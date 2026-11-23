@@ -97,7 +97,7 @@ impl ArtifactViewer for SequenceViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         let child_id = &doc.snapshot.content.child_id;
         let dialect = doc.children.dialect("content", child_id).ok_or_else(|| semio_plugin::PluginAssemblyError::new("sequence.child-content", "published Sequence child dialect is missing"))?;
         if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
@@ -108,7 +108,7 @@ impl ArtifactViewer for SequenceViewer {
         let (steps, edges) = crate::working_from_sequence_content_snapshot(&content);
         let scene = neural_engine::ColdOwner::new(crate::SequenceWorkingScene { steps, edges });
         match body_key {
-            main::SEQUENCE_VIEW_BODY_MAIN => main::render(&scene),
+            main::SEQUENCE_VIEW_BODY_MAIN => main::render(&scene, view_state.locale),
             _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence viewer diagnostic admission failed")),
         }
         .map(semio_plugin::built_to_component_tree)

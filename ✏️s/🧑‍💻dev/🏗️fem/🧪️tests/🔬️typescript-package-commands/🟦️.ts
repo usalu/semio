@@ -4,7 +4,7 @@ import { runVitest } from "@semio-tech/repo-lib/testing";
 import { join } from "node:path";
 
 
-type BehaviouralLaw = Readonly<{ manifest: string; filters: readonly string[] }>;
+type BehaviouralLaw = Readonly<{ manifest: string; filters: readonly string[]; target?: readonly string[] }>;
 const ENGINE = "✏️s/🔨️modules/🏗️fem/⚙️engine";
 const EDITOR = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor";
 /** 🔥️ The p6h microcursor invariants, each carried by the behavioural tests of the crate that owns it: LDLT and subspace max+1/cancel/deadline/stale/replay/parity, mesh edge-phase interrupts and mounted preparation, element stiffness cells and owned assembly lookup/partition scans. */
@@ -17,13 +17,13 @@ const FEM_NUMERICAL_MICROCURSOR_LAWS: readonly BehaviouralLaw[] = [
 ];
 /** 👁️ The mounted fixed-page visual publication invariants: bounded steps, max+1 refusal before owner transfer, stale/cancel/fault/deadline/device-close preserving the last valid publication, for 2D and 3D. */
 const FEM_LIVE_VISUAL_LAWS: readonly BehaviouralLaw[] = [
-  { manifest: `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/${EDITOR}/🎭️modes/✏️edit/🪟️windows/🧱️model/📦️packages/🦀️rust/Cargo.toml`, filters: ["visual"] },
+  { manifest: `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/${EDITOR}/📦️packages/🦀️rust/Cargo.toml`, target: ["--test", "editor_app"], filters: ["model_window::"] },
   { manifest: `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/${EDITOR}/🧵️session/📦️packages/🦀️rust/Cargo.toml`, filters: ["visual"] },
 ];
 
 /** 🧪️ Runs the filtered behavioural tests of each owning crate through the repository cargo gate. */
 async function runBehaviouralCargoLaws(repoRoot: string, laws: readonly BehaviouralLaw[]): Promise<void> {
-  for (const law of laws) for (const filter of law.filters) await runCargo(["test", "--manifest-path", join(repoRoot, law.manifest), "--lib", "--", "--test-threads=1", filter], repoRoot);
+  for (const law of laws) await runCargo(["test", "--manifest-path", join(repoRoot, law.manifest), ...(law.target ?? ["--lib"]), "--", "--test-threads=1", ...law.filters], repoRoot);
 }
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */

@@ -282,13 +282,13 @@ pub fn live_fill_payload(tool_run: Option<&ToolRunView>) -> Option<Wfc3dFillTick
     fill::decode_fill_payload(bytes).filter(|payload| crate::editor::wfc3d::transient::source_matches(&payload.source_revision, Some(&run.identity.base_revision)))
 }
 
-pub fn render(document: &Wfc3dSnapshot, transient: &Wfc3dTransient, zoom: f64) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Wfc3dSnapshot, transient: &Wfc3dTransient, zoom: f64, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
     let scene = World3dScene {
         instances_delta_json: Some(instances_delta_json(document, transient)),
         status_json: Some(status_json(document, transient)),
         ..World3dScene::base(camera_json(document, zoom), meshes_json(document), instances_json(document, transient), world3d_selection_json("replace", &[], None))
     };
-    scene_surface(WFC_3D_PREVIEW_SURFACE, ContractSurfaceKind::World3d, &scene)
+    scene_surface(WFC_3D_PREVIEW_SURFACE, ContractSurfaceKind::World3d, &scene, semio_plugin::surface_name(locale, "Preview", "Vorschau"), None)
 }
 
 /// 🩺 The one-line verdict the preview banner shows. Deliberately short: a window body's owned text

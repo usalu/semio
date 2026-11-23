@@ -194,9 +194,9 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
 /// 🖼️ The board-2d surface node for one pane — bound by each window's own `render()`. The snapshot rides
 /// as its own paged lane carrier (`Board2dSceneLane::Snapshot`), so a 180-node board is bounded by its
 /// carrier pages instead of by the 32 KiB surface doc that refused it outright.
-pub fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str, name: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let scene = puzzle2d_board_scene(document_json, envelope, pane);
-    semio_plugin::scene_surface(&format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), semio_ui_contract::SurfaceKind::Board2d, &scene)
+    semio_plugin::scene_surface(&format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), semio_ui_contract::SurfaceKind::Board2d, &scene, name, None)
 }
 //#endregion 🔖️Canvas
 

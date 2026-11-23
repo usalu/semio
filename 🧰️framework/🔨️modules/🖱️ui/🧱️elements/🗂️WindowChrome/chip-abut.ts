@@ -1,5 +1,5 @@
 import { chipGapReadsAsSliver } from "../🃏️CardStack/bands.ts";
-import { sharedBorderAxisScale } from "../🔲️WindowSilhouette/shared-border.ts";
+import { sharedBorderAxisScale } from "../🔲️WindowFrame/shared-border.ts";
 
 /** 🫸️ One chip of a cap or footer row in the row's own px: its painted extent, the width its content needs, and the neighbour it may stretch toward (`next` grows to the right, `prev` to the left). */
 export interface ChipRowChip {
@@ -9,7 +9,7 @@ export interface ChipRowChip {
   readonly reach: "none" | "next" | "prev";
 }
 
-/** 🫸️ Which chips of one row must stretch to abut their neighbour because the open gap between them would be a sliver under {@link chipGapReadsAsSliver}, so the two share one seam instead of a small U-gap. Gaps are read from the natural extents (a stretched chip does not hide the room it reopens), so the decision is stable. Pure and language-agnostic.
+/** 🫸️ Which chips of one row must stretch to abut their neighbour because the open space between them would be a sliver under {@link chipGapReadsAsSliver}, so the two share one seam instead of a narrow strip of content. Gaps are read from the natural extents (a stretched chip does not hide the room it reopens), so the decision is stable. Pure and language-agnostic.
  *
  * @see ./chip-abut.cases.json */
 export function resolveChipRowAbuts(chips: readonly ChipRowChip[]): readonly boolean[] {
@@ -35,10 +35,10 @@ export function chipAbutSize(chips: readonly ChipRowChip[], index: number): numb
   return chip.right - (previous.reach === "next" ? previous.left + previous.natural : previous.right);
 }
 
-const CHIP_SELECTOR = "[data-window-silhouette-chip]";
+const CHIP_SELECTOR = "[data-window-frame-chip]";
 const PANE_ANCHOR_REACH = { "top-left": "next", "bottom-left": "next", "top-right": "prev", "bottom-right": "prev" } as const;
 
-/** 🫸️ The cross-pane twin of {@link settleChipRowAbuts}: the folded anchored panes of one window body (left, middle, right of one edge) are separate silhouettes, so their chips are ordered by position and a left-anchored chip reaches next, a right-anchored one prev. A marked chip gets `data-chip-abut` and its stack the width that closes the sliver (`--chip-abut-size`). Expanded panes keep their own cap row and only act as neighbours.
+/** 🫸️ The cross-pane twin of {@link settleChipRowAbuts}: the folded anchored panes of one window body (left, middle, right of one edge) are separate frames, so their chips are ordered by position and a left-anchored chip reaches next, a right-anchored one prev. A marked chip gets `data-chip-abut` and its stack the width that closes the sliver (`--chip-abut-size`). Expanded panes keep their own cap row and only act as neighbours.
  *
  * @see ./chip-abut.cases.json */
 export function settlePaneChipAbuts(body: HTMLElement): boolean {
@@ -47,9 +47,9 @@ export function settlePaneChipAbuts(body: HTMLElement): boolean {
   let changed = false;
   for (const edge of ["top", "bottom"]) {
     const panes = [...body.querySelectorAll<HTMLElement>(`[data-anchor^="${edge}-"]`)].filter(overlay => overlay.closest("[data-slot='window-body']") === body).flatMap(overlay => {
-      const stack = overlay.querySelector<HTMLElement>(":scope > [data-window-silhouette]");
-      const folded = stack?.querySelector<HTMLElement>(":scope > [data-window-silhouette-chip]") ?? null;
-      const chip = folded ?? stack?.querySelector<HTMLElement>(":scope > [data-slot='window-chrome-cap'] [data-window-silhouette-chip]") ?? null;
+      const stack = overlay.querySelector<HTMLElement>(":scope > [data-window-frame]");
+      const folded = stack?.querySelector<HTMLElement>(":scope > [data-window-frame-chip]") ?? null;
+      const chip = folded ?? stack?.querySelector<HTMLElement>(":scope > [data-slot='window-chrome-cap'] [data-window-frame-chip]") ?? null;
       return stack && chip ? [{ stack, chip, owned: folded !== null, anchor: overlay.dataset.anchor as keyof typeof PANE_ANCHOR_REACH }] : [];
     });
     const measured = panes.map(({ chip, owned, anchor }) => {
@@ -74,12 +74,12 @@ export function settlePaneChipAbuts(body: HTMLElement): boolean {
   return changed;
 }
 
-/** 🪟️ Reads the chips of `row` (its own chrome, not nested silhouettes), marks the ones that must stretch with `data-chip-abut` and returns whether any mark changed. The chips declare their reach with `data-chip-reach`; the stylesheet stretches a marked chip and collapses the open gap beside it.
+/** 🪟️ Reads the chips of `row` (its own chrome, not nested frames), marks the ones that must stretch with `data-chip-abut` and returns whether any mark changed. The chips declare their reach with `data-chip-reach`; the stylesheet stretches a marked chip over the free row space beside it.
  *
  * @see ./chip-abut.cases.json */
 export function settleChipRowAbuts(row: HTMLElement): boolean {
-  const owner = row.closest("[data-window-silhouette]");
-  const chips = [...row.querySelectorAll<HTMLElement>(CHIP_SELECTOR)].filter(chip => chip.closest("[data-window-silhouette]") === owner);
+  const owner = row.closest("[data-window-frame]");
+  const chips = [...row.querySelectorAll<HTMLElement>(CHIP_SELECTOR)].filter(chip => chip.closest("[data-window-frame]") === owner);
   const rect = row.getBoundingClientRect();
   const scale = sharedBorderAxisScale(rect.width, row.offsetWidth);
   const measured = chips.map(chip => {

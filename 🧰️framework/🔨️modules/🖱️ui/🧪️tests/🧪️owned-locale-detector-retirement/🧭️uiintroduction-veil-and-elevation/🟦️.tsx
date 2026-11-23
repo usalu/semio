@@ -2,7 +2,7 @@ import * as ui from "@semio-tech/ui-react/source";
 import type { TestSource, Tests1Vitest, Tests1Dependencies } from "../🧰️harness/🟦️.ts";
 
 export async function registerUiintroductionVeilAndElevationTests(vitest: Tests1Vitest, dependencies: Tests1Dependencies, testSource: TestSource): Promise<void> {
-  const { Mode, Pane, UIIntroduction, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, resolveWindowSilhouetteBorderKind, uiDataLabel, windowSilhouettePath } = dependencies;
+  const { Mode, Pane, UIIntroduction, isWindowChromeIntroducedTarget, measureWindowFrameMetrics, resolveWindowFrameBorderKind, uiDataLabel } = dependencies;
   const { describe, expect, it, vi } = vitest;
   const { render, screen, fireEvent, waitFor } = await import("@testing-library/react");
 
@@ -154,7 +154,7 @@ export async function registerUiintroductionVeilAndElevationTests(vitest: Tests1
       expect(container.querySelector('[id="framework.window.puzzle3dMainPerspective"]')?.getAttribute("data-introduced")).toBe("true");
     });
 
-    it("pulses an introduced utility toggle without promoting the dock-stack window silhouette", async () => {
+    it("pulses an introduced utility toggle without promoting the dock-stack window frame", async () => {
       const { container } = render(
         <div className="h-layout-story w-layout-story-md">
           <Mode
@@ -209,13 +209,13 @@ export async function registerUiintroductionVeilAndElevationTests(vitest: Tests1
       });
       expect(container.querySelector('[id="framework.window.puzzle3dMainTop"]')?.getAttribute("data-introduced")).toBeNull();
       expect(isWindowChromeIntroducedTarget(container.querySelector("#transform")!)).toBe(false);
-      expect(resolveWindowSilhouetteBorderKind(container.querySelector('[data-slot="window"]'))).toBe("normal");
+      expect(resolveWindowFrameBorderKind(container.querySelector('[data-slot="window"]'))).toBe("normal");
       await waitFor(() => {
-        expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).not.toBe("introduced");
+        expect(container.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).not.toBe("introduced");
       });
     });
 
-    it("elevates the mode-dock-stack silhouette and paints the SVG border when introducing a docked window", async () => {
+    it("elevates the mode-dock-stack frame and paints the SVG border when introducing a docked window", async () => {
       const { container } = render(
         <div className="h-layout-story w-layout-story-md">
           <Mode
@@ -261,12 +261,12 @@ export async function registerUiintroductionVeilAndElevationTests(vitest: Tests1
       expect(container.querySelector('[data-slot="window"]')?.getAttribute("data-introduction-elevated")).toBeNull();
       expect(container.querySelector('[id="framework.window.puzzle3dMain"]')?.getAttribute("data-introduced")).toBe("true");
       expect(container.querySelector('[data-slot="window"]')?.getAttribute("data-introduced")).toBeNull();
-      expect(resolveWindowSilhouetteBorderKind(container.querySelector('[data-slot="window"]'))).toBe("introduced");
+      expect(resolveWindowFrameBorderKind(container.querySelector('[data-slot="window"]'))).toBe("introduced");
       await waitFor(() => {
-        expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("introduced");
+        expect(container.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("introduced");
       });
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).toContain("z-window");
-      expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
+      expect(container.querySelector('[data-slot="mode-dock-frame-border"]')?.className).toContain("z-[40]");
       const stack = container.querySelector('[data-slot="mode-dock-stack"]') as HTMLElement;
       const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
         if (!(el instanceof HTMLElement)) return;
@@ -285,10 +285,9 @@ export async function registerUiintroductionVeilAndElevationTests(vitest: Tests1
       };
       mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
       mockRect(stack.querySelector('[data-slot="mode-dock-tab-cap"]'), { left: 0, right: 60, width: 60, height: 24, bottom: 24 });
-      mockRect(stack.querySelector('[data-slot="mode-dock-tab-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="mode-dock-controls-cap"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="mode-dock-tabbar"]'), { height: 24, bottom: 24, width: 200, right: 200 });
-      expect(measureWindowSilhouetteMetrics(stack)).toEqual({
+      expect(measureWindowFrameMetrics(stack)).toEqual({
         width: 200,
         height: 100,
         top: { depth: 24, chips: [{ left: 0, right: 60 }] },
@@ -296,7 +295,7 @@ export async function registerUiintroductionVeilAndElevationTests(vitest: Tests1
       });
       Object.defineProperty(stack, "offsetWidth", { configurable: true, value: 400 });
       Object.defineProperty(stack, "offsetHeight", { configurable: true, value: 200 });
-      expect(measureWindowSilhouetteMetrics(stack)).toEqual({
+      expect(measureWindowFrameMetrics(stack)).toEqual({
         width: 400,
         height: 200,
         top: { depth: 48, chips: [{ left: 0, right: 120 }] },
@@ -304,19 +303,14 @@ export async function registerUiintroductionVeilAndElevationTests(vitest: Tests1
       });
       Reflect.deleteProperty(stack, "offsetWidth");
       Reflect.deleteProperty(stack, "offsetHeight");
-      stack.setAttribute("data-silhouette-remeasure", "1");
+      stack.setAttribute("data-frame-remeasure", "1");
       await waitFor(() => {
-        const border = container.querySelector('[data-slot="mode-dock-silhouette-border"]');
+        const border = container.querySelector('[data-slot="mode-dock-frame-border"]');
         expect(border?.hasAttribute("data-pending")).toBe(false);
         expect(border?.getAttribute("data-kind")).toBe("introduced");
-        expect(border?.querySelector("path")?.getAttribute("d")).toBe(
-          windowSilhouettePath({
-            width: 200,
-            height: 100,
-            top: { depth: 24, chips: [{ left: 0, right: 60 }] },
-            bottom: { depth: 0, chips: [] },
-          }),
-        );
+        const segments = [...(border?.querySelector("path")?.getAttribute("d") ?? "").matchAll(/M ([\d.]+) ([\d.]+) L ([\d.]+) ([\d.]+)/gu)].map((match) => match.slice(1).map(Number));
+        for (const edge of [[1, 1, 199, 1], [1, 99, 199, 99], [1, 1, 1, 99], [199, 1, 199, 99], [1, 23, 59, 23], [59, 1, 59, 23]]) expect(segments).toContainEqual(edge);
+        expect(segments).toHaveLength(6);
       });
     });
 

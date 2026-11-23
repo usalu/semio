@@ -45,6 +45,7 @@ impl<P:Send+Sync+'static> SnapshotAliasRetirement<P>{
  }
 }
 impl<P:Send+Sync+'static> ErasedSnapshotRetirement for SnapshotAliasRetirement<P>{
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
  fn requires_original_control(&self)->bool{if let Some(active)=self.active.as_ref(){return !active.terminal_is_empty()&&active.requires_original_control()}if self.registry.is_some()||self.alias.is_some()||self.snapshots.is_some(){return false}self.factory.as_ref().is_some_and(|factory|!factory.terminal_is_empty()&&factory.requires_original_control())}
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{
   if let Some(active)=self.active.as_ref(){return if active.terminal_is_empty(){Ok(1)}else{active.next_computational_work(body)}}

@@ -64,7 +64,7 @@ async fn export_over_the_inline_budget_streams_one_segmented_download_carrying_t
 /// 📥️ Wave B16: leftover `openImportSnapshot` must emit the file picker that completes as `importSnapshot`.
 #[semio_framework_async_macros::async_test]
 async fn leftover_open_import_snapshot_requests_file_open() {
-    let source = include_str!("../../../🦀️.rs");
+    let source = include_str!("../../../🧩️play-app/🦀️.rs");
     assert!(
         source.contains(r#""openImportSnapshot" => bound!(|request, instance| Puzzle3dWindowCommandWork::new(tool_id).bound(instance))"#),
         "openImportSnapshot must leftover-commit through Puzzle3dWindowCommandWork, not BoundedFirstStep"

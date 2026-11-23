@@ -94,7 +94,7 @@ fn form_field_value(snapshot: &PdfSnapshot, path: &str) -> String {
 
 /// ✍️ The page-level authoring controls: create annotations, link, merge, replace and extract; see [`create_annotation`].
 pub(super) fn authoring_controls(page: usize, size: (f64, f64), controller_id: &str, publication_revision: semio_plugin::UiPublicationRevision, locale: Locale) -> UiAssemblyResult<Vec<semio_ui_contract::BuiltNode>> {
-    let label = |en: &'static str, de: &'static str| if locale == Locale::De { de } else { en };
+    let label = |en: &'static str, de: &'static str| pick_label(locale, en, de);
     let top = (size.1 - 72.0).max(0.0);
     let place = |width: f64, height: f64| vec![("x", 36.0), ("y", top), ("width", width), ("height", height)];
     let strokes = format!("36,{top},156,{}", top + 20.0);
@@ -186,8 +186,8 @@ fn entry_input(family: &str, id: String, label: &str, key: &str, value: &str, co
 
 /// 🗝️ The generic key-value form: a headed group with one labelled input per editable entry, read-only lines for other entries and an add input taking `key=value`.
 pub(super) fn entry_form(snapshot: &PdfSnapshot, family: &'static str, heading: &str, controller_id: &str, publication_revision: semio_plugin::UiPublicationRevision, locale: Locale) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
-    let mut column = ui::column().try_id(format!("pdf-entries-{family}")).map_err(|_| inspector_error("pdf.entry.group-id"))?;
-    let title = ui::text(ui::Label(UiText::clipped(heading))).try_id(format!("pdf-entries-{family}-heading")).map_err(|_| inspector_error("pdf.entry.heading-id"))?.try_build().map_err(|_| inspector_error("pdf.entry.heading"))?;
+    let mut column = ui::column().try_id(format!("pdf-entries-{family}")).map_err(|_| inspector_error("pdf.entry.group-id"))?.try_label(heading).map_err(|_| inspector_error("pdf.entry.group-label"))?;
+    let title = ui::text(ui::Label(UiText::clipped(heading))).emphasize(true).try_id(format!("pdf-entries-{family}-heading")).map_err(|_| inspector_error("pdf.entry.heading-id"))?.try_build().map_err(|_| inspector_error("pdf.entry.heading"))?;
     column = column.try_child(title).map_err(|_| inspector_error("pdf.entry.heading"))?;
     for (index, (key, value, editable)) in entry_rows(snapshot, family).into_iter().enumerate() {
         let node = if editable {
@@ -197,14 +197,14 @@ pub(super) fn entry_form(snapshot: &PdfSnapshot, family: &'static str, heading: 
         };
         column = column.try_child(node).map_err(|_| inspector_error("pdf.entry.row"))?;
     }
-    let add = if locale == Locale::De { "Eintrag hinzufügen (Schlüssel=Wert)" } else { "Add entry (key=value)" };
-    column = column.try_child(entry_input(family, format!("pdf-entry-{family}-add"), add, "", "", controller_id, publication_revision)?).map_err(|_| inspector_error("pdf.entry.add"))?;
+    let add = pick(locale, "Add entry (key=value)", "Eintrag hinzufügen (Schlüssel=Wert)");
+    column = column.try_child(entry_input(family, format!("pdf-entry-{family}-add"), &add, "", "", controller_id, publication_revision)?).map_err(|_| inspector_error("pdf.entry.add"))?;
     column.try_build().map_err(|_| inspector_error("pdf.entry.group"))
 }
 
 /// 🗝️ Every document dictionary family as a key-value form.
 pub(super) fn entry_forms(snapshot: &PdfSnapshot, controller_id: &str, publication_revision: semio_plugin::UiPublicationRevision, locale: Locale) -> UiAssemblyResult<Vec<semio_ui_contract::BuiltNode>> {
-    let heading = |en: &'static str, de: &'static str| if locale == Locale::De { de } else { en };
+    let heading = |en: &'static str, de: &'static str| pick_label(locale, en, de);
     [("catalog", heading("Catalog entries", "Katalogeinträge")), ("trailer", heading("Trailer entries", "Trailer-Einträge")), ("info", heading("Extra info entries", "Zusätzliche Infoeinträge")), ("viewer", heading("Extra viewer preferences", "Zusätzliche Betrachtereinstellungen"))]
         .into_iter()
         .map(|(family, title)| entry_form(snapshot, family, title, controller_id, publication_revision, locale))
@@ -308,12 +308,17 @@ pub(super) fn field_input(
     if let Some(text) = &field.text {
         arguments = insert_text_arg(arguments, text)?;
     }
+    arguments = insert_named_text_arg(arguments, "locale", locale.as_str())?;
     let draft_target = inspector_draft_target(controller_id, field.action, page, object_id, field.key)?;
-    let builder = ui::input(field.kind)
-        .value(inspector_text(&field.value)?)
-        .commit(inspector_text(if field.action == "set-page-extra" && object_id.starts_with("box.") {
-            "blurDecimalQuad"
-        } else { "blur" })?)
+    let quad = field.action == "set-page-extra" && object_id.starts_with("box.");
+    let (kind, shown) = match field.kind {
+        ui::InputKind::Number => (ui::InputKind::Text, localized_number(&field.value, locale)),
+        other if quad => (other, localized_quad(&field.value, locale)),
+        other => (other, field.value.clone()),
+    };
+    let builder = ui::input(kind)
+        .value(inspector_text(&shown)?)
+        .commit(inspector_text("blur")?)
         .draft_target(draft_target)
         .publication_revision(publication_revision)
         .try_label(label)
@@ -378,11 +383,14 @@ pub(super) fn inspector_error(code: &'static str) -> PluginAssemblyError {
 }
 
 fn shown_number(value: f64) -> String {
-    if !value.is_finite() {
-        return "0".into();
-    }
-    let text = format!("{value:.4}");
-    let trimmed = text.trim_end_matches('0').trim_end_matches('.').to_string();
-    if trimmed.is_empty() || trimmed == "-" { "0".into() } else { trimmed }
+    format_pdf_number(value, None)
+}
+
+fn localized_number(canonical: &str, locale: Locale) -> String {
+    parse_pdf_number(canonical, None).map_or_else(|| canonical.to_string(), |value| format_pdf_number(value, Some(locale)))
+}
+
+fn localized_quad(canonical: &str, locale: Locale) -> String {
+    canonical.split_whitespace().map(|token| token.replace('.', &pdf_decimal_separator(Some(locale)).to_string())).collect::<Vec<_>>().join(" ")
 }
 //#endregion 🔎️Inspector

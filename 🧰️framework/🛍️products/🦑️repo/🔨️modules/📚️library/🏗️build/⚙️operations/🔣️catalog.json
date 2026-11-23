@@ -490,7 +490,7 @@
       "value": "separate",
       "valueName": "url",
       "operations": ["remote-execution"],
-      "description": { "en": "remote-execution workers|status: the worker API of the scheduler, for example http://build-host:8981 (default: SEMIO_REMOTE_EXECUTION_SCHEDULER).", "de": "remote-execution workers|status: die Worker-API des Schedulers, zum Beispiel http://build-host:8981 (Standard: SEMIO_REMOTE_EXECUTION_SCHEDULER)." }
+      "description": { "en": "remote-execution workers|status|cancel: the worker API of the scheduler, for example http://build-host:8981 (default: SEMIO_REMOTE_EXECUTION_SCHEDULER).", "de": "remote-execution workers|status|cancel: die Worker-API des Schedulers, zum Beispiel http://build-host:8981 (Standard: SEMIO_REMOTE_EXECUTION_SCHEDULER)." }
     },
     {
       "name": "--name",
@@ -1787,7 +1787,7 @@
     {
       "name": "remote-execution",
       "requires": "none",
-      "synopsis": "remote-execution serve|status|workers",
+      "synopsis": "remote-execution serve|status|workers|cancel",
       "summary": {
         "en": "Run the in-house remote execution service that hermetic Bazel actions can run on, inspect it, or join this machine to it as a worker.",
         "de": "Betreibt den hauseigenen Remote-Execution-Dienst, auf dem hermetische Bazel-Aktionen laufen können, zeigt ihn an oder bindet diesen Rechner als Worker an."
@@ -1819,13 +1819,22 @@
             "en": "Run a worker of this machine (or devcontainer) that joins a scheduler, runs the hermetic actions it is handed in a sandbox and reports until stopped.",
             "de": "Betreibt einen Worker dieses Rechners (oder Devcontainers), der einem Scheduler beitritt, die ihm zugeteilten hermetischen Aktionen in einer Sandbox ausführt und meldet, bis er gestoppt wird."
           }
+        },
+        {
+          "name": "cancel",
+          "synopsis": "remote-execution cancel <operation|all-stuck> [--join <url>]", "flags": ["--join"],
+          "summary": {
+            "en": "Free a wedged build without restarting anything: end one operation of the scheduler (its id or action digest, at least 8 characters, from the fleet load table) or every unfinished operation older than the policy's stuck limit (all-stuck); the clients that wait for it compile the unit locally and a worker that still runs it is told to stop. Prints a Cancellation.",
+            "de": "Befreit einen festgefahrenen Build ohne Neustart: beendet eine Operation des Schedulers (ihre Kennung oder ihren Aktions-Digest, mindestens 8 Zeichen, aus der Lasttabelle der Flotte) oder jede unfertige Operation, die älter als die Stuck-Grenze der Richtlinie ist (all-stuck); die wartenden Clients kompilieren die Einheit lokal, und ein Worker, der sie noch ausführt, wird zum Stoppen angewiesen. Gibt eine Cancellation aus."
+          }
         }
       ],
       "flags": ["--bind", "--grpc-port", "--worker-port", "--cache", "--local-workers", "--concurrency", "--advertise", "--sandbox", "--work-directory", "--join", "--name", "--origin", "--load-interval", "--properties", "--tls-certificate", "--tls-key"],
       "examples": [
         { "command": "repo remote-execution serve", "description": { "en": "Run the service with the shared store and one local worker: gRPC for build tools on 127.0.0.1:8980, HTTP for workers, status and the fleet load table on 127.0.0.1:8981; hermetic Bazel actions can then run remotely.", "de": "Betreibt den Dienst mit dem gemeinsamen Speicher und einem lokalen Worker: gRPC für Build-Werkzeuge auf 127.0.0.1:8980, HTTP für Worker, Status und die Lasttabelle der Flotte auf 127.0.0.1:8981; hermetische Bazel-Aktionen können dann remote laufen." } },
         { "command": "repo remote-execution workers --join http://build-host:8981", "description": { "en": "Add this machine as a worker of a service that runs elsewhere.", "de": "Fügt diesen Rechner als Worker eines Dienstes hinzu, der anderswo läuft." } },
-        { "command": "repo remote-execution status", "description": { "en": "Show the client contract, whether the endpoint answers and which workers are registered.", "de": "Zeigt den Client-Vertrag, ob der Endpunkt antwortet und welche Worker angemeldet sind." } }
+        { "command": "repo remote-execution status", "description": { "en": "Show the client contract, whether the endpoint answers and which workers are registered.", "de": "Zeigt den Client-Vertrag, ob der Endpunkt antwortet und welche Worker angemeldet sind." } },
+        { "command": "repo remote-execution cancel all-stuck", "description": { "en": "End every operation that has been unfinished for longer than the policy's stuck limit; the builds that wait for them compile those units locally.", "de": "Beendet jede Operation, die länger als die Stuck-Grenze der Richtlinie unfertig ist; die Builds, die auf sie warten, kompilieren diese Einheiten lokal." } }
       ],
       "notes": [
         {

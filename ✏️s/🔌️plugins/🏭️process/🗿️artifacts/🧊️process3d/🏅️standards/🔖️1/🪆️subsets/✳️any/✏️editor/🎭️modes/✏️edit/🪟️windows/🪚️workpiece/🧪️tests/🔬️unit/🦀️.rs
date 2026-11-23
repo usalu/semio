@@ -65,7 +65,7 @@ async fn render_world_scene_replays_the_timber_beam_instead_of_the_fallback_box(
     assert!((extent(0) - 3.0).abs() < 1e-3, "x extent {} is not the 3.0 beam length", extent(0));
     assert!(extent(1) < 1.0 && extent(2) < 1.0, "y/z extents {}/{} are not the 0.2/0.3 beam section", extent(1), extent(2));
     let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
-    let tree = semio_plugin::built_to_component_tree(render(&snapshot, &Process3dConfig::default(), "select", &[]).expect("workpiece renders"));
+    let tree = semio_plugin::built_to_component_tree(render(&snapshot, &Process3dConfig::default(), "select", &[], semio_plugin::Locale::En).expect("workpiece renders"));
     let published = semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(tree, |root| semio_plugin::artifact_app_laws::built_surface_scene::<semio_plugin::World3dScene>(root)).expect("workpiece scene");
     let instances: serde_json::Value = serde_json::from_str(&published.instances_json).unwrap();
     assert_eq!(instances[0]["id"], snapshot.stock_id);
@@ -104,7 +104,7 @@ async fn workpiece_surface_replays_the_cursor_through_empty_and_restored_geometr
         let config = Process3dConfig { resolved_up_to: Some(cursor), ..Default::default() };
         let status = workpiece::engagement(&snapshot, &config, "select", &Process3dLabels::NATIVE_EN).status.unwrap();
         assert!(status[0].text.ends_with(&format!("{} m³", fixture["expected"][expected].as_str().unwrap())), "{status:?}");
-        let built = workpiece::render(&snapshot, &config, "select", std::slice::from_ref(&snapshot.stock_id)).expect("workpiece renders");
+        let built = workpiece::render(&snapshot, &config, "select", std::slice::from_ref(&snapshot.stock_id), semio_plugin::Locale::En).expect("workpiece renders");
         let rendered = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).expect("workpiece projection");
         let published = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::World3dScene>(&rendered).expect("published workpiece scene");
         assert_eq!(published.domain_id.as_deref(), Some("geometry"));

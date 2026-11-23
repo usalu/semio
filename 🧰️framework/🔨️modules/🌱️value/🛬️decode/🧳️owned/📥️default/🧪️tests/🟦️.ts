@@ -15,8 +15,8 @@ test("declared native defaults agree with independent schema default constructio
   } finally { db.close(); }
   const source = readFileSync(new URL("../🦀️.rs", import.meta.url), "utf8");
   expect(source).toContain("pub trait NativeDefault");
-  expect(source).toContain("retained_clone_grant_admits(grant,demand)");
+  expect(source).toContain("retained_clone_grant_admits(effect.grant()");
   expect(source).not.toContain("Box::new");
-  expect(source).not.toContain("Default::default()");
+  expect(source).not.toContain("T::default()");
   expect(fixture.zeroHeapBirth && fixture.sameOriginalSource).toBe(true);
 });

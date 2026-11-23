@@ -43,10 +43,16 @@ export function matchesTranspileKey(entry:StageEntryV1,component:string,base:str
   const digest=(value:unknown)=>typeof value==="string"&&/^[0-9a-f]{64}$/u.test(value);
   if(stage!=="transpile"||!exact(inputs,["component"])||inputs.component!==component||!digest(component)||tools.base!==base||!digest(tools.materialization))return false;
   const common=["base","materialization"];
+  if(schemaVersion===3)return exact(tools,[...common,"native-transpile","maps"])&&digest(tools["native-transpile"])&&digest(tools["maps"]);
   if(schemaVersion===2)return exact(tools,[...common,"native-transpile"])&&digest(tools["native-transpile"]);
   if(schemaVersion!==1||!tools.jco)return false;
   return exact(tools,[...common,"jco"])||
     exact(tools,[...common,"jco","native-transpile"])&&digest(tools["native-transpile"]);
+}
+
+/** 🗜️ Admits an optimizer stage that names wasm-opt, including the schema that records its binary and arguments. */
+export function admittedOptimizeSchema(schemaVersion:number,tools:Readonly<Record<string,string>>):boolean{
+  return (schemaVersion===1||schemaVersion===2)&&typeof tools["wasm-opt"]==="string"&&tools["wasm-opt"].length>0;
 }
 
 /** 🧷️ Binds the raw receipt to a unique complete set of optimized cores through the build's transpile, optimizer and browser probe. */
@@ -92,7 +98,7 @@ async function verifyReceipt(request:Request,targets:readonly ComponentStageTarg
 if(import.meta.main){
   try{
     const requests=JSON.parse(process.argv[2]!) as Request[];
-    const targets=componentStageTargetsV1(workspace),transpiles=stageEntries("transpile"),optimizes=stageEntries("optimize").filter(row=>row.key.schemaVersion===1&&typeof row.key.tools["wasm-opt"]==="string"),probes=stageEntries("probe").filter(row=>row.key.schemaVersion===2);
+    const targets=componentStageTargetsV1(workspace),transpiles=stageEntries("transpile"),optimizes=stageEntries("optimize").filter(row=>admittedOptimizeSchema(row.key.schemaVersion,row.key.tools)),probes=stageEntries("probe").filter(row=>row.key.schemaVersion===2);
     const collected:(readonly StageFileV1[])[]=[];
     for(const request of requests)collected.push(await verifyReceipt(request,targets,transpiles,optimizes,probes));
     console.log(JSON.stringify(collected));

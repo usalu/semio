@@ -99,6 +99,11 @@ export function parseAssetsForCrate(manifestPath: string, repoRoot: string, view
 /** ✂️ The variation selector that closes an emoji identity in `exampleSlugPattern` — everything after it is the example id. */
 export const EXAMPLE_SLUG_IDENTITY_SEPARATOR = "\uFE0F";
 
+/** 🪪️ The canonical example id of a path slug — the `exampleSlugPattern` tail after the emoji identity, the id `manifest.examples` and `examplesForApp` use. */
+export function exampleIdOfSlug(slug: string): string {
+  return slug.slice(slug.lastIndexOf(EXAMPLE_SLUG_IDENTITY_SEPARATOR) + 1);
+}
+
 /** 🪪️ The example ids one owner descriptor declares for a playground's app — every `manifest.examples` row when the playground names no app. */
 export function declaredExampleIdsForPlayground(descriptor: Record<string, unknown> | undefined, app?: string): ReadonlySet<string> {
   const manifest = descriptor?.manifest as { examples?: unknown } | undefined;
@@ -117,12 +122,12 @@ export function declaredExampleIdsForPlayground(descriptor: Record<string, unkno
  * examples this playground's own app declares. One crate serves several apps (`puzzle` ships 2d/3d/5d
  * from one crate), so the membership scan alone advertises a sibling app's examples and test-only
  * surface fixtures; the owner descriptor is the app's own declaration, so it decides whenever it
- * carries one. The id of an example slug is its `exampleSlugPattern` tail — everything after the
- * emoji identity's `U+FE0F`.
+ * carries one. The catalog emits the canonical plain id ({@link exampleIdOfSlug}), never the emoji
+ * path slug.
  */
 export function discoverExamplesForPlayground(repoRoot: string, cratePath: string, declared: ReadonlySet<string>, view?: RegistryCatalogInputView): string[] {
-  const slugs = registryExampleCatalog(repoRoot, cratePath, TAXONOMY, view);
-  return declared.size === 0 ? slugs : slugs.filter((slug) => declared.has(slug.slice(slug.lastIndexOf(EXAMPLE_SLUG_IDENTITY_SEPARATOR) + 1)));
+  const ids = registryExampleCatalog(repoRoot, cratePath, TAXONOMY, view).map(exampleIdOfSlug);
+  return [...new Set(declared.size === 0 ? ids : ids.filter((id) => declared.has(id)))];
 }
 
 export function parsePlaygroundsForCrate(manifestPath: string, pluginId: string, cratePath: string, repoRoot: string, view?: RegistryCatalogInputView): PlaygroundEntry[] {

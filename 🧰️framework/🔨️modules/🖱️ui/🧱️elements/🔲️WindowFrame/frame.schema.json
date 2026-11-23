@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "window-frame-geometry/v1",
+  "title": "Window Frame Geometry Cases",
+  "description": "Normalization: width and height are clamped to >= 0; top depth is clamped to height, bottom depth to height minus top depth; chips are clamped to [0, width], sorted, merged when closer than 0.5 and dropped when not wider than 0.5; a chip row with depth <= 0.5 has no chip regions. borderPath is the rectangle inset by min(1, width / 2, height / 2), or the empty string when width or height is <= 0.5. contains is inclusive on all four frame edges and false for non-finite points.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["name", "metrics", "expected"],
+    "additionalProperties": false,
+    "properties": {
+      "name": { "type": "string" },
+      "metrics": { "$ref": "#/$defs/metrics" },
+      "expected": {
+        "type": "object",
+        "required": ["frame", "chipRegions", "safeClearances", "borderPath", "contains"],
+        "additionalProperties": false,
+        "properties": {
+          "frame": { "$ref": "#/$defs/rect" },
+          "chipRegions": { "type": "array", "items": { "$ref": "#/$defs/chipRegion" } },
+          "safeClearances": {
+            "type": "object",
+            "required": ["top", "right", "bottom", "left"],
+            "additionalProperties": false,
+            "properties": { "top": { "type": "number" }, "right": { "type": "number" }, "bottom": { "type": "number" }, "left": { "type": "number" } }
+          },
+          "borderPath": { "type": "string" },
+          "contains": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["x", "y", "inside"],
+              "additionalProperties": false,
+              "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "inside": { "type": "boolean" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "chip": { "type": "object", "required": ["left", "right"], "additionalProperties": false, "properties": { "left": { "type": "number" }, "right": { "type": "number" } } },
+    "edge": { "type": "object", "required": ["depth", "chips"], "additionalProperties": false, "properties": { "depth": { "type": "number" }, "chips": { "type": "array", "items": { "$ref": "#/$defs/chip" } } } },
+    "metrics": { "type": "object", "required": ["width", "height", "top", "bottom"], "additionalProperties": false, "properties": { "width": { "type": "number" }, "height": { "type": "number" }, "top": { "$ref": "#/$defs/edge" }, "bottom": { "$ref": "#/$defs/edge" } } },
+    "rect": { "type": "object", "required": ["x", "y", "width", "height"], "additionalProperties": false, "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "width": { "type": "number" }, "height": { "type": "number" } } },
+    "chipRegion": { "type": "object", "required": ["x", "y", "width", "height", "dock"], "additionalProperties": false, "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "width": { "type": "number" }, "height": { "type": "number" }, "dock": { "enum": ["top", "bottom"] } } }
+  }
+}

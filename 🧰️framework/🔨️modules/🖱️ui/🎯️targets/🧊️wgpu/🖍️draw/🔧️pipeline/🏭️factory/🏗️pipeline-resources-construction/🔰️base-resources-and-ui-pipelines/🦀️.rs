@@ -120,15 +120,13 @@ pub(super) fn build_base_resources(device: &gpu_device::Device, format: gpu_devi
     BaseResources { world_encoded_format, globals_bind_group_layout, ui_shader, vector_shader, world_shader, world_lines_shader, depth_state, overlay_depth_state, quad_vertex_buffer, globals_buffer, glyph_texture, glyph_sampler, icon_texture, icon_sampler, glyph_bind_group }
 }
 
-/// 🗂 The ui, vector and mask pipelines.
+/// 🗂 The ui and vector pipelines.
 pub(super) struct UiPipelineSet {
-    #[cfg(any(test,feature="testkit"))]
-    pub(super) mask_pipeline: gpu_device::RenderPipeline,
     pub(super) ui_pipeline: gpu_device::RenderPipeline,
     pub(super) vector_pipeline: gpu_device::RenderPipeline,
 }
 
-/// 🖌 Builds the ui pipeline layout, the silhouette mask pipeline (tests and testkit) and the ui and vector pipelines.
+/// 🖌 Builds the ui pipeline layout, the ui and vector pipelines.
 pub(super) fn build_ui_pipelines(
     device: &gpu_device::Device,
     format: gpu_device::TextureFormat,
@@ -138,42 +136,6 @@ pub(super) fn build_ui_pipelines(
     overlay_depth_state: Option<gpu_device::DepthStencilState>,
 ) -> UiPipelineSet {
     let ui_pipeline_layout = device.create_pipeline_layout(&gpu_device::PipelineLayoutDescriptor { label: Some("ui_pipeline_layout"), bind_group_layouts: &[Some(globals_bind_group_layout)], immediate_size: 0 });
-    #[cfg(any(test,feature="testkit"))]
-    let mask_pipeline = device.create_render_pipeline(&gpu_device::RenderPipelineDescriptor {
-        label: Some("silhouette_mask_pipeline"),
-        layout: Some(&ui_pipeline_layout),
-        vertex: gpu_device::VertexState {
-            module: ui_shader,
-            entry_point: Some("vs_main"),
-            buffers: &[
-                gpu_device::VertexBufferLayout { array_stride: 8, step_mode: gpu_device::VertexStepMode::Vertex, attributes: &[gpu_device::VertexAttribute { offset: 0, shader_location: 0, format: gpu_device::VertexFormat::Float32x2 }] },
-                gpu_device::VertexBufferLayout {
-                    array_stride: size_of::<UiInstance>() as gpu_device::BufferAddress,
-                    step_mode: gpu_device::VertexStepMode::Instance,
-                    attributes: &[
-                        gpu_device::VertexAttribute { offset: 0, shader_location: 1, format: gpu_device::VertexFormat::Float32x4 },
-                        gpu_device::VertexAttribute { offset: 16, shader_location: 2, format: gpu_device::VertexFormat::Float32x4 },
-                        gpu_device::VertexAttribute { offset: 32, shader_location: 3, format: gpu_device::VertexFormat::Float32x4 },
-                        gpu_device::VertexAttribute { offset: 48, shader_location: 4, format: gpu_device::VertexFormat::Float32x4 },
-                        gpu_device::VertexAttribute { offset: 64, shader_location: 5, format: gpu_device::VertexFormat::Float32x4 },
-                    ],
-                },
-            ],
-            compilation_options: Default::default(),
-        },
-        fragment: Some(gpu_device::FragmentState { module: ui_shader, entry_point: Some("fs_main"), targets: &[Some(gpu_device::ColorTargetState { format, blend: None, write_mask: gpu_device::ColorWrites::empty() })], compilation_options: Default::default() }),
-        primitive: gpu_device::PrimitiveState::default(),
-        depth_stencil: Some(gpu_device::DepthStencilState {
-            format: gpu_device::TextureFormat::Depth24PlusStencil8,
-            depth_write_enabled: Some(false),
-            depth_compare: Some(gpu_device::CompareFunction::Always),
-            stencil: mask_stencil_state(),
-            bias: gpu_device::DepthBiasState::default(),
-        }),
-        multisample: gpu_device::MultisampleState::default(),
-        multiview_mask: None,
-        cache: None,
-    });
     let ui_pipeline = device.create_render_pipeline(&gpu_device::RenderPipelineDescriptor {
         label: Some("ui_pipeline"),
         layout: Some(&ui_pipeline_layout),
@@ -235,5 +197,5 @@ pub(super) fn build_ui_pipelines(
         multiview_mask: None,
         cache: None,
     });
-    UiPipelineSet { #[cfg(any(test,feature="testkit"))] mask_pipeline, ui_pipeline, vector_pipeline }
+    UiPipelineSet { ui_pipeline, vector_pipeline }
 }

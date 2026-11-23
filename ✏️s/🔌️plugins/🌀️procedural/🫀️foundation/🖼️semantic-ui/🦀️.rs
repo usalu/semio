@@ -51,10 +51,10 @@ pub fn graph_hover_args(target_id: &str, granularity: &str) -> UiAssemblyResult<
     ])
 }
 
-/// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract.
-pub fn scene_surface<T: semio_ui_declaration::ui::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
+/// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract under its required localized accessible `name`.
+pub fn scene_surface<T: semio_ui_declaration::ui::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T, name: &str, description: Option<&str>) -> UiAssemblyResult<BuiltNode> {
     let id = id.into();
-    semio_plugin::scene_surface(&id, kind, scene)
+    semio_plugin::scene_surface(&id, kind, scene, name, description)
 }
 
 /// ♿️ [`scene_surface`] plus the accessible name, description and liveness a canvas owes a reader.
@@ -77,8 +77,7 @@ pub fn accessible_scene_surface<T: semio_ui_declaration::ui::SceneDoc>(
     description: &str,
     live: Liveness,
 ) -> UiAssemblyResult<BuiltNode> {
-    let mut node = scene_surface(id, kind, scene)?;
-    node.accessibility.label = UiText::try_from_str(label).map(Label);
+    let mut node = scene_surface(id, kind, scene, label, None)?;
     node.accessibility.description = Some(Label(UiText::clipped(description)));
     node.accessibility.live = live;
     Ok(node)

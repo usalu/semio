@@ -1,0 +1,14 @@
+# Unreceipted allocation during source close
+
+## Method
+A temporary `[DEBUG]` allocation tap (testing allocator `install_allocation_tap`, raw `backtrace()` into a const thread-local array, `backtrace_symbols_fd` after the observed window; nothing allocates inside the window) was wired into the job testkit `observe`, the construction `observe_heap` and the worker-payload `observe`. It is removed again from all four places.
+
+## Findings
+- `original_contiguous_bytes_keep_exact_birth_fill_and_return_on_the_same_source` (run `sca2`): every allocation inside an observed window was receipted (16384 B page admit, 880 B source clock frame, 5984 B return escrow birth, 16385 B window). The only unreceipted allocation was 64 B from `StepContext::recv_dbg` (`🧵️job/⏱️context/🛬️owned`): a temporary `[DEBUG]` helper whose first `Mutex::lock` births a pthread box on macOS inside the observed scope. The coordinator removed the helper.
+- The previously reported 296 B born / 72 B released (page-return), the `(76864,0)` vs `(77064,24)` over-quote and the `(715,315)` worker preparation did not reproduce: `over_quote_preserves_the_born_candidate...` and `genuine_worker_preparation_uses_the_admitting_ledger...` pass (`sca5`), the job lib (15) and `original-page-return` (5) pass with the taps removed (`scb1`).
+- Static check of `ControlledRetirement::retain` / `ControlledCore::new` / `RetainedOwnerGate::new`: allocation-free (`PagedList::with_page_items` only sets a page size; `Vec::new` root). The first cursor page is born only through `reserve_cursor_slot_with` (`PagedList::reserve_one`, funded and receipted as `retained_capacity_bytes`), so no source-close step pushes a cursor without a reservation. The presence 208 to 408 B residue is therefore not explained by the retirement stack itself.
+- Cause class of the earlier mismatches in this area: debug and diagnostic code allocating inside observed scopes (`eprintln!` in `admit_retained_clone_close`, `recv_dbg`), plus the thread-local memo (fixed earlier, see `job-retirement-owned.md`). No product allocation site was found that needs a new funding path, hence no product change and no new law from this pass.
+
+## Not done
+- Collection `heap == progress` tests (sqlite transient allocations): not traced (build lock queue, collection crates rebuilt by others).
+- Presence snapshot (run `scb3`, after concurrent edits): the three tests now fail differently, no longer with the 208/408 B residue: `undersized_grants...` gives `UnsupportedOwner` instead of `Canceled`, `refused_rows...` panics with `refusal carries a value cause`, `accepted_rows...` reports `(0, 54032)` released-without-request at "completed receiving leaves no pending retirement". These are caused by in-flight edits of others in the decode/receiving stack and were not analysed here; the 208/408 B accounting must be re-measured once they settle.

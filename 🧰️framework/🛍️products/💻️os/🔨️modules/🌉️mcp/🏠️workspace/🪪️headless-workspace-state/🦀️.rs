@@ -93,6 +93,11 @@ impl Drop for HeadlessWorkspace {
 }
 
 impl HeadlessWorkspace {
+    /// 🔬️ Whether a live probe store is open for `artifact_id`.
+    pub fn has_open_probe(&self, artifact_id: &str) -> bool {
+        self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(artifact_id)
+    }
+
     /// 🪪️ Provenance of content read from `artifact_id`: its kind as this workspace knows it, the
     /// head it was read at, and who may have written it — the folder's one local principal, or the
     /// writers of the hub space the document lives in. `parts` are the exact bytes enveloped.
@@ -185,7 +190,7 @@ impl HeadlessWorkspace {
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}"))),
             },
             Some("schema") => {
-                let open_probe = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(artifact_id);
+                let open_probe = self.has_open_probe(artifact_id);
                 let body = if open_probe {
                     serde_json::json!({ "artifactId": artifact_id, "schema": PROBE_SCHEMA })
                 } else if let Some(binding) = self.plugin_artifact_binding(artifact_id) {

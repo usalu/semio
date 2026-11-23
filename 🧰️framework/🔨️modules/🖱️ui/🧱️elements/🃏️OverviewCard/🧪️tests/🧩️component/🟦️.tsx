@@ -69,7 +69,7 @@ describe("OverviewCard", () => {
     expect(chip.className).not.toContain("max-w-[12rem]");
     const stack = region.querySelector('[data-slot="quiz-card-stack"]');
     expect(stack?.hasAttribute("data-overview-card-stack")).toBe(true);
-    expect(stack?.getAttribute("data-shared-border-hover")).toBe("silhouette");
+    expect(stack?.getAttribute("data-shared-border-hover")).toBe("frame");
     expect(stack?.getAttribute("data-level")).toBe("dialog");
     expect(stack?.hasAttribute("data-active")).toBe(false);
     expect(region.querySelector('[data-slot="quiz-card-content"]')?.textContent).toContain("passive-house roof");
@@ -79,6 +79,12 @@ describe("OverviewCard", () => {
     for (const button of buttons) expect((button as HTMLButtonElement).type).toBe("button");
     expect(buttons[0]!.closest('[data-slot="window-chrome-footer-left"]')).not.toBeNull();
     expect(buttons[1]!.closest('[data-slot="window-chrome-footer-right"]')).not.toBeNull();
+    for (const button of buttons) {
+      const chipOverlay = button.closest("[data-window-frame-chip]")!;
+      expect(chipOverlay.closest("[data-window-frame]")).toBe(stack);
+    }
+    expect(heading.closest("[data-window-frame-chip]")?.closest("[data-window-frame]")).toBe(stack);
+    expect(stack?.querySelector("[data-window-frame-content]")?.contains(region.querySelector('[data-slot="quiz-card-content"]'))).toBe(true);
     expect(buttons[1]!.getAttribute("data-overview-card-action")).toBe("primary");
     expect(buttons[1]!.querySelector('[data-icon="chevron-right"]')).not.toBeNull();
     expect(buttons[0]!.querySelector('[data-icon="chevron-right"]')).toBeNull();

@@ -28,5 +28,13 @@ elif "automaticCompletion" in data:
             return int(row["priorBytes"]<=row["cap"])
         return 1
     print(json.dumps([scans(row) for row in corpus["rows"]]))
+elif "increments" in data:
+    g=data["increments"]
+    def inc(r):
+        t=r["total"]
+        if t<=g["cap"]*g["high"]:return 0
+        full=t-g["cap"]*g["low"]
+        return math.ceil(min(full,t-g["cap"]*g["high"]+g["increment"])) if r["incremental"] else math.ceil(full)
+    print(json.dumps([inc(r) for r in g["rows"]]))
 else:
     print(json.dumps({"decisions":[decide(data["policy"],c) for c in data["cases"]],"needs":[need(data["policy"],n) for n in data["needs"]]}))

@@ -63,6 +63,6 @@ class Beat1_Fahrplan(RoadmapScene):
     BRACKET = {"last": 4, "label": ("applies in winter and summer alike", "gilt im Winter wie im Sommer")}
     HANDOVERS = [
         {"text": (r"\to\;\text{Heating:}\;\dot{Q}_{\mathrm{V}}", r"\to\;\text{Heizung:}\;\dot{Q}_{\mathrm{V}}"), "color": "P_ORANGE"},
-        {"text": (r"\to\;\text{Cooling:}\;\dot{Q}_{\mathrm{V}}", r"\to\;\text{Kühlung:}\;\dot{Q}_{\mathrm{V}}"), "color": "P_CYAN"},
+        {"text": (r"\to\;\text{Cooling systems:}\;\dot{Q}_{\mathrm{V}}", r"\to\;\text{Kühltechnik:}\;\dot{Q}_{\mathrm{V}}"), "color": "P_CYAN"},
     ]
 #endregion

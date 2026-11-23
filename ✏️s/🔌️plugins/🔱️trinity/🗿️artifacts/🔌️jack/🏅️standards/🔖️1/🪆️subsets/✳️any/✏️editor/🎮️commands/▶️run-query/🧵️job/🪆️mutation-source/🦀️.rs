@@ -6,12 +6,12 @@ use semio_framework_job::{OriginalTurnFailure, StepContext};
 use semio_framework_value::{ErasedSnapshotRetirement, RetainedAllocationEffect, ValueError, retained_clone::{RetainedCloneSource, StagedSourceAdmission}, retirement::controlled::ControlledRetirement};
 use store::os_store::snapshot_read::{SnapshotRead, SnapshotReadSourceStaging};
 
-type PreparedEdit = (QueryResult, Vec<ChildEmitPreparation>, Option<TrinityGraphMutation>);
+pub(super) type PreparedEdit = (Option<QueryResult>, Vec<ChildEmitPreparation>, Option<TrinityGraphMutation>);
 type CommandAdmission = StagedSourceAdmission<TrinityJackCommand, TrinityJackCommand>;
 
 #[derive(Default, semio_framework_value::RetireOwned)]
 struct OriginalSources {
-    pending: Option<(QueryResult, Option<TrinityGraphMutation>)>,
+    pending: Option<(Option<QueryResult>, Option<TrinityGraphMutation>)>,
     effects: Vec<GraphEffect>,
     snapshot: Option<RetainedCloneSource<JackSnapshot, SnapshotRead<JackSnapshot>>>,
     snapshot_staging: SnapshotReadSourceStaging<JackSnapshot>,
@@ -45,7 +45,9 @@ impl<C: JackComposition> QueryMutationSource<C> {
         let placeholder = match command {
             TrinityJackCommand::RunQuery { .. } => TrinityJackCommand::RunQuery { query: None, results_window_id: String::new() },
             TrinityJackCommand::LoadExampleQuery { .. } => TrinityJackCommand::LoadExampleQuery { query: String::new(), results_window_id: String::new() },
-            _ => return Err(ValueError::invariant("Jack query received a different original command").into()),
+            TrinityJackCommand::PatchNodes { .. } => TrinityJackCommand::PatchNodes { node_ids: Vec::new(), field: String::new(), value: String::new() },
+            TrinityJackCommand::DeleteSelection => TrinityJackCommand::DeleteSelection,
+            _ => return Err(ValueError::invariant("Jack mutation source received a different original command").into()),
         };
         let demand = RetirementDemand { copy_bytes: size_of::<TrinityJackCommand>() + size_of::<Option<CommandAdmission>>(), depth: 1, ..Default::default() };
         source_turn(cx, demand, 1, |effect| {
@@ -66,7 +68,7 @@ impl<C: JackComposition> QueryMutationSource<C> {
         self.sources.original().is_some_and(|sources| sources.pending.is_some())
     }
 
-    pub(super) fn stage(&mut self, result: QueryResult, effects: Vec<GraphEffect>, root: Option<TrinityGraphMutation>) {
+    pub(super) fn stage(&mut self, result: Option<QueryResult>, effects: Vec<GraphEffect>, root: Option<TrinityGraphMutation>) {
         let sources = self.sources.original_mut().expect("Jack query mutation source remains active");
         assert!(sources.pending.is_none());
         sources.pending = Some((result, root));

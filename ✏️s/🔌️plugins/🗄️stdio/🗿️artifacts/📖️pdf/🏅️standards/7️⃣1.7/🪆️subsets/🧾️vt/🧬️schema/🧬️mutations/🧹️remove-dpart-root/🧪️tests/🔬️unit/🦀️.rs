@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::vt::schema::mutations::set_dpart_root::SetDpartRoot;
 use crate::standards::v1_7::subsets::vt::schema::mutations::PdfVtMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ fn changes_the_owned_conformance_axis_and_plans_its_inverse() {
     let next = applied(&base, &PdfVtMutation::RemoveDpartRoot(mutation.clone()));
     assert!(support::catalog_entry(&next, "DPartRoot").is_none());
     assert_eq!(next, catalog, "the partition objects leave with the root entry");
-    assert_eq!(<RemoveDpartRoot as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfVtMutation::SetDpartRoot(SetDpartRoot { job: "run 4711".to_string(), placements: Vec::new(), entry_index: None })]);
+    assert_eq!(<RemoveDpartRoot as ColdMutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfVtMutation::SetDpartRoot(SetDpartRoot { job: "run 4711".to_string(), placements: vec![testkit::placed(2, 1), testkit::placed(3, 2)], entry_index: Some(1) })]);
 }
 
 #[semio_framework_async_macros::async_test]

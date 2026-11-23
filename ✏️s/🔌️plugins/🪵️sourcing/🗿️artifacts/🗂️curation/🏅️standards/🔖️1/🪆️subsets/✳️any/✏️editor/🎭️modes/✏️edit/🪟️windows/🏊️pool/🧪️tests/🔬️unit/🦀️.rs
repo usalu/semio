@@ -8,7 +8,7 @@ use crate::editor::sourcing::SourcingCurationCommand;
 use crate::editor::sourcing::config::SetContributionsEdit;
 use crate::editor::sourcing::commands::{curation_add, set_contributions, set_filter_query, sort_table, stock_from_catalogue};
 use crate::editor::sourcing::modes::edit::windows::curated::SOURCING_CURATION_BODY_CURATED;
-use crate::editor_unit_tests::context::{dispatch, new_app, row_ids, settle, table_of};
+use crate::editor_unit_tests::context::{arena, dispatch, new_app, row_ids, settle, table_of};
 use crate::{Filters, SortDirection, TableSort};
 
 /// 🧩️ One fake host `sourcing.module` contribution carrying a single salvaged-oak kind under a
@@ -61,6 +61,7 @@ fn demonstrator_contributions() -> String {
 
 #[test]
 fn pool_filter_controls_have_localized_names() {
+    let _arena = arena();
     use semio_ui_locale::{Locale, Terminology};
     for locale in [Locale::En, Locale::De] {
         let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(locale, Terminology::Native));
@@ -130,8 +131,9 @@ async fn pool_sort_applies_only_to_its_own_columns() {
 
 #[semio_framework_async_macros::async_test]
 async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
+    let _arena = arena();
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    let node = render(&document, &SourcingCurationConfig::default(), crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))).expect("bounded pool");
+    let node = render(&document, &SourcingCurationConfig::default(), crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)),semio_ui_locale::Locale::En).expect("bounded pool");
     assert_eq!(node.children.len(), 2, "filter row above the table");
     let semio_plugin::Component::Surface(props) = &node.children.get(1).expect("table surface").component else { panic!("expected a table surface") };
     let scene = crate::editor_unit_tests::context::table_scene_of(node.children.get(1).expect("table surface")).expect("complete retained table scene");
@@ -148,6 +150,7 @@ async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
 /// 🔍️ LAW: every filter control in the bar names a real command with the args the production bridge reads.
 #[semio_framework_async_macros::async_test]
 async fn the_filter_bar_binds_each_control_to_its_own_command() {
+    let _arena = arena();
     let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let bar = filter_bar(&SourcingCurationConfig::default(), labels).expect("bounded filter bar");
     let ids: Vec<String> = bar.children.iter().map(|child| child.key.as_str().to_string()).collect();
@@ -220,6 +223,7 @@ async fn curation_add_updates_the_pool_stepper_and_curated_table() {
 /// already carries the contribution, which is what the host hands it.
 #[semio_framework_async_macros::async_test]
 async fn a_contributed_module_reaches_the_filter_bar_and_then_the_pool_rows() {
+    let _arena = arena();
     let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let cfg = SourcingCurationConfig { contributions_json: fake_contribution(), ..Default::default() };
     let toggles: Vec<String> = filter_bar(&cfg, labels).expect("bounded filter bar").children.iter().map(|child| child.key.as_str().to_string()).collect();

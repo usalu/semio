@@ -21,6 +21,8 @@ test("the unfinished status is the one the compiler stand-in reports",async()=>{
 
 test("settled work ends the process with its own status",()=>{
  for(const status of[0,1,7])expect(run(`exitWithStatusOfV1(async()=>${status});`).status).toBe(status);
+ const lingering=run("setInterval(()=>{},60000);exitWithStatusOfV1(async()=>0);");
+ expect(lingering.status).toBe(0);
 });
 
 test("work that rejects ends the process with status 1 and says why",()=>{

@@ -99,7 +99,7 @@ fn main() {
             let mut most_items = 0;
             let smallest = usize::from(!expected.is_empty());
             loop {
-                let (node, actual, count) = window::render_viewport_page("norm.fixture.viewport", &authored, "norm.fixture", false, page, chrome).expect("bounded scene");
+                let (node, actual, count) = window::render_viewport_page("norm.fixture.viewport", &authored, "norm.fixture", false, page, chrome, "Viewport").expect("bounded scene");
                 assert_eq!(actual, page);
                 let nodes = census(&node) + chrome;
                 largest = largest.max(nodes);
@@ -142,7 +142,7 @@ fn main() {
                 let original = expected.iter().find(|item| id(item) == instance).unwrap();
                 assert_eq!(*triangles, mesh_triangles(expected_meshes[original["meshId"].as_str().unwrap()]));
             }
-            let (last, actual, count) = window::render_viewport_page("norm.fixture.viewport", &authored, "norm.fixture", false, usize::MAX, chrome).expect("clamped page");
+            let (last, actual, count) = window::render_viewport_page("norm.fixture.viewport", &authored, "norm.fixture", false, usize::MAX, chrome, "Viewport").expect("clamped page");
             assert_eq!((actual, count), (page - 1, page));
             drop(last);
             arena::drain();

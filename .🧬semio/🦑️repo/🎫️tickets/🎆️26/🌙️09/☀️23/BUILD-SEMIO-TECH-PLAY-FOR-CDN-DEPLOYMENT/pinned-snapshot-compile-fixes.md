@@ -1,0 +1,9 @@
+# Pinned Snapshot Compile Fixes
+
+- Command (cwd `/Users/ueli/.sinc/play/🌎️hub/🧩️compositions/🧩️puzzle/🧩️component/📦️packages/🦀️rust`): `cargo check --target wasm32-unknown-unknown --keep-going --offline --config 'build.rustc-wrapper=""' --message-format short` with `RUSTC=<nightly-2026-07-20 toolchain>/rustc RUSTC_WRAPPER= CARGO_TARGET_DIR=/Users/ueli/.sinc/check-target CARGO_BUILD_BUILD_DIR=/Users/ueli/.sinc/check-build CARGO_HOME=<snapshot cargo home> CARGO_BUILD_JOBS=4`. Overriding `RUSTC` and the wrapper bypasses the compiler ingress gate. `CARGO_BUILD_BUILD_DIR` is needed because `.cargo/config.toml` otherwise puts build-dir inside the snapshot's `.cache`.
+- Error found: `semio-s-artifact-stdio-pdf-pdf-snapshot-value-tests` (lib) had 10 errors, 5 E0425 `main::pdf_viewer_labels` not found and 5 E0061 `main::render` taking 1 argument but 2 supplied. They came from the stale `viewer/.../windows/main/🦀️.rs` in the 7.1.7 subsets `🗄️a`, `📐️e`, `⚕️h`, `♿️ua` and `🖨️x`. Their `viewer/🦀️.rs` was already new.
+- Fix (snapshot only): copied the live `main/🦀️.rs` into the six 7.1.7 subsets `🗄️a`, `📐️e`, `⚕️h`, `♿️ua`, `🖨️x` and `🧾️vt`. Then changed the final call to `DocumentWindowKit::render(&DocumentView { pages })`, with no `locale` argument. The snapshot's framework `window-kits/📃️document` kit is older than live and takes one argument. This matches the snapshot's own 7.1.7 `🧱️base`.
+- Path: `/Users/ueli/.sinc/play/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/<subset>/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs`.
+- Final result: `Finished dev profile in 15m47s`, 0 errors. Warnings only.
+- Caveat: dev-profile `cargo check`, default features. The real job builds release via wasm-pack.
+- Cleanup: removed the check target and build dirs, and the first run's 12 GB `.cache/b/r/m/u/l/d` that landed in the snapshot. Disk free is about 47 GiB.

@@ -32,19 +32,19 @@ pub fn model_scene(doc: &Fem3dSnapshot, window: &Fem3dModelWindowConfig, interac
 
 /// 🧱️ Renders the undeformed structure with no interaction — the fixture render.
 #[cfg(any(test, feature = "testkit"))]
-pub fn render(doc: &Fem3dSnapshot, camera: &semio_os_kernel::Viewport3dOrbit) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render(doc: &Fem3dSnapshot, camera: &semio_os_kernel::Viewport3dOrbit, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let window = Fem3dModelWindowConfig { camera: *camera, ..Fem3dModelWindowConfig::default() };
-    semio_s_fem_app_surface::world_3d_surface(FEM3D_BODY_MODEL, &model_scene(doc, &window, &Fem3dInteractionSnapshot::default(), false)?)
+    semio_s_fem_app_surface::world_3d_surface(FEM3D_BODY_MODEL, &model_scene(doc, &window, &Fem3dInteractionSnapshot::default(), false)?, semio_plugin::surface_name(locale, "Model view", "Modellansicht"))
 }
 
 /// 👁️ Renders the undeformed structure (the same node/member/solid instances `render` draws, no
 /// displacement, no stress) and carries the generation-qualified `live_visual` page lease on
 /// `scene.snapshot` for a host that pages it — a host that only draws `meshes_json`/`instances_json`
 /// (the React world today) still shows the model as it is edited.
-pub fn render_with_progress(doc: &Fem3dSnapshot, window: &Fem3dModelWindowConfig, interaction: &Fem3dInteractionSnapshot, transform_armed: bool, visual: Option<&semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render_with_progress(doc: &Fem3dSnapshot, window: &Fem3dModelWindowConfig, interaction: &Fem3dInteractionSnapshot, transform_armed: bool, visual: Option<&semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease>, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut scene = model_scene(doc, window, interaction, transform_armed)?;
     scene.snapshot = visual.map(semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease::snapshot);
-    semio_s_fem_app_surface::world_3d_surface(FEM3D_BODY_MODEL, &scene)
+    semio_s_fem_app_surface::world_3d_surface(FEM3D_BODY_MODEL, &scene, semio_plugin::surface_name(locale, "Model view", "Modellansicht"))
 }
 
 // #region 🧪️Tests

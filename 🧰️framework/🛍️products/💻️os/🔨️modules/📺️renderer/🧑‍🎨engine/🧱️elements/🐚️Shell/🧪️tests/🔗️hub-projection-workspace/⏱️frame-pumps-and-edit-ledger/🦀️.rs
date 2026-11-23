@@ -22,13 +22,13 @@ fn is_live(shell: &ShellState) -> bool {
 fn frame_pump(shell: &mut ShellState) -> usize {
     let advanced = semio_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
     let _ = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY).turn(|cx| semio_framework_job_worker::pump_worker_job_retirements(1, cx));
-    drive(PointerCtx::of(&mut shell).pump_sync_events());
+    drive(PointerCtx::of(shell).pump_sync_events());
     shell.sync.request_presence_preview(&mut shell.chrome);
     if shell.chrome.chrome_present.maintenance.presence_requested {
-        ChromeViewCtx::of(&mut shell).advance_presence_preview_step();
+        ChromeViewCtx::of(shell).advance_presence_preview_step();
     }
-    if PointerCtx::of(&mut shell).settle_pump_pending() {
-        drive(PointerCtx::of(&mut shell).settle_pump_step());
+    if PointerCtx::of(shell).settle_pump_pending() {
+        drive(PointerCtx::of(shell).settle_pump_step());
     }
     advanced
 }

@@ -1,7 +1,37 @@
 [
-  {"id":"whole","paths":["M0 0 H100 V100 Z"],"pending":false,"clip":"polygon(0px 0px, 100px 0px, 100px 100px)","ready":true},
-  {"id":"split","paths":["M0 0 L100 0","M100 0 L100 100"],"pending":false,"clip":"polygon(0px 0px, 100px 0px, 100px 100px)","ready":true},
-  {"id":"empty","paths":[],"pending":false,"clip":"polygon(0px 0px, 100px 0px, 100px 100px)","ready":true},
-  {"id":"pending","paths":["M0 0 L100 0"],"pending":true,"clip":"polygon(0px 0px, 100px 0px, 100px 100px)","ready":false},
-  {"id":"stale-clip","paths":["M0 0 L100 0"],"pending":false,"clip":"polygon(0px 0px, 90px 0px, 100px 100px)","ready":false}
+  {
+    "id": "ready",
+    "border": true,
+    "pending": false,
+    "state": "ready",
+    "ready": true
+  },
+  {
+    "id": "pending-border",
+    "border": true,
+    "pending": true,
+    "state": "ready",
+    "ready": false
+  },
+  {
+    "id": "pending-content",
+    "border": true,
+    "pending": false,
+    "state": "pending",
+    "ready": false
+  },
+  {
+    "id": "no-content",
+    "border": true,
+    "pending": false,
+    "state": null,
+    "ready": false
+  },
+  {
+    "id": "no-border",
+    "border": false,
+    "pending": false,
+    "state": "ready",
+    "ready": false
+  }
 ]

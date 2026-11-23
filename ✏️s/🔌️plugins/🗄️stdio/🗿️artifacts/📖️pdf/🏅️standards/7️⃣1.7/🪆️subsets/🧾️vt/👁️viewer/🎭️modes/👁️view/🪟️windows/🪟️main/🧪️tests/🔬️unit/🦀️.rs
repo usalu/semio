@@ -25,7 +25,7 @@ fn render_lists_one_line_per_page_with_media_box_and_text() {
     let document = demo_pdf17_snapshot();
     assert_eq!(document.pages.len(), 1);
     let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
-    let node = render(&document).expect("bounded PDF document fixture must render");
+    let node = render(&document, semio_ui_locale::Locale::En).expect("bounded PDF document fixture must render");
     let observed_children = node.children.len();
     let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project the rendered page window");
     assert_eq!(observed_children, 1);

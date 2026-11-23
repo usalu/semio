@@ -1,4 +1,5 @@
 use semio_s_artifact_procedural_3d_editor::*;
+use semio_plugin::retained_command::ArtifactCommandWork;
 #[cfg(test)] use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 #[cfg(test)] use semio_plugin::component::ArtifactEditor;
 
@@ -35,7 +36,7 @@ async fn every_bounded_retained_route_answers_an_admissible_extent() {
             ("channel".into(), semio_framework_value::DslValue::String("width".into())),
             ("value".into(), semio_framework_value::DslValue::String("2".into())),
         ]));
-        let command = <Generation3dPlayApp as ArtifactEditor>::command_from_action(tool_id, args.clone(), None).unwrap_or_else(|_| panic!("{tool_id} decodes from its own action id"));
+        let command = <Generation3dPlayApp as ArtifactEditor>::command_from_action(tool_id, &mut args.clone(), &mut None).unwrap_or_else(|_| panic!("{tool_id} decodes from its own action id"));
         let extent = if GENERATION3D_PREVIEW_TOOL_IDS.contains(&tool_id) {
             Generation3dPreviewCommandWork::new(tool_id, instance_owner.clone()).extent(&command, &read, &interaction, None)
         } else {

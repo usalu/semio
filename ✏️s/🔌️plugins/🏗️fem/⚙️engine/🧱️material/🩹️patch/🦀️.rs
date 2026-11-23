@@ -31,7 +31,7 @@ impl<P:NativeMaterialPatch<N>,R:NativeMaterialRow<N>,const N:usize> NativeMateri
  fn original_name<'a>(patch:RetainedCloneRef<'a,P>)->RetainedCloneRef<'a,String>{patch.project(1,|p|p.name().expect("genuine authored sparse material name"))}
  pub fn demand(&self,row:RetainedCloneRef<'_,R>,patch:RetainedCloneRef<'_,P>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
   if self.closing||self.phase>=7{return Err(invalid());}row.check_binding(&self.row)?;patch.check_binding(&self.patch)?;let m=Self::metadata();
-  match self.phase{0=>Ok(fixed(row.binding_copy_bytes()+m)),1=>Ok(fixed(patch.binding_copy_bytes()+m)),2=>Ok(fixed(size_of::<SealedShared<String>>()*2+m)),3=>if patch.get().name().is_some(){nested(if self.name.ready(){self.name.take_demand()?}else{self.name.demands(Self::original_name(patch),body,maximum_work_units)?},m)}else{Ok(fixed(size_of::<SealedShared<String>>()*2+m))},4=>{let texts=row.get().texts();let numbers=Self::values(row.get(),patch.get());nested(R::validation_demand([texts[0].as_str(),texts[1].as_str()],numbers),size_of::<[Number;N]>()*2+size_of::<[Option<f64>;N]>()+m)},5=>Ok(fixed(size_of::<R>()*2+size_of::<[Number;N]>()*2+size_of::<[Option<f64>;N]>()+m)),6=>nested(semio_framework_value_native_owned::native_decoding::NativeOwnedDecodeControl::shared_birth_demand::<R>(),m),_=>Err(invalid())}
+  match self.phase{0=>Ok(fixed(row.binding_copy_bytes()+m)),1=>Ok(fixed(patch.binding_copy_bytes()+m)),2=>Ok(fixed(size_of::<SealedShared<String>>()*2+m)),3=>if patch.get().name().is_some(){nested(if self.name.ready(){self.name.take_demand()?}else{self.name.demands(Self::original_name(patch),body,maximum_work_units)?},m)}else{Ok(fixed(size_of::<SealedShared<String>>()*2+m))},4=>{let texts=row.get().texts();let numbers=Self::values(row.get(),patch.get());nested(R::validation_demand([texts[0].as_str(),texts[1].as_str()],numbers),size_of::<[Number;N]>()*2+size_of::<[Option<f64>;N]>()+m)},5=>Ok(fixed(size_of::<R>()*2+size_of::<[Number;N]>()*2+size_of::<[Option<f64>;N]>()+m)),6=>nested(self.admission.shared_demand(),m),_=>Err(invalid())}
  }
  pub fn nested(&self,patch:RetainedCloneRef<'_,P>)->bool{self.phase==6||self.phase==3&&patch.get().name().is_some()&&!self.name.ready()}
  /// 🏃️ Runs one local funded phase; nested phases run through [`Self::advance_nested`].
@@ -63,6 +63,8 @@ impl<P:NativeMaterialPatch<N>,R:NativeMaterialRow<N>,const N:usize> NativeMateri
   let result=turn.result.map_err(primary).and_then(|p|{if self.output.is_some(){self.phase=7;}self.settle(g,p)});
   Complete(RetainedWorkOutcome{result,work:turn.work})
  }
+ /// ⏳️ Observes only an actual live nested name or sealed admission action that must settle before closure.
+ pub fn advance_pending(&self)->bool{self.name.advance_pending()||!self.admission.can_advance()}
  pub fn ready(&self)->bool{!self.closing&&self.phase==7&&self.output.is_some()}
  pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid());}Ok(fixed(size_of::<Option<SealedShared<R>>>()*2+size_of::<u8>()))}
  pub fn take(&mut self,g:RetainedCloneGrant)->Result<Option<(SealedShared<R>,RetainedCloneProgress)>,ValueError>{let d=self.take_demand()?;if !retained_clone_grant_admits(g,d){return Ok(None);}self.phase=8;Ok(Some((self.output.take().ok_or_else(invalid)?,receipt(d))))}

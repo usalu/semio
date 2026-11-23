@@ -1,5 +1,10 @@
 {
-  "roots": ["🧰️framework", "✏️s", "🌎️hub", "🎓️teaching"],
+  "roots": [
+    "🧰️framework",
+    "✏️s",
+    "🌎️hub",
+    "🎓️teaching"
+  ],
   "allowed": [
     {
       "file": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs",
@@ -17,9 +22,29 @@
       "reason": "Test fixture that must be returned by the retirement queue admission."
     },
     {
-      "file": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🦀️.rs",
+      "file": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🦀️.rs",
+      "owner": "Unsupported",
+      "reason": "Test fixture that must be refused by the controlled retirement admission."
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧭️support/🧪️tests/🦀️.rs",
+      "owner": "Unsupported",
+      "reason": "Test fixture that must remain owned when a denied right sibling is reached."
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧾️outcome/🧪️tests/owning.rs",
+      "owner": "Unsupported",
+      "reason": "Test fixture that must be returned by the owning outcome admission."
+    },
+    {
+      "file": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🧪️tests/🥣️companion/📏️retirement/🦀️.rs",
       "owner": "Unsupported",
       "reason": "Test fixture that must be returned by the history fold control before registration."
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🦀️.rs",
+      "owner": "SourceRoots",
+      "reason": "Job source roots hold a lock-guarded clock whose retirement demand is only known when the source itself closes; they are closed by the job's own source close step and never admitted as payload, snapshot or factory input."
     }
   ]
 }

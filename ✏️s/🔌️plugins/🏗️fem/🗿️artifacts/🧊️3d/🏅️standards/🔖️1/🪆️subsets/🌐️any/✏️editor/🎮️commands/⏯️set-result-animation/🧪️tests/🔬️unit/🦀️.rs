@@ -83,11 +83,12 @@ async fn set_result_animation_arms_one_clock_when_playback_starts() {
 #[semio_framework_async_macros::async_test]
 async fn set_result_animation_never_touches_the_document() {
     let mut app = fem3d_app();
-    let before = app.snapshot().expect("snapshot");
+    let before = crate::context::Retiring::new(app.snapshot().expect("snapshot"));
     let result = dispatch(&mut app, animation(SetResultAnimation { playing: Some(true), ..blank() })).await;
     settle(&mut app).await;
     assert!(result.mutations.is_empty(), "setResultAnimation must not emit a document VCS operation");
-    assert_eq!(app.snapshot().expect("snapshot"), before);
+    let after = crate::context::Retiring::new(app.snapshot().expect("snapshot"));
+    assert_eq!(*after, *before);
     close(&mut app);
 }
 
@@ -131,9 +132,9 @@ async fn set_result_animation_applies_one_named_field() {
 /// disagrees with the configuration actually captured, is refused by name.
 #[semio_framework_async_macros::async_test]
 async fn set_result_animation_honours_the_window_a_control_tagged() {
-    let snapshot = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot");
+    let snapshot = crate::context::Retiring::new(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot"));
     let history = semio_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let doc = ArtifactView::new(&*snapshot, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     let split = ViewModel {

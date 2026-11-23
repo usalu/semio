@@ -210,10 +210,10 @@ fn architect_semantic_panels_match_the_json_oracle() {
     let register_cfg = crate::editor::architect::modes::edit::windows::register::config::ArchitectRegisterWindowConfig::default();
     let report_cfg = crate::editor::architect::modes::edit::windows::report::config::ArchitectReportWindowConfig::default();
     for node in [
-        crate::editor::architect::modes::edit::windows::graph::render(&program, &graph_cfg).expect("graph"),
-        crate::editor::architect::modes::edit::windows::register::render(&program, &register_cfg).expect("register"),
+        crate::editor::architect::modes::edit::windows::graph::render(&program, &graph_cfg, semio_plugin::Locale::En).expect("graph"),
+        crate::editor::architect::modes::edit::windows::register::render(&program, &register_cfg, semio_plugin::Locale::En).expect("register"),
         crate::editor::architect::modes::edit::windows::report::render(&program, &report_cfg, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), &semio_plugin::TreeWindows::unhosted()).expect("report placeholder"),
-        crate::editor::architect::modes::edit::windows::trace::render(&program, &semio_plugin::TreeWindows::unhosted()).expect("trace"),
+        crate::editor::architect::modes::edit::windows::trace::render(&program, &semio_plugin::TreeWindows::unhosted(), semio_plugin::Locale::En).expect("trace"),
         crate::editor::architect::panels::document::render(&program, &semio_plugin::TreeWindows::unhosted()).expect("document"),
     ] {
         project(node);

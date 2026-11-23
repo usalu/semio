@@ -1,0 +1,17 @@
+- `✅️asset-validation`: exit 0  Test Files 1 skipped (1); Tests 83 skipped (83);
+- `⚡️asset-power`: exit 0  Test Files 1 skipped (1); Tests 24 skipped (24);
+- `🔭️multiview-coverage`: exit 0  Test Files 1 skipped (1); Tests 23 skipped (23);
+- `🫁️breathing-catalog`: first run 2 failed (`person-checking-watch`: pose `hand-on-hip` at 1.2 met used the pattern `sighing`, 9 breaths a minute; `sunbather-on-towel`: `lying-rest` 11 a minute); repaired (the pose uses `quiet-standing`; `lying-rest` 12 a minute); second run: exit 0, 72 passed, 218 skipped.
+- `🌡️catalog-physics`: first run 1 failed (`sunbather-on-towel`: swimsuit skin 37.40 °C above the core 37.02 °C, caused by the corrected thermal areas of this repair); repaired (see the defects section); second run: exit 0, 72 passed, 768 skipped.
+- `🧊️volumes-rules`: exit 0  Test Files 1 skipped (1); Tests 128 skipped (128);
+- `🧊️volumes-connected`: exit 0  Test Files 1 skipped (1); Tests 101 skipped (101);
+- `🧊️model-silhouette`: exit 0  Test Files 1 skipped (1); Tests 24 skipped (24);
+- `🧊️three-views`: exit 1, 6 failed, 42 passed, 727 skipped; 163 findings in 6 people, 158 of them in the files before this repair (see "What stays red").
+- `📏️print-suitability`: exit 0  Test Files 1 skipped (1); Tests 7 skipped (7);
+- `🧬️schema-conformance`: exit 0  Test Files 1 skipped (1); Tests 43 skipped (43);
+- `🦴️lateral-rest`: exit 0  Test Files 1 skipped (1); Tests 29 skipped (29);
+- `🧍️front-projection`: exit 0  Test Files 1 skipped (1); Tests 9 skipped (9);
+- `🧍️plan-projection`: exit 0  Test Files 1 skipped (1); Tests 13 skipped (13);
+- `✂️section-views`: exit 0  Test Files 1 skipped (1); Tests 26 skipped (26);
+- `🧊️model-catalog`: stopped after several minutes; its module builds and reloads models of the catalog (FBX loader output) before the name filter applies. `🧊️model-roundness` was not started for the same reason. Not measured.
+- A suite line with only skipped tests has no test that names one of the 24 people: its catalog cases are a fixed list of the fixture or one loop over the whole catalog inside a single test. For those the same checks were run on the 24 directly: `validateAsset` (0 issues each), the check CLI (`✓` each, it includes the print suitability of every scale), `REP-B/power.ts` and `REP-B/rows.ts` (see the rows section).

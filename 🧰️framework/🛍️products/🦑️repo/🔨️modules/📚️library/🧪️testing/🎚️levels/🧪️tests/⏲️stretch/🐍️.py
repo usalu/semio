@@ -1,8 +1,8 @@
 """Independent model of the stretched inner tool timeouts.
 
-argv: <levels corpus JSON> <contention policy JSON>; stdin: a JSON list of {"level", "ratio"}.
+argv: <levels corpus JSON> <contention policy JSON> <suite schema JSON> <Bun selection schema JSON>; stdin: a JSON list of {"level", "ratio"}.
 For each case it takes the stretch-1 argument vectors of that level from the corpus, clamps the ratio to the
-policy's stretch bounds and multiplies every timeout (milliseconds rounded up, seconds rounded up from them).
+policy's stretch bounds and multiplies every timeout (milliseconds rounded up, clamped to the lower of the two schema maxima, seconds rounded up from them).
 It shares no code with the TypeScript implementation.
 """
 import json
@@ -15,12 +15,15 @@ def main():
     policy = json.load(open(sys.argv[2], encoding="utf8"))
     low = policy["stretch"]["minimumBasisPoints"] / 10000
     high = policy["stretch"]["maximumBasisPoints"] / 10000
+    suite = json.load(open(sys.argv[3], encoding="utf8"))
+    selection = json.load(open(sys.argv[4], encoding="utf8"))
+    ceiling = min(suite["definitions"]["Suite"]["properties"]["budgetMs"]["maximum"], selection["definitions"]["Selection"]["properties"]["timeoutMilliseconds"]["maximum"])
     rows = {row["level"]: row for row in corpus["levels"]}
     out = []
     for case in json.load(sys.stdin):
         row = rows[case["level"]]
         stretch = min(high, max(low, case["ratio"]))
-        ms = math.ceil(row["playwright"] * stretch)
+        ms = min(ceiling, math.ceil(row["playwright"] * stretch))
         seconds = math.ceil(ms / 1000)
         go = list(row["go"]); go[go.index("-timeout") + 1] = "%ds" % seconds
         vitest = [str(ms) if index % 2 else value for index, value in enumerate(row["vitest"])]

@@ -34,20 +34,10 @@ async fn neutral_activation_failures_retire_the_exact_kernel_and_guest_owners() 
         }
         if stage == "quarantine" {
             let peer = kernel.activate(package.clone(), 0, ActorKind::PluginApp { plugin: package.clone(), app_id: "peer".into(), instance_id: 2 }, Lane::Interactive, None, ActivationEvent::Manual, semio_plugin_host_operation::test_native_authority::original_retained_turn(), semio_plugin_host_operation::test_native_authority::original_retained_loan()).await;
-            let fault = semio_framework_actor::TurnResult {
-                retained_receipt: semio_plugin_host_operation::test_native_authority::idle_receipt(),
-                ui_patches: vec![],
-                effects: vec![],
-                command_ingress: vec![],
-                cold_pair_ingress: Default::default(),
-                lifecycle_receipt: None,
-                ui_patch_receipt: None,
-                next_wake: None,
-                status: semio_framework_actor::TurnStatus::Faulted { detail: b"trap".to_vec() },
-                usage: Default::default(),
-            };
-            for _ in 0..semio_framework_actor::FAILURE_QUARANTINE_RESTART_THRESHOLD {
-                kernel.complete(peer, &fault, 0).await.unwrap();
+            for seq in 1..=u64::from(semio_framework_actor::FAILURE_QUARANTINE_RESTART_THRESHOLD) {
+                kernel.submit(&semio_framework_actor::Envelope { to: peer, from: semio_framework_actor::Origin::Kernel, lane: Lane::Interactive, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: semio_framework_actor::Payload::Event { bytes: vec![1] } }).await;
+                kernel.tick(0).await;
+                kernel.record_transport_fault(peer, "trap".into(), 0).await.unwrap();
             }
             assert_eq!(kernel.actor_status(actor).await, Some(&semio_framework_actor::ActorStatus::Quarantined));
             kernel.deactivate(peer).await.unwrap();
@@ -60,7 +50,7 @@ async fn neutral_activation_failures_retire_the_exact_kernel_and_guest_owners() 
         }
         let budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
         let result = install_actor(&mut kernel, &runtime, &shards, reservation, &compiled, &[], &budget).await;
-        assert_eq!(result.is_ok(), row["admitted"].as_bool().unwrap(), "{}", row["id"]);
+        assert_eq!(result.is_ok(), row["admitted"].as_bool().unwrap(), "{} {:?}", row["id"], result.as_ref().err().map(|refusal| refusal.reason.clone()));
         assert_eq!(kernel.transport_key(actor).is_some(), result.is_ok());
         assert_eq!(kernel.actor_record(actor).await.is_some(), row["actorRetained"].as_bool().unwrap(), "{}", row["id"]);
         assert_eq!(mock.instantiate_admissions.load(std::sync::atomic::Ordering::Acquire) as u64, row["instantiations"].as_u64().unwrap(), "{}", row["id"]);

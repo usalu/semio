@@ -81,6 +81,13 @@ describe("Specific original catalog completion", () => {
     expect(payload, payload.join("\n")).toEqual([]);
   });
 
+  it("every generated playground example id is a plain example id, never an emoji path slug", () => {
+    const rows = readGeneratedCatalogProjection(join(findWorkspaceRoot(), "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated")).playgrounds;
+    const malformed = rows.flatMap((row) => row.examples.filter((id) => !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)).map((id) => `${row.variant}: ${id}`));
+    expect(rows.some((row) => row.examples.length > 0)).toBe(true);
+    expect(malformed, malformed.join("\n")).toEqual([]);
+  });
+
   it("sourcing editor surface resolves the demo row the ShellHost navbar picker reads", () => {
     const descriptorPath = join(findWorkspaceRoot(), "🌎️hub/🧩️compositions/🪵️sourcing/🧩️component/🔣️.json");
     const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8")) as { manifest?: PluginManifest };

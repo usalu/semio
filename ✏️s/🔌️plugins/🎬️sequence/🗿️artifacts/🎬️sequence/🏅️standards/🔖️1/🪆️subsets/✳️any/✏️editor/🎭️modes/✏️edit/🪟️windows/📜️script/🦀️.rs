@@ -40,14 +40,14 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host_snapshot: &SequenceHostSnapshot, transient: &SequenceScriptWindowTransient) -> UiAssemblyResult<BuiltNode> {
+pub fn render(host_snapshot: &SequenceHostSnapshot, transient: &SequenceScriptWindowTransient, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let host = neural_engine::ColdOwner::new(host_from_host_snapshot(host_snapshot));
     let mut text = host.compile_text();
     if !transient.last_run_json.is_empty() {
         text.push_str("\n\n# run result\n");
         text.push_str(&transient.last_run_json);
     }
-    semio_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_SCRIPT, semio_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(text, Some("imperative".into()), None))
+    semio_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_SCRIPT, semio_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(text, Some("imperative".into()), None), semio_plugin::surface_name(locale, "Script", "Skript"), None)
 }
 //#endregion 🔖️Render
 

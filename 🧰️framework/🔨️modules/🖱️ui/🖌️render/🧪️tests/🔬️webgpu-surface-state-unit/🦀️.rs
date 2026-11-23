@@ -48,7 +48,7 @@ fn only_lost_reports_is_lost() {
 }
 
 fn layer_state(foreground_of: Option<usize>, overlay: bool) -> LayerState {
-    LayerState { scissor: None, clip: None, foreground_of, overlay }
+    LayerState { scissor: None, foreground_of, overlay }
 }
 
 #[test]

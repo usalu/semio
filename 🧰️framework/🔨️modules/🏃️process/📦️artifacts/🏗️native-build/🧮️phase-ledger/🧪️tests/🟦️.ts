@@ -4,7 +4,7 @@ import{join}from"node:path";
 import{tmpdir}from"node:os";
 import{spawnSync}from"node:child_process";
 import Ajv from"ajv";
-import{createPhaseLedgerV1,phaseLedgerV1,withPhaseLedgerV1,phaseTableLinesV1,phaseTableBalancedV1,phaseTableCoveredV1,cargoTimingsSummaryV1,cargoTimingsLinesV1,readCargoTimingsV1,unitEventRowsV1,readUnitEventsV1,phaseLedgerFileSinkV1,readPhaseLedgersV1,phaseLedgerRunLinesV1,phaseLedgerTaskV1,PHASE_LEDGER_POLICY_V1}from"../🟦️.ts";
+import{createPhaseLedgerV1,phaseLedgerV1,withPhaseLedgerV1,phaseTableLinesV1,phaseTableBalancedV1,phaseTableCoveredV1,cargoTimingsSummaryV1,cargoTimingsLinesV1,readCargoTimingsV1,unitEventRowsV1,createUnitReuseTallyV1,readUnitEventsV1,phaseLedgerFileSinkV1,readPhaseLedgersV1,phaseLedgerRunLinesV1,phaseLedgerTaskV1,PHASE_LEDGER_POLICY_V1}from"../🟦️.ts";
 import{emitUnitEventV1}from"../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/💾️store/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json";
 
@@ -193,4 +193,26 @@ test("phase ledger: the cargo path and the front of the run are wired",()=>{
  for(const phase of["plan:graph","plan:envelope","plan:sources","plan:recipe","plan:facts","recheck:graph","recheck:envelope","recheck:sources","recheck:recipe","recheck:facts","lease:target","wait:capacity","lock-current","cargo","stage","provenance","custody","consume","consume:source-digests","setup","ledger"])expect(native).toContain('"'+phase+'"');
  expect(native).toContain('"--timings"');expect(native).toContain("phaseTableLinesV1(ledger.finish())");expect(native).toContain("endSetup()");
  expect(front).toContain("phaseLedgerRunLinesV1(this.root,runStartedMs");
+});
+
+/** 🧪️ The reuse tally counts only this lane's cache restores written after its creation (local and fleet apart), reads a line in pieces, and restarts when the log shrank. */
+test("unit reuse tally: counts local and fleet restores of one lane after its creation, incrementally",()=>{
+ const root=mkdtempSync(join(tmpdir(),"reuse-tally-"));
+ try{
+  const emit=(lane:string,kind:string)=>emitUnitEventV1(root,{lane,kind:kind as never,crate:"c",key:null,milliseconds:1,waitedMs:0});
+  emit("g","hit");
+  const tally=createUnitReuseTallyV1(root,"g");
+  expect(tally.read()).toEqual({local:0,fleet:0});
+  for(const kind of["hit","script-hit","remote-hit","miss","publish","remote-miss"])emit("g",kind);
+  emit("other","hit");
+  expect(tally.read()).toEqual({local:2,fleet:1});
+  const file=join(root,"x","g.jsonl"),line=JSON.stringify({version:1,atMs:1,lane:"g",kind:"remote-hit",crate:"c",key:null,milliseconds:1,waitedMs:0})+"\n";
+  appendFileSync(file,line.slice(0,20));
+  expect(tally.read()).toEqual({local:2,fleet:1});
+  appendFileSync(file,line.slice(20));
+  expect(tally.read()).toEqual({local:2,fleet:2});
+  writeFileSync(file,line);
+  expect(tally.read()).toEqual({local:2,fleet:3});
+  expect(createUnitReuseTallyV1(join(root,"missing"),"g").read()).toEqual({local:0,fleet:0});
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

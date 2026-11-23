@@ -7,8 +7,13 @@ import {startClusterV1} from "../../../🧪️tests/🧰️cluster/🟦️.ts";
 import {emitOffloadStageV1,offloadRustcUnitV1} from "../../🟦️.ts";
 import {createTestCheckoutV1,testRustEnvironmentV1} from "../🧰️workspace/🟦️.ts";
 import {httpRemoteExecutionContentV1} from "../../../🗄️content/🟦️.ts";
-import {executeOffloadRidingThroughV1,offloadExecuteBudgetMillisecondsV1,runBoundedOffloadPhaseV1} from "../../🔌️client/🟦️.ts";
-import {OFFLOAD_POLICY_V1} from "../../📐️policy/🟦️.ts";
+import {executeOffloadRidingThroughV1,executeOffloadV1,offloadExecuteBudgetMillisecondsV1,runBoundedOffloadPhaseV1} from "../../🔌️client/🟦️.ts";
+import {OFFLOAD_POLICY_V1,offloadDeadlineMillisecondsV1} from "../../📐️policy/🟦️.ts";
+import {GRPC_CODES_V1,GrpcErrorV1,startGrpcServerV1,type GrpcHandlersV1} from "../../../📡️wire/🚪️grpc/🟦️.ts";
+import {remoteExecutionOperationV1} from "../../../🖥️server/🟦️.ts";
+import {spawnSync} from "node:child_process";
+import {encodeProtobufV1,REAPI_V1} from "../../../📡️wire/📦️protobuf/🟦️.ts";
+import {fileURLToPath} from "node:url";
 
 const timeouts=OFFLOAD_POLICY_V1.timeouts;
 const never=():Promise<never>=>new Promise(()=>{});
@@ -84,4 +89,71 @@ test("the stages of an offloaded unit reach the caller and the machine's progres
   const outcome=await offloadRustcUnitV1({args:checkout.arguments("c",["b"]),environment,cwd:checkout.root,root:scratch,crate:"c",key:"b".repeat(64),compiler:["rustc"],onStage:stage=>stages.push(stage)});
   expect(outcome.kind).toBe("local");expect(stages.length,"the caller heard the stages of the request").toBeGreaterThan(0);expect(new Set(stages).size,"each stage once").toBe(stages.length);
  }finally{await cluster.stop();rmSync(scratch,{recursive:true,force:true});}
+});
+
+const vectors=JSON.parse(readFileSync(fileURLToPath(new URL("./🔣️.json",import.meta.url)),"utf8")) as {policy:unknown;cases:{predicted:number|null;linked:boolean;expected:number}[]};
+
+test("the deadline of an offloaded unit is factor times its recorded cost between the floor and the cap, the unknown value without a record, and the same numbers come out of an independent implementation",()=>{
+ expect(vectors.policy).toEqual(OFFLOAD_POLICY_V1.deadline);
+ for(const row of vectors.cases)expect(offloadDeadlineMillisecondsV1(row.predicted??undefined,row.linked),JSON.stringify(row)).toBe(row.expected);
+ const oracle=spawnSync("python3",["-I",fileURLToPath(new URL("./🐍️.py",import.meta.url))],{encoding:"utf8",input:JSON.stringify(vectors)});
+ if(oracle.error===undefined)expect(oracle.stdout.trim(),oracle.stderr).toBe("ok");
+});
+
+const NS="build.bazel.remote.execution.v2",DIGEST={hash:"0".repeat(64),size:1};
+const operation=(stage:"QUEUED"|"EXECUTING"|"COMPLETED",outcome?:object)=>remoteExecutionOperationV1({name:"operations/test",instance:"main",action:DIGEST,stage,...outcome===undefined?{}:{outcome:outcome as never}});
+const served=async(handlers:GrpcHandlersV1)=>{const server=await startGrpcServerV1({host:"127.0.0.1",port:0,handlers});return {server,endpoint:server.url};};
+const hang=():Promise<never>=>new Promise(()=>{});
+const input=(endpoint:string,extra:object={})=>({endpoint,token:undefined,instance:"main",action:{hash:DIGEST.hash,size_bytes:1},...extra});
+
+test("a stream that falls silent is closed and re-attached by name on a new connection, and the answer the re-attach delivers is the answer of the action",async()=>{
+ let attaches=0;
+ const {server,endpoint}=await served({
+  [`${NS}.Execution/Execute`]:async function*(){yield operation("EXECUTING");await hang();},
+  [`${NS}.Execution/WaitExecution`]:async function*(request:{name:string}){attaches++;expect(request.name).toBe("operations/test");yield operation("COMPLETED",{status:{code:0,message:""},actionResult:encodeProtobufV1(REAPI_V1.actionResult,{exit_code:0}),cached:false,worker:"w9"});},
+ });
+ try{
+  const started=Date.now(),outcome=await executeOffloadV1(input(endpoint,{silenceMilliseconds:150,reattachMilliseconds:500,executeMilliseconds:20000}));
+  expect(attaches).toBe(1);expect(Date.now()-started).toBeLessThan(5000);
+  expect(outcome).toMatchObject({kind:"done",origin:"w9"});
+ }finally{await server.stop();}
+});
+
+test("an attach that stays silent ends the wait at once and the unit compiles here",async()=>{
+ let attaches=0;
+ const {server,endpoint}=await served({[`${NS}.Execution/Execute`]:async function*(){yield operation("EXECUTING");await hang();},[`${NS}.Execution/WaitExecution`]:async function*(){attaches++;await hang();}});
+ try{
+  const started=Date.now(),outcome=await executeOffloadV1(input(endpoint,{silenceMilliseconds:150,reattachMilliseconds:200,executeMilliseconds:20000}));
+  expect(outcome).toMatchObject({kind:"declined",reason:"infrastructure",detail:"silent after attach"});expect(attaches).toBe(1);expect(Date.now()-started).toBeLessThan(5000);
+ }finally{await server.stop();}
+});
+
+test("an operation that the server no longer knows is a lost operation: no waiting, the unit compiles here",async()=>{
+ const {server,endpoint}=await served({[`${NS}.Execution/Execute`]:async function*(){yield operation("QUEUED");await hang();},[`${NS}.Execution/WaitExecution`]:async function*(){throw new GrpcErrorV1(GRPC_CODES_V1.NOT_FOUND,"Unknown operation");}});
+ try{
+  const started=Date.now(),outcome=await executeOffloadV1(input(endpoint,{silenceMilliseconds:150,executeMilliseconds:20000}));
+  expect(outcome).toMatchObject({kind:"declined",reason:"infrastructure",detail:"operation lost"});expect(Date.now()-started).toBeLessThan(3000);
+ }finally{await server.stop();}
+});
+
+test("a server that keeps sending its operation but never finishes it is left at the deadline of the unit, not at the action timeout",async()=>{
+ const {server,endpoint}=await served({[`${NS}.Execution/Execute`]:async function*(){for(;;){yield operation("EXECUTING");await Bun.sleep(40);}}});
+ try{
+  const started=Date.now(),outcome=await executeOffloadV1(input(endpoint,{deadlineMilliseconds:400,silenceMilliseconds:5000,executeMilliseconds:600000}));
+  expect(outcome).toMatchObject({kind:"declined",reason:"infrastructure",detail:"deadline 400 ms"});expect(Date.now()-started).toBeLessThan(4000);
+ }finally{await server.stop();}
+});
+
+test("a worker that is lost with the action fails the waiting client back within the deadline: the unit compiles here and nothing hangs",async()=>{
+ const cluster=await startClusterV1({scheduler:{leaseSeconds:2,sweepMilliseconds:100,lingerSeconds:1}});
+ try{
+  const action=await cluster.action({arguments:["/bin/sh","-c","sleep 30"],salt:"lost-worker",platform:[{name:"semio-offload",value:"queue"},{name:"semio-origin",value:"requester"}]});
+  const worker={version:1 as const,name:"silent",host:"h",platform:"darwin-arm64",properties:[{name:"OSFamily",value:"macos"}],concurrency:1,sandbox:"isolated-root" as const,runtime:"test",origin:"silent",capacity:{cores:8,memoryMegabytes:16384},confinement:"none" as const,network:"unenforced" as const};
+  const registered=cluster.server.scheduler.register(worker as never);
+  const started=Date.now(),waiting=executeOffloadV1(input(cluster.server.grpcUrl,{action,deadlineMilliseconds:15000,silenceMilliseconds:5000,executeMilliseconds:60000}));
+  const task=await cluster.server.scheduler.poll(registered.id,5000,new AbortController().signal);
+  expect(task.task,"the action reached the worker that then goes silent").not.toBeNull();
+  const outcome=await waiting;
+  expect(outcome.kind).toBe("declined");expect(Date.now()-started).toBeLessThan(14000);
+ }finally{await cluster.stop();}
 });

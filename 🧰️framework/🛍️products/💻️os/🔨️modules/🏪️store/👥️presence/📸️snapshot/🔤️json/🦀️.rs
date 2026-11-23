@@ -1,8 +1,11 @@
 //! 🔤️ Every value-projectable presence owns one canonical JSON native codec under the original snapshot owners.
 use semio_framework_io_control::{native_snapshot_turn, NativeSnapshotBodyWallet, NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotFailure, NativeSnapshotWork};
 use semio_framework_pack_json::{JsonBorrowedWriteCursor, JsonError, JsonGrammarCursor, JsonMemberPolicy};
-use semio_framework_value::{retirement::RetireOwned, DslValue, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ToValue, ValueError, ValueRefusalKind};
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl, NativeReceivingEffect, NativeReceivingEffectPhase, NativeReceivingEffectPoll, NativeReceivingFailure, OriginalReceivingPrimary};
+use semio_framework_value::retained_clone::{OriginalEffectAuthority, OriginalEffectProducer, OriginalEffectReply, OriginalEffectReplyComplete, OriginalSourceTurnIdentity};
+use semio_framework_value::retirement::{RetirementCursor, RetirementStep};
+use semio_framework_value::{retirement::RetireOwned, OriginalRetirementFailure, DslValue, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ToValue, ValueError, ValueRefusalKind};
+use semio_framework_value_native_receiving_original::{NativeReceivingOriginal, StagedProjection};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl, NativeReceivingEffect, NativeReceivingEffectPhase, NativeReceivingEffectPoll, NativeReceivingFailure, NativeReceive, OriginalReceivingPrimary};
 
 const TURN_UNITS: usize = 1024;
 
@@ -25,6 +28,13 @@ fn effect_step<E: Into<NativeSnapshotFailure>>(native: &mut NativeDecodeControl<
         NativeReceivingEffectPoll::Pending { .. } => Err(pending()),
     }
 }
+/// 🧭️ Runs one staged projection stage as an effect step; a producer left unsettled is a synchronous-recipient refusal.
+fn staged_advance<I: RetireOwned + Sync + 'static>(projection: &mut StagedProjection<I>, admission: &mut semio_framework_value::retained_clone::RetainedCloneSourceAdmission<I, I>, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome<RetainedCloneStep, ValueError> {
+    match projection.advance(admission, effect) {
+        RetainedWorkPoll::Complete(turn) => RetainedWorkOutcome { result: turn.result.map(RetainedCloneStep::Progress), work: turn.work },
+        RetainedWorkPoll::Pending { work } => RetainedWorkOutcome { result: Err(ValueError::literal(ValueRefusalKind::WorkLimit, "presence projection stayed pending on a synchronous recipient")), work },
+    }
+}
 fn effect_poll<E: Into<NativeSnapshotFailure>>(native: &mut NativeDecodeControl<'_>, frame: &mut EffectFrame, work: &mut NativeSnapshotWork, body: &NativeSnapshotBodyWallet, demand: RetirementDemand, operation: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> RetainedWorkPoll<RetainedCloneStep, E>) -> Result<Option<RetainedCloneStep>, NativeSnapshotFailure> {
     effect_step(native, frame, work, body, demand, |_, effect| match operation(effect) {
         RetainedWorkPoll::Complete(turn) => RetainedWorkOutcome { result: turn.result.map_err(Into::<NativeSnapshotFailure>::into), work: turn.work },
@@ -34,20 +44,36 @@ fn effect_poll<E: Into<NativeSnapshotFailure>>(native: &mut NativeDecodeControl<
 
 /// 🧯️ A control-driven receiver failure keeps its complete native primary for the snapshot failure.
 fn primary_of(failure:NativeReceivingFailure)->OriginalReceivingPrimary{match failure{NativeReceivingFailure::Primary(primary)=>primary,NativeReceivingFailure::ValueEffect(effect)=>{let mut receiving=effect.receiving;receiving.allocation_refusal=effect.child;receiving.work_refusal=effect.work_refusal;receiving},NativeReceivingFailure::RetirementEffect(effect)=>{let mut receiving=effect.receiving;receiving.retirement_failure=effect.child;receiving.work_refusal=effect.work_refusal;receiving},NativeReceivingFailure::ReceivingEffect(effect)=>{let mut receiving=effect.receiving;receiving.work_refusal=effect.work_refusal;receiving}}}
-/// ♻️ Pays the receiver close start once, then closes it through its reply-shaped retirement cursor.
-fn receiver_close<P: semio_framework_value_native_owned::native_decoding::NativeReceive<DslValue>>(frame: &mut semio_framework_value_native_receiving_original::NativeReceivingOriginal<DslValue, P>, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkPoll<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
-    use semio_framework_value::{retained_clone::OriginalEffectReply, retirement::{RetirementCursor, RetirementStep}};
-    let mut slot = None;
-    let ran = if !frame.is_closing() { OriginalEffectReply::borrow(&mut slot).and_then(|reply| frame.begin_close_into(effect, reply).map(drop)).map(|()| None) } else {
-        let mut stepped = None;
-        OriginalEffectReply::borrow(&mut stepped).and_then(|reply| RetirementCursor::close_into(frame, body, effect, reply).map(drop)).map(|()| stepped.take())
-    };
-    let work = effect.performed_work();
-    match (ran, slot.take()) {
-        (Err(error), _) => RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Err(error.into()), work }),
-        (Ok(_), Some(settled)) => RetainedWorkPoll::Complete(RetainedWorkOutcome { result: settled, work }),
-        (Ok(Some(settled)), None) => RetainedWorkPoll::Complete(RetainedWorkOutcome { result: settled.and_then(|step| match step { RetirementStep::Progress(progress, _) => Ok(RetainedCloneStep::Progress(progress)), RetirementStep::Failure(failure, _) => Err(failure), RetirementStep::Complete(_) | RetirementStep::Pending(_) | RetirementStep::BudgetExhausted | RetirementStep::Advanced => Ok(RetainedCloneStep::Progress(Default::default())), _ => Err(ValueError::invariant("presence receiver close produced a foreign child step").into()) }), work }),
-        (Ok(None), None) => RetainedWorkPoll::Pending { work },
+/// ♻️ Closes the receiver as the genuine producer invocation of its original action: its close start once, then its reply-shaped retirement cursor.
+struct ReceiverClose<P>(std::marker::PhantomData<P>);
+impl<P: NativeReceive<DslValue>> OriginalEffectProducer for ReceiverClose<P> {
+    type Output = RetainedCloneStep;
+    type Failure = OriginalRetirementFailure;
+    type Context<'turn, 'source> = (&'turn mut NativeReceivingOriginal<DslValue, P>, usize) where 'source: 'turn;
+    fn validate_context<'turn, 'source>(&self, _: &Self::Context<'turn, 'source>) -> Result<(), ValueError> where 'source: 'turn { Ok(()) }
+    fn source_turn<'turn, 'source>(&self, _: &Self::Context<'turn, 'source>) -> Option<OriginalSourceTurnIdentity> where 'source: 'turn { None }
+    fn receive<'reply, 'turn, 'source>(&mut self, context: &mut Self::Context<'turn, 'source>, effect: &mut RetainedAllocationEffect<'_>, reply: CloseReply<'reply>) -> Result<CloseComplete<'reply>, ValueError> where 'source: 'turn { close_step(context.0, context.1, effect, reply, false) }
+    fn recover<'reply, 'turn, 'source>(&mut self, context: &mut Self::Context<'turn, 'source>, effect: &mut RetainedAllocationEffect<'_>, reply: CloseReply<'reply>) -> Result<CloseComplete<'reply>, ValueError> where 'source: 'turn { close_step(context.0, context.1, effect, reply, true) }
+}
+type CloseReply<'reply> = OriginalEffectReply<'reply, RetainedCloneStep, OriginalRetirementFailure>;
+type CloseComplete<'reply> = OriginalEffectReplyComplete<'reply, RetainedCloneStep, OriginalRetirementFailure>;
+fn close_step<'reply, P: NativeReceive<DslValue>>(receiver: &mut NativeReceivingOriginal<DslValue, P>, body: usize, effect: &mut RetainedAllocationEffect<'_>, reply: CloseReply<'reply>, recover: bool) -> Result<CloseComplete<'reply>, ValueError> {
+    if !receiver.is_closing() { return if recover { receiver.recover_begin_close_into(effect, reply) } else { receiver.begin_close_into(effect, reply) } }
+    let mut stepped = None;
+    { let inner = OriginalEffectReply::borrow(&mut stepped)?; drop(if recover { RetirementCursor::recover_close_into(receiver, body, effect, inner)? } else { RetirementCursor::close_into(receiver, body, effect, inner)? }); }
+    match stepped {
+        None => Ok(reply.pending()),
+        Some(settled) => Ok(reply.complete(settled.and_then(|step| match step { RetirementStep::Progress(progress, _) => Ok(RetainedCloneStep::Progress(progress)), RetirementStep::Failure(failure, _) => Err(failure), RetirementStep::Complete(_) | RetirementStep::Pending(_) | RetirementStep::BudgetExhausted | RetirementStep::Advanced => Ok(RetainedCloneStep::Progress(Default::default())), _ => Err(ValueError::invariant("presence receiver close produced a foreign child step").into()) }))),
+    }
+}
+/// 🧯️ Drives one receiver close turn through its original action; a producer left pending is refused on a synchronous recipient.
+fn close_poll<P: NativeReceive<DslValue>>(native: &mut NativeDecodeControl<'_>, frame: &mut NativeReceivingEffect<OriginalRetirementFailure>, authority: &mut OriginalEffectAuthority<ReceiverClose<P>>, work: &mut NativeSnapshotWork, body: &NativeSnapshotBodyWallet, demand: RetirementDemand, receiver: &mut NativeReceivingOriginal<DslValue, P>, copy: usize) -> Result<Option<RetainedCloneStep>, NativeSnapshotFailure> {
+    admit_turn(body, demand)?;
+    let polled = native.receive_original_effect(demand, TURN_UNITS as u64, frame, authority, |_, effect, authority, action| authority.drive(&mut (&mut *receiver, copy), effect, action))?;
+    match polled {
+        NativeReceivingEffectPoll::Complete(turn) => work.take(RetainedWorkOutcome { result: turn.result.map_err(|failure| failure.child.map_or_else(|| failure.receiving.into(), NativeSnapshotFailure::from)), work: turn.work }).map(Some),
+        NativeReceivingEffectPoll::Pending { work: 0 } if frame.phase() == NativeReceivingEffectPhase::Granted => { frame.cancel_unstarted(native)?; Ok(None) }
+        NativeReceivingEffectPoll::Pending { .. } => Err(pending()),
     }
 }
 fn admit_inline<T>(body: &NativeSnapshotBodyWallet) -> Result<(), ValueError> { body.admit_frontier(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<T>(), maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 }) }
@@ -64,25 +90,26 @@ pub fn decode_presence_json<P: semio_framework_value_native_owned::native_decodi
     type Receiving<P>=(JsonGrammarCursor<DslValue>,Option<DslValue>,Option<JsonError>,Option<NativeReceivingOriginal<DslValue,P>>,Option<Source>,EffectFrame);
     let Ok(text)=std::str::from_utf8(bytes) else{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"presence pack is not UTF-8 JSON").into()),work:0}};
     let mut output=None;
-    let turn=owner.receive::<Receiving<P>,P,NativeSnapshotFailure>(&mut output,&mut |slot,result,_marker,_failure,native,body|native_snapshot_turn(|work|{
-        admit_inline::<Receiving<P>>(body)?;*slot=Some((JsonGrammarCursor::new(JsonMemberPolicy::Reject),None,None,None,None,EffectFrame::default()));record_inline::<Receiving<P>>(body)?;
+    let turn=owner.receive::<Receiving<P>,P,NativeSnapshotFailure>(&mut output,&mut |slot,result,_marker,_failure,native,body|native_snapshot_turn(|work|{admit_inline::<Receiving<P>>(body)?;*slot=Some((JsonGrammarCursor::new(JsonMemberPolicy::Reject),None,None,None,None,EffectFrame::default()));record_inline::<Receiving<P>>(body)?;
         let(cursor,tree,refusal,receiving,_,effects)=slot.as_mut().ok_or_else(||ValueError::invariant("slot absent"))?;
         loop{
             let demand=match cursor.normal_step_demands(text){Ok(demand)=>demand,Err(JsonError::Native(error))=>return Err(error.into()),Err(error)=>{let kind=error.kind();*refusal=Some(error);return Err(ValueError::literal(kind,"presence JSON source was refused").into())}};
-            let mut result=Ok(None);effect_step(native,effects,work,body,demand,|control,effect|{result=cursor.step(text,1,control,effect);RetainedWorkOutcome{result:Ok::<_,ValueError>(RetainedCloneStep::Progress(Default::default())),work:effect.performed_work()}})?.ok_or_else(unfunded)?;let performed=cursor.normal_step_progress();
+            let mut result=Ok(None);effect_step(native,effects,work,body,demand,|control,effect|{result=cursor.step(text,1,control,effect);RetainedWorkOutcome{result:Ok::<_,ValueError>(RetainedCloneStep::Progress(cursor.normal_step_progress())),work:effect.performed_work()}})?.ok_or_else(unfunded)?;let performed=cursor.normal_step_progress();
             let ready=match result{Ok(Some(value))=>{*tree=Some(value);Ok(true)},Ok(None)=>Ok(false),Err(JsonError::Native(error))=>Err(error),Err(error)=>{let kind=error.kind();*refusal=Some(error);Err(ValueError::literal(kind,"presence JSON grammar refused the original pack"))}};body.record_progress(performed)?;
             if ready?{break;}if performed==RetainedCloneProgress::default(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"presence JSON parser has no funded frontier").into());}
         }
-        let mut admission=Source::admission_owned(tree.take().ok_or_else(||ValueError::invariant("tree absent"))?,());let mut original=None;
+        let mut projection=StagedProjection::<DslValue>::default();let mut admission=Source::admission_owned(tree.take().ok_or_else(||ValueError::invariant("tree absent"))?,());let mut original=None;
         let admitted=(||->Result<(),NativeSnapshotFailure>{
-            let mut idle=0u8;while admission.phase()!="ready"{let phase=admission.phase();let demand=admission.next_demand()?;let step=effect_step(native,effects,work,body,demand,|_,effect|admission.advance(effect))?.ok_or_else(unfunded)?;body.record_progress(step.progress())?;idle=if step.progress()==RetainedCloneProgress::default()&&admission.phase()==phase{idle+1}else{0};if idle>=2{return Err(stalled())}}
-            let step=effect_step(native,effects,work,body,admission.take_output_demand(),|_,effect|admission.take_output(&mut original,effect))?.ok_or_else(unfunded)?;body.record_progress(step.progress())?;Ok(())
+            let mut idle=0u8;while admission.phase()!="ready"{let phase=admission.phase();let staged=projection.quote(&admission)?;let demand=match staged{Some((demand,_))=>demand,None=>admission.next_demand()?};let step=effect_step(native,effects,work,body,demand,|_,effect|if staged.is_some(){staged_advance(&mut projection,&mut admission,effect)}else{admission.advance(effect)})?.ok_or_else(unfunded)?;body.record_progress(step.progress())?;idle=if step.progress()==RetainedCloneProgress::default()&&admission.phase()==phase{idle+1}else{0};if idle>=2{return Err(stalled())}}
+            loop{let step=effect_step(native,effects,work,body,admission.take_output_demand(),|_,effect|admission.take_output(&mut original,effect))?.ok_or_else(unfunded)?;body.record_progress(step.progress())?;if !original.as_ref().is_some_and(RetainedCloneSource::publication_pending){break}}Ok(())
         })();
         if let Err(error)=admitted{
             let mut back=None;
-            while !admission.terminal_is_empty(){
-                let demand=admission.next_return_demand().unwrap_or_default();
-                match effect_step(native,effects,work,body,demand,|_,effect|admission.return_inputs(&mut back,effect)){Ok(Some(step))=>{if body.record_progress(step.progress()).is_err(){break}},_=>break}
+            while !admission.terminal_is_empty()||!projection.terminal_is_empty(){
+                let closing=match projection.close_quote(&admission){Ok(quote)=>quote,Err(_)=>break};
+                let demand=match closing{Some((demand,_))=>demand,None=>admission.next_return_demand().unwrap_or_default()};
+                let stepped=effect_step(native,effects,work,body,demand,|_,effect|if closing.is_some(){RetainedWorkOutcome{result:projection.close(&mut admission,effect).map(RetainedCloneStep::Progress),work:effect.performed_work()}}else{admission.return_inputs(&mut back,effect)});
+                match stepped{Ok(Some(step))=>{if body.record_progress(step.progress()).is_err(){break}},_=>break}
             }
             *tree=back.map(|(value,())|value);
             return Err(error);
@@ -99,8 +126,9 @@ pub fn decode_presence_json<P: semio_framework_value_native_owned::native_decodi
             }
         }
         let demand=frame.take_demand()?;
-        match effect_poll(native,effects,work,body,demand,|effect|frame.take(result,effect))?{Some(step)=>body.record_progress(step.progress())?,None=>return Err(unfunded())}
-        while !frame.terminal_is_empty(){let copy=body.remaining_grant().maximum_copy_bytes;let demand=if frame.is_closing(){frame.close_demands(copy)?}else{frame.begin_close_demand()?};match effect_poll(native,effects,work,body,demand,|effect|receiver_close(frame,copy,effect))?{Some(step)=>body.record_progress(step.progress())?,None=>return Err(unfunded())}}
+        match effect_poll(native,effects,work,body,demand,|effect|frame.take(result,effect))?{Some(step)=>body.record_progress(step.progress())?,None=>return Err(unfunded())}let mut retiring=NativeReceivingEffect::<OriginalRetirementFailure>::default();let mut closer=OriginalEffectAuthority::new(ReceiverClose::<P>(std::marker::PhantomData));
+        while !frame.terminal_is_empty(){let copy=body.remaining_grant().maximum_copy_bytes;let demand=if frame.is_closing(){frame.close_demands(copy)?}else{frame.begin_close_demand()?};match close_poll(native,&mut retiring,&mut closer,work,body,demand,frame,copy)?{Some(step)=>body.record_progress(step.progress())?,None=>return Err(unfunded())}}
+        drop(closer.into_producer());
         Ok(())
     }));
     RetainedWorkOutcome{result:turn.result.and_then(|()|output.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"presence receiving produced no output").into())),work:turn.work}

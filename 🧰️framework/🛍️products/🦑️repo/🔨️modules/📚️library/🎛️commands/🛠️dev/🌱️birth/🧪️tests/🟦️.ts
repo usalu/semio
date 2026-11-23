@@ -210,6 +210,13 @@ test("graph-free component preparation keeps exact selected Cargo passes", async
   } finally { database.close(); }
 });
 
+test("native transpile publishes only through the products partition store, never into a plain directory of a fresh workspace", () => {
+  const source = readFileSync(resolve(import.meta.dirname, "../../../../../../../💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile/📜️script.ts"), "utf8");
+  expect(source).toContain('withRepositoryCacheStoreV1(workspace, "products"');
+  expect(source).toContain("stageRepositoryArtifacts(");
+  expect(source).not.toMatch(/\b(mkdirSync|copyFileSync|renameSync|writeFileSync)\b/u);
+});
+
 test("graph-free playground prepares the selected-mode transpiler and validates configured overrides", async () => {
   const { nativeTranspileRequiresBuildV1 } = await import("../../../../../../../💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile/🟦️.ts");
   const { ensureNativeTranspileV1 } = await import("../../../../../../../💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile/📜️script.ts");

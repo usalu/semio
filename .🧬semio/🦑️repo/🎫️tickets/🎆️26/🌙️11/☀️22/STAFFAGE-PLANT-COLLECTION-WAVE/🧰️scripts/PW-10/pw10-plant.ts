@@ -324,7 +324,7 @@ function boundaryLoops(faces: number[][]): number[][] {
 /** 🍃️ A plate of a leaf bone: its (u, w) ring and the v span at the bone origin and at the bone tip (the span runs straight between them). The plate is the body solid of that part of the leaf and its drawing at once, so the three views are the true views of the body by construction. */
 export type Plate = { id: string; bone: string; kind: "blade" | "rib"; ring: P2[]; z0: number; z1: number; zTip: [number, number]; centre: V3 };
 
-/** 🍃️ The plates of one leaf bone: the bone is cut into `bands` along u; in each band the blade faces, cut at the band edges, are one plate per connected outline and the tube pieces (petiole, midrib, stipe, rachis) another, each with the straight v span fitted to the faces whose centre lies in the band. */
+/** 🍃️ The plates of one leaf bone: the bone is cut into `bands` along u (fewer where a band would be shorter than 1.3 times the least plate size); in each band the blade faces, cut at the band edges, are one plate per connected outline and the tube pieces (petiole, midrib, stipe, rachis) another, each with the straight v span fitted to the faces whose centre lies in the band. */
 function platesOf(bone: string, P: Parts, F: Frame, L: number, bands: number, scale: Scale, minThick: number, dropped: string[]): Plate[] {
   const feature = featureOf(scale);
   const least = minThick;
@@ -352,14 +352,18 @@ function platesOf(bone: string, P: Parts, F: Frame, L: number, bands: number, sc
   const all = [...blades, ...ribs];
   if (all.length === 0) return [];
   const [umin, umax] = [Math.min(...all.map((x) => x.u)), Math.max(...all.map((x) => x.u))];
-  const edges = steps(umin - 1e-6, umax + 1e-6, (umax - umin + 2e-6) / bands);
+  const count = Math.max(1, Math.min(bands, Math.floor((umax - umin) / (least * 1.3))));
+  const edges = steps(umin - 1e-6, umax + 1e-6, (umax - umin + 2e-6) / count);
   const plates: Plate[] = [];
   for (const [kind, items] of [["blade", blades], ["rib", ribs]] as const) for (let b = 0; b + 1 < edges.length; b++) {
-    const inBand = items.filter((x) => x.u >= edges[b]! && x.u < edges[b + 1]! + (b + 2 === edges.length ? 1e-6 : 0));
-    if (inBand.length === 0) continue;
+    const centred = items.filter((x) => x.u >= edges[b]! && x.u < edges[b + 1]! + (b + 2 === edges.length ? 1e-6 : 0));
+
     const [from, to] = [b === 0 ? -Infinity : edges[b]!, b + 2 === edges.length ? Infinity : edges[b + 1]!];
     const within = (ring: P2[]) => (to === Infinity ? ring : clipRing(ring, to, false));
     const polys = items.map((x) => (ringArea(x.poly) < 0 ? [...x.poly].reverse() : x.poly)).map((x) => within(from === -Infinity ? x : clipRing(x, from, true))).filter((x) => x.length >= 3 && Math.abs(ringArea(x)) > 1e-10);
+    const [from0, to0] = [edges[b]!, edges[b + 1]!];
+    const inBand = centred.length ? centred : items.filter((x) => Math.max(...x.us) > from0 && Math.min(...x.us) < to0);
+    if (inBand.length === 0 || polys.length === 0) continue;
     const us = inBand.flatMap((x) => x.us), vs = inBand.flatMap((x) => x.vs);
     const n = us.length;
     const mu = us.reduce((a, x) => a + x, 0) / n, mv = vs.reduce((a, x) => a + x, 0) / n;
@@ -449,14 +453,14 @@ function plateSolid(pl: Plate, L: number, fields: Json): Json | null {
   let volume = 0;
   for (const [a, b, c] of triangles) volume += dot(vertices[a] as V3, cross(vertices[b] as V3, vertices[c] as V3));
   if (volume < 0) for (const tri of triangles) [tri[1], tri[2]] = [tri[2], tri[1]];
-  if (polyhedronFault(vertices, triangles) !== null) { if (process.env.PW10_DEBUG === pl.id) console.log(`[DEBUG] ${pl.id} ring ${JSON.stringify(pl.ring.map((q) => [q.x, q.y]))} span ${pl.z0} ${pl.z1} ${pl.zTip}`); return null; }
+  if (polyhedronFault(vertices, triangles) !== null) return null;
   return { id: pl.id, kind: "polyhedron", bone: pl.bone, ...fields, vertices, triangles };
 }
 
-/** 🍃️ The plates of every leaf bone at a scale. No plate is thinner or narrower than `least`: a little above the smallest feature, and at 1:500 the 0.21 mm of paper that a filled shape needs to print in every pose (a plate seen edge-on shows its thickness). */
+/** 🍃️ The plates of every leaf bone at a scale. No plate is thinner or narrower than `least`: a little above the smallest feature, and at 1:500 the 0.24 mm of paper that a filled shape safely needs to print in every pose (a plate seen edge-on shows its thickness). */
 export function leafPlates(sp: Species, rig: Json, scale: Scale, P: Parts, F: Record<string, Frame>, say: string[]): Plate[] {
   const feature = featureOf(scale);
-  const least = scale === 500 ? 0.105 : Math.max(feature * 1.04, scale === 50 ? 0.008 : 0);
+  const least = scale === 500 ? 0.12 : Math.max(feature * 1.04, scale === 50 ? 0.008 : 0);
   const dropped: string[] = [];
   const plates = rig.bones.filter((b: Json) => sp.leafBone(b.id)).flatMap((b: Json) => platesOf(b.id, P, F[b.id]!, b.lengthM, sp.bands(b.id, scale), scale, least, dropped));
   if (dropped.length) say.push(`[DEBUG] 1:${scale} plates below ${(least * 1000).toFixed(0)} mm left out (${dropped.length}): ${dropped.slice(0, 14).join(", ")}`);

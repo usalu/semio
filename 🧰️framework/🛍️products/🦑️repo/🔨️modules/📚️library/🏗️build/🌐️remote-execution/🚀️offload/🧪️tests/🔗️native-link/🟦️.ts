@@ -1,3 +1,4 @@
+import{stretchedBudgetMillisecondsV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {afterEach,expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
@@ -162,4 +163,4 @@ test.skipIf(!toolsPresent)(`the native cdylib with a static library of the check
   expect({hash:sha(bytes),size:bytes.length},label).toEqual({hash:sha(reference),size:reference.length});
   expect(bytes.includes(Buffer.from(a.base)),`${label} leaks the first checkout`).toBe(false);expect(bytes.includes(Buffer.from(b.base)),`${label} leaks the second checkout`).toBe(false);
  }
-},600000);
+},stretchedBudgetMillisecondsV1(600000));

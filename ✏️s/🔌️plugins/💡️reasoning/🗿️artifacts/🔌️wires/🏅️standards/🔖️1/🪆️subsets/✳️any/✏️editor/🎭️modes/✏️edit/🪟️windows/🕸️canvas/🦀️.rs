@@ -43,12 +43,12 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(board: &DslValue, wires: &DslValue, window: &config::WiresCanvasWindowConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(board: &DslValue, wires: &DslValue, window: &config::WiresCanvasWindowConfig, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let camera_x = window.camera.x;
     let camera_y = window.camera.y;
     let zoom = window.camera.zoom;
     let layers: Vec<Value> = crate::schema::wires_canvas_layers(board, wires).iter().map(semio_framework_pack_json::from_dsl_value).collect();
-    semio_plugin::scene_surface(WIRES_PLAY_SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: None, camera_x, camera_y, zoom, layers_json: semio_framework_pack_json::to_string(&Value::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    semio_plugin::scene_surface(WIRES_PLAY_SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: None, camera_x, camera_y, zoom, layers_json: semio_framework_pack_json::to_string(&Value::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Wire canvas", "Leitungsfläche"), None)
 }
 //#endregion 🔖️Render
 

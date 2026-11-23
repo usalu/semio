@@ -291,9 +291,9 @@ impl ArtifactEditor for RemodelingPlayApp {
         let scene = doc.snapshot;
         let labels = remodeling_labels(view_state);
         let built = match body_key {
-            model::windows::model::REMODELING_PLAY_BODY_MAIN => model::windows::model::render(scene, &model::windows::model::config::current(cfg)),
-            capture::windows::frames::REMODELING_PLAY_BODY_FRAMES => capture::windows::frames::render(scene, &capture::windows::frames::config::current(cfg)),
-            analyze::windows::report::REMODELING_PLAY_BODY_REPORT => analyze::windows::report::render(scene, &analyze::windows::report::config::current(cfg)),
+            model::windows::model::REMODELING_PLAY_BODY_MAIN => model::windows::model::render(scene, &model::windows::model::config::current(cfg), view_state.locale),
+            capture::windows::frames::REMODELING_PLAY_BODY_FRAMES => capture::windows::frames::render(scene, &capture::windows::frames::config::current(cfg), view_state.locale),
+            analyze::windows::report::REMODELING_PLAY_BODY_REPORT => analyze::windows::report::render(scene, &analyze::windows::report::config::current(cfg), view_state.locale),
             media::REMODELING_PLAY_BODY_MEDIA => media::render(scene, labels, &semio_plugin::TreeWindows::for_body(view_state, media::REMODELING_PLAY_BODY_MEDIA)),
             document::REMODELING_PLAY_BODY_PIPELINE => document::render(scene, doc.tool_run(), view_state.locale, &semio_plugin::TreeWindows::for_body(view_state, document::REMODELING_PLAY_BODY_PIPELINE)),
             results::REMODELING_PLAY_BODY_RESULTS => results::render(scene, labels, &semio_plugin::TreeWindows::for_body(view_state, results::REMODELING_PLAY_BODY_RESULTS)),

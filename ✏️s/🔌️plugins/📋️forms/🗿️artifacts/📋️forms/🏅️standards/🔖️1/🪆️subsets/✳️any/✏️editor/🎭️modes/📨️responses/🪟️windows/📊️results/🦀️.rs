@@ -46,7 +46,7 @@ fn answer_row(answer: &FormsAnswer, labels: &FormsLabels) -> UiAssemblyResult<Bu
     let item = if value.len() > semio_ui_contract::UI_TEXT_MAX_BYTES {
         let mut scene = semio_plugin::TextEditorScene::base(value, None, None);
         scene.settings_json = Some(semio_framework_pack_json::to_json_string(&semio_framework_pack_json::json!({ "readOnly": true, "label": answer.label })));
-        ui_admit(item.default_open(true).try_child(semio_plugin::scene_surface(&format!("{}.answer", answer.question_id), ui::SurfaceKind::TextEditor, &scene)?))?
+        ui_admit(item.default_open(true).try_child(semio_plugin::scene_surface(&format!("{}.answer", answer.question_id), ui::SurfaceKind::TextEditor, &scene, &answer.label, None)?))?
     } else { item };
     ui_admit(item.try_build())
 }

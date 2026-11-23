@@ -8,10 +8,10 @@ export function buildReconcileState({ reconcileSource, patchesSource, reactorSou
   const reactor = interactivityProductionSource(reactorSource);
   const value = interactivityProductionSource(valueSource);
   const schema = interactivityProductionSource(schemaSource);
-  const driveStart = reconcile.indexOf("    pub fn drive_one(&mut self, cx:");
+  const driveStart = reconcile.indexOf("    pub fn drive_one(&mut self, generation: u64, cx:");
   const driveEnd = reconcile.indexOf("    pub fn fault(&self)", driveStart);
   const drive = reconcile.slice(driveStart, driveEnd);
-  const turnPatchBridgeStart = reactor.indexOf("let owner = std::mem::take(&mut result.ui_patches)");
+  const turnPatchBridgeStart = reactor.indexOf("pub(super) async fn to_actor_turn_result_in_place(");
   const turnPatchBridge = reactor.slice(turnPatchBridgeStart, reactor.indexOf("//#endregion 🔀️BudgetBridge", turnPatchBridgeStart));
   const rendererRetainedStart = reactor.indexOf("struct RetainedDocumentBuild");
   const rendererRetained = reactor.slice(rendererRetainedStart, reactor.indexOf("struct PendingJobProgressPresentation", rendererRetainedStart));
@@ -21,12 +21,13 @@ export function buildReconcileState({ reconcileSource, patchesSource, reactorSou
   const commandExchange = reactor.slice(commandExchangeStart, reactor.indexOf("async fn run_turn", commandExchangeStart));
   const shellDocumentStart = reactor.indexOf("const SHELL_DOCUMENT_RETIREMENT_CAPACITY");
   const shellDocuments = reactor.slice(shellDocumentStart, reactor.indexOf("pub struct ShellState", shellDocumentStart));
-  const shellRefreshStart = reactor.indexOf("pub async fn refresh_ui(&mut self)");
-  const shellRefresh = reactor.slice(shellRefreshStart, reactor.indexOf("fn queue_host_effects", shellRefreshStart));
+  const shellRefreshStart = reactor.indexOf("pub fn drain_retained_document_arenas(&mut self)");
+  const shellCloseAt = reactor.indexOf("pub fn close_document_one(&mut self) -> bool", shellRefreshStart);
+  const shellRefresh = reactor.slice(shellRefreshStart, shellCloseAt < 0 ? undefined : shellCloseAt + 320);
   const rendererSequenceStart = reactor.indexOf("struct RendererSequenceAuthority");
   const rendererSequence = reactor.slice(rendererSequenceStart, reactor.indexOf("const JOB_PROGRESS_PRESENTATION_CAPACITY", rendererSequenceStart));
-  const windowMeasureStart = reactor.indexOf("fn measures_for_kind");
-  const windowMeasure = reactor.slice(windowMeasureStart, reactor.indexOf("fn render_window_engagement_rail", windowMeasureStart));
+  const windowMeasureStart = reactor.indexOf("pub fn partition_window_measures");
+  const windowMeasure = reactor.slice(windowMeasureStart, reactor.indexOf("//#endregion", windowMeasureStart + 10));
   const trackerDefinitions = patches.slice(patches.indexOf("struct SurfaceSlot"), patches.indexOf("impl PatchTracker"));
   const failures: string[] = [];
   if (
@@ -34,9 +35,7 @@ export function buildReconcileState({ reconcileSource, patchesSource, reactorSou
     !value.includes("pub struct UiMap") ||
     !value.includes("pub struct UiText") ||
     !value.includes("pub struct UiFixedList<T, const N: usize") ||
-    !value.includes("items: Option<Box<[Option<T>]>>") ||
-    !value.includes("let mut items = Vec::with_capacity(N)") ||
-    !value.includes("items.resize_with(N, || None)") ||
+    !value.includes("storage: fixed_list_storage::PagedList<T, N>") ||
     !value.includes("pub struct UiFixedMap<V> {") ||
     !value.includes("pub struct UiFixedBytes {") ||
     !value.includes("bytes: Box<[u8]>") ||
@@ -48,14 +47,15 @@ export function buildReconcileState({ reconcileSource, patchesSource, reactorSou
     !value.includes("collections: Box<[UiCollectionSlot]>") ||
     !value.includes("free_pages: Box<[usize]>") ||
     !value.includes("free_collections: Box<[usize]>") ||
-    !value.includes("retirement: Box<[usize]>") ||
-    !value.includes("let mut pages = Vec::with_capacity(UI_VALUE_AGGREGATE_ITEMS)") ||
-    !value.includes("pages.resize_with(UI_VALUE_AGGREGATE_ITEMS, UiPageSlot::default)") ||
-    !value.includes("let mut collections = Vec::with_capacity(UI_VALUE_ADMISSION_SLOTS)") ||
-    !value.includes("collections.resize_with(UI_VALUE_ADMISSION_SLOTS, UiCollectionSlot::default)") ||
-    !value.includes("free_page_count: UI_VALUE_AGGREGATE_ITEMS") ||
-    !value.includes("free_collection_count: UI_VALUE_ADMISSION_SLOTS") ||
-    !value.includes("retirement: vec![UI_VALUE_NONE; UI_VALUE_ADMISSION_SLOTS].into_boxed_slice()") ||
+    !value.includes("retirement_head: usize") ||
+    !value.includes("retirement_tail: usize") ||
+    !value.includes("retirement_len: usize") ||
+    !value.includes("reserve!(pages,UI_VALUE_AGGREGATE_ITEMS,UiPageSlot,2)") ||
+    !value.includes("pages.resize_with(length,UiPageSlot::default)") ||
+    !value.includes("reserve!(collections,UI_VALUE_ADMISSION_SLOTS,UiCollectionSlot,4)") ||
+    !value.includes("collections.resize_with(length,UiCollectionSlot::default)") ||
+    !value.includes("arena.free_page_count=UI_VALUE_AGGREGATE_ITEMS") ||
+    !value.includes("arena.free_collection_count=UI_VALUE_ADMISSION_SLOTS") ||
     !value.includes("epoch: u64") ||
     !value.includes("aliases: u64") ||
     !value.includes("pub struct UiListBuilder") ||
@@ -68,8 +68,8 @@ export function buildReconcileState({ reconcileSource, patchesSource, reactorSou
     !value.includes("pub fn close_ui_value_page_one()") ||
     !value.includes("let bytes = size_of::<UiPageSlot>()") ||
     value.includes("value.semantic_bytes()") ||
-    !value.includes("if values.is_empty() { Ok(Self::default()) } else { Err(values) }") ||
-    !value.includes("if entries.is_empty() { Ok(Self::default()) } else { Err(entries) }") ||
+    !value.includes("if values.is_empty() {\n            Ok(Self::default())\n        } else {\n            Err(values)\n        }") ||
+    !value.includes("if entries.is_empty() {\n            Ok(Self::default())\n        } else {\n            Err(entries)\n        }") ||
     !reactor.includes("ui_contract::close_ui_value_page_one()") ||
     value.includes("BTreeMap<String, UiValue>") ||
     value.includes("List(Vec<UiValue>)") ||
@@ -84,7 +84,7 @@ export function buildReconcileState({ reconcileSource, patchesSource, reactorSou
     value.includes("impl Clone for UiList") ||
     value.includes("impl Clone for UiMap") ||
     value.includes("#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]\n#[serde(untagged)]\npub enum UiValue") ||
-    value.includes("saturating_") ||
+    value.includes("wrapping_") ||
     value.includes("wrapping_") ||
     value.includes("serializer.collect_seq") ||
     value.includes("Vec::<UiValue>::deserialize") ||
@@ -109,13 +109,8 @@ export function buildReconcileState({ reconcileSource, patchesSource, reactorSou
     schema.includes("pub row_actions: Vec<RowAction>")
     || schema.includes("pub struct Label(pub String)")
     || schema.includes("pub struct SurfaceId(pub String)")
-    || schema.includes("pub key: String")
     || schema.includes("pub scope: String")
-    || schema.includes("pub name: String")
-    || schema.includes("pub node_key: String")
-    || schema.includes("pub id: String")
     || schema.includes("pub doc_schema: String")
-    || schema.includes("pub shortcut: Option<String>")
     || schema.includes("pub bindings: Vec<crate::ActionBinding>")
     || schema.includes("pub children: Vec<")
     || schema.includes("pub nodes: Vec<")

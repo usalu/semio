@@ -13,7 +13,7 @@ test("🔐️ shared factory metadata never enlarges a narrow payload copy grant
     expect(pending.snapshot).toBe(baseline.snapshot);expect(pending.factory).toBe("original");expect(applyPatch<typeof pending|Omit<typeof pending,"snapshot"|"factory">&{snapshot:null;factory:null}>(pending,[{op:"replace",path:"/snapshot",value:null},{op:"replace",path:"/factory",value:null}],true).newDocument).toEqual({...baseline,snapshot:null,aliases:0,factory:null});expect(baseline.snapshot).toBe(text);
   }
   const factory=readFileSync(new URL("../../../🏭️factory/🦀️.rs",import.meta.url),"utf8");
-  expect(between(factory,'#[path="../🔗️arc-custody/🏭️factory/🦀️.rs"]','pub use shared::FactorySharedRetirement;').includes("pub mod shared;")).toBe(true);
-  expect(factory.includes('pub use shared::FactorySharedRetirement;')).toBe(true);
+  expect(between(factory,'#[path="../🔗️arc-custody/🏭️factory/🦀️.rs"]','pub use shared::{FactorySharedRetirement,ArcRootRetirement};').includes("pub mod shared;")).toBe(true);
+  expect(factory.includes('pub use shared::{FactorySharedRetirement,ArcRootRetirement};')).toBe(true);
   expect(readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8").includes("pub struct FactorySharedRetirement<")).toBe(true);
 });

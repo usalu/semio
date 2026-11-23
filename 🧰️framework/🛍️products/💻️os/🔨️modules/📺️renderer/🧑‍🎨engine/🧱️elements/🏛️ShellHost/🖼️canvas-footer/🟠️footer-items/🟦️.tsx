@@ -12,16 +12,20 @@ import { AgentPresence } from "../../../🚦️AgentPresence/🟦️.tsx";
 import { type ShellCatalogProbe, shellCatalogProbePlugins } from "../../🎚️shell-model/🟦️.tsx";
 import type { buildPluginFilterState } from "../🔶️plugin-filter/🟦️.tsx";
 
-/** 🟡 Builds footerItems, buildPanelProps, dispatchShellMenuAction of useCanvasAndFooter. */
+/** 🟡 Builds canvasChips (the bottom anchors' folded panel tab rows, glass chips on the canvas frame's bottom edge), footerItems, buildPanelProps, dispatchShellMenuAction of useCanvasAndFooter. */
 export function useFooterItemsState({ uiDevice, mobile, buildPanelSelectionProps, brand, uiLocale, presencePeers, timeTravelPeers, agentBridge, revealAgentApproval, hubConnectionStatuses, hubSessionPresence, hubLink, openHubWorkspace, panels, dispatch, treeOpenStates, activeToolId, focusedToolMeasuresByToolId, actionPaneStagedArgsByKey, scope, pluginFilter, hostMode, notFoundPath, error, session, initialExampleReady, registry, pluginStatusById, appRouter, spacePrograms, panel, contributionsPublisherRef, documentServices, browserActorUiByRuntimeKeyRef, routerFaultByPluginId, activeWindowId, onAction }: Pick<ReturnType<typeof buildPluginFilterState>, "uiDevice" | "mobile" | "buildPanelSelectionProps" | "brand" | "uiLocale" | "presencePeers" | "timeTravelPeers" | "agentBridge" | "revealAgentApproval" | "hubConnectionStatuses" | "hubSessionPresence" | "hubLink" | "openHubWorkspace" | "panels" | "dispatch" | "treeOpenStates" | "activeToolId" | "focusedToolMeasuresByToolId" | "actionPaneStagedArgsByKey" | "scope" | "pluginFilter" | "hostMode" | "notFoundPath" | "error" | "session" | "initialExampleReady" | "registry" | "pluginStatusById" | "appRouter" | "spacePrograms" | "panel" | "contributionsPublisherRef" | "documentServices" | "browserActorUiByRuntimeKeyRef" | "routerFaultByPluginId" | "activeWindowId" | "onAction">) {
+  const canvasChips = useMemo(
+    () => (mobile ? undefined : {
+      start: <PanelChromeTabBar anchor="bottom-left" compactLabels={uiDevice === "tablet"} {...buildPanelSelectionProps("bottom-left")} />,
+      center: <PanelChromeTabBar anchor="bottom-middle" compactLabels={uiDevice === "tablet"} {...buildPanelSelectionProps("bottom-middle")} />,
+      end: <PanelChromeTabBar anchor="bottom-right" compactLabels={uiDevice === "tablet"} {...buildPanelSelectionProps("bottom-right")} />,
+    }),
+    [buildPanelSelectionProps, mobile, uiDevice],
+  );
+
   const footerItems = useMemo((): NavbarItem[] => {
     const compactFooter = uiDevice === "tablet";
-    const items: NavbarItem[] = mobile
-      ? []
-      : [
-          { key: "bottomLeftPanelTabs", content: <PanelChromeTabBar anchor="bottom-left" compactLabels={compactFooter} {...buildPanelSelectionProps("bottom-left")} /> },
-          { key: "bottomMiddlePanelTabs", centered: true, content: <PanelChromeTabBar anchor="bottom-middle" compactLabels={compactFooter} {...buildPanelSelectionProps("bottom-middle")} /> },
-        ];
+    const items: NavbarItem[] = [];
     const credits = brand?.footerItems ?? [];
     const compactCredits = shellFooterCreditsCompact(mobile, compactFooter);
     if (compactCredits) {
@@ -38,9 +42,8 @@ export function useFooterItemsState({ uiDevice, mobile, buildPanelSelectionProps
     if (agentBridge.pendingApprovals.length > 0) items.push({ key: "agentApprovals", content: <AgentApprovalsNotice approvals={agentBridge.pendingApprovals} onReview={revealAgentApproval} /> });
     if (agentBridge.status === "unavailable" || agentBridge.status === "incompatible") items.push({ key: "agentBridgeNotice", content: <AgentPresence status={agentBridge.status} presence={agentBridge.presence} versionMismatch={agentBridge.versionMismatch} /> });
     items.push({ key: "hubConnection", content: <HubConnectionIndicator statuses={hubConnectionStatuses} session={hubSessionPresence} link={hubLink} onSignIn={openHubWorkspace} /> });
-    if (!mobile) items.push({ key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" compactLabels={compactFooter} {...buildPanelSelectionProps("bottom-right")} /> });
     return items;
-  }, [agentBridge.pendingApprovals, agentBridge.presence, agentBridge.status, agentBridge.versionMismatch, brand?.footerItems, buildPanelSelectionProps, hubConnectionStatuses, hubLink, hubSessionPresence, mobile, openHubWorkspace, presencePeers, revealAgentApproval, timeTravelPeers.peers, uiDevice, uiLocale]);
+  }, [agentBridge.pendingApprovals, agentBridge.presence, agentBridge.status, agentBridge.versionMismatch, brand?.footerItems, hubConnectionStatuses, hubLink, hubSessionPresence, mobile, openHubWorkspace, presencePeers, revealAgentApproval, timeTravelPeers.peers, uiDevice, uiLocale]);
 
   const buildPanelProps = useCallback(
     (anchor: Anchor) => ({
@@ -184,5 +187,5 @@ export function useFooterItemsState({ uiDevice, mobile, buildPanelSelectionProps
     },
     [session, activeWindowId, onAction, dispatch],
   );
-  return { dispatchShellMenuAction, footerItems, buildPanelProps };
+  return { dispatchShellMenuAction, footerItems, canvasChips, buildPanelProps };
 }

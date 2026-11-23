@@ -67,7 +67,7 @@ impl<'ctx> SessionCtx<'ctx> {
             self.windows.engagement_activated.remove(&window_id);
             self.windows.window_engagements.remove(&window_id);
             self.dock.window_content_rects.remove(&window_id);
-            self.dock.window_silhouettes.remove(&window_id);
+            self.dock.window_frames.remove(&window_id);
             let prefix = format!("{window_id}:");
             self.commands.staged_action_args.retain(|key, _| !key.starts_with(&prefix));
         }

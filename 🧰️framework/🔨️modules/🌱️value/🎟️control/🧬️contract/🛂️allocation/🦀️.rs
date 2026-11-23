@@ -81,6 +81,12 @@ pub trait NativeAllocationLoan:sealed_allocation_loan::Sealed{
  fn settle(&mut self,state:&mut NativeAllocationTransaction,actual:Option<usize>)->Result<(),ValueError>;
  fn recover(&mut self,state:&mut NativeAllocationTransaction)->Result<bool,ValueError>;
  fn finish(&mut self,slot:&mut Option<NativeAllocationTransaction>)->Result<(),ValueError>;
+ /// 🎟️ Admits a request outside any quoted effect as one historical `Admit` event and reports whether it did; an open quoted transaction already owns its admission and the call is a no-op.
+ fn admit_unquoted(&mut self,request:NativeAllocationRequest)->Result<bool,ValueError>{
+  if !self.matches_transaction(None){return Ok(false)}
+  let mut slot=None;self.begin(request,false,&mut slot)?;let verdict=slot.as_mut().and_then(|state|state.take_verdict());self.finish(&mut slot)?;
+  match verdict{Some(Err(NativeAllocationRefusal::Owned(error)))=>Err(error),Some(Err(NativeAllocationRefusal::Retained(_)))=>Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native allocation refusal remains with its original issuer")),_=>Ok(true)}
+ }
 }
 /// 🚚️ Native Send execution borrows a sealed loan from the same original authority.
 #[cfg(not(target_arch="wasm32"))]

@@ -399,7 +399,7 @@ mod receiving {
             array, boolean, named, named_mut, optional, record, reserve, sequence, small_array, small_record, string, unsigned,
         }};
         use crate::standards::v1_7::subsets::base::schema::{
-            diff::{PdfIndexedDiff, PdfIndexedItem},
+            diff::{PdfIndexedDiff, PdfRoleItem},
             mutations::{InsertObject, RemoveObject},
             snapshot::{ObjRef, PdfObject},
             stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfStreamRoleValue},
@@ -510,7 +510,7 @@ mod receiving {
 
         fn role_rows(
             raw: Option<&mut DslValue>, effect: &mut RetainedAllocationEffect<'_>,
-        ) -> Result<Vec<PdfIndexedItem<PdfAdmittedStreamRole>>, ValueError> {
+        ) -> Result<Vec<PdfRoleItem>, ValueError> {
             let Some(raw) = raw else { return Ok(Vec::new()); };
             type Row = (usize, ObjRef, RoleText);
             let mut shape: [Option<Row>; SMALL_ROLE_ROWS] = [None; SMALL_ROLE_ROWS];
@@ -531,14 +531,14 @@ mod receiving {
                         code: string(named_mut(value, "code")).expect("validated calculator text"),
                     },
                 };
-                output.push(PdfIndexedItem { index, value: PdfAdmittedStreamRole {
+                output.push(PdfRoleItem { index, value: PdfAdmittedStreamRole {
                     identity: PdfGraphIdentity { owner, path: Vec::new() }, dependencies: Vec::new(), value,
                 } });
             }
             Ok(output)
         }
 
-        fn roles_target(target: &mut PdfMutation) -> &mut Option<PdfIndexedDiff<PdfAdmittedStreamRole>> {
+        fn roles_target(target: &mut PdfMutation) -> &mut Option<crate::standards::v1_7::subsets::base::schema::diff::PdfRoleDiff> {
             match target {
                 PdfMutation::InsertObject(operation) => &mut operation.admitted_stream_roles,
                 PdfMutation::RemoveObject(operation) => &mut operation.admitted_stream_roles,
@@ -555,8 +555,8 @@ mod receiving {
             fn row_fields(&self) -> Option<(usize, usize)> {
                 match self.phase {
                     Phase::Removed => Some((0, size_of::<usize>())),
-                    Phase::Modified => Some((1, size_of::<PdfIndexedItem<PdfAdmittedStreamRole>>())),
-                    Phase::Added => Some((2, size_of::<PdfIndexedItem<PdfAdmittedStreamRole>>())),
+                    Phase::Modified => Some((1, size_of::<PdfRoleItem>())),
+                    Phase::Added => Some((2, size_of::<PdfRoleItem>())),
                     _ => None,
                 }
             }
@@ -656,7 +656,7 @@ mod receiving {
                         None | Some(DslValue::Null) => Phase::Done,
                         Some(roles) => {
                             record(roles)?;
-                            *roles_target(target.as_mut().expect("retained typed object")) = Some(PdfIndexedDiff::default());
+                            *roles_target(target.as_mut().expect("retained typed object")) = Some(Default::default());
                             Phase::Removed
                         }
                     },

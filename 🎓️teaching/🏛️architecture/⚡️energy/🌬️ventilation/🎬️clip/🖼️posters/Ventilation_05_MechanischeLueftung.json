@@ -5,7 +5,7 @@
     "animation": null
   },
   "sources": {
-    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udf2c\ufe0fventilation/\ud83c\udfac\ufe0fclip/\u2699\ufe0fmechanical/\ud83d\udc0d\ufe0f.py": "af5b723b0b5fc0aff541d0ad6dc499b6c2ef6d800a3c302340418954706a3d51",
+    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udf2c\ufe0fventilation/\ud83c\udfac\ufe0fclip/\u2699\ufe0fmechanical/\ud83d\udc0d\ufe0f.py": "2b43be218e612eb83ce15ba6233e9719a448ed7531ec30baa343091601df7a7c",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udf2c\ufe0fventilation/\ud83c\udfac\ufe0fclip/\u2699\ufe0fmechanical/\ud83d\udd00\ufe0ftransitions/\ud83d\udd23\ufe0f.json": "c31425522999c5a7bff5448cef4dca71242539ebdc7bb8e61ceb519730afcc6d",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0ftheme/\ud83d\udc0d\ufe0f.py": "a7367e0158b70f9d1807f45e1f6a29ca338370218e5e0698ddc49bcf14f346e9",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0fvisuals/\ud83d\udc0d\ufe0f.py": "e6b4a12825f9d06937a5c0dd73139dcd615ee2fa844f920c9f4421c4021e938d",
@@ -69,13 +69,13 @@
     "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fassets/\ud83d\udd24\ufe0ffonts/\ud83e\uddf1\ufe0fkelly-slab/\ud83c\udfdb\ufe0flatin/\ud83d\udcd6\ufe0fregular/\ud83d\udd24\ufe0foutline.ttf": "33c29e564b169dbbc1a90be9f050fcde7fb204232bc4f3c52bf4b844e31dbba6"
   },
   "captured": {
-    "language": "de",
-    "profile": "preview",
+    "language": "en",
+    "profile": "final",
     "audience": "speaker"
   },
   "size": [
     640,
     360
   ],
-  "sha256": "f87797de96f31fb078f5b5a6dbb4c4304e6931529ba7cb19648c6d022be1257c"
+  "sha256": "1df55d1acd88a8f36b7f0c7d720b21f79aaac8b2892249902c93c5f603a32039"
 }

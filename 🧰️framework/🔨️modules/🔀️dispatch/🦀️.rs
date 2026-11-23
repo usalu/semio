@@ -258,6 +258,7 @@ fn without_async_fn(mut item: ItemTrait) -> ItemTrait {
 }
 
 /// 🎟️ A typed owner can customize lifecycle methods while forwarding the original borrowed contract.
+/// 📦️ Every forwarded future is boxed so the layout query of a delegating future stops at a pointer instead of recursing through the target's whole async chain (rustc "queries overflow the depth limit", depth 130 over `VcsArtifactApp`/`EditorApp` and the closed per-plugin enums).
 fn build_typed_delegation(item: &ItemTrait) -> syn::Result<TokenStream> {
     if !item.generics.params.is_empty() || item.generics.where_clause.is_some() {
         return Err(syn::Error::new_spanned(&item.generics, "dyn_enum delegate: place generic parameters on the concrete target; the delegated contract must be monomorphic"));
@@ -307,7 +308,7 @@ fn build_typed_delegation(item: &ItemTrait) -> syn::Result<TokenStream> {
             Some(value) => quote!{
                 #(#attributes)*
                 fn #method_name #generics (#inputs) -> impl ::core::future::Future<Output = #value> #where_clause {
-                    async move { #name::#method_name(#receiver #(, #args)*).await }
+                    async move { ::std::boxed::Box::pin(#name::#method_name(#receiver #(, #args)*)).await }
                 }
             },
             None => quote!{

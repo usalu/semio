@@ -264,8 +264,8 @@ async fn with_nothing_selected_the_panel_edits_the_project() {
 async fn accessible(app: &mut BimApp, body: &str, view: &ViewModel) -> (Option<String>, Option<String>) {
     use semio_plugin::PluginApp;
     semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, body, view, app.1.cx(), |root| {
-        let name = root.accessibility.label.as_ref().map(|label| label.0.as_str().to_string());
         let description = root.accessibility.description.as_ref().map(|label| label.0.as_str().to_string());
+        let description = root.accessibility.description.as_ref().map(|label| label.as_str().to_string());
         (name, description)
     }).await.expect("render")
 }

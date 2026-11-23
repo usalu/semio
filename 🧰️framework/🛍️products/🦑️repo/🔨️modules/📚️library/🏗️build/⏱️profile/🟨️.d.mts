@@ -18,6 +18,7 @@ export function repoProfileV1():RepoProfileV1;
 export function resetRepoProfileV1():void;
 export function profilePhaseV1<T>(phase:string,body:()=>T,detail?:string):T;
 export function profileMarkV1(phase:string,detail?:string):void;
+export function profileProgressV1(text:string|undefined):void;
 export function profileCurrentPhaseV1():string|undefined;
 export function installRepoProfileSpawnCensusV1(profile:RepoProfileV1):void;
 export function repoProfileSpawnLabelV1(command:unknown):string;

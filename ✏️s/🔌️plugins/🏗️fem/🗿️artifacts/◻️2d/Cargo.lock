@@ -3898,6 +3898,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
+ "semio-framework-deflate",
  "semio-framework-diagnostic",
  "semio-framework-io-control",
  "semio-framework-io-schema",
@@ -4476,7 +4477,6 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
- "semio-framework-value-snapshot-read",
  "semio-os-directory",
  "semio-os-spr",
  "semio-os-store-backbone",
@@ -4485,6 +4485,7 @@ dependencies = [
  "semio-os-store-engine-bundle",
  "semio-os-store-engine-close",
  "semio-os-store-engine-core",
+ "semio-os-store-engine-derived",
  "semio-os-store-engine-live",
  "semio-os-store-engine-owners",
  "semio-os-store-engine-stage",
@@ -4639,6 +4640,25 @@ dependencies = [
  "semio-os-store-text-io",
  "semio-os-vcs",
  "serde",
+]
+
+[[package]]
+name = "semio-os-store-engine-derived"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-snapshot-read",
+ "semio-os-spr",
+ "semio-os-store-engine-core",
+ "semio-os-store-engine-live",
+ "semio-os-store-ledger",
+ "semio-os-store-operation-wire",
+ "semio-os-store-read",
+ "semio-os-store-replay",
+ "semio-os-store-replay-operation",
+ "semio-os-store-space-schema",
+ "semio-os-vcs",
 ]
 
 [[package]]
@@ -6212,6 +6232,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-value",
  "semio-os-kernel",
+ "semio-plugin-command",
  "semio-plugin-decl-app",
  "semio-plugin-instance-app",
  "semio-plugin-instance-initialization",
@@ -7516,6 +7537,7 @@ dependencies = [
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
+ "semio-plugin-reactor-jobs",
  "semio-plugin-testing-laws",
  "semio-plugin-time-travel",
  "semio-plugin-window-config",
@@ -8045,6 +8067,7 @@ dependencies = [
  "semio-s-artifact-fem-2d-viewer",
  "semio-s-fem-material",
  "semio-s-fem-node",
+ "semio-s-fem-receiving",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -8135,6 +8158,7 @@ dependencies = [
  "semio-s-fem-model",
  "semio-s-fem-node",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-locale",
  "semio-ui-scene",
  "serde_json",
@@ -8241,6 +8265,7 @@ dependencies = [
  "semio-s-fem-material",
  "semio-s-fem-node",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-locale",
 ]
 
@@ -8618,6 +8643,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-schema-state",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-os-command",
@@ -13034,6 +13060,7 @@ dependencies = [
  "semio-ui-contract-text",
  "semio-ui-contract-text-edit",
  "semio-ui-contract-values",
+ "semio-ui-contract-window-resource",
  "semio-ui-styling",
  "serde",
 ]
@@ -13147,6 +13174,10 @@ dependencies = [
  "semio-ui-contract-text",
  "serde",
 ]
+
+[[package]]
+name = "semio-ui-contract-window-resource"
+version = "0.1.0"
 
 [[package]]
 name = "semio-ui-declaration"

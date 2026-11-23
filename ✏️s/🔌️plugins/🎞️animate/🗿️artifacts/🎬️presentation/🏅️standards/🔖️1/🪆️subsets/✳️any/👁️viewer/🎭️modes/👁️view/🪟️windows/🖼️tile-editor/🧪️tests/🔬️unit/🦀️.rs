@@ -18,7 +18,7 @@ use semio_framework_pack_json::Value;
 #[test]
 fn renders_canvas_2d_scene() {
     let deck = crate::default_presentation_snapshot();
-    let debug_str = format!("{:?}", render(&deck));
+    let debug_str = format!("{:?}", render(&deck, semio_plugin::Locale::En));
     assert!(debug_str.contains("canvas-2d") || debug_str.contains("Canvas2d"));
 }
 

@@ -271,14 +271,14 @@ impl ArtifactEditor for Ifc2x3CobieEditor {
     ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         if body_key==inspector::BODY_KEY{return inspector::render(doc,_interaction,view_state,"s.stdio.ifc@2x3/cobie#editor",true,cx).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);}
         if body_key == main::BODY_KEY {
-            return main::render_selected_in_context(doc.snapshot,cx,_interaction,inspector::DOMAIN,inspector::GRANULARITY).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+            return main::render_selected_in_context(doc.snapshot,cx,_interaction,inspector::DOMAIN,inspector::GRANULARITY, view_state.locale).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
         }
         Self::render(body_key, doc, cfg, view_state).map(Some).map_err(Into::into)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(doc.snapshot, view_state.locale).map(semio_plugin::built_to_component_tree),
             editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details_provider_revisioned(&details::Ifc2x3DetailsProvider::new(doc.snapshot),semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?,view_state.locale,"s.stdio.ifc@2x3/cobie#editor",&semio_plugin::TreeWindows::for_body(view_state,editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_plugin::built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }

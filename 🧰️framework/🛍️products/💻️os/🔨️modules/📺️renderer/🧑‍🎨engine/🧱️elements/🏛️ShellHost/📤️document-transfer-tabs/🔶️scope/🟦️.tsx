@@ -4,7 +4,8 @@ import { NATURAL_FILE_PORT_ID, parseSurfaceAppId, type AppDefinition, type Sever
 import { decodePackValue } from "@semio-tech/framework/packs";
 import { DOCUMENT_ARCHIVE_MAXIMUM_BYTES, decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
-import { DOCUMENT_ARCHIVE_FILE_EXTENSION, DOCUMENT_ARCHIVE_MEDIA_TYPE, documentArchiveFileNameV1, beginDocumentTransferV1, naturalFileSaveNameV1, naturalFileFormatV1, naturalMediaDescriptorMatchesV1, naturalFileMediaInputV1, openNaturalFileOwnerV1, documentTransferNoticeTextV1, documentTransferNoticeCodeV1, type DocumentTransferNoticeV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { DOCUMENT_ARCHIVE_FILE_EXTENSION, DOCUMENT_ARCHIVE_MEDIA_TYPE, documentArchiveFileNameV1, beginDocumentTransferV1, naturalFileSaveNameV1, naturalFileFormatV1, naturalMediaDescriptorMatchesV1, openNaturalFileOwnerV1, documentTransferNoticeTextV1, documentTransferNoticeCodeV1, type DocumentTransferNoticeV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { naturalFileMediaInputV1 } from "../../../🛠️ShellHelpers/🎞️media-import/🟦️.ts";
 import { NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, readBlobBytesBoundedV1, requestFileSelectionV1, downloadMediaExportBytes, shellSegmentedDownloadSinkFactory } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
 import { buildSpacePanelState, parsePanelState, studioPanelFocusingSpawned } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx";
@@ -18,6 +19,7 @@ import { spawnedProgramViewStateV1 } from "../../🪟️spawned-program/🟦️.
 import { localCatalogBindingV1 } from "../../🗂️local-catalog/🟦️.ts";
 import { LOCAL_CATALOG_WRITE_DEADLINE_MS_V1, sameLocalDocumentArchiveV1 } from "../../🗂️local-catalog/🟦️.ts";
 import { awaitVerifiedReadbackV1 } from "../../🗂️local-catalog/💾️acknowledgment/🟦️.ts";
+import { FOLDER_ENDPOINT_PATH } from "../../../../../../🏪️store/👷️worker/⚙️constants/🟦️.ts";
 import { readSignedDocumentArchiveV1 } from "../📦️signed-archive/🟦️.ts";
 import { readOwnedDocumentArchiveV1 } from "../../🗄️shell-uri-documents/🔸️open-document/🔏️archive-owner/🟦️.ts";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
@@ -272,6 +274,13 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
           return () => { if (core.localDocumentOwnersRef.current.get(entry.clientInstanceId) === observer) core.localDocumentOwnersRef.current.delete(entry.clientInstanceId); };
         },
         submit: () => { const wire = encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "localDocumentArchive", archive: expected } }); worker.postMessage({ wire }, [wire.buffer]); },
+        read: async () => {
+          const folder = entry.persistenceBindings.find((binding) => binding.kind === "folder" && binding.dataClass === "persistedLocalOnly");
+          if (folder === undefined || folder.kind !== "folder") return null;
+          const response = await fetch(`${FOLDER_ENDPOINT_PATH}?uri=${encodeURIComponent(`folder://${folder.path}`)}&documentId=${encodeURIComponent(entry.documentId)}`);
+          if (!response.ok || response.status === 204) return null;
+          return new Uint8Array(await response.arrayBuffer());
+        },
         probe: () => worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "externalChanged" } }) }),
       });
       if (readback === null) throw signal.reason ?? new Error("natural-file.archive-not-persisted");

@@ -136,9 +136,9 @@ impl ArtifactViewer for FlowViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(&crate::flow_composed_snapshot(doc.snapshot, &doc.children).map_err(|fault| semio_plugin::PluginAssemblyError::new("flow.content-unavailable", fault.message))?).map(semio_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(&crate::flow_composed_snapshot(doc.snapshot, &doc.children).map_err(|fault| semio_plugin::PluginAssemblyError::new("flow.content-unavailable", fault.message))?, view_state.locale).map(semio_plugin::built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

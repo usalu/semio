@@ -21,5 +21,16 @@
       "maximumDepth": 64
     },
     "workFuel": 10000000
+  },
+  "infrastructure": {
+    "retained": {
+      "maximumItems": 65536,
+      "maximumCopyBytes": 16777216,
+      "maximumCapacityBytes": 67108864,
+      "maximumReleaseBytes": 67108864,
+      "maximumDepth": 64
+    },
+    "workFuel": 10000000,
+    "maximumCleanupMicroseconds": 100000
   }
 }

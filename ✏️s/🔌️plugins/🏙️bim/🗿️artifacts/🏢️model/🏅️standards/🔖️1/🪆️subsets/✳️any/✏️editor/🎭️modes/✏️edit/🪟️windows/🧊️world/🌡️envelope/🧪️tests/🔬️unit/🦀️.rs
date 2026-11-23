@@ -145,7 +145,7 @@ async fn the_world_scene_gains_the_overlay_only_while_the_setting_is_on_and_stil
     let boundary = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::scene(&snapshot, &inference, &on("boundary"), &[], &[], 1);
     assert!(boundary.annotations.is_some() && boundary.scalar_field.is_none());
     for config in [on("u_value"), on("boundary")] {
-        assert!(world::render(&snapshot, &inference, &config, &[], &[], 1).is_ok(), "the scene with the overlay is a valid surface");
+        assert!(world::render(&snapshot, &inference, &config, &[], &[], 1, semio_plugin::Locale::En).is_ok(), "the scene with the overlay is a valid surface");
     }
 }
 

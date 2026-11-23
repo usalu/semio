@@ -78,7 +78,7 @@ pub fn curated_row_actions(item: &CuratedItem, kind: &ObjectKind, labels: &Sourc
     actions
 }
 
-pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels: &SourcingLabels, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let columns = [("name", labels.col_name.as_str(), true), ("availability", labels.col_availability.as_str(), true), ("count", labels.col_count.as_str(), true), ("actions", labels.col_actions.as_str(), false)];
     let rows = curated_rows(document, cfg)
         .into_iter()
@@ -94,7 +94,7 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels:
             )
         })
         .collect();
-    sourcing_table(SOURCING_CURATION_SURFACE_CURATED, &columns, rows, "dropOnCurated", cfg.filters.sort.as_ref())
+    sourcing_table(SOURCING_CURATION_SURFACE_CURATED, &columns, rows, "dropOnCurated", cfg.filters.sort.as_ref(), semio_plugin::surface_name(locale, "Curated table", "Kuratierte Tabelle"))
 }
 //#endregion 🔖️Render
 

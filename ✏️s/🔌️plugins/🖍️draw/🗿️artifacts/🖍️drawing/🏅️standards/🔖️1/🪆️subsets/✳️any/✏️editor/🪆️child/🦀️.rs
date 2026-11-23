@@ -7,7 +7,6 @@ fn registration(command_id:&'static str)->ChildEditorRegistration<DrawingSnapsho
 pub static DRAWING_CHILD_EDIT_PATH:LazyLock<ChildEditorRegistration<DrawingSnapshot>>=LazyLock::new(||registration("editPath"));
 pub static DRAWING_CHILD_EDIT_FILL:LazyLock<ChildEditorRegistration<DrawingSnapshot>>=LazyLock::new(||registration("editFill"));
 pub static DRAWING_CHILD_PATCH_LAYER:LazyLock<ChildEditorRegistration<DrawingSnapshot>>=LazyLock::new(||registration("patchLayer"));
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
 
 /// 📖️ Genuine vector reads use an explicit read capability and never fabricate an edit command.
 pub static DRAWING_CHILD_VECTOR_READ:semio_plugin::app::vector_read::ChildVectorReadRegistration<DrawingSnapshot>=semio_plugin::app::vector_read::ChildVectorReadRegistration::new(semio_plugin::app::child_read::ChildReadCapability{artifact_kind:DRAWING_DIALECT.artifact_kind,standard:DRAWING_DIALECT.standard.0,subset:DRAWING_DIALECT.subset.0},&DRAWING_ADMITTER,&DRAWING_VECTOR_SOURCE);

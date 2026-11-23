@@ -4,20 +4,30 @@
   "rowHeight": 7.2,
   "cases": [
     {
-      "name": "Header shares its bottom border",
+      "name": "Header chips sit on the shared bottom rule",
       "bar": "navbar",
       "side": "bottom",
       "bodyHeight": 10.08,
-      "openHeight": 10.83,
-      "totalHeight": 11.58
+      "totalHeight": 11.58,
+      "chipHeight": 10.83,
+      "edges": [
+        "top",
+        "left",
+        "right"
+      ]
     },
     {
-      "name": "Footer shares its top border",
+      "name": "Footer chips hang from the shared top rule",
       "bar": "footer",
       "side": "top",
       "bodyHeight": 10.08,
-      "openHeight": 10.83,
-      "totalHeight": 11.58
+      "totalHeight": 11.58,
+      "chipHeight": 10.83,
+      "edges": [
+        "bottom",
+        "left",
+        "right"
+      ]
     }
   ],
   "footerLogo": {
@@ -80,5 +90,45 @@
         "right": "Thema"
       }
     }
-  ]
+  ],
+  "surface": {
+    "opacity": 0.82,
+    "glass": "semio-chrome-window",
+    "opaque": "semio-chrome-window",
+    "switch": "semio@chip@glass"
+  },
+  "frame": {
+    "edges": {
+      "title": [
+        "right",
+        "bottom"
+      ],
+      "number": [
+        "left",
+        "bottom"
+      ],
+      "heading": {
+        "title": [
+          "right"
+        ],
+        "number": [
+          "left"
+        ]
+      }
+    },
+    "topRule": "continuous",
+    "removed": [
+      "cap@raise",
+      "cap@open",
+      "header@gap@open",
+      "vskip_stroke_hairline",
+      "header@baseline@corner@stub",
+      "cap@left@overlay",
+      "semio@heading@cap",
+      "semio@window@tab",
+      "semio@window@ctrl",
+      "semio@heading@pair",
+      "semio@heading@chip@open"
+    ]
+  }
 }

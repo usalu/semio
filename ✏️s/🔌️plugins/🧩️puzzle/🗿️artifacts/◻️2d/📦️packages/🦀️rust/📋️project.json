@@ -12,31 +12,12 @@
       "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/**/*",
-      "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🔨️modules/🏠️host/🧰️owned/🧪️tests/🧫️fixtures/♻️store-close/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🧪️tests/📏️inline-import/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/**/*"
     ]
   },
   "targets": {
-    "test-store-close-source": {
-      "executor": "repo:script",
-      "cache": true,
-      "outputs": [],
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "repo ./📜️script.ts test-store-close source"
-      }
-    },
-    "test-store-close-native": {
-      "executor": "repo:script",
-      "cache": true,
-      "outputs": [],
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
-        "command": "repo ./📜️script.ts test-store-close native"
-      }
-    },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
       "cache": true,

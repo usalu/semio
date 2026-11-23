@@ -53,7 +53,7 @@ fn receiving_fault<E:semio_framework_value_native_owned::native_decoding::Native
 pub fn receive<E:semio_framework_value_native_owned::native_decoding::NativeReceivingEffectError>(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,u64,RetainedCloneGrant)->semio_framework_value::RetainedWorkPoll<RetainedCloneStep,E>)->Result<(),OriginalTurnFailure>{
  if cx.should_yield()||!fits(cx,d){return Ok(())}
  let mut out=None;let mut polled=None;
- if !cx.with_native_receiving_work(&mut out, Default::default(), |native,grant,maximum|{polled=Some(run(native,maximum,grant));Ok(())})?{return Ok(())}
+ if !cx.with_native_receiving_work(&mut out, d, |native,grant,maximum|{polled=Some(run(native,maximum,grant));Ok(())})?{return Ok(())}
  out.ok_or_else(||invalid("original tool receiving scope vanished"))?.into_result()?;
  match polled{Some(semio_framework_value::RetainedWorkPoll::Complete(turn))=>{semio_framework_job::receive_original_receiving_work(cx,semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(receiving_fault),work:turn.work})?;Ok(())},Some(semio_framework_value::RetainedWorkPoll::Pending{work})=>{cx.consume_fuel(u64::try_from(work).unwrap_or(u64::MAX));Ok(())},None=>Ok(())}
 }
@@ -62,7 +62,7 @@ pub fn receive_effect<E:semio_framework_value_native_owned::native_decoding::Nat
  use semio_framework_value_native_owned::native_decoding::{NativeReceivingEffect,NativeReceivingEffectPoll};
  if cx.should_yield()||!fits(cx,d){return Ok(())}
  let mut out=None;let mut frame=NativeReceivingEffect::<E>::default();let mut done=None;
- if !cx.with_native_receiving_work(&mut out, Default::default(), |native,_,maximum|{done=Some(native.receive_effect(d,maximum,&mut frame,run)?);Ok(())})?{return Ok(())}
+ if !cx.with_native_receiving_work(&mut out, d, |native,_,maximum|{done=Some(native.receive_effect(d,maximum,&mut frame,run)?);Ok(())})?{return Ok(())}
  out.ok_or_else(||invalid("original tool effect scope vanished"))?.into_result()?;
  match done{Some(NativeReceivingEffectPoll::Complete(turn))=>{semio_framework_job::receive_original_receiving_work(cx,semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(receiving_fault),work:turn.work})?;Ok(())},Some(_)=>Err(invalid("synchronous native receiving stayed pending").into()),None=>Ok(())}
 }

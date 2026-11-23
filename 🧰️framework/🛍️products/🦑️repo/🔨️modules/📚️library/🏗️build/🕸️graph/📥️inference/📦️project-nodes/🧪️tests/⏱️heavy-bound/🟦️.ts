@@ -39,3 +39,20 @@ test("the old wiring with the machine sign never ends before the safety net, whi
  expect(causes).toEqual(["limit"]);
  expect(at).toBeGreaterThanOrEqual(wantedPolicyV1.waitMaximumMilliseconds);
 });
+
+test("a fleet that delivers none of the heavy owners within the declared heavy bound is left at once: the wait is wired with that bound and ends `stalled` after it, so the read runs the owners here",async()=>{
+ expect(wait).toContain("policy:{...wantedModule.wantedPolicyV1,waitMilliseconds:wantedModule.wantedPolicyV1.heavyWaitMilliseconds}");
+ expect(wantedPolicyV1.heavyWaitMilliseconds).toBeLessThanOrEqual(300000);
+ expect(wantedPolicyV1.heavyWaitMilliseconds).toBeLessThan(wantedPolicyV1.waitMilliseconds);
+ let at=0;const causes:string[]=[];
+ const left=await awaitWantedV1({projects:["heavy","other"],take:async()=>false,now:()=>at,sleep:async milliseconds=>{at+=milliseconds;},alive:()=>at,progressSign:()=>0,end:cause=>{causes.push(cause);},policy:{...wantedPolicyV1,waitMilliseconds:wantedPolicyV1.heavyWaitMilliseconds}});
+ expect(left).toEqual(["heavy","other"]);expect(causes).toEqual(["stalled"]);
+ expect(at).toBeGreaterThanOrEqual(wantedPolicyV1.heavyWaitMilliseconds);expect(at).toBeLessThan(wantedPolicyV1.heavyWaitMilliseconds+2*wantedPolicyV1.pollMilliseconds);
+});
+
+test("an arrival restarts the heavy bound: a fleet that delivers keeps being waited for, only silence ends the wait",async()=>{
+ let at=0;const causes:string[]=[],taken=new Set<string>(),names=["a","b"];
+ const left=await awaitWantedV1({projects:names,take:async name=>taken.has(name),now:()=>at,sleep:async milliseconds=>{at+=milliseconds;if(at===wantedPolicyV1.heavyWaitMilliseconds-wantedPolicyV1.pollMilliseconds)taken.add("a");},alive:()=>at,progressSign:()=>heavyProgressSignV1(names,taken),end:cause=>{causes.push(cause);},policy:{...wantedPolicyV1,waitMilliseconds:wantedPolicyV1.heavyWaitMilliseconds}});
+ expect(left).toEqual(["b"]);expect(causes).toEqual(["stalled"]);
+ expect(at).toBeGreaterThan(wantedPolicyV1.heavyWaitMilliseconds);expect(at).toBeLessThan(2*wantedPolicyV1.heavyWaitMilliseconds+2*wantedPolicyV1.pollMilliseconds);
+});

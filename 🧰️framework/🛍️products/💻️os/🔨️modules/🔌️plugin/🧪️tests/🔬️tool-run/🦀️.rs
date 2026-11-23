@@ -478,10 +478,10 @@ impl ArtifactApp for ToyRunApp {
         Ok(Emit { artifact_mutations: vec![command.clone()], ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
         if body_key == text(&fixture()["boardLane"]["bodyKey"]) {
             let scene = Board2dScene::base(format!("{{\"count\":{}}}", doc.snapshot.count), "{}".into(), true);
-            let surface = scene_surface(text(&fixture()["boardLane"]["surfaceId"]), SurfaceKind::Board2d, &scene)?;
+            let surface = scene_surface(text(&fixture()["boardLane"]["surfaceId"]), SurfaceKind::Board2d, &scene, semio_plugin_window_transient::surface_name(view_state.locale, "Board", "Brett"), None)?;
             return column()
                 .try_id("board")
                 .map_err(|_| PluginAssemblyError::new("toy", "board id"))?
@@ -500,7 +500,7 @@ impl ArtifactApp for ToyRunApp {
         let provisional = |unit: i32| doc.tool_run().is_some_and(|run| run.provisional_entities.contains(&(unit as u64)));
         let instances: Vec<Value> = (1..=doc.snapshot.count).map(|unit| serde_json::json!({ "id": format!("unit-{unit}"), "meshId": "unit", "provisional": provisional(unit) })).collect();
         let scene = World3dScene::base("{}".into(), "[]".into(), Value::Array(instances).to_string(), semio_ui_scene::world3d_default_selection_json());
-        let surface = scene_surface(text(&fixture()["traceLane"]["surfaceId"]), SurfaceKind::World3d, &scene)?;
+        let surface = scene_surface(text(&fixture()["traceLane"]["surfaceId"]), SurfaceKind::World3d, &scene, semio_plugin_window_transient::surface_name(view_state.locale, "3D view", "3D-Ansicht"), None)?;
         column()
             .try_id("world")
             .map_err(|_| PluginAssemblyError::new("toy", "world id"))?

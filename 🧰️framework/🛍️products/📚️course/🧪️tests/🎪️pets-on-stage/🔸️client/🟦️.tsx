@@ -43,7 +43,7 @@ export function registerClientTests(): void {
       const parts = [...document.querySelectorAll<HTMLElement>(COURSE_PET_SURFACES)].filter((part) => part.closest("[inert]") === null);
       const cards = uniq(parts.flatMap((part) => part.closest<HTMLElement>("[data-card]")?.dataset.card ?? []));
       expect(cards.length).toBeGreaterThanOrEqual(1);
-      for (const card of cards) expect(parts.filter((part) => part.closest<HTMLElement>("[data-card]")?.dataset.card === card).map((part) => part.dataset.slot)).toEqual(["window-chrome-chip-cap"]);
+      for (const card of cards) expect(parts.filter((part) => part.closest<HTMLElement>("[data-card]")?.dataset.card === card).map((part) => part.hasAttribute("data-window-frame"))).toEqual([true]);
       expect(parts.at(-1)).toBe(app().querySelector(":scope > footer"));
       expect(parts.at(-1)).not.toBeNull();
       expect([...document.querySelectorAll(COURSE_PET_KEEPOUTS)]).toContain(app().querySelector(":scope > header"));

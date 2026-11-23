@@ -16,5 +16,5 @@ async fn render_emits_one_page_per_slide() {
     let document = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation {
         slides: vec![PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("only")], position: Default::default() }] }],
     });
-    assert_eq!(render(&document).expect("render").children.len(), 1);
+    assert_eq!(render(&document, semio_plugin::Locale::En).expect("render").children.len(), 1);
 }

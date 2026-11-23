@@ -3,8 +3,6 @@ pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
 pub use semio_framework_value_retirement::{retirement_fields_type,retirement_fields_seed,OriginalRetirementOutcome,OriginalRetirementPoll,OriginalRetirementControl,RetainedWorkOutcome,ErasedSnapshotRetirement,retirement,factory_ticket_demands,close_factory_ticket,RetirementSelection,select_factory_ticket,owned_retirement_birth_bytes,admit_owned_retirement,OriginalRetirementFailure,OriginalRetirementCloseLoan,OriginalRetirementClosePort,OriginalFailureStorageBirth,OriginalFailureStoragePool};
 pub use semio_framework_value_shared_issuance as shared_issuance;
-#[cfg(test)]
-pub use semio_framework_value_retirement::{retirement_fields_seed,retirement_fields_type};
 use semio_framework_value_retirement::{RetireOwned,retirement::controlled::RetainedOwnerGate};
 use std::{mem::ManuallyDrop,sync::atomic::AtomicU64};
 static RETAINED_CLONE_SOURCE_IDS:AtomicU64=AtomicU64::new(1);
@@ -139,7 +137,7 @@ impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthority<A>{
  pub fn next_close_capacity_byte_demand(&self,work:usize)->Result<usize,ValueError>{self.source.next_close_capacity_byte_demand(work)}
  pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.source.next_close_release_byte_demand()}
  pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.source.next_close_depth_demand()}
- pub fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();self.source.close_step(body,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
+ pub fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();self.source.close_step(body,&mut effect.nested(grant))}
  pub fn next_take_work_demand(&self,body:usize)->Result<u64,ValueError>{self.source.next_take_work_demand(body)}
  pub fn next_take_copy_byte_demand(&self)->Result<usize,ValueError>{self.source.next_take_copy_byte_demand()}
  pub fn next_take_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.source.next_take_capacity_byte_demand(body)}

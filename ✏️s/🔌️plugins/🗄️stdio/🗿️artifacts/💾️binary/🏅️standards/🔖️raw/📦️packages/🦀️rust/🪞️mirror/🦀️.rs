@@ -21,6 +21,10 @@ pub mod io_registry {
     }
 
     /// 📌️ Registers every entry into the OS-wide typed io registry. Called once from `🔌️plugin/🔧️setup`.
+    // 🚫️async: E1 pure registry call (no await) — see R9
+    pub fn register() {
+        semio_plugin::io::register_composer_entries(v_raw::entries()).expect("static Stdio registration must be available and conflict-free");
+    }
 
     //#region 🧪️Tests
     #[cfg(test)]

@@ -11,6 +11,14 @@
     { "ratio": -3, "stretch": 1 },
     { "ratio": null, "stretch": 1 }
   ],
+  "ceilingMilliseconds": 1800000,
+  "funding": [
+    { "name": "an idle host funds the declared budget", "budget": 300000, "ratio": 1, "funded": 300000, "needed": 300000, "clamped": false },
+    { "name": "a stretch below the ceiling is funded in full", "budget": 300000, "ratio": 5, "funded": 1500000, "needed": 1500000, "clamped": false },
+    { "name": "a stretch that overflows the ceiling is clamped", "budget": 300000, "ratio": 7.5, "funded": 1800000, "needed": 2250000, "clamped": true },
+    { "name": "the maximum stretch of the ceiling budget is clamped", "budget": 1800000, "ratio": 80, "funded": 1800000, "needed": 14400000, "clamped": true },
+    { "name": "a ceiling budget on an idle host is not clamped", "budget": 1800000, "ratio": 1, "funded": 1800000, "needed": 1800000, "clamped": false }
+  ],
   "clocks": [
     { "name": "an idle host stops at the exact wall budget", "budget": 300000, "work": 297000, "cores": 10, "trace": [[0, 2]], "expiry": 300000, "survives": true },
     { "name": "a load equal to the cores stretches nothing", "budget": 300000, "work": 297000, "cores": 10, "trace": [[0, 10]], "expiry": 300000, "survives": true },

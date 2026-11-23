@@ -66,7 +66,7 @@ fn collection_of(tag: &str) -> &'static str {
 impl UnitSource for En1999Units {
     type Document = En1999Snapshot;
 
-    const OWNERS: semio_s_plugin_norm_compliance::Owners = semio_s_plugin_norm_compliance::Owners::new(&["members", "connections", "coldFormed", "shells", "fireScenarios", "fatigueDetails", "weldRuns", "fatigueCategories", "patchLoads", "sheetProfiles", "fireInsulations", "ringStiffeners", "transverseStiffeners", "cases"], &["en1999.1-1.empty", "en1999.8.empty", "en1999.1-2.empty", "en1999.1-3.empty", "en1999.1-4.empty", "en1999.1-5.empty", "en1999.ref.", "en1999.6.1.outline.", "en1999.integrity."]);
+    const OWNERS: semio_s_plugin_norm_compliance::Owners = semio_s_plugin_norm_compliance::Owners::new(&["members", "connections", "coldFormed", "shells", "fireScenarios", "fatigueDetails", "weldRuns", "fatigueCategories", "patchLoads", "ringStiffeners", "transverseStiffeners", "cases"], &["en1999.1-1.empty", "en1999.8.empty", "en1999.1-2.empty", "en1999.1-3.empty", "en1999.1-4.empty", "en1999.1-5.empty", "en1999.ref.", "en1999.6.1.outline.", "en1999.integrity."]);
 
     fn units(d: &En1999Snapshot) -> Vec<CheckUnit<En1999Snapshot>> {
         let part = |rows: Rowing, name: &'static str, collection: &str| rows.part_reading(name, &["annex", &format!("{collection}.*.id")], run(Scope::Part(name)));

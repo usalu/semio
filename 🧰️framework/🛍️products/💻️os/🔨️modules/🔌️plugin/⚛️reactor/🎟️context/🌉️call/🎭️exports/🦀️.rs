@@ -38,7 +38,12 @@ pub fn progress(original:RetainedCloneProgress)->Wire::RetainedProgress{Wire::Re
 #[doc(hidden)]
 pub fn kind(original:ValueRefusalKind)->Wire::ActorAuthorityRefusal{match original{ValueRefusalKind::InvalidValue=>Wire::ActorAuthorityRefusal::InvalidValue,ValueRefusalKind::Canceled=>Wire::ActorAuthorityRefusal::Canceled,ValueRefusalKind::OwnershipLimit=>Wire::ActorAuthorityRefusal::OwnershipLimit,ValueRefusalKind::AllocationFailed=>Wire::ActorAuthorityRefusal::AllocationFailed,ValueRefusalKind::WorkLimit=>Wire::ActorAuthorityRefusal::WorkLimit,ValueRefusalKind::DepthLimit=>Wire::ActorAuthorityRefusal::DepthLimit,ValueRefusalKind::UnsupportedOwner=>Wire::ActorAuthorityRefusal::UnsupportedOwner,ValueRefusalKind::InvariantViolated=>Wire::ActorAuthorityRefusal::InvariantViolated}}
 #[doc(hidden)]
-pub fn failure(input:Wire::RetainedTurnInput,spent:RetainedCloneProgress,work_units_spent:u64,authority:Option<ValueRefusalKind>)->Wire::ActorCallRefusal{Wire::ActorCallRefusal{input,spent:progress(spent),work_units_spent,failure:authority.map(|original|Wire::ActorCallFailure::Authority(kind(original))).unwrap_or(Wire::ActorCallFailure::Semantic)}}
+/// 🔎️ The WIT failure carries only the `semantic` tag, so the retained cause code and message go through the guest `log` import.
+fn report_semantic(){
+ let detail=with_entry(|entry|entry.original_job_refusal().or_else(||entry.original_cleanup_refusal()).map(|failure|failure.diagnostic()).or_else(||entry.original_fault().map(|fault|format!("{}: {}",fault.code.0,fault.message))));
+ if let Ok(Some(detail))=detail{semio_plugin_abi::wasip2::semio::framework::pure::log("error",&format!("original-turn.semantic {detail}"))}
+}
+pub fn failure(input:Wire::RetainedTurnInput,spent:RetainedCloneProgress,work_units_spent:u64,authority:Option<ValueRefusalKind>)->Wire::ActorCallRefusal{if authority.is_none(){report_semantic()}Wire::ActorCallRefusal{input,spent:progress(spent),work_units_spent,failure:authority.map(|original|Wire::ActorCallFailure::Authority(kind(original))).unwrap_or(Wire::ActorCallFailure::Semantic)}}
 fn outputs_held()->bool{ORIGINAL_WIT_OUTPUT.with(|output|output.borrow().is_some())||ORIGINAL_OWNED_OUTPUT.with(|output|!output.borrow().is_empty())}
 fn owned_input_held()->bool{ORIGINAL_WIT_INPUT.with(|input|input.borrow().is_some())||ORIGINAL_OWNED_INPUT.with(|input|input.borrow().is_some())||ORIGINAL_FAILURE_FRAME.with(|frame|!frame.borrow().is_empty())||ORIGINAL_FAILURE_DESCRIPTOR.with(|descriptor|descriptor.borrow().is_some())}
 /// 📥️ Retains one admitted wire in the guest's single input slot, charging exactly its bytes; the spend is receipted by this call alone.
@@ -156,7 +161,7 @@ pub fn original_job_clock()->Option<u64>{ORIGINAL_CLOCK_BINDING.with(|binding|se
 #[doc(hidden)]
 pub fn job_budget(budget:JobsWire::JobBudget)->Result<kernel::OriginalJobBudget,ValueError>{Ok(kernel::OriginalJobBudget{input:native_input(budget.input)?,retained_policy:native_grant(budget.retained_policy)?,fuel:budget.fuel,deadline_us:budget.deadline_us,cancelled:budget.cancelled})}
 fn job_failure(failure:OriginalActorEntryFailure)->kernel::OriginalJobCallFailure{match failure{OriginalActorEntryFailure::Authority(error)=>kernel::OriginalJobCallFailure::Authority(error.kind),OriginalActorEntryFailure::Semantic=>kernel::OriginalJobCallFailure::Semantic}}
-fn wire_job_failure(failure:kernel::OriginalJobCallFailure)->Wire::ActorCallFailure{match failure{kernel::OriginalJobCallFailure::Authority(error)=>Wire::ActorCallFailure::Authority(kind(error)),kernel::OriginalJobCallFailure::Semantic=>Wire::ActorCallFailure::Semantic}}
+fn wire_job_failure(failure:kernel::OriginalJobCallFailure)->Wire::ActorCallFailure{match failure{kernel::OriginalJobCallFailure::Authority(error)=>Wire::ActorCallFailure::Authority(kind(error)),kernel::OriginalJobCallFailure::Semantic=>{report_semantic();Wire::ActorCallFailure::Semantic}}}
 #[doc(hidden)]
 pub fn job_source(source:JobsWire::JobSource)->kernel::OriginalJobSource{kernel::OriginalJobSource{job:source.job,kind:source.kind,input:source.input,checkpoint:source.checkpoint}}
 fn wire_job_source(source:kernel::OriginalJobSource)->JobsWire::JobSource{JobsWire::JobSource{job:source.job,kind:source.kind,input:source.input,checkpoint:source.checkpoint}}

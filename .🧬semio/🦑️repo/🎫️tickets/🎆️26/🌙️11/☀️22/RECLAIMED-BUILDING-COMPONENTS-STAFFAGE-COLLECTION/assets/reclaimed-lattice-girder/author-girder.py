@@ -734,10 +734,12 @@ def prop_solid_shape(sid, name, z, tone, side):
     return {"id": sid, "bone": name, "role": "body", "z": z, "filled": True, "tone": tone, "region": "props", "material": "softwood-weathered", "kind": "poly", "points": prof, "closed": True, "solid": {"kind": "extruded", "sweep": "u", "z0": -PROP_T / 2, "z1": PROP_T / 2}}
 
 
-def sling_solid_shape(sid, name, z, tone, r):
-    """🎗️ A round sling drawn by its side profile swept laterally (front and plan follow its swing)."""
-    return {"id": sid, "bone": name, "role": "body", "z": z, "filled": True, "tone": tone, "region": "slings", "material": "polyester", "kind": "poly", "points": [[0.0, -r], [SLING["l"], -r], [SLING["l"], r], [0.0, r]], "closed": True,
-            "solid": {"kind": "extruded", "sweep": "w", "z0": r4(SLING["z"] - SLING["r"]), "z1": r4(SLING["z"] + SLING["r"])}}
+def sling_solid_shape(sid, name, z, tone, r, scale):
+    """🎗️ A round sling drawn by its side profile swept laterally (front and plan follow its swing); at 1:500 it is typified as the single stroke of its axis, as in the side elevation."""
+    solid = {"kind": "extruded", "sweep": "w", "z0": r4(SLING["z"] - SLING["r"]), "z1": r4(SLING["z"] + SLING["r"])}
+    if scale == 500:
+        return {**line(sid, name, "body", z, tone, [(0.0, 0.0), (SLING["l"], 0.0)], "slings", pen=0.15), "solid": solid}
+    return {"id": sid, "bone": name, "role": "body", "z": z, "filled": True, "tone": tone, "region": "slings", "material": "polyester", "kind": "poly", "points": [[0.0, -r], [SLING["l"], -r], [SLING["l"], r], [0.0, r]], "closed": True, "solid": solid}
 
 
 def drawings(scale, parts):
@@ -823,9 +825,8 @@ def drawings(scale, parts):
         F.append(poly_shape(f"bearer-{n}", f"bearer-{n}", "body", 1 if n == "a" else 1.2, True, 0.56, clean(proj(p, "front")), region="bearers", material="softwood-weathered"))
     for name, side in PROPS:
         F.append(prop_solid_shape(f"{name}", name, 3 if name.startswith("prop-2") else 2.5, 0.64, side))
-    if scale < 500:
-        for n in ("a", "b"):
-            F.append(sling_solid_shape(f"sling-{n}", f"sling-{n}", 4, 0.74, SLING["r"]))
+    for n in ("a", "b"):
+        F.append(sling_solid_shape(f"sling-{n}", f"sling-{n}", 4, 0.74, SLING["r"], scale))
 
     top = clean(unary_union([proj(p, "plan") for p in gparts]))
     P.extend(multi_shape("girder-top", "girder", "body", 2, True, 0.46, top, regions=["lattice-paint", "bearing-steel", "slings"], material="steel-painted"))
@@ -837,9 +838,8 @@ def drawings(scale, parts):
         P.append(poly_shape(f"bearer-{n}", f"bearer-{n}", "body", 1, True, 0.56, clean(proj(p, "plan")), region="bearers", material="softwood-weathered"))
     for name, side in PROPS:
         P.append(prop_solid_shape(f"{name}", name, 3, 0.64, side))
-    if scale < 500:
-        for n in ("a", "b"):
-            P.append(sling_solid_shape(f"sling-{n}", f"sling-{n}", 4, 0.74, SLING["r"]))
+    for n in ("a", "b"):
+        P.append(sling_solid_shape(f"sling-{n}", f"sling-{n}", 4, 0.74, SLING["r"], scale))
     return E, F, P
 
 

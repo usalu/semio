@@ -1,0 +1,18 @@
+{
+  "scenarios": [
+    {
+      "name": "a tree walked by three owners in one round is listed once per directory",
+      "tree": ["a/", "a/b/", "a/b/c.ts", "a/d.ts", "e/", "e/f/", "e/f/g.ts", "h.ts"],
+      "walks": 3,
+      "asks": [["exists", "a/d.ts"], ["exists", "a/missing.ts"], ["fileExists", "e/f/g.ts"], ["directoryExists", "a/b"]],
+      "askRepeats": 4
+    },
+    {
+      "name": "an empty tree costs one listing however often it is walked",
+      "tree": ["only/"],
+      "walks": 5,
+      "asks": [["exists", "only"]],
+      "askRepeats": 2
+    }
+  ]
+}

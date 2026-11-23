@@ -106,7 +106,7 @@ pub async fn render(app: &crate::SpaceApp, projection: &WorkflowSnapshot, config
         presence_peers_json: Some(crate::presence_peers_json(app, config).await),
         ..NodeGraphScene::base(json_array_to_node_graph_nodes(&graph_payload.nodes_json).await, json_array_to_node_graph_edges(&graph_payload.edges_json).await, Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom })
     };
-    semio_plugin::scene_surface(S_PLAY_SURFACE_WORKFLOW, semio_ui_contract::SurfaceKind::NodeGraph, &scene)
+    semio_plugin::scene_surface(S_PLAY_SURFACE_WORKFLOW, semio_ui_contract::SurfaceKind::NodeGraph, &scene, semio_plugin::surface_name(view_state.locale, "Workflow graph", "Workflow-Graph"), None)
 }
 //#endregion 🔖️Render
 

@@ -7440,3 +7440,115 @@ Tests (repo test-file): portable 35/0 (was 27), fleet-run 2/0, sources 6/0, uplo
 - Files (UC = 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache): UC/🔏️key/🟦️.ts (7e321cc8374a -> 42c8cc7dc8a9 at HEAD vs now, later edits by K2 not excluded), UC/📜️script.ts (35a474ec497c -> 0a101094923d), UC/💾️store/🟦️.ts (f469203a792b -> 7e0194381fa9), UC/🧬️schema/🔣️.json (70a491cee4d2 -> 39eef14b9dc0; namespace v2, extraToken, metadataCharacters), UC/🔏️key/🧪️tests/🐍️oracle/🐍️.py, UC/🔏️key/🧪️tests/🟦️.ts, UC/📖️admission/🧪️tests/🔑️key-stability/🔣️.json, UC/🧪️tests/🧫️fixtures/🔣️.json, UC/🧪️tests/🔁️churn/🟦️.ts, UC/🧪️tests/🟦️.ts, new UC/🧪️tests/🆔️metadata/🟦️.ts.
 - Effect: key excludes `-C metadata`/`extra-filename`; the compiler gets `-C metadata=<16 hex of the portable key>`; outputs stored/restored under a name token. Old entries are never read (v2). Takes effect only for builds launched after the landing (sealed generation).
 - Tests: see wave-1122-dist/K1-metadata.md (new 2/0, key 8/0, components 4/0, main 28/0, churn 9/0, many more; some files unverified under host load).
+
+## 23:16 O6 offload planner: macro-expanded module reach, exact-read shipping, env read-set, OUT_DIR dependencies, counting harness
+Files: LIB/🏗️build/🌐️remote-execution/🚀️offload/🗺️paths/🟦️.ts c92afb9c (reachedFilesV1 resolves `mod x;` beside every ancestor too; exactReadsV1; environmentReadNamesV1: only read env names travel/decline; dependencies inside a mapped dir such as OUT_DIR no longer decline), 🚀️offload/🟦️.ts (recorded input), UC/📜️script.ts (passes slot gap rows), tests 🧪️tests/🟦️.ts (3 env tests adapted), new 🧪️tests/🗺️paths/🟦️.ts, cluster fleet-store and signed-fleet (counter ignores --print probes).
+Tests: offload 40/0, paths 1 file (4 tests)/0, fleet-store 1/0, signed-fleet 1/0, cluster 1/0, key sources 1/0.
+
+## 23:40 O7 fleet-sized jobs and light slots
+- Files: capacity `🧮️units/{🟦️.ts,🧬️schema/🔣️.json}` (planFleetJobsV1, policy fleetJobsMaximum 48, lightUnitMegabytes 96, EN+DE "fleet" line); `🎟️admission` env pass-through of `SEMIO_UNIT_CACHE_LIGHT_SLOTS`; UC `🔒️lock/🟦️.ts` (acquireLightSlotV1, lightSlotsHeldV1), `🟦️.ts` exports, `🚪️launch/🟦️.ts` (lightSlots), `📜️script.ts` (light slot around offload); remote-execution `🚦️admission/🟦️.ts` (fleetIdleSlotsV1), `⚖️placement/🟦️.ts` (idle count `slots`, additive); native-build `🧩️component-pass/🟦️.ts` (fleetJobs/fleetRunning options, fleet jobserver, progress), OS `🧩️driver-stages/🟦️.ts` and repo `🚪️launcher/🟦️.ts` (wiring).
+- Effect: only builds started after landing; old scheduler answers without `slots` (falls back to candidates). No server restarted.
+- Tests: see wave-1122-dist/O7-fleet-jobs.md.
+
+## 23:50 T1 test-file failure rendering
+- Files: `LIB/🏗️build/🔬️test-file/{🟦️.ts (renderTestFileResultV1 prints a failed row's error line), 📖️texts/🔣️.json (row.error EN+DE), 🧪️tests/🟦️.ts (assert both languages)}`; sha256 after 92fcd054 / 7262b04b / acd24e03.
+- Effect: a failure before bun prints (deadline refused, Python binding, admission) is no longer a bare "FAILED" line. Nothing restarted.
+- Tests: test-file 11/3 under load 55 (3 = load deadline on a 1 s fixture, python not on PATH, unrelated to the edit); the new error line was observed live in the run output.
+
+## O8 (23:50) deadlines, liveness, scheduler worker loss, cancel CLI
+Files (LIB=`🏗️build/`): `🌐️remote-execution/🚀️offload/🔌️client/🟦️.ts`, `🚀️offload/🟦️.ts`, `🚀️offload/📐️policy/🟦️.ts`, `🚀️offload/🧬️schema/🔣️.json` (policy.deadline), `🗓️scheduler/🟦️.ts`, `🖥️server/🟦️.ts`, `👷️worker/🟦️.ts`, `⌨️command/🟦️.ts`, `📖️texts/🔣️.json`, `🔣️policy.json` + `🏃️execution/🧬️schema/🌐️remote-execution.json` (server keepAlive/cancelGrace/stuck, Cancellation), `⚙️operations/🔣️catalog.json` (cancel). Tests added: scheduler 6, offload timeouts 5 (+ 🔣️.json/🐍️.py deadline vectors), command catalogue test updated. No restarts. Results: scheduler 21 pass / 1 fail (operator test timed out: test bug, fixed by defaultActionSeconds in harness, rerun blocked); other files not run (host load 75 makes `stretched` budget exceed the 1.8M ms selection cap: "Explicit finite owned Bun file selection required"). sha256 not recorded. Open: help fixtures `⚙️operations/🧪️tests/🧫️fixtures/📖️help/🔣️.json` need regeneration for the new synopsis.
+
+## F2 test-budget clamp (2026-11-23 ~00:30)
+- Files: `🧪️testing/🎚️budget/⏲️contention/{🟦️.ts,🔣️.json,🧬️schema/🔣️.json}` (sha256 before 🟦️.ts e0ae6acf, 🔣️.json 929b0ffd, schema 4fd41ad9), `🧪️testing/🗂️suites/🏃️run/🟦️.ts`, `📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts`, `library/🏗️build/🔬️test-file/🏃️run/🟦️.ts`, contention tests (fixture, python oracle, law).
+- Stretched budgets clamp to the suite-schema `budgetMs` maximum; clamped runs are admitted and print "budget clamped". Tests: contention file 13 pass / 1 fail (load-sensitive 2 s real-process timing law, unrelated). See `wave-1122-dist/F2-test-budget.md`.
+
+## F3 incremental prepare stage order (2026-11-23 ~01:10)
+- Files (LIB=`🏗️build/📏️incremental/`): `🧬️schema/🔣️.json` (Policy.bootstrap, declared stages with requires), `⌨️command/🟦️.ts` (incrementalBootstrapV1), `🧪️tests/🟦️.ts` (order law), `🏎️bench/🧪️tests/🟦️.ts` (expected steps). sha256 after: schema 867299cc, command 3241f7e6, tests 45995acb, bench tests 157fb9df.
+- Prepare now runs preflight, dependencies sync --all, tools setup all (was tools setup before sync). See `wave-1122-dist/F3-incremental-prepare.md`.
+
+## 01:19 K5 cross-root fleet key (OUT_DIR)
+- Files (UC = unit-cache): UC/🔏️key/🟦️.ts (+outDirectoryIdentityV1, +sourceValueV1; sha256 after 919cd888fb12), UC/📜️script.ts (env!-read values go through sourceValueV1; after 30ba3b590b68), NEW UC/🧪️tests/🌍️cross-root/🟦️.ts (after 56127abcebb0). Before-hashes not taken (additive edits, one replaced expression in script.ts).
+- Effect: the OUT_DIR value in the key is the crate name (`⟨out⟩<crate>`), no longer Cargo's unit hash / lane / directory; other env!-read values are lane-neutral. Fleet keys of OUT_DIR-consuming crates change (same namespace v3; such entries were root-bound before, so nothing valid is orphaned).
+- Tests: cross-root 2/0 (fails 3 distinct keys without the script.ts change), key 8/0, portable 35/0, metadata 4/0, fleet rooted 4/0.
+
+## K4 slot-level -C metadata (2026-11-23 ~01:25)
+- Files (UC=unit-cache): UC/🛰️fleet/🪪️identity/🟦️.ts (new slotMetadataV1) 85f149eb, UC/🔏️key/🟦️.ts (canonicalMetadataV1(identity)) 919cd888, UC/📜️script.ts (slotMetadataV1 call, basicsEarly) 30ba3b59, UC/🧬️schema/🔣️.json (namespace v3) 657af85c, tests: 🧪️tests/🆔️metadata 976a49a6, 🔭️cutoff (timeouts 900 s) 11fb4998, 🔏️key tests (v3) 97fcff59, 📖️admission key-stability fixture (v3) fd8b9c12. Before-hashes not recorded (K1 edits were live).
+- Effect: -C metadata = hash of slot-level identity (toolchain, portable args with extern names, package@version/member, crate, kinds, features, profile, target), never of source/extern bytes: stable across body edits and workspaces. Namespace v3: old entries never read. Sealed wrapper per build, new builds only; nothing restarted.
+- Tests: 🆔️metadata 4/0 (workspace independence, new slot unit law, new real-rustc check-chain early cutoff with equal metadata across a body edit). 🔭️cutoff not completed: run 1 failed on 240 s test timeouts under load, re-run hit the 1800 s suite deadline in the queue. See wave-1122-dist/K4-metadata-slot.md.
+
+## O5 build-script RUN offload (01:26 11/23)
+- Files: UC/🏗️buildscript/🟦️.ts (miss path: fleet lookup -> claim -> runOffloadedV1: light slot + command offload, else real local slot + local run; sha256 after 60fd50a35f65), new UC/🏗️buildscript/☁️offload/🟦️.ts (8cc599e1f17c), ☁️offload/🧬️schema/🔣️.json (a1d782e9861c), ☁️offload/🧪️tests/🟦️.ts + 🔣️.json (25efb3a759b6).
+- Tests: pure logic (schema, 14 source / 5 binary / 5 env / 5 translation / 3 manifest fixtures, bounded walk) verified via scratch runner 3/3 pass; live-cluster tests (byte-identical OUT_DIR+cargo lines, outside-path local, leak withdrawn, wrapper, -j > local grant, light slot) written, NOT verified green: repo test-file fails host-wide ("Explicit finite owned Bun file selection required") and the scratch cluster starved at load 45-70 under taskpolicy -b (content store timeouts). Report: wave-1122-dist/O5-buildscript-offload.md.
+
+## 01:42 F4 selection timeout ceiling
+Files: testing/🎚️budget/⏲️contention/🟦️.ts (ceiling = min(Suite.budgetMs.maximum, Selection.timeoutMilliseconds.maximum), no Math.max with declared), testing/🟨️bun/📁️files/🟦️.ts (OWNED_BUN_TIMEOUT_CEILING_MILLISECONDS_V1 from schema; selection timeout clamped), contention tests (new law). Tests: bun/files 1 pass; contention 14 pass, 1 known load-timing fail.
+- F3 addendum: prepare provisions `.cache/f` fleet facts, machine.json and identity keys (except admin.key, origin.key) into the clone (`incrementalFleetProvisionV1`, schema Policy.fleet). Tests: incremental 47/4 (3 Bazel load timeouts + a stale step expectation, fixed after), bench 48/1 (load timeout).
+
+## 02:20 P1 outdir-layout fix
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts`: `outDirectoryIdentityV1` also accepts the `build-dir-new-layout` form `build/<crate>/<hash>/out` (sha256 before 919cd888fb12d780e…, after 30e142892ed1a6c89…).
+- `…/unit-cache/🧪️tests/🌍️cross-root/🟦️.ts`: 3 new expectations (sha before 56127abcebb046ca3…, after ac133ebcbbd5fa5c8…).
+- Tests: `repo test-file` cross-root 2 pass / 0 fail. Live proof: B2 (old code) 4 misses (serde_core, serde, p_mid, p_top) on `env:OUT_DIR`; B3 (new code) 17/17 fleet hits.
+
+## 02:21 S1 sdk identity (unit-cache key sdkIdentityV1, sha256 after cf05318f9841)
+Files: unit-cache/🔏️key/🟦️.ts (sdkIdentityV1: SDKSettings.json CanonicalName, else version of dir name; realpath first), toolchain/🟦️.ts docstring, unit-cache/🧪️tests/🧳️portable/🟦️.ts (+new test), offload/🧪️tests/🟦️.ts. Tests: portable 36/0, offload 40/0, cross-root 2/0. Workers advertise the new value after their next restart.
+
+## 02:26 N1 native-build driver lane g carries the fleet tier
+Files: unit-cache/🚪️launch/🟦️.ts (new unitCacheChainEnvironmentV1 = the one assembly incl. fleetRemoteEnvironmentV1; unitCacheEnvironmentV1 now calls it), native-build/🎟️admission/🟦️.ts (compilerWrapperEnvironmentV1 delegates to it; lane g), admission/🧪️tests/♻️replay/🟦️.ts (new law: driver chain == fleetRemoteEnvironmentV1, none with SEMIO_UNIT_CACHE_REMOTE=off). sha256 before/after: .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️13/FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION/wave-1122-dist/N1-sha-before.txt / N1-sha-after.txt.
+Tests: replay file 5 pass 0 fail; unit-cache tests file not run (queued 1060 s on shared bun resource, "Original Script deadline refused"); direct probe of unitCacheEnvironmentV1 keeps key set, remote off drops SEMIO_REMOTE_CACHE_*. Live: N1-live-probe.ts on main checkout writes lane-g lookups row with "remote". New builds only (sealed wrappers).
+
+## 03:05 C2 cargo source.capture read-ahead + build-script RUN SIGTERM
+- LIB=`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/`. Files: `LIB/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts` (before 23e83b0f4efe; bounded read-ahead of the capture walk, `report` option), `…/authorizers/🧬️schema/🔣️.json` (SourceReadAhead), `LIB/🏗️build/📥️source/🔏️closure/🏗️compiler/🟦️.ts` (before 5a86cf62), `LIB/🏗️build/⏱️profile/🟨️.mjs` (before 83b91a49) + `🟨️.d.mts` (3842c8d1) (`profileProgressV1`), `LIB/⚡️caching/🦀️cargo/🗃️unit-cache/🏗️buildscript/🟦️.ts` (`runOffloadedV1`: SIGTERM/SIGINT honoured through light-slot wait, offload and the local slot wait), tests: authorizers `🧪️tests/🧭️ancestry`, profile `🧪️tests`, buildscript `🧪️tests/🔓️slot-held`.
+- Effect: see `wave-1122-dist/C2-cargo-capture.md`. Nothing restarted.
+- Tests (repo test-file, one at a time): authorizers ancestry 6 pass / 0 fail; profile 10 / 0; buildscript slot-held 3 / 0.
+
+## 03:31 O9 offload closure ships exactly the loaded externs
+- LIB=`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/`. Files under `LIB/🏗️build/🌐️remote-execution/🚀️offload/`: `🌳️inputs/🟦️.ts` (before 6ff70ab5603257c0, after 4408f8bdbcb4; dependencyClosureV1: missing/unreadable dirs and files skipped, metadata read from rmeta only, rlibs of indirect deps dropped for library units), `🗺️paths/🟦️.ts` (before c92afb9c2c7a, after 2417b713bd83; passes the crate-type, accurate decline detail), `🧪️tests/🟦️.ts` (before b6f01659f4ee, after d85deb0504f2; new unrelated-artifacts test, updated closure expectations).
+- Effect: see `wave-1122-dist/O9-inputs.md`. Nothing restarted; requester-side only, applies to the next build start.
+- Tests (repo test-file, one at a time): offload 41 pass / 0 fail, paths 4 / 0, cluster 11 / 1 (extra `.semio-key` sidecar files in the unit dir, unrelated to inputs; zero local rustc as required).
+
+## 05:15 R2 retention follows every dependency edge (Declaration v2: self + units)
+- LIB=`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/`. Files: `LIB/🏗️build/🪢️slots/🧬️schema/🔣️.json` (Declaration v2, `self`, `units`), `LIB/🏗️build/🪢️slots/🟦️.ts`, `LIB/🏗️build/🌐️remote-cache/🏷️retention/🍂️staleness/🟦️.ts` (judge follows externs + units, only stage outputs and workspace-source entries are roots, v1 declarations undeclared, `declareV1`), `LIB/⚡️caching/🦀️cargo/🗃️unit-cache/🪪️extern/🟦️.ts` (producer-key sidecars), `…/📜️script.ts`, `…/💾️store/🟦️.ts`, `…/🏗️buildscript/🟦️.ts`, `…/🏗️buildscript/🔑️run-key/🟦️.ts`, `…/🏗️buildscript/📦️run-wire/🟦️.ts`; tests: staleness fixture (+3 scenarios) and Python oracle, extern test, supersession test, fleet stale e2e.
+- sha256 (first 10) after: slots schema febfbec986, slots ts 317a47ce69, staleness ts 7279ea5b3a, script.ts 558b13dddd, store ts ff7555f253, extern ts db6c63ef9d, buildscript ts ae25682111, run-key 939dc0651a, run-wire 2a7ceee888 (before = git HEAD, includes other lanes' edits: 98b3fb9bd1, d27d07ba6e, 0a69110432, 7efac9100e, 7e0194381f, 9986f175fa, 4520440837, 47b5b973a5, 9280d85d28).
+- Tests (repo test-file): staleness 5/0, extern 2/0, supersession 8/0, retention 17/0, restorable 10/0, fleet stale e2e 1/0, uploader 5/0, fleet-run 2/0, store contract 24/0. Scratch proof (real build A+C, local only): stale exactly p_leaf/p_mid/p_top pre-edit, 21 live, 4 orphan A-generation runs unreached, enforce on a copy removes those 7 only. Report `wave-1122-dist/R2-retention-edges.md`. Nothing run against live stores; no restart.
+
+## 04:55 CAS1 host CAS cap: admission, continuous collection, transient input leases
+- LIB=`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/`. Files: `🗄️cas/🧬️schema/🔣️.json` (sha 5fdd18070b82), `🗄️cas/🧬️schema/🟦️.ts` (4cd18da79a81), `🗄️cas/📌️pins/🟦️.ts` (b9506cc3b96a), `🗄️cas/🗃️store/🟦️.ts` (d2a615b103f8), `🗄️cas/🧹️collector/🟦️.ts` (cfa82f02b63d), `🗄️cas/🧹️collector/🧮️plan.ts` (6f41bfb3beee), `🗄️cas/🚦️guard/🟦️.ts` (cbf753f848e8), `🗄️cas/⌨️command/🟦️.ts` (7f1d47e8429f), `🗄️cas/🧪️tests/🟦️.ts` (92e1b12459f1) + `🧪️tests/📋️enforcement/🔣️.json`, `🧪️tests/🐍️enforcement.py`, `🌐️remote-cache/🖥️server/🟦️.ts` (7cc76e9c7993), `🌐️remote-execution/🗄️content/🟦️.ts` (a51e2e6c34b4), `🌐️remote-execution/🚀️offload/📜️action/🟦️.ts` (4981a0f97b5f), `🌐️remote-execution/🛰️sidecar/🗄️cache/🟦️.ts` (64b78bfa1fe1). Effect: `wave-1122-dist/CAS1-cap.md`. Live only after the next restart of the cache sidecar / requesters; nothing restarted, no collection run.
+- Tests: cas 49/0, pins 1/0, remote-cache 27/0, remote-cache lag 1/0, offload 41/0, host-capacity disk 8/0.
+
+## 05:37 K6 build-script RUN key lane/root neutrality
+Files (UC = unit-cache): UC/🔏️key/🟦️.ts (buildPathIdentityV1, buildDependencyPathsV1, buildKeyEnvironmentV1 neutralises build-dir paths), UC/💾️store/🟦️.ts (run output neutral/restore translate DEP_ dirs, restore takes environment), UC/🏗️buildscript/🟦️.ts (run lookups logged with key components; restore passes environment), new UC/🏗️buildscript/🧪️tests/🛤️lanes/{🟦️.ts,🔣️.json}. sha256 after (key, store, buildscript, test): 19ac26f4de4a 5f7d034ac2d5 6b196e704c58 a2c45cd90a1b  (before not recorded: files edited live). Tests: lanes 4/0, fleet-run 2/0, store contract 24/0, portable 36/0, key 8/0.
+
+## 06:55 PY1 python binding derived from the files (lane lock suites-python)
+Files (PROC=`🧰️framework/🔨️modules/🏃️process/`, LIB=`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/`; sha HEAD -> now): PROC`🧪️testing/🧰️toolchain/🟦️.ts` (698d7b6c -> see tree; `testToolsUsedByV1`, `testToolsUsedByFilesV1`, probe timeout from protocol), PROC`🧪️testing/🧰️toolchain/🔣️.json` (2043ba57 -> new `usage.hints/closure`, `binding.probeTimeoutMilliseconds`), PROC`🧪️testing/🗂️suites/🟦️.ts` (32544c23 -> 878bd6a9; `processTestSuiteToolsV1`, `processTestSuiteBindsToolV1`), PROC`🧪️testing/🗂️suites/🏃️run/🟦️.ts` (cfe04bf1 -> fffefda2; binds derived tools), PROC`📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts` (920fc123 -> f0aab55b; barrel), LIB`⚡️caching/📜️script.ts` (89ee654f -> daec0ba9), LIB`🏗️build/🗂️suites/📜️script.ts` (6454ab6e -> 589615b1), LIB`🏗️build/🔬️test-file/🟦️.ts` (92fcd054 -> 9b3bc8d3; route.python derived), new LIB`🏗️build/🔬️test-file/🧪️tests/🔭️tool-binding/{🟦️.ts,🐍️.py}` (law + Python oracle).
+Tests: tool-binding law 3/0 (1080 s); store/contract 20/4 (was 0/1 python unbound; 4 = 60 s timeouts under load 50); stretch 2/1 (python bound now; 1 = model 2370000 vs code clamp 1800000, not python); test-file member 13/1 (deadline fixture, load). Details: wave-1122-dist/PY1-python.md
+
+## 06:55 X1 one-machine visibility in repo fleet status
+Files (LIB=🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/): LIB/🚢️fleet-status/{🟦️.ts,📥️readers/🟦️.ts,🧬️schema/🔣️.json,🧪️tests/{🟦️.ts,🐍️.py,🧫️fixtures/🔣️.json}}, LIB/🌐️remote-execution/🚢️status/🟦️.ts (retention from cache /status), LIB/🌐️remote-execution/🚀️offload/🟦️.ts (deadline/operation-lost/silent reason counters), LIB/🗄️cas/{⌨️command/🟦️.ts,🧬️schema/🔣️.json} (cache cas status last collection). sha256 after (status ts, readers, schema, re-status, offload, cas cmd): 1b8128ec1ae7 7dfbadf46d0e ade00755993c 8b4f4cea12bc a8314b78633a afeb5856cdc4 
+Tests: fleet-status 17/1 (the 1 = storage reader test, 120 s timeout under load 60, hdiutil, outside X1), cas 49/0. Live: repo fleet status shows Host store, input leases, retention (not reported by old server), Offload. Report wave-1122-dist/X1-visibility.md.
+
+## 07:50 T2b test-sweep fixes
+- LIB=`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/`. Files: `LIB/🧪️testing/🎚️levels/🧪️tests/⏲️stretch/🐍️.py` + `🟦️.ts` (Python oracle clamps to min of suite budgetMs max and Bun Selection timeout max, both read from the schemas; F2/F4 design change), `LIB/🏗️build/🪢️slots/🧪️tests/🟦️.ts` (Declaration fixture version 2, R2), `LIB/🏗️build/🌐️remote-execution/🚀️offload/{🧰️command,🧪️tests/🌐️cluster,🧪️tests/🔗️native-link,🧪️tests/🔗️native-link/🌐️cluster}/…/🟦️.ts` (literal test deadlines >= 10 s now `stretchedBudgetMillisecondsV1(n)`), `🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🧪️tests/⏳️literal-deadlines/🔣️.json` (ceilings: cluster entry removed, timeouts file 1).
+- Tests: stretch 3/0, tool-binding 3/0, slots 4/0, cas 49/0 (rerun). Offload edits syntax-checked only. Report `wave-1122-dist/T2b-sweep.md`.
+
+## 07:20 T2a test sweep fixes (tests + one schema)
+- LIB=`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/`, UC=`LIB/⚡️caching/🦀️cargo/🗃️unit-cache/`. Files: `UC/🧬️schema/🔣️.json` (BuildEntry gains `retention`, R2's Declaration v2 on build-script run entries; sha256 657af85c85ea -> e653581cb916), `UC/🏗️buildscript/☁️offload/🧪️tests/🟦️.ts` (fixture crate names `wrapped`/`light`; 25efb3a759b6 -> 6844de7ae48c), `UC/🛰️fleet/🧪️tests/🥀️stale/🟦️.ts` (150 ms wait beyond the 50 ms grace before collect; 23c27596fa7e -> 63a355d36918).
+- Tests (repo test-file): unit-cache main 28/0, offload 10/0, stale e2e 1/0, gc units 13/0. Whole sweep report: `wave-1122-dist/T2a-sweep.md`, table `wave-1122-dist/T2a-table.tsv`.
+
+## V1 (2026-11-23 08:5x) progress reuse counters + offload content retries
+Files: native-build `🧮️phase-ledger/🟦️.ts` (sha after da08ee02d4fa), `🧩️component-pass/🟦️.ts` (309dc6f7f88d), remote-execution `🗄️content/🟦️.ts` (f6dfb6d2bb44), `🚀️offload/🟦️.ts` (37b88b4134e9), `🚀️offload/🧬️schema/🔣️.json` (0c0119f2e20e); tests `phase-ledger` (+1), new `🧪️tests/🔁️content-retry`. Tests: content-retry 3/0, refusal-reason 3/0, offload 41/0, phase-ledger 7/1 (pre-existing cargo test). Report wave-1122-dist/V1-counters-infra.md.
+
+## Wave 1122-dist W1 (ready diagnosis + fix), 12:50 CET (areas remote-cache/nx single-flight, remote-execution/sidecar/ready)
+Edited: `🌐️remote-cache/🧶️nx/🚦️single-flight/🟦️.ts` (+ schema counter `dropped`, tests): a busy (503), full (507) or unreachable fleet cache never fails an Nx run any more: GET -> miss (404), PUT/blob PUT -> accepted (200 "Stored") and counted `dropped` (was passed through as 503/502; Nx said "Misconfigured remote cache endpoint: 503" and closed admission although every task succeeded: m02 stage failures). `🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts` + schema: `refreshKeepingFailureCodes` (stage-timeout, stage-stall-exhausted, store-full, interrupted, spawn-failed, loop-failed keep Ready; only stage-failed/tooling-compiler leave it), backoff of such a failure patched as ready+refreshing; `diskGrowth.measuredCeilingMegabytes` 16384 bounds a measured disk need (m01 asked 31184 MB from one run whose free-space delta was 15592 MB). Tests: single-flight 16/0 (new busy-cache law, two 502 expectations -> 200), ready refresh 9/0 (grid now covers timeout/store-full/tooling-compiler against the Python oracle), disk-recovery 8/0 (oracle extended with the cap). Workers pick the code up through the replica + supervisor restart. Sha256 after (first 16): see W1-ready.md.
+
+## R3 (2026-11-23 13:06) server byte bound follows the host CAS cap; LRU size eviction; sidecar staleness wiring
+Files (sha256 after): 
+- `🌐️remote-cache/💾️store/🟦️.ts` 54230407de68
+- `🌐️remote-cache/🧹️collector/🟦️.ts` 588c13112d49
+- `🌐️remote-cache/🖥️server/🟦️.ts` 364f877bac1c
+- `🌐️remote-execution/🛰️sidecar/🗄️cache/🟦️.ts` 608e9c74fc6f
+- `🌐️remote-cache/🏠️hosted/🟦️.ts` df17422330a7
+- `🌐️remote-cache/⌨️command/🟦️.ts` 57e11fc9303a
+- `🏃️execution/🧬️schema/🌐️remote-cache.json` e912f5f01a76
+- `🔣️policy.json` 85b9baab3031
+- `🌐️remote-cache/📐️blob-bound/🧪️tests/🟦️.ts` e729f2d6c21d
+Tests: blob-bound (new) 4/0 (Python plan oracle 300 rounds, bound follows cap, dry-run+enforce LRU eviction accepts next write, pinned set shrinks). Existing members re-run below in R3-server-bound.md. Takes effect at the sidecar's next natural restart. Report wave-1122-dist/R3-server-bound.md.

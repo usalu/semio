@@ -73,13 +73,13 @@ use semio_plugin::ViewModel;
 
 /// 🎬️ The bundled `demo` fixture — the only built-in document carrying solids, supports and both
 /// load cases, so every law over `n20_l1`/`sol1`/`s_00`/`l2` is stated over it.
-fn demo() -> Fem3dSnapshot {
-    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot")
+fn demo() -> crate::context::Retiring<Fem3dSnapshot> {
+    crate::context::Retiring::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot"))
 }
 
 /// 🌲️ The document the app actually boots on (`concrete-forest`) — frames and member UDLs only.
-fn boot() -> Fem3dSnapshot {
-    semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot()
+fn boot() -> crate::context::Retiring<Fem3dSnapshot> {
+    crate::context::Retiring::new(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot"))
 }
 
 fn selecting(doc: &Fem3dSnapshot, ids: &[&str]) -> Fem3dInteractionSnapshot {
@@ -88,7 +88,7 @@ fn selecting(doc: &Fem3dSnapshot, ids: &[&str]) -> Fem3dInteractionSnapshot {
         let kind = if doc.elements.iter().any(|element| element_id(element) == *id) { "element" }
             else if doc.solids.iter().any(|solid| solid.id == *id) { "solid" }
             else if doc.supports.iter().any(|support| support.id == *id) { "support" }
-            else if doc.materials.iter().any(|material| material.id == *id) { "material" }
+            else if doc.materials.iter().any(|material| material.id.as_str() == *id) { "material" }
             else if doc.sections.iter().any(|section| section.id == *id) { "section" }
             else if doc.load_cases.iter().any(|case| case.id == *id) { "loadCase" }
             else if doc.combinations.iter().any(|combination| combination.id == *id) { "combination" }
@@ -100,7 +100,7 @@ fn selecting(doc: &Fem3dSnapshot, ids: &[&str]) -> Fem3dInteractionSnapshot {
 
 fn panel(doc: &Fem3dSnapshot, ids: &[&str], view_state: &ViewModel) -> String {
     let built = render(doc, &selecting(doc, ids), fem3d_labels(view_state), &TreeWindows::unhosted()).expect("fem3d inspector assembly");
-    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree { root: built }).expect("fem3d inspector projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree::new(built)).expect("fem3d inspector projection")
 }
 
 fn english(doc: &Fem3dSnapshot, ids: &[&str]) -> String {
@@ -266,12 +266,13 @@ async fn a_multi_selection_headers_the_count_and_inspects_the_first_3d() {
     let de = panel(&boot(), &["lc1b", "lc2b"], &ViewModel::new(Locale::De, Terminology::Native));
     assert!(de.contains("Knoten lc1b") && de.contains("Knoten lc2b"));
     let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../../../../🕹️interaction/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("localized selection vectors");
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     for row in fixture["selectionLabels"].as_array().expect("selection label cases") {
         let locale = match row["locale"].as_str().unwrap() { "en" => Locale::En, "de" => Locale::De, _ => panic!("explicit supported locale") };
         let view = ViewModel::new(locale, Terminology::Native);
         let identity = row["identity"].as_str().unwrap();
         let built = selection_row(identity, fem3d_labels(&view)).unwrap();
-        let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree { root: built }).unwrap();
+        let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree::new(built)).unwrap();
         let decoded: serde_json::Value = serde_json::from_str(&projection).unwrap();
         assert!(decoded.to_string().contains(row["expected"].as_str().unwrap()));
         assert_eq!(decoded["key"].as_str(), Some(format!("{ROOT}.selection.{identity}").as_str()));

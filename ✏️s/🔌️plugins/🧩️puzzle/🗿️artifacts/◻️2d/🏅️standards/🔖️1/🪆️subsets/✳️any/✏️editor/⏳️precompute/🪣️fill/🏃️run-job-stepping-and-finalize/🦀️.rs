@@ -30,14 +30,14 @@ impl Puzzle2dFillRunJob {
             if context.fuel_exhausted() || context.deadline_exceeded() || self.writer.pending_bytes() >= FILL_RUN_TICK_FLUSH_BYTES {
                 return Ok(self.flush(context).unwrap_or(JobTurn::Yield));
             }
-            if self.pending_snapshot.is_some() {
+            if self.pending_snapshot.is_some() || (self.search.is_some() && !self.construction.terminal_is_empty()) {
                 let operation = Operation::new(OperationId(self.pending_search_serial), RevisionId(0), Generation(0), self.seed);
                 if !BoardFillJob::admit_original(&mut self.construction, &mut self.pending_snapshot, u32::MAX, operation, &mut self.search, context)? { return Ok(JobTurn::Yield); }
                 self.stage = FillRunStage::Search;
                 continue;
             }
             if let Some(capture) = self.capture.as_mut() {
-                if capture.ingress.is_none() && !BoardFillSnapshotIngress::admit_original(&mut capture.construction, capture.suggestion_offset, &PUZZLE_2D_BOARD_NAMING, &mut capture.ingress, context)? { return Ok(JobTurn::Yield); }
+                if (capture.ingress.is_none() || !capture.construction.terminal_is_empty()) && !BoardFillSnapshotIngress::admit_original(&mut capture.construction, capture.suggestion_offset, &PUZZLE_2D_BOARD_NAMING, &mut capture.ingress, context)? { return Ok(JobTurn::Yield); }
                 match capture.advance(self.document.as_ref().expect("original fill snapshot remains until close").value(), &self.kinds, FILL_RUN_CAPTURE_UNITS) {
                     Ok(None) => {}
                     Ok(Some(snapshot)) => {

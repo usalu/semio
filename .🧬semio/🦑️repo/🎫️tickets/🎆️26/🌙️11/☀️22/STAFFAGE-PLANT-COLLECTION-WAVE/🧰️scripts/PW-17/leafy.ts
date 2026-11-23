@@ -51,8 +51,8 @@ export const holeShare = (seen: readonly P[], scale: Scale): number => {
   return Math.max(0, ringArea(seen) - 0.4 * (FEATURE[scale] / 4) * perimeter) / (16 * FEATURE[scale] ** 2);
 };
 
-/** 🍃️ A leaf plate on its bone (outline and holes in [u, w], thickness v0..v1). A hole whose seen size is undecided in some view ({@link holeShare} between 0.75 and 1.3) is left out of the plant, solid and drawings alike; every other hole is in the solid and is drawn in the views where it is outline (share above 1) or prints (narrowest projected width minus the pen at least 0.17 mm at the end of the band). The plate is filled only where it is at least 0.3 mm wide at the end of the band in that view. */
-export function plate(id: string, bone: string, f: Frame, outer: P[], holes: P[][], v0: number, v1: number, scale: Scale, m: Meta, sm: SolidMeta, pen: number): { placed: Placed[]; solid: Json; dropped: Record<View, number>; unfilled: View[]; undecided: number } {
+/** 🍃️ A leaf plate on its bone (outline and holes in [u, w], thickness v0..v1). A hole whose seen size is undecided in some view ({@link holeShare} between 0.75 and 1.3) is left out of the plant, solid and drawings alike; every other hole is in the solid and is drawn in the views where it is outline (share above 1) or prints (narrowest projected width minus the pen at least 0.17 mm at the end of the band). The plate is filled only where it is at least 0.36 mm wide at the end of the band in that view (a narrower one loses its printable width in the drooping poses); elsewhere it is its outline in the thinnest pen, so the three views keep the same extents; `outlineOnly` draws it so in every view (a blade that neighbours hide down to a sliver in some pose). */
+export function plate(id: string, bone: string, f: Frame, outer: P[], holes: P[][], v0: number, v1: number, scale: Scale, m: Meta, sm: SolidMeta, pen: number, outlineOnly = false): { placed: Placed[]; solid: Json; dropped: Record<View, number>; unfilled: View[]; undecided: number } {
   const centre = toWorld(f, [outer.reduce((s, p) => s + p[0], 0) / outer.length, 0, 0]);
   const world = (r: P[]) => r.map(([u, w]) => toWorld(f, [u, (v0 + v1) / 2, w]));
   const seenIn = (h: P[], view: View) => world(h).map((p) => project(view, p));
@@ -62,11 +62,11 @@ export function plate(id: string, bone: string, f: Frame, outer: P[], holes: P[]
   const dropped = {} as Record<View, number>;
   const unfilled: View[] = [];
   for (const view of VIEWS) {
-    const wide = atBandEnd(scale, minWidth(world(outer).map((p) => project(view, p))));
+    const wide = outlineOnly ? 0 : atBandEnd(scale, minWidth(world(outer).map((p) => project(view, p))));
     const kept = decided.filter((h) => holeShare(seenIn(h, view), scale) > 1 || atBandEnd(scale, minWidth(seenIn(h, view))) - pen >= 0.17);
     dropped[view] = decided.length - kept.length;
-    if (wide < 0.3) unfilled.push(view);
-    placed.push({ view, at: centre, shape: plateShape(id, bone, outer, wide < 0.3 ? [] : kept, v0, v1, { ...m, filled: wide >= 0.3 }) });
+    if (wide < 0.36) unfilled.push(view);
+    placed.push({ view, at: centre, shape: plateShape(id, bone, outer, wide < 0.36 ? [] : kept, v0, v1, wide < 0.36 ? { ...m, filled: false, penMm: 0.1 } : { ...m, filled: true }) });
   }
   return { placed, solid, dropped, unfilled, undecided: holes.length - decided.length };
 }

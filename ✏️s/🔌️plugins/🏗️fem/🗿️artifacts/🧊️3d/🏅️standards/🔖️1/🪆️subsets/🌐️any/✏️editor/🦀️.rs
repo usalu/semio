@@ -172,11 +172,18 @@ semio_plugin::app_commands! {
 
 #[path = "🗃️retained-commands/🦀️.rs"]
 mod retained_commands;
-pub use retained_commands::*;
+pub(crate) use retained_commands::*;
+pub use retained_commands::{fem3d_retained_contract, fem3d_route, Fem3dRetainedCommandJobFactory, FEM3D_ARTIFACT_STORE_MAXIMUM_BYTES, FEM3D_RETAINED_DECODED_ITEMS, FEM3D_RETAINED_OUTPUT_BYTES, FEM3D_RETAINED_PUBLICATION_CONTRACTS, FEM3D_RETAINED_RAW_BYTES, FEM3D_RETAINED_TOOL_IDS, FEM3D_RETAINED_WORK_ITEMS, FEM3D_WINDOW_COMMAND_VALUE_BYTES};
 
 #[path = "📬️store-preparation/🦀️.rs"]
 mod store_preparation;
-pub use store_preparation::*;
+pub use store_preparation::Fem3dArtifactPreparationFactory;
+pub(crate) use store_preparation::*;
+
+#[macro_use]
+#[path = "../../../../../../../🧩️receiving/✉️pack-envelope/🦀️.rs"]
+mod fem_pack_envelope;
+fem_pack_envelope_decode_owner_bundle!(fem3d_envelope_decode_owner_bundle, fem_pack_envelope, Fem3dSnapshot, Fem3dMutation);
 
 #[path = "🔌️json-io-and-arg-helpers/🦀️.rs"]
 mod json_io_and_arg_helpers;

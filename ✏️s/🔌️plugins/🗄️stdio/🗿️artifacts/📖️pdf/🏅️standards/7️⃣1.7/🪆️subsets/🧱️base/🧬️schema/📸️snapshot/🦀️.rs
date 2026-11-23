@@ -31,7 +31,7 @@ pub const STDIO_PDF17_DOCUMENT_SCHEMA: &str = "stdio.pdf.1.7";
 /// 🧬️ `stdio.pdf` (1.7) persistent snapshot: the typed document lanes plus the retained COS
 /// carrier (`objects`/`trailer`, the full logical indirect-object graph as read — lossless
 /// retention per D2 ground rules, what the conformance subsets inspect).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::RetainedClone)]
 #[artifact_schema(id = "s.stdio.pdf.1.7")]
 pub struct PdfSnapshot {
     #[state(artifact)]

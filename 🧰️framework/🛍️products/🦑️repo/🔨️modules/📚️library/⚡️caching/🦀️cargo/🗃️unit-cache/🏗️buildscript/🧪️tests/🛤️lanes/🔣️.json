@@ -1,0 +1,9 @@
+{
+ "version":1,
+ "package":{"name":"zlib-sys","version":"1.2.3","rust":"rustc 1.0","identity":"unit:1111111111111111111111111111111111111111111111111111111111111111"},
+ "targets":[
+  {"name":"machine-one-lane-one","home":"/Users/a","workspace":"/Users/a/semio","lane":"/Users/a/semio/.cache/lane-one","dependencyHash":"0123456789abcdef","unitHash":"aaaaaaaaaaaaaaaa"},
+  {"name":"machine-one-lane-two","home":"/Users/a","workspace":"/Users/a/semio","lane":"/Volumes/fast/lane-two","dependencyHash":"fedcba9876543210","unitHash":"bbbbbbbbbbbbbbbb"},
+  {"name":"machine-two","home":"/home/b","workspace":"/srv/checkouts/s","lane":"/srv/lanes/three","dependencyHash":"1111111111111111","unitHash":"cccccccccccccccc"}
+ ]
+}

@@ -319,7 +319,7 @@ impl GuestRuntime for MockGuestRuntime {
             Some(ScriptedOutcome::Job(_)) => Err(TurnFault::Trapped("scripted outcome was a job step, not a turn".to_string())),
             Some(ScriptedOutcome::PendingJob { .. }) => Err(TurnFault::Trapped("scripted outcome was a pending job step, not a turn".to_string())),
             Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
-            Some(ScriptedOutcome::GuestFault(fault)) => Err(TurnFault::Guest(fault)),
+            Some(ScriptedOutcome::GuestFault(fault)) => Err(TurnFault::Guest(Box::new(fault))),
             Some(ScriptedOutcome::DeadlineExceeded) => Err(TurnFault::DeadlineExceeded),
             None => Err(TurnFault::Exhausted),
         }
@@ -356,7 +356,7 @@ impl GuestRuntime for MockGuestRuntime {
             }
             Some(ScriptedOutcome::Turn(_)) => return mock_job_call(execution, Err(TurnFault::Trapped("scripted outcome was a turn, not a job step".to_string()))),
             Some(ScriptedOutcome::Fault(message)) => return mock_job_call(execution, Err(TurnFault::Trapped(message))),
-            Some(ScriptedOutcome::GuestFault(fault)) => return mock_job_call(execution, Err(TurnFault::Guest(fault))),
+            Some(ScriptedOutcome::GuestFault(fault)) => return mock_job_call(execution, Err(TurnFault::Guest(Box::new(fault)))),
             Some(ScriptedOutcome::DeadlineExceeded) => return mock_job_call(execution, Err(TurnFault::DeadlineExceeded)),
             None => return mock_job_call(execution, Err(TurnFault::Exhausted)),
         };

@@ -447,7 +447,7 @@ fn action_rows(id: &str, kind: &str, labels: &Fem3dLabels) -> UiAssemblyResult<U
 /// 🔢️ One text row per selected id, keyed by the id itself so a window over a wide selection names
 /// the same row at any offset — the fields below belong to the FIRST of them, which is the one every
 /// viewport pick leaves at the head of the selection.
-fn selection_row(identity: &str, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn selection_row(identity: &str, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltNode> {
     let segments = protocol::wire::decode_scoped_identity(identity).map_err(|_| ui_error("fem3d.entity-identity"))?;
     let text = match segments.as_slice() {
         ["load", owner, id] => format!("{} {owner} / {id}", labels.load.as_str()),

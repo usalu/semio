@@ -1,0 +1,12 @@
+import {readFileSync} from "node:fs";
+const G="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build";
+const obs=await import(G+"/👁️observation/🟨️.mjs");
+const mb=()=>{Bun.gc(true);const m=process.memoryUsage();return Math.round(m.heapUsed/1048576)+"MB heap "+Math.round(m.rss/1048576)+"MB rss"};
+let memo:any=JSON.parse(readFileSync(process.argv[2],"utf8"));
+const all=memo.observations as unknown[],owners=memo.owners as {suffix:string;rows:number[]}[];
+console.log("memo parsed",mb());
+const entries=new Map<string,{rows:unknown[]}>();
+for(const o of owners)entries.set(o.suffix,{rows:JSON.parse(JSON.stringify(o.rows.map(i=>all[i])))});
+memo=null;console.log("per-owner decoded copies (checkpoint-like)",mb(),"rows",[...entries.values()].reduce((a,e)=>a+e.rows.length,0));
+for(const e of entries.values())obs.shareObservationRowsV1(e.rows);
+console.log("after shareObservationRowsV1",mb());

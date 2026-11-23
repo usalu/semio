@@ -21,6 +21,8 @@ DEMAND = next(path for path in Path(__file__).resolve().parents if path.name == 
 PREFIX = "🎓️teaching.🏛️architecture.⚡️energy.📊️demand.🎬️clip"
 certificate = importlib.import_module(f"{PREFIX}.🏷️certificate.🐍️")
 practice = importlib.import_module(f"{PREFIX}.🧪️practice.🐍️")
+demand_power = importlib.import_module(f"{PREFIX}.⚡️demand-power.🐍️")
+primary = importlib.import_module(f"{PREFIX}.🏭️primary-energy.🐍️")
 
 
 def narration(clip_module):
@@ -39,6 +41,24 @@ class ChainContract(unittest.TestCase):
         self.assertEqual((certificate.GAS_END, certificate.WP_END, certificate.Q_NUTZ), (gas["final"], wp["final"], FIXTURE["useful"]))
         self.assertAlmostEqual(practice.CHAIN_END / practice.CHAIN_NUTZ, gas["e_E"], places=2)
         self.assertAlmostEqual(practice.CHAIN_END_WP / practice.CHAIN_NUTZ, wp["e_E"], places=2)
+
+    def test_annual_heating_demand_is_one_value_from_the_running_example(self):
+        load = demand_power._annual_load()
+        self.assertEqual(demand_power.Q_H_KWH_A, FIXTURE["annual_heating_demand"])
+        self.assertAlmostEqual(float(np.sum(load)) * demand_power.PEAK_KW, FIXTURE["annual_heating_demand"], delta=1.0)
+        self.assertEqual(round(float(demand_power._cumulative(load)[-1]), -2), FIXTURE["annual_heating_demand"])
+
+    def test_primary_energy_expenditure_numbers_are_derived_and_narrated(self):
+        self.assertAlmostEqual(primary.E_P_GAS, FIXTURE["gas"]["primary"] / FIXTURE["useful"])
+        self.assertAlmostEqual(primary.E_P_WP, FIXTURE["heat_pump"]["primary"] / FIXTURE["useful"])
+        en, de = narration(primary)["anlagenzahl"]
+        self.assertIn("$1.54$ against $0.56$", en)
+        self.assertIn("$1{,}54$ gegen $0{,}56$", de)
+
+    def test_counted_units_use_the_singular_for_one(self):
+        self.assertIn(r"1\;\text{month}", certificate._count_label(1.0))
+        self.assertNotIn("months", certificate._count_label(1.4))
+        self.assertIn(r"2\;\text{months}", certificate._count_label(2.0))
 
     def test_class_scale_equals_anlage_10_and_a_third_party_lookup(self):
         letters = [letter for letter, _ in FIXTURE["classes"]]

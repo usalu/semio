@@ -9,6 +9,19 @@ use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base as oracle;
 use serde_json::{json, Value};
 
+/// 🔢️ Normalises every JSON number to one decimal spelling so `10` and `10.0` compare equal.
+fn numeric(value: Value) -> Value {
+    match value {
+        Value::Number(number) => match number.as_f64() {
+            Some(value) if value.is_finite() => Value::String(format!("{value}")),
+            _ => Value::Number(number),
+        },
+        Value::Array(items) => Value::Array(items.into_iter().map(numeric).collect()),
+        Value::Object(entries) => Value::Object(entries.into_iter().map(|(key, value)| (key, numeric(value))).collect()),
+        other => other,
+    }
+}
+
 fn fixture() -> Value {
     serde_json::from_str(include_str!("🧪️authoring.json")).unwrap()
 }
@@ -99,7 +112,7 @@ fn page_selections_follow_the_fixture() {
     for case in fixture()["pageSelections"].as_array().unwrap() {
         let parsed = parse_page_selection(case["selection"].as_str().unwrap(), case["count"].as_u64().unwrap() as usize);
         match case.get("pages") {
-            Some(pages) => assert_eq!(serde_json::to_value(parsed.unwrap()).unwrap(), *pages, "{case}"),
+            Some(pages) => assert_eq!(numeric(serde_json::to_value(parsed.unwrap()).unwrap()), numeric(pages.clone()), "{case}"),
             None => assert!(parsed.is_err(), "{case}"),
         }
     }
@@ -127,17 +140,17 @@ fn created_annotations_follow_the_fixture_and_round_trip_through_lopdf() {
         }
         outcome.unwrap();
         let annotation = snapshot.pages[0].annotations.last().unwrap();
-        assert_eq!(serde_json::to_value(annotation.rect).unwrap(), case["annotRect"], "{case}");
+        assert_eq!(numeric(serde_json::to_value(annotation.rect).unwrap()), numeric(case["annotRect"].clone()), "{case}");
         if let Some(quads) = case.get("quads") {
             let (PdfAnnotationKind::Highlight { quad_points } | PdfAnnotationKind::Underline { quad_points } | PdfAnnotationKind::StrikeOut { quad_points }) = &annotation.kind else { panic!("{case}") };
-            assert_eq!(serde_json::to_value(quad_points).unwrap(), *quads);
+            assert_eq!(numeric(serde_json::to_value(quad_points).unwrap()), numeric(quads.clone()));
         }
         if let Some(paths) = case.get("paths") {
             let PdfAnnotationKind::Ink { paths: stored } = &annotation.kind else { panic!("{case}") };
-            assert_eq!(serde_json::to_value(stored).unwrap(), *paths);
+            assert_eq!(numeric(serde_json::to_value(stored).unwrap()), numeric(paths.clone()));
         }
         if let Some(color) = case.get("colorOut") {
-            assert_eq!(serde_json::to_value(&annotation.color).unwrap(), *color, "{case}");
+            assert_eq!(numeric(serde_json::to_value(&annotation.color).unwrap()), numeric(color.clone()), "{case}");
         }
         if let Some(flags) = case.get("flags") {
             assert_eq!(json!(annotation.flags), *flags);
@@ -151,7 +164,7 @@ fn created_annotations_follow_the_fixture_and_round_trip_through_lopdf() {
     let bytes = encode_pdf(&snapshot).unwrap();
     let drawn = oracle::reference_widget_appearances(&bytes).unwrap();
     assert_eq!(drawn.len(), 5, "note, highlight, underline, strike-out and ink each carry a generated appearance: {drawn:?}");
-    assert!(drawn.iter().any(|(_, content)| content.contains("gs") && content.contains(" f")), "{drawn:?}");
+    assert!(drawn.iter().any(|(_, content)| content.contains("gs") && content.lines().any(|line| line == "f")), "{drawn:?}");
     assert!(snapshot.ext_g_states.iter().any(|state| state.blend_mode.as_deref() == Some(&["Multiply".to_string()][..])));
     assert_eq!(oracle::reference_annotation_subtypes(&bytes).unwrap()[0], subtypes);
     assert!(oracle::reference_annotation_subtypes(&bytes).unwrap()[1].is_empty());
@@ -381,6 +394,7 @@ fn collect(node: &semio_ui_contract::BuiltNode, names: &mut Vec<String>, shown: 
 }
 
 fn panel(snapshot: &PdfSnapshot, selected: Option<&str>, locale: semio_ui_locale::Locale) -> (Vec<String>, Vec<String>) {
+    let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let node = render_inspector(snapshot, selected, "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), locale).expect("inspector");
     let (mut names, mut shown) = (Vec::new(), Vec::new());
     semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |node| collect(node, &mut names, &mut shown));
@@ -481,7 +495,7 @@ fn page_edits_renumber_outline_entries_and_named_destinations() {
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDestinationFit, PdfNamedDestination, PdfOutlineItem};
     let go = |page: u32| PdfDestination::Page { page, fit: PdfDestinationFit::Fit };
     let mut snapshot = structure_document();
-    let item = |title: &str, page: u32, children: Vec<PdfOutlineItem>| PdfOutlineItem { title: title.into(), destination: Some(go(page)), action: None, color: None, italic: false, bold: false, open: false, children };
+    let item = |title: &str, page: u32, children: Vec<PdfOutlineItem>| PdfOutlineItem { title: title.into(), destination: Some(go(page)), action: None, color: None, italic: false, bold: false, open: false, children, extra: Vec::new() };
     snapshot.outlines = vec![item("one", 0, vec![item("child", 2, Vec::new())]), item("two", 1, Vec::new())];
     snapshot.named_destinations = vec![PdfNamedDestination { name: "last".into(), destination: go(2) }, PdfNamedDestination { name: "first".into(), destination: go(0) }];
     let mut inserted = snapshot.clone();

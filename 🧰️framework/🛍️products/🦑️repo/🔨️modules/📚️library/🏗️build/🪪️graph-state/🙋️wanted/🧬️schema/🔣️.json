@@ -12,6 +12,7 @@
         "minimumWaveProjects": 8,
         "maximumLocalWaves": 4,
         "waitMilliseconds": 1800000,
+        "heavyWaitMilliseconds": 120000,
         "silenceMilliseconds": 300000,
         "waitMaximumMilliseconds": 21600000,
         "renewMilliseconds": 300000,

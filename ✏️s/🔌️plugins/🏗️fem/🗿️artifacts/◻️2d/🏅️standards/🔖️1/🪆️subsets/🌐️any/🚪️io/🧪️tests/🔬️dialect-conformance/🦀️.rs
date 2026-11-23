@@ -19,7 +19,9 @@ fn component_protocol_semio_is_protocol_dialect() {
 
 #[test]
 fn verify_protocol_bytes_against_encoded_pack() {
-    let bytes = binary::snapshot::encode(&Fem2dSnapshot::default());
+    let snapshot = Fem2dSnapshot::default();
+    let bytes = binary::snapshot::encode(&snapshot);
+    semio_framework_value::FromValue::retire_decoded(snapshot);
     let g = semio_framework_dsl::parse_grammar(binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
     semio_os_kernel::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");
 }

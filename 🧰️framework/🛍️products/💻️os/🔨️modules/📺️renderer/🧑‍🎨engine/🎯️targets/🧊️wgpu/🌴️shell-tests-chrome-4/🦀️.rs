@@ -6,7 +6,7 @@
 
 extern crate infinite_canvas as infinite_world;
 use semio_renderer_wgpu_contracts::{SHELL_FIND_ITEM_CAPACITY, ShellFindItem, ShellFindItems, try_push_find_item};
-use semio_renderer_wgpu_dock::{DockNode, DockStackTab, WindowSilhouette, push_window_silhouette_border};
+use semio_renderer_wgpu_dock::{DockNode, DockStackTab, WindowFrame, push_window_frame_border};
 use semio_renderer_wgpu_fixtures::shell::split_pane_shell;
 use semio_renderer_wgpu_shell_actions::{ActionsCtx, staged_arg_value};
 use semio_renderer_wgpu_shell_async::{engagement_completion_suffix, engagement_ghost_accept_on_click, utility_subtree_has_active_path};

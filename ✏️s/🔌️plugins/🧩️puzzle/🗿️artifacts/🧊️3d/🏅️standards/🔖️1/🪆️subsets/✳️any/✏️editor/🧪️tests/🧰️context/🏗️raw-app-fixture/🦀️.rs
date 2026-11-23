@@ -114,6 +114,7 @@ impl Puzzle3dApp {
             self.view.window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.into() });
             let view = self.window_view(window_id);
             self.window_transient_generation(&view).expect("open the fixture window's transient partition").expect("the Puzzle window has a transient owner");
+            self.birth_window_config(&view).expect("open the fixture window's config partition");
         }
     }
 
@@ -134,12 +135,46 @@ impl Puzzle3dApp {
         self.view.tool_run_trace_cursor_by_window_id.insert(window_id.to_string(), cursor);
     }
 
-    pub fn window_view(&self, window_id: &str) -> ViewModel {
+    /// 🔢️ The viewed window's config generation after the native partition birth the host pumps before every capture.
+    pub async fn window_config_generation(&mut self, view: &ViewModel) -> Result<Option<u64>, semio_plugin::Fault> {
+        self.birth_window_config(view)?;
+        let (raw, _) = self.parts();
+        raw.window_config_generation(view).await
+    }
+
+    /// 🌱️ Pumps the viewed window's native config partition birth under the caller's full grant, as the host does before every capture, so a keyed command never has to birth it inside the narrower publication grant.
+    fn birth_window_config(&mut self, view: &ViewModel) -> Result<(), semio_plugin::Fault> {
+        let fuel = artifact_app_laws::OriginalFixtureCaller::turn_fuel();
+        for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+            let (raw, cx) = self.parts();
+            let grant = cx.retained_grant();
+            artifact_app_laws::fixture_renew_turn(cx, fuel, grant).map_err(|error| semio_plugin::Fault::from(format!("{error:?}")))?;
+            let before = cx.retained_progress();
+            match raw.stores.window_config_store.ensure_for_view(Some(view), cx) {
+                Ok(ready) if ready && cx.retained_progress() == before => break,
+                Ok(_) => {}
+                Err(failure) => {
+                    let fault = fault_of(failure);
+                    return Err(fault);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn window_view(&self, window_id: &str) -> WindowView {
         let mut view = self.view.clone();
         if !view.window_instances.iter().any(|instance| instance.id == window_id) {
             view.window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.into() });
         }
-        view.for_window_instance(window_id).expect("puzzle3d test window roster")
+        let projected = view.for_window_instance(window_id).expect("puzzle3d test window roster");
+        retire_view(view);
+        WindowView(Some(projected))
+    }
+
+    /// 🪪️ The addressed window's host projection already bound to a local-actor `ActionMeta`, retired together with its view.
+    pub fn window_meta(&self, window_id: &str) -> WindowMeta {
+        WindowMeta(Some(ActionMeta { view_state: Some(std::sync::Arc::new(self.window_view(window_id).into_inner())), ..self.meta("local") }))
     }
 
     /// 🛠️🧰️ The shell's own activation branches (`🏛️ShellHost/🟦️.tsx`'s `SET_ACTIVE_TOOL_ACTION_ID`
@@ -153,7 +188,7 @@ impl Puzzle3dApp {
             let next = resolve_activation(self.view.active_tool_id.as_deref(), requested("toolId"));
             self.view.active_tool_id = next.clone();
             if next.is_some() {
-                self.view.active_utility_by_window_id = Default::default();
+                std::mem::take(&mut self.view.active_utility_by_window_id).retire_cold();
             }
             return;
         }
@@ -206,6 +241,65 @@ impl Puzzle3dApp {
     }
 }
 
+/// ♻️ Retires the two ordered roots of one host view synchronously, so dropping the view never aborts an unretired ownership.
+fn retire_view(mut view: ViewModel) {
+    std::mem::take(&mut view.active_utility_by_window_id).retire_cold();
+    std::mem::take(&mut view.tool_run_trace_cursor_by_window_id).retire_cold();
+}
+
+/// 🪟️ One window projection of the host session; its ordered roots are retired on drop instead of aborting.
+pub struct WindowView(Option<ViewModel>);
+
+impl WindowView {
+    pub fn into_inner(mut self) -> ViewModel {
+        self.0.take().expect("the window view is live until consumed")
+    }
+}
+
+impl std::ops::Deref for WindowView {
+    type Target = ViewModel;
+    fn deref(&self) -> &ViewModel {
+        self.0.as_ref().expect("the window view is live until consumed")
+    }
+}
+
+impl Drop for WindowView {
+    fn drop(&mut self) {
+        if let Some(view) = self.0.take().filter(|_| !std::thread::panicking()) {
+            retire_view(view);
+        }
+    }
+}
+
+/// 🪪️ One `ActionMeta` whose shared window view is retired when the meta goes out of scope.
+pub struct WindowMeta(Option<ActionMeta>);
+
+impl std::ops::Deref for WindowMeta {
+    type Target = ActionMeta;
+    fn deref(&self) -> &ActionMeta {
+        self.0.as_ref().expect("the window meta is live")
+    }
+}
+
+impl std::ops::DerefMut for WindowMeta {
+    fn deref_mut(&mut self) -> &mut ActionMeta {
+        self.0.as_mut().expect("the window meta is live")
+    }
+}
+
+impl Drop for WindowMeta {
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            return;
+        }
+        if let Some(view) = self.0.take().and_then(|meta| meta.view_state) {
+            if let Ok(view) = std::sync::Arc::try_unwrap(view) {
+                retire_view(view);
+            }
+        }
+    }
+}
+
 /// 🧯️ Projects a fixture dispatch failure onto the diagnostic `Fault` the drivers' callers assert on: the original fault when that is the primary, else the complete debug form.
 pub fn fault_of(failure: semio_framework_job::OriginalTurnFailure) -> Fault {
     failure.primary_fault().cloned().unwrap_or_else(|| Fault::from(format!("{failure:?}")))
@@ -235,6 +329,7 @@ impl Drop for Puzzle3dApp {
     fn drop(&mut self) {
         if !std::thread::panicking() {
             assert!(close_witness(self).expect("original Puzzle3D app retirement"));
+            retire_view(std::mem::replace(&mut self.view, ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)));
         }
         puzzle3d_session_release(self.instance_id);
     }
@@ -355,13 +450,14 @@ pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mu
     settled.turns += 1;
     let policy = artifact_app_laws::fixture_mounted_policy();
     let maintenance_items = maximum_items.max(policy.maintenance.maximum_items);
-    let publication_grant = app.parts().1.retained_grant();
+    let (publication_grant, caller_grant) = (policy.maintenance, app.parts().1.retained_grant());
     app.measure_maintenance_step(maintenance_items, policy.maintenance.maximum_copy_bytes).expect("maintenance step drives the mounted operation's worker and retirement stages");
     let instance_id = app.instance_id;
     let (raw, cx) = app.parts();
     artifact_app_laws::fixture_renew_turn(cx, artifact_app_laws::OriginalFixtureCaller::turn_fuel(), publication_grant).expect("renew the fixture turn for publication after maintenance");
     raw.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
     semio_plugin::artifact_app_laws::retain_original_ownership_receipts(raw, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut Vec::new()).expect("post the ownership receipts to the fixture caller like the host's exchange output");
+    artifact_app_laws::fixture_renew_turn(cx, artifact_app_laws::OriginalFixtureCaller::turn_fuel(), caller_grant).expect("restore the fixture caller grant after publication");
     while let Some(mut page) = semio_plugin::artifact_app_laws::take_fixture_result_page(raw, instance_id, policy.preparation).expect("take one typed operation result page") {
         assert_ne!(page.lane, semio_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
         if page.lane == semio_plugin::app::TypedOperationResultLane::Download {

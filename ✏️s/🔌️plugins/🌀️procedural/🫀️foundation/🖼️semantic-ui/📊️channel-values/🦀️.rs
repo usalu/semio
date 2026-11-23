@@ -35,17 +35,18 @@ pub struct ChannelValueLabels<'a> {
     value: &'static str,
     image: &'static str,
     image_unavailable: &'static str,
+    locale: semio_plugin::Locale,
 }
 
 impl<'a> ChannelValueLabels<'a> {
     /// 🌍️ Uses the same locale as the surrounding preview window.
-    pub fn new(is_de: bool, input: &'a str, output: &'a str) -> Self {
-        let (values, key, value, image, image_unavailable) = if is_de {
+    pub fn new(locale: semio_plugin::Locale, input: &'a str, output: &'a str) -> Self {
+        let (values, key, value, image, image_unavailable) = if locale == semio_plugin::Locale::De {
             ("Werte", "Schlüssel", "Wert", "Bildvorschau", "Bildvorschau nicht verfügbar")
         } else {
             ("Values", "Key", "Value", "Image preview", "Image preview unavailable")
         };
-        Self { values, input, output, key, value, image, image_unavailable }
+        Self { values, input, output, key, value, image, image_unavailable, locale }
     }
 }
 
@@ -122,7 +123,7 @@ impl ChannelValueNodes<'_, '_> {
     }
 
     fn text(&self, row: TreeItemBuilder, id: &str, text: &str) -> UiAssemblyResult<BuiltNode> {
-        windowed_read_only_text(self.windows, row, id, text, |page| self.row(page, page, ""))
+        windowed_read_only_text(self.windows, row, id, text, self.labels.locale, |page| self.row(page, page, ""))
     }
 }
 
@@ -132,13 +133,14 @@ pub fn windowed_read_only_text(
     row: TreeItemBuilder,
     id: &str,
     text: &str,
+    locale: semio_plugin::Locale,
     mut page_row: impl FnMut(&str) -> UiAssemblyResult<TreeItemBuilder>,
 ) -> UiAssemblyResult<BuiltNode> {
     let pages = TextPages(text);
     let page_count = pages.len();
     let surface = |index| {
         let page = pages.get(index).ok_or_else(|| ui_assembly_error("ui.value-text.page"))?;
-        TextWindowKit::render_read_only("content", &TextView { text: page.to_owned(), language: None })
+        TextWindowKit::render_read_only("content", &TextView { text: page.to_owned(), language: None }, locale)
     };
     semio_plugin::tree_window_indexed_item(windows, row, id, false, page_count, |index| {
         if page_count == 1 {

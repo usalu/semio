@@ -559,6 +559,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
         }
         let mut admit = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| true;
         let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut admit);
+        native.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))?;
         let mut original = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
         let turn = self.step_stage(presence_store, &mut original);
         let progress = original.progress();

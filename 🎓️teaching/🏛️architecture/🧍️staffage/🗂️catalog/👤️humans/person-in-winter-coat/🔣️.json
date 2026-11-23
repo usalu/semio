@@ -2083,6 +2083,90 @@
               }
             },
             {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0122,
+                  -0.0048
+                ],
+                [
+                  -0.0074,
+                  -0.0274
+                ],
+                [
+                  -0.0045,
+                  -0.0295
+                ],
+                [
+                  0.0101,
+                  -0.0314
+                ],
+                [
+                  0.0176,
+                  -0.0379
+                ],
+                [
+                  0.0337,
+                  -0.0409
+                ],
+                [
+                  0.0595,
+                  -0.0392
+                ],
+                [
+                  0.0756,
+                  -0.0422
+                ],
+                [
+                  0.0937,
+                  -0.0414
+                ],
+                [
+                  0.0981,
+                  -0.0361
+                ],
+                [
+                  0.102,
+                  -0.0186
+                ],
+                [
+                  0.1021,
+                  0.0142
+                ],
+                [
+                  0.0977,
+                  0.0343
+                ],
+                [
+                  0.0944,
+                  0.0388
+                ],
+                [
+                  0.0888,
+                  0.0418
+                ],
+                [
+                  0.0569,
+                  0.0455
+                ],
+                [
+                  0.0174,
+                  0.0398
+                ],
+                [
+                  0.0068,
+                  0.0325
+                ],
+                [
+                  -0.008,
+                  0.0272
+                ],
+                [
+                  -0.0115,
+                  0.0159
+                ]
+              ],
+              "closed": true,
               "id": "hand-l",
               "bone": "hand-l",
               "role": "body",
@@ -2090,173 +2174,7 @@
               "filled": true,
               "tone": 0.71,
               "region": "gloves",
-              "material": "knit-glove",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.00383,
-                  0.0292
-                ],
-                [
-                  0.01017,
-                  0.0342
-                ],
-                [
-                  0.05117,
-                  0.0652
-                ],
-                [
-                  0.07517,
-                  0.0782
-                ],
-                [
-                  0.09517,
-                  0.0862
-                ],
-                [
-                  0.10017,
-                  0.0862
-                ],
-                [
-                  0.10567,
-                  0.0807
-                ],
-                [
-                  0.10567,
-                  0.0737
-                ],
-                [
-                  0.06267,
-                  0.0457
-                ],
-                [
-                  0.08017,
-                  0.0442
-                ],
-                [
-                  0.09417,
-                  0.0382
-                ],
-                [
-                  0.13917,
-                  0.0412
-                ],
-                [
-                  0.16917,
-                  0.0402
-                ],
-                [
-                  0.17267,
-                  0.0357
-                ],
-                [
-                  0.17267,
-                  0.0307
-                ],
-                [
-                  0.16717,
-                  0.0252
-                ],
-                [
-                  0.10467,
-                  0.0187
-                ],
-                [
-                  0.17217,
-                  0.0162
-                ],
-                [
-                  0.17667,
-                  0.0127
-                ],
-                [
-                  0.17767,
-                  0.0057
-                ],
-                [
-                  0.17317,
-                  0.0002
-                ],
-                [
-                  0.16717,
-                  -0.0008
-                ],
-                [
-                  0.11017,
-                  -0.0028
-                ],
-                [
-                  0.15117,
-                  -0.0068
-                ],
-                [
-                  0.16067,
-                  -0.0113
-                ],
-                [
-                  0.16067,
-                  -0.0193
-                ],
-                [
-                  0.15617,
-                  -0.0228
-                ],
-                [
-                  0.10017,
-                  -0.0228
-                ],
-                [
-                  0.10117,
-                  -0.0258
-                ],
-                [
-                  0.12917,
-                  -0.0318
-                ],
-                [
-                  0.13167,
-                  -0.0383
-                ],
-                [
-                  0.12717,
-                  -0.0438
-                ],
-                [
-                  0.07817,
-                  -0.0428
-                ],
-                [
-                  0.05917,
-                  -0.0398
-                ],
-                [
-                  0.04617,
-                  -0.0418
-                ],
-                [
-                  0.02917,
-                  -0.0408
-                ],
-                [
-                  0.02117,
-                  -0.0388
-                ],
-                [
-                  0.01017,
-                  -0.0318
-                ],
-                [
-                  -0.00433,
-                  -0.0293
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "extruded",
-                "sweep": "w",
-                "z0": 0.15508,
-                "z1": 0.24
-              }
+              "material": "knit-glove"
             },
             {
               "id": "sleeve-l",
@@ -13450,7 +13368,7 @@
                   -0.162
                 ],
                 [
-                  -1e-05,
+                  -0.00001,
                   -0.16
                 ],
                 [
@@ -13812,7 +13730,7 @@
                   0.158
                 ],
                 [
-                  1e-05,
+                  0.00001,
                   0.156
                 ],
                 [
@@ -13938,7 +13856,7 @@
                   -0.162
                 ],
                 [
-                  -1e-05,
+                  -0.00001,
                   -0.16
                 ],
                 [
@@ -27980,7 +27898,7 @@
               "sunlitFraction": 0
             },
             "beanie": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.5424,
               "sunlitFraction": 0
             },
             "gloves": {
@@ -27988,11 +27906,11 @@
               "sunlitFraction": 0
             },
             "parka": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.7235,
               "sunlitFraction": 0
             },
             "scarf": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.629,
               "sunlitFraction": 0
             },
             "trousers": {
@@ -28000,7 +27918,7 @@
               "sunlitFraction": 0
             },
             "boots": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.4796,
               "sunlitFraction": 0
             }
           },
@@ -28078,7 +27996,7 @@
               "sunlitFraction": 0
             },
             "beanie": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.5424,
               "sunlitFraction": 0
             },
             "gloves": {
@@ -28086,11 +28004,11 @@
               "sunlitFraction": 0
             },
             "parka": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.7235,
               "sunlitFraction": 0
             },
             "scarf": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.629,
               "sunlitFraction": 0
             },
             "trousers": {
@@ -28098,7 +28016,7 @@
               "sunlitFraction": 0
             },
             "boots": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.4796,
               "sunlitFraction": 0
             }
           },
@@ -28193,7 +28111,7 @@
               "sunlitFraction": 0
             },
             "beanie": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.5424,
               "sunlitFraction": 0
             },
             "gloves": {
@@ -28201,11 +28119,11 @@
               "sunlitFraction": 0
             },
             "parka": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.7235,
               "sunlitFraction": 0
             },
             "scarf": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.629,
               "sunlitFraction": 0
             },
             "trousers": {
@@ -28213,7 +28131,7 @@
               "sunlitFraction": 0
             },
             "boots": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.4796,
               "sunlitFraction": 0
             }
           },
@@ -28309,7 +28227,7 @@
               "sunlitFraction": 0
             },
             "beanie": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.5424,
               "sunlitFraction": 0
             },
             "gloves": {
@@ -28317,11 +28235,11 @@
               "sunlitFraction": 0
             },
             "parka": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.7235,
               "sunlitFraction": 0
             },
             "scarf": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.629,
               "sunlitFraction": 0
             },
             "trousers": {
@@ -28329,7 +28247,7 @@
               "sunlitFraction": 0
             },
             "boots": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.4796,
               "sunlitFraction": 0
             }
           },
@@ -28433,7 +28351,7 @@
               "sunlitFraction": 0
             },
             "beanie": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.5424,
               "sunlitFraction": 0
             },
             "gloves": {
@@ -28441,11 +28359,11 @@
               "sunlitFraction": 0
             },
             "parka": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.7235,
               "sunlitFraction": 0
             },
             "scarf": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.629,
               "sunlitFraction": 0
             },
             "trousers": {
@@ -28453,7 +28371,7 @@
               "sunlitFraction": 0
             },
             "boots": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.4796,
               "sunlitFraction": 0
             }
           },
@@ -28558,7 +28476,7 @@
               "sunlitFraction": 0
             },
             "beanie": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.5424,
               "sunlitFraction": 0
             },
             "gloves": {
@@ -28566,11 +28484,11 @@
               "sunlitFraction": 0
             },
             "parka": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.7235,
               "sunlitFraction": 0
             },
             "scarf": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.629,
               "sunlitFraction": 0
             },
             "trousers": {
@@ -28578,7 +28496,7 @@
               "sunlitFraction": 0
             },
             "boots": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.4796,
               "sunlitFraction": 0
             }
           },
@@ -28683,7 +28601,7 @@
               "sunlitFraction": 0
             },
             "beanie": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.5424,
               "sunlitFraction": 0
             },
             "gloves": {
@@ -28691,11 +28609,11 @@
               "sunlitFraction": 0
             },
             "parka": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.7235,
               "sunlitFraction": 0
             },
             "scarf": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.629,
               "sunlitFraction": 0
             },
             "trousers": {
@@ -28703,7 +28621,7 @@
               "sunlitFraction": 0
             },
             "boots": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.4796,
               "sunlitFraction": 0
             }
           },
@@ -28808,7 +28726,7 @@
               "sunlitFraction": 0
             },
             "beanie": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.5424,
               "sunlitFraction": 0
             },
             "gloves": {
@@ -28816,11 +28734,11 @@
               "sunlitFraction": 0
             },
             "parka": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.7235,
               "sunlitFraction": 0
             },
             "scarf": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.629,
               "sunlitFraction": 0
             },
             "trousers": {
@@ -28828,7 +28746,7 @@
               "sunlitFraction": 0
             },
             "boots": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.4796,
               "sunlitFraction": 0
             }
           },
@@ -28934,7 +28852,7 @@
               "sunlitFraction": 0
             },
             "beanie": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.5424,
               "sunlitFraction": 0
             },
             "gloves": {
@@ -28942,11 +28860,11 @@
               "sunlitFraction": 0
             },
             "parka": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.7235,
               "sunlitFraction": 0
             },
             "scarf": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.629,
               "sunlitFraction": 0
             },
             "trousers": {
@@ -28954,7 +28872,7 @@
               "sunlitFraction": 0
             },
             "boots": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.4796,
               "sunlitFraction": 0
             }
           },
@@ -29059,7 +28977,7 @@
               "sunlitFraction": 0
             },
             "beanie": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.5424,
               "sunlitFraction": 0
             },
             "gloves": {
@@ -29067,11 +28985,11 @@
               "sunlitFraction": 0
             },
             "parka": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.7235,
               "sunlitFraction": 0
             },
             "scarf": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.629,
               "sunlitFraction": 0
             },
             "trousers": {
@@ -29079,7 +28997,7 @@
               "sunlitFraction": 0
             },
             "boots": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.4796,
               "sunlitFraction": 0
             }
           },
@@ -32826,7 +32744,7 @@
           "kind": "clothing",
           "model": "body",
           "material": "knit-wool",
-          "areaM2": 0.05,
+          "areaM2": 0.09219,
           "characteristicLengthM": 0.18,
           "geometry": "sphere",
           "skyViewFactor": 0.8,
@@ -32904,7 +32822,7 @@
           "kind": "clothing",
           "model": "body",
           "material": "down-parka",
-          "areaM2": 1.2502,
+          "areaM2": 1.728,
           "characteristicLengthM": 0.3,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.45,
@@ -32988,7 +32906,7 @@
           "kind": "clothing",
           "model": "body",
           "material": "wool-scarf",
-          "areaM2": 0.0409,
+          "areaM2": 0.06502,
           "characteristicLengthM": 0.1,
           "geometry": "cylinder",
           "skyViewFactor": 0.5,
@@ -33081,7 +32999,7 @@
           "kind": "surface",
           "model": "body",
           "material": "nubuck-boot",
-          "areaM2": 0.1937,
+          "areaM2": 0.4039,
           "characteristicLengthM": 0.1,
           "geometry": "horizontal-plate-up",
           "skyViewFactor": 0.1,
@@ -38686,7 +38604,7 @@
               {
                 "at": [
                   -0.01848,
-                  -7e-05,
+                  -0.00007,
                   -0.02526
                 ],
                 "rx": 0.05789,
@@ -39454,7 +39372,7 @@
               {
                 "at": [
                   -0.01848,
-                  -7e-05,
+                  -0.00007,
                   0.02526
                 ],
                 "rx": 0.05789,
@@ -40882,7 +40800,7 @@
               {
                 "at": [
                   0.05534,
-                  -3e-05,
+                  -0.00003,
                   0
                 ],
                 "rx": 0.07333,
@@ -41090,7 +41008,7 @@
               {
                 "at": [
                   0.13682,
-                  -7e-05,
+                  -0.00007,
                   0
                 ],
                 "rx": 0.033,
@@ -81780,7 +81698,7 @@
               {
                 "at": [
                   -0.01848,
-                  -7e-05,
+                  -0.00007,
                   -0.02526
                 ],
                 "rx": 0.04589,
@@ -82178,7 +82096,7 @@
               {
                 "at": [
                   -0.01848,
-                  -7e-05,
+                  -0.00007,
                   -0.02526
                 ],
                 "rx": 0.04289,
@@ -82576,7 +82494,7 @@
               {
                 "at": [
                   -0.01848,
-                  -7e-05,
+                  -0.00007,
                   -0.02526
                 ],
                 "rx": 0.04169,
@@ -82980,7 +82898,7 @@
               {
                 "at": [
                   -0.01848,
-                  -7e-05,
+                  -0.00007,
                   0.02526
                 ],
                 "rx": 0.04589,
@@ -83378,7 +83296,7 @@
               {
                 "at": [
                   -0.01848,
-                  -7e-05,
+                  -0.00007,
                   0.02526
                 ],
                 "rx": 0.04289,
@@ -83776,7 +83694,7 @@
               {
                 "at": [
                   -0.01848,
-                  -7e-05,
+                  -0.00007,
                   0.02526
                 ],
                 "rx": 0.04169,
@@ -89677,7 +89595,7 @@
               {
                 "at": [
                   0.05534,
-                  -3e-05,
+                  -0.00003,
                   0
                 ],
                 "rx": 0.07333,
@@ -95803,7 +95721,7 @@
               {
                 "at": [
                   0.25929,
-                  -7e-05,
+                  -0.00007,
                   0.05213
                 ],
                 "rx": 0.004,
@@ -95993,7 +95911,7 @@
               {
                 "at": [
                   0.25929,
-                  -7e-05,
+                  -0.00007,
                   -0.05213
                 ],
                 "rx": 0.004,
@@ -100688,7 +100606,7 @@
             ],
             "p1": [
               0.1776,
-              -3e-05,
+              -0.00003,
               0.00135
             ],
             "r0": 0.0056,
@@ -100710,7 +100628,7 @@
             ],
             "p1": [
               0.1776,
-              -3e-05,
+              -0.00003,
               -0.00135
             ],
             "r0": 0.0056,
@@ -137157,7 +137075,7 @@
               {
                 "at": [
                   0.25929,
-                  -7e-05,
+                  -0.00007,
                   0.05213
                 ],
                 "rx": 0.0075,
@@ -137251,7 +137169,7 @@
               {
                 "at": [
                   0.25929,
-                  -7e-05,
+                  -0.00007,
                   -0.05213
                 ],
                 "rx": 0.0075,
@@ -138706,7 +138624,7 @@
             ],
             "p1": [
               0.1776,
-              -3e-05,
+              -0.00003,
               0.00135
             ],
             "r0": 0.0075,
@@ -138728,7 +138646,7 @@
             ],
             "p1": [
               0.1776,
-              -3e-05,
+              -0.00003,
               -0.00135
             ],
             "r0": 0.0075,
@@ -143095,7 +143013,7 @@
               {
                 "at": [
                   0.12726,
-                  6e-05,
+                  0.00006,
                   0
                 ],
                 "rx": 0.051,
@@ -143431,7 +143349,7 @@
               {
                 "at": [
                   0.12726,
-                  6e-05,
+                  0.00006,
                   0
                 ],
                 "rx": 0.051,

@@ -259,7 +259,7 @@ pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_ut
             );
             scene.domain_id = Some(MESH_INTERACTION_DOMAIN.into());
             scene.domain_granularity_id = Some(MESH_GRANULARITY_OBJECT.into());
-            scene_surface(LOWPOLY_PLAY_SURFACE_MAIN, semio_ui_contract::SurfaceKind::World3d, &scene)
+            scene_surface(LOWPOLY_PLAY_SURFACE_MAIN, semio_ui_contract::SurfaceKind::World3d, &scene, labels.surface_main.as_str(), None)
         }
         None => semio_plugin::built_text_node(labels.failed_model.into()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly main window failed-load text admission failed")),
     }

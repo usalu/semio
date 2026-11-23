@@ -11,10 +11,10 @@ fn canonical_native_source_handoff_refuses_extracted_original_without_losing_cus
  let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let edit=Box::new(semio_framework_pack_json::from_json_str::<Edit<bool>>(&serde_json::to_string(&cases["cases"][0]["edit"]).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
  let pointer=edit.as_ref()as*const Edit<bool>;let id=edit.id.as_ptr();
- let admitted=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:131072,maximum_depth:4096};
+ let admitted=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:131072,maximum_depth:1024};
  let mut source=stage(edit);
  let extracted=extracted(&mut source,admitted).expect("original authority transfer");let mut source=Some(source);
- let(result,heap)=observe(||ArtifactCanonicalEditSealCursor::admit_source(&mut source,admitted));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(source.is_some());assert_eq!(extracted.as_ref()as*const Edit<bool>,pointer);assert_eq!(extracted.id.as_ptr(),id);
+ let(result,heap)=observe(||ArtifactCanonicalEditSealCursor::admit_source(&mut source,grant(ArtifactCanonicalEditSealCursor::<bool>::source_constructor_demand())));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(source.is_some());assert_eq!(extracted.as_ref()as*const Edit<bool>,pointer);assert_eq!(extracted.id.as_ptr(),id);
  let mut source=source.unwrap();for turn in 0..100000{if source.terminal_is_empty(){break;}let(step,_)=closed(&mut source,admitted);assert!(step.progress().fits(admitted));assert!(turn<99999||source.terminal_is_empty());}assert!(source.terminal_is_empty());
  let edit=extracted;assert_eq!(edit.as_ref()as*const Edit<bool>,pointer);assert_eq!(edit.id.as_ptr(),id);let mut owner=ControlledRetirement::new(edit).unwrap_or_else(|(error,_)|panic!("extracted original retirement: {error}"));for turn in 0..100000{if owner.terminal_is_empty(){break;}let(step,_)=stepped(&mut owner,admitted);assert!(step.progress().fits(admitted));assert!(turn<99999||owner.terminal_is_empty());}assert!(owner.terminal_is_empty());let(_,heap)=observe(||{drop(owner);drop(source);});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
@@ -90,4 +90,38 @@ fn canonical_seal_terminal_polling_preserves_one_shot_original_transfer(){
   assert_eq!(transfers,if cancel{0}else{contract["expectedTransfers"].as_u64().unwrap()});
   if let Some(edit)=transferred{let mut owner=ControlledRetirement::new(edit).unwrap_or_else(|(error,_)|panic!("returned original retirement: {error}"));for _ in 0..contract["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break;}let body=owner.next_copy_byte_demand().unwrap();let admitted=grant(RetirementDemand{copy_bytes:body,capacity_bytes:owner.next_capacity_byte_demand(body).unwrap(),release_bytes:owner.next_release_byte_demand().unwrap(),depth:owner.next_depth_demand().unwrap()});assert!(stepped(&mut owner,admitted).0.progress().fits(admitted));}assert!(owner.terminal_is_empty());}
  }}
+}
+
+/// 🎯️ Every seal turn granted exactly its own quote settles within that quote for edits far larger than the fixtures.
+#[test]
+fn canonical_native_edit_seal_settles_every_exact_quote_within_its_own_grant_for_large_edits(){
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let dense=cases["cases"][1]["edit"].clone();
+ let mut digests=Vec::new();
+ for scale in[1usize,8,64]{for exact in[true,false]{
+  let mut row=dense.clone();
+  row["id"]=serde_json::Value::String("i".repeat(scale*13));
+  row["forwards"]=serde_json::Value::Array(vec![serde_json::Value::Bool(true);scale*7]);
+  row["inverse"]=serde_json::Value::Array(vec![serde_json::Value::Bool(false);scale*5]);
+  let meta=row["mutationMeta"][0].clone();
+  row["mutationMeta"]=serde_json::Value::Array((0..scale).map(|index|{let mut entry=meta.clone();entry["mutation_id"]=serde_json::Value::String(format!("m{index}"));entry["dependencies"]=serde_json::Value::Array((0..index%9).map(|dependency|serde_json::Value::String(format!("d{dependency}"))).collect());entry}).collect());
+  let original=Box::new(semio_framework_pack_json::from_json_str::<Edit<bool>>(&serde_json::to_string(&row).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
+  let mut source=Some(stage(original));
+  let wide=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:4096,maximum_release_bytes:131072,maximum_depth:1024};
+  let constructor=ArtifactCanonicalEditSealCursor::<bool>::source_constructor_demand();
+  let(mut cursor,_)=ArtifactCanonicalEditSealCursor::admit_source(&mut source,grant(constructor)).unwrap().unwrap();
+  for turn in 0..1000000{
+   if cursor.is_ready()||cursor.terminal_is_empty(){break;}
+   let demand=cursor.next_demand().unwrap();let admitted=if exact{grant(demand)}else{RetainedCloneGrant{maximum_depth:demand.depth,..wide}};
+   let(step,_)=polled(admitted,|effect|cursor.advance(effect));
+   assert!(step.progress().fits(admitted),"scale {scale} exact {exact} turn {turn} phase {:?} demand {demand:?} progress {:?}",cursor.phase as u8,step.progress());
+   assert!(turn<999999);
+  }
+  assert!(cursor.is_ready());digests.push((scale,hex(cursor.digest().unwrap())));
+  let(edit,_,_)=cursor.take_edit(grant(cursor.next_take_demand())).unwrap().unwrap();
+  let mut owner=ControlledRetirement::new(edit).unwrap_or_else(|(error,_)|panic!("{error}"));
+  for _ in 0..1000000{if owner.terminal_is_empty(){break;}let work=owner.next_copy_byte_demand().unwrap();let admitted=grant(RetirementDemand{copy_bytes:work,capacity_bytes:owner.next_capacity_byte_demand(work).unwrap(),release_bytes:owner.next_release_byte_demand().unwrap(),depth:owner.next_depth_demand().unwrap()});stepped(&mut owner,admitted);}
+  assert!(cursor.terminal_is_empty());
+ }}
+ for pair in digests.chunks(2){assert_eq!(pair[0],pair[1],"exact and wide grants must agree on the digest");}
 }

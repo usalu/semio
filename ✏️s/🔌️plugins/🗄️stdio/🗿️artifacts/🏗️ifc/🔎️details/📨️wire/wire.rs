@@ -65,9 +65,9 @@ pub struct IfcPublication {
     rows: usize,
     preflight_mutation: usize,
     mutation_source: Option<(usize, usize)>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     cancel_at: Option<usize>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     turns: usize,
 }
 
@@ -84,9 +84,9 @@ impl Default for IfcPublication {
             rows: 0,
             preflight_mutation: 0,
             mutation_source: None,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             cancel_at: None,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             turns: 0,
         }
     }
@@ -245,7 +245,7 @@ impl IfcPublication {
             return Err(refusal("IFC original mutation source changed during retained publication").into());
         }
         for _ in 0..64 {
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             {
                 self.turns += 1;
                 if self.cancel_at == Some(self.turns) {
@@ -405,15 +405,15 @@ impl IfcPublication {
     pub fn codec_live(&self) -> bool {
         !self.codec.closed || self.view.overlay.has_metadata()
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn cancel_at_turn(&mut self, turn: usize) {
         self.cancel_at = Some(turn);
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn turns(&self) -> usize {
         self.turns
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn inverse_wire<'a>(&'a self, mutations: &'a [IfcMutation]) -> impl store::ArtifactCanonicalJson + 'a {
         inverse::BorrowedInverse { view: &self.view, mutations }
     }

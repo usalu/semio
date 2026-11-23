@@ -122,7 +122,7 @@ fn issues_show_in_the_language_of_the_labels_next_to_the_part_they_belong_to() {
 fn the_window_renders_a_family_the_hint_and_the_empty_model() {
     let snapshot = model();
     let inference = ModelInference::infer(&snapshot).expect("infers");
-    assert!(render(&snapshot, &inference, &[], &["fam-table".to_string()], &BimLabels::NATIVE_EN).is_ok());
+    assert!(render(&snapshot, &inference, &[], &["fam-table".to_string()], &BimLabels::NATIVE_EN, semio_plugin::Locale::En).is_ok());
     let empty = ModelSnapshot::default();
     let nothing = ModelInference::infer(&empty).expect("infers");
     assert!(render(&empty, &nothing, &[], &[], &BimLabels::NATIVE_DE).is_ok());
@@ -141,8 +141,8 @@ fn the_preview_draws_the_visible_solids_of_the_selected_family() {
     assert_eq!((top.indices.len(), top.groups.len(), top.face_groups.len()), (36, 1, 12));
     assert!((top.volume - 1.6 * 0.8 * 0.03).abs() < 1e-12);
     assert_eq!(top.groups[0].material, "m-oak");
-    assert!(view_render(&snapshot, &inference, &[], &["fam-table".to_string()]).is_ok());
-    assert!(view_render(&ModelSnapshot::default(), &ModelInference::default(), &[], &[]).is_ok());
+    assert!(view_render(&snapshot, &inference, &[], &["fam-table".to_string()], semio_plugin::Locale::En).is_ok());
+    assert!(view_render(&ModelSnapshot::default(), &ModelInference::default(), &[], &[], semio_plugin::Locale::En).is_ok());
 }
 
 #[test]

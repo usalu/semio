@@ -1,4 +1,4 @@
-//! 🥣️ Companion test crate of `semio-s-artifact-draw-drawing-model`: the unit laws of the drawing model's fill, shape, affine, inference and snapshot-codec modules. The test files stay at their taxonomy nodes and are mounted here in the module nest the parent used.
+//! 🎗 Companion test crate of `semio-s-artifact-draw-drawing-model`: the unit laws of the drawing model's fill, shape, affine, inference, snapshot-codec, validation, receive, vector, fill-sampling and snapshot-lookup modules. The test files stay at their taxonomy nodes and are mounted here in the module nest the parent used.
 
 #![cfg(test)]
 
@@ -62,4 +62,46 @@ pub mod io_unit;
 pub mod shape_geometry {
     #[path = "../../🔷️shape/✏️coordinates/🧪️tests/🔬️unit/🦀️.rs"]
     pub mod tests;
+}
+
+#[path = "."]
+pub mod validation {
+    #[path = "../../✅️validation/🧪️tests.rs"]
+    pub mod tests;
+}
+#[path = "."]
+pub mod native_receive {
+    #[path = "../../🛬️receive/🧪️tests/🦀️.rs"]
+    pub mod tests;
+}
+#[path = "."]
+pub mod vector_source {
+    #[path = "../../🧵️vector/🧪️tests.rs"]
+    pub mod tests;
+    #[path = "../../🧵️vector/🧪️preparation.rs"]
+    pub mod preparation_tests;
+}
+#[path = "."]
+pub mod fill {
+    #[path = "."]
+    pub mod sampling {
+        #[path = "../../🎨️fill/🎨️sampling/🧪️tests/🔬️unit/🦀️.rs"]
+        pub mod tests;
+    }
+}
+#[path = "."]
+pub mod snapshot {
+    #[path = "."]
+    pub mod lookup {
+        #[path = "."]
+        pub mod original_text {
+            #[path = "../../📸️snapshot/🔎️lookup/📝️original-text/🧪️tests/🦀️.rs"]
+            pub mod tests;
+        }
+        #[path = "."]
+        pub mod equality {
+            #[path = "../../📸️snapshot/🔎️lookup/⚖️equality/🧪️tests/🦀️.rs"]
+            pub mod tests;
+        }
+    }
 }

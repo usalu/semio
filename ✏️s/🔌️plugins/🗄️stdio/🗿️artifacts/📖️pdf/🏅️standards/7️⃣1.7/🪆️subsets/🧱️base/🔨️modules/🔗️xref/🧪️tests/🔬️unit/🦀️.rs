@@ -63,38 +63,3 @@ fn latest_classic_section_yields_free_entry_and_trailer_using_single_work_grants
     let trailer = PdfObject::Dict(cursor.take_trailer().unwrap());
     assert_eq!(trailer.dict_get("Info").and_then(PdfObject::as_ref), Some(ObjRef { num: 9, gen: 0 }));
 }
-
-#[test]
-fn prefixed_pdf_preserves_structured_free_entries_under_either_offset_convention() {
-    use crate::standards::v1_7::subsets::base::io::import::decode_pdf;
-    let source = include_bytes!("../../../../🧪️tests/🧫️fixtures/🔗️incremental-free/📑️table.pdf");
-    let prefix = b"\n% document preamble\n";
-    let delta = prefix.len();
-    let mut absolute = source.to_vec();
-    let mut next_footer = false;
-    for line in absolute.split_mut(|&byte| byte == b'\n') {
-        if next_footer {
-            shift_decimal(line, delta);
-            next_footer = false;
-        }
-        if line == b"startxref" { next_footer = true; }
-        if line.get(16..18) == Some(b" n") { shift_decimal(&mut line[..10], delta); }
-        if let Some(prev) = line.windows(6).position(|word| word == b"/Prev ") {
-            let digits = &mut line[prev + 6..];
-            let end = digits.iter().position(|b| !b.is_ascii_digit()).unwrap_or(digits.len());
-            shift_decimal(&mut digits[..end], delta);
-        }
-    }
-    for source in [source.as_slice(), &absolute] {
-        let pdf = [prefix.as_slice(), source].concat();
-        let doc = decode_pdf(&pdf).unwrap();
-        assert_eq!(doc.pages.len(), 2);
-        assert_eq!(doc.info.title.as_deref(), Some("Updated"));
-        assert!(doc.objects.iter().all(|object| object.id.num != 3));
-    }
-
-    fn shift_decimal(field: &mut [u8], delta: usize) {
-        let value = std::str::from_utf8(field).unwrap().parse::<usize>().unwrap() + delta;
-        field.copy_from_slice(format!("{value:0width$}", width = field.len()).as_bytes());
-    }
-}

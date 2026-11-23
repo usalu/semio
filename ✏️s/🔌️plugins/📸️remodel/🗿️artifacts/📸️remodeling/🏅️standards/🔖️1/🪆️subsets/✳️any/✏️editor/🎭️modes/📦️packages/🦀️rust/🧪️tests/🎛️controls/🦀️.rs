@@ -44,8 +44,8 @@ fn different_window_configs_render_distinct_frame_and_table_scenes() {
     scene.gcps.push(GroundControlPoint { id: "point-a".into(), observations: vec![GcpObservation { stream_id: "stream-a".into(), frame_index: 5, pixel: [1.0, 2.0] }], ..Default::default() });
     let first = frames::config::RemodelingFramesWindowConfig { frame_cursor: frames::config::RemodelingFrameCursor { stream_id: Some("stream-a".into()), frame_index: 0 } };
     let second = frames::config::RemodelingFramesWindowConfig { frame_cursor: frames::config::RemodelingFrameCursor { stream_id: Some("stream-a".into()), frame_index: 5 } };
-    assert_ne!(format!("{:?}", frames::render(&scene, &first).unwrap()), format!("{:?}", frames::render(&scene, &second).unwrap()));
+    assert_ne!(format!("{:?}", frames::render(&scene, &first, Locale::En).unwrap()), format!("{:?}", frames::render(&scene, &second, Locale::En).unwrap()));
     let cameras = report::config::RemodelingReportWindowConfig { report_table: "cameras".into() };
     let gcps = report::config::RemodelingReportWindowConfig { report_table: "gcps".into() };
-    assert_ne!(format!("{:?}", report::render(&scene, &cameras).unwrap()), format!("{:?}", report::render(&scene, &gcps).unwrap()));
+    assert_ne!(format!("{:?}", report::render(&scene, &cameras, Locale::En).unwrap()), format!("{:?}", report::render(&scene, &gcps, Locale::En).unwrap()));
 }

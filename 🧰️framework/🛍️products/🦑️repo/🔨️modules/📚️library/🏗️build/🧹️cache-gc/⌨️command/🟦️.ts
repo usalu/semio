@@ -231,6 +231,12 @@ export async function runCacheLedgerV1(root:string,args:readonly string[],invoca
   const reclaimDue=(await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts")).repositoryPartitionReclaimDueV1,{createHash}=await import("node:crypto"),{tmpdir}=await import("node:os"),{mkdirSync,readFileSync,writeFileSync}=await import("node:fs"),{compactOnIdleV1}=await import("../🛌️idle/🟦️.ts");
   const stamps=join(tmpdir(),"semio-idle-compaction-"+createHash("sha256").update(root).digest("hex").slice(0,16));
   if(args.includes("--dry-run")){for(const partition of order)if(reclaimDue(root,partition))writeResultLineV1("Would reclaim the host blocks of image "+partition);return;}
+  const{refreshStaleImageIfQuiescentV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🔄️refresh/🟦️.ts"),{repositoryCacheBudgetV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts");
+  for(const partition of order){
+   const declared=repositoryCacheBudgetV1(root).partitions[partition];if(declared===undefined)continue;
+   const refreshed=await refreshStaleImageIfQuiescentV1({directory:declared.directory,leaseDirectory:directory,control:phaseControl});
+   if(refreshed.outcome==="refreshed")writeResultLineV1("Refreshed the available space of image "+partition+": "+(refreshed.beforeAvailableBytes===undefined?"?":formatCacheBytesV1(refreshed.beforeAvailableBytes))+" -> "+(refreshed.afterAvailableBytes===undefined?"?":formatCacheBytesV1(refreshed.afterAvailableBytes))+(refreshed.cured?"":" (still stale)")+" / Verfügbarer Platz von Image "+partition+" aufgefrischt"+(refreshed.cured?"":" (weiterhin veraltet)"));
+  }
   const results=await compactOnIdleV1({partitions:order,minimumIntervalMilliseconds:idleOnly?CACHE_GC_LIMITS_V1.idleCompactionIntervalMilliseconds:0,maximumMilliseconds:CACHE_GC_LIMITS_V1.idleCompactionMaximumMilliseconds,signal:invocation.control.signal,ports:{
    now:Date.now,due:partition=>reclaimDue(root,partition as RepositoryCachePartitionIdV1),
    lastAt:partition=>{try{return (JSON.parse(readFileSync(join(stamps,partition+".json"),"utf8")) as {at:number}).at;}catch{return undefined;}},

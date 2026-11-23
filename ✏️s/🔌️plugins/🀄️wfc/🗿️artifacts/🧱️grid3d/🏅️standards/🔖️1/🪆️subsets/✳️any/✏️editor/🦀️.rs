@@ -746,8 +746,8 @@ impl Grid3dEditor {
     fn render_bodies(body_key:&str,doc:&ArtifactView<'_,Grid3dSnapshot>,cfg:&ConfigView<'_,NoConfig>,view_state:&semio_plugin::ViewModel,transient:&Grid3dTransient)->semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>{
         let window_config=config_from_view(cfg);
         match body_key {
-            grid::BODY_KEY=>grid::render(doc.snapshot,&window_config,&[],None,grid3d_active_utility(Some(view_state))).map(semio_plugin::built_to_component_tree),
-            preview::BODY_KEY=>preview::render(doc.snapshot,&window_config,transient,doc.tool_run(),doc.render_operation_ref().map(|operation|&operation.canonical_base_revision)).map(semio_plugin::built_to_component_tree),
+            grid::BODY_KEY=>grid::render(doc.snapshot,&window_config,&[],None,grid3d_active_utility(Some(view_state)),view_state.locale).map(semio_plugin::built_to_component_tree),
+            preview::BODY_KEY=>preview::render(doc.snapshot,&window_config,transient,doc.tool_run(),doc.render_operation_ref().map(|operation|&operation.canonical_base_revision),view_state.locale).map(semio_plugin::built_to_component_tree),
             _=>semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

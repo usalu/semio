@@ -42,7 +42,7 @@ pub(crate) fn stencil_operation(op: StencilOperation) -> wgpu::StencilOperation 
     }
 }
 
-/// 🎨️ `None` disables blending (the silhouette mask pass writes no color anyway); `Replace`/
+/// 🎨️ `None` disables blending (the viewport mask pass writes no color anyway); `Replace`/
 /// `AlphaBlending` mirror `wgpu::BlendState::REPLACE`/`ALPHA_BLENDING`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub(crate) fn blend_state(mode: BlendMode) -> Option<wgpu::BlendState> {

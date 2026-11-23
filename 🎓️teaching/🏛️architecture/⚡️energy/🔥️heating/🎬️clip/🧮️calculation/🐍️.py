@@ -91,7 +91,7 @@ _THETA_I = _example.THETA_I_WINTER_C
 _THETA_HG = _example.THETA_HG_C
 _F_GT = 0.024 * _GT
 _Q_LOSS = _example.Q_LOSS_KWH_PER_A
-_Q_LOSS_SHOWN = round(_Q_LOSS, -2)
+_Q_LOSS_SHOWN = _example.Q_LOSS_SHOWN_KWH_PER_A
 _Q_SOL, _Q_INT = _example.Q_SOL_KWH_PER_A, _example.Q_INT_KWH_PER_A
 DESK_SURFACE_M = 0.72
 _Q_GAIN = _Q_SOL + _Q_INT
@@ -139,7 +139,7 @@ def _utilization(peak, mass, upto: float = 24.0):
     return a_used, a_gain, a_used / float(np.trapezoid(gain, _DAY_T))
 
 
-def _solve_solar_peak(target: float = 0.90) -> float:
+def _solve_solar_peak(target: float = _example.ETA_UTILISATION) -> float:
     """🎯 Solar peak that makes the light house reach ``target`` utilization."""
     lo, hi = 2.0, 6.0
     for _ in range(60):
@@ -149,11 +149,9 @@ def _solve_solar_peak(target: float = 0.90) -> float:
 
 
 _SOLAR_PEAK = _solve_solar_peak()
-_ETA_LIGHT = _utilization(_SOLAR_PEAK, 0.0)[2]
-_ETA_HEAVY = _utilization(_SOLAR_PEAK, 1.0)[2]
-_ETA = round(_ETA_LIGHT, 2)
-_Q_USE = _ETA * _Q_GAIN
-_Q_H = _Q_LOSS_SHOWN - _Q_USE
+_ETA = _example.ETA_UTILISATION
+_Q_USE = _example.Q_USE_KWH_PER_A
+_Q_H = _example.Q_H_KWH_PER_A
 #endregion
 
 #region System losses (DIN V 18599-5)
@@ -628,7 +626,7 @@ class Scene2(Scene):
                            hg_name, gt_def, gt_note, d_read, gap, gap_name)),
             run_time=2.5,
         )
-        self.remove(initial_eq, multiplier_group)
+        self.remove(initial_eq, multiplier_group, *initial_eq.submobjects, *multiplier_group.submobjects)
         self.play(FadeIn(VGroup(ce["times2"], ce["hd"]), shift=LEFT * 0.2), run_time=0.8)
         self.play(FadeIn(VGroup(vi["eq"], vi["h"], vi["d1"], vi["d2"], vi["hd"])),
                   stage.transition("heating.calculation.balance.degree-day-readout-to-value", source=gt_read, target=vi["gt"]), run_time=1.2)
@@ -676,7 +674,7 @@ class ReviewingHeatGains(Scene):
         title = _heading(tr("Overview of heat gains", "Übersicht der Wärmegewinne"))
 
         subtitle = _label(tr("Free heat gains (DIN V 4108-6:2003-06)", "Freie Wärmegewinne (DIN V 4108-6:2003-06)"), size=18, color=SUBTEXT_GREY)
-        subtitle.next_to(title, DOWN, buff=0.15)
+        subtitle.next_to(title, DOWN, buff=0.15, aligned_edge=LEFT)
 
         FX, SOL_Y, INT_Y = 1.3, 0.95, -1.15
 

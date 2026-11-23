@@ -7,7 +7,7 @@ import{Worker}from"node:worker_threads";
 import{pathToFileURL}from"node:url";
 import{WALK_FARM_V1,partIdOfV1}from"../🟨️.mjs";
 
-const P=WALK_FARM_V1,[,,root,module]=process.argv;
+const P=WALK_FARM_V1,[,,root,module]=process.argv,recycleBytes=Number(process.env.SEMIO_WALK_FARM_RECYCLE_BYTES)>0?Number(process.env.SEMIO_WALK_FARM_RECYCLE_BYTES):P.recycleBytes;
 const send=message=>wire(P.marker+JSON.stringify(message)+"\n");
 
 /** 🐕️ The parent-gone watchdog of the farm worker (its own thread, so a walk that holds this loop for minutes still ends with the read).
@@ -47,7 +47,7 @@ const serve=async message=>{
   send({id:message.id,answer:{fact:answer.fact,parts}});
  }catch(error){send({id:message.id,failure:{name:String(error?.name??"Error"),...typeof error?.code==="string"?{code:error.code}:{},message:String(error?.message??error).slice(0,2000)}});}
  if(++served%P.roundResetEvery===0)delete pass.round;
- if(process.memoryUsage.rss()>P.recycleBytes){send({recycle:true});process.exit(0);}
+ if(process.memoryUsage.rss()>recycleBytes){send({recycle:true});process.exit(0);}
 };
 for await(const line of createInterface({input:process.stdin})){
  const at=line.lastIndexOf(P.marker);if(at<0)continue;

@@ -13,7 +13,7 @@ fn run(input:&ChangeWidgetInput)->bool{
   for denied in [
    RetainedCloneGrant{maximum_items:0,..grant()},
    RetainedCloneGrant{maximum_depth:0,..grant()},
-   RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant()},
+   RetainedCloneGrant{maximum_copy_bytes:0,..grant()},
   ]{
    if denied.maximum_items>0&&denied.maximum_depth>0&&demand.copy_bytes==0{continue}
    let(turn,heap)=turn(&mut work,input,denied);

@@ -42,12 +42,6 @@ impl Entry {
     pub fn playground(&self) -> Option<&PlaygroundFacts> { match &self.action { Action::Playground(playground) => Some(playground), _ => None } }
 }
 
-/// 🎬️ A catalog example is chosen by its slug or by its bare id, the part after the emoji identity.
-pub(super) fn canonical_value(parameter: &Parameter, text: &str) -> String {
-    if parameter.origin != Origin::Playground || parameter.id != "example" || parameter.values.iter().any(|(known, _)| known == text) { return text.to_string(); }
-    parameter.values.iter().map(|(known, _)| known).find(|known| known.rsplit_once('\u{FE0F}').is_some_and(|(_, bare)| bare == text)).cloned().unwrap_or_else(|| text.to_string())
-}
-
 pub(super) fn unknown_parameter(id: &str, key: &str, accepted: &[Parameter]) -> String {
     format!("{id}: unknown parameter {key:?}; it accepts {}", if accepted.is_empty() { "none".to_string() } else { accepted.iter().map(|parameter| parameter.id.as_str()).collect::<Vec<_>>().join(", ") })
 }

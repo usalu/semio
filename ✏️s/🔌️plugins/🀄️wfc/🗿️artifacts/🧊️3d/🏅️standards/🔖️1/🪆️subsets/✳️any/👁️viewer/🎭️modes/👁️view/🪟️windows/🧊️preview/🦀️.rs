@@ -50,7 +50,7 @@ pub fn render(document: &Wfc3dSnapshot, cache: &crate::editor::wfc3d::transient:
         instances_delta_json: Some(editor_preview::instances_delta_json(document, transient)),
         ..World3dScene::base(editor_preview::camera_json(document, 1.0), editor_preview::meshes_json(document), editor_preview::instances_json(document, transient), world3d_selection_json("replace", &[], None))
     };
-    let scene = scene_surface(WFC_3D_VIEW_SURFACE, ContractSurfaceKind::World3d, &scene)?;
+    let scene = scene_surface(WFC_3D_VIEW_SURFACE, ContractSurfaceKind::World3d, &scene, semio_plugin::surface_name(locale, "Preview", "Vorschau"), None)?;
     let label = if document.slots.is_empty() { LocalizedLabel::native("No slots authored yet.", "Noch keine Plätze angelegt.") }
         else if transient.contradiction { LocalizedLabel::native("No assignment satisfies the current rules.", "Keine Belegung erfüllt die aktuellen Regeln.") }
         else if !transient.assignments.is_empty() { LocalizedLabel::native("Showing the current result.", "Das aktuelle Ergebnis wird angezeigt.") }

@@ -75,7 +75,7 @@ pub fn sourcing_table_row(object_id: &str, cells: Vec<(&str, semio_plugin::Table
 
 /// 📊️ One sourcing table surface: `(id, label, sortable)` columns, [`sourcing_table_row`] records
 /// draggable under [`SOURCING_DRAG_MIME`], and `drop_action` answering a row dropped onto it.
-pub fn sourcing_table(surface_id: &str, columns: &[(&str, &str, bool)], rows: Vec<semio_framework_value::DslValue>, drop_action: &str, sort: Option<&crate::TableSort>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn sourcing_table(surface_id: &str, columns: &[(&str, &str, bool)], rows: Vec<semio_framework_value::DslValue>, drop_action: &str, sort: Option<&crate::TableSort>, name: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let columns = columns
         .iter()
         .map(|(id, label, sortable)| semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(id.to_string())), ("label".to_string(), semio_framework_value::DslValue::String(label.to_string())), ("sortable".to_string(), semio_framework_value::DslValue::Bool(*sortable))]))
@@ -86,7 +86,7 @@ pub fn sourcing_table(surface_id: &str, columns: &[(&str, &str, bool)], rows: Ve
     scene.sort_json = sort.map(|sort| semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(sort)));
     scene.domain_id = Some(SOURCING_ROWS_DOMAIN.into());
     scene.domain_granularity_id = Some(SOURCING_OBJECT_GRANULARITY.into());
-    semio_plugin::scene_surface(surface_id, semio_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene)
+    semio_plugin::scene_surface(surface_id, semio_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene, name, None)
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.

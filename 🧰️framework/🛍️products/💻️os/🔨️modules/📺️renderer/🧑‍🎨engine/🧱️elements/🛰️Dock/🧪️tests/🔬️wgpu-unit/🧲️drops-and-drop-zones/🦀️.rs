@@ -12,11 +12,11 @@ fn apply_drop_tab_moves_window_to_target_corner() {
     assert_eq!(dock.active_window_id.as_deref(), Some("a"));
 }
 
-/// 🪟️ ONE merged top span, not one per tab: React's tab bar is `flex items-stretch justify-start`
-/// with no gap utility (`🎨️Canvas/🟦️.tsx:1108`), so adjacent chips form a single silhouette edge
-/// and the content clip is body + that one span.
+/// 🪟️ ONE merged top chip, not one per tab: React's tab bar is `flex items-stretch justify-start`
+/// with no gap utility (`🎨️Canvas/🟦️.tsx:1108`), so adjacent tabs form a single glass chip, and the
+/// content fills the whole frame through ONE rectangular scissor, chip row included.
 #[test]
-fn dock_stack_content_fills_full_bounds_through_one_silhouette_clip() {
+fn dock_stack_content_fills_the_whole_frame_through_one_rectangular_scissor() {
     let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
     dock.root = stack_tabs(&["a", "b"], "a");
     let bounds = Rect::new(10.0, 20.0, 600.0, 400.0);
@@ -29,9 +29,13 @@ fn dock_stack_content_fills_full_bounds_through_one_silhouette_clip() {
     let icon_ids = HashMap::new();
     let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
     dock.paint_chrome(&mut ctx, bounds, true);
-    let fill = draw.layers.iter().find(|layer| layer.clip.is_some() && layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h])).expect("full silhouette content fill");
-    assert_eq!(fill.clip.as_ref().map(|clip| clip.scissors.len()), Some(2));
-    assert!(!fill.clip.as_ref().is_some_and(|clip| clip.scissors.iter().any(|rect| rect.x <= 300 && 300 < rect.x + rect.w && rect.y <= 30 && 30 < rect.y + rect.h)));
+    let fill = draw.layers.iter().find(|layer| layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h])).expect("full frame content fill");
+    assert_eq!(fill.clip, None, "no stencil or union clip");
+    assert_eq!(fill.scissor.map(|rect| (rect.x, rect.y, rect.w, rect.h)), Some((10, 20, 600, 400)), "one rectangle: the frame");
+    assert_eq!(draw.glass_regions.len(), 1);
+    let chip = draw.glass_regions[0].rect;
+    assert!(chip[0] >= bounds.x && chip[1] >= bounds.y && chip[0] + chip[2] <= bounds.x + bounds.w && chip[1] + chip[3] <= bounds.y + bounds.h, "the chip glass lies inside the frame");
+    assert!(chip[2] < bounds.w, "the chip row beside the chip is content");
 }
 
 /// 🏁️ `register_hit` only STAGES; `hit_at` resolves the PUBLISHED registry, so the frame build has

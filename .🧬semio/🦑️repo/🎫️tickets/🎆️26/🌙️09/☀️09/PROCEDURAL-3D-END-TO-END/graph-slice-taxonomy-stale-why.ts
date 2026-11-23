@@ -1,0 +1,10 @@
+import {readFileSync} from "node:fs";
+const G="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build";
+const obs=await import(G+"/👁️observation/🟨️.mjs");
+const producer=await import(G+"/🕸️graph/📥️inference/🟨️.mjs");
+await producer.libraryBootstrap;producer.prepareSourceAnalysesV1();
+const memo=JSON.parse(readFileSync(process.argv[2],"utf8"));
+const rows=(memo.observations as any[]).filter(r=>r.kind==="analysis"&&String(r.path).endsWith("🔣️taxonomy.json"));
+console.log("taxonomy analysis rows",rows.length,"distinct facts",new Set(rows.map(r=>JSON.stringify(r.fact))).size);
+const row=rows[0];console.log(JSON.stringify({provider:row.fact.provider,revision:row.fact.revision,source:row.fact.source,resultSha256:row.fact.resultSha256,nested:row.fact.nestedObservations.length}).slice(0,600));
+console.log(JSON.stringify(await obs.firstFailingRowV1([row])).slice(0,800));

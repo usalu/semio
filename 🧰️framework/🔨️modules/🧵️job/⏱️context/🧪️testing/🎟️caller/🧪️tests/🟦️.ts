@@ -36,7 +36,7 @@ test("original fixture caller spends one source stock and CPU balance through al
   expect(source).toContain("stock:RetainedCloneGrant");
   expect(source).toContain("spent:RetainedCloneProgress");
   expect(source).toContain("with_retained_loan(grant");
-  expect(source).toContain("self.fuel=cx.fuel_remaining()");
+  expect(source).toContain("self.fuel=cx.original_source_fuel_remaining().min(issued_fuel)");
   expect(source).toContain("pub fn retire_step");
   expect(source).not.toContain("let mut receipt=RetainedCloneProgress::default();let mut cx=");
 });
@@ -44,7 +44,7 @@ test("original fixture caller spends one source stock and CPU balance through al
 test("original work loan narrows CPU and absolute deadline while preserving parent balances",()=>{
   const validate=new Ajv2020({strict:true}).compile(schema);
   expect(validate(fixture)).toBe(true);
-  let fuel=fixture.fuel-3;
+  let fuel=fixture.fuel;
   for(const loan of fixture.workLoans){
     const child={fuel:Math.min(fuel,loan.fuel),deadline:Math.min(fixture.deadline,loan.deadline)};
     const permitted=child.fuel>0&&fixture.clock<child.deadline;
@@ -54,6 +54,6 @@ test("original work loan narrows CPU and absolute deadline while preserving pare
     expect(fuel).toBe(loan.remaining);
     expect(child.deadline<=fixture.deadline).toBe(true);
   }
-  const source=readFileSync(new URL("../../../../🦀️.rs",import.meta.url),"utf8");
+  const source=readFileSync(new URL("../../../../⏱️context/🦀️.rs",import.meta.url),"utf8");
   expect(source.includes("pub fn with_original_work_loan")).toBe(true);
 });

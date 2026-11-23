@@ -1,0 +1,55 @@
+{
+  "id": "english-yew",
+  "category": "vegetation",
+  "title": {
+    "en": "English Yew",
+    "de": "Gemeine Eibe"
+  },
+  "heightM": 12.226,
+  "widthM": 10.75,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "english-yew-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A 12 m old yew with a short, fluted trunk under a dark, lumpy dome 10.7 m wide that sweeps down to a skirt, the densest and stiffest evergreen crown of the archive.",
+    "de": "Eine 12 m hohe alte Eibe mit kurzem, spannrückigem Stamm unter einer dunklen, knolligen Kuppel von 10,7 m Breite, die zu einer Schleppe herabschwingt, die dichteste und steifste immergrüne Krone des Archivs."
+  },
+  "completion": "authored"
+}

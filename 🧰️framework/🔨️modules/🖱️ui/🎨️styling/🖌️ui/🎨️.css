@@ -1346,65 +1346,65 @@
   }
 }
 
-@keyframes window-silhouette-border-loading-dash {
+@keyframes window-frame-border-loading-dash {
   to {
     --loading-border-dashoffset: -48;
   }
 }
 
-@keyframes window-silhouette-border-waiting-dash {
+@keyframes window-frame-border-waiting-dash {
   to {
     --waiting-border-dashoffset: -48;
   }
 }
 
 @layer shared-border-ownership {
-  .window-silhouette-border {
+  .window-frame-border {
     stroke-width: var(--stroke-hairline);
   }
 }
 
-.window-silhouette-border-introduced {
+.window-frame-border-introduced {
   stroke-width: var(--stroke-hairline);
   animation: introduced-border-pulse var(--introduced-border-duration) ease-in-out infinite;
 }
 
-.window-silhouette-border-loading {
+.window-frame-border-loading {
   stroke-width: var(--stroke-hairline);
   stroke-dasharray: 28 20;
   stroke-linecap: butt;
   stroke-dashoffset: var(--loading-border-dashoffset);
   opacity: var(--loading-border-pulse-opacity);
   animation:
-    window-silhouette-border-loading-dash var(--loading-border-duration) linear infinite,
+    window-frame-border-loading-dash var(--loading-border-duration) linear infinite,
     loading-border-pulse var(--loading-border-duration) ease-in-out infinite;
 }
 
-.window-silhouette-border-waiting {
+.window-frame-border-waiting {
   stroke-width: var(--stroke-hairline);
   stroke-dasharray: 10 14;
   stroke-linecap: butt;
   stroke-dashoffset: var(--waiting-border-dashoffset);
   opacity: var(--waiting-border-pulse-opacity);
   animation:
-    window-silhouette-border-waiting-dash var(--waiting-border-duration) linear infinite,
+    window-frame-border-waiting-dash var(--waiting-border-duration) linear infinite,
     waiting-border-pulse var(--waiting-border-duration) ease-in-out infinite;
 }
 
-.window-silhouette-border-active {
+.window-frame-border-active {
   stroke: var(--active-base);
 }
 
-.window-silhouette-border-normal {
+.window-frame-border-normal {
   stroke: var(--border-normal-color);
 }
 
 /* 🎉️ The celebratory fill spins through the brand colours along the same hairline. */
-.window-silhouette-border-celebrated-mask {
+.window-frame-border-celebrated-mask {
   stroke-width: var(--stroke-hairline);
 }
 
-.window-silhouette-border-celebrated-fill {
+.window-frame-border-celebrated-fill {
   --celebrate-conic: conic-gradient(
     from var(--celebrate-border-angle),
     var(--celebrate-border-color-a, var(--color-primary)),
@@ -1419,20 +1419,20 @@
 @media (prefers-reduced-motion: reduce) {
   /* 🛑️ One stop for every element-scoped phase clock in 🔁️BorderEffectClocks — the clocks live on the
      painting elements now, so reduced motion silences them there rather than on `:root`. */
-  .window-silhouette-border-introduced,
-  .window-silhouette-border-loading,
-  .window-silhouette-border-waiting,
-  .window-silhouette-border-celebrated-mask,
-  .window-silhouette-border-celebrated-fill,
+  .window-frame-border-introduced,
+  .window-frame-border-loading,
+  .window-frame-border-waiting,
+  .window-frame-border-celebrated-mask,
+  .window-frame-border-celebrated-fill,
   [data-slot="tree-guide"] [data-tree-guide-line] {
     animation: none;
   }
 
-  .window-silhouette-border-introduced,
-  .window-silhouette-border-loading,
-  .window-silhouette-border-waiting,
-  .window-silhouette-border-celebrated-mask,
-  .window-silhouette-border-celebrated-fill {
+  .window-frame-border-introduced,
+  .window-frame-border-loading,
+  .window-frame-border-waiting,
+  .window-frame-border-celebrated-mask,
+  .window-frame-border-celebrated-fill {
     opacity: 1;
   }
 
@@ -6668,7 +6668,7 @@
   background-color: color-mix(in oklab, var(--destructive-border) 10%, transparent);
 }
 [data-shared-border-cells][data-tone="destructive"] > svg[data-shared-border-overlay] [data-shared-border-segment][data-shared-border-state="normal"] { stroke: var(--destructive-border); }
-/* 🧱️ Cells have no native border: the compositor paints every divider, cell outline and state line (hover, focus-visible, selection, effects) as strokes of the owner's overlay, so a stated cell is always a closed silhouette. */
+/* 🧱️ Cells have no native border: the compositor paints every divider, cell outline and state line (hover, focus-visible, selection, effects) as strokes of the owner's overlay, so a stated cell is always a closed outline. */
 /* A wrapping owner (`data-shared-border-wrap`: a `SharedBorderRow wrap` or a wrapping `ToggleGroup`) breaks its cells into lines that stretch to the owner's width; the compositor paints the dividers between and across lines. */
 [data-shared-border-wrap] {
   flex-wrap: wrap;
@@ -6688,8 +6688,8 @@
   box-shadow: none !important;
 }
 /* ⌨️ Selected and pressed controls also underline the label when keyboard focus is visible. */
-:is([data-state="active"], [data-state="on"], [aria-selected="true"], [aria-pressed="true"], [data-active="true"], [data-selected="true"]):not([role="tabpanel"], [data-window-silhouette]):focus-visible,
-:is([data-state="active"], [data-state="on"], [aria-selected="true"], [aria-pressed="true"], [data-active="true"], [data-selected="true"]):not([role="tabpanel"], [data-window-silhouette], [data-slot="window"]) > :is(button, [role="button"], [role="tab"], a[href], select, input, [tabindex]):focus-visible {
+:is([data-state="active"], [data-state="on"], [aria-selected="true"], [aria-pressed="true"], [data-active="true"], [data-selected="true"]):not([role="tabpanel"], [data-window-frame]):focus-visible,
+:is([data-state="active"], [data-state="on"], [aria-selected="true"], [aria-pressed="true"], [data-active="true"], [data-selected="true"]):not([role="tabpanel"], [data-window-frame], [data-slot="window"]) > :is(button, [role="button"], [role="tab"], a[href], select, input, [tabindex]):focus-visible {
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 0.2em;
@@ -7202,14 +7202,14 @@
   box-shadow: none !important;
 }
 /* 🧊 Backdrop pages of a layered landing show their content blurred through the veil but never a border: every border colour and outline of the subtree is transparent
-   and the compositor overlay / silhouette strokes are not painted, so no bordered box or edge fragment ghosts through a U-gap, a chip band or an edge hint. */
+   and the compositor overlay / frame strokes are not painted, so no bordered box or edge fragment ghosts through a chip, a chip band or an edge hint. */
 [data-layered-backdrop] *,
 [data-layered-backdrop] *::before,
 [data-layered-backdrop] *::after {
   border-color: transparent !important;
   outline-color: transparent !important;
 }
-[data-layered-backdrop] :is([data-shared-border-overlay], [data-window-silhouette-border], [class*="window-silhouette-border"]) {
+[data-layered-backdrop] :is([data-shared-border-overlay], [data-window-frame-border], [class*="window-frame-border"]) {
   visibility: hidden !important;
 }
 /* 🌫 The card whose explore control is pressed wears the veil's tint, so the page behind it is the only crisp surface. */
@@ -7227,9 +7227,9 @@
 
 
 /* #region 🪟️GlassAccessibilityFallbacks
- * Accessibility and capability fallbacks replace each painted glass region independently. They
- * never fill the silhouette host or cap row, so U-gaps remain real cutouts instead of degrading to
- * a rectangular opaque surface when blur is unavailable or intentionally disabled. */
+ * Accessibility and capability fallbacks replace each painted glass region independently: a chip
+ * (and the frame surface beneath it) degrades to its opaque level surface when blur is unavailable,
+ * transparency is reduced or forced colours apply. The chip rows themselves never paint a fill. */
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   :is(.ui-glass, .ui-veil) {
     background-color: var(--surface-bg);
@@ -7248,11 +7248,6 @@
   [data-layered-card][data-tinted] > *::after {
     background-color: var(--surface-bg);
   }
-
-  [data-window-silhouette-gap] {
-    background: transparent !important;
-    background-color: transparent !important;
-  }
 }
 
 @media (forced-colors: active) {
@@ -7267,14 +7262,8 @@
     forced-color-adjust: none;
   }
 
-  [data-window-silhouette-border] path {
+  [data-window-frame-border] path {
     stroke: CanvasText !important;
-  }
-
-  [data-window-silhouette-gap] {
-    background: transparent !important;
-    background-color: transparent !important;
-    forced-color-adjust: none;
   }
 }
 /* #endregion 🪟️GlassAccessibilityFallbacks */
@@ -7300,89 +7289,88 @@
   transition: color 120ms ease;
 }
 
-/* 🪟️ Border overlay is a pure paint layer above the gap/chip glass — never intercepts pointer events
+/* 🪟️ Border overlay is a pure paint layer above the content and chip glass — never intercepts pointer events
  * or reserves layout space, regardless of what utility classes a consumer composes onto it. */
-[data-window-silhouette-border] {
+[data-window-frame-border] {
   pointer-events: none;
 }
 
-/* #region 🌊️SilhouetteContentFlow
- * The clipped content plane occupies the full top/body/bottom silhouette while its matching
- * padding keeps ordinary document content below chrome at rest. Negative margins cancel that
- * padding in layout, so auto-sized windows retain their pre-compositor intrinsic size. Edgeless
- * scenes and dead-line scroll viewports intentionally consume the expanded bounds themselves. */
-.window-silhouette-content-plane {
-  margin-block-start: calc(-1 * var(--window-silhouette-top-clearance, 0px));
-  margin-block-end: calc(-1 * var(--window-silhouette-bottom-clearance, 0px));
-  padding-block-start: var(--window-silhouette-top-clearance, 0px);
-  padding-block-end: var(--window-silhouette-bottom-clearance, 0px);
+/* #region 🌊️FrameContentFlow
+ * The content plane fills the whole frame; the chip rows float above it. Its padding is the chip row
+ * depth the frame reports per edge, so document content starts below the top row and ends above the
+ * bottom row at rest and still scrolls beneath the chips. Edgeless scenes and dead-line scroll
+ * viewports consume the full frame themselves and are full-bleed from the first frame. */
+.window-frame-content-plane {
+  padding-block-start: var(--window-frame-top-clearance, 0px);
+  padding-block-end: var(--window-frame-bottom-clearance, 0px);
+  scroll-padding-block-start: var(--window-frame-top-clearance, 0px);
+  scroll-padding-block-end: var(--window-frame-bottom-clearance, 0px);
 }
 
-/* 🚧️ The opt-out belongs to a plane whose OWN content consumes the expanded bounds. A plane that hosts a
-   whole window (the mode dock's stack body) must keep the compensating padding: dropping it while the
-   negative margin stands hoists the nested window — chrome rows and all — up into this plane's cap band,
-   which is how the mode dock's tab bar came to cover every window pane toggle. The nested window's own
-   planes still opt out for their own content. */
-.window-silhouette-content-plane:has(
+/* 🚧️ A plane that hosts a whole window keeps its padding: the nested window's own chrome rows are laid out by that window, whose own plane opts out for its own edgeless content. */
+.window-frame-content-plane:has(
     [data-window-content-layout="edgeless"],
     [data-slot="window-dead-line-scroll"]
   ):not(:has([data-slot="window"])) {
   padding-block-start: 0;
   padding-block-end: 0;
 }
-/* #endregion 🌊️SilhouetteContentFlow */
+/* #endregion 🌊️FrameContentFlow */
 
-/* 🪟️ U-gap must punch through — never inherit cap/body glass or a stack rectangle fill. */
-[data-window-silhouette-gap] {
-  background: transparent !important;
-  background-color: transparent !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-  box-shadow: none !important;
+/* 🧊 Chip rows are transparent overlays inside the frame: uncovered row space belongs to the content, only the chips take pointer input and paint glass. */
+:is([data-slot="window-chrome-cap"], [data-slot="window-chrome-footer"]) {
+  pointer-events: none;
+  background: transparent;
 }
 
-/* Chip wrappers defer their outline to the silhouette. Child frames retain every edge
+[data-window-frame-chip] {
+  pointer-events: auto;
+}
+
+/* 📏 A frame is never shorter than its chip rows: a frame without content height is exactly its chips, never a zero-height frame with chips hanging outside. */
+[data-window-frame]:has(> [data-dock]) {
+  min-block-size: var(--chip-row-height);
+}
+
+[data-window-frame]:has(> [data-dock="top"]):has(> [data-dock="bottom"]) {
+  min-block-size: calc(2 * var(--chip-row-height));
+}
+
+/* Chips defer their outline to the frame border: their outer edges are the frame outline, their inner edges are painted by the compositor. Child frames retain every edge
  * unless attachment measurement explicitly marks that physical side as shared. */
-[data-window-silhouette-chip] {
+[data-window-frame-chip] {
   border-width: 0;
   border-style: none;
 }
 
-/* 🫸️ Two chips of one cap or footer row whose open gap would drop under the card-band minimum abut instead (chip-abut.ts): the reaching chip stretches over the gap and the pair shares one seam. */
-[data-window-silhouette-chip][data-chip-abut] {
+/* 🫸️ Two chips of one cap or footer row whose free space would drop under the card-band minimum abut instead (chip-abut.ts): the reaching chip stretches over the free space and the pair shares one seam. */
+[data-window-frame-chip][data-chip-abut] {
   flex: 1 1 auto;
-}
-
-[data-window-silhouette-chip][data-chip-abut] + [data-window-silhouette-gap] {
-  flex: 0 0 0;
-}
-
-[data-slot^="window-chrome-footer-"]:has(> [data-window-silhouette-chip][data-chip-abut]) {
   justify-self: stretch;
 }
 
-[data-anchor] > [data-window-silhouette]:has(> [data-window-silhouette-chip][data-chip-abut]) {
+[data-anchor] > [data-window-frame]:has(> [data-window-frame-chip][data-chip-abut]) {
   min-inline-size: var(--chip-abut-size);
 }
 
 /* 🪟️ A folded pane chip stretched to the width of the control group hanging under it: the chip and its toggle fill the stack, so both share the same left and right lines. */
-[data-pane-chip-fill] > [data-window-silhouette-chip] {
+[data-pane-chip-fill] > [data-window-frame-chip] {
   flex: 1 1 auto;
 }
 
-[data-pane-chip-fill] > [data-window-silhouette-chip] > [data-slot="window-pane-chrome-toggle"] {
+[data-pane-chip-fill] > [data-window-frame-chip] > [data-slot="window-pane-chrome-toggle"] {
   flex: 1 1 auto;
 }
 
-/* ⌨️ Keyboard focus on a docked control is the recolour of its chip's own lines (the silhouette paints them in the focus colour, chip-focus.ts), never a ring inside them. */
-[data-window-silhouette-chip] :is(button, [role="button"], [tabindex], a[href], input, select, textarea):focus-visible {
+/* ⌨️ Keyboard focus on a docked control is the recolour of its chip's own lines (the frame border paints them in the focus colour, chip-focus.ts), never a ring inside them. */
+[data-window-frame-chip] :is(button, [role="button"], [tabindex], a[href], input, select, textarea):focus-visible {
   outline: none;
   box-shadow: none;
 }
 
-/* 🎛️ The silhouette chip already paints this level's glass. Immediate control-group shells must
+/* 🎛️ The frame chip already paints this level's glass. Immediate control-group shells must
  * stay transparent so Back/Next and equivalent controls do not paint the same level twice. */
-[data-window-silhouette-chip] > :is(
+[data-window-frame-chip] > :is(
   [data-slot="button-group"],
   [data-slot="toggle-group"],
   [data-slot="action-group"],
@@ -7405,33 +7393,10 @@
   background-color: transparent !important;
 }
 
-/* 🃏️ Card stack and grid: cards interlock with no gap. The measured `--card-stack-lift|cap|footer` (see `useCardInterlock`) lift a
- * card (its grid cell in a grid) onto the bottom line of the one above and give the lower cap row and the upper footer row the
- * height of one shared band; the rows themselves let pointer events through to the chips of the card beneath. */
-:is([data-card-stack] > [data-overview-card], [data-card-stack] > .contents > [data-overview-card], [data-card-grid] > [data-card-grid-cell], [data-card-grid] > .contents > [data-card-grid-cell]) {
-  margin-block-start: calc(var(--card-stack-lift, 0px) * -1);
-}
-
-/* 🪢️ Cards never lift in a stack, a grid or the layered overview (a swiped card shares its lines with the neighbour hints): a translate would break the shared line, so hover emphasis stays on colour and outline. */
+/* 🃏️ Card stack and grid: every card is one rectangle with its chips inside it, so cards abut with no gap, lift or band and share one line. A card never lifts in a stack, a grid or the layered overview (a swiped card shares its lines with the neighbour hints): a translate would break the shared line, so hover emphasis stays on colour and outline. */
 :is([data-card-stack], [data-card-grid], [data-layered-overview]) [data-overview-card-paint] {
   translate: none !important;
   transform: none !important;
-}
-
-:is([data-card-stack], [data-card-grid]) [data-overview-card-stack] > [data-slot="window-chrome-cap"] {
-  min-height: var(--card-stack-cap, 0px);
-}
-
-:is([data-card-stack], [data-card-grid]) [data-overview-card-stack] > [data-slot="window-chrome-footer"] {
-  min-height: var(--card-stack-footer, 0px);
-}
-
-:is([data-card-stack], [data-card-grid]) [data-overview-card-stack] > :is([data-slot="window-chrome-cap"], [data-slot="window-chrome-footer"]) {
-  pointer-events: none;
-}
-
-:is([data-card-stack], [data-card-grid]) [data-overview-card-stack] > :is([data-slot="window-chrome-cap"], [data-slot="window-chrome-footer"]) > [data-window-silhouette-chip] {
-  pointer-events: auto;
 }
 
 /* 🔳️ Card grid: cards tile edge to edge. No gap, no cell padding, the card fills its cell, so neighbours share one line. */
@@ -7470,7 +7435,6 @@
 /* 🎓️ Introduction step unit hover: title + drag handle — not footer step-count chip. */
 [data-slot="introduction-info-box"]:is(
   :has([data-slot="window-chrome-body"]:hover),
-  :has([data-slot="window-chrome-gap"]:hover),
   :has([data-slot="window-chrome-controls"]:hover),
   :has([data-slot="introduction-info-box-chip"]:hover)
 ) [data-slot="introduction-info-box-chip"]:not([data-handle-hovered="true"]) {
@@ -7480,7 +7444,6 @@
 
 [data-slot="introduction-info-box"]:is(
   :has([data-slot="window-chrome-body"]:hover),
-  :has([data-slot="window-chrome-gap"]:hover),
   :has([data-slot="window-chrome-controls"]:hover),
   :has([data-slot="introduction-info-box-chip"]:hover)
 ) [data-slot="introduction-info-box-chip"] [data-slot="drag-handle"] {
@@ -7681,18 +7644,16 @@
 
 /* #endregion 🎉️CelebrateContent */
 
-/* 🪟️ Outer stroke is owned by the stack silhouette SVG — never reintroduce piecewise chrome borders. */
+/* 🪟️ Outer stroke is owned by the stack frame border SVG — never reintroduce piecewise chrome borders. */
 [data-slot="mode-dock-stack"]
   :is(
     [data-slot="mode-dock-stack-body"],
     [data-slot="mode-dock-tab-cap"],
-    [data-slot="mode-dock-tab-gap"],
     [data-slot="mode-dock-controls-cap"]
   ),
 [data-slot="window-chrome-stack"]
   :is(
     [data-slot="window-chrome-chip-cap"],
-    [data-slot="window-chrome-gap"],
     [data-slot="window-chrome-controls"],
     [data-slot="window-chrome-body"],
     [data-slot="panel-content"],

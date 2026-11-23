@@ -268,7 +268,7 @@ async fn report_out_exports_the_computed_check_report() {
 }
 //#endregion ðï¸Behavior
 
-semio_plugin::history_edit_acceptance_law!("norm", crate::Vdi3805PlayApp, || semio_plugin::App { definition: crate::create_vdi3805_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("norm", crate::Vdi3805PlayApp, || semio_plugin::App { definition: crate::create_vdi3805_app(), examples: Vec::new() }, "../../..");
 
 #[test]
 fn compiled_input_metadata_matches_all_native_schema_rows() {

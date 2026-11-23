@@ -1,7 +1,7 @@
 import {chmodSync,existsSync,lstatSync,mkdirSync,readdirSync,readFileSync,readlinkSync,realpathSync,renameSync,rmdirSync,statSync,unlinkSync,writeFileSync} from "node:fs";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import {freeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** ♻️ The closed rules of the collection: where holds and generations live, how long a superseded, retained or unfinished generation rests before it may go, the free fraction of the image below which the rest shrinks to nothing, and how many entries one removal batch deletes. */
 export const dependencyGenerationCollectionPolicyV1=schema.$defs.Policy.const;

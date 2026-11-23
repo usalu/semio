@@ -1,5 +1,6 @@
 # 🧬️ Shooting mutation schema — artifact-lane fields only.
 scalar UInt32
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 
 type ShootingMutation {
   schema: String! @state(class: ARTIFACT)
@@ -9,6 +10,7 @@ type ShootingMutation {
   shots: [ShootingShot!]! @state(class: ARTIFACT)
   activeShotId: String! @state(class: ARTIFACT)
   activeAssetId: String! @state(class: ARTIFACT)
+  emblem: ArtifactChild @state(class: ARTIFACT)
 }
 
 type ShootingCamera {

@@ -11,7 +11,6 @@
 
 [data-overview-card]:is(
   :has([data-slot="window-chrome-body"]:hover),
-  :has([data-slot="window-chrome-gap"]:hover),
   :has([data-slot="demonstrator-pane-card-title-chip"]:hover),
   :focus-visible,
   :has(:focus-visible)

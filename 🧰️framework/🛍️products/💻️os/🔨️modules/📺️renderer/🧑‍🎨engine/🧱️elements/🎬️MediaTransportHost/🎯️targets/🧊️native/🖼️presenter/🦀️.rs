@@ -761,7 +761,7 @@ impl MediaSlotPresenter {
                 let playing = self.playing(token);
                 let area = Self::video_area(slot, self.can_apply);
                 let top = if matches!(props.kind, SlotMediaKind::Video) { area.y + area.h + GAP } else { inner.y };
-                let row = |index: f32| SlotRect::new(inner.x, top + index * (ROW + GAP), inner.w, ROW);
+                let row = |index: u8| SlotRect::new(inner.x, top + f32::from(index) * (ROW + GAP), inner.w, ROW);
                 let spoken = |ms: u64| media_time_value_text(ms, props.is_de, &props.labels);
                 let transport = row(0);
                 let seek_width = (transport.w - BUTTON_WIDTH - 2.0 * TIME_WIDTH - 3.0 * GAP).max(0.0);

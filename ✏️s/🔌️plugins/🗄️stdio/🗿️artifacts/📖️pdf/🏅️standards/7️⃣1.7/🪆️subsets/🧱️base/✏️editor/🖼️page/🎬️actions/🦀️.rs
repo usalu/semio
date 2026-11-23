@@ -44,7 +44,7 @@ pub fn edit_from_action(action: &str, args: Option<&semio_framework_value::DslVa
         "set-mark-info" => (0, String::new(), String::new(), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), 0.0, 0.0, 0.0, 0.0),
         "set-viewer-preferences" => (0, object_id()?, text_arg(args, "text"), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-info-field" => (0, text_arg(args, "object"), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-page-extra" => (page_index()?, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-page-extra" => (page_index()?, text_arg(args, "object"), page_extra_text(args)?, text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-annotation-style" => (page_index()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
         "set-annotation-border" => (page_index()?, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", -1.0), opt_num(args, "width", 0.0), 0.0, 0.0, 0.0, 0.0),
         "set-annotation-markup" => (page_index()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
@@ -79,6 +79,11 @@ pub fn edit_from_action(action: &str, args: Option<&semio_framework_value::DslVa
         _ => return Err(fault(format!("unknown pdf page action '{action}'"))),
     };
     Ok(payload_edit(action, page, object, text, extra, x, y, width, height, red, green, blue))
+}
+
+fn page_extra_text(args: Option<&semio_framework_value::DslValue>) -> Result<String, Fault> {
+    let text = text_arg(args, "text");
+    if text_arg(args, "object").starts_with("box.") { canonical_quad(&text, typed_locale(args, "text")) } else { Ok(text) }
 }
 
 /// 🧬 Applies a replayable page edit to the typed document.

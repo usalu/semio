@@ -36,8 +36,8 @@ use crate::context::Fem3dApp;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 use semio_framework::kernel::HistoryEntry;
 use semio_plugin::HistoryView;
-fn demo() -> Fem3dSnapshot {
-    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
+fn demo() -> crate::context::Retiring<Fem3dSnapshot> {
+    crate::context::Retiring::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot"))
 }
 
 fn translate(dx: f64, phase: Option<&str>) -> Fem3dCommand {
@@ -46,7 +46,7 @@ fn translate(dx: f64, phase: Option<&str>) -> Fem3dCommand {
 
 fn node_position(app: &Fem3dApp, id: &str) -> [f64; 3] {
     let snapshot = app.snapshot().expect("snapshot");
-    let node = snapshot.nodes.iter().find(|node| node.id == id).expect("node");
+    let node = snapshot.nodes.iter().find(|node| node.id.as_str() == id).expect("node");
     [node.x, node.y, node.z]
 }
 
@@ -61,7 +61,7 @@ fn english(row: &HistoryEntry) -> String {
 fn the_unmounted_route_commits_one_relative_leaf_and_refuses_a_stream() {
     let doc = demo();
     let history = HistoryView::empty();
-    let view = ArtifactView::new(&doc, &history);
+    let view = ArtifactView::new(&*doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
     let emit = translate_selection::handle(&translate_selection::TranslateSelection { ids: vec![semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()], dx: 0.5, dy: -0.25, dz: 0.0, phase: None, reason: None }, &view, &cfg).expect("emit");
     let [Fem3dMutation::MoveSelection(leaf)] = emit.artifact_mutations.as_slice() else { panic!("one relative leaf: {:?}", emit.artifact_mutations) };
@@ -82,7 +82,7 @@ fn the_unmounted_route_commits_one_relative_leaf_and_refuses_a_stream() {
 fn an_id_less_payload_moves_the_live_selection() {
     let doc = demo();
     let history = HistoryView::empty();
-    let view = ArtifactView::new(&doc, &history);
+    let view = ArtifactView::new(&*doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
     let live = semio_s_artifact_fem_3d_editor::editor::fem3d::fem3d_route(&Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: Vec::new(), dx: 0.0, dy: 0.0, dz: 1.0, phase: None, reason: None }), &view, &cfg, || vec![semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()], None).expect("route");
     let [Fem3dMutation::MoveSelection(leaf)] = live.artifact_mutations.as_slice() else { panic!("the live selection moved") };
@@ -177,10 +177,10 @@ async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
         let mut edits = 0;
         for dispatch in case["steps"].as_array().expect("steps").iter().map(|step| &step["dispatch"]).filter(|dispatch| !dispatch.is_null()) {
             let mut args = dispatch["args"].clone();
-            args["ids"] = serde_json::json!(["n20_l1"]);
+            args["ids"] = serde_json::json!([semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").expect("canonical node target")]);
             let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&args.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire args parse");
             let action = dispatch["action"].as_str().expect("action");
-            let command = <EditorApp<Fem3dPlayApp> as semio_plugin::ArtifactApp>::command_from_action(action, Some((args).clone()), None).await.unwrap_or_else(|fault| panic!("{name}: {action} decodes from the host's wire args: {}", fault.message));
+            let command = <EditorApp<Fem3dPlayApp> as semio_plugin::ArtifactApp>::command_from_action(action, &mut Some(args), &mut None).await.unwrap_or_else(|fault| panic!("{name}: {action} decodes from the host's wire args: {}", fault.message));
             edits += dispatch_rows(&mut app, command).await.len();
         }
         let after = node_position(&app, "n20_l1");

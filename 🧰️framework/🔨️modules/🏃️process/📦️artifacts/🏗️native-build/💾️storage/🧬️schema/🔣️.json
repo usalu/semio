@@ -457,14 +457,32 @@
               "filesystemTypeKey": "FilesystemType",
               "darwinFilesystemType": "apfs",
             "infoProgram": "/usr/sbin/diskutil",
-            "infoArguments": ["info", "-plist"]
+            "infoArguments": ["info", "-plist"],
+            "refresh": {
+              "description": "A quiescent image whose volume reports less than its container can take is returned to a true figure by one detach and attach cycle, because the volume samples the host free space only when it attaches. Only the operating systems of `mechanisms` have such a volume; the others refuse the action. The caller holds the exclusive image lease nonwaiting, which proves that no repository process uses the image, so a busy refusal may be escalated: `hdiutil detach -force`, then `diskutil unmount force` of the mount point and `hdiutil detach -force` again. The volume is probed only while it reports less than `probeBelowBytes`; a cycle that did not cure the figure is not repeated within `retryMilliseconds`. The reserve is a file of real bytes inside every image that is released before the cycle (and by any writer that meets ENOSPC) so the volume has room to flush its transactions and to delete, and is created again while the image has `creationFreeMultiplier` times its size free.",
+              "mechanisms": {
+                "darwin": {
+                  "forceUnmountProgram": "/usr/sbin/diskutil",
+                  "forceUnmountArguments": ["unmount", "force"]
+                }
+              },
+              "probeBelowBytes": 17179869184,
+              "retryMilliseconds": 300000,
+              "reserve": {
+                "file": ".semio-reserve",
+                "bytes": 33554432,
+                "chunkBytes": 1048576,
+                "creationFreeMultiplier": 4
+              }
+            }
           }
         },
         "mountProgram": "/sbin/mount",
         "mountWithoutOwnersFlag": "noowners",
         "reservedApplicationEntries": [
           ".fseventsd",
-          ".metadata_never_index"
+          ".metadata_never_index",
+          ".semio-reserve"
         ],
         "bootSession": {
           "program": "/usr/sbin/sysctl",

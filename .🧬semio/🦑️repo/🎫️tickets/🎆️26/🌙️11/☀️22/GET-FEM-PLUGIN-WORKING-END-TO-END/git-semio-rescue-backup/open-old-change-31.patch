@@ -1,0 +1,805 @@
+diff --git "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpifws5_np\\b.lf" "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpifws5_np\\o.lf"
+index 663afd8..d33740d 100644
+--- "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpifws5_np\\b.lf"
++++ "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpifws5_np\\o.lf"
+@@ -26,4 +26,5 @@ _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡
+ room_metre = _manim_module.room_metre
+ P_PRIMARY = _manim_module.P_PRIMARY
++reference_chip = _manim_module.reference_chip
+ P_DEEP_DARK = _manim_module.P_DEEP_DARK
+ P_WHITE = _manim_module.P_WHITE
+@@ -68,11 +69,10 @@ swap_caption = _manim_module.swap_caption
+ hold_for = _manim_module.hold_for
+ subtitle_text = _manim_module.subtitle_text
+-set_vo_language = _manim_module.set_vo_language
+ tr = _manim_module.tr
+ load_vo_timing = _manim_module.load_vo_timing
+ 
+-# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
+-set_vo_language("de")
++# 🗣️ Measured clause durations live in vo_timing.json.
+ _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
++_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
+ TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
+ _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(Path(__file__).resolve().parent) / "timing.json"
+@@ -96,17 +96,34 @@ HOUSE_SCALE = 0.8
+ 
+ #region Example house
+-# One set of numbers for the whole chapter — the same example house the Heating
+-# series calculates (areas, U-values, volume, air change from 2_ventilation/), so every bar and
+-# readout below is a product of drawn quantities.
++# One set of numbers for the whole chapter, taken from the running example (areas, U-values, volume,
++# air change, heat capacity of air), so every bar and readout below is a product of drawn quantities.
++_example = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📏️running-example.🐍️")
+ SURFACE_SLUGS = ("wall", "roof", "windows", "floor")
+-SURFACES = [
+-    ("Außenwand", 209.0, 0.24, 20.0, LOSS_BLUE),
+-    ("Dach", 89.0, 0.20, 20.0, semio_color("info")),
+-    ("Fenster", 30.0, 1.10, 20.0, P_CYAN),
+-    ("Boden", 80.0, 0.30, 10.0, P_TEAL),
+-]
++_ENVELOPE = {name: (area, u) for name, area, u, _delta in _example.ENVELOPE}
++_GROUND_DELTA = {name: delta for name, _a, _u, delta in _example.ENVELOPE}["Boden"]
++_SURFACE_COLORS = (("Außenwand", LOSS_BLUE), ("Dach", semio_color("info")), ("Fenster", P_CYAN), ("Boden", P_TEAL))
++
++
++def _surfaces_at(d_theta: float):
++    """🧱 The four envelope surfaces at an indoor-outdoor difference; the floor always sees the ground at its own difference."""
++    return [(n, _ENVELOPE[n][0], _ENVELOPE[n][1], _GROUND_DELTA if n == "Boden" else d_theta, c) for n, c in _SURFACE_COLORS]
++
++
++def _eta_heat(gamma: float, a: float = 2.0) -> float:
++    """🔋 Utilisation factor of the gains η = (1 − γᵃ) / (1 − γᵃ⁺¹) with γ = Q_g / Q_l (DIN V 4108-6, 6.5)."""
++    return a / (a + 1.0) if abs(gamma - 1.0) < 1e-9 else (1.0 - gamma ** a) / (1.0 - gamma ** (a + 1.0))
++
++
++def _eta_cool(gamma: float, a: float = 2.0) -> float:
++    """❄️ Utilisation factor of the losses η_c = (1 − γ⁻ᵃ) / (1 − γ⁻⁽ᵃ⁺¹⁾) with γ = Q_g / Q_l."""
++    return a / (a + 1.0) if abs(gamma - 1.0) < 1e-9 else (1.0 - gamma ** -a) / (1.0 - gamma ** -(a + 1.0))
++
++
++D_THETA_MONTH, D_THETA_JAN, D_THETA_JUL = 10.0, _example.D_THETA_WINTER_K, 6.0
++D_THETA = D_THETA_MONTH
++SURFACES = _surfaces_at(D_THETA_MONTH)
+ A_HUELLE = sum(a for _n, a, _u, _d, _c in SURFACES)
+ DU_WB = 0.05
+-V_NET, N_AIR, RHO_C, D_THETA = 440.0, 0.5, 0.34, 20.0
++V_NET, N_AIR, RHO_C = _example.V_NET_M3, _example.N_AIR_PER_H, _example.C_LUFT_WH_M3_K
+ T_MONTH = 744.0
+ PHI_SURFACES = [u * a * d for _n, a, u, d, _c in SURFACES]
+@@ -115,29 +132,32 @@ PHI_V = V_NET * N_AIR * RHO_C * D_THETA
+ BAR_UNIT = 3.0 / (sum(PHI_SURFACES) + PHI_WB + PHI_V)
+ 
+-A_WINDOW, G_VALUE, F_S, I_S = 30.0, 0.6, 0.7, 26.0
+-Q_I_SPEC, A_NET, ETA_H = 5.0, 60.0, 0.8
+-Q_SOLAR = A_WINDOW * G_VALUE * F_S * I_S
++
++def _loss_kwh(d_theta: float) -> float:
++    """📉 Monthly losses Q_l = Q_T + Q_V in kWh."""
++    phi = sum(u * a * d for _n, a, u, d, _c in _surfaces_at(d_theta)) + DU_WB * A_HUELLE * d_theta + V_NET * N_AIR * RHO_C * d_theta
++    return phi * T_MONTH / 1000.0
++
++
++A_WINDOW, G_VALUE, F_S = _ENVELOPE["Fenster"][0], _example.G_PERP, _example.F_S_WINTER
++F_C, F_F, F_W = _example.F_C_NONE, _example.F_F, _example.F_W
++I_S, I_S_JAN, I_S_JUL = 65.0, 26.0, 54.0
++Q_I_SPEC, A_NET = 5.0, 60.0
+ Q_INTERN = Q_I_SPEC * A_NET * T_MONTH / 1000.0
+-Q_QUELLE = Q_SOLAR + Q_INTERN
+-Q_USABLE = ETA_H * Q_QUELLE
+-Q_SENKE = 840.0
+-D_THETA_JUL, I_S_JUL, ETA_K = 6.0, 54.0, 0.9
+-Q_SENKE_JUL = Q_SENKE * D_THETA_JUL / D_THETA
+-Q_QUELLE_JUL = A_WINDOW * G_VALUE * F_S * I_S_JUL + Q_INTERN
+-#endregion
+ 
+ 
+-#region DIN citation
+-def _din_ref(text: str):
+-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
++def _solar_kwh(i_s: float) -> float:
++    """☀️ Solar gains Q_S = A · I_s · g⊥ · F_S · F_C · F_F · F_W in kWh, every factor from the running example."""
++    return A_WINDOW * G_VALUE * F_S * F_C * F_F * F_W * i_s
+ 
+-    Same size, colour, opacity and corner as every Heating/Cooling beat
+-    (``4_cooling/3_transmission_humidity/scene_3.py``) — a dim footnote that
+-    never competes with the diagram.
+-    """
+-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+-    ref.set_opacity(0.72)
+-    ref.to_corner(UR, buff=0.30)
+-    return ref
++
++Q_SOLAR = _solar_kwh(I_S)
++Q_L, Q_G = _loss_kwh(D_THETA_MONTH), Q_SOLAR + Q_INTERN
++ETA_H = _eta_heat(Q_G / Q_L)
++Q_USABLE = ETA_H * Q_G
++Q_L_JAN, Q_G_JAN = _loss_kwh(D_THETA_JAN), _solar_kwh(I_S_JAN) + Q_INTERN
++ETA_JAN = _eta_heat(Q_G_JAN / Q_L_JAN)
++Q_USABLE_JAN = ETA_JAN * Q_G_JAN
++Q_L_JUL, Q_G_JUL = _loss_kwh(D_THETA_JUL), _solar_kwh(I_S_JUL) + Q_INTERN
++ETA_C = _eta_cool(Q_G_JUL / Q_L_JUL)
+ #endregion
+ 
+@@ -363,5 +383,5 @@ def _thermo_pair(x: float, bottom: float, *, height: float = 1.5, gap: float = 0
+     t_out = thermometer_glyph(np.array([x + gap, bottom, 0.0]), height=height, color=LOSS_BLUE, level=0.0)
+     names = VGroup(body_text(tr("inside", "innen"), font_size=LABEL_FONT_SIZE, color=INT_ORANGE),
+-                   body_text("außen", font_size=LABEL_FONT_SIZE, color=LOSS_BLUE))
++                   body_text(tr("outside", "außen"), font_size=LABEL_FONT_SIZE, color=LOSS_BLUE))
+     names[0].move_to(np.array([x, bottom - 0.33, 0.0]))
+     names[1].move_to(np.array([x + gap, bottom - 0.33, 0.0]))
+@@ -398,33 +418,33 @@ class Beat1_Bilanzgrenze(Scene):
+     NARRATION = [
+         ("intro",
+-         "In three videos we calculated single heat flows. Now we assemble them into one balance.",
+-         "In drei Videos haben wir einzelne Wärmeströme berechnet. Jetzt fügen wir sie zu einer Bilanz zusammen."),
++         r"In three videos we calculated single heat flows. Now we assemble them into one balance.",
++         r"In drei Videos haben wir einzelne Wärmeströme berechnet. Jetzt fügen wir sie zu einer Bilanz zusammen."),
+         ("huelle",
+-         "A balance needs a boundary: the thermal envelope.",
+-         "Eine Bilanz braucht eine Grenze: die thermische Hülle."),
++         r"A balance needs a boundary: the thermal envelope.",
++         r"Eine Bilanz braucht eine Grenze: die thermische Hülle."),
+         ("fluesse",
+-         "Everything that crosses it over the year is an energy flow we can add up.",
+-         "Alles, was sie übers Jahr kreuzt, ist ein Energiefluss, den wir aufsummieren."),
++         r"Everything that crosses it over the year is an energy flow we can add up.",
++         r"Alles, was sie übers Jahr kreuzt, ist ein Energiefluss, den wir aufsummieren."),
+         ("erhaltung",
+-         "Energy is conserved — so at a constant indoor temperature, everything that flows out must be replaced.",
+-         "Energie bleibt erhalten: Bei konstanter Innentemperatur muss alles ersetzt werden, was hinausfließt."),
++         r"Energy is conserved — so at a constant indoor temperature, everything that flows out must be replaced.",
++         r"Energie bleibt erhalten: Bei konstanter Innentemperatur muss alles ersetzt werden, was hinausfließt."),
+         ("transmission",
+-         "Through walls, roof, windows and floor, heat leaves by transmission.",
+-         "Durch Wände, Dach, Fenster und Boden verlässt Wärme das Gebäude als Transmission."),
++         r"Through walls, roof, windows and floor, heat leaves by transmission, the energy $Q_T$.",
++         r"Durch Wände, Dach, Fenster und Boden verlässt Wärme das Gebäude als Transmission, die Energie $Q_T$."),
+         ("lueftung",
+-         "With the exhaust air, heat leaves as ventilation loss.",
+-         "Mit der Abluft verlässt Wärme das Gebäude als Lüftungsverlust."),
++         r"With the exhaust air, heat leaves as ventilation loss $Q_V$.",
++         r"Mit der Abluft verlässt Wärme das Gebäude als Lüftungsverlust $Q_V$."),
+         ("sonne",
+-         "The sun brings heat in for free: the solar gains.",
+-         "Die Sonne bringt kostenlos Wärme herein: die solaren Gewinne."),
++         r"The sun brings heat in for free: the solar gains $Q_S$.",
++         r"Die Sonne bringt kostenlos Wärme herein: die solaren Gewinne $Q_S$."),
+         ("intern",
+-         "People, appliances and lighting add internal gains.",
+-         "Personen, Geräte und Beleuchtung liefern interne Gewinne."),
++         r"People, appliances and lighting add internal gains $Q_i$.",
++         r"Personen, Geräte und Beleuchtung liefern interne Gewinne $Q_i$."),
+         ("rest",
+-         "What the free gains don't cover, the heating has to deliver.",
+-         "Was die freien Gewinne nicht decken, muss die Heizung liefern."),
++         r"What the free gains don't cover, the heating has to deliver.",
++         r"Was die freien Gewinne nicht decken, muss die Heizung liefern."),
+         ("bedarf",
+-         "That remainder is the useful heating demand — Heizwärmebedarf.",
+-         "Dieser Rest ist der Heizwärmebedarf."),
++         r"That remainder is the heating demand $Q_h$ — the useful energy the heating must hand to the room.",
++         r"Dieser Rest ist der Heizwärmebedarf $Q_h$ — die Nutzenergie, die die Heizung an den Raum abgeben muss."),
+     ]
+ 
+@@ -434,5 +454,5 @@ class Beat1_Bilanzgrenze(Scene):
+ 
+         subtitle = section_heading(tr("System boundary & energy conservation", "Bilanzgrenze & Energieerhaltung"))
+-        din = _din_ref("DIN V 18599-1")
++        din = reference_chip(_references.cite("!din-v-4108-6"), subtitle)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -450,5 +470,5 @@ class Beat1_Bilanzgrenze(Scene):
+         tag_v = _tag(tr("Ventilation", "Lüftung"), r"Q_{V}", VENT_BLUE)
+         tag_s = _tag(tr("Solar gains", "Solare Gewinne"), r"Q_{S}", SOLAR_YELLOW)
+-        tag_i = _tag(tr("Internal gains", "Interne Gewinne"), r"Q_{I}", INT_ORANGE)
++        tag_i = _tag(tr("Internal gains", "Interne Gewinne"), r"Q_{i}", INT_ORANGE)
+         tag_t.move_to(np.array([4.6, 0.55, 0.0]))
+         tag_v.move_to(np.array([-4.45, -0.95, 0.0]))
+@@ -528,6 +548,6 @@ class Beat1_Bilanzgrenze(Scene):
+         row, box, items = math_panel([
+             ("qh", r"Q_{h}", DEMAND_RED), (None, "+", P_WHITE),
+-            ("quelle", r"Q_{\mathrm{Quelle}}", SOLAR_YELLOW), (None, "=", P_WHITE),
+-            ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, r"\;[\mathrm{kWh/a}]", P_PRIMARY),
++            ("quelle", r"Q_{g}", SOLAR_YELLOW), (None, "=", P_WHITE),
++            ("senke", r"Q_{l}", LOSS_BLUE), (None, r"\quad Q\;\mathrm{in}\;\frac{\mathrm{kWh}}{\mathrm{a}}", P_PRIMARY),
+         ])
+         glue = [m for m in row if all(m is not v for v in items.values())]
+@@ -556,63 +576,66 @@ class Beat2_Verlustseite(Scene):
+     NARRATION = [
+         ("intro",
+-         "The loss side first — and it is exactly the two mechanisms the Heating and Ventilation videos derived.",
+-         "Zuerst die Verlustseite — genau die beiden Mechanismen aus den Videos Heizen und Lüftung."),
++         r"The loss side first — and it is exactly the two mechanisms the Heating and Ventilation videos derived.",
++         r"Zuerst die Verlustseite — genau die beiden Mechanismen aus den Videos Heizen und Lüftung."),
+         ("transmission",
+-         "Transmission: heat conducts through every envelope surface to the outside, and we add the surfaces up one by one.",
+-         "Transmission: Wärme wird durch jede Hüllfläche nach außen geleitet — Fläche für Fläche summieren wir sie auf."),
++         r"Transmission: the heat flow $\Phi$ through each surface, as load $\dot{Q}_T$, times time gives the energy $Q_T$.",
++         r"Transmission: Der Wärmestrom $\Phi$ durch jede Fläche, als Last $\dot{Q}_T$, mal Zeit ergibt die Energie $Q_T$."),
+         ("u",
+-         "The U-value states how many watts flow through one square metre of a building element per kelvin.",
+-         "Der U-Wert gibt an, wie viele Watt je Quadratmeter und Kelvin durch ein Bauteil fließen."),
++         r"The U-value $U$ states how many watts flow through one square metre per kelvin: here $0.24\;\mathrm{W/(m^2K)}$.",
++         r"Der U-Wert $U$ gibt an, wie viele Watt je Quadratmeter und Kelvin fließen: hier $0{,}24\;\mathrm{W/(m^2K)}$."),
+         ("a",
+-         "The area A tells how large that element is — here the exterior wall with 209 square metres.",
+-         "Die Fläche A sagt, wie groß das Bauteil ist — hier die Außenwand mit 209 Quadratmetern."),
++         r"The area $A$ tells how large the element is — here the exterior wall with $209\;\mathrm{m^2}$.",
++         r"Die Fläche $A$ sagt, wie groß das Bauteil ist — hier die Außenwand mit $209\;\mathrm{m^2}$."),
+         ("dt",
+-         "Δθ is the temperature difference between inside and outside — here 20 kelvin.",
+-         "Δθ ist der Temperaturunterschied zwischen innen und außen — hier 20 Kelvin."),
++         r"The temperature difference $\Delta\theta = \theta_i - \theta_e$ between inside and outside — here $10\;\mathrm{K}$ in a transition month.",
++         r"Die Temperaturdifferenz $\Delta\theta = \theta_i - \theta_e$ zwischen innen und außen — hier $10\;\mathrm{K}$ in einem Übergangsmonat."),
+         ("t",
+-         "And t is the time: one month has 744 hours.",
+-         "Und t ist die Zeit: Ein Monat hat 744 Stunden."),
++         r"And $t$ is the time: one month has $744\;\mathrm{h}$.",
++         r"Und $t$ ist die Zeit: Ein Monat hat $744\;\mathrm{h}$."),
+         ("wand",
+-         "The exterior wall: 209 square metres at U = 0.24 gives about 1000 watts of loss.",
+-         "Die Außenwand: 209 m² mit U = 0,24 W/(m²·K) ergeben rund 1000 W Verlust."),
++         r"The exterior wall: $209\;\mathrm{m^2}\cdot 0.24\;\mathrm{W/(m^2K)}\cdot 10\;\mathrm{K}$ is about $500\;\mathrm{W}$.",
++         r"Die Außenwand: $209\;\mathrm{m^2}\cdot 0{,}24\;\mathrm{W/(m^2K)}\cdot 10\;\mathrm{K}$ ergeben rund $500\;\mathrm{W}$."),
+         ("dach",
+-         "The roof: 89 square metres at U = 0.20 — well insulated, so only about 360 watts.",
+-         "Das Dach: 89 m² mit U = 0,20 W/(m²·K) — gut gedämmt, daher nur etwa 360 W."),
++         r"The roof: $89\;\mathrm{m^2}$ at $0.20\;\mathrm{W/(m^2K)}$ — well insulated, so only about $180\;\mathrm{W}$.",
++         r"Das Dach: $89\;\mathrm{m^2}$ mit $0{,}20\;\mathrm{W/(m^2K)}$ — gut gedämmt, daher nur etwa $180\;\mathrm{W}$."),
+         ("fenster",
+-         "The windows: only 30 square metres, but U = 1.10 — that is about 660 watts.",
+-         "Die Fenster: nur 30 m², aber U = 1,10 W/(m²·K) — das sind etwa 660 W."),
++         r"The windows: only $30\;\mathrm{m^2}$, but $1.10\;\mathrm{W/(m^2K)}$ — that is about $330\;\mathrm{W}$.",
++         r"Die Fenster: nur $30\;\mathrm{m^2}$, aber $1{,}10\;\mathrm{W/(m^2K)}$ — das sind etwa $330\;\mathrm{W}$."),
+         ("boden",
+-         "The floor: 80 square metres at U = 0.30, but only 10 kelvin towards the ground — about 240 watts.",
+-         "Der Boden: 80 m² mit U = 0,30 W/(m²·K), zum Erdreich aber nur 10 K Unterschied — rund 240 W."),
++         r"The floor: $80\;\mathrm{m^2}$ at $0.30\;\mathrm{W/(m^2K)}$, and the ground stays $10\;\mathrm{K}$ below the room all year — $240\;\mathrm{W}$.",
++         r"Der Boden: $80\;\mathrm{m^2}$ mit $0{,}30\;\mathrm{W/(m^2K)}$, und das Erdreich bleibt das ganze Jahr $10\;\mathrm{K}$ kälter als der Raum — $240\;\mathrm{W}$."),
+         ("bruecken",
+-         "Thermal bridges — edges, corners and joints — let additional heat escape.",
+-         "Wärmebrücken — Kanten, Ecken und Anschlüsse — lassen zusätzlich Wärme entweichen."),
++         r"Thermal bridges — edges, corners and joints — let additional heat escape.",
++         r"Wärmebrücken — Kanten, Ecken und Anschlüsse — lassen zusätzlich Wärme entweichen."),
+         ("zuschlag",
+-         "We add them as a lump surcharge on every U-value.",
+-         "Wir erfassen sie pauschal als Zuschlag ΔU auf jeden U-Wert."),
++         r"We add them as a lump surcharge $\Delta U_{\mathrm{WB}}$ on every U-value.",
++         r"Wir erfassen sie pauschal als Zuschlag $\Delta U_{\mathrm{WB}}$ auf jeden U-Wert."),
+         ("wb_wert",
+-         "That is 0.05 watts per square metre kelvin when a thermal-bridge check is available, more without one.",
+-         "Mit Wärmebrückennachweis sind es 0,05 W/(m²·K), ohne Nachweis deutlich mehr."),
++         r"That is $0.05\;\mathrm{W/(m^2K)}$ when a thermal-bridge check is available, more without one.",
++         r"Mit Wärmebrückennachweis sind es $0{,}05\;\mathrm{W/(m^2K)}$, ohne Nachweis deutlich mehr."),
+         ("lueftung",
+-         "Ventilation, as the Ventilation video built it, carries the second stream out of the building.",
+-         "Die Lüftung, wie das Lüftungs-Video sie aufgebaut hat, trägt den zweiten Strom aus dem Gebäude hinaus."),
++         r"Ventilation, as the Ventilation video built it, carries the second stream out: the load $\dot{Q}_V$.",
++         r"Die Lüftung, wie das Lüftungs-Video sie aufgebaut hat, trägt den zweiten Strom hinaus: die Last $\dot{Q}_V$."),
+         ("luftwechsel",
+-         "The air change rate n states how often the room air is exchanged per hour — here 0.5.",
+-         "Der Luftwechsel n gibt an, wie oft pro Stunde die Raumluft ausgetauscht wird — hier 0,5."),
++         r"The air change rate $n$ states how often the room air is exchanged per hour — here $0.5\;\mathrm{h^{-1}}$.",
++         r"Der Luftwechsel $n$ gibt an, wie oft pro Stunde die Raumluft ausgetauscht wird — hier $0{,}5\;\mathrm{h^{-1}}$."),
+         ("volumen",
+-         "The air volume V of the building — 440 cubic metres — is what gets exchanged.",
+-         "Das Luftvolumen V des Gebäudes — 440 Kubikmeter — wird dabei ausgetauscht."),
++         r"The air volume $V$ of the building — $440\;\mathrm{m^3}$ — is what gets exchanged.",
++         r"Das Luftvolumen $V$ des Gebäudes — $440\;\mathrm{m^3}$ — wird dabei ausgetauscht."),
+         ("waermekap",
+-         "Rho times c, the heat capacity of air per cubic metre, turns that air flow into heat per kelvin.",
+-         "ρ·c, die Wärmekapazität der Luft je Kubikmeter, macht aus dem Luftstrom Wärme je Kelvin."),
++         r"$\rho\,c_p = 0.34\;\mathrm{Wh/(m^3K)}$ is the heat capacity of air per cubic metre; it turns the air flow into heat per kelvin.",
++         r"$\rho\,c_p = 0{,}34\;\mathrm{Wh/(m^3K)}$ ist die Wärmekapazität der Luft je Kubikmeter; sie macht aus dem Luftstrom Wärme je Kelvin."),
++        ("dichte",
++         r"It belongs to $\rho \approx 1.2\;\mathrm{kg/m^3}$ at $20\;^{\circ}\mathrm{C}$; colder air is denser, $1.27\;\mathrm{kg/m^3}$ at $5\;^{\circ}\mathrm{C}$, but the standard keeps the fixed value.",
++         r"Sie gehört zu $\rho \approx 1{,}2\;\mathrm{kg/m^3}$ bei $20\;^{\circ}\mathrm{C}$; kältere Luft ist dichter, $1{,}27\;\mathrm{kg/m^3}$ bei $5\;^{\circ}\mathrm{C}$, die Norm rechnet aber mit dem festen Wert."),
+         ("lueft_block",
+-         "With Δθ and t as before, this gives the second block of the losses.",
+-         "Mit Δθ und t wie zuvor ergibt sich der zweite Block der Verluste."),
++         r"With $\Delta\theta$ and $t$ as before, this gives the second block of the losses, $Q_V$.",
++         r"Mit $\Delta\theta$ und $t$ wie zuvor ergibt sich der zweite Block der Verluste, $Q_V$."),
+         ("senke_teile",
+-         "Transmission covers four surfaces plus thermal bridges; ventilation is a block of its own.",
+-         "Die Transmission umfasst vier Flächen und die Wärmebrücken, die Lüftung bildet einen eigenen Block."),
++         r"Transmission $Q_T$ covers four surfaces plus thermal bridges; ventilation $Q_V$ is a block of its own.",
++         r"Die Transmission $Q_T$ umfasst vier Flächen und die Wärmebrücken, die Lüftung $Q_V$ bildet einen eigenen Block."),
+         ("summe",
+-         "Together they form the sink side of the balance — every kilowatt-hour the building loses over the year.",
+-         "Zusammen bilden sie die Senkenseite der Bilanz — jede Kilowattstunde, die das Gebäude im Jahr verliert."),
++         r"Together they form the loss side of the balance, $Q_l = Q_T + Q_V$ — all the heat the building loses.",
++         r"Zusammen bilden sie die Verlustseite der Bilanz, $Q_l = Q_T + Q_V$ — alle Wärme, die das Gebäude verliert."),
+     ]
+ 
+@@ -622,5 +645,5 @@ class Beat2_Verlustseite(Scene):
+ 
+         subtitle = section_heading(tr("The loss side: transmission & ventilation", "Die Verlustseite: Transmission & Lüftung"))
+-        din = _din_ref("DIN V 18599-2")
++        din = reference_chip(_references.cite(("din-v-4108-6", "verluste")), subtitle)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -669,5 +692,5 @@ class Beat2_Verlustseite(Scene):
+             ("a", r"A", P_CYAN), (None, r")", P_ORANGE), (None, r"\cdot", P_WHITE),
+             ("dt", r"\Delta\theta", P_BLUE), (None, r"\cdot", P_WHITE),
+-            ("t", r"t", P_PRIMARY), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
++            ("t", r"t", P_PRIMARY), (None, r"\quad Q\;\mathrm{in}\;\mathrm{kWh}", P_PRIMARY),
+         ])
+         self.add(_veil(row_t))
+@@ -679,5 +702,5 @@ class Beat2_Verlustseite(Scene):
+         u_t, a_t = ValueTracker(0.0), ValueTracker(0.0)
+         ex = _card("", LOSS_BLUE, [
+-            (lambda: rf"U = {label_number(u_t.get_value(), 2)}\,\mathrm{{W/(m^{{2}}K)}}", P_ORANGE),
++            (lambda: rf"U = {label_number(u_t.get_value(), 2)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}\,K}}}}", P_ORANGE),
+             (lambda: rf"A = {label_number(a_t.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
+         ])
+@@ -706,5 +729,5 @@ class Beat2_Verlustseite(Scene):
+         self.add(th["in"]["column"], th["out"]["column"], dth_read)
+         self.play(FadeIn(th["static"]), *_terms(row_t, 7, 9),
+-                  th["in"]["level"].animate.set_value(0.75), th["out"]["level"].animate.set_value(0.25), run_time=1.6)
++                  th["in"]["level"].animate.set_value(0.75), th["out"]["level"].animate.set_value(0.5), run_time=1.6)
+         self.add(th["arrow"])
+         hold_for(self, self.NARRATION, "dt")
+@@ -728,5 +751,5 @@ class Beat2_Verlustseite(Scene):
+         u_s, a_s, d_s = ValueTracker(0.0), ValueTracker(0.0), ValueTracker(0.0)
+         card = _card("", P_ORANGE, [
+-            (lambda: rf"U = {label_number(u_s.get_value(), 2)}\,\mathrm{{W/(m^{{2}}K)}}", P_ORANGE),
++            (lambda: rf"U = {label_number(u_s.get_value(), 2)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}\,K}}}}", P_ORANGE),
+             (lambda: rf"A = {label_number(a_s.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
+             (lambda: rf"\Delta\theta = {label_number(d_s.get_value())}\,\mathrm{{K}}", P_BLUE),
+@@ -774,5 +797,5 @@ class Beat2_Verlustseite(Scene):
+         du_read = math_readout(lambda: rf"\Delta U_{{WB}} = {label_number(du_t.get_value() * 0.15, 2)}",
+                                np.array([5.65, 0.52, 0.0]), size=LABEL_FONT_SIZE + 1, color=P_ORANGE, edge="center")
+-        du_unit = math_label(r"\mathrm{W/(m^{2}K)}", np.array([5.65, 0.16, 0.0]), size=LABEL_FONT_SIZE, color=P_ORANGE)
++        du_unit = math_label(r"\frac{\mathrm{W}}{\mathrm{m^{2}K}}", np.array([5.65, 0.16, 0.0]), size=LABEL_FONT_SIZE, color=P_ORANGE)
+         row_t2, box_t2, it_t2 = math_panel([
+             ("qt", r"Q_{T}", LOSS_BLUE), (None, "=", P_WHITE),
+@@ -780,5 +803,5 @@ class Beat2_Verlustseite(Scene):
+             ("a", r"A", P_CYAN), (None, r")", P_ORANGE), (None, r"\cdot", P_WHITE),
+             ("dt", r"\Delta\theta", P_BLUE), (None, r"\cdot", P_WHITE),
+-            ("t", r"t", P_PRIMARY), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
++            ("t", r"t", P_PRIMARY), (None, r"\quad Q\;\mathrm{in}\;\mathrm{kWh}", P_PRIMARY),
+         ])
+         ring_u2 = highlight_param(it_t2, "u", color=P_ORANGE)
+@@ -798,6 +821,6 @@ class Beat2_Verlustseite(Scene):
+             (lambda: rf"n = {label_number(n_t.get_value(), 1)}\,\mathrm{{h^{{-1}}}}", P_YELLOW),
+             (lambda: rf"V = {label_number(v_t.get_value())}\,\mathrm{{m^{{3}}}}", P_YELLOW),
+-            (lambda: rf"\rho c = {label_number(rc_t.get_value(), 2)}\,\mathrm{{Wh/m^{{3}}K}}", P_GREEN),
+-            (lambda: rf"\Phi_{{V}} = {label_number(rc_t.get_value() * n_t.get_value() * v_t.get_value() * D_THETA)}\,\mathrm{{W}}", P_WHITE),
++            (lambda: rf"\rho\,c_{{p}} = {label_number(rc_t.get_value(), 2)}\,\frac{{\mathrm{{Wh}}}}{{\mathrm{{m^{{3}}\,K}}}}", P_GREEN),
++            (lambda: rf"\dot{{Q}}_{{V}} = {label_number(rc_t.get_value() * n_t.get_value() * v_t.get_value() * D_THETA)}\,\mathrm{{W}}", P_WHITE),
+         ])
+         v_head = body_text(tr("Ventilation", "Lüftung"), font_size=LABEL_FONT_SIZE, color=VENT_BLUE).move_to(v_card["head_at"])
+@@ -807,7 +830,7 @@ class Beat2_Verlustseite(Scene):
+             ("n", r"n", P_YELLOW), (None, r"\cdot", P_WHITE),
+             ("v", r"V", P_YELLOW), (None, r"\cdot", P_WHITE),
+-            ("rc", r"\rho\,c", P_GREEN), (None, r"\cdot", P_WHITE),
++            ("rc", r"\rho\,c_{p}", P_GREEN), (None, r"\cdot", P_WHITE),
+             ("dt", r"\Delta\theta", P_BLUE), (None, r"\cdot", P_WHITE),
+-            ("t", r"t", P_PRIMARY), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
++            ("t", r"t", P_PRIMARY), (None, r"\quad Q\;\mathrm{in}\;\mathrm{kWh}", P_PRIMARY),
+         ])
+         ring_n = highlight_param(it_v, "n", color=P_YELLOW)
+@@ -837,4 +860,11 @@ class Beat2_Verlustseite(Scene):
+         hold_for(self, self.NARRATION, "waermekap", during=vent_flows)
+ 
++        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "dichte"))
++        rho_note = math_label(tr(r"\rho \approx 1.2\,\frac{\mathrm{kg}}{\mathrm{m^{3}}}\;\text{at}\;20\,^{\circ}\mathrm{C}",
++                                 r"\rho \approx 1{,}2\,\frac{\mathrm{kg}}{\mathrm{m^{3}}}\ (20\,^{\circ}\mathrm{C})"),
++                              np.array([5.65, -1.05, 0.0]), size=LABEL_FONT_SIZE, color=P_GREEN)
++        self.play(FadeIn(rho_note), *vent_flows(1.6), run_time=1.6)
++        hold_for(self, self.NARRATION, "dichte", during=vent_flows)
++
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lueft_block"))
+         self.add(v_card["rows"][3])
+@@ -852,13 +882,13 @@ class Beat2_Verlustseite(Scene):
+         lab_t = _sym(r"Q_{T}", LOSS_BLUE).next_to(brace_t, LEFT, buff=0.1)
+         lab_v = _sym(r"Q_{V}", VENT_BLUE).next_to(brace_v, LEFT, buff=0.1)
+-        lab_all = _sym(r"Q_{\mathrm{Senke}}", LOSS_BLUE).next_to(brace_all, LEFT, buff=0.1)
++        lab_all = _sym(r"Q_{l}", LOSS_BLUE).next_to(brace_all, LEFT, buff=0.1)
+         scale_group = VGroup(stack["bars"], labels, leaders, ledger)
+         row_s, box_s, it_s = math_panel([
+-            ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, "=", P_WHITE),
++            ("senke", r"Q_{l}", LOSS_BLUE), (None, "=", P_WHITE),
+             ("qt", r"Q_{T}", LOSS_BLUE), (None, "+", P_WHITE),
+-            ("qv", r"Q_{V}", VENT_BLUE), (None, r"\;[\mathrm{kWh/a}]", P_PRIMARY),
++            ("qv", r"Q_{V}", VENT_BLUE), (None, r"\quad Q\;\mathrm{in}\;\frac{\mathrm{kWh}}{\mathrm{a}}", P_PRIMARY),
+         ])
+         glue = [m for m in row_s if all(m is not v for v in it_s.values())]
+-        self.play(FadeOut(VGroup(H["group"], H["air"], envelope, vol, sym_v, v_card["frame"], v_head, row_v, box_v)),
++        self.play(FadeOut(VGroup(H["group"], H["air"], envelope, vol, sym_v, v_card["frame"], v_head, rho_note, row_v, box_v)),
+                   *[FadeOut(r) for r in v_card["rows"]],
+                   scale_group.animate.shift(shift), run_time=1.4)
+@@ -885,54 +915,57 @@ class Beat3_Gewinnseite(Scene):
+     NARRATION = [
+         ("intro",
+-         "Now the other pan of the scale: the heat the building gets for free.",
+-         "Jetzt die andere Waagschale: die Wärme, die das Gebäude kostenlos bekommt."),
++         r"Now the other pan of the scale: the heat the building gets for free.",
++         r"Jetzt die andere Waagschale: die Wärme, die das Gebäude kostenlos bekommt."),
+         ("solar",
+-         "Solar gains: sunlight enters the building through the glazing.",
+-         "Solare Gewinne: Sonnenstrahlung dringt durch die Verglasung ins Gebäude."),
++         r"Solar gains $Q_S$: sunlight enters the building through the glazing.",
++         r"Solare Gewinne $Q_S$: Sonnenstrahlung dringt durch die Verglasung ins Gebäude."),
+         ("fenster",
+-         "The window area — here 30 square metres — decides how much radiation enters.",
+-         "Die Fensterfläche — hier 30 Quadratmeter — bestimmt, wie viel Strahlung hereinkommt."),
++         r"The window area $A$ — here $30\;\mathrm{m^2}$ — decides how much radiation enters.",
++         r"Die Fensterfläche $A$ — hier $30\;\mathrm{m^2}$ — bestimmt, wie viel Strahlung hereinkommt."),
+         ("einstrahlung",
+-         "The irradiation on that facade supplies the energy per square metre: here 26 kilowatt-hours in the month.",
+-         "Die Einstrahlung auf diese Fassade liefert die Energie je Quadratmeter: hier 26 kWh im Monat."),
++         r"The irradiation $I_s$ on that facade supplies the energy per square metre: here $65\;\mathrm{kWh/m^2}$ in this spring month.",
++         r"Die Einstrahlung $I_s$ auf diese Fassade liefert die Energie je Quadratmeter: hier $65\;\mathrm{kWh/m^2}$ in diesem Frühjahrsmonat."),
+         ("gwert",
+-         "The g-value says which share of the radiation passes through the glass — here 0.6.",
+-         "Der g-Wert sagt, welcher Anteil der Strahlung durch das Glas gelangt — hier 0,6."),
++         r"The total solar energy transmittance $g_\perp$ says which share of the radiation passes the glass — here $0.6$.",
++         r"Der Gesamtenergiedurchlassgrad $g_\perp$ sagt, welcher Anteil der Strahlung durch das Glas gelangt — hier $0{,}6$."),
+         ("fs",
+-         "The shading factor accounts for overhangs and neighbouring buildings — here 0.7.",
+-         "Der Verschattungsfaktor berücksichtigt Überhänge und Nachbargebäude — hier 0,7."),
++         r"The shading factor $F_S$ accounts for overhangs and neighbouring buildings — here $0.8$, as in the heating video.",
++         r"Der Verschattungsfaktor $F_S$ berücksichtigt Überhänge und Nachbargebäude — hier $0{,}8$ wie im Heizungsvideo."),
++        ("weitere",
++         r"Sun protection $F_C = 1$, frame share $F_F = 0.70$, oblique incidence $F_W = 0.90$ — as in the heating video.",
++         r"Sonnenschutz $F_C = 1$, Rahmenanteil $F_F = 0{,}70$, schräger Einfall $F_W = 0{,}90$ — wie im Heizungsvideo."),
+         ("solar_block",
+-         "Multiplied, that is the solar heat gain — about 328 kilowatt-hours.",
+-         "Multipliziert ergibt das den solaren Wärmegewinn — rund 328 Kilowattstunden."),
++         r"Multiplied, that is the solar heat gain $Q_S = 590\;\mathrm{kWh}$.",
++         r"Multipliziert ergibt das den solaren Wärmegewinn $Q_S = 590\;\mathrm{kWh}$."),
+         ("intern",
+-         "Internal gains: people, appliances and lighting all give off heat.",
+-         "Interne Gewinne: Personen, Geräte und Beleuchtung geben Wärme ab."),
++         r"Internal gains $Q_i$: people, appliances and lighting all give off heat.",
++         r"Interne Gewinne $Q_i$: Personen, Geräte und Beleuchtung geben Wärme ab."),
+         ("q_i",
+-         "DIN V 18599-10 tabulates them by use — here as 5 watts per square metre.",
+-         "DIN V 18599-10 tabelliert sie nutzungsabhängig — hier mit 5 Watt je Quadratmeter."),
++         r"DIN V 4108-6 assumes $q_i = 5\;\mathrm{W/m^2}$ for residential use.",
++         r"DIN V 4108-6 setzt für Wohnnutzung $q_i = 5\;\mathrm{W/m^2}$ an."),
+         ("a_n",
+-         "That applies per square metre of net floor area — here 60 square metres.",
+-         "Das gilt je Quadratmeter Nettogrundfläche — hier 60 Quadratmeter."),
++         r"That applies per square metre of useful floor area $A_N$ — here $60\;\mathrm{m^2}$.",
++         r"Das gilt je Quadratmeter Nutzfläche $A_N$ — hier $60\;\mathrm{m^2}$."),
+         ("t_i",
+-         "Over the 744 hours of the month this adds up to the internal gain of about 223 kilowatt-hours.",
+-         "Über die 744 Stunden des Monats ergibt das den internen Gewinn von rund 223 Kilowattstunden."),
++         r"Over the $744\;\mathrm{h}$ of the month this adds up to $Q_i = 223\;\mathrm{kWh}$.",
++         r"Über die $744\;\mathrm{h}$ des Monats ergibt das $Q_i = 223\;\mathrm{kWh}$."),
+         ("eta",
+-         "But not every free kilowatt-hour helps.",
+-         "Doch nicht jede freie Kilowattstunde hilft."),
++         r"But not every free kilowatt-hour helps.",
++         r"Doch nicht jede freie Kilowattstunde hilft."),
+         ("eta_h",
+-         "The utilization factor depends on the ratio of gains to losses.",
+-         "Der Ausnutzungsgrad hängt vom Verhältnis aus Gewinnen und Verlusten ab."),
++         r"The utilisation factor $\eta$ depends on the ratio $\gamma = Q_g / Q_l$ of gains to losses.",
++         r"Der Ausnutzungsgrad $\eta$ hängt vom Verhältnis $\gamma = Q_g / Q_l$ aus Gewinnen und Verlusten ab."),
+         ("wert",
+-         "Here, schematically, it is 0.8: that share of the free heat is actually used.",
+-         "Hier schematisch 0,8: Diesen Anteil der freien Wärme nutzt das Gebäude tatsächlich."),
++         r"Here it is $\eta \approx 0.86$: that share of the free heat is actually used.",
++         r"Hier ist $\eta \approx 0{,}86$: Diesen Anteil der freien Wärme nutzt das Gebäude tatsächlich."),
+         ("ueberhitzung",
+-         "Gains that arrive when no heat is needed only overheat the room.",
+-         "Gewinne, die ohne Wärmebedarf anfallen, überhitzen nur den Raum."),
++         r"Gains that arrive when no heat is needed only overheat the room.",
++         r"Gewinne, die ohne Wärmebedarf anfallen, überhitzen nur den Raum."),
+         ("bilanz",
+-         "The usable gains cover part of the losses — the heating adds the rest.",
+-         "Die nutzbaren Gewinne decken einen Teil der Verluste — den Rest liefert die Heizung."),
++         r"The usable gains $\eta \cdot Q_g$ cover part of the losses $Q_l$ — the heating adds the rest.",
++         r"Die nutzbaren Gewinne $\eta \cdot Q_g$ decken einen Teil der Verluste $Q_l$ — den Rest liefert die Heizung."),
+         ("bilanz_qh",
+-         "That remainder is the heating demand.",
+-         "Dieser Rest ist der Heizwärmebedarf."),
++         r"That remainder is the heating demand $Q_h = Q_l - \eta \cdot Q_g$ — useful energy at the room.",
++         r"Dieser Rest ist der Heizwärmebedarf $Q_h = Q_l - \eta \cdot Q_g$ — Nutzenergie am Raum."),
+     ]
+ 
+@@ -942,5 +975,5 @@ class Beat3_Gewinnseite(Scene):
+ 
+         subtitle = section_heading(tr("The gain side & the utilisation factor", "Die Gewinnseite & der Ausnutzungsgrad"))
+-        din = _din_ref("DIN V 18599-2")
++        din = reference_chip(_references.cite(("din-v-4108-6", "gewinne")), subtitle)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -955,5 +988,5 @@ class Beat3_Gewinnseite(Scene):
+         slats = _overhangs(H)
+ 
+-        base_y, unit, width = -1.0, 2.9 / Q_SENKE, 1.0
++        base_y, unit, width = -1.0, 2.9 / Q_L, 1.0
+         x_sink, x_gain = 0.95, 2.35
+ 
+@@ -963,9 +996,9 @@ class Beat3_Gewinnseite(Scene):
+                              stroke_width=1.2).move_to(np.array([x, base_y + y0 * unit + h / 2, 0.0]))
+ 
+-        sink = block(x_sink, 0.0, Q_SENKE, LOSS_BLUE, 0.55)
++        sink = block(x_sink, 0.0, Q_L, LOSS_BLUE, 0.55)
+         ground = Line(np.array([x_sink - 0.75, base_y, 0.0]), np.array([x_gain + 0.75, base_y, 0.0]),
+                       color=P_WHITE, stroke_width=2, stroke_opacity=0.5)
+-        cap_sink = math_label(r"Q_{\mathrm{Senke}}", np.array([x_sink, base_y - 0.38, 0.0]), size=BODY_FONT_SIZE, color=LOSS_BLUE)
+-        cap_gain = math_label(r"Q_{\mathrm{Quelle}}", np.array([x_gain, base_y - 0.38, 0.0]), size=BODY_FONT_SIZE, color=SOLAR_YELLOW)
++        cap_sink = math_label(r"Q_{l}", np.array([x_sink, base_y - 0.38, 0.0]), size=BODY_FONT_SIZE, color=LOSS_BLUE)
++        cap_gain = math_label(r"Q_{g}", np.array([x_gain, base_y - 0.38, 0.0]), size=BODY_FONT_SIZE, color=SOLAR_YELLOW)
+ 
+         def loss_flows(rt):
+@@ -983,10 +1016,10 @@ class Beat3_Gewinnseite(Scene):
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "solar"))
+         aw_t, is_t, g_t, fs_t, qs_t = [ValueTracker(0.0) for _ in range(5)]
+-        g_g = _gauge("g", P_ORANGE, np.array([5.45, 1.85, 0.0]), g_t)
++        g_g = _gauge(r"g_{\perp}", P_ORANGE, np.array([5.45, 1.85, 0.0]), g_t)
+         fs_g = _gauge(r"F_{S}", P_TEAL, np.array([5.45, 1.85, 0.0]), fs_t)
+         s_card = _card("", P_YELLOW, [
+-            (lambda: rf"A_{{W}} = {label_number(aw_t.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
+-            (lambda: rf"I_{{S}} = {label_number(is_t.get_value())}\,\mathrm{{kWh/m^{{2}}}}", P_YELLOW),
+-            (lambda: rf"g = {label_number(g_t.get_value(), 2)}", P_ORANGE),
++            (lambda: rf"A = {label_number(aw_t.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
++            (lambda: rf"I_{{s}} = {label_number(is_t.get_value())}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{m^{{2}}}}}}", P_YELLOW),
++            (lambda: rf"g_{{\perp}} = {label_number(g_t.get_value(), 2)}", P_ORANGE),
+             (lambda: rf"F_{{S}} = {label_number(fs_t.get_value(), 2)}", P_TEAL),
+             (lambda: rf"Q_{{S}} = {label_number(qs_t.get_value())}\,\mathrm{{kWh}}", SOLAR_YELLOW),
+@@ -1000,8 +1033,10 @@ class Beat3_Gewinnseite(Scene):
+         row_s, box_s, it_s = math_panel([
+             ("qs", r"Q_{S}", SOLAR_YELLOW), (None, "=", P_WHITE),
+-            ("a", r"A_{W}", P_CYAN), (None, r"\cdot", P_WHITE),
+-            ("i", r"I_{S}", P_YELLOW), (None, r"\cdot", P_WHITE),
+-            ("g", r"g", P_ORANGE), (None, r"\cdot", P_WHITE),
+-            ("f", r"F_{S}", P_TEAL), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
++            ("a", r"A", P_CYAN), (None, r"\cdot", P_WHITE),
++            ("i", r"I_{s}", P_YELLOW), (None, r"\cdot", P_WHITE),
++            ("g", r"g_{\perp}", P_ORANGE), (None, r"\cdot", P_WHITE),
++            ("f", r"F_{S}", P_TEAL), (None, r"\cdot", P_WHITE), (None, r"F_{C}", P_TEAL), (None, r"\cdot", P_WHITE),
++            (None, r"F_{F}", P_TEAL), (None, r"\cdot", P_WHITE), (None, r"F_{W}", P_TEAL),
++            (None, rf"\quad F_{{C}}={label_number(F_C)},\;F_{{F}}={label_number(F_F, 2)},\;F_{{W}}={label_number(F_W, 2)}", P_PRIMARY),
+         ])
+         ring_a = highlight_param(it_s, "a", color=P_CYAN)
+@@ -1039,8 +1074,11 @@ class Beat3_Gewinnseite(Scene):
+         hold_for(self, self.NARRATION, "fs", during=sunny)
+ 
++        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "weitere"))
++        self.play(FadeOut(fs_g["static"]), FadeOut(ring_f), *_terms(row_s, 9, 16), *sunny(1.2), run_time=1.2)
++        hold_for(self, self.NARRATION, "weitere", during=sunny)
++
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "solar_block"))
+         self.add(s_card["rows"][4])
+-        self.play(FadeOut(fs_g["static"]), FadeOut(ring_f), FadeIn(patches), *_terms(row_s, 9, 10),
+-                  *sunny(1.0), run_time=1.0)
++        self.play(FadeIn(patches), *sunny(1.0), run_time=1.0)
+         self.play(stage.transition("demand.recap.gain.patches-into-solar-block", source=patches, target=solar_block), FadeIn(cap_gain), qs_t.animate.set_value(Q_SOLAR),
+                   *sunny(1.6), run_time=1.6)
+@@ -1050,8 +1088,8 @@ class Beat3_Gewinnseite(Scene):
+         q_t, an_t, t_t, qi_t = [ValueTracker(0.0) for _ in range(4)]
+         i_card = _card("", INT_ORANGE, [
+-            (lambda: rf"q_{{I}} = {label_number(q_t.get_value())}\,\mathrm{{W/m^{{2}}}}", P_ORANGE),
++            (lambda: rf"q_{{i}} = {label_number(q_t.get_value())}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}}", P_ORANGE),
+             (lambda: rf"A_{{N}} = {label_number(an_t.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
+             (lambda: rf"t = {label_number(t_t.get_value())}\,\mathrm{{h}}", P_PRIMARY),
+-            (lambda: rf"Q_{{I}} = {label_number(qi_t.get_value())}\,\mathrm{{kWh}}", INT_ORANGE),
++            (lambda: rf"Q_{{i}} = {label_number(qi_t.get_value())}\,\mathrm{{kWh}}", INT_ORANGE),
+         ], top=1.85)
+         floors = VGroup(*[Line(np.array([H["x_l"] + 0.12, y + 0.04, 0.0]), np.array([H["x_r"] - 0.12, y + 0.04, 0.0]),
+@@ -1061,8 +1099,8 @@ class Beat3_Gewinnseite(Scene):
+         intern_block = block(x_gain, 0.0, Q_INTERN, INT_ORANGE)
+         row_i, box_i, it_i = math_panel([
+-            ("qi", r"Q_{I}", INT_ORANGE), (None, "=", P_WHITE),
+-            ("q", r"q_{I}", P_ORANGE), (None, r"\cdot", P_WHITE),
++            ("qi", r"Q_{i}", INT_ORANGE), (None, "=", P_WHITE),
++            ("q", r"q_{i}", P_ORANGE), (None, r"\cdot", P_WHITE),
+             ("a", r"A_{N}", P_CYAN), (None, r"\cdot", P_WHITE),
+-            ("t", r"t", P_PRIMARY), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
++            ("t", r"t", P_PRIMARY), (None, r"\quad Q\;\mathrm{in}\;\mathrm{kWh}", P_PRIMARY),
+         ])
+         ring_q = highlight_param(it_i, "q", color=P_ORANGE)
+@@ -1107,19 +1145,19 @@ class Beat3_Gewinnseite(Scene):
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "eta_h"))
+         eta_t = ValueTracker(0.0)
+-        eta_g = _gauge(r"\eta_{h}", ETA_GREEN, np.array([-3.2, 0.1, 0.0]), eta_t, length=2.4)
+-        ratio = VGroup(math_label(r"Q_{\mathrm{Quelle}}", size=BODY_FONT_SIZE, color=SOLAR_YELLOW),
++        eta_g = _gauge(r"\eta", ETA_GREEN, np.array([-3.2, 0.1, 0.0]), eta_t, length=2.4)
++        ratio = VGroup(math_label(r"Q_{g}", size=BODY_FONT_SIZE, color=SOLAR_YELLOW),
+                        math_label(r"/", size=BODY_FONT_SIZE, color=P_WHITE),
+-                       math_label(r"Q_{\mathrm{Senke}}", size=BODY_FONT_SIZE, color=LOSS_BLUE)).arrange(RIGHT, buff=0.2)
++                       math_label(r"Q_{l}", size=BODY_FONT_SIZE, color=LOSS_BLUE)).arrange(RIGHT, buff=0.2)
+         ratio.move_to(np.array([-3.2, 1.2, 0.0]))
+         usable = block(x_gain, 0.0, Q_USABLE, ETA_GREEN)
+-        waste = block(x_gain, Q_USABLE, Q_QUELLE - Q_USABLE, P_RED, 0.6)
+-        spill = DashedLine(np.array([x_gain - 0.65, base_y + Q_QUELLE * unit, 0.0]),
+-                           np.array([x_gain + 0.65, base_y + Q_QUELLE * unit, 0.0]), color=P_RED, stroke_width=2)
++        waste = block(x_gain, Q_USABLE, Q_G - Q_USABLE, P_RED, 0.6)
++        spill = DashedLine(np.array([x_gain - 0.65, base_y + Q_G * unit, 0.0]),
++                           np.array([x_gain + 0.65, base_y + Q_G * unit, 0.0]), color=P_RED, stroke_width=2)
+         spill_note = body_text(tr("Overheating", "Überhitzung"), font_size=LABEL_FONT_SIZE, color=P_RED).move_to(
+-            np.array([3.95, base_y + (Q_USABLE + (Q_QUELLE - Q_USABLE) / 2) * unit, 0.0]))
++            np.array([3.95, base_y + (Q_USABLE + (Q_G - Q_USABLE) / 2) * unit, 0.0]))
+         row_e, box_e, it_e = math_panel([
+-            ("eta", r"\eta_{h}", ETA_GREEN), (None, r"\cdot", P_WHITE),
+-            ("quelle", r"Q_{\mathrm{Quelle}}", SOLAR_YELLOW),
+-            (None, rf"\approx {label_number(ETA_H, 1)}\cdot {label_number(Q_QUELLE)} \approx {label_number(Q_USABLE)}\;\mathrm{{kWh}}", P_WHITE),
++            ("eta", r"\eta", ETA_GREEN), (None, r"\cdot", P_WHITE),
++            ("quelle", r"Q_{g}", SOLAR_YELLOW),
++            (None, rf"\approx {label_number(ETA_H, 2)}\cdot {label_number(Q_G)}\,\mathrm{{kWh}} \approx {label_number(Q_USABLE)}\,\mathrm{{kWh}}", P_WHITE),
+         ])
+         ring_eta = highlight_param(it_e, "eta", color=ETA_GREEN)
+@@ -1146,17 +1184,17 @@ class Beat3_Gewinnseite(Scene):
+         rad = _heater(H)
+         supply = P["supply"]
+-        demand = block(x_gain, Q_USABLE, Q_SENKE - Q_USABLE, DEMAND_RED)
+-        level = DashedLine(np.array([x_sink + 0.65, base_y + Q_SENKE * unit, 0.0]),
+-                           np.array([x_gain + 0.65, base_y + Q_SENKE * unit, 0.0]), color=P_WHITE, stroke_width=1.8,
++        demand = block(x_gain, Q_USABLE, Q_L - Q_USABLE, DEMAND_RED)
++        level = DashedLine(np.array([x_sink + 0.65, base_y + Q_L * unit, 0.0]),
++                           np.array([x_gain + 0.65, base_y + Q_L * unit, 0.0]), color=P_WHITE, stroke_width=1.8,
+                            stroke_opacity=0.55)
+-        lab_use = math_label(rf"\eta_{{h}}\cdot Q_{{\mathrm{{Quelle}}}}", np.array([3.0, base_y + Q_USABLE / 2 * unit - 0.07, 0.0]),
++        lab_use = math_label(rf"\eta\cdot Q_{{g}}", np.array([3.0, base_y + Q_USABLE / 2 * unit - 0.07, 0.0]),
+                              size=LABEL_FONT_SIZE + 1, color=ETA_GREEN, edge="left")
+-        lab_dem = math_label(r"Q_{h}", np.array([3.0, base_y + (Q_USABLE + (Q_SENKE - Q_USABLE) / 2) * unit - 0.07, 0.0]),
++        lab_dem = math_label(r"Q_{h}", np.array([3.0, base_y + (Q_USABLE + (Q_L - Q_USABLE) / 2) * unit - 0.07, 0.0]),
+                              size=BODY_FONT_SIZE, color=DEMAND_RED, edge="left")
+         row_b, box_b, it_b = math_panel([
+             ("qh", r"Q_{h}", DEMAND_RED), (None, "=", P_WHITE),
+-            ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, "−", P_WHITE),
+-            ("eta", r"\eta_{h}", ETA_GREEN), (None, r"\cdot", P_WHITE),
+-            ("quelle", r"Q_{\mathrm{Quelle}}", SOLAR_YELLOW), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
++            ("senke", r"Q_{l}", LOSS_BLUE), (None, "−", P_WHITE),
++            ("eta", r"\eta", ETA_GREEN), (None, r"\cdot", P_WHITE),
++            ("quelle", r"Q_{g}", SOLAR_YELLOW), (None, r"\quad Q\;\mathrm{in}\;\mathrm{kWh}", P_PRIMARY),
+         ])
+         ring_h = highlight_param(it_b, "qh", color=DEMAND_RED)
+@@ -1187,33 +1225,33 @@ class Beat4_WinterUndSommer(Scene):
+     NARRATION = [
+         ("intro",
+-         "The same balance runs all year — only the two pans change height.",
+-         "Dieselbe Bilanz läuft das ganze Jahr — nur die beiden Waagschalen ändern ihre Höhe."),
++         r"The same balance runs all year — only the two pans change height.",
++         r"Dieselbe Bilanz läuft das ganze Jahr — nur die beiden Waagschalen ändern ihre Höhe."),
+         ("januar",
+-         "In January it is cold outside and the sun stands low.",
+-         "Im Januar ist es draußen kalt, und die Sonne steht tief."),
++         r"In January it is cold outside, as on our example winter day: $\Delta\theta = 20\;\mathrm{K}$, and the sun stands low.",
++         r"Im Januar ist es draußen kalt wie am Beispiel-Wintertag, $\Delta\theta = 20\;\mathrm{K}$, und die Sonne steht tief."),
+         ("januar_schalen",
+-         "So the loss pan is high and the gain pan is small.",
+-         "Deshalb ist die Verlustschale hoch und die Gewinnschale klein."),
++         r"So the loss pan $Q_l$ is high and the gain pan is small — almost all gains are used, $\eta \approx 0.98$.",
++         r"Deshalb ist die Verlustschale $Q_l$ hoch und die Gewinnschale klein — fast alle Gewinne werden genutzt, $\eta \approx 0{,}98$."),
+         ("januar_luecke",
+-         "The gap between them is the heating demand.",
+-         "Die Lücke dazwischen ist der Heizwärmebedarf."),
++         r"The gap between them is the heating demand $Q_h$.",
++         r"Die Lücke dazwischen ist der Heizwärmebedarf $Q_h$."),
+         ("juli",
+-         "In July it flips: the sun stands high and the temperature difference shrinks to 6 kelvin.",
+-         "Im Juli kippt es: Die Sonne steht hoch, und die Temperaturdifferenz schrumpft auf 6 Kelvin."),
++         r"In July it flips: the sun stands high and the temperature difference $\Delta\theta$ shrinks to $6\;\mathrm{K}$.",
++         r"Im Juli kippt es: Die Sonne steht hoch, und die Temperaturdifferenz $\Delta\theta$ schrumpft auf $6\;\mathrm{K}$."),
+         ("juli_schalen",
+-         "The losses shrink, while sun and internal loads deliver more heat.",
+-         "Die Verluste schrumpfen, während Sonne und interne Lasten mehr Wärme liefern."),
++         r"The losses shrink and count only with $\eta_c \approx 0.53$, while sun and internal loads deliver more heat.",
++         r"Die Verluste schrumpfen und zählen nur mit $\eta_c \approx 0{,}53$, während Sonne und interne Lasten mehr Wärme liefern."),
+         ("juli_ueberschuss",
+-         "Now the gains exceed the losses, and the surplus opens a gap on the other side.",
+-         "Jetzt übersteigen die Gewinne die Verluste, und der Überschuss öffnet eine Lücke auf der anderen Seite."),
++         r"Now the gains exceed the usable losses $\eta_c \cdot Q_l$, and the surplus opens a gap on the other side.",
++         r"Jetzt übersteigen die Gewinne die nutzbaren Verluste $\eta_c \cdot Q_l$, und der Überschuss öffnet eine Lücke auf der anderen Seite."),
+         ("juli_kuehlen",
+-         "That surplus is the cooling energy demand — heat that has to be removed.",
+-         "Dieser Überschuss ist der Kühlenergiebedarf — Wärme, die wir abführen müssen."),
++         r"That surplus is the cooling demand $Q_c = Q_g - \eta_c \cdot Q_l$ — heat that has to be removed.",
++         r"Dieser Überschuss ist der Kühlbedarf $Q_c = Q_g - \eta_c \cdot Q_l$ — Wärme, die wir abführen müssen."),
+         ("beide",
+-         "Same building, same physics, opposite sign.",
+-         "Gleiches Gebäude, gleiche Physik, umgekehrtes Vorzeichen."),
++         r"Same building, same physics, opposite sign.",
++         r"Gleiches Gebäude, gleiche Physik, umgekehrtes Vorzeichen."),
+         ("groessen",
+-         "Heating counted the annual demand, cooling the design load — two quantities, one envelope.",
+-         "Heizen zählte den Jahresbedarf, Kühlen die Auslegungslast — zwei Größen, eine Hülle."),
++         r"Heating counted the annual demand $Q_h$, cooling the design load $\dot{Q}_C$ — two quantities, one envelope.",
++         r"Heizen zählte den Jahresbedarf $Q_h$, Kühlen die Auslegungslast $\dot{Q}_C$ — zwei Größen, eine Hülle."),
+     ]
+ 
+@@ -1223,5 +1261,5 @@ class Beat4_WinterUndSommer(Scene):
+ 
+         subtitle = section_heading(tr("The same balance, two seasons", "Dieselbe Bilanz, zwei Jahreszeiten"))
+-        din = _din_ref("DIN V 18599-2 · VDI 2078")
++        din = reference_chip(_references.cite(("din-v-4108-6", "ausnutzung"), ("din-ts-18599-2", "nutzenergie")), subtitle)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -1234,13 +1272,13 @@ class Beat4_WinterUndSommer(Scene):
+             return a + (b - a) * t.get_value()
+ 
+-        base_y, unit, width = -1.0, 2.9 / Q_SENKE, 1.0
++        base_y, unit, width = -1.0, 2.9 / Q_L_JAN, 1.0
+         x_loss, x_gain = -1.2, 1.0
+         mid_x = (x_loss + x_gain) / 2
+ 
+         def loss_h():
+-            return mix(Q_SENKE, ETA_K * Q_SENKE_JUL, season)
++            return mix(Q_L_JAN, ETA_C * Q_L_JUL, season)
+ 
+         def gain_h():
+-            return mix(Q_USABLE, Q_QUELLE_JUL, season)
++            return mix(Q_USABLE_JAN, Q_G_JUL, season)
+ 
+         def column(x, height, color_fn, opacity):
+@@ -1274,14 +1312,14 @@ class Beat4_WinterUndSommer(Scene):
+         ground = Line(np.array([x_loss - 0.75, base_y, 0.0]), np.array([x_gain + 0.75, base_y, 0.0]),
+                       color=P_WHITE, stroke_width=2, stroke_opacity=0.5)
+-        cap_loss = math_label(r"Q_{\mathrm{Senke}}", np.array([x_loss, base_y - 0.38, 0.0]), size=BODY_FONT_SIZE, color=LOSS_BLUE)
+-        cap_gain = math_label(r"\eta_{h}\cdot Q_{\mathrm{Quelle}}", np.array([x_gain, base_y - 0.38, 0.0]),
++        cap_loss = math_label(r"Q_{l}", np.array([x_loss, base_y - 0.38, 0.0]), size=BODY_FONT_SIZE, color=LOSS_BLUE)
++        cap_gain = math_label(r"\eta\cdot Q_{g}", np.array([x_gain, base_y - 0.38, 0.0]),
+                               size=BODY_FONT_SIZE, color=ETA_GREEN)
+-        cap_loss_k = math_label(r"\eta_{k}\cdot Q_{\mathrm{Senke}}", np.array([x_loss, base_y - 0.38, 0.0]),
++        cap_loss_k = math_label(r"\eta_{c}\cdot Q_{l}", np.array([x_loss, base_y - 0.38, 0.0]),
+                                 size=BODY_FONT_SIZE, color=LOSS_BLUE)
+-        cap_gain_k = math_label(r"Q_{\mathrm{Quelle}}", np.array([x_gain, base_y - 0.38, 0.0]),
++        cap_gain_k = math_label(r"Q_{g}", np.array([x_gain, base_y - 0.38, 0.0]),
+                                 size=BODY_FONT_SIZE, color=SOLAR_YELLOW)
+-        gap_lab_h = math_label(r"Q_{h}", np.array([mid_x - 0.2, base_y + (Q_SENKE + Q_USABLE) / 2 * unit - 0.07, 0.0]),
++        gap_lab_h = math_label(r"Q_{h}", np.array([mid_x - 0.2, base_y + (Q_L_JAN + Q_USABLE_JAN) / 2 * unit - 0.07, 0.0]),
+                                size=BODY_FONT_SIZE, color=DEMAND_RED)
+-        gap_lab_k = math_label(r"Q_{K}", np.array([mid_x - 0.2, base_y + 0.5 * (ETA_K * Q_SENKE_JUL + Q_QUELLE_JUL) * unit - 0.07, 0.0]),
++        gap_lab_k = math_label(r"Q_{c}", np.array([mid_x - 0.2, base_y + 0.5 * (ETA_C * Q_L_JUL + Q_G_JUL) * unit - 0.07, 0.0]),
+                                size=BODY_FONT_SIZE, color=DEMAND_RED)
+ 
+@@ -1301,19 +1339,19 @@ class Beat4_WinterUndSommer(Scene):
+         eta_g = _gauge(r"\eta", ETA_GREEN, np.array([4.9, 0.1, 0.0]), eta_t)
+         card = _card("", P_PRIMARY, [
+-            (lambda: rf"\Delta\theta = {label_number(mix(D_THETA, D_THETA_JUL, climate))}\,\mathrm{{K}}", P_BLUE),
+-            (lambda: rf"I_{{S}} = {label_number(mix(I_S, I_S_JUL, climate))}\,\mathrm{{kWh/m^{{2}}}}", P_YELLOW),
++            (lambda: rf"\Delta\theta = {label_number(mix(D_THETA_JAN, D_THETA_JUL, climate))}\,\mathrm{{K}}", P_BLUE),
++            (lambda: rf"I_{{s}} = {label_number(mix(I_S_JAN, I_S_JUL, climate))}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{m^{{2}}}}}}", P_YELLOW),
+         ], x=-6.3, top=0.85)
+ 
+         row_w, box_w, it_w = math_panel([
+             ("qh", r"Q_{h}", DEMAND_RED), (None, "=", P_WHITE),
+-            ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, "−", P_WHITE),
+-            ("eta", r"\eta_{h}", ETA_GREEN), (None, r"\cdot", P_WHITE),
+-            ("quelle", r"Q_{\mathrm{Quelle}}", SOLAR_YELLOW), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
++            ("senke", r"Q_{l}", LOSS_BLUE), (None, "−", P_WHITE),
++            ("eta", r"\eta", ETA_GREEN), (None, r"\cdot", P_WHITE),
++            ("quelle", r"Q_{g}", SOLAR_YELLOW), (None, r"\quad Q\;\mathrm{in}\;\mathrm{kWh}", P_PRIMARY),
+         ])
+         row_k, box_k, it_k = math_panel([
+-            ("qk", r"Q_{K}", DEMAND_RED), (None, "=", P_WHITE),
+-            ("quelle", r"Q_{\mathrm{Quelle}}", SOLAR_YELLOW), (None, "−", P_WHITE),
+-            ("eta", r"\eta_{k}", ETA_GREEN), (None, r"\cdot", P_WHITE),
+-            ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
++            ("qk", r"Q_{c}", DEMAND_RED), (None, "=", P_WHITE),
++            ("quelle", r"Q_{g}", SOLAR_YELLOW), (None, "−", P_WHITE),
++            ("eta", r"\eta_{c}", ETA_GREEN), (None, r"\cdot", P_WHITE),
++            ("senke", r"Q_{l}", LOSS_BLUE), (None, r"\quad Q\;\mathrm{in}\;\mathrm{kWh}", P_PRIMARY),
+         ])
+         ring_h = highlight_param(it_w, "qh", color=DEMAND_RED)
+@@ -1331,5 +1369,5 @@ class Beat4_WinterUndSommer(Scene):
+         self.add(eta_g["read"])
+         self.play(Indicate(cap_loss, color=P_WHITE), run_time=1.0)
+-        self.play(Indicate(cap_gain, color=P_WHITE), FadeIn(eta_g["static"]), eta_t.animate.set_value(ETA_H), run_time=1.4)
++        self.play(Indicate(cap_gain, color=P_WHITE), FadeIn(eta_g["static"]), eta_t.animate.set_value(ETA_JAN), run_time=1.4)
+         hold_for(self, self.NARRATION, "januar_schalen")
+ 
+@@ -1347,5 +1385,5 @@ class Beat4_WinterUndSommer(Scene):
+ 
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "juli_schalen"))
+-        self.play(season.animate.set_value(1.0), eta_t.animate.set_value(ETA_K),
++        self.play(season.animate.set_value(1.0), eta_t.animate.set_value(ETA_C),
+                   stage.transition("demand.recap.seasons.shell-loss-to-summer", source=cap_loss, target=cap_loss_k), stage.transition("demand.recap.seasons.shell-gain-to-summer", source=cap_gain, target=cap_gain_k),
+                   run_time=2.6, rate_func=smooth)
+@@ -1362,6 +1400,6 @@ class Beat4_WinterUndSommer(Scene):
+ 
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "beide"))
+-        win_chip = chip(tr("Winter: losses > gains", "Winter: Verluste > Gewinne"), LOSS_BLUE, font_size=LABEL_FONT_SIZE).move_to(np.array([4.6, -0.2, 0.0]))
+-        sum_chip = chip(tr("Summer: gains > losses", "Sommer: Gewinne > Verluste"), P_RED, font_size=LABEL_FONT_SIZE).move_to(np.array([4.6, -0.9, 0.0]))
++        win_chip = chip(tr("Winter: losses > usable gains", "Winter: Verluste > nutzbare Gewinne"), LOSS_BLUE, font_size=LABEL_FONT_SIZE).move_to(np.array([4.6, -0.2, 0.0]))
++        sum_chip = chip(tr("Summer: gains > usable losses", "Sommer: Gewinne > nutzbare Verluste"), P_RED, font_size=LABEL_FONT_SIZE).move_to(np.array([4.6, -0.9, 0.0]))
+         self.play(FadeOut(VGroup(card["frame"], eta_g["static"], ring_k)), *[FadeOut(r) for r in card["rows"]],
+                   FadeOut(eta_g["read"]), run_time=0.8)

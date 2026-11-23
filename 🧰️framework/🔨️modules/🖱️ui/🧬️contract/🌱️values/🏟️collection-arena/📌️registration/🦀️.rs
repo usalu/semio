@@ -21,6 +21,9 @@ impl UiArenaRegistry{
  fn lock(&self)->RegistryGuard<'_>{loop{if let Some(guard)=self.try_lock(){return guard}std::hint::spin_loop();std::thread::yield_now()}}
  fn is_poisoned(&self)->bool{self.poisoned.load(Ordering::Relaxed)}
  fn clear_poison(&self){self.poisoned.store(false,Ordering::Relaxed)}
+ /// 🧯️ Frees the process-wide registry from a registration whose orderly close is impossible, such as a test that panicked while its descendants were still borrowed; the abandoned backing and its pending handbacks are discarded and only a later epoch can register again.
+ #[cfg(any(test,feature="testkit"))]
+ pub fn abandon(&'static self){let mut guard=self.lock();guard.pointer=0;guard.closing=false;guard.epoch=guard.epoch.wrapping_add(1);retirement::UI_VALUE_HANDBACKS.abandon();self.clear_poison()}
  pub fn borrow(&'static self)->Result<Option<UiArenaBorrow>,ValueError>{let Some(guard)=self.try_lock()else{return Ok(None)};if self.is_poisoned(){return Err(invalid())}if guard.pointer==0||guard.closing{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"UI arena has no accepting lifetime registration"))}Ok(Some(UiArenaBorrow{guard}))}
  /// 🔒️ Borrows the same registered backing for an existing synchronous arena operation.
  pub fn borrow_blocking(&'static self)->Result<UiArenaBorrow,ValueError>{let guard=self.lock();if self.is_poisoned(){return Err(invalid())}if guard.pointer==0||guard.closing{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"UI arena has no accepting lifetime registration"))}Ok(UiArenaBorrow{guard})}

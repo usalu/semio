@@ -107,10 +107,10 @@ fn the_drag_lane_hoists_a_single_child_axis_like_the_close_lane() {
 }
 
 /// 🪟️ The active stack's outline is painted, not commented out: a hairline along the whole
-/// silhouette in `--active-base` when the stack holds the active window, `--border-normal-color`
+/// frame in `--active-base` when the stack holds the active window, `--border-normal-color`
 /// otherwise (`⚛️react/🟦️.tsx:7494-7509`).
 #[test]
-fn the_active_stack_paints_a_silhouette_focus_border() {
+fn the_active_stack_paints_a_frame_focus_border() {
     let theme = Theme::default();
     let strokes = |dock: &DockState| {
         let mut atlas = FontAtlas::builtin();
@@ -144,15 +144,18 @@ fn tab_insert_index_follows_the_painted_gapless_chip_run() {
     assert_eq!(compute_dock_drop_zone(125.0, 10.0, &tab_bars, &bodies, Rect::new(0.0, 0.0, 200.0, 224.0)), Some(DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 2 }));
 }
 
-/// 📐️ Explicit separator arithmetic remains independently testable. Live frames abut, retain
-/// horizontal body padding, and publish centered resize targets clipped to their axis bounds.
+/// 📐️ Explicit separator arithmetic remains independently testable. Live frames abut on one shared
+/// border line (the fixture's separator and canvas inset are 0), retain no body padding, and
+/// publish centered resize targets clipped to their axis bounds.
 #[test]
-fn themed_axis_geometry_matches_the_shared_react_fixture() {
+fn abutting_axis_geometry_matches_the_shared_react_fixture() {
     let fixture = dock_axis_geometry_fixture();
-    let token = fixture["oracleSample"]["tokenPixels"].as_f64().expect("token pixels") as f32;
+    let token = fixture["oracleSample"]["separatorPixels"].as_f64().expect("separator pixels") as f32;
+    let inset = fixture["canvasInsetPixels"].as_f64().expect("canvas inset pixels") as f32;
+    assert_eq!((token, inset), (0.0, 0.0), "📐️ abutting frames share one border line: no separator, no canvas inset");
     let width = fixture["viewport"]["width"].as_f64().expect("viewport width") as f32;
     let height = fixture["viewport"]["height"].as_f64().expect("viewport height") as f32;
-    let canvas = Rect::new(token, token, width - token * 2.0, height - token * 2.0);
+    let canvas = Rect::new(inset, inset, width - inset * 2.0, height - inset * 2.0);
     let stack = |id: &str| DockNode::Stack { windows: vec![DockStackTab::new(id)], active: id.to_string() };
     let dock = DockState {
         root: DockNode::Row(vec![(stack("left"), 35.0), (DockNode::Column(vec![(stack("right-top"), 70.0), (stack("right-bottom"), 30.0)]), 65.0)]),
@@ -173,15 +176,17 @@ fn themed_axis_geometry_matches_the_shared_react_fixture() {
     assert!((dock.split_axis_extent(&vec![1], canvas, token).expect("nested column") - (canvas.h - token)).abs() < 0.001);
 
     let theme = Theme::light();
-    assert!((theme.gap_standard - token).abs() < 0.001, "📐️ the neutral sample is the default live spacing token");
     let mut atlas = FontAtlas::builtin();
     let labels = HashMap::new();
     let bodies = dock.stack_body_rects(canvas, &theme, &labels, &mut atlas);
     let live_frames = dock.stack_frame_rects(canvas);
+    for (_, rect, id) in &frames {
+        let live = live_frames.iter().find(|(_, _, frame_id)| frame_id == id).expect("matching live frame").1;
+        assert!((live.x - rect.x).abs() + (live.y - rect.y).abs() + (live.w - rect.w).abs() + (live.h - rect.h).abs() < 0.001, "📐️ {id} live frame {live:?} equals the fixture solve {rect:?}");
+    }
     for (_, body, id) in &bodies {
         let frame = live_frames.iter().find(|(_, _, frame_id)| frame_id == id).expect("matching frame").1;
-        assert!((body.x - frame.x - token).abs() < 0.001, "📐️ {id} begins after one horizontal body inset");
-        assert!((body.w - (frame.w - token * 2.0)).abs() < 0.001, "📐️ {id} removes both horizontal body insets");
+        assert_eq!(*body, frame, "📐️ {id} content fills its frame");
     }
 
     let mut draw = DrawList::default();

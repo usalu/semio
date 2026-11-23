@@ -163,10 +163,37 @@
           }
         },
         "drawing": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingDrawing"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingDrawing",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "SVG drawing",
+              "de": "SVG-Zeichnung"
+            },
+            "description": {
+              "en": "Line and fill drawing for this shot.",
+              "de": "Linien- und Füllzeichnung dieser Aufnahme."
+            },
+            "group": "drawing",
+            "order": 90
+          }
         },
         "autoFit": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Auto fit",
+              "de": "Automatische Einpassung"
+            },
+            "description": {
+              "en": "Absent inherits the scene auto-fit setting.",
+              "de": "Ohne Angabe gilt die automatische Einpassung der Szene."
+            },
+            "group": "framing",
+            "order": 100
+          }
         }
       },
       "x-semio-ui": {

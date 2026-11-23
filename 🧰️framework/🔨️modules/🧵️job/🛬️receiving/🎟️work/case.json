@@ -13,7 +13,6 @@
   ],
   "sameSource": true,
   "scope": "base-context-real-current-loan-native-admission-not-host-birth",
-  "childQuantum": 1,
-  "sourcePlacementWork": 2,
-  "sourceWork": 3
+  "childQuantum": 2,
+  "sourceWork": 1
 }

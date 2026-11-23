@@ -13,10 +13,10 @@ pub const COMMAND_LEASE_WAITERS:usize=8;
 pub type LeaseKey=(semio_framework_job::OriginalSourceBinding,(semio_framework_value::retained_clone::NativeAllocationIdentity,u64));
 /// 🔐️ The shared command scope as a held lease: a non-owner queues in arrival order and never overwrites the holder, the holder keeps it until its lane releases it, and the head of the queue is granted next. See `🧪️tests/🔣️.json`.
 #[derive(Clone,Copy)]
-pub struct Lease<K>{holder:Option<K>,waiters:[Option<K>;COMMAND_LEASE_WAITERS]}
+pub struct Lease<K>{holder:Option<K>,armed:bool,waiters:[Option<K>;COMMAND_LEASE_WAITERS]}
 /// 🔐️ The command scope lease keyed by the actual caller and decoder.
 pub type CommandLease=Lease<LeaseKey>;
-impl<K:Copy> Default for Lease<K>{fn default()->Self{Self{holder:None,waiters:[None;COMMAND_LEASE_WAITERS]}}}
+impl<K:Copy> Default for Lease<K>{fn default()->Self{Self{holder:None,armed:false,waiters:[None;COMMAND_LEASE_WAITERS]}}}
 impl<K:Copy+PartialEq> Lease<K>{
  /// 🔓️ True once no lane holds or awaits the lease.
  pub fn is_idle(&self)->bool{self.holder.is_none()&&self.waiters[0].is_none()}
@@ -25,20 +25,20 @@ impl<K:Copy+PartialEq> Lease<K>{
  /// ⏳️ True while this key is queued for the lease.
  pub fn queued(&self,key:K)->bool{self.waiters.contains(&Some(key))}
  /// 🔓️ Releases the lease held by this key and drops its queue slot; returns whether anything changed.
- pub fn leave(&mut self,key:K)->bool{let mut changed=false;if self.holder==Some(key){self.holder=None;changed=true}if let Some(at)=self.waiters.iter().position(|waiter|*waiter==Some(key)){self.waiters.copy_within(at+1..,at);self.waiters[COMMAND_LEASE_WAITERS-1]=None;changed=true}changed}
- /// 🛡️ Idle publication releases only a lane whose command source has settled.
+ pub fn leave(&mut self,key:K)->bool{let mut changed=false;if self.holder==Some(key){self.holder=None;self.armed=false;changed=true}if let Some(at)=self.waiters.iter().position(|waiter|*waiter==Some(key)){self.waiters.copy_within(at+1..,at);self.waiters[COMMAND_LEASE_WAITERS-1]=None;changed=true}changed}
+ /// 🛡️ Idle publication releases only a lane whose command source has settled and whose grant its own claim has already used: the granting turn answers false, so a grant that no claim has yet confirmed has no source to settle and must survive until the lane returns for it.
  pub fn leave_if_idle(&mut self,key:K,command_source_pending:bool)->bool{
-  !command_source_pending&&self.leave(key)
+  !command_source_pending&&!(self.armed&&self.holder==Some(key))&&self.leave(key)
  }
  /// 🔓️ Drops every holder and waiter.
  pub fn clear(&mut self){*self=Self::default()}
  /// 🎟️ True once this key holds the lease. A free lease is granted to the head of the queue only; every other key queues once. A grant or a queueing is committed only when `pay` affords it, and the granting turn itself answers false.
  pub fn arbitrate<E>(&mut self,key:K,pending:bool,pay:impl FnOnce()->Result<bool,E>)->Result<bool,E>{
-  if self.holds(key){return Ok(true)}
+  if self.holds(key){self.armed=false;return Ok(true)}
   let queued=self.queued(key);let head=self.waiters[0];
   let free=self.holder.is_none()&&!pending&&(head.is_none()||head==Some(key));
   if !free&&queued||!pay()?{return Ok(false)}
-  if free{if head==Some(key){self.waiters.copy_within(1..,0);self.waiters[COMMAND_LEASE_WAITERS-1]=None}self.holder=Some(key)}else if let Some(slot)=self.waiters.iter_mut().find(|waiter|waiter.is_none()){*slot=Some(key)}
+  if free{if head==Some(key){self.waiters.copy_within(1..,0);self.waiters[COMMAND_LEASE_WAITERS-1]=None}self.holder=Some(key);self.armed=true}else if let Some(slot)=self.waiters.iter_mut().find(|waiter|waiter.is_none()){*slot=Some(key)}
   Ok(false)
  }
 }

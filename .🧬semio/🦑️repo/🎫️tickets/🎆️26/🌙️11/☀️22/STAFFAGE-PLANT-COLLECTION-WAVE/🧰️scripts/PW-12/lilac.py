@@ -177,7 +177,7 @@ def scale500():
         top = at(t, d, 0.12, 0.30)
         lobes.append(Lobe("crown-%s" % sid, "f-%s-top" % sid, (top[0], top[1] - 0.14, top[2]), (rt[0] + 0.12, rt[1] + 0.16, rt[2] + 0.06), "leaf-sun", SUN, 0.6))
     lobes.append(Lobe("crown-top", "f-s5-top", (0.10, 3.42, 0.06), (0.80, 0.58, 0.78), "leaf-sun", SUN, 0.6))
-    lobes.append(Lobe("crown-core", "f-core-low", (0.02, 2.5, 0.0), (1.05, 1.0, 1.0), "leaf-sun", SUN, 0.6))
+    lobes.append(Lobe("crown-core", "f-core-low", (0.02, 2.46, 0.0), (1.05, 1.06, 1.0), "leaf-sun", SUN, 0.6))
     lobes.append(Lobe("crown-suckers", "f-suckers", (0.0, 0.42, 0.0), (0.62, 0.42, 0.56), "leaf-sun", SUN, 0.56))
     for lb in lobes:
         lb.regions = merged

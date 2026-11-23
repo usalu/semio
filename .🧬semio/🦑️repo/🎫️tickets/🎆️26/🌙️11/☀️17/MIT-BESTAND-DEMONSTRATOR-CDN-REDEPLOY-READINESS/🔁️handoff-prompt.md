@@ -2,6 +2,33 @@
 
 Continue the open ticket `2026/11/17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS` (folder `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS`). Follow `CLAUDE.md`. Read `🚀️redeploy-log.md` and every `🔬️*.md` note in the ticket first.
 
+## Live continuation on November 22, 16:45 PST
+
+- **Update at 16:55:** the queue finished, and both roots failed twice, on in-progress window and viewer API refactors by other sessions (`🗑️generated/browser-{procedural,demonstrator}.log`):
+  - **procedural:** `stdio-contract-window-kit` `🧊️mesh-scene` line 51 calls a window-kits mesh function at `🧊️mesh/🦀️.rs:49`, which now takes 2 arguments, with 1. `semio-s-procedural-core-semantic-ui` gives 2 of 3 arguments.
+  - **demonstrator:** `view_state` not found in `semio-s-artifact-puzzle-3d-viewer` (line 114) and `semio-s-artifact-process-process3d-viewer` (line 135).
+  - **Next step:** check whether those sessions have finished; if not, adapt the callers minimally, then requeue with `JOBS=1 ./native-queue.sh procedural demonstrator`.
+- **Previously running (now finished):** `JOBS=1 ./native-queue.sh procedural demonstrator`.
+  - Log: `🗑️generated/queue-pd.log`.
+  - Per-root logs: `🗑️generated/browser-<id>.log`.
+  - Procedural attempt 2 is rebuilding the descriptor emitter (`🗑️generated/describe-build.log`).
+  - Attempt 1 failed on a concurrent `semio-plugin-window-kits` signature break (`scene_surface` arity). Another session fixed it at 16:25.
+- **Last static matrix:** 8/16 passing.
+  - Passing: Aggregator, Energie, Statik and Verfolgen, in both languages.
+  - Missing: Generator (needs the rebuilt `procedural`) and Koordinator, Aussuchen and Bearbeiten (need the rebuilt `demonstrator`). Their fixes are already in source.
+- **When both roots stage:**
+  - Rebuild the site: `MEM=4096 bash native-wasm.sh site`.
+  - Restage the shard worker if its TS changed: the `support` step in the state section below.
+  - Run `verify-static.sh <out> 8765` for the full 16-case matrix.
+  - Then follow the Finish steps.
+- **Image wedge, fixed manually today.** The rust image `.cache/b/r/m` reported 0 B free while the host had space, and even `rm` failed with ENOSPC.
+  - Recovery: stop the holders (bun `repo dev mcp` and sealed repo-tool processes), run `diskutil unmount force .cache/b/r/m`, detach, then `diskutil image attach --nobrowse --mountOptions owners --mountPoint .cache/b/r/m .cache/b/r/fixed.dmg`.
+  - Then remove idle `components/runs/*` with plain `rm -rf`, because bun rm hits EFAULT when the volume is full.
+  - A permanent fix is now in source: an opener-triggered refresh cycle plus a `.semio-reserve` file per image (`🔬️image-statfs-refresh.md`). It is untested on a real image.
+- **Disk at handoff:** host 35 GiB free, rust image about 16 GiB free. A Demonstrator build writes about 20 GiB, so keep `JOBS=1` for the large roots.
+- **Concurrent refactors keep breaking roots.** Read the first `error[` in the root log, check whether the current tree already fixed it, patch minimally if not, then requeue.
+- **Model setup for the next chat:** main chat Grok 4.7 256k High Non-Fast; task agents Grok 4.7 256k Medium Non-Fast; read-only or low-complexity agents Grok 4.7 256k Light Non-Fast Medium. No fast modes.
+
 ## Live continuation on November 21, 08:32 PST
 
 The original Rust image is mounted at its canonical path and had 16 GiB available at this check. The holders are active release compilers. The roster supervisor (PID 51044 at this checkpoint) is managing both required JOBS=2 queue roots. Demonstrator wakSUm7 and Procedural w5PGoij are linking. Both linked-browser probes are armed. GIS wsl3Qi1 passed 11 stages with a certified optimized core. The latest full site result is 6/16, and the current published Generator predates the correction in w5PGoij. The release verdict and subsequent checkpoints are in 📋️readiness-report.md and 🚀️redeploy-log.md.

@@ -5,7 +5,7 @@ fn finish_params(viewport: [f32; 2], dpr: f32) -> FinishParams {
     FinishParams { viewport, dpr, time_seconds_origin: 0.0, resource_ops: Vec::new() }
 }
 
-//#region SilhouetteClipTests
+//#region FrameTests
 
 #[test]
 fn scissor_intersects_child() {
@@ -21,33 +21,49 @@ fn scissor_covers_fractional_rect_edges_without_pixel_seams() {
     assert_eq!(ScissorRect::from_rect(LayoutRect::new(10.25, 20.75, 30.5, 40.5)), ScissorRect { x: 10, y: 20, w: 31, h: 42 });
 }
 
-#[test]
-fn clip_region_preserves_disjoint_cutouts_and_intersects_scissor() {
-    let clip = ClipRegion::from_rects(&[LayoutRect::new(0.0, 0.0, 40.0, 20.0), LayoutRect::new(80.0, 0.0, 20.0, 20.0), LayoutRect::new(0.0, 20.0, 100.0, 80.0)]);
-    let scissors = clip.effective_scissors(Some(ScissorRect { x: 10, y: 0, w: 80, h: 100 }), 100.0, 100.0);
-    assert_eq!(scissors, vec![ScissorRect { x: 10, y: 0, w: 30, h: 20 }, ScissorRect { x: 80, y: 0, w: 10, h: 20 }, ScissorRect { x: 10, y: 20, w: 80, h: 80 }]);
+const FRAME: [f32; 4] = [10.0, 20.0, 200.0, 120.0];
+
+fn frame_rect() -> LayoutRect {
+    LayoutRect::new(FRAME[0], FRAME[1], FRAME[2], FRAME[3])
+}
+
+fn inside(rect: [f32; 4], frame: [f32; 4]) -> bool {
+    rect[0] >= frame[0] && rect[1] >= frame[1] && rect[0] + rect[2] <= frame[0] + frame[2] && rect[1] + rect[3] <= frame[1] + frame[3]
 }
 
 #[test]
-fn scene_builder_nests_and_restores_clip_regions() {
+fn a_frame_clips_with_exactly_its_rectangular_scissor_and_records_no_mask() {
     let mut builder = SceneBuilder::default();
-    builder.begin_silhouette_clip(&[LayoutRect::new(0.0, 0.0, 100.0, 100.0)]);
-    builder.begin_silhouette_clip(&[LayoutRect::new(25.0, 25.0, 100.0, 100.0)]);
-    assert_eq!(builder.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.as_slice()), Some([ScissorRect { x: 25, y: 25, w: 75, h: 75 }].as_slice()));
-    builder.end_silhouette_clip();
-    assert_eq!(builder.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.as_slice()), Some([ScissorRect { x: 0, y: 0, w: 100, h: 100 }].as_slice()));
-    builder.end_silhouette_clip();
-    assert!(builder.layers.last().is_some_and(|layer| layer.clip.is_none()));
+    builder.push_scissor(frame_rect());
+    builder.push_solid(FRAME, [0.1, 0.1, 0.1, 1.0]);
+    builder.pop_scissor();
+    let packet = Scene::finish(builder, finish_params([500.0, 400.0], 1.0)).expect("finish");
+    let batch = packet.batches.iter().find(|draw_batch| draw_batch.pipeline == PipelineKind::UiQuad).expect("frame content batch");
+    assert_eq!(batch.layer_state.scissor, Some(ScissorRect::from_rect(frame_rect())), "rect clip equals frame");
+    assert_eq!(packet.quad_instances.len(), 1, "no stencil mask instances are appended for a frame");
 }
 
 #[test]
-fn glass_foreground_inherits_active_silhouette_clip() {
+fn chip_glass_is_ordered_after_the_frame_content_and_inside_the_frame() {
+    let style = GlassStyle { tint: [0.2, 0.2, 0.2, 1.0], alpha: 0.6, blur_px: 8.0, saturate: 1.1 };
+    let chip = [FRAME[0] + 8.0, FRAME[1], 80.0, 28.0];
     let mut builder = SceneBuilder::default();
-    builder.begin_silhouette_clip(&[LayoutRect::new(0.0, 0.0, 40.0, 20.0), LayoutRect::new(0.0, 20.0, 100.0, 80.0)]);
-    let style = GlassStyle { tint: [0.1, 0.1, 0.1, 1.0], alpha: 0.5, blur_px: 8.0, saturate: 1.2 };
-    let glass = builder.push_glass([0.0, 0.0, 40.0, 20.0], 0.0, style);
-    builder.begin_glass_content(glass);
-    assert_eq!(builder.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.len()), Some(2));
+    builder.push_scissor(frame_rect());
+    builder.push_solid(FRAME, [0.1, 0.1, 0.1, 1.0]);
+    builder.pop_scissor();
+    let region = builder.push_glass(chip, 0.0, style);
+    builder.begin_glass_content(region);
+    builder.push_solid(chip, [1.0, 1.0, 1.0, 1.0]);
+    builder.end_glass_content();
+    let packet = Scene::finish(builder, finish_params([500.0, 400.0], 1.0)).expect("finish");
+    let content = packet.batches.iter().position(|draw_batch| draw_batch.pipeline == PipelineKind::UiQuad && draw_batch.layer_state.foreground_of.is_none()).expect("content batch");
+    let glass = packet.batches.iter().position(|draw_batch| draw_batch.pipeline == PipelineKind::Glass).expect("chip glass batch");
+    let chip_content = packet.batches.iter().position(|draw_batch| draw_batch.pipeline == PipelineKind::UiQuad && draw_batch.layer_state.foreground_of == Some(region)).expect("chip foreground batch");
+    assert!(content < glass, "chip glass is ordered after the content it blurs");
+    assert!(content < chip_content, "chip foreground is ordered after the frame content");
+    assert_eq!(packet.glass_instances.len(), 1);
+    assert!(inside(packet.glass_instances[0].rect, FRAME), "the chip glass rect lies inside the frame rect");
+    assert!(packet.glass_instances[0].params[1] < 1.0 && packet.glass_instances[0].params[2] > 0.0, "the chip is translucent and blurs the content behind it");
 }
 
 #[test]
@@ -81,7 +97,7 @@ fn glass_scissor_inherits_foreground_tag() {
     assert_eq!(scissor_layer.foreground_of, Some(glass));
 }
 
-//#endregion SilhouetteClipTests
+//#endregion FrameTests
 
 #[test]
 fn push_scissor_splits_layers() {
@@ -188,17 +204,6 @@ fn finish_merges_layers_that_return_to_an_identical_clip_state() {
     let quad_batches: Vec<&DrawBatch> = packet.batches.iter().filter(|draw_batch| draw_batch.pipeline == PipelineKind::UiQuad).collect();
     assert_eq!(quad_batches.len(), 1);
     assert_eq!(quad_batches[0].instance_range.1, 2);
-}
-
-#[test]
-fn finish_computes_a_mask_range_for_a_silhouette_clipped_batch() {
-    let mut builder = SceneBuilder::default();
-    builder.begin_silhouette_clip(&[LayoutRect::new(0.0, 0.0, 40.0, 40.0)]);
-    builder.push_solid([1.0, 1.0, 2.0, 2.0], [1.0, 0.0, 0.0, 1.0]);
-    builder.end_silhouette_clip();
-    let packet = Scene::finish(builder, finish_params([100.0, 100.0], 1.0)).expect("finish");
-    let quad_batch = packet.batches.iter().find(|draw_batch| draw_batch.pipeline == PipelineKind::UiQuad).expect("quad batch");
-    assert!(quad_batch.mask_range.is_some());
 }
 
 #[test]

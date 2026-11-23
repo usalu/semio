@@ -105,7 +105,7 @@ async fn part_field_mutations_inverse_law() {
     (assert_mutation_inverse_law(&with_part, &change_part_anchor("p1".into(), Puzzle5dPartAnchor::Derived))).await;
     (assert_mutation_inverse_law(&with_part, &add_part_grip::<Puzzle5dMutation>("p1".into(), Puzzle5dGrip { id: "g2".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }, None))).await;
     (assert_mutation_inverse_law(&with_part, &remove_part_grip("p1".into(), "g1".into()))).await;
-    (assert_mutation_inverse_law(&with_part, &replace_part_grip("p1".into(), "g1".into(), Puzzle5dGrip { id: "g1".into(), grip_kind: Some("k".into()), grip_2d: Default::default(), grip_3d: Default::default() }))).await;
+    (assert_mutation_inverse_law(&with_part, &replace_part_grip::<Puzzle5dMutation>("p1".into(), "g1".into(), Puzzle5dGrip { id: "g1".into(), grip_kind: Some("k".into()), grip_2d: Default::default(), grip_3d: Default::default() }))).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -143,7 +143,7 @@ async fn document_scalar_mutations_inverse_law() {
     (assert_mutation_inverse_law(&base, &connect_kind_compatibility::<Puzzle5dMutation>("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip, None))).await;
     let connected = protocol::apply_diff_cold(connect_kind_compatibility::<Puzzle5dMutation>("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip, None).diff(&base).diff(), &base).expect("valid mutation diff");
     (assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into()))).await;
-    (assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle5dKindCatalogs::default())))).await;
+    (assert_mutation_inverse_law(&base, &replace_kind_catalogs::<Puzzle5dMutation>(Some(Puzzle5dKindCatalogs::default())))).await;
 }
 
 #[test]

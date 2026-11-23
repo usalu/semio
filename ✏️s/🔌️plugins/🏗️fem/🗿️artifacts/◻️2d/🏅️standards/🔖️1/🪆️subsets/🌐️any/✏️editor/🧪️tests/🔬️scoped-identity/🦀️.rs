@@ -24,6 +24,7 @@ fn layers_json(document: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot)
 
 #[test]
 fn scoped_entity_identity_prevents_cross_kind_and_case_collisions() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let (fixture, mut value) = identity_fixture();
     let collision = &fixture["collision"];
     value.materials[0].id = collision["materialId"].as_str().expect("shared identity").into();

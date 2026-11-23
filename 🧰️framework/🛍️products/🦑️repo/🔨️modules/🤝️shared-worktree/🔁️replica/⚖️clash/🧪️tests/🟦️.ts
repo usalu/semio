@@ -312,6 +312,25 @@ posixTest("the 02:13 incident: an edit written on a stale view never replaces ne
  expect(events(fleet,"stale-base").length).toBeGreaterThan(0);
 },240_000);
 
+posixTest("an edit written on a stale view that changes other lines than the newer fleet content is merged onto it and published",async()=>{
+ const fleet=await fleetOf(),[m0,m1,m2]=fleet.machines as [ChaosMachineV1,ChaosMachineV1,ChaosMachineV1];
+ put(m0,"merge-base.txt","one\ntwo\nthree\nfour\nfive\n");
+ await sync(fleet);
+ put(m0,"merge-base.txt","ONE\ntwo\nthree\nfour\nfive\n");
+ await publish(m0);
+ for(const who of [m2]){await closeReplicaV1(who.replica!);who.options={...who.options,concurrentEditMilliseconds:200};who.replica=await openReplicaV1(who.options,event=>who.events.push(event));}
+ await Bun.sleep(400);
+ const later=new Date(Date.now()+3_600_000);
+ put(m2,"merge-base.txt","one\ntwo\nthree\nfour\nFIVE\n");
+ utimesSync(at(m2,"merge-base.txt"),later,later);
+ expect((await publishOnceV1(m2.replica!)).published).toBe(0);
+ await sync(fleet);
+ for(const who of [m0,m1,m2])expect(text(who,"merge-base.txt")).toBe("ONE\ntwo\nthree\nfour\nFIVE\n");
+ expect(events(fleet,"merged").some(event=>event.path==="merge-base.txt")).toBe(true);
+ expect(events(fleet,"stale-base").some(event=>event.path==="merge-base.txt")).toBe(false);
+ expect(lostFiles(m2).some(file=>file.endsWith("merge-base.txt"))).toBe(true);
+},240_000);
+
 posixTest("a simultaneous edit of the same base still resolves by modification time and keeps the other in lost",async()=>{
  const fleet=await fleetOf(),[m0,m1,m2]=fleet.machines as [ChaosMachineV1,ChaosMachineV1,ChaosMachineV1];
  put(m0,"both.txt","start\n");

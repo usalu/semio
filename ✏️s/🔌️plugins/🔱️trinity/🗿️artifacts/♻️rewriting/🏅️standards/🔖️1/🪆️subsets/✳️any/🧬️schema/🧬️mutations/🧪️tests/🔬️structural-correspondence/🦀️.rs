@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::*;
 use protocol::SemanticMutation;
 
 /// 🧱️ Checks that one direct mutation owner agrees with its derived descriptor, payload schema, language surfaces and the JSON catalog.
-fn assert_direct_owner_correspondence<T>(mutation_root: &std::path::Path, descriptor_kinds: &[&str], vectors: &[semio_framework_pack_json::Value], kind: &str, aggregate_variant: &str, directory: &str, binary_tag: T) where semio_framework_pack_json::Value: PartialEq<T>, T: std::fmt::Debug {
+fn assert_direct_owner_correspondence(mutation_root: &std::path::Path, descriptor_kinds: &[&str], vectors: &[semio_framework_pack_json::Value], kind: &str, aggregate_variant: &str, directory: &str, binary_tag: u64) {
         let owner = mutation_root.join(directory);
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
@@ -14,20 +14,20 @@ fn assert_direct_owner_correspondence<T>(mutation_root: &std::path::Path, descri
         assert!(descriptor_kinds.contains(&kind), "direct owner {directory} must have a derived descriptor");
         assert!(source.contains("protocol::MutationKind"), "direct owner {directory} must implement its payload");
         assert!(!source.contains(concat!("::", "mutation::")), "direct owner {directory} must not route through a nested mutation module");
-        assert_eq!(descriptor["semanticKind"], kind);
-        assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
-        assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
-        assert_eq!(descriptor["textOpcode"], kind);
-        assert_eq!(descriptor["binaryTag"], binary_tag);
-        assert_eq!(descriptor["invertibility"], "explicit-mutation");
-        assert_eq!(descriptor["diffParticipation"], "detect");
-        assert_eq!(descriptor["composition"], "atomic");
+        assert_eq!(descriptor["semanticKind"].as_str(), Some(kind));
+        assert_eq!(descriptor["aggregateVariant"].as_str(), Some(aggregate_variant));
+        assert_eq!(descriptor["payloadSchema"].as_str(), Some("🧬️schema/🔣️.json"));
+        assert_eq!(descriptor["textOpcode"].as_str(), Some(kind));
+        assert_eq!(descriptor["binaryTag"].as_u64(), Some(binary_tag));
+        assert_eq!(descriptor["invertibility"].as_str(), Some("explicit-mutation"));
+        assert_eq!(descriptor["diffParticipation"].as_str(), Some("detect"));
+        assert_eq!(descriptor["composition"].as_str(), Some("atomic"));
         assert_eq!(descriptor["requiredLanguageSurfaces"], semio_framework_pack_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
         assert!(descriptor["owner"].as_str().expect("descriptor owner").ends_with(&format!("/🧬️mutations/{directory}")));
         assert!(!descriptor["outcomeClasses"].as_array().expect("descriptor outcome classes").is_empty());
         let payload_schema_source = std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct JSON payload schema");
         let payload_schema: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&payload_schema_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("direct payload schema must be valid JSON");
-        assert_eq!(payload_schema["title"], aggregate_variant);
+        assert_eq!(payload_schema["title"].as_str(), Some(aggregate_variant));
         {
             let surface_source = std::fs::read_to_string(owner.join("🟦️.ts")).expect("direct mutation surface");
             assert!(surface_source.contains(kind) || surface_source.contains(aggregate_variant));
@@ -48,7 +48,7 @@ fn assert_direct_owner_correspondence<T>(mutation_root: &std::path::Path, descri
             let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️.rs")).expect("direct mutation surface");
             assert!(surface_source.contains(kind) || surface_source.contains(aggregate_variant));
         }
-        assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory), "direct owner {directory} must correspond to the JSON catalog");
+        assert!(vectors.iter().any(|vector| vector["mutationId"].as_str() == Some(kind) && vector["mutationDirectoryName"].as_str() == Some(directory)), "direct owner {directory} must correspond to the JSON catalog");
 }
 
 #[test]

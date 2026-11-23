@@ -25,6 +25,9 @@
         "capHostSharePercent": 3,
         "minimumCapBytes": 1073741824,
         "enforceTickMilliseconds": 30000,
+        "incrementBytes": 2147483648,
+        "transientLeaseMs": 1800000,
+        "admissionBudgetMs": 8000,
         "highWatermark": 0.9,
         "lowWatermark": 0.75,
         "partition": {
@@ -157,6 +160,22 @@
         "status": {
           "en": "Cache store {root}: {objects} objects, {usedGib} GiB of {capGib} GiB cap.",
           "de": "Cache-Speicher {root}: {objects} Objekte, {usedGib} GiB von {capGib} GiB Grenze."
+        },
+        "statusCap": {
+          "en": "Cap in force {effectiveGib} GiB (declared {capGib} GiB): collection from {highGib} GiB in steps of {incrementGib} GiB down to {lowGib} GiB, writes refused above the cap; transient inputs: {transient} leased or expired blobs, lease {leaseMinutes} min.",
+          "de": "Wirksame Grenze {effectiveGib} GiB (deklariert {capGib} GiB): Bereinigung ab {highGib} GiB in Schritten von {incrementGib} GiB bis auf {lowGib} GiB, Schreiben über der Grenze abgelehnt; flüchtige Eingaben: {transient} geleaste oder abgelaufene Blobs, Lease {leaseMinutes} Min."
+        },
+        "statusCollection": {
+          "en": "Last collection {age} min ago left {gib} GiB.",
+          "de": "Letzte Sammlung vor {age} Min. ließ {gib} GiB übrig."
+        },
+        "statusNoCollection": {
+          "en": "No finished collection recorded.",
+          "de": "Keine abgeschlossene Sammlung verzeichnet."
+        },
+        "capRefused": {
+          "en": "The cache store is over its cap ({usedGib} GiB of {capGib} GiB) and the collection freed too little in time; this write is refused and the caller carries on without the cache.",
+          "de": "Der Cache-Speicher liegt über seiner Grenze ({usedGib} GiB von {capGib} GiB) und die Bereinigung gab rechtzeitig zu wenig frei; dieses Schreiben wird abgelehnt und der Aufrufer arbeitet ohne Cache weiter."
         },
         "statusPartition": {
           "en": "Partition {partition}: {usedPercent}% used, {freeGib} GiB free (collection from {highPercent}% down to {lowPercent}%, writes and builds refused from {criticalPercent}%).",

@@ -1,6 +1,5 @@
 use semio_ui_tui_frame::chrome::shell;
 use semio_ui_tui_frame::chrome::window_chip_layout;
-use semio_ui_tui_frame::chrome::ChromeMode;
 use semio_ui_tui_frame::chrome::ChromeState;
 use semio_ui_tui_frame::chrome::FooterState;
 use semio_ui_tui_frame::chrome::NavbarState;
@@ -66,8 +65,7 @@ fn active_chip(tui: &Tui, node: NodeId) -> (Rect, Pos) {
     let NodeContent::Chrome(ChromeState::Window(state)) = &tui.scene.node(node).content else { unreachable!() };
     let layout = window_chip_layout(state, rect);
     let (group, tab) = layout.groups.iter().find_map(|group| group.tabs.iter().find(|tab| tab.kind == TabKind::Tab && tab.index == state.active_stack_tab).map(|tab| (group, tab))).expect("active tab visible");
-    let y = if layout.mode == ChromeMode::Compact { rect.y } else if group.corner.is_top() { rect.y } else { rect.y + rect.height - 3 };
-    (Rect::new(tab.x, y, tab.interior_width + 2, if layout.mode == ChromeMode::Compact { 1 } else { 3 }), Pos { x: tab.x + 1, y: layout.text_y(group.corner, rect) })
+    (layout.chip_rect(group.corner, tab, rect), Pos { x: tab.x + 1, y: layout.text_y(group.corner, rect) })
 }
 
 #[test]
@@ -121,7 +119,7 @@ fn window_drag_fixture_previews_the_exact_committed_active_tab_and_seam() {
         tui.dispatch(&pointer(MouseKind::Down(MouseButton::Left), grip));
         let area = tui.scene.rect(target);
         let placement = case.get("placement").and_then(Value::as_str).unwrap();
-        let mut pos = match placement {
+        let pos = match placement {
             "top-left" => Pos { x: area.x + 12.min(area.width - 2), y: area.y + 1 },
             "top-right" => Pos { x: area.x + area.width - 2, y: area.y + u16::from(area.height > 3) },
             "bottom-left" => Pos { x: area.x + 1, y: area.y + area.height - 2 },
@@ -144,7 +142,6 @@ fn window_drag_fixture_previews_the_exact_committed_active_tab_and_seam() {
             }
             _ => unreachable!(),
         };
-        if case.get("cap").and_then(Value::as_bool).unwrap_or(false) { pos.y = area.y; }
         let proposed = tui.dispatch(&pointer(MouseKind::Drag(MouseButton::Left), pos));
         if placement == "overflow-next" {
             assert!(proposed.iter().any(|(_, signal)| matches!(signal, WidgetSignal::WindowDockPreview { placement: semio_ui_tui_core::docking::DockPlacement::Corner(semio_ui_tui_core::docking::WindowStackCorner::TopLeft), .. })), "{name} occupied arrow corner");
@@ -202,7 +199,7 @@ fn proposed_tab_dimensions_match_independent_taffy_sizing() {
         let label_cells = unicode_width::UnicodeWidthStr::width("Source") as f32;
         let mut oracle = TaffyTree::<()>::new();
         let child = oracle.new_leaf(Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::length(label_cells + 8.0), height: taffy::style::Dimension::length(if compact { 1.0 } else { 3.0 }) },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(label_cells + 8.0), height: taffy::style::Dimension::length(1.0) },
             ..Default::default()
         }).unwrap();
         oracle.compute_layout(child, taffy::geometry::Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(24.0) }).unwrap();

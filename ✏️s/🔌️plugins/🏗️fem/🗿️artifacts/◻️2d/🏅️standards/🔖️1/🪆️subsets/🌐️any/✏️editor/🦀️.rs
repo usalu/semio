@@ -188,6 +188,11 @@ mod result_json_and_ports;
 use result_json_and_ports::{config_result_display, fem2d_dof, fem2d_dofs, results_map_json};
 pub use result_json_and_ports::{fem2d_geometry_in_port, fem2d_io, fem2d_results_out_port};
 
+#[macro_use]
+#[path = "../../../../../../../🧩️receiving/✉️pack-envelope/🦀️.rs"]
+mod fem_pack_envelope;
+fem_pack_envelope_decode_owner_bundle!(fem2d_envelope_decode_owner_bundle, fem_pack_envelope, Fem2dSnapshot, Fem2dMutation);
+
 #[path = "🎛️play-app-editor/🦀️.rs"]
 mod play_app_editor;
 pub use play_app_editor::Fem2dPlayApp;

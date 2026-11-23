@@ -1,0 +1,141 @@
+{
+ "workers": {
+  "PW-01": {
+   "changed": [
+    "Found: generator only, no catalog file, no row, the worker's candidates lost with `🗑️generated`. Rebuilt the three candidates with `run.ts` (norway-maple 92 s, field-maple 24 s, sycamore-maple 200 s).",
+    "`🧰️scripts/PW-01/asset.ts`: new `unitRotation` pass over every volume solid (rotations renormalised and rounded to six decimals). Before: `sycamore-maple` failed `volume-transform` (\"th-tp-shade-1\" at 1:100, squared norm 0.9988).",
+    "Shipped all three with `run.ts --ship` (catalog files and rows), after the check CLI printed ✓ on the candidates; the shipped files of `norway-maple` and `field-maple` (changed rounding) were checked again as catalog files."
+   ],
+   "imperfect": [
+    "The cross-scale rule (`volumes-cross-scale`: the boundary of each coarser body within about seven smallest features of the next finer one for 95 % of its length) is not met: the scales are separate designs whose crown lobes or tiers sit at different places. This needs a redesign of the coarse crowns (the same silhouette lobes at every scale, as `PW-03` and `PW-04` did) and was not done by the finisher. Affects all three maples (9 or 7 findings each).",
+    "`norway-maple` and `field-maple`: one group of body solids at 1:100 is 33.5 mm away from the rest (`volumes-connected`, \"r4-2\" from \"r4-3\")."
+   ]
+  },
+  "PW-02": {
+   "changed": [
+    "Found: shipped files invalid (`validateAsset` 4, 10 and 5 issues: the coarse scales and the symbol were up to 0.6 m narrower than `dimensions`; check CLI ✗).",
+    "`🧰️scripts/PW-02/kit.ts`: `buildModel` takes a `Stretch` (lobe centres moved away from the stem axis per side and up from the lowest ring); `buildAsset` fits 1:100, 1:200 and 1:500 to the box of the 1:50 body in twelve rounds (residual 0 mm on all five faces, stretch factors 0.965 to 1.068, written to the build log).",
+    "`🧰️scripts/PW-02/european-beech.ts`: 1:500 gets a bridging ring at 25.4 m and the top lobe at 27.6 m (the top lobe was a separate island 0.55 m above the crown, so the symbol outline missed it: symbol height 24.9 m against 29.6 m).",
+    "`🧰️scripts/PW-02/build.ts`: `--candidate` writes only `🗑️generated/PW-02/<id>/🔣️.json`.",
+    "Rebuilt and shipped all three (catalog files and rows)."
+   ],
+   "imperfect": [
+    "The cross-scale rule (`volumes-cross-scale`: the boundary of each coarser body within about seven smallest features of the next finer one for 95 % of its length) is not met: the scales are separate designs whose crown lobes or tiers sit at different places. This needs a redesign of the coarse crowns (the same silhouette lobes at every scale, as `PW-03` and `PW-04` did) and was not done by the finisher. Affects all three (7 to 9 findings each); the ring heights, lobe counts and the per-scale jitter of `kit.ts` differ between the scales by design.",
+    "`horse-chestnut` and `common-ash`: the final whole-asset validation is two runs (with print checks without volume rules, and with volume rules without print checks) because one combined run took more than 15 minutes on the shared host; `european-beech` has the combined run.",
+    "The beech text of the 1:500 body still says \"seven rings\" (there are eight with the bridging ring)."
+   ]
+  },
+  "PW-03": {
+   "changed": [
+    "Nothing in the assets, rows or generators: the three assets were found complete and proven. The placeholders of the report above (`RESULTS_PLACEHOLDER`, `TESTS_PLACEHOLDER`, `PREVIEWS_PLACEHOLDER`) are answered by this section."
+   ],
+   "imperfect": [
+    "`crab-apple` shows a small rectangular see-through opening in the upper crown at 1:500 and 1:200 (front view)."
+   ]
+  },
+  "PW-04": {
+   "changed": [
+    "Nothing in the assets, rows or generators. The worker's report was a stub; this section is the report."
+   ],
+   "imperfect": [
+    "`honey-locust`: one cross-scale finding (1:500 against 1:200 in the elevation, IoU 0.888, boundary distance p95 at least 712.5 mm against at most 543.8 mm): the merged crown masses of 1:500 close the sky gaps of 1:200.",
+    "`honey-locust` reads thin: flat sprays on bare limbs and one single cluster on a long bare leader above the crown, at every scale."
+   ]
+  },
+  "PW-05": {
+   "changed": [
+    "Found: generator only, no catalog file, no row. Rebuilt the three candidates with `assemble.ts`.",
+    "`🧰️scripts/PW-05/assemble.ts` (`symbolsOf`): the true-extent symbol draws every outer ring of the 1:500 crown outline (`crown`, `crown-2`, …) instead of the first ring only. Before: `black-locust` failed `symbol-extent-front-height` (17.6 m against 19.8 m) and `symbol-extent-elevation-width` (10.2 m against 12.7 m) because its open crown has separate islands in the views.",
+    "Shipped all three with `assemble.ts <id> --ship`."
+   ],
+   "imperfect": [
+    "`tulip-tree`: one cross-scale finding (1:500 against 1:200 in the front, IoU 0.981, p95 at least 712.5 mm against at most 543.8 mm).",
+    "All three: 1:50 and 1:100 show nearly the same detail (foliage clouds at the branch ends over a darker core, no leaf texture)."
+   ]
+  },
+  "PW-06": {
+   "changed": [
+    "Found: generator only, no catalog file, no row. Rebuilt the three candidates.",
+    "`🧰️scripts/PW-06/plant-kit.ts` (`symbolOf`): the symbol draws every outer ring of the 1:500 crown outline. Before: `black-alder` failed `symbol-extent-front-height` and `symbol-extent-elevation-height` (14.9 m against 20 m).",
+    "`🧰️scripts/PW-06/black-alder.ts`: the vertical semi-axes of the 1:500 rings s3, s4, s5 are 1.3, 1.27 and 1.2 m (were 1.2, 1.15, 1.1), so the rings overlap. Before: print check `range-end-feature` (the stem seen through a sliver between two rings was 0.196 mm wide at 1:350, below 0.2 mm).",
+    "Shipped all three with `<id>.ts --catalog`. The table and `RESULTS` placeholder of the report above are answered by this section."
+   ],
+   "imperfect": [
+    "`rowan`: one finding, the 1:50 plan drawing against the body (p95 45.0 mm against 30.0 mm).",
+    "`hawthorn`: 12 findings: the body is not one connected object at any scale, the plan drawings differ from the body at 1:50, 1:100 and 1:200, cross-scale at 1:100 and 1:200, three limb members outside the body in the 1:500 plan. The plan shows an open ring between the centre and the outer crown.",
+    "`black-alder`: 15 findings: cross-scale at every scale, foliage mass solids and one limb member outside the body silhouette, the 1:500 body not connected, the 1:50 plan drawing."
+   ]
+  },
+  "PW-07": {
+   "changed": [
+    "Found: shipped, hard gates clean, `checkVolumes` 8 (spruce), 14 (larch), 1 (cedar).",
+    "`🧰️scripts/PW-07/whorled.py`: `spray_member` and `covered` lay the structural member of every spray bone inside the body of its scale (from the stem axis into the tier; the highest start and longest reach whose three projections stay inside the body outlines). Before: members along the straight bone lay up to 215 mm outside the body (`volumes-structure-coverage`, 2 findings on the spruce, 4 on the larch).",
+    "`whorled.py`: the 1:500 thermal solid of the upper bark is the true stem profile (a three-point revolve) instead of a thin capsule, so the bark surface of 1:500 is measured (`volumes-thermal-coverage` total: 39 % and 44 % deviation before); the 1:500 crown profile is simplified until it has at most 34 points (`volumes-monotonic`).",
+    "`whorled.py`, `atlas_cedar.py`: `--candidate` writes only `🗑️generated/PW-07/<id>/🔣️.json`.",
+    "`🧰️scripts/PW-07/atlas_cedar.py`: `ROOT_EXPOSED = 0.22`: the buttress roots count with their exposed share in the lower bark area (23.41 m² instead of 28.67 m²; the product measures 23.414 m²); the thermal assumption text says so in both languages.",
+    "Rebuilt and shipped all three (catalog files and rows)."
+   ],
+   "imperfect": [
+    "`atlas-cedar` is now clean (`checkVolumes` 0).",
+    "The cross-scale rule (`volumes-cross-scale`: the boundary of each coarser body within about seven smallest features of the next finer one for 95 % of its length) is not met: the scales are separate designs whose crown lobes or tiers sit at different places. This needs a redesign of the coarse crowns (the same silhouette lobes at every scale, as `PW-03` and `PW-04` did) and was not done by the finisher. `norway-spruce`: 4 findings (1:100 against 1:50 in all views, measured 112.5 to at least 142.5 mm against 108.8 mm; 1:200 against 1:100 in the plan). `european-larch`: 7 findings (the hanging shoots, sprays and upswept tips of 1:50 are not at 1:100 and 1:200, the 1:500 crown is one envelope over the open storeys).",
+    "The plans are plain ellipses with a few spray ends: little to read from above."
+   ]
+  },
+  "PW-08": {
+   "changed": [
+    "Found: generator only, no catalog file, no row, report stub. Rebuilt the three candidates with `build.ts`.",
+    "`🧰️scripts/PW-08/shared-geometry.ts` (`fitExtent`): the coarse scales are also stretched in the upper half of the height to the top of the 1:50 body. Before: `english-yew` failed `extent-height` at 1:500 (11.95 m against 12.226 m).",
+    "Shipped all three with `build.ts <id> --publish`."
+   ],
+   "imperfect": [
+    "`italian-cypress` is clean (`checkVolumes` 0).",
+    "`english-yew`: 7 findings (cross-scale 1:100 against 1:50 in all views; structure solids outside the body at 1:50 and 1:100). It is drawn as a few large smooth masses: coarse for 1:50.",
+    "`dawn-redwood`: 8 findings (cross-scale 1:500 against 1:200 in all views; structure solids outside the body at 1:50 and 1:100; total thermal surface at 1:500). It reads as stacked beads on a stick with sky between them: schematic, more a diagram of tiers than the feathery cone of the species."
+   ]
+  },
+  "PW-09": {
+   "changed": [
+    "Found: shipped, hard gates clean, `checkVolumes` 6 (olive), 24 (fig), 11 (stone pine).",
+    "`fig-tree`: the body and the drawings of the shipped file disagreed (IoU 0.69 in the elevation at 1:50, foliage solids about 0.9 m lower than their shapes). Cause: the template `japanese-maple` changed in the catalog between the worker's build (17:17) and now (its volumes were being reworked by another ticket), so the fig carried the 2D of one state and the 3D of another. Rebuilt from the template as it is now.",
+    "`🧰️scripts/PW-09/morph.py` (`inflate`): a solid declared `slender` or `sheet` (the single leaves of the new template) is carried unchanged by the rise of its attached end instead of being thickened (1001 `volumes-slender` issues otherwise); twigs stay where they are, in the volumes and in the drawings.",
+    "`🧰️scripts/PW-09/candidate.sh` (new): build, measure, floors, build as a candidate only. `fig-floors.json` was regenerated from an empty list by `floors.py` (now one floor, the support disc at 1:500; the twelve limb floors of the old template state are no longer needed).",
+    "Shipped `fig-tree` with `build.py fig … --ship` (catalog file and row). `olive-tree` and `stone-pine` are unchanged."
+   ],
+   "imperfect": [
+    "`fig-tree`: 10 findings left (24 before): open load paths of the structure at every scale (the twig members of the foliage bones do not reach the limb members after the per-bone enlargement of stage 1), cross-scale 5, one joint 18.1 mm outside the body. On the sheets the top tier floats above the crown at 1:200 (a gap between the cap and the tier below), the tiers and the serrated leaf outline of the 1:50 plan are still those of a Japanese maple, not the coarse lobed leaves of a fig. This is the weakest asset of the scope.",
+    "`olive-tree`: 6 findings: the shrunk olives are 6 to 26 mm away from what carries them at 1:50, 1:100 and 1:200; the trunk bark area (7.22 m² declared, 8.57 and 10.26 m² measured); one member 80 mm outside the body at 1:200.",
+    "`stone-pine`: 11 findings: limb bark area (18.82 m² declared, 27.37 m² measured), members along the plate axes outside the body at 1:50, 1:200 and 1:500, open load paths at 1:100, 1:200 and 1:500, one group of plates 48 mm from its limb at 1:200.",
+    "The templates `apple-tree` and `scots-pine` also changed in the catalog after the worker's builds (commit of 23:11); `scots-pine` was being edited at 22:50. Olive and stone pine were therefore not rebuilt: a rebuild takes the new template and needs the same generator work as the fig."
+   ]
+  }
+ },
+ "plants": {
+  "norway-maple": "dense, broad, rounded dome on a short stem, scalloped outline; shade core visible in the gaps at 1:200 to 1:50, leaf and samara marks at 1:50; reads as a Norway maple at every scale.",
+  "field-maple": "small rounded dense crown on a short stem, 10 m; clearly the small brother of the other two maples.",
+  "sycamore-maple": "large broad dome, 25 m, heavier and wider than the Norway maple; 1:500 one calm outline.",
+  "horse-chestnut": "massive dense dome, 24 m, large overlapping sprays; the candles are small dots at this size; reads as a horse chestnut.",
+  "european-beech": "wide dense dome on a smooth stem; the top is ragged at 1:200 and 1:100 (separate sprays and bare shoots at the tip), the 1:500 top now joins the crown.",
+  "common-ash": "open, airy, oval crown of separate sprays with the limbs showing, which fits the species; at 1:500 one round spray stands on the tip like a knob.",
+  "japanese-cherry": "vase of steep limbs under a flat-topped cloud of blossom clusters; the best reading asset of the scope.",
+  "saucer-magnolia": "low, wide, multi-stemmed, goblets as small circles on the masses; reads as a magnolia in bloom.",
+  "crab-apple": "low dense dome on a short forked stem with a drooping skirt; small rectangular opening in the upper crown at 1:500 and 1:200.",
+  "ginkgo": "irregular narrow cone of separate clusters on ascending limbs, fan marks at 1:50; reads as a young street ginkgo.",
+  "honey-locust": "open vase of long limbs with flat sprays; thin, and one cluster stands alone on a long bare leader above the crown.",
+  "sweetgum": "regular pyramid of clusters on a straight stem; star marks at 1:50.",
+  "tulip-tree": "tall, narrow, straight stem to a third of the height, foliage clouds over a darker core.",
+  "red-oak": "broad, heavy, rounded crown on a short stout stem with spreading limbs.",
+  "black-locust": "open, irregular crown with separate foliage clouds and bare forks, as the species has.",
+  "rowan": "small oval crown on a slender stem, berry clusters as dots at 1:200 to 1:50; bubbly close up.",
+  "hawthorn": "low, broad, flat-topped dense small tree; the plan has an open ring around the centre.",
+  "black-alder": "narrow cone on a straight stem; the 1:500 reads as stacked tiers.",
+  "norway-spruce": "narrow cone of drooping tiers with upturned ends, sun and shade halves toned; unmistakable.",
+  "european-larch": "thin, widely spaced storeys with the stem showing between them and hanging shoots at 1:50 and 1:100.",
+  "atlas-cedar": "flat needle plates in tiers on ascending limbs with sky between; unmistakable.",
+  "italian-cypress": "slender dark column of overlapping upright sprays; unmistakable at every scale.",
+  "english-yew": "broad dark dome of a few large masses on a short, thick, fluted trunk.",
+  "dawn-redwood": "narrow pyramid on a flared base, but as separate beads on a stick.",
+  "olive-tree": "short, massive, gnarled stem with a broad low crown wider than high; reads as an old olive.",
+  "fig-tree": "broad, low, multi-stemmed dome in tiers; reads as a small multi-stem tree, not specifically as a fig; top tier detached at 1:200.",
+  "stone-pine": "tall bare stem under a flat umbrella of needle plates; unmistakable."
+ }
+}

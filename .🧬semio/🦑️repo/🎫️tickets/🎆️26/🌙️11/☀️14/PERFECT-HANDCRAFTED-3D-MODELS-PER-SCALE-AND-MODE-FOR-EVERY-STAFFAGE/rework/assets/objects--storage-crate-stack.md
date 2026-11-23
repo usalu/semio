@@ -1,0 +1,10 @@
+# objects/storage-crate-stack
+
+## 2026-11-22 23:00 — fittings rework pass (coarse scales per feature, measured rules proven)
+
+Full report: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/rework-fittings.md`. Final proof: `r3-validate.ts objects/storage-crate-stack --catalog-only --volumes` → `VALID … schema 0, validateAsset 0, checkVolumes 0`; check CLI `✓ storage-crate-stack (1/1)`.
+
+- Finding: the front drawing (a longitudinal section) of crates 3, 4, 5 was flat while the clips turn these crates about the vertical: up to 8 mm wrong on paper. Crate 2 has the same defect; the rule misses it only because its nine clip samples fall beside the turn of crate 2.
+- Redrawn (`K/rework-storage-crate-stack-front-solids.py`, roots: `representations` of all four scales): every front shape of crates 2 to 5 is a real part of the moulding as an extruded `solid` in the crate frame: the end wall beyond the section plane as its own face with the open hand hole (`sweep: "v"`), its foot, the rim band as the full 0.60 x 0.40 m block, floor, both long walls with the draft (`zTip`), the stacking channel with foot and ledge, the flanges. At rest the picture is the section drawn before; while a crate turns, front, side and plan now agree (seen at `unload-stack` t 1.75 s: crates 4 and 5 show their 0.6 m side in the front view). The separate cut far skirt (3 mm sliver) is merged into the rim block: as its own shape it left a 0.12 mm white gap that the print rule refuses. Crate 1 is fixed and keeps its flat section. Volumes untouched.
+- Sheets opened: candidate 2D 1:50 at `unload-stack` t 1.75 s, 2D 1:100 default, 2D 1:500 default; the placed front paths of crates 2 and 3 at 1:100 were read from the SVG (hand hole 120 x 35 mm, mirror of the turned crate). Rendered but not opened: 2D 1:50 `half`. Not rendered: 1:200, the 3D sheets (volumes unchanged).
+- Imperfect: a section through a crate that stands at 90 degrees would cut other walls than the drawn parts show; the solids give the true projection of the parts, not a new cut. Crate 1 flat by design.

@@ -1,0 +1,47 @@
+diff --git "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmp2qa7rzej\\b.lf" "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmp2qa7rzej\\o.lf"
+index f985bc0..3bda97b 100644
+--- "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmp2qa7rzej\\b.lf"
++++ "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmp2qa7rzej\\o.lf"
+@@ -78,4 +78,7 @@ for(const[kind,entry]of Object.entries(interaction.cursors)){const local=path.jo
+ const imageFiles=new Map();
+ for(const frame of batch.frames)for(const entry of frame.media){if(entry.body_image){const local=path.resolve(entry.body_image);if(!local.startsWith(root+path.sep))throw Error("Presentation body images must stay inside the workspace");const key="/frame-image/"+imageFiles.size;imageFiles.set(key,local);entry.body_image="http://presentation.local"+key}}
++const posterUrls={};
++for(const [scene,poster] of Object.entries(contract.posters??{})){const local=path.resolve(poster.file);if(!local.startsWith(root+path.sep))throw Error("Presentation posters must stay inside the workspace");await fs.access(local).catch(()=>{throw Error("Missing poster image for "+scene+": "+local)});const key="/frame-image/"+imageFiles.size;imageFiles.set(key,local);posterUrls[scene]="http://presentation.local"+key}
++contract.posters=posterUrls;
+ const mime=file=>({".svg":"image/svg+xml",".woff2":"font/woff2",".woff":"font/woff",".ttf":"font/ttf",".png":"image/png",".jpg":"image/jpeg",".webp":"image/webp"}[path.extname(file)]??"application/octet-stream");
+ sources.add(path.join(root,"package.json"));sources.add(path.join(root,"bun.lock"));
+@@ -130,5 +133,5 @@ try{
+   };
+   const outputs=[],metadata=[];
+-  let page,errors,down=false;
++  let page,errors,down=false,previous=null;
+   for(let index=0;index<batch.frames.length;index++){
+     if(process.exitCode===130)throw Error("Presentation browser rendering cancelled");
+@@ -138,5 +141,13 @@ try{
+     down=false;
+     await page.mouse.move(1610,910);
+-    await page.evaluate(value=>window.semioPresentation.render(value,true),frame);
++    if(previous?.cursor?.pressed&&previous.cursor.point){
++      await page.evaluate(value=>window.semioPresentation.render(value,true),previous);
++      await page.clock.runFor(0);
++      await page.mouse.move(previous.cursor.point[0],previous.cursor.point[1]);
++      await page.mouse.down();down=true;
++      await page.evaluate(()=>{window.semioPresentation.pointerEvents.length=0});
++      if(!frame.cursor?.pressed&&JSON.stringify(previous.hierarchy.opened_path)!==JSON.stringify(frame.hierarchy.opened_path)){await page.mouse.up();down=false}
++    }
++    await page.evaluate(([value,reset])=>window.semioPresentation.render(value,reset),[frame,!down]);
+     await page.evaluate(async()=>{await document.fonts.ready;await Promise.all([...document.images].map(image=>image.decode().catch(()=>{})))});
+     await page.clock.runFor(0);
+@@ -145,4 +156,5 @@ try{
+     if(point)await page.mouse.move(point[0],point[1]);else await page.mouse.move(1610,910);
+     if(frame.cursor?.pressed&&!down){await page.mouse.down();down=true}else if(!frame.cursor?.pressed&&down){await page.mouse.up();down=false}
++    previous=frame;
+     await page.clock.runFor(frame.transition_elapsed??1000);
+     await finishIncidentalTransitions(page);
+@@ -188,5 +200,5 @@ try{
+           panes:[...strip.children].filter(pane=>pane.hasAttribute("data-layered-pane")).map(pane=>({id:pane.getAttribute("data-layered-pane"),rect:rect(pane),inert:pane.inert,opened:pane.hasAttribute("data-opened")}))};
+       });
+-      return{hierarchy:{opened_path:JSON.parse(document.getElementById("app").getAttribute("data-presentation-opened-path")),revealed_path:JSON.parse(document.getElementById("app").getAttribute("data-presentation-revealed-path")),pressed:document.getElementById("app").hasAttribute("data-presentation-pressed")},footer_ancestors:[...document.querySelectorAll("[id^=\"footer:path:\"]")].map(element=>({id:element.id,rect:rect(element),label:element.textContent})),layers,pointer_events:window.semioPresentation.pointerEvents.splice(0),menu:menuInfo,navbar:rect(document.querySelector("[data-slot=navbar]")),footer:rect(document.querySelector("[data-slot=footer]")),chrome:{ancestors:[...document.querySelectorAll("#footer\\:root,[id^=\"footer:path:\"]")].map(element=>({id:element.id,rect:rect(element)})),energy:rect(document.getElementById("navbar:energy")),menu_rect:rect(document.querySelector("[data-presentation-menu]")),range:rect(document.getElementById("footer:range")),treeRows},hovered,windows:[...document.querySelectorAll("[data-presentation-window]")].map(stack=>{
++      return{hierarchy:{opened_path:JSON.parse(document.getElementById("app").getAttribute("data-presentation-opened-path")),revealed_path:JSON.parse(document.getElementById("app").getAttribute("data-presentation-revealed-path")),pressed:document.getElementById("app").hasAttribute("data-presentation-pressed")},footer_ancestors:[...document.querySelectorAll("[id^=\"footer:path:\"]")].map(element=>({id:element.id,rect:rect(element),label:element.textContent})),layers,pointer_events:window.semioPresentation.pointerEvents.splice(0),menu:menuInfo,navbar:rect(document.querySelector("[data-slot=navbar]")),footer:rect(document.querySelector("[data-slot=footer]")),chrome:{ancestors:[...document.querySelectorAll("#footer\\:root,[id^=\"footer:path:\"]")].map(element=>({id:element.id,rect:rect(element)})),energy:rect(document.getElementById("navbar:energy")),menu_rect:rect(document.querySelector("[data-presentation-menu]")),range:rect(document.getElementById("footer:range")),treeRows},posters:[...document.querySelectorAll("[data-presentation-poster]")].map(image=>{const owner=image.closest("[data-layered-card],[data-presentation-window]");return{reference:image.getAttribute("data-presentation-poster"),owner:owner?.getAttribute("data-layered-card")??owner?.getAttribute("data-presentation-window")??null,rect:rect(image),natural:[image.naturalWidth,image.naturalHeight],decoded:image.complete&&image.naturalWidth>0}}),empty_cards:[...document.querySelectorAll("[data-presentation-empty-card]")].map(element=>element.getAttribute("data-presentation-empty-card")),hovered,windows:[...document.querySelectorAll("[data-presentation-window]")].map(stack=>{
+         const title=stack.querySelector("[data-slot=window-chrome-chip-cap]"),chip=title.querySelector("[data-presentation-title-chip]"),name=chip.querySelector(":scope > span[id]"),control=chip.querySelector("[data-slot=fullscreen]"),body=stack.querySelector("[data-slot=window-chrome-body-surface]"),ink=getComputedStyle(chip),glass=getComputedStyle(body),border=stack.querySelector("[data-window-silhouette-border]");
+         return{id:stack.getAttribute("data-presentation-window"),rect:rect(stack),title_rect:rect(title),control_rect:rect(control),control_text:control.textContent,control_icons:icons(control),control_count:stack.querySelectorAll("[data-slot=fullscreen]").length,title_chip_rect:rect(chip),title_chip_background:ink.backgroundColor,title_name_rect:rect(name),title_text:name.textContent,control_icon_rect:rect(control.querySelector("[data-presentation-icon] svg,[data-icon]")),control_aria_label:control.getAttribute("aria-label"),control_in_title_chip:chip.contains(control),title_native_button_count:chip.querySelectorAll("button").length,right_cap_control_count:stack.querySelectorAll("[data-slot=window-chrome-controls] [data-slot=fullscreen]").length,body_surface_rect:rect(body),content_rect:rect(stack.querySelector("[data-presentation-body]")),content_path:stack.querySelector("[data-window-silhouette-content]")?.style.clipPath,border_segments:[...(border?.querySelectorAll("path")??[])].filter(path=>path.getAttribute("d")).map(path=>({path:path.getAttribute("d"),state:path.getAttribute("data-shared-border-state")??border.getAttribute("data-kind"),color:getComputedStyle(path).stroke})),font_size:ink.fontSize,line_height:ink.lineHeight,padding:ink.paddingLeft,glassbackground:glass.backgroundColor,backdropfilter:glass.backdropFilter,control_background:getComputedStyle(control).backgroundColor,control_color:getComputedStyle(control).color,title_color:ink.color}

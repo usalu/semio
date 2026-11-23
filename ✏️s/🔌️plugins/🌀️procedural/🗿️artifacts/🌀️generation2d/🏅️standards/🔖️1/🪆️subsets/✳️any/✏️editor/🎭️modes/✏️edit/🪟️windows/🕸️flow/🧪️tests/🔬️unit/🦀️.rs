@@ -50,7 +50,7 @@ fn render_paints_the_selection_it_is_handed() {
     let config = config::Generation2dMainWindowConfig::default();
     let session = FlowEvalSession::new();
     let selection = vec!["slider".into(), "rect".into()];
-    let node = render(&document, &config, &session, &selection).expect("empty fixture still renders a node-graph scene");
+    let node = render(&document, &config, &session, &selection, semio_ui_locale::Locale::En).expect("empty fixture still renders a node-graph scene");
     let tree = semio_plugin::built_to_component_tree(node);
     let encoded = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("tree json");
     session.retire_cold();

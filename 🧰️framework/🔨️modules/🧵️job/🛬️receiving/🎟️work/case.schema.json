@@ -12,7 +12,6 @@
     "sameSource",
     "scope",
     "childQuantum",
-    "sourcePlacementWork",
     "sourceWork"
   ],
   "properties": {
@@ -49,13 +48,10 @@
       "const": "base-context-real-current-loan-native-admission-not-host-birth"
     },
     "childQuantum": {
-      "const": 1
-    },
-    "sourcePlacementWork": {
       "const": 2
     },
     "sourceWork": {
-      "const": 3
+      "const": 1
     }
   }
 }

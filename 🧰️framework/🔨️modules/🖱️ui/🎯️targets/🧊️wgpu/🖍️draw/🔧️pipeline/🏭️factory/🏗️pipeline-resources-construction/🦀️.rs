@@ -25,7 +25,7 @@ use vertex_layouts_and_material_depth::{world_vertex_layout, world_instance_layo
 impl PipelineResources {
     pub fn new(device: &gpu_device::Device, queue: &gpu_device::Queue, format: gpu_device::TextureFormat) -> Self {
         let BaseResources { world_encoded_format, globals_bind_group_layout, ui_shader, vector_shader, world_shader, world_lines_shader, depth_state, overlay_depth_state, quad_vertex_buffer, globals_buffer, glyph_texture, glyph_sampler, icon_texture, icon_sampler, glyph_bind_group } = build_base_resources(device, format);
-        let UiPipelineSet { #[cfg(any(test,feature="testkit"))] mask_pipeline, ui_pipeline, vector_pipeline } = build_ui_pipelines(device, format, &globals_bind_group_layout, &ui_shader, &vector_shader, overlay_depth_state);
+        let UiPipelineSet { ui_pipeline, vector_pipeline } = build_ui_pipelines(device, format, &globals_bind_group_layout, &ui_shader, &vector_shader, overlay_depth_state);
         let WorldLayouts { world_bind_group_layout, world_globals_ring, world_shadow_bind_group_layout, world_shadow_target, world_pipeline_layout, world_mesh_pipeline_layout } = build_world_layouts_and_targets(device);
         let WorldGeometryPipelines { world_pipeline, world_pipeline_translucent, world_section_stencil_pipeline, world_section_cap_pipeline, world_shadow_pipeline, world_line_pipeline, world_points_pipeline } = build_world_geometry_pipelines(device, format, world_encoded_format, &world_shader, &world_lines_shader, depth_state, &world_pipeline_layout, &world_mesh_pipeline_layout);
         let MaterialLayouts { blur_shader, scene_blit_shader, glass_shader, world_postprocess_shader, blur_bind_group_layout, postprocess_bind_group_layout, scene_bind_group_layout, world_authored_bind_group_layout, world_authored_white, world_authored_shader, world_authored_pipeline_layout, world_painted_shader, world_celebration_shader, world_painted_pipeline_layout, world_celebration_pipeline_layout } = build_material_layouts_and_shaders(device, format, queue, &world_bind_group_layout, &world_shadow_bind_group_layout);
@@ -35,8 +35,6 @@ impl PipelineResources {
         let PostProcessingResources { blur_globals_buffer, postprocess_globals_buffer, world_postprocess_pipeline, blur_downsample_pipeline, scene_blit_pipeline, glass_pipeline } = build_post_processing_resources(device, format, world_encoded_format, &globals_bind_group_layout, &blur_shader, &scene_blit_shader, &glass_shader, &world_postprocess_shader, &blur_bind_group_layout, &postprocess_bind_group_layout, &scene_bind_group_layout);
         let _ = queue;
         Self {
-            #[cfg(any(test,feature="testkit"))]
-            mask_pipeline,
             ui_pipeline,
             vector_pipeline,
             world_pipeline,

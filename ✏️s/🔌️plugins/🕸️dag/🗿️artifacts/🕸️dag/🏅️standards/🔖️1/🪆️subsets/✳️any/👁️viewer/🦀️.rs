@@ -95,9 +95,9 @@ impl ArtifactViewer for DagViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(&crate::dag_scene(doc).map_err(|error| semio_plugin::PluginAssemblyError::new("dag.child-content", format!("{error:?}")))?).map(semio_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(&crate::dag_scene(doc).map_err(|error| semio_plugin::PluginAssemblyError::new("dag.child-content", format!("{error:?}")))?, view_state.locale).map(semio_plugin::built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

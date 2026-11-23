@@ -63,7 +63,7 @@ impl GuestRelayMountedRegistry {
                 Ok(GuestRelayMountedClose::Pending) => waker.wake_by_ref(),
                 Ok(GuestRelayMountedClose::Blocked { wake_registered: false }) => self.schedule_reaper_timer(waker),
                 Ok(GuestRelayMountedClose::Blocked { wake_registered: true }) => {},
-                Err(failure)=>return std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(failure)))
+                Err(failure)=>return std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(Box::new(failure))))
             }
             return std::task::Poll::Pending;
         }
@@ -82,7 +82,7 @@ impl GuestRelayMountedRegistry {
                     waker.wake_by_ref();
                     return std::task::Poll::Pending;
                 }
-                Err(failure) => return std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(failure))),
+                Err(failure) => return std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(Box::new(failure)))),
             },
             GuestRelayMountedOwner::Session(owner) => match self.step_owner(owner, index, generation) {
                 Ok(Some(GuestRelayStep::Checked(checked))) => session.checked_out = Some(checked),
@@ -92,7 +92,7 @@ impl GuestRelayMountedRegistry {
                     waker.wake_by_ref();
                     return std::task::Poll::Pending;
                 }
-                Err(failure) => return std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(failure))),
+                Err(failure) => return std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(Box::new(failure)))),
             },
             GuestRelayMountedOwner::Admitting(_) | GuestRelayMountedOwner::AdmittingProbe(_) | GuestRelayMountedOwner::Empty => return std::task::Poll::Pending,
         }
@@ -158,7 +158,7 @@ impl GuestRelayMountedRegistry {
                 session.lifecycle = GuestRelayMountedLifecycle::DetachedForReap;
                 self.reaper_epoch.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
                 self.ensure_reaper();
-                std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(failure)))
+                std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(Box::new(failure))))
             }
         }
     }
@@ -173,7 +173,7 @@ impl GuestRelayMountedRegistry {
         match acknowledged {
             Ok(Some(true)) => self.finish_guest_relay_outcome(session),
             Ok(Some(false)) | Ok(None) => {}
-            Err(failure) => return std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(failure))),
+            Err(failure) => return std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(Box::new(failure)))),
         }
         waker.wake_by_ref();
         std::task::Poll::Pending

@@ -114,9 +114,9 @@ function uiPatchReceipt(result, activationGeneration) {
   return encodeActorUiPatchReceipt(receipt);
 }
 
-function nativeRefusalError(failure) {
+function nativeRefusalError(failure, detail) {
   const tag = (failure?.payload ?? failure)?.failure?.tag;
-  if (typeof tag === "string") return new Error("original-turn.native-return-refused: " + tag, { cause: failure });
+  if (typeof tag === "string") return new Error("original-turn.native-return-refused: " + tag + (detail ? ": " + detail : ""), { cause: failure });
   return failure instanceof Error ? failure : undefined;
 }
 
@@ -133,6 +133,7 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
   const { reactor, jobs, checkpoint, describe, codec } = await import(componentUrl.href);
   hostShim.__bindOriginalClock(operationClockUs);
   const originalSource = new OriginalOperationSource(originalAdmission, () => hostShim.operationClockUs());
+  let refusalDetail;
   function receiveOriginal(call, workUnitsSpent) {
     let receipt;
     try { receipt = originalReceiptFromWit(call, workUnitsSpent); originalSource.receive(receipt); }
@@ -143,7 +144,7 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
   let sourceTail = Promise.resolve();
   const exclusive = (run) => {
     const work = sourceTail.then(() => {
-      const refusal = nativeRefusalError(originalSource.nativeRefusal);
+      const refusal = nativeRefusalError(originalSource.nativeRefusal, refusalDetail);
       if (refusal !== undefined) throw refusal;
       return run();
     });
@@ -231,7 +232,8 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
           const raw = hostShim.__returnOriginal(turn);
           if (raw !== undefined) { originalSource.holdProducerRefusal(raw); originalReturn.hold(raw); }
         }
-        throw nativeRefusalError(failure) ?? failure;
+        refusalDetail ??= hostShim.__takeActorFault();
+        throw nativeRefusalError(failure, refusalDetail) ?? failure;
       }
       let raw;
       try { receiveOriginal(result.retainedReceipt, result.retainedReceipt.workUnitsSpent); }

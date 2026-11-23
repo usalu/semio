@@ -1,9 +1,9 @@
 //! 📐️ CPU tessellation: ear clipping, dashed-line/thick-line expansion, triangle fans, pixel
-//! snapping and silhouette mask geometry. Every function here is pure — same inputs, same outputs,
+//! and pixel snapping. Every function here is pure — same inputs, same outputs,
 //! no GPU type in sight — which is what makes [`crate::scene::Scene::finish`]'s `snap`/`batch` steps
 //! deterministic and unit-testable without a device.
 
-use crate::scene::{ClipRegion, QuadInstance, ScissorRect};
+use crate::scene::ScissorRect;
 
 //#region 🔖️Tessellate
 
@@ -176,67 +176,17 @@ pub fn ear_clip_polygon(points: &[[f32; 2]]) -> Vec<[f32; 2]> {
 
 //#endregion EarClip
 
-//#region SilhouetteMask
+//#region Scissor
 
-/// ⋃️ The smallest rect covering every piece, or `None` for an empty slice. Ported verbatim.
+/// ✂️ The rectangular scissor a batch renders under: `scissor` intersected with the viewport, the whole viewport when the batch has none, `None` when nothing of it is visible. A frame clips its content with exactly this rectangle.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn union_scissors(scissors: &[ScissorRect]) -> Option<ScissorRect> {
-    let first = *scissors.first()?;
-    let (mut x0, mut y0, mut x1, mut y1) = (first.x, first.y, first.x + first.w, first.y + first.h);
-    for scissor in &scissors[1..] {
-        x0 = x0.min(scissor.x);
-        y0 = y0.min(scissor.y);
-        x1 = x1.max(scissor.x + scissor.w);
-        y1 = y1.max(scissor.y + scissor.h);
-    }
-    Some(ScissorRect { x: x0, y: y0, w: x1 - x0, h: y1 - y0 })
-}
-
-/// 🔀️ Unions two optional bounds, passing either through unchanged if the other is absent.
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn merge_scissor_bounds(a: Option<ScissorRect>, b: Option<ScissorRect>) -> Option<ScissorRect> {
-    match (a, b) {
-        (Some(a), Some(b)) => union_scissors(&[a, b]),
-        (Some(value), None) | (None, Some(value)) => Some(value),
-        (None, None) => None,
-    }
-}
-
-/// 🪟️ The concrete pieces a batch must scissor/stencil-mask against: a silhouette clip's rectangles
-/// intersected with the ambient scissor and the viewport, or the scissor alone, or the whole viewport.
-/// Ported verbatim from the wgpu target's `layer_scissors`.
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn layer_scissors(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, width: f32, height: f32) -> Vec<Option<ScissorRect>> {
-    if let Some(clip) = clip {
-        return clip.effective_scissors(scissor, width, height).into_iter().map(Some).collect();
-    }
+pub fn viewport_scissor(scissor: Option<ScissorRect>, width: f32, height: f32) -> Option<ScissorRect> {
     let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
-    match scissor.map(|value| value.intersect(&viewport)) {
-        Some(value) if value.w > 0 && value.h > 0 => vec![Some(value)],
-        Some(_) => Vec::new(),
-        None => vec![None],
-    }
+    let resolved = scissor.map_or(viewport, |value| value.intersect(&viewport));
+    (resolved.w > 0 && resolved.h > 0).then_some(resolved)
 }
 
-/// 🎭️ The stencil-mask quads one batch must paint before its content: a reset quad covering the union
-/// of the previous batch's bounds and this batch's bounds (so switching *out* of a smaller mask
-/// clears the stencil bits the previous mask set), followed by one quad per silhouette piece. Ported
-/// verbatim from the wgpu target's `mask_instances`; `UiInstance::solid` becomes `QuadInstance::solid`.
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn mask_instances(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, previous_bounds: Option<ScissorRect>, width: f32, height: f32) -> (Vec<QuadInstance>, Option<ScissorRect>) {
-    let white = [1.0, 1.0, 1.0, 1.0];
-    let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
-    let pieces: Vec<ScissorRect> = layer_scissors(scissor, clip, width, height).into_iter().map(|piece| piece.unwrap_or(viewport)).collect();
-    let current_bounds = union_scissors(&pieces);
-    let Some(reset_bounds) = merge_scissor_bounds(previous_bounds, current_bounds) else {
-        return (Vec::new(), None);
-    };
-    let mut instances = vec![QuadInstance::solid([reset_bounds.x as f32, reset_bounds.y as f32, reset_bounds.w as f32, reset_bounds.h as f32], white)];
-    instances.extend(pieces.into_iter().map(|piece| QuadInstance::solid([piece.x as f32, piece.y as f32, piece.w as f32, piece.h as f32], white)));
-    (instances, current_bounds)
-}
-
-//#endregion SilhouetteMask
+//#endregion Scissor
 
 //#region Tests
 

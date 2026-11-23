@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
-import {REPO_PROFILE_LEGEND_V1,REPO_PROFILE_PHASE_PATTERN_V1,createRepoProfileV1,readRepoProfileModeV1,renderRepoProfileTableV1,repoProfileSpawnLabelV1,summarizeRepoProfileV1} from "../🟨️.mjs";
+import {REPO_PROFILE_LEGEND_V1,REPO_PROFILE_PHASE_PATTERN_V1,createRepoProfileV1,readRepoProfileModeV1,profileCurrentPhaseV1,profileMarkV1,profileProgressV1,renderRepoProfileTableV1,repoProfileSpawnLabelV1,summarizeRepoProfileV1} from "../🟨️.mjs";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
@@ -87,4 +87,13 @@ test("the profile names the phase started last also while it is off", async () =
   expect(profileCurrentPhaseV1()).toBe("lane.progress-second");
   profileMarkV1("lane.progress-mark");
   expect(profileCurrentPhaseV1()).toBe("lane.progress-mark");
+});
+
+test("a phase names what it is working on only while it reports progress",()=>{
+ profileMarkV1("source.capture");
+ expect(profileCurrentPhaseV1()).toBe("source.capture");
+ profileProgressV1("walked 32 files, now a/b.ts");
+ expect(profileCurrentPhaseV1()).toBe("source.capture (walked 32 files, now a/b.ts)");
+ profileMarkV1("source.served");
+ expect(profileCurrentPhaseV1()).toBe("source.served");
 });

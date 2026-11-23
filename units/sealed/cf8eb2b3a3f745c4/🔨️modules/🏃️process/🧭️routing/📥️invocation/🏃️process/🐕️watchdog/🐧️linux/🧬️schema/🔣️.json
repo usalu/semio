@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/watchdog/linux/schema.json",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumProcessId": 2147483647,
+        "maximumProcesses": 16384,
+        "maximumDepth": 64,
+        "maximumStatBytes": 4096,
+        "maximumAuxvBytes": 4096,
+        "clockTicksTag": 17
+      }
+    },
+    "Case": {
+      "type": "object",
+      "required": [
+        "name",
+        "pid",
+        "observer",
+        "rows",
+        "expected"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pid": {
+          "type": "integer"
+        },
+        "observer": {
+          "type": "integer"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "expected": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "integer"
+          }
+        },
+        "clock": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "milliseconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "reused": {
+          "type": "boolean"
+        },
+        "cpuReused": {
+          "type": "boolean"
+        }
+      }
+    },
+    "AuxvCase": {
+      "type": "object",
+      "required": [
+        "name",
+        "word",
+        "little",
+        "entries",
+        "expected"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "word": {
+          "enum": [
+            4,
+            8
+          ]
+        },
+        "little": {
+          "type": "boolean"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "expected": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

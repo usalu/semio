@@ -97,7 +97,7 @@ fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
 /// `hover_json` — the lane `TiledMapHost` feeds straight into the wasm session's `syncInteraction`
 /// (highlight) and its hover popup. A `TiledMapHost` feature pick therefore round-trips:
 /// `interactionSelect` → framework interaction store → this render → highlighted feature.
-pub fn render(document: &GisMapSnapshot, cfg: &MapWindowConfig, interaction: &Gis2dInteractionSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &GisMapSnapshot, cfg: &MapWindowConfig, interaction: &Gis2dInteractionSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let mut scene = TiledMapScene::base(gis_map_scene_descriptor_json(document), cfg.camera_json.clone());
     scene.render_mode = cfg.render_mode.clone();
     scene.vector_style = cfg.vector_style.clone();
@@ -107,7 +107,7 @@ pub fn render(document: &GisMapSnapshot, cfg: &MapWindowConfig, interaction: &Gi
     scene.selection_json = interaction.feature_selection_json(document);
     scene.hover_json = interaction.feature_hover_json(document);
     apply_gis_map_tile_base_url(&mut scene);
-    scene_surface(GIS2D_PLAY_SURFACE, ContractSurfaceKind::TiledMap, &scene)
+    scene_surface(GIS2D_PLAY_SURFACE, ContractSurfaceKind::TiledMap, &scene, semio_plugin::surface_name(locale, "Map", "Karte"), None)
 }
 //#endregion 🔖️Render
 

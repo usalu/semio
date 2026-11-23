@@ -1,0 +1,57 @@
+{
+  "id": "norway-maple",
+  "category": "vegetation",
+  "title": {
+    "en": "Norway Maple",
+    "de": "Spitzahorn"
+  },
+  "heightM": 20.05,
+  "widthM": 14.869,
+  "powerW": 0,
+  "poses": [
+    "summer-calm",
+    "summer-breeze",
+    "storm",
+    "autumn-colour",
+    "early-wet-snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "norway-maple-plan-crown",
+    "tree-sign"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A mature Norway maple (Acer platanoides) of about 20 m: a straight stem with one leader and five whorls of ascending limbs under a dense, rounded-ovoid crown that is closed to the ground of the crown; obtuse samaras.",
+    "de": "Ein ausgewachsener Spitzahorn (Acer platanoides) von etwa 20 m: ein gerader Stamm mit einer Stammverlängerung und fünf Quirlen aufsteigender Äste unter einer dichten, rundlich-eiförmigen, geschlossenen Krone; stumpfwinklige Flügelfrüchte."
+  },
+  "completion": "authored"
+}

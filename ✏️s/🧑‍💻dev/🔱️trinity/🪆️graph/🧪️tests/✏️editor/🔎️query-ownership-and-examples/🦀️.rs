@@ -160,11 +160,11 @@ async fn query_ownership_rejected_editor_target_retires_without_publication() {
     let results = view.for_window_instance("results-main").unwrap();
     let document = app.snapshot().unwrap();
     let fixture_grant = cx.retained_grant();
-    let rejection = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::RunQuery { query: None, results_window_id: "editor-main".into() }, &semio_plugin::ActionMeta { view_state: Some(editor.into()), ..meta(semio_os_kernel::LOCAL_ACTOR_ID) }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)
-        .await.expect_err("an attached editor cannot own query results");
-    assert!(format!("{rejection:?}").contains("targeted window transient capture does not match the command owner's expected window kind"), "{rejection:?}");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::RunQuery { query: None, results_window_id: "editor-main".into() }, &semio_plugin::ActionMeta { view_state: Some(editor.into()), ..meta(semio_os_kernel::LOCAL_ACTOR_ID) }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)
+        .await.expect("typed ingress queues the command before its owner is resolved");
+    let rejection = drive_query_ownership_operations(&mut app, cx).await.expect_err("an attached editor cannot own query results");
+    assert!(rejection.contains("targeted window transient capture does not match the command owner's expected window kind"), "{rejection}");
     let close = trinity_mounted_owner_policy().close;
-    assert!(!app.maintenance_source_terminal_is_empty(cx), "rejected typed ingress still owns its source");
     for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
         if app.maintenance_source_terminal_is_empty(cx) {
             break;
@@ -178,7 +178,6 @@ async fn query_ownership_rejected_editor_target_retires_without_publication() {
         })).expect("rejected command source retires");
     }
     assert!(app.maintenance_source_terminal_is_empty(cx), "rejected command retained {:?}: {}", app.maintenance_source_close_demands(close.maximum_copy_bytes, cx), app.typed_operation_diagnostic());
-    assert_eq!(drive_query_ownership_operations(&mut app, cx).await.expect("rejected query settles"), (0, 0, 0));
     assert_eq!(app.snapshot().unwrap(), document);
     assert_eq!(app.window_transient_generation(&results).unwrap(), Some(0));
     app.close(cx);

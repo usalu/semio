@@ -415,12 +415,12 @@ fn revise_inputs_notice<C: CaseCatalogue>(entry: &CaseEntry, result: &CheckResul
     let keys: Vec<String> = declared::<C>(entry).iter().map(|row| row.key.to_owned()).collect();
     let list = keys.join(", ");
     let action = loc(&format!("Revise the inputs of this case ({list}) until the check passes."), &format!("Die Eingaben dieses Falls ({list}) überarbeiten, bis der Nachweis erfüllt ist."));
-    Remedy { applicable: false, ..Remedy::one_of(result.subject.clone(), keys, action) }
+    Remedy::advisory(result.subject.clone(), action)
 }
 //#endregion 🔖️Validation
 
 //#region 🔖️Evaluation
-/// 🧮 Evaluates one design case: input issues first, then the catalogue results re-addressed to the case row; failing results gain a sizing remedy on the first lever input that is set.
+/// 🧮 Evaluates one design case: input issues first, then the catalogue results re-addressed to the case row (a remedy aimed at the catalogue row is dropped: the row is no field); failing results gain a sizing remedy on the first lever input that is set.
 pub fn evaluate_case<C: CaseCatalogue>(case: &DesignCase, annex: AnnexChoice) -> Vec<CheckResult> {
     let label = if case.label_en.is_empty() && case.label_de.is_empty() { loc(&case.id, &case.id) } else { loc(&case.label_en, &case.label_de) };
     let subject = SubjectRef::new(&case.id, format!("cases[id={}]", case.id), label);
@@ -432,7 +432,8 @@ pub fn evaluate_case<C: CaseCatalogue>(case: &DesignCase, annex: AnnexChoice) ->
     };
     let mut out: Vec<CheckResult> = issues::<C>(&entry, &case.values).iter().map(|issue| issue_result::<C>(&entry, case, annex, issue)).collect();
     for mut result in C::evaluate(&entry, annex, case) {
-        result.subject = subject.clone();
+        let catalogue_row = std::mem::replace(&mut result.subject, subject.clone()).path;
+        result.remedies.retain(|remedy| remedy.target.path != catalogue_row);
         if result.status == CheckStatus::Fail && result.utilization > 1.0 {
             result.remedies.extend(lever_remedy::<C>(&entry, case, result.utilization));
         }

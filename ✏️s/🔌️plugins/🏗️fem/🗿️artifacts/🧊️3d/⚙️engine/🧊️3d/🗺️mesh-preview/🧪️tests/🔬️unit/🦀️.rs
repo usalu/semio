@@ -1,4 +1,7 @@
 use super::*;
+#[path = "../../../🧪️tests/🧰️persisted/🦀️.rs"]
+mod persisted;
+use persisted::{persist, Persisted};
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterialValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNodeValue;
@@ -8,8 +11,8 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 
-fn solid_slab_doc() -> Fem3dSnapshot {
-    Fem3dSnapshot::from_reference(Fem3dSnapshotValue {
+fn solid_slab_doc() -> Persisted {
+    persist(Fem3dSnapshotValue {
         nodes: vec![FemNodeValue { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNodeValue { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
         elements: vec![],
         materials: vec![FemMaterialValue { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
@@ -24,7 +27,7 @@ fn solid_slab_doc() -> Fem3dSnapshot {
         load_cases: vec![FemLoadCase { id: "self".into(), name: "Self Weight".into(), loads: vec![], self_weight: true }],
         combinations: vec![],
         analysis: FemAnalysisSettings::default(),
-    }).expect("fixture snapshot")
+    })
 }
 
 #[test]
@@ -56,7 +59,7 @@ fn fem3d_nodal_von_mises_returns_finite_values_for_solid() {
 /// surface, so a scene render never silently drops the slab.
 #[test]
 fn fem3d_mesh_preview_meshes_every_demo_solid() {
-    let doc = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot");
+    let doc = Persisted::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot"));
     assert!(!doc.solids.is_empty(), "the demo carries a solid");
     let previews = fem3d_mesh_preview(&doc).expect("the demo example meshes");
     assert_eq!(previews.iter().map(|mesh| mesh.solid_id.as_str()).collect::<Vec<_>>(), doc.solids.iter().map(|solid| solid.id.as_str()).collect::<Vec<_>>());

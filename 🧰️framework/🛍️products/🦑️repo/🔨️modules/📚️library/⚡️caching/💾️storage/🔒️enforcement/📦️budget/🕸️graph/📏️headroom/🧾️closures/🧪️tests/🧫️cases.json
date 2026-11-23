@@ -145,6 +145,7 @@
     "inference",
     "publication-fallback",
     "pack",
+    "pack-unproven",
     "unknown",
     "corrupt",
     "symlink",

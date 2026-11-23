@@ -1,6 +1,7 @@
 //! 🧪️ Presence JSON native codec round-trips language-agnostic fixtures and agrees with an independent Serde oracle.
 use super::*;
 use semio_framework_io_control::{NativeSnapshotCause, NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotFailure};
+use semio_framework_value::retained_clone::OriginalEffectReply;
 use semio_framework_value::{AuthoringWallet, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll};
 use crate::ArtifactPresenceSnapshot;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
@@ -13,14 +14,15 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 struct Camera { eye_height: f64, zoom: f64, target: Option<String> }
 
+use semio_framework_value_native_owned::{OriginalSourceTurn, OriginalSourceTurnIssuer};
 use semio_framework_value_native_owned::native_decoding::{OriginalConstructionAccept, OriginalConstructionAcceptComplete, OriginalConstructionAuthority, OriginalConstructionGrant, OriginalConstructionGrantComplete, OriginalConstructionRecipient, OriginalSourceTurnIdentity, OriginalWorkAuthority, OriginalWorkPartialCheck, OriginalWorkPartialCheckComplete, OriginalWorkQuote, OriginalWorkQuoteComplete, OriginalWorkRecipient};
 
 /// 🏗️ Test construction recipient: issues the stock grant for every quote and accumulates the submitted receipts.
-struct ConstructionLoan { current: semio_framework_value::RetainedCloneGrant, submitted: semio_framework_value::RetainedCloneProgress }
+struct ConstructionLoan { current: semio_framework_value::RetainedCloneGrant, submitted: semio_framework_value::RetainedCloneProgress, turn: OriginalSourceTurnIdentity }
 impl OriginalConstructionRecipient for ConstructionLoan {
     type Context<'turn, 'source> = () where 'source: 'turn;
     fn validate_context<'turn, 'source>(&self, _: &()) -> Result<(), ValueError> where 'source: 'turn { Ok(()) }
-    fn source_turn<'turn, 'source>(&self, _: &()) -> Option<OriginalSourceTurnIdentity> where 'source: 'turn { None }
+    fn source_turn<'turn, 'source>(&self, _: &()) -> Option<OriginalSourceTurnIdentity> where 'source: 'turn { Some(self.turn) }
     fn grant<'a, 'turn, 'source>(&mut self, _: &mut (), quote: OriginalConstructionGrant<'a>) -> OriginalConstructionGrantComplete<'a> where 'source: 'turn { quote.complete(Ok(self.current)) }
     fn accept<'a, 'turn, 'source>(&mut self, _: &mut (), receipt: OriginalConstructionAccept<'a>) -> OriginalConstructionAcceptComplete<'a> where 'source: 'turn {
         let (granted, progress) = (receipt.grant(), receipt.progress());
@@ -32,21 +34,21 @@ impl OriginalConstructionRecipient for ConstructionLoan {
 }
 
 /// ⛽️ Test work recipient: admits any quote that fits the finite original stock.
-struct WorkLoan<'a>(&'a u128);
+struct WorkLoan<'a>(&'a u128, OriginalSourceTurnIdentity);
 impl OriginalWorkRecipient for WorkLoan<'_> {
     type Context<'turn, 'source> = () where 'source: 'turn;
     fn validate_context<'turn, 'source>(&self, _: &()) -> Result<(), ValueError> where 'source: 'turn { Ok(()) }
-    fn source_turn<'turn, 'source>(&self, _: &()) -> Option<OriginalSourceTurnIdentity> where 'source: 'turn { None }
+    fn source_turn<'turn, 'source>(&self, _: &()) -> Option<OriginalSourceTurnIdentity> where 'source: 'turn { Some(self.1) }
     fn admits<'reply, 'turn, 'source>(&mut self, _: &mut (), quote: OriginalWorkQuote<'reply>, observed: u64, additional: u64) -> OriginalWorkQuoteComplete<'reply> where 'source: 'turn { quote.complete(Ok(observed.checked_add(additional).is_some_and(|total| u128::from(total) <= *self.0))) }
     fn settle_partial<'reply, 'turn, 'source>(&mut self, _: &mut (), check: OriginalWorkPartialCheck<'reply>) -> OriginalWorkPartialCheckComplete<'reply> where 'source: 'turn { check.complete(Ok(())) }
     fn recover_partial<'reply, 'turn, 'source>(&mut self, _: &mut (), check: OriginalWorkPartialCheck<'reply>) -> OriginalWorkPartialCheckComplete<'reply> where 'source: 'turn { check.complete(Ok(())) }
 }
 
-fn receive<T, E: From<ValueError>>(control: &mut NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant, work_loan: WorkLoan<'_>, apply: impl FnOnce(&mut NativeDecodeControl<'_>) -> RetainedWorkOutcome<T, E>) -> RetainedWorkOutcome<T, E> {
-    let mut construction = OriginalConstructionAuthority::new(ConstructionLoan { current: grant, submitted: Default::default() });
+fn receive<'a, T, E: From<ValueError>>(control: &mut NativeDecodeControl<'a>, grant: semio_framework_value::RetainedCloneGrant, work_loan: WorkLoan<'_>, dispatch: &'a OriginalSourceTurn, apply: impl FnOnce(&mut NativeDecodeControl<'_>) -> RetainedWorkOutcome<T, E>) -> RetainedWorkOutcome<T, E> {
+    let mut construction = OriginalConstructionAuthority::new(ConstructionLoan { current: grant, submitted: Default::default(), turn: dispatch.identity() });
     let mut authority = OriginalWorkAuthority::new(work_loan);
     let mut work = 0;
-    let result = authority.with_loan(&mut (), |work_loan| construction.with_loan(&mut (), |construction_loan| control.with_work_recipient(work_loan, |control| control.with_construction_recipient(construction_loan, |control| { let turn = apply(control); work = turn.work; turn.result }))));
+    let result = control.with_source_witness(Some(dispatch.witness()), |control| authority.with_loan(&mut (), |work_loan| construction.with_loan(&mut (), |construction_loan| control.with_work_recipient(work_loan, |control| control.with_construction_recipient(construction_loan, |control| { let turn = apply(control); work = turn.work; turn.result })))));
     let result = match result { Ok(Ok(result)) => result, Ok(Err(error)) | Err(error) => Err(E::from(error)) };
     RetainedWorkOutcome { result, work }
 }
@@ -74,6 +76,8 @@ const CLOSE_GRANT: semio_framework_value::RetainedCloneGrant = semio_framework_v
 struct Observed<T> { result: Result<T, NativeSnapshotFailure>, progress: semio_framework_value::RetainedCloneProgress, heap: semio_framework_trace::HeapAllocationObservation, closure: semio_framework_trace::HeapAllocationObservation }
 
 fn decode_with(bytes: &[u8], fixture: &serde_json::Value, grant: semio_framework_value::RetainedCloneGrant, alive: &std::cell::Cell<bool>) -> Observed<FixturePresence> {
+    let issuer = OriginalSourceTurnIssuer::new();
+    let dispatch = issuer.issue().unwrap();
     let mut callback = |_| alive.get();
     let mut recipient = NativeDecodeRetirementRecipient::new();
     let mut native = NativeDecodeControl::new_retained(&mut callback);
@@ -81,7 +85,7 @@ fn decode_with(bytes: &[u8], fixture: &serde_json::Value, grant: semio_framework
     native.admit_turn_capacity(grant.maximum_capacity_bytes.min(fixture["nativeMaximumBytes"].as_u64().unwrap() as usize)).unwrap();
     let stock = 1u128 << 40;
     let mut progress = semio_framework_value::RetainedCloneProgress::default();
-    let (outcome, heap) = observe(|| receive(&mut native, grant, WorkLoan(&stock), |control| {
+    let (outcome, heap) = observe(|| receive(&mut native, grant, WorkLoan(&stock, dispatch.identity()), &dispatch, |control| {
         let mut owner = NativeSnapshotDecodeOwner::new(control, grant);
         let outcome = FixturePresence::decode_presence_native(bytes, &mut owner);
         progress = owner.progress();
@@ -90,7 +94,7 @@ fn decode_with(bytes: &[u8], fixture: &serde_json::Value, grant: semio_framework
     }));
     let result = outcome.result;
     alive.set(true);
-    let ((), closure) = observe(|| { for _ in 0..100_000 { if !native.has_retirement_owner() { return } native.admit_turn_capacity(CLOSE_GRANT.maximum_capacity_bytes).unwrap(); receive(&mut native, CLOSE_GRANT, WorkLoan(&stock), |control| { if control.with_retirement::<_, ValueError>(CLOSE_GRANT, |original| Ok(original.requires_original_birth())).unwrap() { settle_close(control.with_retirement::<_, ValueError>(CLOSE_GRANT, |original| Ok(original.close_original_birth_step(CLOSE_GRANT))).unwrap()); } else { let quote = control.with_retirement::<_, ValueError>(CLOSE_GRANT, |original| original.retirement_work_demand(CLOSE_GRANT.maximum_copy_bytes)).unwrap(); settle_close(control.with_effect(CLOSE_GRANT, quote, |control, effect| control.close_retirement_recipient(effect)).unwrap().expect("close work quote admitted")); } RetainedWorkOutcome { result: Ok::<(), ValueError>(()), work: 0 } }).result.unwrap(); } panic!("retirement did not terminate") });
+    let ((), closure) = observe(|| { for _ in 0..100_000 { if !native.has_retirement_owner() { return } native.admit_turn_capacity(CLOSE_GRANT.maximum_capacity_bytes).unwrap(); receive(&mut native, CLOSE_GRANT, WorkLoan(&stock, dispatch.identity()), &dispatch, |control| { if control.with_retirement::<_, ValueError>(CLOSE_GRANT, |original| Ok(original.requires_original_birth())).unwrap() { settle_close(control.with_retirement::<_, ValueError>(CLOSE_GRANT, |original| Ok(original.close_original_birth_step(CLOSE_GRANT))).unwrap()); } else { let quote = control.with_retirement::<_, ValueError>(CLOSE_GRANT, |original| original.retirement_work_demand(CLOSE_GRANT.maximum_copy_bytes)).unwrap(); settle_close(control.with_effect(CLOSE_GRANT, quote, |control, effect| control.close_retirement_recipient(CLOSE_GRANT.maximum_copy_bytes, effect)).unwrap().expect("close work quote admitted")); } RetainedWorkOutcome { result: Ok::<(), ValueError>(()), work: 0 } }).result.unwrap(); } panic!("retirement did not terminate") });
     Observed { result, progress, heap, closure }
 }
 
@@ -106,13 +110,20 @@ fn encode_with(value: &FixturePresence, fixture: &serde_json::Value, grant: semi
     let progress = owner.progress();
     drop(owner);
     alive.set(true);
-    let ((), closure) = observe(|| { for _ in 0..100_000 { if !native.has_retirement_owner() { return } native.admit_turn_capacity(CLOSE_GRANT.maximum_capacity_bytes).unwrap(); close_paid(|effect| native.close_retirement_recipient(effect)); } panic!("retirement did not terminate") });
+    let ((), closure) = observe(|| { for _ in 0..100_000 { if !native.has_retirement_owner() { return } native.admit_turn_capacity(CLOSE_GRANT.maximum_capacity_bytes).unwrap(); close_paid(|effect| close_encode(&mut native, effect)); } panic!("retirement did not terminate") });
     Observed { result, progress, heap, closure }
+}
+
+fn close_encode(native: &mut NativeEncodeControl<'_>, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+    let body = effect.grant().maximum_copy_bytes;
+    let mut slot = None;
+    { let reply = OriginalEffectReply::borrow(&mut slot).unwrap(); drop(native.close_retirement_recipient_into(body, effect, reply).unwrap()); }
+    RetainedWorkPoll::Complete(RetainedWorkOutcome { result: slot.expect("encode close recorded its reply"), work: effect.performed_work() })
 }
 
 fn close_paid(close: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll) {
     let mut wallet = AuthoringWallet::new(CLOSE_GRANT, 1 << 20);
-    let paid = wallet.run(CLOSE_GRANT, 1 << 10, close).expect("authoring close effect").expect("close work quote admitted");
+    let paid = wallet.run_invoked(CLOSE_GRANT, 1 << 10, close).expect("authoring close effect").expect("close work quote admitted");
     settle_close(paid.output);
 }
 

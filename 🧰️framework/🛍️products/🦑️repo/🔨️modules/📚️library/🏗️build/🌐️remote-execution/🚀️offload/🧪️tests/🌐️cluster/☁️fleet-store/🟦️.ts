@@ -37,7 +37,7 @@ afterAll(async()=>{
 
 const countingRustc=(directory:string):{path:string;log:string}=>{
  const path=join(directory,"counting-rustc.sh"),log=join(directory,"rustc-calls.log");
- writeFileSync(path,`#!/bin/sh\ncase " $* " in *" -vV "*|*" -Z ls="*) ;; *) echo call >> '${log}';; esac\nexec rustc "$@"\n`);chmodSync(path,0o755);
+ writeFileSync(path,`#!/bin/sh\ncase " $* " in *" -vV "*|*" -Z ls="*|*" --print "*) ;; *) echo "call $*" >> '${log}';; esac\nexec rustc "$@"\n`);chmodSync(path,0o755);
  return{path,log};
 };
 const callsOf=(log:string):number=>existsSync(log)?readFileSync(log,"utf8").split("\n").filter(Boolean).length:0;
@@ -66,7 +66,7 @@ test.skipIf(diskFull)("a unit a worker compiled is stored once in the fleet cach
  const status=await run(requester,environmentA,{admission:{probe:testHostProbeV1("critical-pressure-gigabyte-swap")}});
  expect(status).toBe(0);
  const trace=(root:string):string=>existsSync(join(root,"x"))?readdirSync(join(root,"x")).map(name=>name+": "+readFileSync(join(root,"x",name),"utf8")).join("\n"):"";
- expect(callsOf(join(rootA,"rustc-calls.log")),"the requester compiled nothing itself\n"+trace(rootA)).toBe(0);
+ expect(callsOf(join(rootA,"rustc-calls.log")),"the requester compiled nothing itself\n"+(existsSync(join(rootA,"rustc-calls.log"))?readFileSync(join(rootA,"rustc-calls.log"),"utf8"):"")+trace(rootA)).toBe(0);
  const local=unitEntries(rootA);
  expect(local.length,"one local entry").toBe(1);
  expect(local[0]!.slot,"the local entry carries its slot").toMatch(/^[a-f0-9]{64}$/u);

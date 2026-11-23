@@ -60,6 +60,8 @@ export type ArtifactEvent =
   | { readonly kind: "remoteMutations"; readonly envelopes: readonly MutationEnvelope[] }
   | { readonly kind: "documentBackbone"; readonly message: Uint8Array }
   | { readonly kind: "documentArchiveReplaced"; readonly archive: Uint8Array }
+  /** 🧷 The folder confirmed it holds the archive this document wrote. The open document stays; a foreign folder read still arrives as `documentArchiveReplaced`. */
+  | { readonly kind: "documentArchiveHeld"; readonly archive: Uint8Array }
   /** 🫙️ The bound folder holds no archive of this document: once per open, from the bootstrap folder read alone, never
    * after an archive was read or written — mirrors Rust `ArtifactEvent::DocumentArchiveAbsent`. */
   | { readonly kind: "documentArchiveAbsent" }
@@ -132,7 +134,7 @@ export function wireArtifactEvent(event: ArtifactEvent): unknown {
   if (event.kind === "remoteMutations") {
     return { kind: "remoteMutations", envelopes: encodeCausalEnvelopeBatch(event.envelopes, replicationPackCodec) };
   }
-  if (event.kind === "documentArchiveReplaced") {
+  if (event.kind === "documentArchiveReplaced" || event.kind === "documentArchiveHeld") {
     decodeDocumentArchiveBytes(event.archive);
     return event;
   }
@@ -147,10 +149,10 @@ export function parseArtifactEvent(event: Record<string, unknown>): ArtifactEven
   if (event.kind === "remoteMutations" && Array.isArray(event.envelopes) && event.envelopes.every((entry) => typeof entry === "number")) {
     return { kind: "remoteMutations", envelopes: decodeCausalEnvelopeBatch(event.envelopes as readonly number[], replicationPackCodec) };
   }
-  if (event.kind === "documentArchiveReplaced") {
+  if (event.kind === "documentArchiveReplaced" || event.kind === "documentArchiveHeld") {
     if (Object.keys(event).sort().join(",") !== "archive,kind" || !(event.archive instanceof Uint8Array) || event.archive.length === 0 || event.archive.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("backbone worker response: invalid document archive");
     decodeDocumentArchiveBytes(event.archive);
-    return { kind: "documentArchiveReplaced", archive: event.archive };
+    return event.kind === "documentArchiveHeld" ? { kind: "documentArchiveHeld", archive: event.archive } : { kind: "documentArchiveReplaced", archive: event.archive };
   }
   if (event.kind === "documentArchiveAbsent") {
     if (Object.keys(event).join(",") !== "kind") throw new Error("backbone worker response: invalid document archive absence");

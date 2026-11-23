@@ -34,9 +34,9 @@ const farmFailure=(code,message)=>Object.assign(new Error(message),{code});
 /**
  * 🏭️ Walks closure questions in child processes (`./👷️child`) so independent closures run on several processors: `derive(row, signal)` answers `{fact, parts:[{id, rows?}]}` (a part the child already sent to this parent comes by its id alone, so a closure of a hundred thousand rows costs the wire a few kilobytes) or rejects with code `WALK_FARM_*` so the caller walks the question itself. At most `size` children, started on demand, each fed up to `policy.batch` questions at once so it never waits for a round trip; a child that dies, stalls past the request limit or ends on memory is replaced on the next request; a child whose stdin closes ends, so none outlives the parent. Messages are lines `<marker>{json}`; anything else a child prints is ignored.
  * @see ./🧬️schema/🔣️.json
- * @param {{root:string;size:number;module?:string;spawn?:typeof nodeSpawn;policy?:typeof WALK_FARM_V1;lease?:{release():void}}} options
+ * @param {{root:string;size:number;module?:string;spawn?:typeof nodeSpawn;policy?:typeof WALK_FARM_V1;lease?:{release():void};environment?:Record<string,string>}} options
  */
-export function createWalkFarmV1({root,size,module,spawn=nodeSpawn,policy=WALK_FARM_V1,lease,speed=localMachineSpeedFactorV1()}){
+export function createWalkFarmV1({root,size,module,spawn=nodeSpawn,policy=WALK_FARM_V1,lease,speed=localMachineSpeedFactorV1(),environment}){
  const command=[process.execPath,CHILD,root,...module===undefined?[]:[module]],marker=policy.marker;
  const children=new Set(),queue=[],stats={started:0,answered:0,failed:0,recycled:0,bytes:0,byPid:new Map()};
  let closed=false,sequence=0,failedStarts=0;
@@ -65,7 +65,7 @@ export function createWalkFarmV1({root,size,module,spawn=nodeSpawn,policy=WALK_F
  };
  const start=()=>{
   stats.started++;
-  const process_=spawn(command[0],command.slice(1),{stdio:["pipe","pipe","inherit"],windowsHide:true}),child={process:process_,pid:process_.pid,ready:false,jobs:new Map(),recycling:false,startTimer:undefined,pending:[]};
+  const process_=spawn(command[0],command.slice(1),{stdio:["pipe","pipe","inherit"],windowsHide:true,env:{...process.env,SEMIO_WALK_FARM_RECYCLE_BYTES:String(policy.recycleBytes),...environment}}),child={process:process_,pid:process_.pid,ready:false,jobs:new Map(),recycling:false,startTimer:undefined,pending:[]};
   children.add(child);
   child.startTimer=setTimeout(()=>{failedStarts++;process_.kill("SIGKILL");finish(child,farmFailure("WALK_FARM_START_TIMEOUT","A walk child did not become ready"));},policy.startTimeoutMilliseconds);child.startTimer.unref?.();
   process_.stdout.setEncoding("utf8");process_.unref?.();
@@ -124,6 +124,9 @@ export function reserveWalkFarmV1(wanted,{yield:onYield,environment=process.env,
 let capacitySource=()=>({cpus:availableParallelism(),availableBytes:freemem()});
 /** 🎟️ Binds the capacity the shared farm of closure recipes is sized from (the grant the scheduler admitted to this process). */
 export function bindWalkFarmCapacityV1(source){capacitySource=source;}
+
+/** 🎟️ The capacity the farms of this process are sized from right now: the grant the scheduler admitted to it once bound, the free processors and memory of the machine before. */
+export const walkFarmCapacityV1=()=>capacitySource();
 
 const recipeFarms=new Map();
 /** 📊️ The counters of the walk farms of this process (one per workspace and module): children running, questions answered and failed, children recycled; empty while no farm was started. */

@@ -175,7 +175,7 @@ async fn folder_schema_resource_reads_durable_owner_without_opening_an_artifact(
             assert!(error.retryable);
         }
         assert!(fresh.plugin_artifact_binding(id).is_none());
-        assert_eq!(fresh.open_probes.lock().unwrap().contains_key(id), row["live"].is_string());
+        assert_eq!(fresh.has_open_probe(id), row["live"].is_string());
     }
 }
 

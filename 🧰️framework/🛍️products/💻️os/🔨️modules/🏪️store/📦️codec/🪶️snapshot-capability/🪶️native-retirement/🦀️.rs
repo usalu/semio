@@ -33,7 +33,7 @@ fn stage_failure(stage:Stage<(),NativeSnapshotFailure>)->NativeSnapshotFailure{
  match stage{
   Stage::NotStarted(error)=>error.into(),
   Stage::Operation(error)=>error,
-  Stage::Settlement{operation,refusal,..}=>match operation{Err(error)=>error.with_receipt_refusal(refusal).into(),Ok(())=>refusal.into()},
+  Stage::Settlement{operation,refusal,..}=>match operation{Err(error) if error.kind()==ValueRefusalKind::Canceled&&refusal.kind==ValueRefusalKind::Canceled=>{let progress=error.retained_progress();refusal.with_retained_progress(progress).into()},Err(error)=>error.with_receipt_refusal(refusal),Ok(())=>refusal.into()},
   Stage::WorkSettlement{operation,failure,allocation,..}=>match operation{Err(error)=>error,Ok(())=>ValueError::literal(ValueRefusalKind::InvariantViolated,if failure.is_some()||allocation.is_some(){"SQLite stage settlement refused its original work"}else{"SQLite stage settled without a retained cause"}).into()},
  }
 }

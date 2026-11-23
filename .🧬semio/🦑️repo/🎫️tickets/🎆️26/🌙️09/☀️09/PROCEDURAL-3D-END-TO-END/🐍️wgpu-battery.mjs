@@ -18,11 +18,11 @@
  *   cd <ticket> && bun 🐍️wgpu-battery.mjs --only=boot,examples  # a subset, comma separated
  *   cd <ticket> && bun 🐍️wgpu-battery.mjs --list
  *
- * Env: SEMIO_BATTERY_URL (default http://127.0.0.1:6118/?plugin=generation3d).
+ * Env: SEMIO_BATTERY_URL (default http://127.0.0.1:6118/?plugin=generation3d), SEMIO_BATTERY_ROOT (default wgpu-verify).
  * @see 🐍️react-battery.mjs, 📓️wgpu-end-to-end-verification-2026-09-14.md
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const T = import.meta.dir;
@@ -48,6 +48,8 @@ const readText = (path) => { try { return readFileSync(path, "utf8"); } catch { 
 const faultLines = (text, cap = 10) => [...new Set(text.split("\n").filter((l) => FAULT_RE.test(l)).map((l) => l.trim().slice(0, 260)))].slice(0, cap);
 const countPageErrors = (text) => text.split("\n").filter((l) => /\bpageerror\b/.test(l)).length;
 const consoleOf = (dir, ...extra) => [join(dir, "console.txt"), ...extra].map(readText).join("\n");
+/** 🧾️ The matrix probe keeps one console per row (`<example>/<lane>/console.txt`); the page errors and fault lines of the WHOLE matrix are the union of them. */
+const matrixConsole = (dir, rows) => rows.map((row) => readText(join(dir, row.example, row.lane, "console.txt"))).join("\n");
 
 /** 📚️ The eight bundled examples of `s.procedural.generation3d@1/*`, plus React's own `No example` lane. */
 const EXAMPLES = ["hexagonal-mushroom-column", "rectangle-extrude-volume", "rectangle-wire-preview", "box-shell-preview", "box-fillet-preview", "sphere-cut-with-torus", "sphere-box-fuse", "face-sweep-extrude"];
@@ -77,7 +79,7 @@ const PROBES = [
     },
   },
   {
-    name: "examples", script: "🐍️wgpu-example-matrix-probe.mjs", dir: "examples", minutes: 60,
+    name: "examples", script: "🐍️wgpu-example-matrix-probe.mjs", dir: "examples", minutes: 16 * Math.ceil((200 + 30) / 60) + 5,
     /** ⏲️ `MIN_SECONDS` is the settle FLOOR this lane added: convergence answers the first sample that
      * carries a drawable, and generation3d publishes its port-preview WIRES ~7 s before the guest
      * finishes tessellating the solid, so a run that stops at first convergence reports a census the
@@ -86,8 +88,10 @@ const PROBES = [
     verdict: (dir) => {
       const r = readJson(join(dir, "results.json")) ?? {};
       const rows = r.results ?? [];
+      const console_ = matrixConsole(dir, rows);
       const meshes = (row) => (row.meshSurfaces ?? []).reduce((n, s) => Math.max(n, s.meshes ?? 0), 0);
-      const steps = rows.flatMap((row) => [
+      const expectedRows = EXAMPLES.length * 2;
+      const steps = [{ step: "the matrix ran to completion", ok: r.complete === true && rows.length === expectedRows, detail: { rows: rows.length, expected: expectedRows, complete: r.complete ?? null } }, ...rows.flatMap((row) => [
         {
           step: `${row.lane}: ${row.example}`, ok: row.verdict === "pass",
           detail: { seconds: row.timeToMeshSeconds, meshes: meshes(row), instances: (row.meshSurfaces ?? [])[0]?.instances ?? 0, lines: (row.meshSurfaces ?? [])[0]?.lines ?? 0, body: row.geometry?.body ?? null, alert: row.alert },
@@ -99,7 +103,7 @@ const PROBES = [
          * which is why every non-hex example read 2-3 against an oracle of 1
          * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-mesh-oracle-2026-09-14.md`). */
         { step: `${row.lane}: ${row.example} publishes the committed meshes and box`, ok: Boolean(row.oracle?.ok), detail: { failures: row.oracle?.failures ?? ["no fixture found for this example"], observed: row.oracle?.observed ?? null, expected: row.oracle?.expected ?? null } },
-      ]);
+      ])];
       return {
         steps,
         key: {
@@ -109,7 +113,7 @@ const PROBES = [
           meshesByLane: Object.fromEntries(rows.map((row) => [`${row.lane}:${row.example}`, meshes(row)])),
           publishedRoles: Object.fromEntries(rows.map((row) => [`${row.lane}:${row.example}`, row.oracle?.observed?.roles ?? null])),
         },
-        pageerrors: 0, faults: [],
+        pageerrors: countPageErrors(console_), faults: faultLines(console_),
       };
     },
   },
@@ -130,16 +134,17 @@ const PROBES = [
     env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/no-example`, SEMIO_PROBE_ORIGIN: ORIGIN, SEMIO_PROBE_LANES: "edit,viewer", SEMIO_PROBE_EXAMPLES: "(none)", SEMIO_PROBE_BUDGET: "60" },
     verdict: (dir) => {
       const rows = (readJson(join(dir, "results.json")) ?? {}).results ?? [];
+      const console_ = matrixConsole(dir, rows);
       return {
         /** 📐️ The starter is a SOLID: `geometry.body` names a published mesh whose `positions`
          * actually start with a number, and no `?example=` trace may appear — a boot that reached the
          * starter by dispatching `setActiveExample` would be testing the example lane instead. */
-        steps: rows.map((row) => ({
+        steps: [{ step: "both lanes ran", ok: rows.length === 2, detail: { rows: rows.length } }, ...rows.map((row) => ({
           step: `${row.lane}: no example opens the app's own starter document`,
           ok: row.verdict === "pass" && row.geometry?.body === "solid" && !row.alert && !row.bootExampleTrace,
           detail: { verdict: row.verdict, geometry: row.geometry?.body ?? null, meshSurfaces: row.meshSurfaces, bootExample: row.bootExampleTrace, alert: row.alert },
-        })),
-        key: { rows: rows.length }, pageerrors: 0, faults: [],
+        }))],
+        key: { rows: rows.length }, pageerrors: countPageErrors(console_), faults: faultLines(console_),
       };
     },
   },
@@ -310,6 +315,7 @@ const PROBES = [
       const s = r.steps ?? {};
       const planKey = (plan) => Object.keys(plan ?? {}).sort().join(",");
       const chords = s.d6a_chords_idle?.chordWitness ?? [];
+      const d5 = s.d5_retained_row ?? {};
       const controls = [...new Set((console_.match(/hit=Some\(\([A-Za-z]+, Some\("([^"]+)"\)/g) ?? []).map((m) => /Some\("([^"]+)"\)/.exec(m)?.[1]).filter(Boolean))];
       return {
         steps: [
@@ -317,7 +323,12 @@ const PROBES = [
           { step: "the example picker row is reachable", ok: controls.some((id) => id.includes("navbar.fixture") || id.startsWith("shell.example.")), detail: { picker: controls.filter((id) => id.includes("fixture") || id.startsWith("shell.example.")).slice(0, 6) } },
           { step: "the mode/role buttons are reachable", ok: controls.some((id) => id.includes("navbar.modes.")) && controls.some((id) => id.includes("navbar.roles.")), detail: { modes: controls.filter((id) => id.includes("navbar.modes.")), roles: controls.filter((id) => id.includes("navbar.roles.")) } },
           { step: "a chord replans the dock", ok: chords.length > 0 && chords.some((c) => (c.renderDelta ?? 0) > 0 || (c.sessionSwitchDelta ?? 0) > 0 || (c.newCommands ?? []).length > 0), detail: { chords } },
-          { step: "the world3d cancel control is declared", ok: /shell\.world3d\.cancel|world3d cancel/.test(console_) || Boolean(s.d5_cancel ?? s.cancel), detail: { observed: /shell\.world3d\.cancel/.test(console_) } },
+          /** 🛑️ The cancel control is a DECLARATION the shell traces when it plans the world3d window, so
+           * the console is its witness. The probe never presses it (cancellation SEMANTICS belong to
+           * `cancel-preview`/`spawn-job`), so no `d5_cancel` step exists to read — the retained-row
+           * click it DOES emit (`d5_retained_row`) is graded on its own below. */
+          { step: "the world3d cancel control is declared", ok: /shell\.world3d\.cancel|world3d cancel/.test(console_), detail: { observed: /shell\.world3d\.cancel/.test(console_) } },
+          { step: "the retained row answers a click without a pointer failure", ok: Boolean(d5.row) && (d5.newPointerFailures ?? []).length === 0 && ((d5.renderDelta ?? 0) > 0 || (d5.newCommands ?? []).length > 0), detail: { row: d5.row?.path ?? null, why: d5.why ?? null, renderDelta: d5.renderDelta, newCommands: (d5.newCommands ?? []).length, pointerFailures: (d5.newPointerFailures ?? []).slice(0, 2) } },
         ],
         key: { controls: controls.length, chords: chords.length, previewLanes: s.preview?.lanes ?? null },
         pageerrors: countPageErrors(console_), faults: faultLines(console_),
@@ -326,10 +337,11 @@ const PROBES = [
   },
   {
     name: "catalogue", script: "🐍️wgpu-catalogue-probe.mjs", dir: "catalogue", minutes: 8,
-    /** 🛍️ This probe nests its own run under `wgpu-catalogue/`, so its `SEMIO_PROBE_OUT` is a leaf name
-     * and the collected evidence is copied back into the battery's own folder below. */
-    env: { SEMIO_PROBE_OUT: "verify", SEMIO_PROBE_URL: URL, SEMIO_PROBE_SECONDS: "110" },
-    from: join(GEN, "wgpu-catalogue", "verify"),
+    /** 🛍️ This probe nests its own run under `🗑️generated/wgpu-catalogue/`, so `../<root>/catalogue`
+     * lands it straight in this battery's own folder (the `outUp` pattern of `🐍️react-battery.mjs`):
+     * the lane root is honoured and nothing is copied, so a probe that dies before writing its report
+     * can never be graded on a previous run's evidence. */
+    env: { SEMIO_PROBE_OUT: `../${ROOT_NAME}/catalogue`, SEMIO_PROBE_URL: URL, SEMIO_PROBE_SECONDS: "110" },
     verdict: (dir) => {
       const r = readJson(join(dir, "report.json")) ?? {};
       const console_ = readText(join(dir, "console.txt"));
@@ -526,15 +538,25 @@ for (const probe of selected) {
   const seconds = Math.round((Date.now() - started) / 1000);
   const stdout = `${run.stdout ?? ""}\n${run.stderr ?? ""}`;
   writeFileSync(join(dir, "run.txt"), stdout);
-  if (probe.from && existsSync(probe.from)) spawnSync("cp", ["-R", `${probe.from}/.`, dir]);
   let v = { steps: [], key: {}, pageerrors: 0, faults: [] };
   let verdictError = null;
   try { v = probe.verdict(dir, stdout); } catch (e) { verdictError = String(e).slice(0, 400); }
+  const timedOut = run.signal === "SIGTERM" || Boolean(run.error && /ETIMEDOUT|timed/i.test(String(run.error)));
+  /** 🧯 EVERY probe is gated on a clean page, centrally — the twin of `🐍️react-battery.mjs`: two rows
+   * appended to whatever the probe's own verdict decided, plus one for a probe that was killed by its
+   * budget. A probe whose log carries `pageerror` or a shell fault is not a passing probe, however
+   * green its own steps read. */
+  v.steps = [
+    ...v.steps.filter((s) => s.step !== "no page errors" && s.step !== "no shell faults" && s.step !== "the probe finished inside its budget"),
+    { step: "the probe finished inside its budget", ok: !timedOut, detail: { timedOut, signal: run.signal ?? null, error: run.error ? String(run.error).slice(0, 160) : null } },
+    { step: "no page errors", ok: (Number(v.pageerrors) || 0) === 0, detail: { pageerrors: Number(v.pageerrors) || 0 } },
+    { step: "no shell faults", ok: (v.faults ?? []).length === 0, detail: { faults: (v.faults ?? []).slice(0, 6) } },
+  ];
   const decided = v.steps.filter((s) => s.ok !== undefined);
   const ok = !verdictError && decided.length > 0 && decided.every((s) => s.ok);
   board.probes.push({
     probe: probe.name, script: probe.script, out: `🗑️generated/${ROOT_NAME}/${probe.dir}/`,
-    seconds, exit: run.status, timedOut: run.signal === "SIGTERM" || Boolean(run.error && /ETIMEDOUT|timed/i.test(String(run.error))),
+    seconds, exit: run.status, timedOut,
     ok, verdictError,
     steps: v.steps, key: v.key,
     pageerrors: v.pageerrors ?? 0,

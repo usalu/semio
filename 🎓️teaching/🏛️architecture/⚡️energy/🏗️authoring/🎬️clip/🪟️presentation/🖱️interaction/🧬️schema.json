@@ -30,7 +30,7 @@
         "bounds",
         "ancestors",
         "order",
-        "transparentGap"
+        "chipGap"
       ],
       "properties": {
         "bounds": {
@@ -46,8 +46,8 @@
             "source-index"
           ]
         },
-        "transparentGap": {
-          "const": "polygon-outline"
+        "chipGap": {
+          "const": "content"
         }
       }
     },
@@ -409,13 +409,6 @@
         },
         "z": {
           "type": "number"
-        },
-        "outline": {
-          "type": "array",
-          "minItems": 3,
-          "items": {
-            "$ref": "#/$defs/point"
-          }
         },
         "action": {
           "type": "string"

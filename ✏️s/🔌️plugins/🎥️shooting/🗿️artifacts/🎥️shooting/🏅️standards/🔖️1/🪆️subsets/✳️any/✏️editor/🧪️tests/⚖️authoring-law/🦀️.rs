@@ -1,5 +1,5 @@
 //! ⚖️ Real-store authoring: a shooting document edit authors, applies, undoes and redoes through the shooting editor's own catalog and the runtime's canonical operation wire.
-use semio_plugin::{authoring_law::author_through_document_store, EditorApp};
+use semio_plugin::{authoring_law::{author_through_document_store, StoreAuthoringPhase}, EditorApp};
 use semio_framework_value::ToValue;
 use semio_s_artifact_shooting_shooting::editor::shooting::ShootingPlayApp;
 use semio_s_artifact_shooting_shooting::standards::v1::subsets::any::schema::mutations::create_shot::CreateShot;
@@ -16,11 +16,16 @@ fn assert_row_is_the_serde_document(row: &[u8], mutation: &ShootingMutation) {
 async fn a_shooting_document_edit_authors_applies_undoes_and_redoes_through_its_real_store() {
     let shot = ShootingShot { id: "shot-1".into(), label: "Hero".into(), width: 1280, height: 720, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None, drawing: None, auto_fit: None };
     let mutation = ShootingMutation::CreateShot(CreateShot { shot: shot.clone(), index: None });
-    let law = author_through_document_store::<EditorApp<ShootingPlayApp>>(mutation.clone()).await;
-    assert_eq!(law.applied.shots.last(), Some(&shot));
-    assert_eq!(law.applied.shots.len(), law.undone.shots.len() + 1, "undo removes exactly the created shot");
-    assert_eq!(law.applied.shots[..law.undone.shots.len()], law.undone.shots[..]);
-    assert_eq!(law.redone.shots, law.applied.shots, "redo restores the created shot");
+    let mut observed = Vec::new();
+    let law = author_through_document_store::<EditorApp<ShootingPlayApp>>(mutation.clone(), |phase, snapshot| observed.push((phase, snapshot.shots.clone()))).await;
+    assert_eq!(observed.iter().map(|(phase, _)| *phase).collect::<Vec<_>>(), [StoreAuthoringPhase::Applied, StoreAuthoringPhase::Undone, StoreAuthoringPhase::Redone]);
+    let applied = &observed[0].1;
+    let undone = &observed[1].1;
+    let redone = &observed[2].1;
+    assert_eq!(applied.last(), Some(&shot));
+    assert_eq!(applied.len(), undone.len() + 1, "undo removes exactly the created shot");
+    assert_eq!(applied[..undone.len()], undone[..]);
+    assert_eq!(redone, applied, "redo restores the created shot");
     assert_eq!(law.forward_rows.len(), 1);
     assert_row_is_the_serde_document(&law.forward_rows[0], &mutation);
     assert_eq!(law.inverse_rows.len(), 1, "creating one shot is undone by exactly one row");

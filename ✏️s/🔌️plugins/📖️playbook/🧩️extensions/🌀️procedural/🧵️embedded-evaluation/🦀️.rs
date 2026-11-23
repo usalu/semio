@@ -254,7 +254,7 @@ pub(super) fn render_cached_preview(owner: &mut ModuleGeometryOwner, payload: &M
         } else {
             let meshes = format!("[{}]", cache.meshes.join(","));
             let instances = format!("[{}]", cache.instances.join(","));
-            body = ui_admit(body.try_child(scene_surface(PREVIEW_SURFACE, SurfaceKind::World3d, &world3d_scene(world3d_default_camera(), meshes, instances, world3d_selection_json("single", &[], None), &WorldSunConfig::default()))?))?;
+            body = ui_admit(body.try_child(scene_surface(PREVIEW_SURFACE, SurfaceKind::World3d, &world3d_scene(world3d_default_camera(), meshes, instances, world3d_selection_json("single", &[], None), &WorldSunConfig::default()), labels.preview_surface.as_str(), None)?))?;
         }
     }
     ui_admit(body.try_build())

@@ -265,7 +265,7 @@ impl ArtifactInferenceRouter {
 
         let request = semio_framework_pack_json::to_json_string(&route).into_bytes();
         let registration = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("inference owner `{owner}` is not loaded")))?;
-        let result = call_plugin(&registration, JOB_KIND_INFER, &request, drivers().map_err(PluginHostError::NativeIo)?).await?;
+        let result = call_plugin(&registration, JOB_KIND_INFER, &request, drivers().map_err(|error|PluginHostError::NativeIo(error))?).await?;
         let result_text = std::str::from_utf8(&result).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let echoed: InferenceRouteResult = semio_framework_pack_json::from_json_str(result_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         validate_inference_echo(&route, &echoed).await?;

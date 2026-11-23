@@ -6,7 +6,7 @@
     "Policy": {
       "const": {
         "version": 1,
-        "namespace": "semio.cargo.unit-cache/v2",
+        "namespace": "semio.cargo.unit-cache/v3",
         "layout": {
           "objects": "o",
           "entries": "e",
@@ -482,6 +482,10 @@
         },
         "key": {
           "$ref": "#/definitions/Digest"
+        },
+        "retention": {
+          "description": "What the build script run was produced from, so retention can judge it against the synchronized tree (a Declaration of the slot schema, checked by the code that writes it).",
+          "type": "object"
         },
         "package": {
           "type": "string"

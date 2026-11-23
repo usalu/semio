@@ -26,7 +26,7 @@ test("one owned Pack source returns its exact business tree after codec scaffold
   const source = readFileSync(new URL("../🦀️.rs", import.meta.url), "utf8");
   expect(source).toContain("OwnedProjectedPackWireCursor");
   expect(source).toContain("BorrowedProjectedPackCursor");
-  expect(source).toContain("take_authority(grant)");
+  expect(source).toContain("source.take_authority_into(&mut self.original");
   expect(source).not.toContain("JsonWrite");
   expect(source).not.toContain("to_value(");
 });

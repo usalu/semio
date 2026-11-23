@@ -66,7 +66,7 @@ fn world_instances_json(snapshot: &LowpolySnapshot) -> String {
 /// straight off the document. Every object renders the same fallback-box placeholder mesh geometry
 /// (real composed-child mesh resolution is an editor-side, engine-backed pipeline out of scope for a
 /// pure read).
-pub fn render(document: &LowpolySnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render(document: &LowpolySnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let meshes_json =
         serde_json::to_string(&[serde_json::json!({ "id": LOWPOLY_VIEW_FALLBACK_MESH_KIND, "data": Into::<serde_json::Value>::into(semio_framework_value::ToValue::to_value(&mesh_from_kind(LOWPOLY_VIEW_FALLBACK_MESH_KIND))) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
@@ -75,7 +75,7 @@ pub fn render(document: &LowpolySnapshot) -> semio_plugin::UiAssemblyResult<semi
         instances_json: world_instances_json(document),
         selection_json: world3d_selection_json("rectangle", &[], None),
     };
-    MeshWindowKit::render(&view)
+    MeshWindowKit::render(&view, locale)
 }
 //#endregion 🔖️Render
 

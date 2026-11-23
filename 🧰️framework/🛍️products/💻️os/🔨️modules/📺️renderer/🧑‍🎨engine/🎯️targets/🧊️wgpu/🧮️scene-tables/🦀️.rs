@@ -32,7 +32,7 @@ use semio_ui_wgpu_layout::chrome::{item_bg, item_text, push_control_border, Shar
 use semio_ui_wgpu_widget_kit::{draw_text_wrapped, measure_text_width, register_input_meta, WidgetContext};
 
 /// 🧩️ The three immediate widgets a scene host draws over its surface (text, button, input); every other node kind is the retained painter's.
-fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+pub(crate) fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     match node {
         WidgetNode::Text { value, emphasize } => {
             let (size, color) = if *emphasize { (ctx.theme.font_size_emphasized, ctx.theme.text) } else { (ctx.theme.font_size_body, ctx.theme.text_muted) };

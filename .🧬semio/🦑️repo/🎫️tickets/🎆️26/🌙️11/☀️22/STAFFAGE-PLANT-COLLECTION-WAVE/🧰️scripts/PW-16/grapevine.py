@@ -52,10 +52,10 @@ def trellis(sc, wires=True):
         sc.rod(f"post-{side}", f"post-{side}", [0, 0, 0], [POST_H, 0, 0], POST_D, region="posts", material=POST, tone=0.55)
     arm = {50: 0.012, 100: 0.014, 200: 0.016, 500: 0.016}[sc.d]
     for side in "lr":
-        for h in (1.10, 1.45):
+        for h in (1.10, 1.45) if sc.d != 500 else ():
             sc.rod(f"arm-{side}-{int(h * 100)}", f"post-{side}", [h, 0, -0.165], [h, 0, 0.165], arm, region="wires", material=WIRE, tone=0.25, role="detail")
     if wires:
-        for name, y, z in WIRES:
+        for name, y, z in WIRES if sc.d != 500 else [w for w in WIRES if w[2] == 0.0]:
             sc.rod(f"wire-{name}", "wires", [0, y - 0.80, z], [2 * POST_X, y - 0.80, z], WIRE_D, region="wires", material=WIRE, tone=0.2, role="detail", filled=False, views=() if os.environ.get("NOWIRE") else ("elevation", "front", "plan"))
 
 
@@ -239,8 +239,8 @@ VOLUME_DECISIONS = {
     200: [T("Minimal: the structure of 1:200 already is one member per bone and per drawn bar and one support per anchor, the least the structural views need; it keeps the solids of 1:100.", "Minimal: das Tragwerk von 1:200 ist bereits ein Stab je Knochen und je gezeichnetem Stab und ein Auflager je Anker, das Mindeste, das die Tragwerksansichten brauchen; es behält die Körper von 1:100."),
           T("Body at 1:200: three tiers per vine, one ellipsoid per bunch, no trunk head.", "Körper bei 1:200: drei Lagen je Stock, ein Ellipsoid je Traube, kein Stammkopf."),
           T("Thermal and structure by reference; supports at the smallest feature of the scale.", "Thermik und Tragwerk per Verweis; Auflager im kleinsten Merkmal des Maßstabs.")],
-    500: [T("Minimal: the structure of 1:500 is one member per bone and per drawn bar and one support per anchor, as at 1:200; fewer would leave a drawn wire or bone without its member.", "Minimal: das Tragwerk von 1:500 ist ein Stab je Knochen und je gezeichnetem Stab und ein Auflager je Anker, wie bei 1:200; weniger ließe einen gezeichneten Draht oder Knochen ohne seinen Stab."),
-          T("Body at 1:500: one lobe per vine (0.56 m deep), bunches of 90 mm, trunks of 80 mm, the 2.5 mm wires as slender rods.", "Körper bei 1:500: ein Lappen je Stock (0,56 m tief), Trauben von 90 mm, Stämme von 80 mm, die Drähte von 2,5 mm als schlanke Stäbe."),
+    500: [T("Minimal: the structure of 1:500 is one member per bone and per drawn bar and one support per anchor; fewer would leave a drawn wire or bone without its member.", "Minimal: das Tragwerk von 1:500 ist ein Stab je Knochen und je gezeichnetem Stab und ein Auflager je Anker; weniger ließe einen gezeichneten Draht oder Knochen ohne seinen Stab."),
+          T("Body at 1:500: one lobe per vine (0.56 m deep), bunches of 90 mm, trunks of 80 mm, the fruit wire and the top wire as slender rods of 2.5 mm; the cross arms and the four catch wires they carry are left out (a 16 mm arm does not print at 1:500).", "Körper bei 1:500: ein Lappen je Stock (0,56 m tief), Trauben von 90 mm, Stämme von 80 mm, der Tragdraht und der oberste Draht als schlanke Stäbe von 2,5 mm; die Querarme und die vier Heftdrähte, die sie tragen, sind weggelassen (ein Arm von 16 mm druckt bei 1:500 nicht)."),
           T("Thermal and structure by reference; supports of 80 mm.", "Thermik und Tragwerk per Verweis; Auflager von 80 mm.")],
 }
 

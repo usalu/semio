@@ -47,7 +47,17 @@
         "widget": "select",
         "role": "value",
         "group": "value",
-        "order": 20
+        "order": 20,
+        "options": {
+          "declared": {
+            "en": "Declared on the layer",
+            "de": "Auf der Schicht angegeben"
+          },
+          "derived": {
+            "en": "Derived from investigations",
+            "de": "Aus Erkundungen abgeleitet"
+          }
+        }
       }
     }
   }

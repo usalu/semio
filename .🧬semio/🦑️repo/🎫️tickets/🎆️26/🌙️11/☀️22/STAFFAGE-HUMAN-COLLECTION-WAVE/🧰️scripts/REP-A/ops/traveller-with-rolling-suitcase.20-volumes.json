@@ -1,0 +1,24 @@
+[
+ {
+  "op": "solid-radii",
+  "scale": "50",
+  "list": "body",
+  "match": "hand-[lr]-(index|middle|ring|little)-(proximal|middle|distal)",
+  "factor": 1.2
+ },
+ {
+  "op": "solid-set",
+  "scale": "200",
+  "list": "body",
+  "id": "coat-skirt-l",
+  "set": {
+   "transform": {
+    "translation": [
+     -0.00023,
+     -0.01406,
+     0.00229
+    ]
+   }
+  }
+ }
+]

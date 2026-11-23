@@ -12,7 +12,7 @@
   ],
   "turn": {
     "items": 1,
-    "copyBytes": 4096,
+    "copyBytes": 16384,
     "capacityBytes": 65536,
     "releaseBytes": 65536,
     "depth": 128

@@ -1,0 +1,236 @@
+[
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "rack-rail-l"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "rack-rail-r"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "rack-spine"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "st-rack-bar-1"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "st-rack-bar-2"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "st-rack-bar-3"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "st-rack-bar-4"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "rack-leg-a-l"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "rack-leg-b-l"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "rack-strut-l"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "rack-leg-a-r"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "rack-leg-b-r"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "structure",
+  "id": "rack-strut-r"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-rail-l"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-rail-r"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-spine"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-bar-1"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-bar-2"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-bar-3"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-bar-4"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-leg-a-l"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-leg-b-l"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-strut-l"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-leg-a-r"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-leg-b-r"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "thermal",
+  "id": "th-rack-strut-r"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-rail-l"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-rail-r"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-spine"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-bar-1"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-bar-2"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-bar-3"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-bar-4"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-leg-a-l"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-leg-b-l"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-strut-l"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-leg-a-r"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-leg-b-r"
+ },
+ {
+  "op": "solid-delete",
+  "scale": "500",
+  "list": "body",
+  "id": "rack-strut-r"
+ }
+]

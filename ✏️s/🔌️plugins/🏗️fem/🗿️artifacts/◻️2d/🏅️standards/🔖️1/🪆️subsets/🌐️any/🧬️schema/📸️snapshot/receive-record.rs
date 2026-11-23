@@ -74,7 +74,7 @@ fn support(r: &RecordValue, output:&mut Option<FemSupport>, parent_progress:&mut
         |v,s,progress,unwind,r,o,meter| {
             text(r,0,&mut v.id,&mut s.0,progress,unwind,o,meter)?;
             text(r,1,&mut v.node_id,&mut s.0,progress,unwind,o,meter)?;
-            semio_s_fem_receiving::enum_list(field(r,2)?,&mut s.1,&[FemDof::Tx,FemDof::Ty,FemDof::Tz,FemDof::Rx,FemDof::Ry,FemDof::Rz],progress,unwind,o,meter)?;
+            semio_s_fem_receiving::enum_words(field(r,2)?,&mut s.1,&[FemDof::Tx,FemDof::Ty,FemDof::Tz,FemDof::Rx,FemDof::Ry,FemDof::Rz],progress,unwind,o,meter)?;
             semio_s_fem_receiving::move_vec(o,&mut v.fixed,&mut s.1,progress,unwind,meter)?;
             Ok(())
         },

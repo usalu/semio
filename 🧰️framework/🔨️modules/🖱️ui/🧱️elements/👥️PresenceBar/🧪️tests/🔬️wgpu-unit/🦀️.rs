@@ -86,7 +86,7 @@ async fn an_agent_row_carries_the_agent_badge_in_both_tongues_and_a_person_never
 /// React's `PresenceBar` `activity`; a peer without one is unchanged.
 #[semio_framework_async_macros::async_test]
 async fn an_activity_badges_its_row_and_is_announced_in_the_accessible_name() {
-    let editing = PresencePeerRow { activity: Some(PresenceActivity { text: "Ada is editing Drag selection in time travel".into(), badge: "⏪".into() }), ..peer("actor-a", "Ada", Some(PresenceRole::Author)) };
+    let editing = PresencePeerRow { activity: Some(PresenceActivity { text: "Ada is editing Drag selection in time travel".into(), badge: "⏪".into() }), ..peer("actor-a", "Ada", None) };
     let agent = PresencePeerRow { is_agent: true, activity: Some(PresenceActivity { text: "Drafting agent is editing the history in time travel".into(), badge: "⏪".into() }), ..peer("actor-agent", "Drafting agent", None) };
     let peers = vec![editing, agent, peer("actor-b", "Bob", None)];
     let tree = format!("{:?}", build_presence_bar("s-presence-peers", &peers, None, Locale::En));

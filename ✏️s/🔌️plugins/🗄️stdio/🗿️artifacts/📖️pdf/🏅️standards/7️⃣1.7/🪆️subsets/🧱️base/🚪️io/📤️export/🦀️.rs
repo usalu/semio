@@ -52,12 +52,12 @@ pub fn demo_pdf17_snapshot() -> PdfSnapshot {
     crate::standards::v1_7::subsets::base::io::import::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
 }
 
-/// 🆕️ A new pdf document: the empty 1.7 document as the real codec round-trips it — its retained object graph
+/// 🆕️ A new pdf document: one blank US Letter page ([`PdfPage::default`], 612 x 792 pt), as the real codec round-trips it — its retained object graph
 /// (`objects`/`trailer`) is what a fresh write produced, read back, exactly like [`demo_pdf17_snapshot`]; the empty
 /// `Default` carries no graph, so it saved as a document that reopened as a different one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn blank_pdf_snapshot() -> PdfSnapshot {
     use crate::standards::v1_7::subsets::base::io::import::decode_pdf;
-    encode_pdf(&PdfSnapshot::default()).and_then(|bytes| decode_pdf(&bytes)).expect("blank_pdf_snapshot: the empty document round-trips through the real codec")
+    encode_pdf(&PdfSnapshot { pages: vec![PdfPage::default()], ..PdfSnapshot::default() }).and_then(|bytes| decode_pdf(&bytes)).expect("blank_pdf_snapshot: the blank document round-trips through the real codec")
 }
 //#endregion 🆕️Blank

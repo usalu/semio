@@ -6795,6 +6795,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
+ "semio-framework-deflate",
  "semio-framework-diagnostic",
  "semio-framework-io-control",
  "semio-framework-io-schema",
@@ -9190,6 +9191,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-value",
  "semio-os-kernel",
+ "semio-plugin-command",
  "semio-plugin-decl-app",
  "semio-plugin-instance-app",
  "semio-plugin-instance-initialization",
@@ -10494,6 +10496,7 @@ dependencies = [
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
+ "semio-plugin-reactor-jobs",
  "semio-plugin-testing-laws",
  "semio-plugin-time-travel",
  "semio-plugin-window-config",
@@ -15649,7 +15652,6 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mutations-2",
  "semio-s-artifact-stdio-pdf-snapshot",
  "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-tests",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -15703,10 +15705,16 @@ dependencies = [
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-jpg-inferences",
+ "semio-s-artifact-stdio-pdf-image-route",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-ui-locale",
 ]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-editor-kit"
+version = "0.1.0"
 
 [[package]]
 name = "semio-s-artifact-stdio-pdf-filters"
@@ -15796,6 +15804,14 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-image-route"
+version = "0.1.0"
+dependencies = [
+ "semio-plugin",
+ "semio-s-artifact-stdio-pdf-inferences",
 ]
 
 [[package]]
@@ -17102,6 +17118,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-page-editor-authoring",
  "semio-s-artifact-stdio-pdf-page-editor-base",
  "semio-s-artifact-stdio-pdf-page-editor-view",
+ "semio-s-artifact-stdio-pdf-presence-lane",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
@@ -17192,6 +17209,7 @@ dependencies = [
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-conformance-support",
  "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-editor-kit",
  "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-base",
@@ -17205,6 +17223,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-family-14",
  "semio-s-artifact-stdio-pdf-mut-family-15",
  "semio-s-artifact-stdio-pdf-mut-family-8",
+ "semio-s-artifact-stdio-pdf-presence-lane",
  "semio-s-artifact-stdio-pdf-schema-2",
  "semio-s-artifact-stdio-pdf-schema-3",
  "semio-s-artifact-stdio-pdf-schema-4",
@@ -17214,6 +17233,41 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-testkit",
  "semio-s-artifact-stdio-pdf-tests",
  "semio-s-artifact-stdio-pdf-tests-2",
+ "semio-s-artifact-stdio-pdf-view-lane",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-presence-lane"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d",
+ "semio-framework-action-bus",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-machine",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-snapshot-projection",
+ "semio-os-command",
+ "semio-os-kernel",
+ "semio-os-store-one-item",
+ "semio-plugin",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-pdf-page-editor-view",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -17392,6 +17446,7 @@ dependencies = [
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-editor-document",
+ "semio-s-artifact-stdio-pdf-editor-kit",
  "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-base",
@@ -17403,6 +17458,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-native-save",
  "semio-s-artifact-stdio-pdf-page-editor-authoring",
+ "semio-s-artifact-stdio-pdf-presence-lane",
  "semio-s-artifact-stdio-pdf-schema-3",
  "semio-s-artifact-stdio-pdf-schema-4",
  "semio-s-artifact-stdio-pdf-snapshot",
@@ -17410,6 +17466,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-tests",
  "semio-s-artifact-stdio-pdf-tests-2",
  "semio-s-artifact-stdio-pdf-view-lane",
+ "semio-s-artifact-stdio-pdf14-canvas",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -17670,6 +17727,7 @@ dependencies = [
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-pdf-page-editor",
+ "semio-s-artifact-stdio-pdf-presence-lane",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
@@ -17723,6 +17781,27 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-lexer",
  "semio-s-artifact-stdio-pdf-model",
  "semio-s-artifact-stdio-pdf-snapshot-2",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf14-canvas"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-pdf-graph-projection",
+ "semio-s-artifact-stdio-pdf-mut-base",
+ "semio-s-artifact-stdio-pdf-mut-family-11",
+ "semio-s-artifact-stdio-pdf-page-editor",
+ "semio-s-artifact-stdio-pdf-presence-lane",
+ "semio-s-artifact-stdio-pdf-snapshot",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-s-artifact-stdio-pdf-view-lane",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
 ]
 
 [[package]]

@@ -56,6 +56,14 @@ impl<const SLOTS: usize, const WORDS: usize> UiArenaHandbacks<SLOTS, WORDS> {
         (prefix != 0).then(|| first_word * 64 + prefix.trailing_zeros() as usize)
     }
 
+    /// 🧯️ Forgets every pending obligation of an abandoned arena so the next arena starts from a clean table; only an arena that can no longer be closed in order may call it.
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn abandon(&self) {
+        self.releases.iter().for_each(|slot| slot.store(0, Ordering::Release));
+        self.claims.iter().for_each(|slot| slot.store(false, Ordering::Release));
+        self.ready.iter().for_each(|word| word.store(0, Ordering::Release));
+    }
+
     pub fn has_pending(&self) -> bool {
         self.ready.iter().any(|word| word.load(Ordering::Acquire) != 0)
     }

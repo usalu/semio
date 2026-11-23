@@ -165,4 +165,3 @@ impl EmbeddedChildAdmissionCursorV1 for DrawingAdmissionCursor{
  fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.source.is_none()&&self.program.is_none()&&self.program_bytes==0&&self.index.terminal_is_empty()&&self.walk.terminal_is_empty()}
 }
 impl Drop for DrawingAdmissionCursor{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Drawing admission retains original source or partial backing until funded close")}}
-#[cfg(test)]#[path="🧪️tests.rs"]mod tests;

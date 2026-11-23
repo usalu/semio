@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::e::schema::mutations::PdfEMutation;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::e::schema::mutations::embed_font_file::EmbedFontFile;
@@ -21,7 +21,7 @@ fn detaches_and_can_restore_the_font_program() {
     let next = applied(&base, &PdfEMutation::RemoveFontFile(mutation.clone()));
     let descriptor = support::font_descriptors(&next)[0];
     assert!(support::font_program(&next, descriptor).is_none());
-    assert_eq!(<RemoveFontFile as MutationKind<PdfSnapshot, PdfEMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
+    assert_eq!(<RemoveFontFile as ColdMutationKind<PdfSnapshot, PdfEMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]

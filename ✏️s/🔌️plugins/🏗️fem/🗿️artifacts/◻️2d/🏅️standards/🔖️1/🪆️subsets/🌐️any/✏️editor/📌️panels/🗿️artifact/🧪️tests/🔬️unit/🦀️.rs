@@ -184,6 +184,7 @@ fn section_totals(document: &Fem2dSnapshot) -> [usize; SECTIONS] {
 /// section stamps that same count as the extent of the list it is a window onto.
 #[semio_framework_async_macros::async_test]
 async fn demo_document_lists_every_section_with_its_own_count() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let document = demo();
     let tree = build(&document, english());
     let expected: [(&str, &str, usize); 8] = [
@@ -212,6 +213,7 @@ async fn demo_document_lists_every_section_with_its_own_count() {
 /// 🌳️ Tree rows and viewport picks share canonical typed identities.
 #[semio_framework_async_macros::async_test]
 async fn rows_are_keyed_by_typed_identity_and_bound_to_the_fem2d_domain() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let document = demo();
     let tree = build(&document, english());
     let Component::Tree(props) = &tree.component else { panic!("panel tree") };
@@ -230,6 +232,7 @@ async fn rows_are_keyed_by_typed_identity_and_bound_to_the_fem2d_domain() {
 /// term; the case picks at `loadCase` granularity and each load at `load` granularity.
 #[semio_framework_async_macros::async_test]
 async fn load_case_rows_nest_their_loads_and_combination_rows_nest_their_terms() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let document = demo();
     let tree = build(&document, english());
     let cases = section_node(&tree, "load-cases");
@@ -254,6 +257,7 @@ async fn load_case_rows_nest_their_loads_and_combination_rows_nest_their_terms()
 /// two rows of the same kind apart.
 #[semio_framework_async_macros::async_test]
 async fn rows_carry_the_human_label_of_their_entity() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let document = demo();
     let tree = build(&document, english());
     assert!(row_labels(section_node(&tree, "nodes")).contains(&"n1 · (0.00, −4.00)".to_string()));
@@ -277,6 +281,7 @@ async fn rows_carry_the_human_label_of_their_entity() {
 /// pathological name is clipped rather than refusing the whole render.
 #[semio_framework_async_macros::async_test]
 async fn scalars_and_overlong_labels_stay_inside_the_ui_text_envelope() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let labels = english();
     let hea200 = FemSection { id: "hea200".into(), name: "HEA200".into(), area: 0.00538, iy: 0.0000369 };
     assert_eq!(fem2d_section_label(&hea200), "HEA200 · A 0.00538 m² · Iy 3.69e-5 m⁴");
@@ -301,6 +306,7 @@ async fn scalars_and_overlong_labels_stay_inside_the_ui_text_envelope() {
 /// entity noun each row carries as its description.
 #[semio_framework_async_macros::async_test]
 async fn german_labels_resolve_across_the_whole_tree() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let document = demo();
     let json = projection(build(&document, german()));
     assert!(json.contains("Knoten (12)"), "{json}");
@@ -321,6 +327,7 @@ async fn german_labels_resolve_across_the_whole_tree() {
 /// no row actions compete with the panels rendered beside it.
 #[semio_framework_async_macros::async_test]
 async fn rows_declare_their_granularity_while_the_tree_binds_the_one_interaction_select() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let document = demo();
     let tree = build(&document, english());
     let row = section_node(&tree, "nodes").children.iter().find(|row| row.key.as_str() == "scope:1:4:node2:n1").expect("n1 row");
@@ -344,6 +351,7 @@ async fn rows_declare_their_granularity_while_the_tree_binds_the_one_interaction
 /// selection wider than one fixed list marks its first page instead of refusing the render.
 #[semio_framework_async_macros::async_test]
 async fn selected_and_hovered_ids_are_marked_from_the_interaction_snapshot() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let document = demo();
     let view = wide_view();
     let windows = TreeWindows::for_body(&view, BODY_KEY);
@@ -384,6 +392,7 @@ async fn the_app_declares_the_artifact_panel_under_its_body_key() {
 /// given, and the body never invents a `+N` row to stand in for the remainder.
 #[semio_framework_async_macros::async_test]
 async fn an_oversized_document_stamps_every_extent_and_materialises_one_viewport() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let document = oversized();
     let tree = render(&document, &Fem2dInteractionSnapshot::default(), english(), &TreeWindows::unhosted()).expect("an oversized document still assembles");
     let totals = section_totals(&document);
@@ -411,6 +420,7 @@ async fn an_oversized_document_stamps_every_extent_and_materialises_one_viewport
 /// size the disclosure, and not one child row is materialised.
 #[semio_framework_async_macros::async_test]
 async fn a_closed_container_stamps_its_extent_and_builds_no_child() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let document = oversized();
     let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), Some(false), 0, 48), request(&load_case_path("wind"), Some(false), 0, 48)]);
     let tree = render(&document, &Fem2dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a closed container still assembles");
@@ -426,6 +436,7 @@ async fn a_closed_container_stamps_its_extent_and_builds_no_child() {
 /// exactly that half-open range, keyed by the scoped entity identity.
 #[semio_framework_async_macros::async_test]
 async fn a_window_request_materialises_exactly_its_own_range() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let document = oversized();
     let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), None, 20, 8), request(&load_case_path("wind"), None, 5, 4)]);
     let tree = render(&document, &Fem2dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a windowed document assembles");
@@ -440,6 +451,7 @@ async fn a_window_request_materialises_exactly_its_own_range() {
 /// 🌱️ An empty document is a readable tree of "(none)" placeholders, not a refusal.
 #[semio_framework_async_macros::async_test]
 async fn an_empty_document_renders_placeholders() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let document = Fem2dSnapshotRetiring::new(Fem2dSnapshot::from_reference(Fem2dSnapshotValue::default()).expect("empty panel fixture"));
     let tree = build(&document, english());
     for suffix in ["nodes", "elements", "regions", "supports", "load-cases", "combinations", "materials", "sections"] {

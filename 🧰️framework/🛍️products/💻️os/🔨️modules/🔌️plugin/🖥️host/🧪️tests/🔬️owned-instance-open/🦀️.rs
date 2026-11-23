@@ -16,9 +16,7 @@ fn repo_root()->PathBuf {
     semio_framework_test_fixtures::repo_root!()
 }
 fn fixture_component()->PathBuf {
-    let path=repo_root().join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/dist/components/semio_plugin_host_test_component.wasm");
-    assert!(path.is_file(),"neutral fixture producer prerequisite did not deliver {}",path.display());
-    path
+    semio_framework_test_fixtures::wasm_component!("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/Cargo.toml", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/dist/components/semio_plugin_host_test_component.wasm")
 }
 
 fn package_ref(package_id: &str, bytes: &[u8]) -> PackageRef {

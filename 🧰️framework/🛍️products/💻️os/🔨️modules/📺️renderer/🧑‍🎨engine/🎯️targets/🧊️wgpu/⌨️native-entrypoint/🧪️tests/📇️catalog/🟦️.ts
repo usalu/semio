@@ -83,7 +83,7 @@ test("native publication and launch select the admitted variant and executable",
     const environment = launched[2] as Record<string,string>;
     expect(JSON.parse(environment.SEMIO_NATIVE_LAUNCH_ADMISSION).scriptOwner).toBe("fixture:native-catalog");
     expect(environment.SEMIO_PLUGIN_MODULES).toBe(join(root,"runtime"));
-    expect(launched[1]).toEqual(["--plugin",corpus.variant,"--example","🎬️demo","--app",corpus.playground.app,"--brand",corpus.playground.brand,"--smoke"]);
+    expect(launched[1]).toEqual(["--plugin",corpus.variant,"--example","demo","--app",corpus.playground.app,"--brand",corpus.playground.brand,"--smoke"]);
 
     configuredHost = join(root,corpus.renderer.configured);
     renderer = [];

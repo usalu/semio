@@ -47,6 +47,12 @@ where
     (root, request)
 }
 
+/// 🎟️ The production interactive receiving floor: a scope needs setup items, control items and its quantum, so a step grant alone never opens one.
+const RECEIVING_FLOOR:RetainedCloneGrant=RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<20,maximum_depth:4096};
+
+/// 🪙️ Lends the receiving scope its production floor beneath the step's own grant, which still quotes the step itself.
+fn receiving_turn(step:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:step.maximum_items.max(RECEIVING_FLOOR.maximum_items),maximum_copy_bytes:step.maximum_copy_bytes.max(RECEIVING_FLOOR.maximum_copy_bytes),maximum_capacity_bytes:step.maximum_capacity_bytes.max(RECEIVING_FLOOR.maximum_capacity_bytes),maximum_release_bytes:step.maximum_release_bytes.max(RECEIVING_FLOOR.maximum_release_bytes),maximum_depth:step.maximum_depth.max(RECEIVING_FLOOR.maximum_depth)}}
+
 /// ⚖️ Drives `mutation` over `snapshot` to `Prepared`, then closes the preparation with quoted grants only, asserting every receipt fits its grant and equals the observed allocation.
 pub fn drive_one_item_preparation_law<P, M>(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<P, M>>, snapshot: P, mutation: M, body:usize, grant: ArtifactStoreOneItemGrant) -> OneItemPreparationLaw<P, M>
 where
@@ -68,7 +74,7 @@ where
     let prepared = loop {
         turns += 1;
         let mut out=None;let mut advanced=None;
-        caller.turn_with_decoder(grant.retained_grant(),&mut decoder,|cx|{cx.with_native_receiving(&mut out,|control,_|{advanced=Some(owner.advance(body,grant,control));Ok(())})?;Ok(())}).unwrap_or_else(|error| panic!("law preparation failed at turn {turns}: {error:?}"));
+        caller.turn_with_decoder(receiving_turn(grant.retained_grant()),&mut decoder,|cx|{let ran=cx.with_native_receiving(&mut out,|control,_|{advanced=Some(owner.advance(body,grant,control));Ok(())})?;eprintln!("[DEBUG] law receiving ran={ran:?} turn={turns}");Ok(())}).unwrap_or_else(|error| panic!("law preparation failed at turn {turns}: {error:?}"));
         let step=match advanced{Some(Ok(step))=>step,Some(Err(_))=>panic!("law preparation refused at turn {turns}"),None=>ArtifactStoreOneItemPreparationStep::Blocked};
         match step {
             ArtifactStoreOneItemPreparationStep::Prepared(_, progress) => {

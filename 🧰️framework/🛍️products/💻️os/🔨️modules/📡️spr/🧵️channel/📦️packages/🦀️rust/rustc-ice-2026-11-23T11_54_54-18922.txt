@@ -1,0 +1,24 @@
+thread 'main' panicked at /rustc-dev/9f36de775bc636c8e88c31a173c2bcb6995956a0/compiler/rustc_span/src/source_map.rs:221:14:
+expecting a current working directory to exist: Os { code: 4, kind: Interrupted, message: "Interrupted system call" }
+stack backtrace:
+   0:        0x10c7b2ebc - <std[3e23b466ac191d88]::backtrace::Backtrace>::create
+   1:        0x10a68dd04 - std[3e23b466ac191d88]::panicking::update_hook::<alloc[d97f5b479a8d2901]::boxed::Box<rustc_driver_impl[5865b28a2aa2da18]::install_ice_hook::{closure#1}>>::{closure#0}
+   2:        0x10c7c7518 - std[3e23b466ac191d88]::panicking::panic_with_hook
+   3:        0x10c7a8830 - std[3e23b466ac191d88]::panicking::panic_handler::{closure#0}
+   4:        0x10c79f650 - std[3e23b466ac191d88]::sys::backtrace::__rust_end_short_backtrace::<std[3e23b466ac191d88]::panicking::panic_handler::{closure#0}, !>
+   5:        0x10c7a9d58 - __rustc[7432b9eb82595c9b]::rust_begin_unwind
+   6:        0x10c8922f4 - core[fdb3bf8d302f9586]::panicking::panic_fmt
+   7:        0x10c892040 - core[fdb3bf8d302f9586]::result::unwrap_failed
+   8:        0x10c14311c - <rustc_span[d710e54a8df691d]::source_map::SourceMap>::with_inputs
+   9:        0x10c113fb0 - rustc_session[15e99b935b3c369e]::session::mk_emitter
+  10:        0x10c10c630 - rustc_session[15e99b935b3c369e]::config::build_session_options
+  11:        0x10a69281c - rustc_driver_impl[5865b28a2aa2da18]::run_compiler
+  12:        0x10a69ef14 - rustc_driver_impl[5865b28a2aa2da18]::main
+  13:        0x10464c994 - std[3e23b466ac191d88]::sys::backtrace::__rust_begin_short_backtrace::<fn() -> std[3e23b466ac191d88]::process::ExitCode, std[3e23b466ac191d88]::process::ExitCode>
+  14:        0x10464c9ac - std[3e23b466ac191d88]::rt::lang_start::<std[3e23b466ac191d88]::process::ExitCode>::{closure#0}
+  15:        0x10c7c5a10 - std[3e23b466ac191d88]::rt::lang_start_internal
+  16:        0x10464ca0c - _main
+
+
+rustc version: 1.99.0-nightly (9f36de775 2026-07-19)
+platform: aarch64-apple-darwin

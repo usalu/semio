@@ -94,7 +94,6 @@ export function renderPrintLatexTokenStylesheet(tokens: PrintDesignTokens = load
   lines.push("");
   const chromeMetrics = tokens.metrics?.chrome;
   if (chromeMetrics) {
-    lines.push(`\\newcommand{\\semio@chrome@titlebar@height}{${+(unitFactor * (chromeMetrics.controlHeightUiSpacing ?? 7)).toFixed(3)}em}`);
     lines.push(`\\newcommand{\\semio@chrome@padding}{${+(unitFactor * (chromeMetrics.paddingStandardUiSpacing ?? 1)).toFixed(3)}em}`);
     lines.push(`\\newcommand{\\semio@chrome@navbar@height}{${+(unitFactor * (chromeMetrics.navbarHeightUiSpacing ?? 9)).toFixed(3)}em}`);
     lines.push(`\\newcommand{\\semio@chrome@footer@height}{${+(unitFactor * (chromeMetrics.footerHeightUiSpacing ?? 9)).toFixed(3)}em}`);

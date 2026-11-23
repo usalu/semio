@@ -213,13 +213,13 @@ pub fn scene_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: 
 }
 
 /// 🧊️ Renders the world window.
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    render_over(snapshot, inference, config, selection, hover, revision, &Preview::default())
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    render_over(snapshot, inference, config, selection, hover, revision, locale, &Preview::default())
 }
 
 /// 🧊️ [`render`] with the marks of the gesture in progress painted over the model.
-pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, preview: &Preview) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::World3d, &scene_over(snapshot, inference, config, selection, hover, revision, preview))
+pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, locale: semio_plugin::Locale, preview: &Preview) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::World3d, &scene_over(snapshot, inference, config, selection, hover, revision, preview), semio_plugin::surface_name(locale, "Model view", "Modellansicht"), None)
 }
 //#endregion 🔖️Scene
 

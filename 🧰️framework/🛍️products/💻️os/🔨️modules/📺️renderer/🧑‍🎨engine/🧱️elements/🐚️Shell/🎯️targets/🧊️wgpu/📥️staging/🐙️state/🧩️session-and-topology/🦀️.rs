@@ -323,7 +323,7 @@ impl ShellState {
                 layout_save_label: String::new(),
                 user_layouts: Vec::new(),
                 window_content_rects: HashMap::new(),
-                window_silhouettes: HashMap::new(),
+                window_frames: HashMap::new(),
             },
             input: ShellInputState {
                 scroll_offsets: HashMap::new(),

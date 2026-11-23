@@ -168,7 +168,7 @@ fn fem2d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                 async fn dispatch(app: &mut VcsArtifactApp<EditorApp<Fem2dPlayApp>>, view: &ViewModel, command: Fem2dCommand, expected_windows: usize, cx: &mut semio_plugin::StepContext<'_>) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, String> {
                     let command_id = command.command_id();
                     let view_state = artifact_app_laws::receive_view_fixture(view.clone(), artifact_app_laws::OriginalWorkFixture::stock());
-                    let meta = ActionMeta { instance_id: 71, view_state: Some(view_state), ..artifact_app_laws::meta("fem2d-window-ownership") };
+                    let meta = ActionMeta { instance_id: 71, view_state: Some(view_state), ..artifact_app_laws::meta(semio_os_kernel::LOCAL_ACTOR_ID) };
                     let mut identity = semio_plugin::artifact_app_laws::fixture_identity();
                     let dispatch = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, cx);
                     let invoked = Box::pin(dispatch).await.map_err(|error| format!("{error:?}"))?;

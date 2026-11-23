@@ -32,4 +32,5 @@ semio-framework-value-persistent.workspace = true
 semio-framework-value-native-owned.workspace = true
 
 [dev-dependencies]
+semio-framework-value-testing-admission = { path = "../../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 serde_json.workspace = true

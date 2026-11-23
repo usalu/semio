@@ -1,0 +1,23 @@
+{
+  "title": "Get PDF Artifact Editor Working End to End",
+  "emoji": "📕",
+  "status": "open",
+  "description": "Get pdf artifact editor working end to end. In parallel the shared work fleet mechanism is being developed; if it doesn't work fall back to native tools. Coordinate with Opus, dispatch Sonnet agents for implementation and Haiku agents for exploration/audits. Fix fundamental unrelated issues found along the way. Treat the goal end to end.",
+  "goal": "🎯runningpdf",
+  "sessions": [
+    "18f1aa4b-dca9-4d89-b552-8bd0b6a3f94a"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 23:35:39",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get pdf artifact editor working end to end. In parallel the shared work fleet mechanism is being developed; if it doesn't work fall back to native tools. Coordinate with Opus, dispatch Sonnet agents for implementation and Haiku agents for exploration/audits. Fix fundamental unrelated issues found along the way. Treat the goal end to end.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    }
+  ]
+}

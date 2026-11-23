@@ -1,0 +1,8 @@
+[package]
+name = "p-side"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+itoa = "=1.0.18"

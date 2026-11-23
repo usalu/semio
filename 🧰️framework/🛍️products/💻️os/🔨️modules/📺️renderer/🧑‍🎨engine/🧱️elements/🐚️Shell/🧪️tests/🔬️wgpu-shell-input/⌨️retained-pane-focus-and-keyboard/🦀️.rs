@@ -18,6 +18,7 @@ fn retained_pane_actions_address_the_concrete_window_before_guest_admission() {
         if surface != owner {
             assert!(!shell.windows.active_utility_by_window.contains_key(surface), "{} pane identity never becomes an application window", case["kind"]);
         }
+        std::mem::take(&mut shell.docs.session.as_mut().expect("the host fixture session").view_state.active_utility_by_window_id).retire_cold();
     }
 }
 

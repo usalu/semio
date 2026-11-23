@@ -1,0 +1,93 @@
+{
+  "cases": [
+    {
+      "name": "superseded content-addressed child with an unchanged child id is dropped with its subtree",
+      "root": "root",
+      "head": [
+        {
+          "slot": "steps",
+          "childId": "flow",
+          "artifactId": "steps-flow-new"
+        },
+        {
+          "slot": "kit",
+          "childId": "kit",
+          "artifactId": "kit-1"
+        }
+      ],
+      "members": [
+        {
+          "artifactId": "steps-flow-old",
+          "parent": "root",
+          "slot": "steps",
+          "childId": "flow"
+        },
+        {
+          "artifactId": "steps-flow-new",
+          "parent": "root",
+          "slot": "steps",
+          "childId": "flow"
+        },
+        {
+          "artifactId": "old-leaf",
+          "parent": "steps-flow-old",
+          "slot": "leaf",
+          "childId": "leaf"
+        },
+        {
+          "artifactId": "kit-1",
+          "parent": "root",
+          "slot": "kit",
+          "childId": "kit"
+        }
+      ],
+      "survivors": [
+        "steps-flow-new",
+        "kit-1"
+      ]
+    },
+    {
+      "name": "an unchanged head keeps every member and the nested ones",
+      "root": "root",
+      "head": [
+        {
+          "slot": "steps",
+          "childId": "flow",
+          "artifactId": "steps-flow-1"
+        }
+      ],
+      "members": [
+        {
+          "artifactId": "steps-flow-1",
+          "parent": "root",
+          "slot": "steps",
+          "childId": "flow"
+        },
+        {
+          "artifactId": "leaf-1",
+          "parent": "steps-flow-1",
+          "slot": "leaf",
+          "childId": "leaf"
+        }
+      ],
+      "survivors": [
+        "steps-flow-1",
+        "leaf-1"
+      ]
+    },
+    {
+      "name": "a member under an unreachable parent is dropped",
+      "root": "root",
+      "head": [],
+      "members": [
+        {
+          "artifactId": "orphan",
+          "parent": "gone",
+          "slot": "leaf",
+          "childId": "leaf"
+        }
+      ],
+      "survivors": []
+    }
+  ]
+}

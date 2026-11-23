@@ -11,7 +11,7 @@ use crate::pipelines::Pipelines;
 use crate::resources::GpuResources;
 use crate::scene_target::{SceneColorTarget, SCENE_MIP_LEVELS};
 use crate::surface_state::{classify_batch_phase, ScenePhase};
-use ui_render::{BackendError, DrawBatch, FrameStats, PipelineKind, QuadInstance, RenderPacket, ResourceKind, SurfacePass};
+use ui_render::{viewport_scissor, BackendError, DrawBatch, FrameStats, PipelineKind, QuadInstance, RenderPacket, ResourceKind, SurfacePass};
 
 //#region 🔖️Frame
 
@@ -49,10 +49,10 @@ fn bucket_batches(packet: &RenderPacket) -> BatchBuckets<'_> {
 
 //#endregion 📦️BatchBuckets
 
-//#region 🎭️Mask
+//#region 🎭️ViewportMask
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn draw_silhouette_mask(pass: &mut wgpu::RenderPass<'_>, pipelines: &Pipelines, resources: &GpuResources, quad_buffer: &wgpu::BufferSlice<'_>, start: u32, count: u32, width: f32, height: f32) {
+fn draw_viewport_mask(pass: &mut wgpu::RenderPass<'_>, pipelines: &Pipelines, resources: &GpuResources, quad_buffer: &wgpu::BufferSlice<'_>, start: u32, count: u32, width: f32, height: f32) {
     if count == 0 {
         pass.set_stencil_reference(1);
         return;
@@ -71,20 +71,12 @@ fn draw_silhouette_mask(pass: &mut wgpu::RenderPass<'_>, pipelines: &Pipelines, 
     pass.set_stencil_reference(1);
 }
 
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn apply_mask(pass: &mut wgpu::RenderPass<'_>, pipelines: &Pipelines, resources: &GpuResources, quad_buffer: Option<&wgpu::BufferSlice<'_>>, mask_range: Option<(u32, u32)>, width: f32, height: f32) {
-    match (mask_range, quad_buffer) {
-        (Some((start, count)), Some(buffer)) => draw_silhouette_mask(pass, pipelines, resources, buffer, start, count, width, height),
-        _ => pass.set_stencil_reference(1),
-    }
-}
-
-//#endregion 🎭️Mask
+//#endregion 🎭️ViewportMask
 
 //#region 🎞️BatchReplay
 
 /// 🎞️ Replays one [`DrawBatch`] verbatim — the pipeline/bind-group/vertex-buffer choice is entirely
-/// determined by `batch.pipeline`/`batch.texture`; no ordering, batching or clipping decision is made
+/// determined by `batch.pipeline`/`batch.texture`; no ordering or batching decision is made
 /// here (ticket `backend.rs` invariant).
 #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource this replay step needs; see draw.rs's own identical allow")]
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -100,7 +92,9 @@ fn replay_batch(
     width: f32,
     height: f32,
 ) -> Result<(), BackendError> {
-    apply_mask(pass, pipelines, resources, quad_buffer, batch.mask_range, width, height);
+    let Some(scissor) = viewport_scissor(batch.layer_state.scissor, width, height) else { return Ok(()) };
+    pass.set_scissor_rect(scissor.x, scissor.y, scissor.w, scissor.h);
+    pass.set_stencil_reference(1);
     let (start, count) = batch.instance_range;
     match batch.pipeline {
         PipelineKind::UiQuad => {
@@ -179,7 +173,7 @@ struct PreparedWorldPass {
 /// report**: unlike `draw.rs` (which interleaves each `SurfacePass` between its originating 2D layer's
 /// `quad_watermark`/`vector_watermark`), all 3D content here renders as one block after the backdrop's
 /// 2D content — `RenderPacket` drops the `ordered_layers` a backend would need to recover the exact
-/// interleave point (see `📓️terra-backend-webgpu-report.md`). Each pass still gets its own silhouette
+/// interleave point (see `📓️terra-backend-webgpu-report.md`). Each pass still gets its own viewport
 /// mask scoped to its own `viewport` rect (`mask_quads`), so 3D content is at least clipped to its own
 /// declared rectangle rather than whatever the last 2D batch's stencil state happened to leave behind.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -247,7 +241,7 @@ fn replay_world_passes(
 ) -> Result<(), BackendError> {
     for (slot, scene) in prepared.iter().enumerate() {
         if let Some(mask_buffer) = mask_buffer {
-            draw_silhouette_mask(pass, pipelines, resources, mask_buffer, slot as u32 * 2, 2, width, height);
+            draw_viewport_mask(pass, pipelines, resources, mask_buffer, slot as u32 * 2, 2, width, height);
         }
         pass.set_viewport(scene.viewport[0], scene.viewport[1], scene.viewport[2].max(1.0), scene.viewport[3].max(1.0), 0.0, 1.0);
         pass.set_bind_group(0, world_ring.bind_group(), &[world_ring.offset_for_slot(slot as u32)]);

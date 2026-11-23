@@ -3,8 +3,7 @@
 //! Milestones reached (see `📓️terra-backend-d3d12-report.md` for the authoritative statement):
 //! device + DXGI flip-model swapchain (3 buffers) + direct command queue + per-frame fence (resize
 //! incl. zero-size park/restore, `Present`, clear-colour frame); UI quad + vector pipelines with
-//! glyph/icon atlas + raster texture upload and per-batch scissor; stencil silhouette clip (mask/
-//! content PSO pair, `mask_range` replayed verbatim); offscreen scene target → 5-level mip blur →
+//! glyph/icon atlas + raster texture upload and per-batch rectangular scissor; offscreen scene target → 5-level mip blur →
 //! glass composite → blit; world3d mesh/lines with a real depth buffer and a 256-byte-aligned root-CBV
 //! ring; `GetDeviceRemovedReason` → `DeviceStatus::Lost`, `recover()`, `backend-testing`'s
 //! `debug_force_device_loss`/`read_back`.
@@ -36,7 +35,7 @@ use crate::types::{create_default_texture2d, create_upload_buffer, transition_ba
 use raw_window_handle::{RawWindowHandle, WindowHandle};
 use ui_render::{
     BackendError, DeviceCapabilities, DeviceStatus, DrawBatch, FrameStats, GpuTier, GraphicsBackend, LossReason, MemoryClass, PhysicalSize, PipelineKind, QuadInstance, RecoveredResources, RenderPacket, RenderReport, ResourceKind, ResourceOp,
-    SurfaceFormat, TextureId, VectorVertex,
+    SurfaceFormat, TextureId, VectorVertex, viewport_scissor,
 };
 use windows::core::Interface;
 use windows::Win32::Foundation::{HWND, RECT};
@@ -390,8 +389,8 @@ impl D3d12Backend {
     /// 🪞️ Pass 2 — mirrors `composite_to_swapchain`/the Metal backend's `encode_composite_pass`: blur
     /// the scene's mip chain, blit it to the real swapchain back buffer, composite every glass region
     /// on top, then paint glass-foreground 2D content (normal then overlay) directly onto the back
-    /// buffer, reusing `depth_texture` (no clear — "Load") so it still clips against the same stencil
-    /// silhouettes the offscreen pass wrote.
+    /// buffer, reusing `depth_texture` (no clear — "Load") so it still tests against the same stencil
+    /// buffer the offscreen pass used.
     fn encode_composite_pass(&mut self, back_buffer_index: u32, packet: &RenderPacket) {
         let width = self.size.width as f32;
         let height = self.size.height as f32;
@@ -565,9 +564,10 @@ impl D3d12Backend {
         let quad_stride = std::mem::size_of::<QuadInstance>() as u64;
         let vector_stride = std::mem::size_of::<VectorVertex>() as u64;
         for batch in batches {
-            match batch.mask_range {
-                Some((start, count)) => self.draw_silhouette_mask(quad_address, ui_globals_address, start, count, quad_stride, width, height),
-                None => unsafe { self.list.OMSetStencilRef(1) },
+            let Some(scissor) = viewport_scissor(batch.layer_state.scissor, width, height) else { continue };
+            unsafe {
+                self.list.RSSetScissorRects(&[RECT { left: scissor.x as i32, top: scissor.y as i32, right: (scissor.x + scissor.w) as i32, bottom: (scissor.y + scissor.h) as i32 }]);
+                self.list.OMSetStencilRef(1);
             }
             match batch.pipeline {
                 PipelineKind::UiQuad | PipelineKind::UiRasterTextured => {
@@ -597,38 +597,6 @@ impl D3d12Backend {
             }
         }
         unsafe { self.list.RSSetScissorRects(&[RECT { left: 0, top: 0, right: width as i32, bottom: height as i32 }]) };
-    }
-
-    /// 🩹️ Ports `draw_silhouette_mask`: stamps `reset_bounds` (the first instance in the range) with
-    /// stencil ref `0`, then every remaining "piece" instance with ref `1`, leaving ref `1` set for the
-    /// content draw that follows.
-    #[allow(clippy::too_many_arguments)]
-    fn draw_silhouette_mask(&mut self, quad_address: Option<u64>, ui_globals_address: u64, start: u32, count: u32, quad_stride: u64, width: f32, height: f32) {
-        let Some(quad_address) = quad_address else {
-            unsafe { self.list.OMSetStencilRef(1) };
-            return;
-        };
-        unsafe {
-            self.list.RSSetScissorRects(&[RECT { left: 0, top: 0, right: width as i32, bottom: height as i32 }]);
-            self.list.SetPipelineState(&self.pipelines.ui_mask);
-            self.list.SetGraphicsRootConstantBufferView(0, ui_globals_address);
-            self.list.OMSetStencilRef(0);
-        }
-        let first_view = D3D12_VERTEX_BUFFER_VIEW { BufferLocation: quad_address + (start as u64) * quad_stride, SizeInBytes: quad_stride as u32, StrideInBytes: quad_stride as u32 };
-        unsafe {
-            self.list.IASetVertexBuffers(0, Some(&[self.quad_vertex_view, first_view]));
-            self.list.DrawInstanced(6, 1, 0, 0);
-        }
-        if count > 1 {
-            let rest_view = D3D12_VERTEX_BUFFER_VIEW { BufferLocation: quad_address + ((start + 1) as u64) * quad_stride, SizeInBytes: (count - 1) * (quad_stride as u32), StrideInBytes: quad_stride as u32 };
-            unsafe {
-                self.list.OMSetStencilRef(1);
-                self.list.IASetVertexBuffers(0, Some(&[self.quad_vertex_view, rest_view]));
-                self.list.DrawInstanced(6, count - 1, 0, 0);
-            }
-        } else {
-            unsafe { self.list.OMSetStencilRef(1) };
-        }
     }
 
     /// 🪢️ `t0`/`s0` are always the shared glyph atlas; `t1`/`s1` are the shared icon atlas for

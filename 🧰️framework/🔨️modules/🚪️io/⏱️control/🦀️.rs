@@ -68,7 +68,7 @@ impl NativeSnapshotEncodeAllocation{
  /// 🧾️ Reports every retained original allocation or lower effect refusal.
  pub fn is_unsettled(&self)->bool{self.state.actual.is_some()||self.state.allocation.is_some()||self.state.outcome.is_some()||self.state.settlement.is_some()||self.failure.is_some()||!semio_framework_value::retirement::RetireOwned::retirement_ready(&self.state)}
  /// 🧹️ Releases a completed allocating action only after every original owner left the carrier.
- pub fn reset_completed(&mut self)->Result<(),ValueError>{if self.state.allocation.is_some()||self.state.outcome.is_some()||self.state.settlement.is_some()||self.failure.is_some()||!semio_framework_value::retirement::RetireOwned::retirement_ready(&self.state){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot allocation retains its original encoder state"))}self.state=Default::default();Ok(())}
+ pub fn reset_completed(&mut self)->Result<(),ValueError>{self.state.settle_claimed_work()?;if self.state.allocation.is_some()||matches!(self.state.allocation_status(),semio_framework_value::native_encoding::NativeEncodeAllocationOutcomeStatus::Refused)||self.state.settlement.is_some()||self.failure.is_some()||!semio_framework_value::retirement::RetireOwned::retirement_ready(&self.state){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot allocation retains its original encoder state"))}self.state=Default::default();Ok(())}
 }
 /// 🛬️ Retains original decoder allocation markers and independent refused outcomes.
 #[derive(Default,semio_framework_value::RetireOwned)]

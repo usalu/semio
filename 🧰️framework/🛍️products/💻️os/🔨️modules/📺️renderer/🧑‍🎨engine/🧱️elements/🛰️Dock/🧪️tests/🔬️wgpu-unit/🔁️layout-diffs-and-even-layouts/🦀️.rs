@@ -155,8 +155,7 @@ fn maximized_stack_uses_full_canvas_bounds() {
     let bodies = dock.stack_body_rects(canvas, &theme, &HashMap::new(), &mut atlas);
     assert_eq!(bodies.len(), 1);
     let (_, body, _) = &bodies[0];
-    assert!((body.w - (canvas.w - theme.padding_standard * 2.0)).abs() < 1.0);
-    assert!((body.h - (canvas.h - dock_cap_depth(&theme))).abs() < 2.0);
+    assert_eq!(*body, canvas, "the maximized content plane is the whole frame, chip row included");
 }
 
 #[test]

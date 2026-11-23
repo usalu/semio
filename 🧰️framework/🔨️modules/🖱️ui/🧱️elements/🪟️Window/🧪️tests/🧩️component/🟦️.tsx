@@ -22,9 +22,7 @@ import paneEdges from "../🧫️fixtures/pane-edges.json";
 import { Pane } from "../../../📌️WindowPane/🟦️.tsx";
 import { type Anchor } from "../../../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import Decimal from "decimal.js";
-import * as clippingModule from "polygon-clipping";
 import { WindowChrome } from "../../../🗂️WindowChrome/🟦️.tsx";
-import expandedActionsClip from "../🧫️fixtures/expanded-actions-clip.json";
 // #endregion 🔌️Adapters
 
 it("attaches actual Window pane chrome to its host edges in either direction and fold state", () => {
@@ -38,7 +36,7 @@ it("attaches actual Window pane chrome to its host edges in either direction and
         for (const edge of row.edges) expect(new Decimal(Number.parseFloat(pane.style[edge as "left"])).toNumber(), `${direction}:${folded}:${row.slot}:${edge}`).toBe(paneEdges.insetPx);
         expect(pane.style.maxHeight).toBe("calc(100% - (0px * 2))");
         expect(pane.style.maxWidth).not.toContain("spacing-single");
-        const chrome = pane.querySelector('[data-window-silhouette]');
+        const chrome = pane.querySelector('[data-window-frame]');
         expect(chrome).not.toBeNull();
         expect(pane.querySelector('[data-slot="window-pane-chrome-toggle"]')).not.toBeNull();
       }
@@ -153,15 +151,15 @@ describe("Window chrome stacking", () => {
 describe("Window chrome focus indicator", () => {
   const uiCss = readFileSync(join(import.meta.dirname, "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
   it("recolours the chip's lines instead of ringing a focused control, without erasing contained control borders", () => {
-    expect(uiCss).not.toMatch(/\[data-window-silhouette-chip\] > \*\s*\{/u);
-    expect(uiCss).toMatch(/\[data-window-silhouette-chip\]\s*\{[^}]*border-width: 0/u);
-    expect(uiCss).not.toMatch(/\[data-window-silhouette-chip\][^{]*:focus-visible[^{]*\{[^}]*inset 0 0 0 var\(--stroke-default\) var\(--active-base\)/u);
-    expect(uiCss).toMatch(/\[data-window-silhouette-chip\] :is\([^)]*\):focus-visible\s*\{\s*outline: none;\s*box-shadow: none;/u);
+    expect(uiCss).not.toMatch(/\[data-window-frame-chip\] > \*\s*\{/u);
+    expect(uiCss).toMatch(/\[data-window-frame-chip\]\s*\{[^}]*border-width: 0/u);
+    expect(uiCss).not.toMatch(/\[data-window-frame-chip\][^{]*:focus-visible[^{]*\{[^}]*inset 0 0 0 var\(--stroke-default\) var\(--active-base\)/u);
+    expect(uiCss).toMatch(/\[data-window-frame-chip\] :is\([^)]*\):focus-visible\s*\{\s*outline: none;\s*box-shadow: none;/u);
   });
   it("recolours the same hairline where the window already paints the accent", () => {
     expect(uiCss).toMatch(/\[data-shared-border-state="focus"\]\[data-focus-on-accent\]\s*\{\s*stroke: var\(--border-emphasized-color\);/u);
     expect(uiCss).not.toMatch(/\[data-focus-on-accent\]\s*\{[^}]*stroke-width:/u);
-    expect(uiCss).toMatch(/:not\(\[role="tabpanel"\], \[data-window-silhouette\], \[data-slot="window"\]\) > :is\([^)]*\):focus-visible\s*\{\s*text-decoration: underline;/u);
+    expect(uiCss).toMatch(/:not\(\[role="tabpanel"\], \[data-window-frame\], \[data-slot="window"\]\) > :is\([^)]*\):focus-visible\s*\{\s*text-decoration: underline;/u);
   });
 });
 // #endregion 🪜️ChromeStacking
@@ -248,40 +246,24 @@ it("anchors window controls on the window edge as one gapless cells group", () =
   } finally { view.unmount(); }
 });
 
-it("remeasures the expanded Actions clip before the next observer frame", () => {
-  const { folded, expanded, action } = expandedActionsClip;
-  const geometry = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
-    if (this.hasAttribute("data-window-silhouette")) {
-      const stack = this.querySelector('[data-slot="window-chrome-cap"]') ? expanded : folded;
-      return new DOMRect(0, 0, stack.width, stack.height);
-    }
-    if (this.hasAttribute("data-window-silhouette-chip")) return new DOMRect(0, 0, folded.width, folded.height);
-    if (["window-chrome-cap", "window-chrome-gap"].includes(this.dataset.slot ?? "")) return new DOMRect(0, 0, expanded.width, folded.height);
-    return new DOMRect();
-  });
-  const clipping = "default" in clippingModule ? clippingModule.default as typeof clippingModule : clippingModule;
-  const target: clippingModule.Ring = [
-    [action.x, action.y], [action.x + action.width, action.y],
-    [action.x + action.width, action.y + action.height], [action.x, action.y + action.height], [action.x, action.y],
-  ];
+it("keeps the expanded Actions content plane spanning the whole frame, with the chip overlaid on it and no clip", () => {
   const view = render(<WindowChrome chipOnly titleChips={<button>Actions</button>} />);
   try {
-    const stack = view.container.querySelector("[data-window-silhouette]");
+    const stack = view.container.querySelector("[data-window-frame]");
     for (const open of [true, false, true]) {
       view.rerender(<WindowChrome chipOnly={!open} titleChips={<button>Actions</button>} body={<button>Import PNG</button>} />);
-      expect(view.container.querySelector("[data-window-silhouette]")).toBe(stack);
+      expect(view.container.querySelector("[data-window-frame]")).toBe(stack);
       if (!open) {
         expect(view.queryByRole("button", { name: "Import PNG" })).toBeNull();
         continue;
       }
-      const plane = view.getByRole("button", { name: "Import PNG" }).closest<HTMLElement>("[data-window-silhouette-content]")!;
-      const clip: clippingModule.Ring = [...plane.style.clipPath.matchAll(/(-?\d+(?:\.\d+)?)px\s+(-?\d+(?:\.\d+)?)px/gu)]
-        .map(([, x, y]) => [Number(x), Number(y)]);
-      expect(clip.length).toBeGreaterThanOrEqual(4);
-      expect(clipping.intersection([clip], [target])).toEqual([[target]]);
+      const plane = view.getByRole("button", { name: "Import PNG" }).closest<HTMLElement>("[data-window-frame-content]")!;
+      expect(plane.parentElement).toBe(stack);
+      expect(plane.style.clipPath).toBe("");
+      expect(plane.style.getPropertyValue("-webkit-clip-path")).toBe("");
+      expect(view.getByRole("button", { name: "Actions" }).closest("[data-window-frame-chip]")?.closest("[data-window-frame]")).toBe(stack);
     }
   } finally {
     view.unmount();
-    geometry.mockRestore();
   }
 });

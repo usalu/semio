@@ -2,16 +2,17 @@ import {spawn} from "node:child_process";
 import {chmodSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {join} from "node:path";
-import {parseBuildDirectivesV1,toolchainIdentityV1,UNIT_CACHE_POLICY_V1,type RustcUnitV1} from "../🔏️key/🟦️.ts";
-import {buildRunKeyInputV1,buildScriptIdentityV1} from "./🔑️run-key/🟦️.ts";
+import {parseBuildDirectivesV1,toolchainIdentityV1,unitKeyComponentsV1,UNIT_CACHE_POLICY_V1,type RustcUnitV1} from "../🔏️key/🟦️.ts";
+import {buildRunKeyInputV1,buildScriptIdentityV1,buildScriptKeyV1,markBuildRunKeyV1} from "./🔑️run-key/🟦️.ts";
+import {declareV1} from "../../../../🏗️build/🌐️remote-cache/🏷️retention/🍂️staleness/🟦️.ts";
 import {packRunV1} from "./📦️run-wire/🟦️.ts";
 import {casRootV1} from "../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
 import {readCasObjectSyncV1} from "../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
-import {compilerReleaseV1,localKeyV1,portableRootsV1,slotIdV1,toolRootsV1,type PortableRootV1} from "../🛰️fleet/🪪️identity/🟦️.ts";
+import {compilerReleaseV1,localKeyV1,portableRootsV1,portableTextV1,slotIdV1,toolRootsV1,type PortableRootV1} from "../🛰️fleet/🪪️identity/🟦️.ts";
 import {awaitFleetSettlesV1,obtainFleetUnitV1,offerFleetUnitV1,prepareFleetV1,shareFleetUnitV1,unsharedReasonV1,type FleetHoldV1,type FleetUnitV1} from "../🛰️fleet/🟦️.ts";
 import {countFallbackV1,countSkipV1,skipNameV1} from "../🛰️fleet/📊️counters/🟦️.ts";
-import {acquireUnitClaimV1,type ClaimV1} from "../🔒️lock/🟦️.ts";
-import {digestFileV1,emitUnitEventV1,lookupBuildRunV1,publishBuildRunV1,restoreBuildRunV1,type UnitEventV1} from "../💾️store/🟦️.ts";
+import {acquireLightSlotV1,acquireSlotV1,acquireUnitClaimV1,type ClaimV1} from "../🔒️lock/🟦️.ts";
+import {digestFileV1,emitUnitEventV1,lookupBuildRunV1,publishBuildRunV1,recordLookupV1,restoreBuildRunV1,type UnitEventV1} from "../💾️store/🟦️.ts";
 import {jobserverChildEnvironmentV1,jobserverClosedMessageV1,jobserverPlanV1,jobserverProbeShellV1,jobserverStdioV1,shellQuoteV1} from "../🎰️jobserver/🟦️.ts";
 import {isMainModuleV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 import {exitWithStatusOfV1} from "../🏁️exit/🟦️.ts";
@@ -56,6 +57,9 @@ function runReal(real:string,args:readonly string[],environment:Environment,cwd:
  });
 }
 
+/** 🔓️ The environment of a build script that runs while its process holds a compile slot: the compile slots are switched off for everything it starts, because a script that probes the compiler (`RUSTC_WRAPPER`, as `proc-macro2` does) re-enters the wrapper in a child that would wait for a slot its own parent holds, and with one slot that wait never ends. The probe is accounted to the slot of the script run. */
+export function slotHeldEnvironmentV1(environment:Environment):Environment{return Object.freeze({...environment,SEMIO_UNIT_CACHE_SLOTS:"0"});}
+
 const RUN_UNIT_V1:RustcUnitV1=Object.freeze({crateName:"build_script_run",crateTypes:Object.freeze(["lib"]),emit:Object.freeze(["link"]),outDir:"",source:"",target:undefined,externs:Object.freeze([]),links:Object.freeze([]),nativeSearch:false,incremental:undefined,artifacts:false});
 
 /** 🛰️ The fleet identity of one build script run: its portable key (the run's key inputs with every root of the machine as a token, so the same run has the same key on every machine of the platform), its slot (package, version, target and compiler build), the host platform and the roots. `undefined` when the fleet tier is off or the compiler build cannot be determined. */
@@ -82,28 +86,34 @@ export async function runBuildScriptV1(real:string,args:readonly string[],enviro
   keyInput=buildRunKeyInputV1({toolchain:toolchainIdentityV1(root,inner,environment),identity:buildScriptIdentityV1(real,digest!),args,environment,laneRoot});
   key=localKeyV1(keyInput,roots);
  }catch{const outcome=await runReal(real,args,environment,cwd,false);event("script-bypass",null,Date.now()-started,0,"unreadable-input");return outcome.status;}
- const context={cwd,laneRoot,environment,stampDirectory},serve=():boolean=>{
+ const lookup=(outcome:"local-hit"|"fleet-hit"|"miss"):void=>{
+  const named=unitKeyComponentsV1({...keyInput,normalized:keyInput.normalized.map(argument=>portableTextV1(argument,roots)),environment:keyInput.environment.map(([name,value])=>[name,portableTextV1(value,roots)] as [string,string])},{roots:JSON.stringify(roots.map(row=>row.token))});
+  recordLookupV1(root,{lane,crate:"build-script-run:"+crate,key,outcome,components:named.components,values:named.values});
+ };
+ const context={cwd,laneRoot,environment,stampDirectory},serve=(outcome:"local-hit"|"fleet-hit"):boolean=>{
   const entry=lookupBuildRunV1(root,key,context);if(!entry)return false;
-  const messages=restoreBuildRunV1(root,entry,{outDir,laneRoot});process.stdout.write(messages.stdout);process.stderr.write(messages.stderr);return true;
+  const messages=restoreBuildRunV1(root,entry,{outDir,laneRoot,environment});markBuildRunKeyV1(outDir,key);lookup(outcome);process.stdout.write(messages.stdout);process.stderr.write(messages.stderr);return true;
  };
  const fleet=prepareRunFleetV1({root,environment,inner,cwd,laneRoot,localKey:key,keyInput,crate});
- try{if(serve()){event("script-hit",key,Date.now()-started);if(fleet&&environment.SEMIO_REMOTE_CACHE_ACCESS==="read-write")offerFleetUnitV1(fleet);return 0;}}catch{}
+ try{if(serve("local-hit")){event("script-hit",key,Date.now()-started);if(fleet&&environment.SEMIO_REMOTE_CACHE_ACCESS==="read-write")offerFleetUnitV1(fleet);return 0;}}catch{}
  let claim:ClaimV1|undefined;
  try{claim=await acquireUnitClaimV1(join(root,policy.layout.locks),"run-"+key.slice(0,36),{});}catch{claim=undefined;}
  const waited=claim?.waitedMs??0;let hold:FleetHoldV1|undefined;
  try{
-  if(claim){try{if(serve()){event("script-hit",key,Date.now()-started,waited,"after-wait");return 0;}}catch{}}
+  if(claim){try{if(serve("local-hit")){event("script-hit",key,Date.now()-started,waited,"after-wait");return 0;}}catch{}}
   if(fleet&&fleet.client.state()==="ok"){
    const decision=await obtainFleetUnitV1(fleet,(kind,milliseconds,waitedMs,reason)=>event(kind,key,milliseconds,waitedMs,reason));
-   if(decision.outcome==="hit"){try{if(serve()){event("script-hit",key,Date.now()-started,waited+decision.waitedMs,"fleet");await awaitFleetSettlesV1();return 0;}}catch{}countFallbackV1(root,"run-hit-unservable");}
+   if(decision.outcome==="hit"){try{if(serve("fleet-hit")){event("script-hit",key,Date.now()-started,waited+decision.waitedMs,"fleet");await awaitFleetSettlesV1();return 0;}}catch{}countFallbackV1(root,"run-hit-unservable");}
    else{hold=decision.hold;if(decision.reason!=="granted")countFallbackV1(root,"run-"+decision.reason);}
   }
-  const compiled=Date.now(),outcome=await runOffloadedV1({real,digest,args,environment,cwd,root,lane,crate,key,outDir,stampDirectory,capture:()=>runReal(real,args,environment,cwd,true)});
+  lookup("miss");
+  const compiled=Date.now(),outcome=await runOffloadedV1({real,digest,args,environment,cwd,root,lane,crate,key,outDir,stampDirectory,event:(kind,key,milliseconds,waitedMs,reason)=>event(kind,key,milliseconds,waitedMs,reason),capture:held=>runReal(real,args,held?slotHeldEnvironmentV1(environment):environment,cwd,true)});
   if(outcome.status!==0){await hold?.release();event("failed",key,Date.now()-compiled,waited);return outcome.status;}
   event("script-miss",key,Date.now()-compiled,waited);
   let entry:ReturnType<typeof publishBuildRunV1>;
   try{
-   entry=publishBuildRunV1(root,{key,package:crate,cwd,laneRoot,directives:parseBuildDirectivesV1(outcome.stdout),environment,outDir,stdout:outcome.stdout,stderr:outcome.stderr,stampDirectory});
+   entry=publishBuildRunV1(root,{key,package:crate,cwd,laneRoot,directives:parseBuildDirectivesV1(outcome.stdout),environment,outDir,stdout:outcome.stdout,stderr:outcome.stderr,stampDirectory,retention:declareV1({kind:"build-script-run",toolchain:keyInput.toolchain,sources:[],externs:[digest!],self:key,units:[buildScriptKeyV1(real,digest!)??""]})});
+   markBuildRunKeyV1(outDir,key);
    event(entry?"script-publish":"script-bypass",key,Date.now()-compiled,0,entry?undefined:"not-cacheable");
   }catch{entry=undefined;}
   if(fleet)await shareRunV1(fleet,{entry,hold,workspace,environment,costMs:Date.now()-compiled,key,event});else await hold?.release();
@@ -112,18 +122,26 @@ export async function runBuildScriptV1(real:string,args:readonly string[],enviro
 }
 
 /** ☁️ Produces the outcome of one build script run on a fleet miss, after the fleet claim: on an idle machine of the fleet when the script is hermetic (`offloadBuildScriptRunV1`, in `distribute` mode, same cancellation and timeouts as every command offload), its streams replayed here exactly as a local run prints them; otherwise, or on any fault, by running the real executable here with the reason recorded. */
-async function runOffloadedV1(input:Readonly<{real:string;digest:string|null;args:readonly string[];environment:Environment;cwd:string;root:string;lane:string;crate:string;key:string;outDir:string;stampDirectory:string|undefined;capture:()=>Promise<{status:number;stdout:string;stderr:string}>}>):Promise<{status:number;stdout:string;stderr:string}>{
- if(input.digest!==null){
-  const controller=new AbortController(),abort=()=>controller.abort(),signals=["SIGINT","SIGTERM"] as const;
-  for(const signal of signals)process.once(signal,abort);
-  try{
-   const {offloadBuildScriptRunV1}=await import("./☁️offload/🟦️.ts"),answer=await offloadBuildScriptRunV1({real:input.real,args:input.args,environment:input.environment,cwd:input.cwd,root:input.root,lane:input.lane,crate:input.crate,key:input.key,outDir:input.outDir,signal:controller.signal,digest:path=>digestFileV1(path,input.stampDirectory)});
-   if(answer.kind==="done"){process.stdout.write(answer.stdout);process.stderr.write(answer.stderr);return{status:0,stdout:answer.stdout,stderr:answer.stderr};}
-   if(controller.signal.aborted)return{status:130,stdout:"",stderr:""};
-  }catch{}
-  finally{for(const signal of signals)process.removeListener(signal,abort);}
- }
- return input.capture();
+async function runOffloadedV1(input:Readonly<{real:string;digest:string|null;args:readonly string[];environment:Environment;cwd:string;root:string;lane:string;crate:string;key:string;outDir:string;stampDirectory:string|undefined;event:(kind:UnitEventV1["kind"],key:string|null,milliseconds:number,waitedMs?:number,reason?:string)=>void;capture:(slotHeld:boolean)=>Promise<{status:number;stdout:string;stderr:string}>}>):Promise<{status:number;stdout:string;stderr:string}>{
+ const waiting=(waited:number)=>input.event("slot-wait",null,0,waited),light=Number(input.environment.SEMIO_UNIT_CACHE_LIGHT_SLOTS??0),slots=Number(input.environment.SEMIO_UNIT_CACHE_SLOTS??0);
+ const controller=new AbortController();let received:number|undefined;
+ const handlers=(["SIGINT","SIGTERM"] as const).map(name=>{const handler=()=>{received=name==="SIGINT"?130:143;controller.abort();};process.once(name,handler);return[name,handler] as const;});
+ const cancelled=()=>received===undefined?undefined:{status:received,stdout:"",stderr:""};
+ try{
+  if(input.digest!==null){
+   let hold:ClaimV1|undefined;
+   try{
+    hold=light>0?await acquireLightSlotV1(input.root,light,{signal:controller.signal,onWait:waiting}):undefined;
+    const {offloadBuildScriptRunV1}=await import("./☁️offload/🟦️.ts"),answer=await offloadBuildScriptRunV1({real:input.real,args:input.args,environment:input.environment,cwd:input.cwd,root:input.root,lane:input.lane,crate:input.crate,key:input.key,outDir:input.outDir,signal:controller.signal,digest:path=>digestFileV1(path,input.stampDirectory)});
+    if(answer.kind==="done"){process.stdout.write(answer.stdout);process.stderr.write(answer.stderr);return{status:0,stdout:answer.stdout,stderr:answer.stderr};}
+   }catch{}
+   finally{hold?.release();}
+  }
+  if(received!==undefined)return cancelled()!;
+  let local:ClaimV1|undefined;
+  try{local=slots>0?await acquireSlotV1(input.root,slots,{signal:controller.signal,onWait:waiting}):undefined;}catch(error){if(received!==undefined)return cancelled()!;throw error;}
+  try{return received!==undefined?cancelled()!:await input.capture(local!==undefined);}finally{local?.release();}
+ }finally{for(const [name,handler] of handlers)process.off(name,handler);}
 }
 
 /** 📮️ Offers a published run to the fleet: the run is packed with every root of the machine as a token (also what the upload worker will send), and one that still names a directory of this machine (a file or stream with the home directory, the lane or an unlisted checkout in it) stays local with its reason recorded; otherwise it is queued for upload with the claim handed over. */

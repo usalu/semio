@@ -27,7 +27,7 @@ pub fn build_document_store_owners(
 > {
     semio_plugin::cold_replay_document_store_owners(grant).map(|(mut owners, progress)| {
         owners.operation_wire.source = prepared_operation_source;
-        owners.operation_wire = owners.operation_wire.with_original_binary_receiving();
+        owners.operation_wire = owners.operation_wire.with_original_binary_receiving().with_original_target(semio_os_kernel::os_store::whole_document_target::<RewriteRuleMutation>);
         (owners, progress)
     })
 }

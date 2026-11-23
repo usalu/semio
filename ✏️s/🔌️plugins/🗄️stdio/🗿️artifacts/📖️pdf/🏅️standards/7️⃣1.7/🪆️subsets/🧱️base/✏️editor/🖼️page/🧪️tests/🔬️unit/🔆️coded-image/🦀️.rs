@@ -28,6 +28,6 @@ fn coded_image_preview_matches_mupdf() {
             assert!(rgba.iter().zip(expected).all(|(actual, expected)| actual.abs_diff(expected) <= tolerance),
                 "{name} at [{x}, {y}]: {rgba:?} vs {expected:?}");
         }
-        render_window(&snapshot).expect("coded image scene admission");
+        render_window(&snapshot, semio_ui_locale::Locale::En).expect("coded image scene admission");
     }
 }

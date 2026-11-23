@@ -1,0 +1,13 @@
+{
+  "contractId": "mounted-app-size-budgets",
+  "unit": "bytes",
+  "rationale": "A mounted app is held by value in futures and on thread stacks, and a default 2 MiB test thread must hold several of them: the app handle stays far below 64 KiB and every larger owner lives in its own heap allocation.",
+  "stackCeilingBytes": 65536,
+  "budgets": [
+    { "id": "composedParentVcsApp", "maxBytes": 16384 },
+    { "id": "composedParentApp", "maxBytes": 1024 },
+    { "id": "trinityJackEditorVcsApp", "maxBytes": 16384 },
+    { "id": "trinityJackEditorApp", "maxBytes": 1024 },
+    { "id": "trinityApps", "maxBytes": 16384 }
+  ]
+}

@@ -91,7 +91,7 @@ describe("Shell components", () => {
       expect(screen.getByText("Windows").closest('[data-active="true"]')).toBeNull();
     });
 
-    it("Panel keeps only the root tab row in the silhouette cutout and renders deeper rows as full-width lines before the tree", () => {
+    it("Panel keeps only the root tab row in its top chip overlay and renders deeper rows as full-width lines before the tree", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [
         {
@@ -118,7 +118,10 @@ describe("Shell components", () => {
       expect(bodyTabs?.className).toContain("flex-auto");
       expect(bodyTabs?.parentElement?.getAttribute("data-slot")).toBe("panel-tab-frame");
       expect(bodyTabs?.parentElement?.className).toContain("w-full");
-      expect(bodyTabs?.closest("[data-window-silhouette-chip]")).toBeNull();
+      expect(bodyTabs?.closest("[data-window-frame-chip]")).toBeNull();
+      expect(chipCap?.closest("[data-window-frame-chip]")).toBeTruthy();
+      expect(container.innerHTML).toContain("--window-frame-top-clearance");
+      expect(container.innerHTML).not.toMatch(/silhouette|clip-path/u);
       expect(bodyStack?.firstElementChild?.getAttribute("data-slot")).toBe("ribbon");
       expect(bodyStack?.lastElementChild?.getAttribute("data-slot")).toBe("scroll-area");
       expect(bodyStack?.querySelector('[data-slot="scroll-area-viewport"]')?.className).toContain("w-full");
@@ -138,8 +141,7 @@ describe("Shell components", () => {
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("z-40");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).not.toContain("px-single");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).not.toContain("w-full");
-      expect(container.querySelector('[data-slot="window-chrome-gap"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-chrome-frame-border"]')).toBeTruthy();
     });
 
     it("Panel announces which tab is open through aria-pressed, not only through its styling data attributes", () => {
@@ -293,13 +295,12 @@ describe("Shell components", () => {
       expect(panel.style.top).not.toContain("spacing-single");
       expect(container.querySelector('[data-slot="window-chrome-stack"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-chrome-cap"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-chrome-gap"]')).toBeTruthy();
       expect(screen.getByText("Root A")).toBeTruthy();
       expect(screen.getByText("Leaf A")).toBeTruthy();
       expect(screen.getByText("Leaf B")).toBeTruthy();
     });
 
-    it("chromeHostedOpenPanelPositionStyle pulls top/bottom caps into the shell chrome band and leaves side-middle canvas insets alone", () => {
+    it("chromeHostedOpenPanelPositionStyle pulls the top cap into the navbar band, opens the bottom cap in place over the canvas chip row and leaves side-middle canvas insets alone", () => {
       const top = chromeHostedOpenPanelPositionStyle("top-left");
       expect(top.top).toBe("calc(-1 * var(--navbar-band-height))");
       expect((top as Record<string, unknown>)["--panel-header-height"]).toBe("var(--navbar-band-height)");
@@ -307,7 +308,8 @@ describe("Shell components", () => {
       expect(top.maxHeight).toBe("calc(100% + var(--navbar-band-height))");
 
       const bottom = chromeHostedOpenPanelPositionStyle("bottom-right");
-      expect(bottom.bottom).toBe("calc(-1 * var(--footer-band-height))");
+      expect(bottom.bottom).toBe("0px");
+      expect(bottom.maxHeight).toBe("calc(100% - (0px * 2))");
       expect((bottom as Record<string, unknown>)["--panel-header-height"]).toBe("var(--footer-band-height)");
       expect(bottom.right).toBe("0px");
 
@@ -394,10 +396,14 @@ describe("Shell components", () => {
       const capRow = stack.querySelector('[data-slot="mode-dock-tabbar"]') as HTMLElement;
       const plane = stack.querySelector('[data-slot="mode-dock-stack-body"]') as HTMLElement;
       expect(capRow.querySelector('[data-slot="mode-dock-tab"]')).toBeTruthy();
-      expect(plane.className).toContain("window-silhouette-content-plane");
+      expect(plane.className).toContain("window-frame-content-plane");
       expect(plane.querySelector('[data-slot="window"]')).toBeTruthy();
       expect(plane.querySelector('[data-slot="window-search-overlay"]')).toBeTruthy();
-      expect(capRow.compareDocumentPosition(plane) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(capRow.className).toContain("absolute");
+      expect(capRow.className).toContain("pointer-events-none");
+      expect(stack.contains(capRow) && stack.contains(plane)).toBe(true);
+      expect(plane.hasAttribute("data-window-frame-content")).toBe(true);
+      expect(plane.style.clipPath).toBe("");
       stacked.unmount();
     });
 

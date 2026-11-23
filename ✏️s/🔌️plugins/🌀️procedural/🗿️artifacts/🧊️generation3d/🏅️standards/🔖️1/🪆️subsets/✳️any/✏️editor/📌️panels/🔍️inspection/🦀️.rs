@@ -114,7 +114,7 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
     }
     if let Widget::InputNote { text, .. } = widget {
         let row = if semio_s_artifact_procedural_3d_set_widget_input::mesh_source_text(host_snapshot, selected_id, "text").is_ok() { mesh_source_input_at(windows, &format!("{prefix}.mesh"), selected_id, "text", text, labels, false)? }
-        else { editable_text_input(windows, &format!("{prefix}.note"), labels.value_field.as_str(), selected_id, "text", None, text, false)? };
+        else { editable_text_input(windows, locale, &format!("{prefix}.note"), labels.value_field.as_str(), selected_id, "text", None, text, false)? };
         fields.try_push(highlight_inspector_node(row, is_hovered(&graph_port_id(selected_id, "text", false)))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
     }
     if let Widget::Neuron { neuron_kind, params, .. } = widget {
@@ -152,7 +152,7 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
                     let row = if port.name == "sourceHandle" {
                         read_only(format!("{label}: {}", text.filter(|text| !text.is_empty() && text.len() <= semio_ui_contract::UI_TEXT_MAX_BYTES / 2).unwrap_or(labels.input_value_unavailable.as_str())))?
                     } else if let Some(value) = text.and_then(|text| semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).filter(|value| value.as_array().is_some()) {
-                        reflected_output(windows, &key, label, &value, 0, labels, hover, highlighted)?
+                        reflected_output(windows, locale, &key, label, &value, 0, labels, hover, highlighted)?
                     } else { read_only(format!("{label}: {}", labels.input_value_unavailable.as_str()))? };
                     fields.try_push(highlight(row)).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
                     continue;
@@ -163,7 +163,7 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
                         Some(value) => widget_input_of_literal_as(value, schema).and_then(|value| value.items()),
                         None => semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue::collection(schema, Vec::new()).and_then(|value| value.items()),
                     };
-                    let row = if let Some(items) = items { collection_input(windows, &key, label, selected_id, &port.name, &items, &port.cardinality, labels, highlighted)? } else { read_only(format!("{label}: {}", labels.input_connect_hint.as_str()))? };
+                    let row = if let Some(items) = items { collection_input(windows, locale, &key, label, selected_id, &port.name, &items, &port.cardinality, labels, highlighted)? } else { read_only(format!("{label}: {}", labels.input_connect_hint.as_str()))? };
                     fields.try_push(highlight(row)).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
                 } else if matches!(schema, "point" | "vector") {
                     fields.try_push(highlight(coordinate_input(&key, label, selected_id, &port.name, None, None, value.as_ref())?))
@@ -177,7 +177,7 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
                 } else if matches!(schema, "number" | "text" | "boolean") {
                     let atom = value.as_ref().map(|value| value.get("value").unwrap_or(value));
                     let row = if schema == "text" {
-                        editable_text_input(windows, &key, label, selected_id, &port.name, None, atom.and_then(semio_framework_value::DslValue::as_str).unwrap_or_default(), true)?
+                        editable_text_input(windows, locale, &key, label, selected_id, &port.name, None, atom.and_then(semio_framework_value::DslValue::as_str).unwrap_or_default(), true)?
                     } else {
                         let value = atom.map(semio_framework_pack_json::to_json_string).unwrap_or_default();
                         editable_input(&key, label, selected_id, &port.name, None, &value, (schema == "number").then_some(InputKind::Number))?
@@ -202,7 +202,7 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
                     else if matches!(status, Some("stale" | "queued" | "computing" | "blocked")) { Some(labels.mesh_output_stale.as_str()) }
                     else { None };
                 let row = if let (None, Some(value)) = (status_text, value) {
-                    reflected_output(windows, &key, label, value, 0, labels, hover, is_hovered(&graph_target))?
+                    reflected_output(windows, locale, &key, label, value, 0, labels, hover, is_hovered(&graph_target))?
                 } else {
                     let text = status_text.unwrap_or(labels.input_value_unavailable.as_str());
                     inspector_hover_row(&key, format!("{label}: {text}"), hover)?
@@ -226,7 +226,7 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
         let label = labels.value_field.as_str();
         let row = if let Some((port, value)) = output {
             let target = graph_port_id(selected_id, port, false);
-            reflected_output(windows, &key, label, value, 0, labels, Some((GraphTargetKind::Handle, &target)), is_hovered(&target))?
+            reflected_output(windows, locale, &key, label, value, 0, labels, Some((GraphTargetKind::Handle, &target)), is_hovered(&target))?
         } else {
             tree_item(&key, format!("{label}: {}", labels.input_value_unavailable.as_str()))?
         };
@@ -348,14 +348,14 @@ fn editable_field(key: &str, label: &str, value: &str, kind: Option<InputKind>, 
 }
 
 /// 📝️ Preserves a text input's exact source and publishes an owned edit through the shared control.
-fn editable_text_input(windows: &semio_plugin::TreeWindows<'_>, key: &str, label: &str, widget: &str, channel: &str, index: Option<usize>, text: &str, incoming: bool) -> UiAssemblyResult<semio_plugin::BuiltNode> {
+fn editable_text_input(windows: &semio_plugin::TreeWindows<'_>, locale: semio_ui_locale::Locale, key: &str, label: &str, widget: &str, channel: &str, index: Option<usize>, text: &str, incoming: bool) -> UiAssemblyResult<semio_plugin::BuiltNode> {
     use semio_s_procedural_core_semantic_ui as ui;
     let target = graph_port_id(widget, channel, incoming);
     let hover = Some((GraphTargetKind::Handle, target.as_str()));
     let row = inspector_hover_row(key, label, hover)?;
     let carrier_nodes = if text.len() <= semio_ui_contract::UI_TEXT_MAX_BYTES { 0 } else { semio_plugin::paged_text_carrier_nodes(text) };
     if text.len() > semio_s_artifact_procedural_3d_set_widget_input::MAX_WIDGET_INPUT_TEXT_BYTES || !windows.try_debit_unreserved(carrier_nodes) {
-        return ui::windowed_read_only_text(windows, row, key, text, |page| inspector_hover_row(page, page, hover));
+        return ui::windowed_read_only_text(windows, row, key, text, locale, |page| inspector_hover_row(page, page, hover));
     }
     let mut args = vec![("widgetId", ui::ui_value_text(widget)?), ("channel", ui::ui_value_text(channel)?)];
     if let Some(index) = index {
@@ -414,14 +414,14 @@ fn inspector_hover_row(key: &str, label: impl AsRef<str>, target: Option<(GraphT
 }
 
 /// 🪞️ Declared evaluated outputs use read-only retained windows without geometry recomputation.
-fn reflected_output(windows: &semio_plugin::TreeWindows<'_>, key: &str, label: &str, value: &semio_framework_pack_json::Value, depth: usize, labels: &Generation3dLabels, hover: Option<(GraphTargetKind, &str)>, highlighted: bool) -> UiAssemblyResult<semio_plugin::BuiltNode> {
+fn reflected_output(windows: &semio_plugin::TreeWindows<'_>, locale: semio_ui_locale::Locale, key: &str, label: &str, value: &semio_framework_pack_json::Value, depth: usize, labels: &Generation3dLabels, hover: Option<(GraphTargetKind, &str)>, highlighted: bool) -> UiAssemblyResult<semio_plugin::BuiltNode> {
     use semio_framework_pack_json::Value;
     let text_row = |text: &str| inspector_hover_row(key, format!("{label}: {text}"), hover)?.highlighted(highlighted).try_build()
         .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.inspection.output", "fixed UI output admission failed"));
     if let Some(text) = reflected_value(value) { return text_row(&text); }
     if let Some(text) = value.as_str() {
         let row = inspector_hover_row(key, label, hover)?.highlighted(highlighted);
-        return semio_s_procedural_core_semantic_ui::windowed_read_only_text(windows, row, key, text, |page| {
+        return semio_s_procedural_core_semantic_ui::windowed_read_only_text(windows, row, key, text, locale, |page| {
             inspector_hover_row(page, page, hover).map(|row| row.highlighted(highlighted))
         });
     }
@@ -435,7 +435,7 @@ fn reflected_output(windows: &semio_plugin::TreeWindows<'_>, key: &str, label: &
         let (name, value) = if let Some(array) = array { ((index + 1).to_string(), &array[index]) } else { let (name, value) = object[index]; (name.to_string(), value) };
         let name = if name.len() <= semio_ui_contract::UI_TEXT_MAX_BYTES / 2 { name } else { (index + 1).to_string() };
         let name = semio_s_artifact_procedural_3d_terminology::generation3d_input_name(labels, &name, &name);
-        reflected_output(windows, &format!("{key}.{index}"), name, value, depth + 1, labels, hover, highlighted)
+        reflected_output(windows, locale, &format!("{key}.{index}"), name, value, depth + 1, labels, hover, highlighted)
     })
 }
 
@@ -667,7 +667,7 @@ fn mesh_source_fields(widget: &str, channel: &str, path: &[String]) -> UiAssembl
 }
 
 /// 📃️ Ordered typed inputs share the host's tree window and absolute command bindings.
-fn collection_input(windows: &semio_plugin::TreeWindows<'_>, key: &str, label: &str, widget: &str, channel: &str, items: &[semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue], cardinality: &semio_os_flow::neural::Cardinality, labels: &Generation3dLabels, highlighted: bool) -> UiAssemblyResult<semio_plugin::BuiltNode> {
+fn collection_input(windows: &semio_plugin::TreeWindows<'_>, locale: semio_ui_locale::Locale, key: &str, label: &str, widget: &str, channel: &str, items: &[semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue], cardinality: &semio_os_flow::neural::Cardinality, labels: &Generation3dLabels, highlighted: bool) -> UiAssemblyResult<semio_plugin::BuiltNode> {
     let error = || semio_plugin::PluginAssemblyError::new("ui.inspection.collection", "fixed UI collection admission failed");
     let target = graph_port_id(widget, channel, true);
     let hover = Some((GraphTargetKind::Handle, target.as_str()));
@@ -687,7 +687,7 @@ fn collection_input(windows: &semio_plugin::TreeWindows<'_>, key: &str, label: &
             let value = literal.get("value").map(|value| value.as_str().map(str::to_owned).unwrap_or_else(|| semio_framework_pack_json::to_json_string(value))).unwrap_or_default();
             let key = format!("{item_key}.value");
             let control = if schema == "text" {
-                editable_text_input(windows, &key, &item_label, widget, channel, Some(index), &value, true)?
+                editable_text_input(windows, locale, &key, &item_label, widget, channel, Some(index), &value, true)?
             } else {
                 editable_item(&key, &item_label, widget, channel, None, Some(index), &value, (schema == "number").then_some(InputKind::Number))?
             };

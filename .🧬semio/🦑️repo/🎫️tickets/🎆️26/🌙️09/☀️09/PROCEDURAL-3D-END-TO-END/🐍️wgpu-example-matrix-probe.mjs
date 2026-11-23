@@ -148,6 +148,9 @@ const lanes = (process.env.SEMIO_PROBE_LANES ?? "edit,viewer,generate").split(",
 mkdirSync(outRoot, { recursive: true });
 
 const results = [];
+/** 💾️ Evidence is published after EVERY row, so a battery timeout or a crash leaves the rows already measured instead of nothing; `complete` flips only when the whole matrix ran. */
+const publish = (complete) => writeFileSync(join(outRoot, "results.json"), JSON.stringify({ origin, lanes, examples, budgetSeconds, complete, results }, null, 2));
+publish(false);
 const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--use-angle=metal"] });
 
 for (const lane of lanes) {
@@ -273,7 +276,8 @@ for (const lane of lanes) {
     let stable = 0;
     let firstConvergedMs = null;
     let flip = 0;
-    for (let elapsed = 0; elapsed < budgetSeconds && (stable < 2 || elapsed < minSeconds); elapsed += 1) {
+    /** ⏱️ The per-example budget is WALL clock from the row's own start (`at()`), not an iteration count: `measure()` itself takes seconds, so counting loop turns let one example run far past `SEMIO_PROBE_BUDGET`. */
+    while (at() < budgetSeconds * 1000 && (stable < 2 || at() < minSeconds * 1000)) {
       for (let nudge = 0; nudge < 5; nudge += 1) {
         await page.waitForTimeout(200);
         flip = 1 - flip;
@@ -318,9 +322,10 @@ for (const lane of lanes) {
     writeFileSync(join(outDir, "console.txt"), lines.join("\n"));
     writeFileSync(join(outDir, "result.json"), JSON.stringify(row, null, 2));
     await page.close();
+    publish(false);
   }
 }
 
-writeFileSync(join(outRoot, "results.json"), JSON.stringify({ origin, lanes, examples, results }, null, 2));
+publish(true);
 await browser.close();
 console.log("DONE", JSON.stringify({ pass: results.filter((row) => row.verdict === "pass").length, total: results.length, out: outRoot }, null, 2));

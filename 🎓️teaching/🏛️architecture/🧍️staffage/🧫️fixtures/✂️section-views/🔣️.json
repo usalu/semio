@@ -23,14 +23,14 @@
     "bookshelf": { "front": 0.4 },
     "three-seat-sofa": { "front": 1.0 },
     "curtain-wall-bay": { "front": 0.7, "plan": 2.075 },
-    "masonry-wall-with-lintel": { "front": 1.25, "plan": 1.5 },
+    "masonry-wall-with-lintel": { "front": 1.25, "plan": 1.55 },
     "sliding-door": { "plan": 1.0 }
   },
   "elevationCatalog": {
     "cooking-pot": { "50": 0, "100": 0 },
-    "retractable-bollard": { "50": 0, "100": 0 },
+    "retractable-bollard": { "50": 0, "100": 0, "200": 0, "500": 0 },
     "panel-radiator": { "50": 0 },
-    "sectional-garage-door": { "50": 0, "100": 0 },
+    "sectional-garage-door": { "50": 0, "100": 0, "200": 0, "500": 0 },
     "solar-thermal-collector": { "50": 0, "100": 0, "200": 0, "500": 0 }
   }
 }

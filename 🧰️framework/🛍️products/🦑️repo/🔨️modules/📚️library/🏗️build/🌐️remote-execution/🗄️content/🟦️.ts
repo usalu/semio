@@ -1,13 +1,17 @@
 import type {RemoteExecutionDigestV1} from "../🟦️.ts";
+import {CAS_LEASE_HEADER_V1} from "../../🗄️cas/📌️pins/🟦️.ts";
 import { runtimeSleepV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
+
+/** 📥️ Why a blob is asked for or sent: `input` marks a blob that only feeds one action, which the store leases for the time of the action instead of keeping it like a published output. */
+export type RemoteExecutionContentIntentV1="input";
 
 /** 🗄️ Where the protocol's blobs and action results live: the shared content-addressed store. Scheduler and workers use this interface only, so a store can be swapped without touching either. */
 export interface RemoteExecutionContentV1{
- has(instance:string,hash:string,signal?:AbortSignal):Promise<boolean>;
- missing(instance:string,digests:readonly RemoteExecutionDigestV1[],signal?:AbortSignal):Promise<RemoteExecutionDigestV1[]>;
+ has(instance:string,hash:string,signal?:AbortSignal,intent?:RemoteExecutionContentIntentV1):Promise<boolean>;
+ missing(instance:string,digests:readonly RemoteExecutionDigestV1[],signal?:AbortSignal,intent?:RemoteExecutionContentIntentV1):Promise<RemoteExecutionDigestV1[]>;
  read(instance:string,digest:RemoteExecutionDigestV1,signal?:AbortSignal):Promise<Uint8Array|undefined>;
  stream(instance:string,digest:RemoteExecutionDigestV1,signal?:AbortSignal):Promise<AsyncGenerator<Uint8Array>|undefined>;
- write(instance:string,digest:RemoteExecutionDigestV1,source:Uint8Array|AsyncIterable<Uint8Array>,signal?:AbortSignal):Promise<void>;
+ write(instance:string,digest:RemoteExecutionDigestV1,source:Uint8Array|AsyncIterable<Uint8Array>,signal?:AbortSignal,intent?:RemoteExecutionContentIntentV1):Promise<void>;
  readActionResult(instance:string,hash:string,signal?:AbortSignal):Promise<Uint8Array|undefined>;
  writeActionResult(instance:string,hash:string,bytes:Uint8Array,signal?:AbortSignal):Promise<void>;
 }
@@ -24,7 +28,7 @@ export class RemoteExecutionContentErrorV1 extends Error{
 }
 
 /** ⚙️ How to reach the shared store over its HTTP protocol (`/<instance>/cas/<sha256>`, `/<instance>/ac/<sha256>`, bearer token). */
-export type RemoteExecutionHttpContentOptionsV1=Readonly<{endpoint:string;token?:string|undefined;fetch?:typeof fetch;concurrency?:number;timeoutSeconds?:number;retries?:number}>;
+export type RemoteExecutionHttpContentOptionsV1=Readonly<{endpoint:string;token?:string|undefined;fetch?:typeof fetch;concurrency?:number;timeoutSeconds?:number;retries?:number;retryAfterCapMilliseconds?:number}>;
 
 const EMPTY="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",INSTANCE=/^[a-z0-9][a-z0-9._-]{0,63}$/u,TRANSIENT=new Set([408,429,500,502,503,504]);
 
@@ -35,7 +39,7 @@ async function* chunksOf(body:ReadableStream<Uint8Array>):AsyncGenerator<Uint8Ar
 
 /** 🌐️ The store of the repository's own cache server (and any server speaking Bazel's HTTP cache protocol), as `RemoteExecutionContentV1`. Retries transient failures, bounds parallel existence checks, sends the declared length of every blob and streams large blobs in both directions. */
 export function httpRemoteExecutionContentV1(options:RemoteExecutionHttpContentOptionsV1):RemoteExecutionContentV1{
- const base=options.endpoint.replace(/\/+$/u,""),limit=options.concurrency??32,retries=options.retries??3,timeout=(options.timeoutSeconds??60)*1000,headers=(extra:Record<string,string>={}):Record<string,string>=>({...(options.token?{authorization:`Bearer ${options.token}`}:{}),...extra});
+ const base=options.endpoint.replace(/\/+$/u,""),limit=options.concurrency??32,retries=options.retries??3,retryAfterCap=options.retryAfterCapMilliseconds??5000,timeout=(options.timeoutSeconds??60)*1000,headers=(extra:Record<string,string>={}):Record<string,string>=>({...(options.token?{authorization:`Bearer ${options.token}`}:{}),...extra});
  const url=(instance:string,kind:"ac"|"cas",hash:string):string=>{
   if(instance!==""&&!INSTANCE.test(instance))throw new RemoteExecutionContentErrorV1(3,`Valid instance name required: ${instance}`);
   return `${base}${instance===""?"":"/"+instance}/${kind}/${hash}`;
@@ -45,7 +49,7 @@ export function httpRemoteExecutionContentV1(options:RemoteExecutionHttpContentO
   for(let attempt=0;attempt<=(retry?retries:0);attempt++){
    try{
     const response=await(options.fetch??fetch)(target,{method,...init,headers:{...headers(),...(init.headers as Record<string,string>|undefined)},signal:signal?AbortSignal.any([signal,AbortSignal.timeout(timeout)]):AbortSignal.timeout(timeout)});
-    if(TRANSIENT.has(response.status)&&attempt<retries){await response.body?.cancel();await runtimeSleepV1(50*2**attempt);continue;}
+    if(TRANSIENT.has(response.status)&&attempt<retries){const hint=Number(response.headers.get("retry-after"));await response.body?.cancel();await runtimeSleepV1(Math.max(50*2**attempt,Number.isFinite(hint)&&hint>0?Math.min(hint*1000,retryAfterCap):0));continue;}
     return response;
    }catch(error){
     if(signal?.aborted)throw error;
@@ -62,16 +66,16 @@ export function httpRemoteExecutionContentV1(options:RemoteExecutionHttpContentO
   throw new RemoteExecutionContentErrorV1(code,`Content store answered ${response.status} for ${what}${reason===""?"":": "+reason}`,missingOutput);
  };
  const content:RemoteExecutionContentV1={
-  async has(instance,hash,signal){
+  async has(instance,hash,signal,intent){
    if(hash===EMPTY)return true;
-   const response=await send("HEAD",url(instance,"cas",hash),signal);await response.body?.cancel();
+   const response=await send("HEAD",url(instance,"cas",hash),signal,intent===undefined?{}:{headers:{[CAS_LEASE_HEADER_V1]:intent}});await response.body?.cancel();
    if(response.status===200)return true;
    if(response.status===404)return false;
    return refuse(response,`cas/${hash}`);
   },
-  async missing(instance,digests,signal){
+  async missing(instance,digests,signal,intent){
    const out:RemoteExecutionDigestV1[]=new Array(digests.length),found:boolean[]=new Array(digests.length);let next=0;
-   await Promise.all(Array.from({length:Math.min(limit,digests.length)},async()=>{for(;;){const index=next++;if(index>=digests.length)return;found[index]=await content.has(instance,digests[index]!.hash,signal);}}));
+   await Promise.all(Array.from({length:Math.min(limit,digests.length)},async()=>{for(;;){const index=next++;if(index>=digests.length)return;found[index]=await content.has(instance,digests[index]!.hash,signal,intent);}}));
    let count=0;
    digests.forEach((digest,index)=>{if(!found[index])out[count++]=digest;});
    return out.slice(0,count);
@@ -90,9 +94,9 @@ export function httpRemoteExecutionContentV1(options:RemoteExecutionHttpContentO
    if(response.status!==200)return refuse(response,`cas/${digest.hash}`);
    return response.body?chunksOf(response.body):(async function*(){})();
   },
-  async write(instance,digest,source,signal){
+  async write(instance,digest,source,signal,intent){
    if(digest.size===0&&digest.hash===EMPTY)return;
-   const target=url(instance,"cas",digest.hash),request={"content-length":String(digest.size),"content-type":"application/octet-stream"};
+   const target=url(instance,"cas",digest.hash),request={"content-length":String(digest.size),"content-type":"application/octet-stream",...intent===undefined?{}:{[CAS_LEASE_HEADER_V1]:intent}};
    if(source instanceof Uint8Array){const response=await send("PUT",target,signal,{body:source as unknown as BodyInit,headers:request});await settle(response,`cas/${digest.hash}`);return;}
    const iterator=source[Symbol.asyncIterator](),body=new ReadableStream<Uint8Array>({async pull(controller){const next=await iterator.next();if(next.done)controller.close();else controller.enqueue(next.value);},cancel(){void iterator.return?.();}});
    const response=await send("PUT",target,signal,{body,headers:request,duplex:"half"} as RequestInit,false);await settle(response,`cas/${digest.hash}`);

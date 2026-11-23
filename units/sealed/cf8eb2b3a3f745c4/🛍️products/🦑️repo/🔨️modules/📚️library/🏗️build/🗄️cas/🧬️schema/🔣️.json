@@ -1,0 +1,243 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Host-wide content-addressed store / Rechnerweiter inhaltsadressierter Speicher",
+  "$comment": "🗄️ CasPolicyV1: one store per host, shared and deduplicated by all workspaces, size-capped with least-recently-accessed eviction. Byte sizes are plain numbers; ratios are fractions of capBytes.",
+  "definitions": {
+    "GraphClosureArea": {
+      "$comment": "The host collector accounts for source inventories. The graph owner retires them under its reference census and writer cut.",
+      "const": "build-input-closures"
+    },
+    "UsageHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "bytes", "atMs"],
+      "properties": {
+        "version": {"const": 1},
+        "bytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "atMs": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "automaticScope": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "Policy": {
+      "const": {
+        "version": 1,
+        "capBytes": 34359738368,
+        "capHostSharePercent": 3,
+        "minimumCapBytes": 1073741824,
+        "enforceTickMilliseconds": 30000,
+        "incrementBytes": 2147483648,
+        "transientLeaseMs": 1800000,
+        "admissionBudgetMs": 8000,
+        "highWatermark": 0.9,
+        "lowWatermark": 0.75,
+        "partition": {
+          "highUsedFraction": 0.9,
+          "lowUsedFraction": 0.8,
+          "criticalUsedFraction": 0.97
+        },
+        "minAgeMs": 600000,
+        "leaseMaxMs": 3600000,
+        "touchGranularityMs": 60000,
+        "temporaryMaxAgeMs": 3600000,
+        "ledgerQuietMs": 3600000,
+        "lockStaleMs": 7200000,
+        "progressMs": 250,
+        "checkEvery": 256,
+        "fanOutHexLength": 2,
+        "areas": [
+          {
+            "id": "graph-memo",
+            "capBytes": 4294967296,
+            "maxAgeMs": 604800000
+          }
+        ]
+      }
+    },
+    "Budget": {
+      "$comment": "EN: The disk budget of the partition that holds the store, derived from the partition size instead of fixed shares: a command may start while its need plus the cushion is free, a collection starts while its need plus the reserve is not free, and a collection goes on until the hysteresis more is free. The reserve is the largest declared need of any stage times the safety factor of the workspace scale family, so no disk stranded by a fixed percentage. A partition below minimumTotalFactor times reserve plus hysteresis keeps the fixed shares of Policy.partition. DE: Das Plattenbudget der Partition des Speichers, aus der Partitionsgröße abgeleitet statt aus festen Anteilen: ein Befehl darf starten, solange sein Bedarf plus Puffer frei ist, eine Sammlung startet, solange sein Bedarf plus Reserve nicht frei ist, und läuft weiter, bis die Hysterese mehr frei ist. Die Reserve ist der größte deklarierte Bedarf einer Stufe mal Sicherheitsfaktor der Familie der Arbeitsbereichsgröße, damit keine Platte durch einen festen Prozentsatz gestrandet wird. Eine Partition unter minimumTotalFactor mal Reserve plus Hysterese behält die festen Anteile von Policy.partition.",
+      "const": {
+        "version": 1,
+        "largestNeedBytes": 6442450944,
+        "cushionDivisor": 4,
+        "minimumTotalFactor": 2
+      }
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "PinFile": {
+      "type": "object",
+      "required": [
+        "version",
+        "holder",
+        "pid",
+        "expiresAtMs",
+        "digests"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "holder": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]{1,96}$"
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expiresAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "digests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Digest"
+          }
+        }
+      }
+    },
+    "LedgerEvent": {
+      "type": "object",
+      "required": [
+        "d",
+        "t"
+      ],
+      "properties": {
+        "d": {
+          "$ref": "#/definitions/Digest"
+        },
+        "t": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "previewProgress": {
+          "en": "Cache preview scanned {entries} entries, {usedGib} GiB used of {capGib} GiB, {freedMib} MiB reclaimable.",
+          "de": "Cache-Vorschau prüfte {entries} Einträge, {usedGib} GiB von {capGib} GiB belegt, {freedMib} MiB freigebbar."
+        },
+        "progress": {
+          "en": "Cache store: scanned {entries} entries, {usedGib} GiB used of {capGib} GiB, freed {freedMib} MiB.",
+          "de": "Cache-Speicher: {entries} Einträge geprüft, {usedGib} GiB belegt von {capGib} GiB, {freedMib} MiB freigegeben."
+        },
+        "previewCollection": {
+          "en": "Of the scanned entries, cache cleanup would remove {evicted} and free {freedMib} MiB. The remaining {keptGib} GiB would include {protectedMib} MiB of protected data{partial}.",
+          "de": "Cache-Bereinigung im Probelauf. Einträge zur Entfernung: {evicted}. Freigebbar sind {freedMib} MiB, {keptGib} GiB blieben erhalten, davon {protectedMib} MiB geschützt{partial}."
+        },
+        "done": {
+          "en": "Cache store collected: {evicted} entries, {freedMib} MiB freed, {keptGib} GiB kept, {protectedMib} MiB protected{partial}.",
+          "de": "Cache-Speicher bereinigt: {evicted} Einträge, {freedMib} MiB freigegeben, {keptGib} GiB behalten, {protectedMib} MiB geschützt{partial}."
+        },
+        "partitionState": {
+          "en": " Partition {partition} was {usedPercent}% used (high watermark {highPercent}%, low watermark {lowPercent}%).",
+          "de": " Partition {partition} war zu {usedPercent} % belegt (obere Marke {highPercent} %, untere Marke {lowPercent} %)."
+        },
+        "idle": {
+          "en": "Cache store is below the high watermark ({usedGib} GiB of {capGib} GiB); nothing to collect.",
+          "de": "Der Cache-Speicher liegt unter der oberen Marke ({usedGib} GiB von {capGib} GiB); nichts zu bereinigen."
+        },
+        "locked": {
+          "en": "Another collector already runs on this cache store.",
+          "de": "Auf diesem Cache-Speicher läuft bereits ein Sammler."
+        },
+        "partial": {
+          "en": ", cancelled before completion",
+          "de": ", vor dem Ende abgebrochen"
+        },
+        "shortfall": {
+          "en": "The collection is {overMib} MiB short of its low-water target.",
+          "de": "Bis zur unteren Grenze fehlen der Bereinigung {overMib} MiB."
+        },
+        "graphClosures": {
+          "en": " The graph owns {protectedMib} MiB of source inventories. To reclaim unreferenced inventories, run repo cache gc --area=graph-inference.",
+          "de": " Der Graph verwaltet {protectedMib} MiB an Quellinventaren. Nicht referenzierte Inventare lassen sich mit repo cache gc --area=graph-inference bereinigen."
+        },
+        "status": {
+          "en": "Cache store {root}: {objects} objects, {usedGib} GiB of {capGib} GiB cap.",
+          "de": "Cache-Speicher {root}: {objects} Objekte, {usedGib} GiB von {capGib} GiB Grenze."
+        },
+        "statusCap": {
+          "en": "Cap in force {effectiveGib} GiB (declared {capGib} GiB): collection from {highGib} GiB in steps of {incrementGib} GiB down to {lowGib} GiB, writes refused above the cap; transient inputs: {transient} leased or expired blobs, lease {leaseMinutes} min.",
+          "de": "Wirksame Grenze {effectiveGib} GiB (deklariert {capGib} GiB): Bereinigung ab {highGib} GiB in Schritten von {incrementGib} GiB bis auf {lowGib} GiB, Schreiben über der Grenze abgelehnt; flüchtige Eingaben: {transient} geleaste oder abgelaufene Blobs, Lease {leaseMinutes} Min."
+        },
+        "statusCollection": {
+          "en": "Last collection {age} min ago left {gib} GiB.",
+          "de": "Letzte Sammlung vor {age} Min. ließ {gib} GiB übrig."
+        },
+        "statusNoCollection": {
+          "en": "No finished collection recorded.",
+          "de": "Keine abgeschlossene Sammlung verzeichnet."
+        },
+        "capRefused": {
+          "en": "The cache store is over its cap ({usedGib} GiB of {capGib} GiB) and the collection freed too little in time; this write is refused and the caller carries on without the cache.",
+          "de": "Der Cache-Speicher liegt über seiner Grenze ({usedGib} GiB von {capGib} GiB) und die Bereinigung gab rechtzeitig zu wenig frei; dieses Schreiben wird abgelehnt und der Aufrufer arbeitet ohne Cache weiter."
+        },
+        "statusPartition": {
+          "en": "Partition {partition}: {usedPercent}% used, {freeGib} GiB free (collection from {highPercent}% down to {lowPercent}%, writes and builds refused from {criticalPercent}%).",
+          "de": "Partition {partition}: {usedPercent} % belegt, {freeGib} GiB frei (Bereinigung ab {highPercent} % bis auf {lowPercent} %, Schreiben und Builds abgelehnt ab {criticalPercent} %)."
+        },
+        "previewAdoption": {
+          "en": "Cache preview found {linked} files that could share {objects} stored objects, saving {savedMib} MiB, with {failed} failures{partial}.",
+          "de": "Cache-Vorschau. {linked} Dateien könnten sich {objects} gespeicherte Objekte teilen und {savedMib} MiB einsparen. Fehlgeschlagen: {failed}{partial}."
+        },
+        "adopted": {
+          "en": "Cache store: {linked} files now share {objects} stored objects, {savedMib} MiB saved, {failed} failed{partial}.",
+          "de": "Cache-Speicher: {linked} Dateien teilen sich jetzt {objects} gespeicherte Objekte, {savedMib} MiB gespart, {failed} fehlgeschlagen{partial}."
+        },
+        "previewAdopting": {
+          "en": "Cache preview examined {entries} files, with {savedMib} MiB in potential savings.",
+          "de": "Cache-Vorschau prüfte {entries} Dateien, mögliche Einsparung bisher {savedMib} MiB."
+        },
+        "adopting": {
+          "en": "Cache store: examined {entries} files, {savedMib} MiB saved so far.",
+          "de": "Cache-Speicher: {entries} Dateien geprüft, bisher {savedMib} MiB gespart."
+        }
+      }
+    },
+    "Adoption": {
+      "const": {
+        "minBytes": 65536,
+        "quietMs": 600000,
+        "clearWriteBits": true,
+        "skipPattern": "(^\\.|\\.(sqlite3?|db|log|jsonl|lock|pid|tmp|wal|shm)$|-wal$|-shm$)",
+        "places": [
+          {
+            "id": "bun-cache",
+            "path": ".cache/b/d/m/bun-cache",
+            "mode": "hardlink",
+            "reason": "The bun content cache never changes a stored file in place."
+          },
+          {
+            "id": "tool-downloads",
+            "path": ".cache/b/t/m/downloads",
+            "mode": "hardlink",
+            "reason": "Pinned tool archives are written once under their digest."
+          },
+          {
+            "id": "bazel-cas",
+            "path": ".🧬semio/🦑️repo/⚡️cache/bazel/actions/cas",
+            "mode": "hardlink",
+            "reason": "The Bazel disk cache CAS names every file by its digest and replaces, never edits, it."
+          },
+          {
+            "id": "dependency-installs",
+            "path": ".cache/b/d/m/j",
+            "mode": "reflink",
+            "reason": "Installed trees can be patched or rewritten by their tools, so only copy-on-write clones are safe."
+          },
+          {
+            "id": "tool-installs",
+            "path": ".cache/b/t/m",
+            "mode": "reflink",
+            "reason": "Installed toolchains can be updated in place by their tools, so only copy-on-write clones are safe."
+          }
+        ]
+      }
+    }
+  }
+}

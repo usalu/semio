@@ -17,7 +17,7 @@ pub use key::{NativeSchemaKeyPoll,NativeSchemaKeyMetadata};
 fn page<T>(value:Result<T,PagedListError>)->Result<T,ValueError>{value.map_err(Into::into)}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}#[derive(Clone,Copy)]pub struct NativeSchemaLeaf{pub name:&'static str,pub ordinal:u32}
-#[derive(Clone,Copy)]pub enum NativeRecordSchema{Leaf(NativeSchemaLeaf),Flatten{fields:NativeSchemaFields,count:usize},Union{fields:NativeSchemaFields,count:usize},Skip}
+#[derive(Clone,Copy)]pub enum NativeRecordSchema{Leaf(NativeSchemaLeaf),Flatten{fields:NativeSchemaFields,count:usize},Splice{fields:NativeSchemaFields,count:usize},Union{fields:NativeSchemaFields,count:usize},Skip}
 /// 🧾️ Certifies a native, bounded schema descriptor and its reachable nested tables.
 #[derive(Clone,Copy)]pub struct NativeSchemaFields{read:fn(usize)->Option<NativeRecordSchema>}
 impl NativeSchemaFields{
@@ -45,6 +45,8 @@ impl<I:NativeValueSource+?Sized>NativeRecordMatcher<I>{
  pub fn new_flat(leaves:&'static [NativeSchemaLeaf],key_source:NativeSchemaKeySource)->Self{Self::with_root(SchemaRoot::Flat(leaves),key_source)}
  fn with_root(root:SchemaRoot,key_source:NativeSchemaKeySource)->Self{Self{binding:None,key_backing:ManuallyDrop::new(NativeProjectionBacking::new(NativeSchemaKeyFrame::seed_template())),key_child:ManuallyDrop::new(None),frames:ManuallyDrop::new(PagedList::with_page_items(4)),pending:None,scan:None,popped:None,key:None,leaf:None,leaf_root:0,offset:0,key_source,root,matched:NativeFieldMatch::Missing,done:false,closing:false,close_route:None,input:std::marker::PhantomData}}
  pub fn result(&self)->Option<NativeFieldMatch>{self.done.then_some(self.matched)}
+ /// 🔢️ Tells whether the bound original key is an ordinal, which addresses a flattened field itself instead of its spliced names.
+ pub fn ordinal_key(&self)->bool{matches!(self.key,Some(Key::Ordinal(_)))}
  pub fn close_started(&self)->bool{self.closing}
  pub fn begin_close_demand(&self)->RetirementDemand{if self.closing{Default::default()}else{fixed(size_of::<bool>())}}
  pub fn begin_close_work_demand(&self)->u64{u64::from(!self.closing)}

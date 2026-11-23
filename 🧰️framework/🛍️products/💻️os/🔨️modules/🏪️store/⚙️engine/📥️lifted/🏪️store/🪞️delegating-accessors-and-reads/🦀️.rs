@@ -257,6 +257,8 @@ where
 
     /// 🪞️ Delegates to [`StoreOwners::snapshot_read_leases_terminal_is_empty`].
     #[inline] pub fn snapshot_read_leases_terminal_is_empty(&self) -> bool { self.owners.snapshot_read_leases_terminal_is_empty() }
+    /// 🪞️ Delegates to [`StoreOwners::snapshot_read_leases_await_return`].
+    #[inline] pub fn snapshot_read_leases_await_return(&self) -> bool { self.owners.snapshot_read_leases_await_return() }
 
     /// 🪞️ Delegates to [`StoreOwners::returned_snapshot_read_count`].
     #[inline] pub fn returned_snapshot_read_count(&self) -> usize { self.owners.returned_snapshot_read_count() }

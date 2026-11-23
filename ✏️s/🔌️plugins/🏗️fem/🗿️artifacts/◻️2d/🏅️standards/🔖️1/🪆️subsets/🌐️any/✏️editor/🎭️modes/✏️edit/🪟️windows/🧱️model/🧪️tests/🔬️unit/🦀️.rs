@@ -62,7 +62,7 @@ fn canvas_scene(node: &BuiltNode) -> Canvas2dScene {
 
 fn published_snapshot(doc: &Fem2dSnapshot, lease: &Fem2dMountedVisualLease) -> Canvas2dSnapshotLease {
     let node = render_with_progress(
-        doc, &Viewport2d::default(), Some(lease), &Fem2dInteractionSnapshot::default(), None, FEM2D_UTILITY_SELECT_DIRECT,
+        doc, &Viewport2d::default(), Some(lease), &Fem2dInteractionSnapshot::default(), None, FEM2D_UTILITY_SELECT_DIRECT, semio_plugin::Locale::En,
     ).expect("publish the visual through the model surface");
     canvas_scene(&node).snapshot.expect("surface carries the visual snapshot lease")
 }
@@ -97,7 +97,7 @@ async fn renders_fem2d_model_scene() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_preview_renders_region_edges() {
     let doc = demo_snapshot();
-    let node = render(&doc, &Viewport2d::default()).expect("fixture surface admission");
+    let node = render(&doc, &Viewport2d::default(), semio_plugin::Locale::En).expect("fixture surface admission");
     let scene = canvas_scene(&node);
     assert!(scene.layers_json.contains("mesh-edge-"), "expected mesh-edge preview layers in the model scene");
 }

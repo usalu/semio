@@ -209,7 +209,7 @@ impl Lifter<'_> {
             match dict_get(&dict, key).map(|v| lifter.source.deref(v)) {
                 Some(PdfObject::Array(items)) => items.iter().filter_map(|item| match item {
                     PdfObject::Text(text) => Some(text.clone()),
-                    PdfObject::Str(bytes) => Some(decode_text_string(bytes)),
+                    PdfObject::Str(bytes) => Some(decode_text_string(&bytes)),
                     PdfObject::Name(name) => Some(name.clone()),
                     _ => None,
                 }).collect(),
@@ -247,7 +247,7 @@ impl Lifter<'_> {
                 options: self.source.deref(dict_get(&dict, "Opt").unwrap_or(&PdfObject::Null)).as_array().map(|items| items.iter().map(|item| match item {
                     PdfObject::Array(pair) => (self.text(pair.first()).unwrap_or_default(), self.text(pair.get(1)).unwrap_or_default()),
                     PdfObject::Text(text) => (text.clone(),text.clone()),
-                    PdfObject::Str(bytes) => (decode_text_string(bytes), decode_text_string(bytes)),
+                    PdfObject::Str(bytes) => (decode_text_string(&bytes), decode_text_string(&bytes)),
                     _ => (String::new(), String::new()),
                 }).collect()).unwrap_or_default(),
                 top_index: dict_i64(&dict, "TI").map(|v| v.max(0) as u32),

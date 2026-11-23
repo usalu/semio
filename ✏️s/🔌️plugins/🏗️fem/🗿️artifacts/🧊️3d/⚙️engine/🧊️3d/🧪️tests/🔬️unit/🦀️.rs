@@ -1,4 +1,7 @@
 use super::*;
+#[path = "../🧰️persisted/🦀️.rs"]
+mod persisted;
+use persisted::{persist, Persisted};
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterialValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNodeValue;
@@ -16,7 +19,7 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structur
 use std::collections::BTreeMap;
 
 // #region 🔖️Fixtures
-fn cantilever_fixture() -> (Fem3dSnapshot, f64, f64, f64, f64, f64) {
+fn cantilever_fixture() -> (Persisted, f64, f64, f64, f64, f64) {
     let e = 210e9;
     let g = 80.77e9;
     let a = 0.00538;
@@ -25,7 +28,7 @@ fn cantilever_fixture() -> (Fem3dSnapshot, f64, f64, f64, f64, f64) {
     let j = 0.00000060;
     let l = 3.0;
     let p = 5000.0;
-    let doc = Fem3dSnapshot::from_reference(Fem3dSnapshotValue {
+    let doc = persist(Fem3dSnapshotValue {
         nodes: vec![FemNodeValue { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "n2".into(), x: l, y: 0.0, z: 0.0 }],
         elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
         materials: vec![FemMaterialValue { id: "steel".into(), name: "Steel".into(), e, g, nu: 0.3, rho: 7850.0 }],
@@ -35,14 +38,14 @@ fn cantilever_fixture() -> (Fem3dSnapshot, f64, f64, f64, f64, f64) {
         load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -p }], self_weight: false }],
         combinations: vec![],
         analysis: FemAnalysisSettings::default(),
-    }).expect("fixture snapshot");
+    });
     (doc, e, iy, l, p, iz)
 }
 
 /// 🔺️ A free 3D joint needs at least 3 non-coplanar bars to be kinematically determinate — two
 /// bars only span a plane, leaving one direction with zero stiffness (a mechanism). Hence n4/b3.
-fn truss_fixture() -> Fem3dSnapshot {
-    Fem3dSnapshot::from_reference(Fem3dSnapshotValue {
+fn truss_fixture() -> Persisted {
+    persist(Fem3dSnapshotValue {
         nodes: vec![FemNodeValue { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "n2".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "n3".into(), x: 1.0, y: 1.0, z: 2.0 }, FemNodeValue { id: "n4".into(), x: 1.0, y: -1.0, z: 0.0 }],
         elements: vec![
             FemElement::Bar { id: "b1".into(), start: "n1".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
@@ -60,14 +63,14 @@ fn truss_fixture() -> Fem3dSnapshot {
         load_cases: vec![FemLoadCase { id: "drop".into(), name: "Drop".into(), loads: vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::Nodal { id: "l1".into(), node_id: "n3".into(), dof: FemDof::Tz, value: -1000.0 }], self_weight: false }],
         combinations: vec![],
         analysis: FemAnalysisSettings::default(),
-    }).expect("fixture snapshot")
+    })
 }
 
 /// 🧱️ A 2m x 1m x 0.5m slab footprint at the origin, meshed at `mesh_size`, with all 4 footprint
 /// corners as pre-placed document nodes fully fixed in translation (`Tet4` has no rotational DOF) —
 /// mirrors `fem_2d`'s `rectangle_region_doc` fixture pattern for `FemSolid`.
-fn solid_slab_doc() -> Fem3dSnapshot {
-    Fem3dSnapshot::from_reference(Fem3dSnapshotValue {
+fn solid_slab_doc() -> Persisted {
+    persist(Fem3dSnapshotValue {
         nodes: vec![FemNodeValue { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNodeValue { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
         elements: vec![],
         materials: vec![FemMaterialValue { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
@@ -82,7 +85,11 @@ fn solid_slab_doc() -> Fem3dSnapshot {
         load_cases: vec![FemLoadCase { id: "self".into(), name: "Self Weight".into(), loads: vec![], self_weight: true }],
         combinations: vec![],
         analysis: FemAnalysisSettings::default(),
-    }).expect("fixture snapshot")
+    })
+}
+
+fn source(kind: &str, id: &str) -> String {
+    semio_s_fem_analyses_model::encode_result_source_parts(kind, id).unwrap()
 }
 // #endregion 🔖️Fixtures
 
@@ -190,11 +197,13 @@ fn fem3d_solve_all_returns_case_and_combination_results() {
     let results = fem3d_solve_all(&doc).expect("solves");
     let mut keys: Vec<&String> = results.keys().collect();
     keys.sort();
-    assert_eq!(keys, vec!["point", "point2", "uls"], "expected exactly the case and combination ids");
+    let mut expected_keys = vec![source("loadCase", "point"), source("loadCase", "point2"), source("combination", "uls")];
+    expected_keys.sort();
+    assert_eq!(keys, expected_keys.iter().collect::<Vec<_>>(), "expected exactly the case and combination ids");
 
-    let point = results.get("point").unwrap();
-    let point2 = results.get("point2").unwrap();
-    let uls = results.get("uls").unwrap();
+    let point = results.get(&source("loadCase", "point")).unwrap();
+    let point2 = results.get(&source("loadCase", "point2")).unwrap();
+    let uls = results.get(&source("combination", "uls")).unwrap();
     for pd in &point.displacements {
         let p2d = point2.displacements.iter().find(|d| d.node_id == pd.node_id).unwrap();
         let ud = uls.displacements.iter().find(|d| d.node_id == pd.node_id).unwrap();
@@ -212,7 +221,7 @@ fn self_weight_case_produces_nonzero_reactions() {
     doc.load_cases = vec![FemLoadCase { id: "self".into(), name: "Self Weight".into(), loads: vec![], self_weight: true }];
 
     let results = fem3d_solve_all(&doc).expect("solves");
-    let result = results.get("self").unwrap();
+    let result = results.get(&source("loadCase", "self")).unwrap();
 
     let total_tz_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Tz).map(|r| r.value).sum();
     let expected = rho * area * l * 9.81;
@@ -229,7 +238,7 @@ fn member_udl_load_matches_total_wl() {
     let w = 800.0;
     doc.load_cases = vec![FemLoadCase { id: "udl".into(), name: "UDL".into(), loads: vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::MemberUdl { id: "u1".into(), element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -w }], self_weight: false }];
     let results = fem3d_solve_all(&doc).expect("solves");
-    let result = results.get("udl").unwrap();
+    let result = results.get(&source("loadCase", "udl")).unwrap();
     let total_tz_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Tz).map(|r| r.value).sum();
     let expected = w * l;
     assert!((total_tz_reaction - expected).abs() / expected < 1e-6, "reaction sum {total_tz_reaction} vs expected {expected}");
@@ -241,7 +250,7 @@ fn member_udl_load_matches_total_wl() {
 fn solid_self_weight_matches_total_mass_times_gravity() {
     let doc = solid_slab_doc();
     let results = fem3d_solve_all(&doc).expect("solid self-weight solves");
-    let result = results.get("self").unwrap();
+    let result = results.get(&source("loadCase", "self")).unwrap();
     let total_tz_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Tz).map(|r| r.value).sum();
     let (footprint_area, height, rho, g) = (2.0 * 1.0, 0.5, 2400.0, 9.81);
     let expected = rho * footprint_area * height * g;
@@ -256,7 +265,7 @@ fn solid_area_load_matches_pressure_times_footprint_area() {
     let mut doc = solid_slab_doc();
     doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "Pressure".into(), loads: vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::Area { id: "a1".into(), solid_id: "sol1".into(), pressure: 8000.0 }], self_weight: false }];
     let results = fem3d_solve_all(&doc).expect("solid pressure load solves");
-    let result = results.get("pressure").unwrap();
+    let result = results.get(&source("loadCase", "pressure")).unwrap();
     let total_tz_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Tz).map(|r| r.value).sum();
     let expected = 8000.0 * 2.0 * 1.0;
     assert!((total_tz_reaction - expected).abs() / expected < 1e-6, "reaction sum {total_tz_reaction} vs expected {expected}");
@@ -270,7 +279,7 @@ fn solid_area_load_matches_pressure_times_footprint_area() {
 /// `fem3d_nodal_von_mises` (`mesh_preview.rs`) and `fem3d_buckling` (`modal_buckling.rs`) together.
 #[test]
 fn example_fixture_parses() {
-    let doc: Fem3dSnapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
+    let doc = Persisted::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT).expect("example fixture parses"));
     assert_eq!(doc.nodes.len(), 16);
     assert_eq!(doc.elements.len(), 16);
     assert_eq!(doc.solids.len(), 1);
@@ -278,10 +287,10 @@ fn example_fixture_parses() {
     assert!(result.checks.residual_norm < 1e-6);
 
     let all_results = fem3d_solve_all(&doc).expect("example fixture solves all");
-    assert!(all_results.contains_key("dead"), "expected dead case result");
-    assert!(all_results.contains_key("live"), "expected live case result");
-    assert!(all_results.contains_key("uls"), "expected uls combination result");
-    let dead = all_results.get("dead").expect("expected dead case result (solid area load + member UDL + self-weight)");
+    assert!(all_results.contains_key(&source("loadCase", "dead")), "expected dead case result");
+    assert!(all_results.contains_key(&source("loadCase", "live")), "expected live case result");
+    assert!(all_results.contains_key(&source("combination", "uls")), "expected uls combination result");
+    let dead = all_results.get(&source("loadCase", "dead")).expect("expected dead case result (solid area load + member UDL + self-weight)");
     assert!(dead.checks.residual_norm < 1e-6, "residual {}", dead.checks.residual_norm);
 
     let previews = crate::fem3d_engine::mesh_preview::fem3d_mesh_preview(&doc).expect("mesh preview succeeds");

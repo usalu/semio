@@ -8,6 +8,7 @@
     "text",
     "items",
     "turn",
+    "allocationPolicies",
     "laws",
     "documentReceiving",
     "correlatedRetirement"
@@ -68,6 +69,7 @@
       "additionalProperties": false,
       "required": [
         "sourceFormat",
+        "totalAllocationCeiling",
         "guessBody",
         "copySource",
         "codecs",
@@ -140,6 +142,10 @@
               100000
             ]
           }
+        },
+        "totalAllocationCeiling": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
         }
       }
     },
@@ -173,6 +179,33 @@
         },
         "sourcePreserved": {
           "const": true
+        }
+      }
+    },
+    "allocationPolicies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "maximumBytes",
+          "limit32",
+          "limit64"
+        ],
+        "properties": {
+          "maximumBytes": {
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          },
+          "limit32": {
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          },
+          "limit64": {
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          }
         }
       }
     }

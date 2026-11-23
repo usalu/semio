@@ -69,7 +69,7 @@ fn world_instances_json() -> String {
 /// 👁️ Pure `SemioBrepSnapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &SemioBrepSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &SemioBrepSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let mesh_data = document_mesh_data(document);
     let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::json!({ "id": SEMIO_BREP_VIEW_MESH_ID, "data": semio_framework_pack_json::Value::from(mesh_data) })]));
     let view = MeshView {
@@ -78,7 +78,7 @@ pub fn render(document: &SemioBrepSnapshot) -> semio_plugin::UiAssemblyResult<Bu
         instances_json: world_instances_json(),
         selection_json: world3d_selection_json("rectangle", &[], None),
     };
-    MeshWindowKit::render(&view)
+    MeshWindowKit::render(&view, locale)
 }
 //#endregion 🔖️Render
 

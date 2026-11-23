@@ -48,7 +48,21 @@
         "widget": "select",
         "role": "value",
         "group": "value",
-        "order": 20
+        "order": 20,
+        "options": {
+          "borehole": {
+            "en": "Borehole",
+            "de": "Bohrung"
+          },
+          "cpt": {
+            "en": "Cone penetration test (CPT)",
+            "de": "Drucksondierung (CPT)"
+          },
+          "spt": {
+            "en": "Standard penetration test (SPT)",
+            "de": "Rammsondierung (SPT)"
+          }
+        }
       }
     }
   }

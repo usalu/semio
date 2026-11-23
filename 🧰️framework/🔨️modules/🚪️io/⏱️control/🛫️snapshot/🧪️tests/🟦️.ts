@@ -35,7 +35,7 @@ test("original receiving result and terminal child shell have closed independent
 expect(fixture.originalInput).toBe("callerSlotUntilAdmission");expect(fixture.originalError).toBe("IoResultInReceivingOutput");expect(fixture.finalPublication).toBe("afterIntermediateTerminal");
  const db=new Database(":memory:");try{
  db.exec("CREATE TABLE terminal_child(native_word_bytes INTEGER PRIMARY KEY,copy_bytes INTEGER NOT NULL,depth INTEGER NOT NULL,items INTEGER NOT NULL,capacity_bytes INTEGER NOT NULL)");
- for(const word of [4,8])db.query("INSERT INTO terminal_child VALUES(?,?,?,?,?)").run(word,fixture.terminalChild.copyBytes,fixture.terminalChild.requiredDepth,fixture.terminalChild.requiredItems,fixture.terminalChild.capacityBytes);
+ for(const word of [4,8])db.query("INSERT INTO terminal_child VALUES(?,?,?,?,?)").run(word,fixture.terminalChild.copyWords*word,fixture.terminalChild.requiredDepth,fixture.terminalChild.requiredItems,fixture.terminalChild.capacityBytes);
  expect(db.query("SELECT copy_bytes FROM terminal_child ORDER BY native_word_bytes").all()).toEqual([{copy_bytes:0},{copy_bytes:0}]);
  expect(db.query("SELECT COUNT(*) AS count FROM terminal_child WHERE copy_bytes=0 AND depth=2 AND items=1 AND capacity_bytes=0").get()).toEqual({count:2});
  db.exec("CREATE TABLE original_error(kind TEXT PRIMARY KEY,text TEXT NOT NULL,octets INTEGER NOT NULL)");

@@ -29,6 +29,7 @@ FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 SINGLE_METRE, ROW_METRE, GRID_METRE, LAPTOP_GRID_METRE, CARD_METRE, CARD_LAMP_METRE = 0.68, 0.47, 0.19, 1.5, 0.6, 1.1
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 window_frame = _manim_module.window_frame
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
@@ -72,22 +73,6 @@ if _VO_TIMING.is_file():
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
 TITLE_DE = "Interne Wärmegewinne"
-
-
-#region DIN citation
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
-
-    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
-    that never competes with the diagram. The formula panel sits on the
-    bottom edge, so this corner is clear in every beat.
-    """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-#endregion
 
 
 #region Shared helpers
@@ -199,7 +184,7 @@ class Beat1_OfficeRoom(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("The enclosed environment", "Die umschlossene Umgebung"))
-        din = _din_ref(_references.cite(("vdi-2078", "innere")))
+        din = reference_chip(_references.cite(("vdi-2078", "innere")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -282,7 +267,7 @@ class Beat2_HumanFactor(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Human metabolic heat", "Menschliche Stoffwechselwärme"))
-        din = _din_ref(_references.cite(("vdi-2078", "personen")))
+        din = reference_chip(_references.cite(("vdi-2078", "personen")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -583,7 +568,7 @@ class Beat3_DevicesLighting(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Equipment, plug loads and lighting", "Geräte, Steckerlasten und Beleuchtung"))
-        din = _din_ref(_references.cite(("vdi-2078", "geraete")))
+        din = reference_chip(_references.cite(("vdi-2078", "geraete")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -790,7 +775,7 @@ class Beat4_CumulativeLoad(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Sum of the internal gains", "Summe der internen Gewinne"))
-        din = _din_ref(_references.cite(("vdi-2078", "innere")))
+        din = reference_chip(_references.cite(("vdi-2078", "innere")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -908,7 +893,7 @@ class Beat5_Mitigation(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Mitigation & smart design", "Minderung & intelligentes Design"))
-        din = _din_ref(_references.cite(("vdi-2078", "innere")))
+        din = reference_chip(_references.cite(("vdi-2078", "innere")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))

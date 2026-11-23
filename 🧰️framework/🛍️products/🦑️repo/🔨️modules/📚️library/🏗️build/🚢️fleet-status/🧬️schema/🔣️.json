@@ -20,7 +20,9 @@
      "maximumWaitersShown": 6
     },
     "readers": {
-     "timeoutMilliseconds": 5000
+     "timeoutMilliseconds": 5000,
+     "maximumLeaseStats": 20000,
+     "maximumBuildOwners": 64
     },
     "graph": {
      "builderResources": [
@@ -128,12 +130,22 @@
      "type": "object",
      "additionalProperties": false,
      "required": [
+      "maximumBuildOwners",
+      "maximumLeaseStats",
       "timeoutMilliseconds"
      ],
      "properties": {
       "timeoutMilliseconds": {
        "type": "integer",
        "minimum": 0
+      },
+      "maximumLeaseStats": {
+       "type": "integer",
+       "minimum": 1
+      },
+      "maximumBuildOwners": {
+       "type": "integer",
+       "minimum": 1
       }
      }
     },
@@ -543,6 +555,54 @@
     "finding.source-failed": {
      "en": "The {section} reader failed: {reason}",
      "de": "Der Leser {section} schlug fehl: {reason}"
+    },
+    "cas": {
+     "en": "Host store: {used} of {effective} GiB used ({percent} %), cap {cap} GiB, high water {high} GiB, low water {low} GiB",
+     "de": "Host-Speicher: {used} von {effective} GiB belegt ({percent} %), Obergrenze {cap} GiB, Hochwasser {high} GiB, Niedrigwasser {low} GiB"
+    },
+    "cas.leases": {
+     "en": "  input leases: {leased} live ({leasedGib} GiB), {expired} expired ({expiredGib} GiB); {collection}",
+     "de": "  Eingabe-Leases: {leased} aktiv ({leasedGib} GiB), {expired} abgelaufen ({expiredGib} GiB); {collection}"
+    },
+    "cas.collected": {
+     "en": "last collection {age} ago, {gib} GiB left",
+     "de": "letzte Sammlung vor {age}, {gib} GiB verblieben"
+    },
+    "cas.neverCollected": {
+     "en": "no collection recorded",
+     "de": "keine Sammlung verzeichnet"
+    },
+    "retention": {
+     "en": "Fleet cache retention {mode}: {swept}; {entries} entries, {judged} judged, {stale} stale, {unreached} unreachable, {undeclared} undeclared, {retired} retired",
+     "de": "Flottencache-Aufbewahrung {mode}: {swept}; {entries} Einträge, {judged} beurteilt, {stale} veraltet, {unreached} unerreichbar, {undeclared} ohne Deklaration, {retired} entfernt"
+    },
+    "retention.swept": {
+     "en": "swept {age} ago",
+     "de": "geprüft vor {age}"
+    },
+    "retention.neverSwept": {
+     "en": "never swept",
+     "de": "noch nie geprüft"
+    },
+    "retention.none": {
+     "en": "Fleet cache retention: no report from the cache host",
+     "de": "Flottencache-Aufbewahrung: keine Meldung des Cache-Hosts"
+    },
+    "retention.stale": {
+     "en": "  stale by: {reasons}",
+     "de": "  veraltet durch: {reasons}"
+    },
+    "retention.refused": {
+     "en": "  refused at publish: {reasons}",
+     "de": "  beim Veröffentlichen abgelehnt: {reasons}"
+    },
+    "offload": {
+     "en": "Offload: {local} running locally, {fleet} on the fleet; {out} offloaded, {refused} refused, {fellBack} fell back ({deadline} deadline, {lost} lost operation, {silent} silent)",
+     "de": "Auslagerung: {local} laufen lokal, {fleet} auf der Flotte; {out} ausgelagert, {refused} abgelehnt, {fellBack} lokal nachgeholt ({deadline} Frist, {lost} verlorene Operation, {silent} still)"
+    },
+    "offload.build": {
+     "en": "  build {pid}: {local} locally, {fleet} on the fleet",
+     "de": "  Build {pid}: {local} lokal, {fleet} auf der Flotte"
     },
     "workers": {
      "en": "Workers: {ready} ready, {working} working, {idle} idle, {silent} silent, {offline} offline, {absent} without a record",
@@ -982,7 +1042,9 @@
       "generation",
       "scheduler",
       "fleet",
-      "workers"
+      "workers",
+      "cas",
+      "offload"
      ]
     },
     "ok": {
@@ -1619,6 +1681,12 @@
     },
     "workers": {
      "$ref": "#/definitions/WorkersFact"
+    },
+    "cas": {
+     "$ref": "#/definitions/CasFact"
+    },
+    "offload": {
+     "$ref": "#/definitions/OffloadFact"
     }
    }
   },
@@ -2923,6 +2991,18 @@
     },
     "workers": {
      "$ref": "#/definitions/WorkersSection"
+    },
+    "cas": {
+     "$ref": "#/definitions/CasSection"
+    },
+    "retention": {
+     "anyOf": [
+      {"type": "null"},
+      {"$ref": "#/definitions/RetentionSection"}
+     ]
+    },
+    "offload": {
+     "$ref": "#/definitions/OffloadSection"
     }
    }
   },
@@ -3219,7 +3299,8 @@
     "retried": {"type": "integer", "minimum": 0},
     "cache": {"type": "object", "additionalProperties": false, "required": ["hits", "misses", "puts"], "properties": {"hits": {"type": "integer", "minimum": 0}, "misses": {"type": "integer", "minimum": 0}, "puts": {"type": "integer", "minimum": 0}}},
     "claims": {"type": "object", "additionalProperties": false, "required": ["active", "waiting", "oldestSeconds"], "properties": {"active": {"type": "integer", "minimum": 0}, "waiting": {"type": "integer", "minimum": 0}, "oldestSeconds": {"type": "integer", "minimum": 0}}},
-    "keys": {"$ref": "#/definitions/KeyComparison"}
+    "keys": {"$ref": "#/definitions/KeyComparison"},
+    "retention": {"$ref": "#/definitions/RetentionFact"}
    }
   },
   "KeyComparison": {
@@ -3291,6 +3372,112 @@
     "offlineSeconds": {"type": "integer", "minimum": 0},
     "counts": {"type": "object", "additionalProperties": false, "required": ["ready", "working", "idle", "silent", "offline", "absent"], "properties": {"ready": {"type": "integer", "minimum": 0}, "working": {"type": "integer", "minimum": 0}, "idle": {"type": "integer", "minimum": 0}, "silent": {"type": "integer", "minimum": 0}, "offline": {"type": "integer", "minimum": 0}, "absent": {"type": "integer", "minimum": 0}}},
     "rows": {"type": "array", "items": {"$ref": "#/definitions/WorkerRow"}}
+   }
+  },
+  "CasFact": {
+   "description": "The host content store as the cache server's collector sees it: the cap in force, its watermarks, the leases of transient offload inputs (count and bytes; bytes are null above the stat bound) and the last finished collection (its time and the bytes it left); nothing is walked.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["root", "capBytes", "effectiveCapBytes", "highWatermarkBytes", "lowWatermarkBytes", "incrementBytes", "leases", "lastCollection"],
+   "properties": {
+    "root": {"type": "string"},
+    "capBytes": {"type": "integer", "minimum": 0},
+    "effectiveCapBytes": {"type": "integer", "minimum": 0},
+    "highWatermarkBytes": {"type": "integer", "minimum": 0},
+    "lowWatermarkBytes": {"type": "integer", "minimum": 0},
+    "incrementBytes": {"type": "integer", "minimum": 0},
+    "leases": {"type": "object", "additionalProperties": false, "required": ["leased", "expired", "leasedBytes", "expiredBytes"], "properties": {"leased": {"type": "integer", "minimum": 0}, "expired": {"type": "integer", "minimum": 0}, "leasedBytes": {"type": ["integer", "null"], "minimum": 0}, "expiredBytes": {"type": ["integer", "null"], "minimum": 0}}},
+    "lastCollection": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["atMs", "bytes"], "properties": {"atMs": {"type": "integer", "minimum": 1}, "bytes": {"type": "integer", "minimum": 0}}}]}
+   }
+  },
+  "CasSection": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["root", "usedBytes", "usedBasisPoints", "capBytes", "effectiveCapBytes", "highWatermarkBytes", "lowWatermarkBytes", "incrementBytes", "leases", "lastCollection"],
+   "properties": {
+    "root": {"type": "string"},
+    "usedBytes": {"type": ["integer", "null"], "minimum": 0},
+    "usedBasisPoints": {"type": ["integer", "null"], "minimum": 0},
+    "capBytes": {"type": "integer", "minimum": 0},
+    "effectiveCapBytes": {"type": "integer", "minimum": 0},
+    "highWatermarkBytes": {"type": "integer", "minimum": 0},
+    "lowWatermarkBytes": {"type": "integer", "minimum": 0},
+    "incrementBytes": {"type": "integer", "minimum": 0},
+    "leases": {"type": "object", "additionalProperties": false, "required": ["leased", "expired", "leasedBytes", "expiredBytes"], "properties": {"leased": {"type": "integer", "minimum": 0}, "expired": {"type": "integer", "minimum": 0}, "leasedBytes": {"type": ["integer", "null"], "minimum": 0}, "expiredBytes": {"type": ["integer", "null"], "minimum": 0}}},
+    "lastCollection": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["atMs", "ageSeconds", "bytes"], "properties": {"atMs": {"type": "integer", "minimum": 1}, "ageSeconds": {"type": "integer", "minimum": 0}, "bytes": {"type": "integer", "minimum": 0}}}]}
+   }
+  },
+  "RetentionFact": {
+   "description": "What the last staleness sweep of the fleet cache found, as its status endpoint reports it (the StalenessReport of the slot schema).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "mode", "sweptAt", "entries", "declared", "live", "grace", "stale", "unreached", "retired", "refused", "examples"],
+   "properties": {
+    "version": {"const": 1},
+    "mode": {"enum": ["off", "dry-run", "enforce"]},
+    "sweptAt": {"type": "integer", "minimum": 0},
+    "entries": {"type": "integer", "minimum": 0},
+    "declared": {"type": "integer", "minimum": 0},
+    "live": {"type": "integer", "minimum": 0},
+    "grace": {"type": "integer", "minimum": 0},
+    "stale": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "unreached": {"type": "integer", "minimum": 0},
+    "retired": {"type": "integer", "minimum": 0},
+    "refused": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "examples": {"type": "array", "items": {"type": "string"}}
+   }
+  },
+  "RetentionSection": {
+   "description": "Retention of the fleet cache: its mode, the age of the last sweep (null when it never swept), entries judged (declared), stale (with the reasons), unreachable and undeclared, and what the publish gate refused.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["mode", "sweptAt", "ageSeconds", "entries", "judged", "live", "grace", "stale", "staleByReason", "unreached", "undeclared", "retired", "refused"],
+   "properties": {
+    "mode": {"enum": ["off", "dry-run", "enforce"]},
+    "sweptAt": {"type": "integer", "minimum": 0},
+    "ageSeconds": {"type": ["integer", "null"], "minimum": 0},
+    "entries": {"type": "integer", "minimum": 0},
+    "judged": {"type": "integer", "minimum": 0},
+    "live": {"type": "integer", "minimum": 0},
+    "grace": {"type": "integer", "minimum": 0},
+    "stale": {"type": "integer", "minimum": 0},
+    "staleByReason": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "unreached": {"type": "integer", "minimum": 0},
+    "undeclared": {"type": "integer", "minimum": 0},
+    "retired": {"type": "integer", "minimum": 0},
+    "refused": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}
+   }
+  },
+  "OffloadFact": {
+   "description": "Units of this machine's builds that run in compile slots (local) and in light slots (on the fleet), per build (the parent process of the slot holders), and the offload counters with the count of every decline or fall-back reason.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["local", "fleet", "builds", "out", "refused", "fellBack", "reasons"],
+   "properties": {
+    "local": {"type": "integer", "minimum": 0},
+    "fleet": {"type": "integer", "minimum": 0},
+    "builds": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["pid", "local", "fleet"], "properties": {"pid": {"type": "integer", "minimum": 1}, "local": {"type": "integer", "minimum": 0}, "fleet": {"type": "integer", "minimum": 0}}}},
+    "out": {"type": "integer", "minimum": 0},
+    "refused": {"type": "integer", "minimum": 0},
+    "fellBack": {"type": "integer", "minimum": 0},
+    "reasons": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}
+   }
+  },
+  "OffloadSection": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["local", "fleet", "builds", "out", "refused", "fellBack", "deadline", "lost", "silent", "reasons"],
+   "properties": {
+    "local": {"type": "integer", "minimum": 0},
+    "fleet": {"type": "integer", "minimum": 0},
+    "builds": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["pid", "local", "fleet"], "properties": {"pid": {"type": "integer", "minimum": 1}, "local": {"type": "integer", "minimum": 0}, "fleet": {"type": "integer", "minimum": 0}}}},
+    "out": {"type": "integer", "minimum": 0},
+    "refused": {"type": "integer", "minimum": 0},
+    "fellBack": {"type": "integer", "minimum": 0},
+    "deadline": {"type": "integer", "minimum": 0},
+    "lost": {"type": "integer", "minimum": 0},
+    "silent": {"type": "integer", "minimum": 0},
+    "reasons": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}
    }
   }
  }

@@ -253,6 +253,7 @@ impl ArtifactEditor for Block3dPlayApp {
                 block3d_render_window_id(view_state),
                 view_state.active_utility_id.as_deref().unwrap_or(BLOCK3D_UTILITY_SELECT),
                 None,
+                labels,
             )?,
             document_panel::BLOCK3D_BODY_ARTIFACT => document_panel::render(doc.snapshot, labels, &semio_plugin::TreeWindows::for_body(view_state, document_panel::BLOCK3D_BODY_ARTIFACT))?,
             inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, active_representation_id, labels, &semio_plugin::TreeWindows::for_body(view_state, inspection_panel::BLOCK3D_BODY_INSPECTOR))?,
@@ -280,6 +281,7 @@ impl ArtifactEditor for Block3dPlayApp {
                 block3d_render_window_id(view_state),
                 view_state.active_utility_id.as_deref().unwrap_or(BLOCK3D_UTILITY_SELECT),
                 preview,
+                block3d_labels(view_state),
             )?;
             return Ok(semio_plugin::built_to_component_tree(root));
         }

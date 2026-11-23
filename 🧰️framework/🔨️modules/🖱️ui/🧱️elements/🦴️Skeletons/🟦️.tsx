@@ -138,7 +138,7 @@ const CanvasSkeletonWindow: React.FC<{ active?: boolean }> = ({ active = false }
       active={active}
       borderKind="loading"
       stackSlot="canvas-skeleton-stack"
-      silhouetteSlot="canvas-skeleton-silhouette-border"
+      frameBorderSlot="canvas-skeleton-frame-border"
       stackClassName="relative z-window h-full min-h-0 w-full min-w-0 overflow-hidden"
       bodyClassName={cn("flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", windowBodyFrameClass)}
       bodySurfaceClassName={windowBodyFrameClass}
@@ -158,7 +158,7 @@ const CanvasSkeletonWindow: React.FC<{ active?: boolean }> = ({ active = false }
   </SurfaceScope>
 );
 
-/** 🚀️ Full canvas placeholder while the primary plugin session boots — two even mode-dock windows with U-cutout silhouettes. */
+/** 🚀️ Full canvas placeholder while the primary plugin session boots — two even mode-dock windows, each one rectangle with its title chip glass-overlaid on the top row above the placeholder. */
 export const CanvasSkeleton: React.FC<{ className?: string; label?: string }> = ({ className = "", label }) => {
   const parent = useSurface();
   const floorClass = shellFloorFillClass(parent);

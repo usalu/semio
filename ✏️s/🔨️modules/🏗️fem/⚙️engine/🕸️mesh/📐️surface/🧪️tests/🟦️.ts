@@ -26,7 +26,7 @@ const bounds=(triangles:readonly(readonly Point[])[])=>{const points=triangles.f
 function thirdPartySurface(text:string,format:"obj"|"stl"):ParsedSurface{
  const triangles:Point[][]=[],names:string[]=[];
  const add=(geometry:{getAttribute(name:string):{count:number;getX(index:number):number;getY(index:number):number;getZ(index:number):number}})=>{const positions=geometry.getAttribute("position");for(let index=0;index<positions.count;index+=3)triangles.push([0,1,2].map(corner=>[positions.getX(index+corner),positions.getY(index+corner),positions.getZ(index+corner)] as Point));};
- if(format==="obj")new OBJLoader().parse(text).traverse(object=>{if("geometry"in object){names.push(object.name);add(object.geometry as Parameters<typeof add>[0]);}});else add(new STLLoader().parse(text));return{triangles,names};
+ if(format==="obj")new OBJLoader().parse(text).traverse(object=>{if("geometry"in object){names.push(object.name);add(object.geometry as Parameters<typeof add>[0]);}});else if(/^\s*facet\b/m.test(text))add(new STLLoader().parse(text));else expect(text.trim().split(/\s*\r?\n\s*/).length).toBe(2);return{triangles,names};
 }
 const referenceObj=(surface:Surface)=>surface.points.map(point=>"v "+point.join(" ")).join("\n")+"\no "+surface.regionId+"\n"+surface.triangles.map(triangle=>"f "+triangle.map(index=>index+1).join(" ")).join("\n")+"\n";
 const referenceStl=(surface:Surface)=>"solid "+surface.regionId+"\n"+surfaceTriangles(surface).map(points=>"facet normal 0 0 0\nouter loop\n"+points.map(point=>"vertex "+point.join(" ")).join("\n")+"\nendloop\nendfacet").join("\n")+"\nendsolid "+surface.regionId+"\n";

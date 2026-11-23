@@ -37,12 +37,12 @@ export const ArtifactMissing: Story = {
   args: { plugin: "architect" } satisfies WgpuBootHostProps,
 };
 
-/** 🪟️ Fixed-size, high-contrast floor for inspecting the native WGPU window silhouette and its real cutouts. */
+/** 🪟️ Fixed-size, high-contrast floor for inspecting the native WGPU window frame and its glass chips over content. */
 export const GlassContent: Story = {
   args: { plugin: "s" } satisfies WgpuBootHostProps,
   render: (args) => (
     <div
-      data-testid="wgpu-silhouette-visual-floor"
+      data-testid="wgpu-frame-visual-floor"
       className="h-screen w-full"
       style={{
         backgroundColor: "#641f45",

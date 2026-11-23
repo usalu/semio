@@ -5,6 +5,7 @@ import {homedir,tmpdir} from "node:os";
 import {join} from "node:path";
 import {wrapRustcV1} from "../../📜️script.ts";
 import {readLookupsV1} from "../../💾️store/🟦️.ts";
+import {portableRootsV1,slotMetadataV1} from "../../🛰️fleet/🪪️identity/🟦️.ts";
 import {canonicalMetadataV1,cargoIdentityArgumentsV1,extraFilenameV1,normalizeRustcArgumentsV1,withCanonicalMetadataV1} from "../../🔏️key/🟦️.ts";
 
 /** 🆔️ Contract: the unit key leaves out the identity Cargo derives from its workspace (`-C metadata`, `-C extra-filename`), so one crate compiled in two Cargo workspaces with other roots, member sets and metadata is one entry: the second workspace is a local hit, gets its own file names, and its dependants link and run. */
@@ -82,3 +83,67 @@ real("one crate and its dependant in two Cargo workspaces (other roots, members 
  const oracle=(crate:string,more:readonly string[])=>spawnSync(rustc!,["--edition","2021","--crate-name",crate,"--crate-type","lib","--emit=link","-C","metadata=plain"+crate,"--out-dir",plain,"-L","dependency="+plain,join(second.work,crate,"lib.rs"),...more],{encoding:"utf8"});
  expect(oracle("a",[]).status).toBe(0);expect(oracle("b",["--extern","a="+join(plain,"liba.rlib")]).status).toBe(0);
 });
+
+const slotInput=(over:Partial<{toolchain:string;normalized:string[];sourceSha256:string;externs:{name:string;sha256:string}[]}>={})=>({toolchain:"tc",normalized:["--crate-name","a","--edition=2021","/work/ws/a/lib.rs","--extern","dep=#digest-1"],sourceSha256:"s1",externs:[{name:"dep",sha256:"digest-1"}],environment:[["CARGO_PKG_NAME","a"]] as [string,string][],...over});
+const slotParts=["rel","host","opt=0","a@1.0.0","a","lib/link","f1",""];
+
+test("the metadata of a unit is its slot-level identity: equal across workspaces and edits, distinct across crates, versions, kinds, features, flags, externs and compilers",()=>{
+ const one=portableRootsV1({cwd:"/work/ws",workspace:undefined}),two=portableRootsV1({cwd:"/elsewhere/ws2",workspace:undefined});
+ const base=slotMetadataV1(slotInput(),one,slotParts);
+ expect(base).toMatch(/^[0-9a-f]{16}$/u);
+ expect(slotMetadataV1(slotInput({sourceSha256:"s2",externs:[{name:"dep",sha256:"digest-2"}],normalized:["--crate-name","a","--edition=2021","/work/ws/a/lib.rs","--extern","dep=#digest-2"]}),one,slotParts),"neither source nor extern bytes").toBe(base);
+ expect(slotMetadataV1(slotInput({normalized:["--crate-name","a","--edition=2021","/elsewhere/ws2/a/lib.rs","--extern","dep=#digest-1"]}),two,slotParts),"another checkout root").toBe(base);
+ expect(slotMetadataV1(slotInput(),one,["other",...slotParts.slice(1)]),"the release digest is the toolchain's business").toBe(base);
+ const differs=[
+  slotMetadataV1(slotInput(),one,[...slotParts.slice(0,3),"a@1.0.1",...slotParts.slice(4)]),
+  slotMetadataV1(slotInput(),one,[...slotParts.slice(0,3),"b@1.0.0",...slotParts.slice(4)]),
+  slotMetadataV1(slotInput(),one,[...slotParts.slice(0,3),"a@1.0.0#sub/a",...slotParts.slice(4)]),
+  slotMetadataV1(slotInput(),one,[...slotParts.slice(0,5),"rlib/link",...slotParts.slice(6)]),
+  slotMetadataV1(slotInput(),one,[...slotParts.slice(0,5),"lib/metadata",...slotParts.slice(6)]),
+  slotMetadataV1(slotInput(),one,[...slotParts.slice(0,6),"f1,f2",""]),
+  slotMetadataV1(slotInput(),one,[...slotParts.slice(0,2),"opt=3",...slotParts.slice(3)]),
+  slotMetadataV1(slotInput(),one,[slotParts[0]!,"wasm32",...slotParts.slice(2)]),
+  slotMetadataV1(slotInput({toolchain:"tc2"}),one,slotParts),
+  slotMetadataV1(slotInput({normalized:["--crate-name","a","--edition=2018","/work/ws/a/lib.rs","--extern","dep=#digest-1"]}),one,slotParts),
+  slotMetadataV1(slotInput({normalized:["--crate-name","a","--edition=2021","/work/ws/a/lib.rs","--extern","other=#digest-1"]}),one,slotParts),
+ ];
+ expect(new Set([base,...differs]).size,"every difference is a distinct identity").toBe(differs.length+1);
+ expect(slotMetadataV1(slotInput(),one,undefined)).toMatch(/^[0-9a-f]{16}$/u);
+});
+
+const logger=(root:string):string=>{
+ const file=join(root,"logger.js");
+ writeFileSync(file,'const {appendFileSync}=require("node:fs"),{spawnSync}=require("node:child_process"),[,,log,rustc,...args]=process.argv;const rows=args.filter((argument,index)=>argument.startsWith("metadata=")&&args[index-1]==="-C"||argument.startsWith("-Cmetadata="));if(rows.length>0)appendFileSync(log,JSON.stringify(rows)+"\\n");process.exit(spawnSync(rustc,args,{stdio:"inherit"}).status??1);\n');
+ return file;
+};
+
+real("a body edit of a library keeps its metadata, so the dependant of a check chain stays a hit and the whole chain still links and runs",async()=>{
+ const cache=directory("cut"),w=workspace("cut",cache,["a","b"]),log=join(w.root,"metadata.log");
+ const check=(crate:string)=>argvOf(w,crate).map(argument=>argument==="--emit=dep-info,metadata,link"?"--emit=dep-info,metadata":argument).map((argument,index,all)=>all[index-1]==="--extern"?argument.replace(".rlib",".rmeta"):argument);
+ const run=async(a:string):Promise<Record<string,string>>=>{
+  sources.a=a;const before=readLookupsV1(cache).length;
+  for(const crate of["a","b"]){
+   mkdirSync(join(w.work,crate),{recursive:true});writeFileSync(join(w.work,crate,"lib.rs"),sources[crate]!);
+   const environment={...process.env,SEMIO_UNIT_CACHE_ROOT:cache,SEMIO_UNIT_CACHE_LANE:"d",SEMIO_UNIT_CACHE_INNER:JSON.stringify([process.execPath,logger(w.root),log,rustc!]),SEMIO_UNIT_CACHE_TOOLCHAIN:"k4-test",CARGO_PKG_NAME:crate,CARGO_PKG_VERSION:"1.0.0",CARGO_MANIFEST_DIR:join(w.work,crate),RUSTC_BOOTSTRAP:"1"} as Record<string,string|undefined>;
+   delete environment.SEMIO_UNIT_CACHE_LANE_ROOT;delete environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT;
+   const write=process.stdout.write.bind(process.stdout),err=process.stderr.write.bind(process.stderr);
+   process.stdout.write=(()=>true) as typeof process.stdout.write;process.stderr.write=(()=>true) as typeof process.stderr.write;
+   const origin=process.cwd();process.chdir(w.work);
+   try{expect(await wrapRustcV1(check(crate),environment,w.work),crate).toBe(0);}finally{process.chdir(origin);process.stdout.write=write;process.stderr.write=err;}
+  }
+  return Object.fromEntries(readLookupsV1(cache).slice(before).map(row=>[row.crate,row.outcome]));
+ };
+ const original=sources.a!;
+ try{
+  expect(await run(original)).toEqual({a:"miss",b:"miss"});
+  expect(await run(original.replace("x + 1","x + 100")),"a is compiled again, b is served").toEqual({a:"miss",b:"local-hit"});
+  const rows=readFileSync(log,"utf8").trim().split("\n").map(row=>JSON.parse(row) as string[]);
+  expect(rows.length,"the compiler ran for a, b, a").toBe(3);
+  expect(rows[0],"a keeps its metadata across the body edit").toEqual(rows[2]);
+  expect(rows[0],"a and b never share one").not.toEqual(rows[1]);
+  expect(rows[0]![0]).toMatch(/^metadata=[0-9a-f]{16}$/u);
+ }finally{sources.a=original;}
+ const consumerSource=join(w.work,"d.rs");writeFileSync(consumerSource,"pub fn run() -> u32 { b::twice(1) + a::answer(1) }\n");
+ const consumer=spawnSync(rustc!,["--edition","2021","--emit=metadata","--crate-type","lib","--crate-name","k4d",consumerSource,"--out-dir",join(w.work,"d"),"-L","dependency="+join(w.work,"target","deps"),"--extern","b="+join(w.work,"target","deps","libb"+w.extra.b+".rmeta"),"--extern","a="+join(w.work,"target","deps","liba"+w.extra.a+".rmeta")],{encoding:"utf8"});
+ expect(consumer.status,consumer.stderr).toBe(0);
+},900000);

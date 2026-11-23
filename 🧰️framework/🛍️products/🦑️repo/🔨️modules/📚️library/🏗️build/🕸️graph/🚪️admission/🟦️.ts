@@ -4,6 +4,7 @@ import {createHash} from "node:crypto";
 import {refuseBuildV1} from "../../📖️texts/🟦️.ts";
 import {isOwnerFailureV1,joinOwnerFailuresV1,type OwnerFailureV1} from "../📥️load/🛟️owner-isolation/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {createDiscoveryAheadV1} from "./🔮️ahead/🟦️.ts";
 import selectionSchema from "../../🧬️schema/🚪️selection.json" with {type:"json"};
 import registrySchema from "../../🧬️schema/📋️owners.json" with {type:"json"};
 import admissionSchema from "../../🧬️schema/🚪️admission.json" with {type:"json"};
@@ -152,17 +153,37 @@ function ownerAdmissionFrontierV1(){
    }
    return first.name;
   },
+  peek(pass:number,limit:number):string[]{return rows.filter(row=>row.pass===pass).map(row=>row.name).sort((a,b)=>a<b?-1:a>b?1:0).slice(0,limit);},
  };
 }
 
+/** 🔮️ One question of the closure to the observation port: an owner with the targets and inputs asked of it. */
+export type OwnerObservationRequestV1={readonly owner:BuildOwnerRegistryV1["owners"][number];readonly targets:readonly string[];readonly inputs:readonly string[]};
+
+/** 🔮️ How many owners behind the one in work the closure announces to the observation port (`lookahead`), which may start them early. */
+const OWNER_LOOKAHEAD_V1=16;
+
 /** 🧩️ Converges exact task prerequisites and source owners through a caller-owned observation port; an owner reached only through `file` edges is admitted ownership-only (its manifest and the imported files are members, it is never observed) until a task, input or dependency edge needs it; the named failure of an owner (see `observeOwnerWithRetryV1`) does not end the walk: every other owner is still observed and kept, the owner is left out when none of its tasks is in the task closure of the selection (a mere project dependency, or a `^` task of a target it does not declare as `declares` answers) and `report` names it, and a needed owner ends the closure with one named failure listing every needed owner.
  * @see ../📥️load/🛟️owner-isolation/🟦️.ts */
-export async function closeBuildOwnerAdmissionV1(selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,inspect:(owner:BuildOwnerRegistryV1["owners"][number],targets:readonly string[],inputs:readonly string[])=>Promise<BuildOwnerAdmissionFactsV1>,report?:(failure:{owner:string;error:OwnerFailureV1;needed:boolean})=>void,declares:(owner:string,target:string)=>boolean|undefined=()=>true,trace?:(summary:OwnerClosureTraceV1)=>void):Promise<BuildOwnerAdmissionV1>{
+export async function closeBuildOwnerAdmissionV1(selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,inspect:(owner:BuildOwnerRegistryV1["owners"][number],targets:readonly string[],inputs:readonly string[])=>Promise<BuildOwnerAdmissionFactsV1>,report?:(failure:{owner:string;error:OwnerFailureV1;needed:boolean})=>void,declares:(owner:string,target:string)=>boolean|undefined=()=>true,trace?:(summary:OwnerClosureTraceV1)=>void,width?:()=>number):Promise<BuildOwnerAdmissionV1>{
  selection=readBuildGraphSelectionV1(selection);registry=readBuildOwnerRegistryV1(registry);
  const direct=selection.kind==="tasks"&&selection.excludeDependencies===true,byName=new Map(registry.owners.map(owner=>[owner.name,owner])),sourceOwner=createSourceOwnerResolverV1(registry),admitted=new Map<string,number>(),targets=new Map<string,Set<string>>(),inputs=new Map<string,Set<string>>(),optionalTasks=new Set<string>(),files=new Set<string>(),admitting=new Set<string>(),observed=new Set<string>(),providers=new Map<string,{ownerRoot:string;sourcePath:string}>(),revisions=new Map<string,string>(),facts=new Map<string,BuildOwnerAdmissionFactsV1>(),failures=new Map<string,OwnerFailureV1>(),named=new Set<string>();
  const attempt=async<T>(name:string,revision:string|undefined,run:()=>Promise<T>):Promise<T|undefined>=>{try{const value=await run();failures.delete(name);return value;}catch(error){if(!isOwnerFailureV1(error))throw error;failures.set(name,error);if(revision!==undefined)revisions.set(name,revision);return undefined;}};
- const observe=async(owner:BuildOwnerRegistryV1["owners"][number],targets:readonly string[],inputs:readonly string[])=>{const value=await inspect(owner,targets,inputs);if(validateJsonSchemaSubset({$defs:admissionSchema.$defs,$ref:"#/$defs/ownerFacts"},value).length)throw Error("Closed build owner observations required");return value;};
+ const flights=createDiscoveryAheadV1<OwnerObservationRequestV1,BuildOwnerAdmissionFactsV1>({key:request=>[request.owner.name,request.targets.join("\u0001"),request.inputs.join("\u0001")].join("\0"),width:()=>width?.()??0,start:async({owner,targets,inputs})=>{const value=await inspect(owner,targets,inputs);if(validateJsonSchemaSubset({$defs:admissionSchema.$defs,$ref:"#/$defs/ownerFacts"},value).length)throw Error("Closed build owner observations required");return value;}});
+ const observe=(owner:BuildOwnerRegistryV1["owners"][number],targets:readonly string[],inputs:readonly string[])=>flights.take({owner,targets,inputs});
  const frontier=ownerAdmissionFrontierV1();
+ const requestOf=(next:string,known:BuildOwnerAdmissionFactsV1|undefined):OwnerObservationRequestV1|undefined=>{
+  if(ownership.has(next))return undefined;
+  const chosen=targets.get(next),open=(target:string)=>optionalTasks.has(next+"\0"+target),owner=byName.get(next)!;
+  if(known===undefined&&[...chosen??[]].some(open))return{owner,targets:[],inputs:[]};
+  const wanted=[...chosen??[]].filter(target=>!open(target)||known?.project.targets[target]).sort(),requested=[...inputs.get(next)??[]].sort();
+  return revisions.get(next)===JSON.stringify([wanted,requested])||!(wanted.length||requested.length||known===undefined)?undefined:{owner,targets:wanted,inputs:requested};
+ };
+ const follow=(request:OwnerObservationRequestV1,known:BuildOwnerAdmissionFactsV1):OwnerObservationRequestV1[]=>{
+  if(request.targets.length||request.inputs.length||facts.has(request.owner.name))return[];
+  const next=requestOf(request.owner.name,known);
+  return next!==undefined&&(next.targets.length||next.inputs.length)?[next]:[];
+ };
  let pass=-1,cursor:string|undefined;
  const dirty=(name:string)=>frontier.add(name,cursor!==undefined&&admitted.get(name)!<=pass&&cursor<name?pass:pass+1);
  const origin=new Map<string,{by:string;kind:string}>(),ownership=new Set<string>();let nextTrace=250;
@@ -193,6 +214,7 @@ export async function closeBuildOwnerAdmissionV1(selection:BuildGraphSelectionV1
   for(let name=frontier.take(pass);name!==undefined;name=frontier.take(pass)){
    cursor=name;
    const owner=byName.get(name)!,selected=targets.get(name),optional=(target:string)=>optionalTasks.has(name+"\0"+target);
+   if((width?.()??0)>0)flights.ahead(frontier.peek(pass,OWNER_LOOKAHEAD_V1).map(next=>requestOf(next,facts.get(next))).filter((request):request is OwnerObservationRequestV1=>request!==undefined),follow);
    if(ownership.has(name)){files.add(owner.manifest);continue;}
    let prior=facts.get(name);
    if(!prior&&[...selected??[]].some(optional)){

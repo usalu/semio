@@ -78,8 +78,8 @@ pub fn keep_on_device(space_id: &str, storage: &str, target: &str) -> Result<Eff
         "name": name.trim(),
         "storage": storage,
         "target": target.trim(),
-        "pack": protocol::base64_standard_encode(&files.pack),
-        "spr": protocol::base64_standard_encode(&files.spr),
+        "pack": protocol::base64_standard_encode(&files.files.pack),
+        "spr": protocol::base64_standard_encode(&files.files.spr),
     }));
     Ok(Effect::ReplayShellCommand { action_id: "os.local-catalog.admit".into(), args: Some(args) })
 }

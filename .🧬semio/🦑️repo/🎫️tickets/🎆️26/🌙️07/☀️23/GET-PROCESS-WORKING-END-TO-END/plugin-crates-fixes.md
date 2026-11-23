@@ -1,0 +1,7 @@
+# Plugin Crates Fixes
+
+1. `semio-plugin` / `semio-plugin-window-kits`: re-checked, `cargo check -p semio-plugin --lib --tests` is clean (another agent had already landed the window API change). No edit.
+2. `semio-plugin-interpreter` `original_structured_control_matches_independent_vm_and_paid_label_retirement` (16 vs 17 at `🧭️control/🧪️tests/🦀️.rs:268`): the assertion is the post-step `frame.pc`, not a label count, and is unrelated to the encode `close_committing` / decode retirement ledger changes. Fixture row "taken conditional branch consumes the condition and discards inner operands": body bytes put `br_if` at pc 8 and the block `end` at pc 15, so the landing pc after the end is 16 (same convention as the sibling rows: before 6/after 10, before 8/after 14). Fixture `after` was 17 (mid `local.get` operand); product is right, fixture corrected to 16 in `🧫️fixtures/🔣️.json`. No TS twin consumes it.
+3. `semio-plugin-abi` `actor_input_serde_accepts_only_the_closed_tagged_corpus`: commit 752 made the corpus declare the JSON-tagged `Job` wire invalid (Job is only admitted as a compact `SJS1` frame; the reactor refuses JSON-form Job with "owned Job input requires a compact SJS1 frame") but `ActorInput::Job` still deserialized. Fix: `#[serde(skip_deserializing)]` on `ActorInput::Job` in `🧬️schema/🔁️persistent-local/🦀️.rs`. Abi: 5/5 pass.
+
+Result: semio-plugin-abi 5 pass; semio-plugin-interpreter 24 pass.

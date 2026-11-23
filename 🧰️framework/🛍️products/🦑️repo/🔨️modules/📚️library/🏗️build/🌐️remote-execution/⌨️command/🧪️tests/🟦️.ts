@@ -39,10 +39,10 @@ test("the schema, the authored policy and the message catalogue agree between th
 
 test("the catalogue row lists exactly the options the command accepts, every flag is defined for the operation, and the examples start with repo",()=>{
  const operation=(catalog.operations as any[]).find(row=>row.name==="remote-execution");
- expect(operation.synopsis).toBe("remote-execution serve|status|workers");expect(operation.subcommands.map((row:any)=>row.name)).toEqual(["serve","status","workers"]);
- const accepted=(name:"serve"|"status"|"workers")=>[...REMOTE_EXECUTION_OPTIONS_V1[name].valued,...REMOTE_EXECUTION_OPTIONS_V1[name].plain].filter(flag=>flag!=="--lang");
+ expect(operation.synopsis).toBe("remote-execution serve|status|workers|cancel");expect(operation.subcommands.map((row:any)=>row.name)).toEqual(["serve","status","workers","cancel"]);
+ const accepted=(name:"serve"|"status"|"workers"|"cancel")=>[...REMOTE_EXECUTION_OPTIONS_V1[name].valued,...REMOTE_EXECUTION_OPTIONS_V1[name].plain].filter(flag=>flag!=="--lang");
  for(const subcommand of operation.subcommands)expect([...subcommand.flags].sort(),subcommand.name).toEqual(accepted(subcommand.name).sort());
- expect([...operation.flags].sort()).toEqual([...new Set(["serve","status","workers"].flatMap(name=>accepted(name as "serve")))].sort());
+ expect([...operation.flags].sort()).toEqual([...new Set(["serve","status","workers","cancel"].flatMap(name=>accepted(name as "serve")))].sort());
  const defined=(flag:string)=>(catalog.flags as any[]).find(row=>row.name===flag&&(row.operations??[]).includes("remote-execution"));
  for(const flag of operation.flags){const row=defined(flag);expect(row,flag).toBeDefined();expect(row.operations,flag).toContain("remote-execution");expect(row.description.en.length).toBeGreaterThan(10);expect(row.description.de.length).toBeGreaterThan(10);}
  for(const row of catalog.flags as any[])if(!operation.flags.includes(row.name))expect(row.operations??[]).not.toContain("remote-execution");

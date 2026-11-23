@@ -80,7 +80,8 @@ pub fn fem3d_solve(doc: &Fem3dSnapshot, case_id: &str) -> Result<semio_s_fem_mod
 /// `analyses::Combination` per `doc.combinations` entry, solving them ALL at once via
 /// `semio_s_fem_analyses::solve_multi_case` (self-weight honored via `doc.materials`' `rho`, gravity
 /// fixed at `[0.0, 0.0, -9.81]` — this crate is Z-up, per `FemNode`'s `{x,y,z}` fields and the existing
-/// cantilever test's `Dof::Tz` tip load). Returns results keyed by case id ∪ combination id.
+/// cantilever test's `Dof::Tz` tip load). Returns results keyed by the encoded result-source identity of each case and combination
+/// (`semio_s_fem_analyses_model::encode_result_source_parts`).
 pub fn fem3d_solve_all(doc: &Fem3dSnapshot) -> Result<HashMap<String, semio_s_fem_model::StaticResult>, Fem3dError> {
     for (kind, id) in doc.load_cases.iter().map(|case| ("loadCase", case.id.as_str())).chain(doc.combinations.iter().map(|combination| ("combination", combination.id.as_str()))) {
         semio_s_fem_analyses_model::validate_result_source_parts(kind, id).map_err(Fem3dError::ResultSource)?;

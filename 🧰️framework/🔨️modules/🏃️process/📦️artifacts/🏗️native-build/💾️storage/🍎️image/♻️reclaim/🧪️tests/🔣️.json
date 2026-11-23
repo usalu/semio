@@ -279,5 +279,176 @@
       "realBytes": 2147483647,
       "stop": true
     }
+  ],
+  "refresh": [
+    {
+      "name": "incident: latched at zero, 60 GiB in the container, 15 GiB on the host",
+      "volumeAvailableBytes": 0,
+      "hostFreeBytes": 16106127360,
+      "probeDue": true,
+      "due": true,
+      "containerFreeBytes": 64424509440
+    },
+    {
+      "name": "stale-low 2 GiB with a roomy container and host",
+      "volumeAvailableBytes": 2147483648,
+      "hostFreeBytes": 16106127360,
+      "probeDue": true,
+      "due": true,
+      "containerFreeBytes": 85899345920
+    },
+    {
+      "name": "consistent low figures are honest and stay",
+      "volumeAvailableBytes": 4294967296,
+      "hostFreeBytes": 16106127360,
+      "probeDue": true,
+      "due": false,
+      "containerFreeBytes": 4429185024
+    },
+    {
+      "name": "a roomy volume is not even probed",
+      "volumeAvailableBytes": 42949672960,
+      "hostFreeBytes": 107374182400,
+      "probeDue": false,
+      "due": false,
+      "containerFreeBytes": 42949672960
+    },
+    {
+      "name": "an unknown container never cycles",
+      "volumeAvailableBytes": 0,
+      "hostFreeBytes": 16106127360,
+      "probeDue": true,
+      "due": false
+    },
+    {
+      "name": "the host is as full as the volume: nothing to gain",
+      "volumeAvailableBytes": 0,
+      "hostFreeBytes": 104857600,
+      "probeDue": false,
+      "due": false,
+      "containerFreeBytes": 64424509440
+    },
+    {
+      "name": "gap exactly at the tolerance stays",
+      "volumeAvailableBytes": 1073741824,
+      "hostFreeBytes": 16106127360,
+      "probeDue": true,
+      "due": false,
+      "containerFreeBytes": 1342177280
+    },
+    {
+      "name": "gap one byte beyond the tolerance cycles",
+      "volumeAvailableBytes": 1073741824,
+      "hostFreeBytes": 16106127360,
+      "probeDue": true,
+      "due": true,
+      "containerFreeBytes": 1342177281
+    }
+  ],
+  "ladder": [
+    {
+      "name": "a plain detach needs no escalation",
+      "quiescent": true,
+      "latched": false,
+      "failures": {},
+      "goneAfter": null,
+      "expected": [
+        "detach /dev/d"
+      ],
+      "throws": false
+    },
+    {
+      "name": "a busy refusal without proof and without latch is final",
+      "quiescent": false,
+      "latched": false,
+      "failures": {
+        "detach /dev/d": "Resource busy"
+      },
+      "goneAfter": null,
+      "expected": [
+        "detach /dev/d"
+      ],
+      "throws": true
+    },
+    {
+      "name": "a busy refusal under the lease proof forces the detach",
+      "quiescent": true,
+      "latched": false,
+      "failures": {
+        "detach /dev/d": "Resource busy"
+      },
+      "goneAfter": null,
+      "expected": [
+        "detach /dev/d",
+        "detach -force /dev/d"
+      ],
+      "throws": false
+    },
+    {
+      "name": "a forced detach that is still busy forces the unmount first",
+      "quiescent": true,
+      "latched": false,
+      "failures": {
+        "detach /dev/d": "Resource busy",
+        "detach -force /dev/d#1": "Resource busy"
+      },
+      "goneAfter": null,
+      "expected": [
+        "detach /dev/d",
+        "detach -force /dev/d",
+        "unmount force /m",
+        "detach -force /dev/d"
+      ],
+      "throws": false
+    },
+    {
+      "name": "a last detach that fails after the unmount is fine when the device is gone",
+      "quiescent": true,
+      "latched": false,
+      "failures": {
+        "detach /dev/d": "Resource busy",
+        "detach -force /dev/d#1": "Resource busy",
+        "detach -force /dev/d#2": "No such device"
+      },
+      "goneAfter": "unmount force /m",
+      "expected": [
+        "detach /dev/d",
+        "detach -force /dev/d",
+        "unmount force /m",
+        "detach -force /dev/d"
+      ],
+      "throws": false
+    },
+    {
+      "name": "a last detach that fails with the device still attached is final",
+      "quiescent": true,
+      "latched": false,
+      "failures": {
+        "detach /dev/d": "Resource busy",
+        "detach -force /dev/d#1": "Resource busy",
+        "detach -force /dev/d#2": "Resource busy"
+      },
+      "goneAfter": null,
+      "expected": [
+        "detach /dev/d",
+        "detach -force /dev/d",
+        "unmount force /m",
+        "detach -force /dev/d"
+      ],
+      "throws": true
+    },
+    {
+      "name": "an error that is not busy is never escalated",
+      "quiescent": true,
+      "latched": true,
+      "failures": {
+        "detach /dev/d": "No such device"
+      },
+      "goneAfter": null,
+      "expected": [
+        "detach /dev/d"
+      ],
+      "throws": true
+    }
   ]
 }

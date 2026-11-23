@@ -91,7 +91,7 @@ pub fn scene(spec: &PlaybookSpec, labels: &PlaybookPlayLabels) -> VirtualFileSys
 }
 
 pub fn render(spec: &PlaybookSpec, labels: &PlaybookPlayLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    semio_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_FILES, semio_ui_contract::SurfaceKind::VirtualFileSystem, &scene(spec, labels))
+    semio_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_FILES, semio_ui_contract::SurfaceKind::VirtualFileSystem, &scene(spec, labels), labels.surface_files.as_str(), None)
 }
 
 #[cfg(test)]

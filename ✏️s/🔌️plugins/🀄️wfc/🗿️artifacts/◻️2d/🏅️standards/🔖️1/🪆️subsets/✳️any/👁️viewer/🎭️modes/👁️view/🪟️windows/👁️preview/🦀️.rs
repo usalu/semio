@@ -171,8 +171,8 @@ pub fn board_layers_json(document: &Wfc2dSnapshot) -> String {
 //#endregion 🔖️Paint
 
 //#region 🔖️Render
-pub fn render(document: &Wfc2dSnapshot) -> UiAssemblyResult<BuiltNode> {
-    scene_surface(WFC_2D_VIEW_SURFACE, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, 1.0, board_layers_json(document)))
+pub fn render(document: &Wfc2dSnapshot, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
+    scene_surface(WFC_2D_VIEW_SURFACE, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, 1.0, board_layers_json(document)), semio_plugin::surface_name(locale, "Board", "Tafel"), None)
 }
 //#endregion 🔖️Render
 

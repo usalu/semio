@@ -126,13 +126,13 @@ pub fn records(plan: &PlanLinework, selection: &[String], hover: &[String], util
 }
 
 /// 🗺️ Renders the plan window: the configured storey's linework, or an empty surface when the model has no storey or no linework yet.
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    render_over(snapshot, inference, config, selection, hover, utility, revision, labels, &[])
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    render_over(snapshot, inference, config, selection, hover, utility, revision, labels, locale, &[])
 }
 
 /// 🗺️ [`render`] with the records of the authoring overlay (handles, snap markers, the gesture preview) painted last, over everything.
 #[allow(clippy::too_many_arguments)]
-pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels, locale: semio_plugin::Locale, overlay: &[DslValue]) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let view = active_view(snapshot, config);
     let filtered = view.as_ref().and_then(|view| inference.view_linework.get(view)).map(|drawing| {
         let mut lines = drawing.lines.clone();
@@ -149,7 +149,7 @@ pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config:
     }
     records.extend(overlay.iter().cloned());
     let framing = plan.filter(|_| !config.framed).and_then(|plan| semio_s_artifact_bim_model_plan_linework::render::plan::canvas_bounds(plan).map(|bounds| semio_plugin::Canvas2dFraming { revision, bounds, padding: 48.0 }));
-    canvas_surface(SURFACE_ID, config.viewport, framing, &records)
+    canvas_surface(SURFACE_ID, config.viewport, framing, &records, semio_plugin::surface_name(locale, "Floor plan", "Grundriss"))
 }
 //#endregion 🔖️Render
 

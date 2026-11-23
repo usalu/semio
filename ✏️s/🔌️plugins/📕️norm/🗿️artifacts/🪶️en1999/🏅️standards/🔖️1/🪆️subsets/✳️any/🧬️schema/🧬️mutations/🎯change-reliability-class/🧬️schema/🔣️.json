@@ -31,7 +31,21 @@
         },
         "widget": "select",
         "group": "value",
-        "order": 20
+        "order": 20,
+        "options": {
+          "RC1": {
+            "en": "RC1",
+            "de": "RC1"
+          },
+          "RC2": {
+            "en": "RC2",
+            "de": "RC2"
+          },
+          "RC3": {
+            "en": "RC3",
+            "de": "RC3"
+          }
+        }
       },
       "x-semio-rust": {
         "type": "semio_s_plugin_norm_compliance::ReliabilityClass"

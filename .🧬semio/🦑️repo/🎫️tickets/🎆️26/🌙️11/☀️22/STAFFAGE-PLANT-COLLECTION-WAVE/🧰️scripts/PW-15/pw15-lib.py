@@ -1,6 +1,9 @@
-"""🧰 PW-15 shared assembly of a grass or perennial asset: imports the round-3 miscanthus kit and model from their place (vectors, rig frames, lofts, plant parts, solids, outlines, view drawings, emitter strips) and adds what every PW-15 species needs around them: the planar rig from a shoot table, poses, clips, thermal model, structure list, symbols, representation frames and the manifest row.
+"""🧰 PW-15 shared assembly of a grass or perennial asset: imports the round-3 miscanthus kit and model from their place (vectors, rig frames, lofts, plant parts, emitter strips) and adds what every PW-15 species needs around them: the planar rig from a shoot table, poses, clips, thermal model, structure list, symbols, representation frames and the manifest row.
+
+Body and drawing are twins (`twin`, `drawings`): every part of a plant becomes one closed triangle mesh (`polyhedron`) through its stated sections, and its three drawn shapes are the outlines of that very mesh projected into the side elevation, the front and the plan (union of the projected triangles, shapely). No part is `slender` and no stroke stands for a body, so the catalog-silhouette guard compares the same polygons on both sides. The generators therefore run through `pw15-build.sh` in the `geometry` oracle environment of the staffage tests (shapely).
 
 See: ../../📋️brief.md
+See: ../../📝️PW-15.md
 See: ../../../../☀️14/PERFECT-HANDCRAFTED-3D-MODELS-PER-SCALE-AND-MODE-FOR-EVERY-STAFFAGE/r3-vegetation-miscanthus-grass.md
 """
 import importlib.util
@@ -79,45 +82,217 @@ def part_area(part):
     return total
 
 
-def solid(rig, part):
-    s = M.solid_of(rig, part)
-    if "capsule" in part and part.get("slender"):
-        s["slender"] = True
-    if part.get("sheet"):
-        s["sheet"] = True
-    return s
+SIDES = {"sheet": {50: 4, 100: 4, 200: 4, 500: 4}, "round": {50: 8, 100: 8, 200: 8, 500: 8}, "mass": {50: 16, 100: 12, 200: 12, 500: 8}, "dome": {50: 32, 100: 24, 200: 20, 500: 16}}
+PEN_FINE = 0.2
 
 
-def shoelace(points):
-    return abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(points, points[1:] + points[:1]))) / 2
+def kind_of(part):
+    """🏷️ The mesh class of a part: a flat `sheet` (leaf blade, ray floret), a `round` stem, a `dome` of revolution or a `mass`."""
+    if "dome" in part:
+        return "dome"
+    if "capsule" in part:
+        return "round"
+    if max(part["ry"]) <= 0.2 * max(part["rx"]):
+        return "sheet"
+    return "round" if part.get("slender") or max(part["rx"]) <= 0.02 else "mass"
 
 
-def perimeter(points):
-    return sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(points, points[1:] + points[:1]))
+def rings_of(part, scale):
+    """⭕ The section rings of a part in world space: `sides` points per station on the superellipse of the station (a flat sheet is a rhombus of its width and thickness), the section normal along the path tangent; a capsule gets a shoulder ring at each end.
+
+    A round stem is an octagonal prism set so that the side elevation looks at a flat of it (the first corner 22.5 degrees off the view) and 3 % narrower across than along that corner: its principal extents are then its two corner diameters, never less than the width any view draws, so `volumes-feature` reads the stem as thick as its drawing shows it whatever its lean."""
+    sides = part.get("sides", {}).get(scale) if isinstance(part.get("sides"), dict) else part.get("sides")
+    sides = sides or SIDES[kind_of(part)][scale]
+    if "capsule" in part:
+        a, b, r = part["capsule"]
+        d = K.unit(K.sub(b, a))
+        c = K.cross(d, (0.0, 0.0, 1.0))
+        x = K.unit(c) if K.norm(c) > 0.2 else (1.0, 0.0, 0.0)
+        stations = [(K.sub(a, K.mul(d, 0.75 * r)), d, x, 0.66 * r, 0.66 * r), (a, d, x, r, r), (b, d, x, r, r), (K.add(b, K.mul(d, 0.75 * r)), d, x, 0.66 * r, 0.66 * r)]
+        exponent = 2.0
+    else:
+        ts = K.tangents(part["points"])
+        stations = [(p, q, x, max(a, 2e-4), max(b, 2e-4)) for p, q, x, a, b in zip(part["points"], ts, part["widths"], part["rx"], part["ry"])]
+        exponent = part.get("exponent", 2.0)
+    e = 2.0 / exponent
+    rings = []
+    before = None
+    stem = kind_of(part) == "round"
+    for p, q, x, a, b in stations:
+        if stem:
+            flat = K.cross((0.0, 0.0, 1.0), q)
+            flat = K.unit(flat) if K.norm(flat) > 0.2 else K.unit(K.cross((1.0, 0.0, 0.0), q))
+            x = K.add(K.mul(flat, math.cos(math.pi / 8)), K.mul(K.cross(q, flat), math.sin(math.pi / 8)))
+            b = 0.97 * a
+        x = K.unit(K.sub(x, K.mul(q, K.dot(x, q))))
+        if before is not None and K.dot(x, before) < 0:
+            x = K.mul(x, -1)
+        before = x
+        y = K.cross(q, x)
+        ring = []
+        for k in range(sides):
+            angle = 2 * math.pi * k / sides
+            c, s = math.cos(angle), math.sin(angle)
+            c, s = (0.0 if abs(c) < 1e-12 else c), (0.0 if abs(s) < 1e-12 else s)
+            ring.append(K.add(p, K.add(K.mul(x, a * math.copysign(abs(c) ** e, c)), K.mul(y, b * math.copysign(abs(s) ** e, s)))))
+        rings.append(ring)
+    return rings
 
 
-def drawings(rig, plant, scale, rename):
-    """✏️ The three views of a scale through the round-3 drawing (`M.drawings`): a stroke of true width along every slender part, a clean outline of every mass; a sheet seen nearly edge-on (its outline thinner than a printable feature) becomes a stroke of its projected width along its projected midrib, never a sliver."""
-    views = M.drawings(rig, plant, scale)
-    by_id = {part["id"]: part for part in plant.parts}
-    least = 0.3 * scale / 1000
-    for view, shapes in views.items():
-        for shape in shapes:
-            part = by_id[shape["id"]]
-            if shape["filled"] and part.get("sheet"):
-                pts = shape["points"]
-                thick = 2 * shoelace(pts) / max(perimeter(pts), 1e-9)
-                if thick < least:
-                    centre = K.simplify([K.view_xy(view, rig, part["bone"], p) for p in part["points"]], 0.0002)
-                    pen = round(min(max(2 * thick * 1000 / scale, 0.1), 0.5), 2)
-                    shape.update({"filled": False, "penMm": pen, "points": [[r4(x), r4(y)] for x, y in centre], "closed": False})
-            if shape["material"] in rename:
-                shape["material"] = rename[shape["material"]]
-    return views
+def world_of(rig, bone, q):
+    u, v, w = rig.axes(bone)
+    o = rig.origin(bone)
+    return (o[0] + q[0] * u[0] + q[1] * v[0] + q[2] * w[0], o[1] + q[0] * u[1] + q[1] * v[1] + q[2] * w[1], o[2] + q[0] * u[2] + q[1] * v[2] + q[2] * w[2])
+
+
+def signed_volume(vertices, triangles):
+    return sum(K.dot(vertices[a], K.cross(vertices[b], vertices[c])) for a, b, c in triangles) / 6
+
+
+def principal_extents(vertices):
+    """📦 The three extents of a vertex cloud along its principal axes, ascending (the measure `volumes-feature` reads from a polyhedron)."""
+    n = len(vertices)
+    mean = [sum(q[i] for q in vertices) / n for i in range(3)]
+    cov = [[sum((q[i] - mean[i]) * (q[j] - mean[j]) for q in vertices) for j in range(3)] for i in range(3)]
+    axes = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+    for _ in range(60):
+        changed = False
+        for a, b in ((0, 1), (0, 2), (1, 2)):
+            off = cov[a][b]
+            if abs(off) <= 1e-14 * (cov[0][0] + cov[1][1] + cov[2][2]):
+                continue
+            changed = True
+            delta = (cov[b][b] - cov[a][a]) / (2 * off)
+            tangent = (-1 if delta < 0 else 1) / (abs(delta) + math.hypot(1, delta))
+            cosine = 1 / math.hypot(1, tangent)
+            sine = tangent * cosine
+            cov[a][a] -= tangent * off
+            cov[b][b] += tangent * off
+            cov[a][b] = cov[b][a] = 0.0
+            k = 3 - a - b
+            p, q = cov[k][a], cov[k][b]
+            cov[a][k] = cov[k][a] = cosine * p - sine * q
+            cov[b][k] = cov[k][b] = sine * p + cosine * q
+            for i in range(3):
+                p, q = axes[a][i], axes[b][i]
+                axes[a][i], axes[b][i] = cosine * p - sine * q, sine * p + cosine * q
+        if not changed:
+            break
+    return sorted(max(K.dot(q, ax) for q in vertices) - min(K.dot(q, ax) for q in vertices) for ax in axes)
+
+
+def twin(rig, part, scale):
+    """👯 A part as its body solid and the source of its drawings at once: a closed, outward triangle mesh through the rings of the part (`polyhedron`, vertices bone-local and rounded to 0.01 mm) and the same rounded vertices carried back to world space, so that the three views are projections of exactly the mesh the kernel reads. The two faces of a flat sheet are split along mirrored diagonals, so a twisted blade never cuts itself."""
+    rings = rings_of(part, scale)
+    m, n = len(rings[0]), len(rings)
+    local = [tuple(rig.point(part["bone"], q)) for ring in rings for q in ring]
+    assert len(set(local)) == len(local), f"{part['id']}: vertices coincide after rounding"
+    triangles = []
+    for i in range(n - 1):
+        for k in range(m):
+            a, b, c, d = i * m + k, i * m + (k + 1) % m, (i + 1) * m + (k + 1) % m, (i + 1) * m + k
+            triangles += [(a, b, d), (b, c, d)] if m == 4 and k % 2 else [(a, b, c), (a, c, d)]
+    end = (n - 1) * m
+    for k in range(1, m - 1):
+        triangles += [(0, k + 1, k), (end, end + k, end + k + 1)]
+    if signed_volume(local, triangles) < 0:
+        triangles = [(a, c, b) for a, b, c in triangles]
+    assert signed_volume(local, triangles) > 0, f"{part['id']}: no volume"
+    for a, b, c in triangles:
+        assert K.norm(K.cross(K.sub(local[b], local[a]), K.sub(local[c], local[a]))) > 1e-12, f"{part['id']}: degenerate triangle"
+    solid = {"id": part["id"], "kind": "polyhedron", "bone": part["bone"], **part["look"], "vertices": [list(q) for q in local], "triangles": [list(q) for q in triangles]}
+    if kind_of(part) == "sheet":
+        thickness, middle, _ = principal_extents(local)
+        if middle >= 21 * thickness:
+            solid["sheet"] = True
+    if part.get("envelope"):
+        solid["envelope"] = True
+    return {"solid": solid, "local": local, "world": [world_of(rig, part["bone"], q) for q in local], "triangles": triangles}
+
+
+def twins(rig, plant):
+    if not hasattr(plant, "twins"):
+        plant.twins = [twin(rig, part, plant.scale) for part in plant.parts]
+    return plant.twins
+
+
+def extent(plant):
+    """📦 The extent of the body of a plant: of the vertices of its meshes."""
+    pts = [q for tw in twins(plant.rig, plant) for q in tw["world"]]
+    return {"x-": min(q[0] for q in pts), "x+": max(q[0] for q in pts), "y-": min(q[1] for q in pts), "y+": max(q[1] for q in pts), "z-": min(q[2] for q in pts), "z+": max(q[2] for q in pts)}
+
+
+def simple_polygons(geometry):
+    """🧩 The simple polygons (no holes) of a union: specks and pinholes of the arithmetic are dropped, a real hole (a ribbon that loops in the view) is opened by cutting the polygon through it."""
+    from shapely.geometry import LineString, Polygon
+    from shapely.ops import split
+    out = []
+    for polygon in getattr(geometry, "geoms", [geometry]):
+        if polygon.geom_type != "Polygon" or polygon.area < 1e-9:
+            continue
+        holes = [ring for ring in polygon.interiors if Polygon(ring).area >= 1e-8]
+        if not holes:
+            out.append(Polygon(polygon.exterior))
+            continue
+        x = Polygon(holes[0]).representative_point().x
+        y0, y1 = polygon.bounds[1] - 1, polygon.bounds[3] + 1
+        out += simple_polygons(split(Polygon(polygon.exterior, holes), LineString([(x, y0), (x, y1)])))
+    return out
+
+
+def outlines(points, triangles):
+    """🖼️ The outline of a projected mesh: the union of its projected triangles as simple polygons, coordinates to 0.1 micrometres."""
+    from shapely import union_all
+    from shapely.geometry import Polygon
+    faces = []
+    for a, b, c in triangles:
+        pa, pb, pc = points[a], points[b], points[c]
+        if abs((pb[0] - pa[0]) * (pc[1] - pa[1]) - (pb[1] - pa[1]) * (pc[0] - pa[0])) > 1e-13:
+            faces.append(Polygon([pa, pb, pc]))
+    if not faces:
+        return []
+    out = []
+    for polygon in simple_polygons(union_all(faces)):
+        ring = []
+        for x, y in list(polygon.exterior.coords)[:-1]:
+            q = [round(x, 7), round(y, 7)]
+            if not ring or ring[-1] != q:
+                ring.append(q)
+        if len(ring) > 1 and ring[0] == ring[-1]:
+            ring.pop()
+        if len(ring) >= 3:
+            out.append(ring)
+    return out
+
+
+def drawings(rig, plant, scale, rename, pens):
+    """✏️ The three views of a scale: every part is one filled outline, the exact projection of its own mesh (side elevation in the frame of its bone, front and plan in rest-pose model metres), ordered by depth. A leaf seen edge-on is the thin outline of its thickness; its pen carries it on paper. No stroke stands for a body, so the drawing and the volume are the same polygons."""
+    depth = {"elevation": lambda p: -p[2], "front": lambda p: p[0], "plan": lambda p: p[1]}
+    flatten = {"front": lambda p: (p[2], p[1]), "plan": lambda p: (p[0], p[2])}
+    out = {}
+    for view in M.VIEWS:
+        shapes = []
+        for part, tw in zip(plant.parts, twins(rig, plant)):
+            look = part["look"]
+            role = look["role"] if scale <= 200 else "body"
+            points = [(q[0], q[1]) for q in tw["local"]] if view == "elevation" else [flatten[view](q) for q in tw["world"]]
+            key = sum(depth[view](p) for p in tw["world"]) / len(tw["world"])
+            fine = kind_of(part) in ("sheet", "round")
+            for index, ring in enumerate(outlines(points, tw["triangles"])):
+                shape = {"id": part["id"] if index == 0 else f"{part['id']}-p{index + 1}", "bone": part["bone"], "role": role, "z": 0, "tone": look["tone"], "region": part["region"], "material": rename.get(look["material"], look["material"]), "filled": True}
+                if fine and pens[role] != PEN_FINE:
+                    shape["penMm"] = PEN_FINE
+                shape.update({"kind": "poly", "points": ring, "closed": True})
+                shapes.append((key, shape))
+        shapes.sort(key=lambda s: s[0])
+        for rank, (_, shape) in enumerate(shapes):
+            shape["z"] = round(2 + rank * 0.01, 2)
+        out[view] = [shape for _, shape in shapes]
+    return out
 
 
 def structure(rig, plant, scale, spec):
-    """🏗️ The load path of one scale: the root mat fixed in the ground, a rod of the declared section along every bone path of `plant.stems`, joints at 1:50 and 1:100, the support disc and the lumped masses (crown and heads or panicles)."""
+    """🏗️ The load path of one scale: the root mat fixed in the ground, a rod of the declared section along every bone path of `plant.stems` (slender unless it is as thick as the smallest feature of the scale), joints at 1:50 and 1:100, the support disc and the lumped masses (crown and heads or panicles)."""
     look = {"material": spec["stem_material"], "role": "body", "tone": 0.5}
     out = []
     mat = spec["mat"][scale]
@@ -127,13 +302,16 @@ def structure(rig, plant, scale, spec):
         r = spec["member_radius"](bone, scale)
         points = path[::take] if (len(path) - 1) % take == 0 else path[::take] + [path[-1]]
         if scale == 500 or len(points) < 2:
-            points = [path[0], path[len(path) // 2], path[-1]]
+            points = [path[0], path[len(path) // 2], path[-1]] if spec.get("member_points", {}).get(scale, 3) == 3 else [path[0], path[-1]]
         member = K.rod(rig, f"member-{bone}", bone, points, [r] * len(points), look)
         member.update({"slender": True, "member": bone, "part": "member"})
+        if r >= 0.5 * 0.00015 * scale:
+            del member["slender"]
         out.append(member)
     if scale <= 100:
-        j = spec["joint_radius"][scale]
         for bone in plant.stems:
+            j = spec["joint_radius"][scale]
+            j = j(bone) if callable(j) else j
             out.append({"id": f"joint-{bone}", "kind": "ellipsoid", "bone": bone, "material": spec["stem_material"], "role": "detail", "tone": 0.35, "radii": [j, j, j], "member": bone, "part": "joint"})
     thick = {50: 0.02, 100: 0.02, 200: 0.03, 500: 0.075}[scale]
     sr = spec["support_radius"]
@@ -249,7 +427,7 @@ def fmt(x, language="en"):
     return s.replace(".", ",") if language == "de" else s
 
 
-PENS = {50: {"body": 0.25, "detail": 0.18, "texture": 0.13, "glazing": 0.1, "ground": 0.35}, 100: {"body": 0.2, "detail": 0.13, "texture": 0.1, "glazing": None, "ground": 0.3}, 200: {"body": 0.18, "detail": 0.13, "texture": None, "glazing": None, "ground": 0.25}, 500: {"body": 0.15, "detail": None, "texture": None, "glazing": None, "ground": 0.25}}
+PENS = {50: {"body": 0.25, "detail": 0.2, "texture": 0.13, "glazing": 0.1, "ground": 0.35}, 100: {"body": 0.2, "detail": 0.2, "texture": 0.1, "glazing": None, "ground": 0.3}, 200: {"body": 0.2, "detail": 0.2, "texture": None, "glazing": None, "ground": 0.25}, 500: {"body": 0.2, "detail": None, "texture": None, "glazing": None, "ground": 0.25}}
 
 
 def build_asset(spec, builders):
@@ -262,8 +440,8 @@ def build_asset(spec, builders):
     volumes, representations, anchors_at, report = {}, {}, {}, {}
     for scale in SCALES:
         plant = builders[scale](rig)
-        plant.extent = M.extent(plant)
-        body = [solid(rig, part) for part in plant.parts]
+        plant.extent = extent(plant)
+        body = [tw["solid"] for tw in twins(rig, plant)]
         thermal = [{"id": f"th-{part['id']}", "of": part["id"], "region": part["region"]} for part in plant.parts]
         for index, part, row in sorted(plant.strips, key=lambda s: s[0]):
             strip, mid = M.strip_of(rig, plant, index, part, row, scale)
@@ -279,12 +457,12 @@ def build_asset(spec, builders):
         struct = structure(rig, plant, scale, spec)
         volumes[str(scale)] = {"status": "authored", "denominator": scale, "body": body, "thermal": thermal, "structure": struct, "decisions": spec["volume_decisions"][scale]}
         lo, hi = spec.get("ranges", RANGES)[scale]
-        representations[str(scale)] = {"status": "authored", "denominator": scale, "validRange": {"minDenominator": lo, "maxDenominator": hi}, "pens": PENS[scale], "hatches": [], "geometry": drawings(rig, plant, scale, rename), "decisions": spec["representation_decisions"][scale]}
+        representations[str(scale)] = {"status": "authored", "denominator": scale, "validRange": {"minDenominator": lo, "maxDenominator": hi}, "pens": PENS[scale], "hatches": [], "geometry": drawings(rig, plant, scale, rename, PENS[scale]), "decisions": spec["representation_decisions"][scale]}
         areas = {}
         for part in plant.parts:
             areas[part["region"]] = areas.get(part["region"], 0.0) + part_area(part)
         one_sided = sum(part_area(p) / 2 for p in plant.parts if p["region"] == spec["leaf_region"])
-        report[scale] = {"body": len(body), "thermal": len(thermal), "structure": len(struct), "extent": {k: round(v, 3) for k, v in plant.extent.items()}, "areas": {k: round(v, 3) for k, v in areas.items()}, "one_sided_leaf_m2": round(one_sided, 3)}
+        report[scale] = {"body": len(body), "triangles": sum(len(s["triangles"]) for s in body), "sheets": sum(1 for s in body if s.get("sheet")), "thermal": len(thermal), "structure": len(struct), "extent": {k: round(v, 4) for k, v in plant.extent.items()}, "areas": {k: round(v, 3) for k, v in areas.items()}, "one_sided_leaf_m2": round(one_sided, 3)}
         if scale == 50:
             symbol_extent = plant.extent
     anchors = [{"id": "base-support", "bone": "root-plate", "x": 0, "y": 0, "kind": "support", "title": spec["support_title"], "support": "fixed", "normalDeg": 90, "footprintLengthM": spec["footprint"], "footprintWidthM": spec["footprint"], "frictionCoefficient": 0.6}]
@@ -311,13 +489,26 @@ def manifest_row(document, distinction):
 
 
 def write(document, report, distinction):
+    """💾 Writes the asset document and its manifest row; with `PW15_CANDIDATE=1` in the environment the document goes to `🗑️generated/PW-15/cand/<id>/` and the catalog and the row stay untouched. Prints the per-scale counts and the body box against `dimensions` (limit: one smallest feature of the scale)."""
+    import os
     a = document["asset"]
     OUT.mkdir(parents=True, exist_ok=True)
-    ROWS.mkdir(parents=True, exist_ok=True)
-    folder = CATALOG / a["id"]
+    candidate = os.environ.get("PW15_CANDIDATE") == "1"
+    folder = (OUT / "cand" if candidate else CATALOG) / a["id"]
     folder.mkdir(parents=True, exist_ok=True)
-    (folder / "🔣️.json").write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    (ROWS / f"{a['id']}.json").write_text(json.dumps(manifest_row(document, distinction), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (folder / "🔣️.json").write_text(json.dumps(document, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    if not candidate:
+        ROWS.mkdir(parents=True, exist_ok=True)
+        (ROWS / f"{a['id']}.json").write_text(json.dumps(manifest_row(document, distinction), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (OUT / f"{a['id']}-report.json").write_text(json.dumps(report, indent=1) + "\n", encoding="utf-8")
+    d = a["dimensions"]
+    previous = None
     for scale, r in report.items():
-        print(f"[DEBUG] {a['id']} 1:{scale} body {r['body']} thermal {r['thermal']} structure {r['structure']} extent {r['extent']} areas {r['areas']} leaf one-sided {r['one_sided_leaf_m2']}")
+        e = r["extent"]
+        box = {"widthM": e["x+"] - e["x-"], "heightM": e["y+"] - e["y-"], "depthM": e["z+"] - e["z-"]}
+        off = {k: round((v - d[k]) * 1000, 1) for k, v in box.items()}
+        bad = [k for k, v in off.items() if abs(v) > 0.15 * scale]
+        grows = previous is not None and (r["body"] > previous["body"] or r["triangles"] > previous["triangles"] or (r["body"] == previous["body"] and r["triangles"] == previous["triangles"]))
+        print(f"[DEBUG] {a['id']} 1:{scale} body {r['body']} triangles {r['triangles']} sheets {r['sheets']} thermal {r['thermal']} structure {r['structure']} box off mm {off}{' BOX ✗ ' + str(bad) if bad else ''}{' NOT SIMPLER ✗' if grows else ''} areas {r['areas']} leaf one-sided {r['one_sided_leaf_m2']}")
+        previous = r
+    print(f"[DEBUG] {a['id']} written to {folder} ({'candidate' if candidate else 'catalog and row'})")

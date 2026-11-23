@@ -17,6 +17,7 @@ import {sweepGitGarbageV1,repairGitConfigV1,applyIndexV1,branchRefV1,gitBrokenV1
 import {DirectoryTableV1,HotSetV1,LatencyV1,nextDelayV1,readHintsV1,ensureHintsV1,type HintReadCursorV1,type HintReceiptV1,type LatencyReportV1} from "../🎣️tiers/🟦️.ts";
 import {StateCorruptV1,appendWalV1,bytesOfV1,checkpointPartsV1,decodeRecordsV1,partWidthV1,payloadsV1,readCheckpointV1,readWalV1,writeCheckpointV1,type CheckpointV1,type WalRecordV1} from "./💾️state/🟦️.ts";
 import {clashKeyV1,clashV1,staleRepublishV1,type ContentEventV1} from "./⚖️clash/🟦️.ts";
+import {mergeBytesLimitV1,mergeTextV1} from "./🔀️merge/🟦️.ts";
 import {awaitWorktreeAccessV1,readAccessV1,type AccessRecordV1} from "../🔐️access/🟦️.ts";
 import {codeDigestV1,codeRootV1,type RestartCheckV1} from "../🩺️attest/🟦️.ts";
 import {admitEntryScriptV1,entryDirectoryV1,entryGuardedV1,maintainEntryV1,migrateAgentV1} from "./🥾️entry/🟦️.ts";
@@ -38,7 +39,7 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 export type ReplicaOptionsV1=Readonly<{concurrentEditMilliseconds?:number;storeStuckRestartMilliseconds?:number;rescueMilliseconds?:number;rescueAgeMilliseconds?:number;gitCheckMilliseconds?:number;gitHealMilliseconds?:number;worktree:string;storeRoot:string;originId:string;groupId:string;pollMilliseconds?:number;scanSeconds?:number;debounceMilliseconds?:number;retentionDays?:number;concurrency?:number;persistMilliseconds?:number;modeless?:boolean;symlinks?:boolean;caseInsensitive?:boolean;lock?:boolean;now?:()=>number;attestMilliseconds?:number;restartStableMilliseconds?:number;codeRoot?:string;gitState?:(worktree:string,signal?:AbortSignal)=>Promise<AttesterGitV1>;gitGuards?:(worktree:string,signal?:AbortSignal)=>Promise<FleetGuardsV1|null>;guardsMilliseconds?:number;guardsMinimumMilliseconds?:number;gitView?:(worktree:string,signal?:AbortSignal)=>Promise<AttesterViewV1|null>;viewMilliseconds?:number;viewDebounceMilliseconds?:number;deltaDebounceMilliseconds?:number;deltaLimit?:number;watch?:boolean;hintMilliseconds?:number;hotMilliseconds?:number;sweepMilliseconds?:number;walkSeconds?:number;watchRoot?:string;selfCheck?:(digest:string,signal?:AbortSignal)=>Promise<RestartCheckV1>;selfCheckMilliseconds?:number;restartJitterMilliseconds?:number;minimumUptimeMilliseconds?:number;storeDeadlineMilliseconds?:number;storeProbe?:(storeRoot:string)=>Promise<boolean>;storeGate?:()=>Promise<void>;logFiles?:readonly string[];compaction?:CompactionSettingsV1;fallback?:FleetFallbackV1;admit?:(digest:string,signal?:AbortSignal)=>Promise<Readonly<{ok:true}>|Readonly<{ok:false;reason:string}>>;publishCodeMilliseconds?:number;entryDirectory?:string;entryMilliseconds?:number;codeKeep?:number;returnMilliseconds?:number;driftMilliseconds?:number;opened?:(replica:ReplicaV1)=>void;sidecars?:SidecarSettingsV1}>;
 
 /** 📡️ One NDJSON progress line, shaped by `ProgressEvent` of the schema. */
-export type ReplicaEventV1=Readonly<{version:1;event:"started"|"stopped"|"scan"|"progress"|"published"|"applied"|"overwritten"|"kept"|"linearised"|"repaired"|"state-rebuilt"|"state-missing"|"refused"|"skipped"|"blocked"|"unstable"|"store-unreachable"|"store-reachable"|"ignore-reloaded"|"clock-refused"|"clock-skew"|"blob-missing"|"rejoin-required"|"relayed"|"snapshot"|"compacted"|"sync"|"restarting"|"store-stuck"|"restart-refused"|"code-reverted"|"journal-repaired"|"retired"|"superseded"|"stale-republish"|"stale-base"|"drift"|"blob-repaired"|"error";stage?:string;path?:string;origin?:string;originId?:string;groupId?:string;hlc?:string;reason?:string;message?:string;lost?:string;winner?:string;loser?:string;result?:string;count?:number;done?:number;total?:number;bytes?:number;seconds?:number}>;
+export type ReplicaEventV1=Readonly<{version:1;event:"started"|"stopped"|"scan"|"progress"|"published"|"applied"|"overwritten"|"merged"|"kept"|"linearised"|"repaired"|"state-rebuilt"|"state-missing"|"refused"|"skipped"|"blocked"|"unstable"|"store-unreachable"|"store-reachable"|"ignore-reloaded"|"clock-refused"|"clock-skew"|"blob-missing"|"rejoin-required"|"relayed"|"snapshot"|"compacted"|"sync"|"restarting"|"store-stuck"|"restart-refused"|"code-reverted"|"journal-repaired"|"retired"|"superseded"|"stale-republish"|"stale-base"|"drift"|"blob-repaired"|"error";stage?:string;path?:string;origin?:string;originId?:string;groupId?:string;hlc?:string;reason?:string;message?:string;lost?:string;winner?:string;loser?:string;result?:string;count?:number;done?:number;total?:number;bytes?:number;seconds?:number}>;
 
 /** 🚰️ Receives progress events; it must not throw. */
 export type ReplicaSinkV1=(event:ReplicaEventV1)=>void;
@@ -1904,6 +1905,26 @@ async function keepNewer(replica:ReplicaV1,path:string,entry:FleetManifestEntryV
  return "kept";
 }
 
+/** 🔀️ The three-way merge (`mergeTextV1`) of the unpublished local edit at `target` with the verified inbound bytes in `inbound`, over the content the replica last applied at the path as their common base, or `undefined` when there is no applied base, its blob is gone or corrupt, a side cannot be read, the sides conflict, or the merge is the inbound content itself. */
+async function mergeLocal(replica:ReplicaV1,target:string,here:Stats,known:StateEntry|undefined,inbound:string):Promise<Uint8Array|undefined>{
+ if(!here.isFile()||known?.operation!=="put"||known.sha256===undefined||here.size>mergeBytesLimitV1||(known.bytes??0)>mergeBytesLimitV1)return undefined;
+ try{
+  const [base,ours,theirs]=await Promise.all([readFile(blobPathV1(replica.settings.storeRoot,known.sha256)),readFile(target),readFile(inbound)]);
+  if(createHash("sha256").update(base).digest("hex")!==known.sha256)return undefined;
+  const outcome=mergeTextV1(base,ours,theirs);
+  return outcome.clean&&Buffer.compare(outcome.merged,theirs)!==0?outcome.merged:undefined;
+ }catch{return undefined;}
+}
+
+/** 🪡️ Writes the clean merge over the inbound content the apply just installed, so that the local edit survives on top of the fleet content and publishes as an ordinary local edit once the replica has caught up; the local bytes stay in `lost/<hlc>/<path>` as well. When the target refuses the write, the inbound content stays and the event says nothing was merged. */
+async function installMerged(replica:ReplicaV1,path:string,target:string,merged:Uint8Array,entry:FleetManifestEntryV1,here:Stats):Promise<void>{
+ const temporary=join(replica.paths.tmp,token());
+ await writeFile(temporary,merged,{mode:!replica.settings.modeless&&entry.executable?0o755:0o644});
+ const nativeCode=await replaceTarget(replica,temporary,target,await lstat(target).catch(()=>undefined));
+ if(nativeCode!==undefined){await rm(temporary,{force:true});noteStale(replica,path,entry,here);return;}
+ replica.say({event:"merged",path,hlc:entry.hlc,lost:`lost/${entry.hlc}/${path}`});
+}
+
 /** 🛟️ Keeps the local file an incoming event is about to overwrite under `lost/<hlc>/<path>`. The copy is always writable: a copy inherits the read-only attribute of its source, and a round that is repeated after a later failure writes the same copy again, which a read-only copy would refuse forever. */
 async function keepLost(replica:ReplicaV1,path:string,target:string,here:Stats,hlc:string):Promise<void>{
  const copy=join(replica.paths.lost,hlc,...path.split("/"));
@@ -2044,7 +2065,7 @@ async function materialiseWork(replica:ReplicaV1,path:string,entry:FleetManifest
   }
  }
  if(lose&&conflictWinnerV1(here!.mtimeMs,entry.hlc,replica.settings.concurrentEditMilliseconds)==="local")return keepNewer(replica,path,entry,here!);
- if(lose)noteStale(replica,path,entry,here!);
+ if(lose&&entry.operation!=="put")noteStale(replica,path,entry,here!);
  const mark=entry.operation==="put"?stales.get(replica)?.get(replica.book.find(path)!):undefined;
  if(mark!==undefined&&!same&&!lose&&here?.isFile()===true&&known?.operation==="put"&&shortSha(known.sha256)===mark){
   stales.get(replica)!.delete(replica.book.find(path)!);
@@ -2090,7 +2111,7 @@ async function materialiseWork(replica:ReplicaV1,path:string,entry:FleetManifest
  const cached=retainable?await stages.find(path,put,source,seenMs):undefined;
  const temporary=cached?.file??join(replica.paths.tmp,token());
  const current=(path:string,wanted:typeof put)=>stagedPutCurrent(replica,path,wanted);
- let kept=false,installed=false,stamp=0;
+ let kept=false,installed=false,stamp=0,merged:Uint8Array|undefined;
  try{
   const original=cached?.original??(retainable&&stages.admits(put)?await stagedPutStampV1(source,put.bytes):undefined);
   if(!cached){
@@ -2120,7 +2141,10 @@ async function materialiseWork(replica:ReplicaV1,path:string,entry:FleetManifest
   }
   const image=original!==undefined&&cached===undefined?await stagedPutStampV1(temporary,put.bytes):undefined;
   stamp=(await lstat(temporary)).mtimeMs;
-  if(lose)await keepLost(replica,path,target,here!,entry.hlc);
+  if(lose){
+   merged=await mergeLocal(replica,target,here!,known,temporary);
+   await keepLost(replica,path,target,here!,entry.hlc);
+  }
   for(let attempt=0;;attempt++){
    try{await mkdir(dirname(target),{recursive:true});}
    catch(error){
@@ -2150,6 +2174,8 @@ async function materialiseWork(replica:ReplicaV1,path:string,entry:FleetManifest
  }
  setFile(replica,path,{...plain(entry),mtimeMs:stamp,seenMs:stamp%1000===0?seenMs:Math.max(seenMs,stamp+racyMilliseconds)});
  releaseBlob(replica,path,entry.sha256!);
+ if(merged!==undefined)await installMerged(replica,path,target,merged,entry,here!);
+ else if(lose)noteStale(replica,path,entry,here!);
  return "applied";
 }
 

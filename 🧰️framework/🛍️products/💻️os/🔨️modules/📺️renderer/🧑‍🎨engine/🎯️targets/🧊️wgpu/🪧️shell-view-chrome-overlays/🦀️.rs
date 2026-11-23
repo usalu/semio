@@ -3,7 +3,7 @@
 //! 🧭️ Native and wasm32: the staging modules of the Shell element tree (`🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪧️view-chrome-overlays`) are mounted here exactly as the `shell` parent mounted them; the `shell` module re-exports this crate. Split from `shell-view-chrome`, which this crate builds on.
 
 use semio_renderer_wgpu_shell_view_chrome::*;
-use semio_renderer_wgpu_shell_async::chrome_now_ms;
+use semio_renderer_wgpu_shell_async::{chrome_now_ms, directory_now_ms};
 use semio_renderer_wgpu_shell_chrome_state::{ChromeState, ChromeTooltipHover, chrome_tooltip_ready};
 use semio_renderer_wgpu_shell_commands::CommandState;
 use semio_renderer_wgpu_shell_directory::DirectoryState;

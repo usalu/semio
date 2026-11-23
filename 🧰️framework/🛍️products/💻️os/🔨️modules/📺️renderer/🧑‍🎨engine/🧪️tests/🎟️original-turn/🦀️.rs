@@ -1,5 +1,8 @@
 use semio_framework_job::{CancelToken,Generation,OperationId,OriginalJobDecodeOwner,OriginalJobFixtureCaller,RetainedCloneGrant,StepContext};
 
+/// 🎟️ The fuel one document-close turn is quoted: a paid close settles one unit per node and layout record it retires, which the one-unit default turn cannot hold.
+const CLOSE_TURN_WORK:u64=1<<20;
+
 /// 🎟️ A fixture keeps one finite original source, decoder and cumulative physical recipient across every turn.
 pub struct FixtureTurnV1 {
     grant:RetainedCloneGrant,
@@ -12,6 +15,13 @@ pub struct FixtureTurnV1 {
 
 impl FixtureTurnV1 {
     pub fn new(grant:RetainedCloneGrant)->Self{Self::with_identity(grant,OperationId(41),Generation(7))}
+    /// 🎟️ A fixture whose every turn runs at the ingress generation one document lease carries, because the engine admits a document only from a turn of that exact generation.
+    pub fn for_generation(grant:RetainedCloneGrant,generation:u64)->Self{Self::with_identity(grant,OperationId(41),Generation(generation))}
+    /// 🎟️ A fixture at `generation` whose `grant` is widened enough for layout, paint and surface retirement to copy their parameter records.
+    pub fn wide(mut grant:RetainedCloneGrant,generation:u64)->Self{
+        grant.maximum_items=1<<24;grant.maximum_copy_bytes=1<<30;grant.maximum_capacity_bytes=1<<30;grant.maximum_release_bytes=1<<30;grant.maximum_depth=4096;
+        Self::for_generation(grant,generation)
+    }
     pub fn with_identity(grant:RetainedCloneGrant,operation:OperationId,generation:Generation)->Self{
         let arena=semio_ui_contract_values::testkit::UiArenaFixture::new();
         let policy:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("original renderer fixture declaration");
@@ -44,7 +54,7 @@ impl FixtureTurnV1 {
     fn close(&mut self){
         if self.caller.is_none(){return}
         for surface in &self.surfaces{semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(surface);}
-        for _ in 0..65_536{if !self.surfaces.iter().any(|surface|semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface)){break}self.turn(semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one).expect("original fixture surface retirement");}
+        for _ in 0..65_536{if !self.surfaces.iter().any(|surface|semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface)){break}self.turn_funded(CLOSE_TURN_WORK,semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one).expect("original fixture surface retirement");}
         assert!(!self.surfaces.iter().any(|surface|semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface)));
         let caller=self.caller.as_mut().unwrap();let stock=caller.stock();
         for _ in 0..65_536{if self.decoder.terminal_is_empty(){break}caller.turn(stock,|cx|{self.decoder.close_on_source(cx)?;Ok(())}).expect("same original renderer decoder close");}

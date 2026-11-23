@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::{language_completion
 use crate::{writer_text, WriterSnapshot};
 use semio_plugin::scene_surface;
 use semio_plugin::BuiltNode;
-use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_plugin::SurfaceKind;
 use semio_plugin::TextEditorScene;
 use semio_plugin::UiAssemblyResult;
@@ -62,7 +62,7 @@ pub fn window_measures(config: &WriterMainWindowConfig, labels: &WriterPlayLabel
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &WriterSnapshot, config: &WriterMainWindowConfig, transient: &WriterMainWindowTransient) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &WriterSnapshot, config: &WriterMainWindowConfig, transient: &WriterMainWindowTransient, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let is_jack = document.language_id == "jack";
     let text = writer_text(document);
     let selection = transient.editor_selection.clone().unwrap_or(crate::WriterEditorSelection { start: 0, end: 0, splice: 0 });
@@ -126,6 +126,8 @@ pub fn render(document: &WriterSnapshot, config: &WriterMainWindowConfig, transi
             newline_gates_json,
             rename_json,
         },
+        semio_plugin::surface_name(locale, "Text editor", "Texteditor"),
+        None,
     )
 }
 

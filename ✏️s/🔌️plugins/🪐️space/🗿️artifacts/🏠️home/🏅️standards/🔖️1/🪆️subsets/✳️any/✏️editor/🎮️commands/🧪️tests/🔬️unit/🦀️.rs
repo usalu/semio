@@ -6,7 +6,7 @@ use crate::editor::home::config::HomeConfig;
 use crate::{editor::home::transient::DirectoryProjectionReceiptV1, editor::home::transient::HomeTransient};
 use semio_plugin::{ArtifactView, ConfigView, Fault};
 use super::super::apply_directory_event_page::*;
-use protocol::Mutation as _;
+use protocol::ColdMutation as _;
 
 fn seal(mut page: store::os_directory::DirectoryEventPageV1) -> store::os_directory::DirectoryEventPageV1 {
     page.receipt_sha256 = semio_framework_hash::sha256_hex(page.canonical_unsigned_json().as_bytes());
@@ -157,16 +157,18 @@ async fn registered_home_admits_its_retained_routes_at_interactive_dispatch() {
     for command in routes {
         let id = command.command_id();
         let fault = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut home, &command, &artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect_err("a registry fixture owns no live instance");
-        assert_ne!(fault.code.0.as_str(), "interactive-job.not-ui-safe", "{id} must be past the classification gate");
-        assert_eq!(fault.code.0.as_str(), "interactive-job.live-instance", "{id} must fail only for the fixture's missing live instance");
+        let code = fault.primary_fault().unwrap_or_else(|| panic!("{id} was refused without a fault: {:?}", fault.primary)).code.0.as_str();
+        assert_ne!(code, "interactive-job.not-ui-safe", "{id} must be past the classification gate");
+        assert_eq!(code, "interactive-job.live-instance", "{id} must fail only for the fixture's missing live instance");
     }
     std::mem::forget(home);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn temporary_studio_uses_ephemeral_registry_not_catalog() {
-    let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-    let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
+    let mut authoring_function = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let authoring_observer: &mut store::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut authoring_function;
+    let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, authoring_observer).expect("finite studio fixture admission");
     let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);

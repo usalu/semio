@@ -1,7 +1,7 @@
-use crate::editor::home::transient::{HomeTransient, HomeTransientRetirementFactory};
+use crate::editor::home::transient::HomeTransient;
 use crate::editor::home::transient::mutations::{ApplyDirectoryPage, HomeTransientDiff, HomeTransientMutation};
 use crate::editor::home::transient::io::text::mutations::{home_transient_mutation_report_json};
-use protocol::Mutation as _;
+use protocol::ColdMutation as _;
 use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
 
@@ -70,23 +70,16 @@ fn item(page_json: &str) -> HomeTransientMutation {
     ApplyDirectoryPage { page_json: page_json.to_owned() }.into()
 }
 
-/// 📬️ Publishes one page item through the PRODUCTION transient preparation (the bounded one-item factory the Home surfaces
-/// install), exactly as the transient store does: preflight, begin over the captured root, advance with the pump's page grant.
+/// 📬️ Publishes one page item the way the Home surfaces' cold transient preparation does: the factory admits the item at
+/// preflight and applies the mutation's cold diff to the captured root; the new root is the diff's directory, or the base
+/// itself when the page is already held.
 fn publish(root: &Arc<HomeTransient>, mutation: HomeTransientMutation) -> (Arc<HomeTransient>, store::os_store::one_item::ArtifactStoreOneItemFootprint) {
-    let factory = semio_plugin::bounded_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
+    let factory = semio_plugin::cold_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
     let footprint = factory.preflight(&mutation).expect("one page is one admissible item");
     assert!(footprint.is_admissible());
-    let request = store::ArtifactEphemeralOneItemPreparationRequest {
-        operation: semio_framework_job::OperationId(1),
-        generation: semio_framework_job::Generation(0),
-        base: store::ArtifactEphemeralBaseRead(store::ArtifactEphemeralBaseOwner::Transient(root.clone())),
-        mutation,
-    };
-    let Ok(mut preparation) = factory.begin(request) else { panic!("the bounded factory begins every admitted page") };
-    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: semio_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES };
-    assert!(matches!(preparation.advance(grant).expect("the page folds"), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(_)));
-    let prepared = preparation.take_prepared().expect("prepared root");
-    (prepared.next_root, footprint)
+    let outcome = mutation.diff(&**root);
+    let next = outcome.diff().directory.clone().map_or_else(|| root.clone(), Arc::new);
+    (next, footprint)
 }
 //#endregion 🧫️Pages
 
@@ -123,7 +116,7 @@ fn a_ten_thousand_space_directory_bootstraps_page_by_page_under_the_one_item_bou
 /// size is its page's, independent of any projection.
 #[test]
 fn a_page_item_never_exceeds_the_one_item_bound() {
-    let factory = semio_plugin::bounded_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
+    let factory = semio_plugin::cold_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
     let largest = item(&"x".repeat(crate::editor::home::config::HOME_DIRECTORY_PAGE_BYTES));
     let footprint = factory.preflight(&largest).expect("the largest admitted page is one item");
     assert!(footprint.is_admissible());
@@ -230,31 +223,99 @@ fn the_page_verb_round_trips_text_and_binary() {
     assert_eq!(refused.diff(), &HomeTransientDiff::default());
 }
 
-/// 🧹️ A displaced 10 000-space root retires in page grants measured by the projection itself and never encodes it.
+/// 🧹️ A displaced 10 000-space root retires through its derived `RetireOwned` cursor in byte-bounded turns measured by the projection itself and never encodes it.
 #[test]
 fn a_displaced_root_retires_in_page_grants() {
+    use semio_framework_value::retirement::controlled::ControlledRetirement;
+    use semio_framework_value::{RetainedCloneGrant, RetainedWorkPoll};
+    use semio_framework_value_testing_admission::{with_original_invocation, BankWallet, EffectBank};
     let root = directory_pages(10_000).iter().fold(Arc::new(HomeTransient::default()), |root, page_json| publish(&root, item(page_json)).0);
     let estimate = root.directory().retained_bytes();
-    let birth = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: 0, maximum_depth: 2 };
-    let Ok((mut retirement, _)) = store::SnapshotRetirementFactory::retire(&HomeTransientRetirementFactory, root, birth) else { panic!("a transient root retirement is born under its own grant") };
-    let grant = semio_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES;
-    let turn = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: grant, maximum_depth: 1 };
+    let value = Arc::try_unwrap(root).unwrap_or_else(|shared| (*shared).clone());
+    let page = semio_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES;
+    let turn = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: page, maximum_capacity_bytes: page, maximum_release_bytes: 64 * page, maximum_depth: 4_096 };
+    let mut bank = EffectBank::new(BankWallet::new(turn, 1 << 40));
+    let mut owner = ControlledRetirement::new(value).map_err(|(error, _)| error).expect("a transient root retirement is born");
     let mut released = 0;
-    loop {
-        match retirement.close_step(turn).expect("retirement step") {
-            semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => {
-                assert!(progress.released_bytes <= grant);
-                released += progress.released_bytes;
+    let mut turns = 0;
+    while !owner.terminal_is_empty() {
+        let admitted = bank.run_outcome(turn, 1 << 20, |effect| {
+            let mut done = None;
+            with_original_invocation(None, effect, &mut |effect| {
+                done = Some(match owner.step(turn.maximum_copy_bytes, effect) {
+                    RetainedWorkPoll::Complete(step) => step,
+                    RetainedWorkPoll::Pending { .. } => panic!("retirement turn stayed pending"),
+                })
+            })
+            .expect("original invocation");
+            done.expect("retirement turn ran")
+        });
+        bank.take_admitted();
+        let progress = admitted.result.expect("retirement step").progress();
+        assert!(progress.released_bytes <= turn.maximum_release_bytes);
+        released += progress.released_bytes;
+        turns += 1;
+        assert!(turns < 1_000_000, "the retirement must terminate");
+    }
+    assert!(released >= estimate, "the paid release covers the projection estimate");
+    assert!(turns > 1, "a large projection retires over several turns");
+}
+/// 🏭️ The cold preparation factory the Home surfaces install admits one page, folds it over the captured root through the cold diff,
+/// publishes exactly the folded root, and closes to terminal-empty both after publication and when cancelled before the first step.
+#[test]
+fn the_cold_factory_folds_a_page_and_closes_after_publication_or_cancellation() {
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    use store::os_store::one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep as Step};
+    use store::ArtifactEphemeralOneItemPreparation as _;
+    let wide = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 8 };
+    let pages = directory_pages(8);
+    for cancel_first in [false, true] {
+        let factory = semio_plugin::cold_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
+        let root = Arc::new(HomeTransient::default());
+        let registry = store::SnapshotReadRegistryHandle::new();
+        let lease = registry.try_issue(Arc::clone(&root)).expect("the registry leases the captured root");
+        let request = store::ArtifactEphemeralOneItemPreparationRequest {
+            operation: semio_framework_job::OperationId(1),
+            generation: semio_framework_job::Generation(0),
+            base: store::ArtifactEphemeralBaseRead(store::ArtifactEphemeralBaseOwner::TransientRead(semio_framework_value_snapshot_read::SnapshotRead::new(Arc::clone(&root), lease))),
+            mutation: item(&pages[0]),
+        };
+        let Ok(mut preparation) = factory.begin(request) else { panic!("the cold factory begins every admitted page") };
+        let mut receiving = semio_os_store_testing_prelude::FixtureStoreReceiving::new(wide);
+        if !cancel_first {
+            let mut prepared = None;
+            for _ in 0..256 {
+                match receiving.receive_with_work(|native| preparation.advance(ArtifactStoreOneItemGrant::from_retained(wide), native)).expect("the page folds") {
+                    Step::Prepared(..) => {
+                        prepared = preparation.take_prepared();
+                        break;
+                    }
+                    Step::Blocked => panic!("a wide grant never blocks the preparation"),
+                    _ => {}
+                }
             }
-            semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => {
-                released += progress.released_bytes;
+            let next = prepared.expect("the page prepares one root").next_root;
+            assert!(next.directory().space_count() > 0, "the folded root lists the page's spaces");
+            assert_eq!(*next, *publish(&root, item(&pages[0])).0, "the factory folds exactly as the cold diff does");
+            drop(next);
+        }
+        preparation.cancel();
+        preparation.begin_close();
+        for turn in 0..100_000 {
+            if preparation.terminal_is_empty() {
                 break;
             }
+            assert!(turn < 99_999, "the cancelled preparation must close");
+            let body = wide.maximum_copy_bytes;
+            let step = receiving.receive_with_work(|native| native.with_effect(wide, 1 << 20, |_, effect| preparation.close_step(body, effect))).expect("close effect");
+            assert!(step.is_some(), "a wide close grant is admitted");
         }
+        assert!(preparation.terminal_is_empty());
+        drop(preparation);
+        drop(registry);
     }
-    assert!(retirement.terminal_is_empty());
-    assert_eq!(released, estimate);
 }
+
 //#endregion 🔖️Codec
 
 /// 🪜️ The grant-driven stepper folds every page to exactly the projection the one-shot `fold_page` yields, in turns whose charged work never exceeds the budget, however small.

@@ -43,6 +43,7 @@
         "mode",
         "limits",
         "timeouts",
+        "deadline",
         "virtual",
         "property",
         "tool",
@@ -96,7 +97,9 @@
             "admissionMemoMilliseconds",
             "unitMegabytes",
             "declineMemoMilliseconds",
-            "reachableMemoMilliseconds"
+            "reachableMemoMilliseconds",
+            "contentRetries",
+            "contentRetryAfterCapMilliseconds"
           ],
           "properties": {
             "roundTripMilliseconds": {
@@ -163,6 +166,14 @@
             "reachableMemoMilliseconds": {
               "type": "integer",
               "minimum": 0
+            },
+            "contentRetries": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "contentRetryAfterCapMilliseconds": {
+              "type": "integer",
+              "minimum": 0
             }
           }
         },
@@ -224,6 +235,55 @@
               "minimum": 1
             },
             "pinQueueMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "deadline": {
+          "description": "How long an offloaded action may take on the fleet before the unit compiles here instead: factor times the recorded local cost of the unit (floor and cap bound it, a unit without a record takes the unknown value; a linked wasm unit or a command has its own cap and unknown value) from the moment it executes, and how long the stream of an operation may stay silent before the client re-attaches to it.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "factor",
+            "floorMilliseconds",
+            "capMilliseconds",
+            "unknownMilliseconds",
+            "linkedCapMilliseconds",
+            "linkedUnknownMilliseconds",
+            "silenceMilliseconds",
+            "reattachMilliseconds"
+          ],
+          "properties": {
+            "factor": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "floorMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "capMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "unknownMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "linkedCapMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "linkedUnknownMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "silenceMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "reattachMilliseconds": {
               "type": "integer",
               "minimum": 1
             }
@@ -708,7 +768,9 @@
       "admissionMemoMilliseconds": 2000,
       "unitMegabytes": 768,
       "declineMemoMilliseconds": 3000,
-      "reachableMemoMilliseconds": 15000
+      "reachableMemoMilliseconds": 15000,
+      "contentRetries": 3,
+      "contentRetryAfterCapMilliseconds": 2000
     },
     "timeouts": {
       "connectMilliseconds": 3000,
@@ -722,6 +784,16 @@
       "rideThroughMilliseconds": 20000,
       "queueSaturatedMilliseconds": 120000,
       "pinQueueMilliseconds": 3600000
+    },
+    "deadline": {
+      "factor": 4,
+      "floorMilliseconds": 60000,
+      "capMilliseconds": 900000,
+      "unknownMilliseconds": 240000,
+      "linkedCapMilliseconds": 3600000,
+      "linkedUnknownMilliseconds": 2400000,
+      "silenceMilliseconds": 20000,
+      "reattachMilliseconds": 10000
     },
     "virtual": {
       "base": ".semio-offload",

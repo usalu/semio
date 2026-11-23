@@ -9,6 +9,7 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { borderNormalBottomClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
+import { CanvasBottomChipRow, type CanvasBottomChips } from "./🦶️bottom-chips/🟦️.tsx";
 import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { CanvasSkeleton } from "../🦴️Skeletons/🟦️.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../🔽️Select/🟦️.tsx";
@@ -34,17 +35,21 @@ import { useModeShortcutsAndContexts, useModeTemplateDropAndPreview } from "./�
 // #endregion 🔌️Adapters
 // #region ⚙️Canvas
 
+export type { CanvasBottomChips };
+
 /**
- * 🌐️ Container component for canvas window layout.
+ * 🌐️ Container component for canvas window layout. Its content is full-bleed; `bottomChips` overlay glass chips inside
+ * the canvas rectangle on its bottom edge instead of occupying a band below it.
  **/
-export const Canvas: React.FC<{ children: React.ReactNode; id?: string; status?: UiStatus }> = ({ children, id, status = "idle" }) => {
+export const Canvas: React.FC<{ children: React.ReactNode; id?: string; status?: UiStatus; bottomChips?: CanvasBottomChips }> = ({ children, id, status = "idle", bottomChips }) => {
   const parent = useSurface();
   const bgClass = shellFloorFillClass(parent);
   const busy = status === "loading" || status === "waiting";
   return (
     <LevelProvider level="base">
-      <div id={id} data-slot="canvas" data-level="base" data-ui-status={busy ? status : undefined} className={cn("box-border h-full w-full p-0", bgClass, chromeStatusBorderClass(status))}>
+      <div id={id} data-slot="canvas" data-level="base" data-ui-status={busy ? status : undefined} className={cn("relative box-border h-full w-full p-0", bgClass, chromeStatusBorderClass(status))}>
         {busy ? <CanvasSkeleton /> : children}
+        <CanvasBottomChipRow chips={bottomChips} />
       </div>
     </LevelProvider>
   );

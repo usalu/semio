@@ -71,6 +71,7 @@ pub fn sourcing_curation_retained_reduce(
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window };
     let emit = command.dispatch(&doc, &cfg)?;
+    eprintln!("[DEBUG] reduce {:?} avail={:?} {} stock_extra={} curated={} muts={} cfg={} effects={}", command, snapshot.stock_extra.iter().map(|e| (e.id.clone(), e.availability)).take(4).collect::<Vec<_>>(), command.command_id(), snapshot.stock_extra.len(), snapshot.curated.len(), emit.artifact_mutation_count(), emit.config_mutations.len(), emit.effects.len());
     let view = _context.and_then(|context| context.view_state.as_deref());
     sourcing_curation_finish_emit(command, emit, window, view)
 }
@@ -116,7 +117,7 @@ impl ArtifactOwnedToolJobFactory for SourcingCurationBoundedCommandJobFactory {
     /// 🛤️ The lane each tool publishes on. `HostOnly` is a whole-document replacement carried as an
     /// `Effect::LoadDocument` rather than a store edit (`loadDocumentJson`/`stockFromCatalogue` share
     /// `setActiveExample`'s `reset_document_effect` path); `Artifact` is the curated-selection
-    /// vocabulary, admitted by `SourcingCurationArtifactPreparationFactory`; `Config` is view state.
+    /// vocabulary, admitted by `sourcing_curation_artifact_preparation_factory`; `Config` is view state.
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },

@@ -107,6 +107,7 @@ impl TimeTravelDiscardCursor {
     }
 }
 impl semio_framework_value::ErasedSnapshotRetirement for TimeTravelDiscardCursor {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.retirement_demands(body)}
 
     fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{Self::close_step(self,body,effect)}

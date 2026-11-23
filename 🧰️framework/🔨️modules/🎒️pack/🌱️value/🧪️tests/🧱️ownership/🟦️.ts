@@ -11,7 +11,7 @@ const contract=fixture as unknown as Ownership,owner=resolve(import.meta.dir,"..
 test("Record ownership examples name the actual package and public module",()=>{
  expect(contract.package).toBe("semio-framework-pack-record");expect(contract.facade).toBe("semio-framework-pack");expect(contract.module).toBe("record");
  expect(new Set(contract.dependencies).intersection(new Set(contract.forbiddenProviders)).size).toBe(0);
- for(const entry of contract.publicEntries)expect(tree("🦀️.rs")).toContain("pub fn "+entry+"(");
+ for(const entry of contract.publicEntries)expect(tree("🦀️.rs")).toMatch(new RegExp("pub fn "+entry+"[(<]"));
  for(const entry of contract.schemaEntries)expect(read("🧬️schema/🦀️.rs")).toContain("pub fn "+entry+"(");
 });
 

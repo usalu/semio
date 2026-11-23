@@ -30,7 +30,7 @@ describe("the catalogue palette drag over the shared vectors", () => {
     expect(CATALOGUE_DRAG_MIME).toBe(vectors.palette.mime);
     const read = catalogueTreeDragController().pointerPaletteDrag!.readEncodedDragPayload;
     for (const vector of vectors.palette.payloads) {
-      const data = vector.payload === null ? {} : { [CATALOGUE_DRAG_MIME]: vector.payload };
+      const data: Record<string, string> = vector.payload === null ? {} : { [CATALOGUE_DRAG_MIME]: vector.payload };
       expect(read(data) !== undefined, JSON.stringify(vector)).toBe(vector.starts);
     }
   });

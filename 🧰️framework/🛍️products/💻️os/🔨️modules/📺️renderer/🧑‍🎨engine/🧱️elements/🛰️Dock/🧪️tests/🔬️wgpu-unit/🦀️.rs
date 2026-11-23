@@ -26,7 +26,7 @@ fn dock_axis_geometry_fixture() -> serde_json::Value {
 
 include!("🧰️dock-fixtures-and-sample-app/🦀️.rs");
 
-include!("🪟️window-instances-geometry-and-silhouette/🦀️.rs");
+include!("🪟️window-instances-geometry-and-frame/🦀️.rs");
 
 include!("shared-borders.rs");
 

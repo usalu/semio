@@ -155,6 +155,6 @@ fn canvas_paint_matches_mupdf_probes() {
                 assert!((actual[channel] - expected).abs() <= tolerance, "{name} at [{x}, {y}]: {actual:?} vs {:?}", probe["rgb"]);
             }
         }
-        render_window(&snapshot).expect("paint fidelity scene admission");
+        render_window(&snapshot, semio_ui_locale::Locale::En).expect("paint fidelity scene admission");
     }
 }

@@ -8,6 +8,10 @@ import chargeCases from "./🧫️fixtures/retained-charge.json";
 import chargeSchema from "./🧫️fixtures/retained-charge.schema.json";
 import floorLaw from "./🧫️fixtures/receiving-floor.json";
 import floorSchema from "./🧫️fixtures/receiving-floor.schema.json";
+import quoteLaw from "./🧫️fixtures/receiving-quote-refusal.json";
+import quoteSchema from "./🧫️fixtures/receiving-quote-refusal.schema.json";
+import refundLaw from "./🧫️fixtures/receiving-refund.json";
+import refundSchema from "./🧫️fixtures/receiving-refund.schema.json";
 test("one retained item and one fuel are admitted together", () => {
  expect(new Ajv().compile(chargeSchema)(chargeCases)).toBe(true);
  using db = new Database(":memory:");
@@ -45,4 +49,18 @@ test("a receiving floor keeps the half share, raises it up to the whole turn and
  expect(rows).toEqual(floorLaw.cases.map(({expect:kind})=>({expect:kind})));
  expect(new Set(floorLaw.cases.map(({expect:kind})=>kind))).toEqual(new Set(["share","floor","refused"]));
  expect(floorLaw.settlingTurns).toBeLessThan(floorLaw.refusalTurns);
+});
+
+test("a quoted receiving scope beyond the turn is refused after at most its settling turns",()=>{
+ expect(new Ajv().compile(quoteSchema)(quoteLaw)).toBe(true);
+ expect(quoteLaw.settlingTurns).toBeLessThan(quoteLaw.refusalTurns);
+ expect(quoteLaw.quoteCopyBytes).toBeGreaterThan(65536);
+});
+
+test("an idle unquoted receiving scope settles with nothing held on the Source",()=>{
+ expect(new Ajv().compile(refundSchema)(refundLaw)).toBe(true);
+ using db=new Database(":memory:");
+ const row=db.query("select json_extract(?1,'$.heldAfterSettle')+json_extract(?1,'$.claimsAfterSettle') as kept").get(JSON.stringify(refundLaw)) as {kept:number};
+ expect(row.kept).toBe(0);
+ expect(refundLaw.scopes).toBeGreaterThan(1);
 });

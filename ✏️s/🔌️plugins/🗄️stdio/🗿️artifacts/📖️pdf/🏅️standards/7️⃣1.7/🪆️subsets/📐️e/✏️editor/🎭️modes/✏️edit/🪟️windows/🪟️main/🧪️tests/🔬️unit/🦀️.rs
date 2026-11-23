@@ -30,7 +30,7 @@ fn first_surface(node: &semio_ui_contract::BuiltNode) -> Option<&semio_ui_contra
 fn render_paints_the_page_text_on_the_canvas() {
     let document = demo_pdf17_snapshot();
     let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
-    let node = render(&document).expect("page canvas");
+    let node = render(&document, semio_ui_locale::Locale::En).expect("page canvas");
     semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |tree| {
         let surface = first_surface(tree).expect("canvas surface");
         let semio_ui_contract::Component::Surface(props) = &surface.component else { unreachable!() };

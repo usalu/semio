@@ -409,7 +409,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             dock_drop_bodies: self.dock.dock_drop_bodies.clone(),
             dock_window_plan: self.dock.dock_window_plan.clone(),
             window_content_rects: self.dock.window_content_rects.clone(),
-            window_silhouettes: self.dock.window_silhouettes.clone(),
+            window_frames: self.dock.window_frames.clone(),
             modal: self.input.candidate_pointer_input_is_modal(&self.chrome),
             panel_rects,
         }

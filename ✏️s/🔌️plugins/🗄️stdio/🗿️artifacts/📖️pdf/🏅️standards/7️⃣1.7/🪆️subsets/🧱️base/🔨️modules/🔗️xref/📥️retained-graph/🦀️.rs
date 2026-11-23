@@ -578,6 +578,51 @@ impl PdfByteGraphCursor {
         }
     }
 
+    /// 🧭 Names the byte-graph phase and, while projecting, the object phase that last ran.
+    pub fn trace(&self) -> String {
+        let phase = match self.phase {
+            BytePhase::Structure => "structure",
+            BytePhase::CloseStructure => "close-structure",
+            BytePhase::AllocateProjection => "allocate-projection",
+            BytePhase::Project => "project",
+            BytePhase::CloseIndex => "close-index",
+            BytePhase::Reference => "reference",
+            BytePhase::NotPdf => "not-pdf",
+            BytePhase::Complete => "complete",
+            BytePhase::Closing => "closing",
+            BytePhase::Closed => "closed",
+        };
+        let object = self.projection.as_ref().map(|cursor| {
+            let name = match cursor.phase {
+                Phase::Reserve => "reserve",
+                Phase::Order => "order",
+                Phase::Schedule(_) => "schedule",
+                Phase::Normal => "normal",
+                Phase::TakeNormal => "take-normal",
+                Phase::CloseNormal => "close-normal",
+                Phase::RawStream => "raw-stream",
+                Phase::StreamHeader => "stream-header",
+                Phase::Member => "member",
+                Phase::Publish => "publish",
+                Phase::CloseOrder => "close-order",
+                Phase::Complete => "complete",
+                Phase::Closing => "closing",
+                Phase::Closed => "closed",
+            };
+            match cursor.phase {
+                Phase::Normal => {
+                    let stage = cursor.normal.as_ref().map(|stream| stream.trace()).unwrap_or("absent");
+                    format!("normal/{stage}/{}", cursor.current.num)
+                }
+                _ => format!("{name}/{}", cursor.current.num),
+            }
+        });
+        match object {
+            Some(object) if matches!(self.phase, BytePhase::Project) => format!("{phase}/{object}"),
+            _ => phase.to_string(),
+        }
+    }
+
     pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> PdfByteGraphReceipt {
         use PdfByteGraphEvent as Event;
         if cancelled { self.begin_close(); }
@@ -763,6 +808,27 @@ impl PdfFilePreparationCursor {
             phase: PreparePhase::Allocate, bytes: None, header: None, graph: None, graph_retirement: Default::default(),
             dictionary: None, inherited: std::array::from_fn(|_| None), trailer: Vec::new(),
             trailer_replacement: Vec::new(), trailer_reverse: 0, trailer_entry_retirement: None, text: None, maximum_objects, maximum_stream_bytes,
+        }
+    }
+
+    /// 🧭 Names the preparation phase and the nested byte-graph phase.
+    pub fn trace(&self) -> String {
+        let phase = match self.phase {
+            PreparePhase::Allocate => "allocate",
+            PreparePhase::Bytes => "bytes",
+            PreparePhase::TakeBytes => "take-bytes",
+            PreparePhase::ReleaseBytes => "release-bytes",
+            PreparePhase::Trailer => "trailer",
+            PreparePhase::TakeTrailer => "take-trailer",
+            PreparePhase::AppendInherited => "append-inherited",
+            PreparePhase::Text => "text",
+            PreparePhase::Ready => "ready",
+            PreparePhase::Closing => "closing",
+            PreparePhase::Closed => "closed",
+        };
+        match self.bytes.as_ref() {
+            Some(bytes) => format!("{phase}/{}", bytes.trace()),
+            None => phase.to_string(),
         }
     }
 

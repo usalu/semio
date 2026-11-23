@@ -177,7 +177,7 @@ export interface PaneView {
 }
 
 /** 📄️ A page behind a card of the overview: it fills its pane, scrolls on its own and lays its cards out in a centred
- * column ({@link CardStack}: no margin, no gap, the cards interlock) laid out for the pane, not the window; `overlay` lies over that column and scrolls with it (the others on
+ * column ({@link CardStack}: no margin, no gap, the cards abut) laid out for the pane, not the window; `overlay` lies over that column and scrolls with it (the others on
  * this page). */
 export function PageFrame(props: { readonly page: string; readonly wide?: boolean; readonly overlay?: ReactNode; readonly children: ReactNode }): ReactElement {
   return (

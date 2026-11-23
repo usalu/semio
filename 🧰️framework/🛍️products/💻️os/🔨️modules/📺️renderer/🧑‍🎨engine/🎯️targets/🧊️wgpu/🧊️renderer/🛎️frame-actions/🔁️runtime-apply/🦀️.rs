@@ -304,7 +304,7 @@ impl RuntimeApply {
             match mailbox.try_spawn_frame_deferred_reserved(FrameDeferredExecutionOwner::new(interaction, cursor_value, work)) {
                 Ok(()) => return true,
                 Err(mut owner) => {
-                    let _ = mailbox.0.completions.lock().expect("runtime completion mailbox lock").cancel_interaction_reservation();
+                    let _ = mailbox.0.completions.lock().unwrap_or_else(std::sync::PoisonError::into_inner).cancel_interaction_reservation();
                     owner.cancel_current();
                     let Some((interaction, cursor_value)) = owner.take_pair() else { return false };
                     runtime.return_interaction(interaction);

@@ -42,16 +42,16 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let live=snapshot.read_source().map_err(|error|semio_plugin::PluginAssemblyError::new("flow.source",error.into_message()))?;
-    render_source(&live,config,session)
+    render_source(&live,config,session,locale)
 }
 
 /// 🗣️ Projects the already retained execution source.
-pub fn render_source(live:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,_config:&FlowMainWindowConfig,_session:&FlowEvalSession)->UiAssemblyResult<BuiltNode>{
+pub fn render_source(live:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,_config:&FlowMainWindowConfig,_session:&FlowEvalSession,locale:semio_plugin::Locale)->UiAssemblyResult<BuiltNode>{
     let wire=flow::FlowHost::project_compiled_wire_literal(live,&flow::flow_neuron_kind_info_map());
     let scene = TextEditorScene::base(wire, Some("wire".into()), None);
-    scene_surface(FLOW_PLAY_SURFACE_COMPILED, ContractSurfaceKind::TextEditor, &scene)
+    scene_surface(FLOW_PLAY_SURFACE_COMPILED, ContractSurfaceKind::TextEditor, &scene, semio_plugin::surface_name(locale, "Compiled wire format", "Kompiliertes Wire-Format"), None)
 }
 //#endregion 🔖️Render
 

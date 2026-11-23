@@ -1,7 +1,7 @@
 //! 🛬️ Original authoring owners receive persistent FEM rows through physical grants and retain every close frontier.
 use super::{Fem3dSnapshot, Fem3dSnapshotValue, FemIdentityKind};
 use semio_framework_value::{
-    OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ValueError, ValueRefusalKind,
+    OriginalRetirementCloseLoan, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ValueError, ValueRefusalKind,
     retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep, StagedSourceAdmission, retained_clone_grant_admits},
     retirement::{RetireOwned, RetirementCursor, RetirementStep},
 };
@@ -254,7 +254,7 @@ impl Fem3dReceiving {
         if !retained_clone_grant_admits(g, d) {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
-        control.checkpoint()?;
+        if !(self.nodes_receiver.as_ref().is_some_and(|rx| rx.advance_pending()) || self.materials_receiver.as_ref().is_some_and(|rx| rx.advance_pending())) { control.checkpoint()?; }
         macro_rules! effect { ($units:expr; $e:ident => $run:expr) => { match work.measured(control, |c| c.with_allocated_effect(d, $units, |_, $e| $run))? { Some(turn) => turn, None => return Ok(RetainedCloneStep::Progress(Default::default())) } }; ($e:ident => $run:expr) => { effect!(ACTION_WORK; $e => $run) } }
         macro_rules! child { ($rx:ident, $out:ident, $base:expr, $at:expr, $project:expr, $ty:ty) => {{
             match self.phase - $base {
@@ -431,6 +431,7 @@ impl Fem3dReceiving {
         }
         macro_rules! slot { ($rx:expr, $size:expr) => { return Ok(if $rx.terminal_is_empty() { (fixed(2 * $size), 1) } else { ($rx.close_demands(body)?, $rx.close_work_demand(body)?) }) } }
         macro_rules! owned { ($ty:ty, $present:expr) => { return Ok((self.retirement.next_owner_demands::<$ty>($present, &None, body)?, self.retirement.next_owner_work::<$ty>($present, &None, body)?)) } }
+        if let (Some(admission), Some(source)) = (self.admission.as_ref(), self.source.as_ref()) { if source.publication_pending() { return Ok((admission.close_demand()?, admission.close_work_demand()?)); } }
         if let Some(rx) = self.nodes_receiver.as_ref() { slot!(rx, size_of::<Option<NodeReceiver>>()) }
         if let Some(rx) = self.materials_receiver.as_ref() { slot!(rx, size_of::<Option<MaterialReceiver>>()) }
         if self.source.as_ref().is_some_and(RetainedCloneSource::publication_pending) {
@@ -449,7 +450,7 @@ impl Fem3dReceiving {
         Ok((Default::default(), 0))
     }
     /// 🧹️ Every source and destination frontier closes only through the supplied effect.
-    fn close_poll(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+    fn close_poll(&mut self, mut original: Option<&mut OriginalRetirementCloseLoan<'_>>, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         use RetainedWorkPoll::Complete;
         let g = effect.grant();
         let fail = |error: ValueError| -> OriginalRetirementPoll { Complete(RetainedWorkOutcome { result: Err(error.into()), work: 0 }) };
@@ -466,13 +467,20 @@ impl Fem3dReceiving {
             $slot.take();
             return Complete(RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(receipt(d))), work: 1 });
         }} }
+        if self.source.as_ref().is_some_and(|source| source.publication_pending()) {
+            if let Some(admission) = self.admission.as_mut() {
+                let turn = admission.close_into(&mut self.pending, &mut self.source, body, effect);
+                let result = turn.result.map(|step| step.progress());
+                return Complete(RetainedWorkOutcome { result: result.map(|progress| self.finish(progress)).map_err(Into::into), work: turn.work });
+            }
+        }
         if let Some(rx) = self.nodes_receiver.as_mut() {
             if rx.terminal_is_empty() { release!(self.nodes_receiver) }
-            return settled(effect, |effect, reply| rx.close_into(body, effect, reply)).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return settled(effect, |effect, reply| match original.as_deref_mut() { Some(loan) => rx.close_original_into(loan, body, effect, reply), None => rx.close_into(body, effect, reply) }).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(rx) = self.materials_receiver.as_mut() {
             if rx.terminal_is_empty() { release!(self.materials_receiver) }
-            return settled(effect, |effect, reply| rx.close_into(body, effect, reply)).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return settled(effect, |effect, reply| match original.as_deref_mut() { Some(loan) => rx.close_original_into(loan, body, effect, reply), None => rx.close_into(body, effect, reply) }).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.source.as_ref().is_some_and(RetainedCloneSource::publication_pending) {
             let Some(admission) = self.admission.as_mut() else { return fail(invalid()) };
@@ -484,7 +492,7 @@ impl Fem3dReceiving {
             return source.close_step(body, effect).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if !self.retirement.is_empty() {
-            let poll = self.retirement.step_granted(body, effect);
+            let poll = match original.as_deref_mut() { Some(loan) if self.retirement.requires_original_control() => self.retirement.step_original(loan, body, effect), _ => self.retirement.step_granted(body, effect) };
             return poll.map(|step| self.finish(step.progress()));
         }
         let turn = if self.admission.is_some() {
@@ -504,7 +512,14 @@ impl Fem3dReceiving {
     }
     /// 🧹️ Every source and destination frontier closes only through the supplied effect.
     pub fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetirementStep {
-        match self.close_poll(body, effect) {
+        Self::retirement_step(self.close_poll(None, body, effect))
+    }
+    /// 🧵️ Closes through the original decode owner's loan, which every child with a pending original birth or control requires.
+    fn close_original_step(&mut self, original: &mut OriginalRetirementCloseLoan<'_>, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetirementStep {
+        Self::retirement_step(self.close_poll(Some(original), body, effect))
+    }
+    fn retirement_step(poll: OriginalRetirementPoll) -> RetirementStep {
+        match poll {
             RetainedWorkPoll::Pending { work } => RetirementStep::Pending(work),
             RetainedWorkPoll::Complete(turn) => match turn.result {
                 Err(error) => RetirementStep::Failure(error, turn.work),
@@ -555,6 +570,23 @@ impl RetirementCursor for Fem3dReceiving {
     }
     fn terminal_release_bytes(&self) -> Option<usize> {
         Some(size_of::<Self>())
+    }
+    fn requires_original_birth(&self) -> bool {
+        if let Some(rx) = self.nodes_receiver.as_ref() { return rx.requires_original_birth(); }
+        if let Some(rx) = self.materials_receiver.as_ref() { return rx.requires_original_birth(); }
+        self.source.is_none() && self.retirement.requires_original_birth()
+    }
+    fn requires_original_control(&self) -> bool {
+        if let Some(rx) = self.nodes_receiver.as_ref() { return rx.requires_original_control(); }
+        if let Some(rx) = self.materials_receiver.as_ref() { return rx.requires_original_control(); }
+        self.source.is_none() && self.retirement.requires_original_control()
+    }
+    fn close_original_birth_step(&mut self, original: &mut OriginalRetirementCloseLoan<'_>, grant: RetainedCloneGrant) -> RetirementStep {
+        let poll = if let Some(rx) = self.nodes_receiver.as_mut() { rx.close_original_birth_step(original, grant) } else if let Some(rx) = self.materials_receiver.as_mut() { rx.close_original_birth_step(original, grant) } else { self.retirement.step_original_birth(original, grant) };
+        Self::retirement_step(poll)
+    }
+    fn close_original_step(&mut self, original: &mut OriginalRetirementCloseLoan<'_>, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetirementStep {
+        Fem3dReceiving::close_original_step(self, original, body, effect)
     }
 }
 impl Drop for Fem3dReceiving {

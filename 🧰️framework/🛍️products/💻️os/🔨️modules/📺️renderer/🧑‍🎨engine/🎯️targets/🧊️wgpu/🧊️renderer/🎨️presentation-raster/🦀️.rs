@@ -698,7 +698,7 @@ impl<R> RuntimeMailboxInner<R> {
 
 /// 🔌️ Everything the runtime mailbox needs of the runtime it guards (plan section 5.3, inversion I2): the interaction checkout, the two pending
 /// frame cursors and the resize entry. The mailbox is generic over it so the transport crate never names the application runtime above it.
-pub trait MailboxRuntime: Send + 'static {
+pub trait MailboxRuntime: semio_framework_job::JobThreadTransfer + 'static {
     fn interaction(&self) -> Option<&AppInteractionState>;
     fn interaction_mut(&mut self) -> Option<&mut AppInteractionState>;
     fn interaction_available(&self) -> bool;

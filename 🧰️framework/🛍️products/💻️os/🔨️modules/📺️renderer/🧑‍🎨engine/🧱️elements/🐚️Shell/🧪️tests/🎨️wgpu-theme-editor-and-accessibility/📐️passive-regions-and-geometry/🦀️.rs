@@ -2,7 +2,7 @@
 
 #[test]
 fn passive_chrome_regions_are_not_announced_as_buttons() {
-    let shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     with_chrome_control_names(|names| names.clear());
     let fixture = accessibility_fixture();
     let cases = fixture["passiveChrome"].as_array().unwrap();

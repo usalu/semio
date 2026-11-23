@@ -350,7 +350,7 @@ function resolvePlayground(id: string, variant: string, chosen: Pins, extra: str
   const target = renderer === "react" ? `dev-${variant}-react-prototype` : renderer === "wgpu-native" ? `run-${variant}-native-prototype` : `dev-${variant}-wgpu-prototype`;
   const effects=apply(axesFor("dev",[],true,true),chosen,{},env),args = ["run", `@semio-tech/framework-os-dev:${target}`,...effects.buildFlags];
   if (chosen.example !== undefined) {
-    const slug = (row.examples as string[]).find((candidate) => candidate === chosen.example || candidate.split("️").pop() === chosen.example)!;
+    const slug = (row.examples as string[]).find((candidate) => candidate === chosen.example)!;
     env.PLAYGROUND_LOCKED_EXAMPLE_ID = slug;
     if (renderer === "wgpu-native") args.push("--", "--example", slug);
   }

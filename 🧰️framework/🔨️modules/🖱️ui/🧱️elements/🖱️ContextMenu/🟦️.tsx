@@ -12,11 +12,11 @@ import type { IconSource } from "../🔣️Icons/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellFloatingSurfaceHost } from "../🐚️ShellScope/🟦️.tsx";
 import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
-import { ContextMenuChrome } from "./🥣️chrome/🟦️.tsx";
+import { ContextMenuChrome, ContextMenuWingFrame } from "./🥣️chrome/🟦️.tsx";
 import { createDOMEventBinding } from "../../🔨️modules/👂️dom-event-binding/🟦️.ts";
 import { type ContextMenuItem, renderPortalInto } from "./🎨️item-render/🟦️.tsx";
 import { contextMenuHoverEndItem, contextMenuHoverItem, contextMenuItemAtPath, contextMenuNavigationFromKey, contextMenuOpenSubmenuPath, contextMenuPathForOrdinal, contextMenuPathKey, findContextMenuCheckedPath, isContextMenuEditableKeyTarget, moveContextMenuActivePath } from "./🧭️navigation/🟦️.tsx";
-import { CONTEXT_MENU_NO_FUSION_PANELS, type ContextMenuFusionPlacement, type FixedContextMenuRenderOptions, contextMenuFusionOffsetsEqual, contextMenuOpenFusionPanels, renderFixedContextMenuItems } from "./🔗️fusion/🟦️.tsx";
+import { CONTEXT_MENU_NO_WINGS, type ContextMenuWingPlacement, type FixedContextMenuRenderOptions, contextMenuSubmenuPlacement, contextMenuWingPlacementsEqual, contextMenuOpenWings, renderFixedContextMenuItems } from "./🪜️submenu/🟦️.tsx";
 import { buildTextSelectionContextMenuItems, copyDomTextSelection, cutDomTextSelection, isDomTextEditableTarget, isPointerEventOnDomTextSelection, pasteDomTextSelection, readDomTextSelection, selectAllDomText } from "./📝️text-selection/🟦️.ts";
 
 export { ContextMenuTriggerButton, contextMenuAnchorPointV1, dispatchContextMenuAtV1, type ContextMenuTriggerButtonProps } from "./🔘️trigger/🟦️.tsx";
@@ -102,9 +102,8 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
   const floatingHost = useShellFloatingSurfaceHost();
   const flow = useFlow();
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
-  const fusionBodyRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const chromeRef = reactHostPort.useRef<HTMLDivElement | null>(null);
-  const [fusionOffsets, setFusionOffsets] = reactHostPort.useState<ReadonlyMap<string, ContextMenuFusionPlacement>>(() => new Map());
+  const [wingPlacements, setWingPlacements] = reactHostPort.useState<ReadonlyMap<string, ContextMenuWingPlacement>>(() => new Map());
   const itemsRef = reactHostPort.useRef(items);
   itemsRef.current = items;
   const [activePath, setActivePath] = reactHostPort.useState<number[]>([]);
@@ -138,7 +137,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     }
     const node = activePath.length ? rowNodesRef.current.get(contextMenuPathKey(activePath)) : undefined;
     (node ?? menuRef.current)?.focus({ preventScroll: true });
-    const scroller = fusionBodyRef.current;
+    const scroller = node?.closest<HTMLElement>("[data-context-menu-scroll]");
     if (!node || !scroller) return;
     const row = node.getBoundingClientRect();
     const viewport = scroller.getBoundingClientRect();
@@ -272,59 +271,43 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
       bindings.dispose();
     };
   }, [applyActivePath, close, closeOnSelect, items.length, onOpenChange, open, position?.x, position?.y]);
-  const fusionPanels = reactHostPort.useMemo(() => (open ? contextMenuOpenFusionPanels(items, activePath, submenuCollapsedAt) : CONTEXT_MENU_NO_FUSION_PANELS), [open, activePath, items, submenuCollapsedAt]);
+  const wings = reactHostPort.useMemo(() => (open ? contextMenuOpenWings(items, activePath, submenuCollapsedAt) : CONTEXT_MENU_NO_WINGS), [open, activePath, items, submenuCollapsedAt]);
   reactHostPort.useLayoutEffect(() => {
-    const body = fusionBodyRef.current;
     const chrome = chromeRef.current;
-    const primary = body?.querySelector<HTMLElement>('[data-slot="context-menu-fusion-primary"]');
-    if (!open || !position || !body || !chrome || !primary) return;
-    const wings = fusionPanels.map((panel) => ({
-      key: contextMenuPathKey(panel.parentPath),
-      node: body.querySelector<HTMLElement>(`[data-context-menu-submenu-of="${contextMenuPathKey(panel.parentPath)}"]`),
-    }));
+    if (!open || !position || !chrome) return;
+    const frames = wings.map((wing) => {
+      const key = contextMenuPathKey(wing.parentPath);
+      return { key, node: document.querySelector<HTMLElement>(`[data-context-menu-submenu-of="${key}"]`) };
+    });
     const measure = (): void => {
-      const bodyRect = body.getBoundingClientRect();
-      const primaryRect = primary.getBoundingClientRect();
-      const next = new Map<string, ContextMenuFusionPlacement>();
-      let right = primaryRect.right;
-      let bottom = primaryRect.bottom;
-      let changed = false;
-      for (const { key, node } of wings) {
-        const anchor = rowNodesRef.current.get(key);
-        if (!node || !anchor) continue;
-        const placement = { left: right - bodyRect.left + body.scrollLeft, top: anchor.getBoundingClientRect().top - bodyRect.top + body.scrollTop };
-        const left = `${placement.left}px`;
-        const top = `${placement.top}px`;
-        changed ||= node.style.left !== left || node.style.top !== top;
-        node.style.left = left;
-        node.style.top = top;
-        next.set(key, placement);
-        const rect = node.getBoundingClientRect();
-        right = rect.right;
-        bottom = Math.max(bottom, rect.bottom);
-      }
-      const paddingRight = `${Math.max(0, right - primaryRect.right)}px`;
-      const paddingBottom = `${Math.max(0, bottom - primaryRect.bottom)}px`;
-      changed ||= body.style.paddingRight !== paddingRight || body.style.paddingBottom !== paddingBottom;
-      body.style.paddingRight = paddingRight;
-      body.style.paddingBottom = paddingBottom;
-      setFusionOffsets((previous) => contextMenuFusionOffsetsEqual(previous, next) ? previous : next);
       chrome.style.left = `${position.x}px`;
       chrome.style.top = `calc(${position.y}px - var(--chip-row-height))`;
       const rect = chrome.getBoundingClientRect();
       if (rect.width > 0 && rect.height > 0) {
-        const left = Math.min(Math.max(rect.left, 0), Math.max(0, window.innerWidth - rect.width));
-        const top = Math.min(Math.max(rect.top, 0), Math.max(0, window.innerHeight - rect.height));
-        chrome.style.left = `${left}px`;
-        chrome.style.top = `${top}px`;
+        chrome.style.left = `${Math.min(Math.max(rect.left, 0), Math.max(0, window.innerWidth - rect.width))}px`;
+        chrome.style.top = `${Math.min(Math.max(rect.top, 0), Math.max(0, window.innerHeight - rect.height))}px`;
       }
-      if (changed) chrome.setAttribute("data-silhouette-remeasure", String(performance.now()));
+      const viewport = { width: window.innerWidth, height: window.innerHeight };
+      const next = new Map<string, ContextMenuWingPlacement>();
+      let parentRect = chrome.getBoundingClientRect();
+      for (const { key, node } of frames) {
+        const anchor = rowNodesRef.current.get(key);
+        if (!node || !anchor) continue;
+        const own = node.getBoundingClientRect();
+        const first = node.querySelector<HTMLElement>('[role="menuitem"], [role="menuitemcheckbox"]');
+        const inset = first ? first.getBoundingClientRect().top - own.top : 0;
+        const placed = contextMenuSubmenuPlacement({ anchor: { left: parentRect.left, right: parentRect.right, top: anchor.getBoundingClientRect().top - inset }, panel: { width: own.width, height: own.height }, viewport });
+        node.style.left = `${placed.left}px`;
+        node.style.top = `${placed.top}px`;
+        next.set(key, { left: placed.left, top: placed.top });
+        parentRect = node.getBoundingClientRect();
+      }
+      setWingPlacements((previous) => (contextMenuWingPlacementsEqual(previous, next) ? previous : next));
     };
     measure();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
     observer?.observe(chrome);
-    observer?.observe(primary);
-    for (const { key, node } of wings) {
+    for (const { key, node } of frames) {
       if (node) observer?.observe(node);
       const anchor = rowNodesRef.current.get(key);
       if (anchor) observer?.observe(anchor);
@@ -336,7 +319,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [fusionPanels, open, position?.x, position?.y, floatingHost]);
+  }, [wings, open, position?.x, position?.y, floatingHost]);
   if (!items.length) {
     return null;
   }
@@ -352,36 +335,43 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     registerRow,
   };
   return renderPortalInto(
-    <ContextMenuChrome ref={chromeRef} style={{ left: position.x, position: "fixed", top: `calc(${position.y}px - var(--chip-row-height))` }} title={title} icon={titleIcon}>
-      <div
-        data-slot="context-menu-fusion-body"
-        dir={flow.inline === "rtl" ? "rtl" : undefined}
-        onContextMenu={(event) => event.preventDefault()}
-        ref={fusionBodyRef}
-        className="relative w-fit max-w-none overflow-auto"
-        style={{ maxWidth: "calc(100vw - 2px)", maxHeight: "calc(100dvh - var(--chip-row-height) - 2px)" }}
-      >
-        <div aria-label={title} data-slot="context-menu-fusion-primary" ref={menuRef} role="menu" tabIndex={-1} className="w-max shrink-0">
+    <>
+      <ContextMenuChrome ref={chromeRef} style={{ left: position.x, position: "fixed", top: `calc(${position.y}px - var(--chip-row-height))` }} title={title} icon={titleIcon}>
+        <div
+          aria-label={title}
+          data-context-menu-scroll=""
+          data-slot="context-menu-primary"
+          dir={flow.inline === "rtl" ? "rtl" : undefined}
+          onContextMenu={(event) => event.preventDefault()}
+          ref={menuRef}
+          role="menu"
+          tabIndex={-1}
+          className="w-max max-w-none overflow-auto"
+          style={{ maxWidth: "calc(100vw - 2px)", maxHeight: "calc(100dvh - var(--chip-row-height) - 2px)" }}
+        >
           {renderFixedContextMenuItems(items, [], renderOptions)}
         </div>
-        {fusionPanels.map((panel) => {
-          const panelKey = contextMenuPathKey(panel.parentPath);
-          return (
+      </ContextMenuChrome>
+      {wings.map((wing) => {
+        const wingKey = contextMenuPathKey(wing.parentPath);
+        return (
+          <ContextMenuWingFrame key={wingKey} parentKey={wingKey} style={{ position: "fixed", left: wingPlacements.get(wingKey)?.left ?? 0, top: wingPlacements.get(wingKey)?.top ?? 0 }}>
             <div
-              key={panelKey}
-              aria-label={contextMenuItemAtPath(items, panel.parentPath)?.label ?? panelKey}
-              data-context-menu-submenu-of={panelKey}
-              data-slot="context-menu-submenu"
+              aria-label={contextMenuItemAtPath(items, wing.parentPath)?.label ?? wingKey}
+              data-context-menu-scroll=""
+              dir={flow.inline === "rtl" ? "rtl" : undefined}
+              onContextMenu={(event) => event.preventDefault()}
               role="menu"
-              className="absolute top-0 flex w-max min-w-0 flex-col"
-              style={{ left: fusionOffsets.get(panelKey)?.left ?? 0, top: fusionOffsets.get(panelKey)?.top ?? 0 }}
+              tabIndex={-1}
+              className="flex w-max min-w-0 max-w-none flex-col overflow-auto"
+              style={{ maxWidth: "calc(100vw - 2px)", maxHeight: "calc(100dvh - 2px)" }}
             >
-              {renderFixedContextMenuItems(panel.items, panel.parentPath, renderOptions)}
+              {renderFixedContextMenuItems(wing.items, wing.parentPath, renderOptions)}
             </div>
-          );
-        })}
-      </div>
-    </ContextMenuChrome>,
+          </ContextMenuWingFrame>
+        );
+      })}
+    </>,
     floatingHost,
   );
 };

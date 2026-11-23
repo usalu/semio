@@ -53,7 +53,7 @@ fn the_view_command_channel_carries_exactly_the_host_dispatched_verbs() {
 fn every_bundled_example_renders_a_non_empty_read_only_canvas() {
     for source in crate::examples::grid2d::sources() {
         let document = <Grid2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&source.document()).expect("example parses");
-        preview::render(&document).unwrap_or_else(|error| panic!("{}: the viewer must render: {error:?}", source.id()));
+        preview::render(&document, semio_ui_locale::Locale::En).unwrap_or_else(|error| panic!("{}: the viewer must render: {error:?}", source.id()));
         assert!(preview::scene(&document).layers_json.len() > 64, "{}: the read-only canvas carries no layers", source.id());
     }
 }

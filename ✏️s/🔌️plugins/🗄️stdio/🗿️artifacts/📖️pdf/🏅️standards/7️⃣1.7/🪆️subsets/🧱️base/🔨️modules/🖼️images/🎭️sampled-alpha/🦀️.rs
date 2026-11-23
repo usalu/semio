@@ -166,6 +166,29 @@ impl<'a> PdfImagePreviewSamples<'a> {
         (self.color.width.max(grid.width), self.color.height.max(grid.height))
     }
 
+    /// 🫧️ Samples color and alpha bilinearly between the four nearest sample centres, weighting colour by opacity, the way MuPDF smooths a modest upscale; the borders clamp to the edge samples.
+    pub fn rgba_smooth(&self, u: f64, v: f64) -> [u8; 4] {
+        let (width, height) = self.dimensions();
+        let (px, py) = (u * f64::from(width) - 0.5, v * f64::from(height) - 0.5);
+        let (x0, y0) = (px.floor(), py.floor());
+        let (fx, fy) = (px - x0, py - y0);
+        let centre = |index: f64, count: u32| (index.clamp(0.0, f64::from(count) - 1.0) + 0.5) / f64::from(count);
+        let mut sums = [0.0; 4];
+        for (dy, wy) in [(0.0, 1.0 - fy), (1.0, fy)] {
+            for (dx, wx) in [(0.0, 1.0 - fx), (1.0, fx)] {
+                let [r, g, b, a] = self.rgba(centre(x0 + dx, width), centre(y0 + dy, height));
+                let weight = wx * wy * f64::from(a);
+                sums[0] += weight * f64::from(r);
+                sums[1] += weight * f64::from(g);
+                sums[2] += weight * f64::from(b);
+                sums[3] += weight;
+            }
+        }
+        if sums[3] <= 0.0 { return [0; 4]; }
+        let [r, g, b] = [0, 1, 2].map(|channel| (sums[channel] / sums[3]).round() as u8);
+        [r, g, b, sums[3].round().min(255.0) as u8]
+    }
+
     /// 🎨️ Samples color and alpha at a normalized image position.
     pub fn rgba(&self, u: f64, v: f64) -> [u8; 4] {
         if !(0.0..1.0).contains(&u) || !(0.0..1.0).contains(&v) { return [0; 4]; }

@@ -53,3 +53,17 @@ export function graphInventoryTextV1(round:number,outcomes:OutcomesV1,elapsedMil
 export function graphSettleTextV1(round:number,count:number,first:readonly string[],evicted:number,settled:boolean):TextV1{
   return both(settled?texts.churn:texts.contradiction,{round,count,first:first.join(", "),evicted});
 }
+
+const names=(list:readonly string[],limit=5)=>list.slice(0,limit).join(", ")+(list.length>limit?" (+"+(list.length-limit)+")":"");
+
+/** 🗣️ The bilingual line of one inventory follow-up round: the dirty owners that are observed again and for how many rounds in a row the same ones were dirty.
+ * @see ./🧪️tests/🧲️membership-follow */
+export function graphDirtyTextV1(round:number,paths:readonly string[],owners:readonly string[],streak:number):TextV1{
+  return both(texts.dirty,{round,paths:paths.length,first:names(paths,3),owners:owners.length,names:names(owners),streak});
+}
+
+/** 🗣️ The bilingual line of the inventory that sealed with volatile owners and paths.
+ * @see ./🧪️tests/🧲️membership-follow */
+export function graphVolatileTextV1(paths:readonly string[],owners:readonly string[]):TextV1{
+  return both(texts.volatile,{paths:paths.length,first:names(paths,3),owners:owners.length,names:names(owners)});
+}

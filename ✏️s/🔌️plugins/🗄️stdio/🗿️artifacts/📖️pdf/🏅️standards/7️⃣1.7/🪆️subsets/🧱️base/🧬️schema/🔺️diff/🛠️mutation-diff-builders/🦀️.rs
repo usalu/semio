@@ -16,14 +16,38 @@ fn page_patch(index: usize, diff: PdfPageDiff) -> PdfDiff {
 pub fn diff_insert_page(index: usize, page: PdfPage) -> PdfDiff {
     PdfDiff { pages: Some(PdfPagesDiff { added: vec![PdfPageAdded { index, page }], ..Default::default() }), ..Default::default() }
 }
-/// 📄️ Replaces page `index` with `page`: the page is removed and re-added at the same index.
+/// 📄️ Replaces page `index` with `page` as one sparse patch carrying only the fields the two pages differ in; nothing when they agree.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_replace_page(base: &PdfSnapshot, index: usize, page: &PdfPage) -> PdfDiff {
-    let Some(current) = base.pages.get(index) else { return PdfDiff::default() };
-    if current == page {
+    let Some(held) = base.pages.get(index) else { return PdfDiff::default() };
+    let extra = (held.extra != page.extra).then(|| PdfDictDiff {
+        removed: held.extra.iter().map(|entry| entry.key.clone()).collect(),
+        modified: Vec::new(),
+        added: page.extra.iter().enumerate().map(|(index, entry)| PdfDictAdded { index, key: entry.key.clone(), item: entry.value.clone() }).collect(),
+    });
+    let diff = PdfPageDiff {
+        media_box: (held.media_box != page.media_box).then_some(page.media_box),
+        crop_box: tri(&held.crop_box, &page.crop_box),
+        bleed_box: tri(&held.bleed_box, &page.bleed_box),
+        trim_box: tri(&held.trim_box, &page.trim_box),
+        art_box: tri(&held.art_box, &page.art_box),
+        rotate: (held.rotate != page.rotate).then_some(page.rotate),
+        user_unit: tri(&held.user_unit, &page.user_unit),
+        content: replace_indexed(&held.content, &page.content),
+        annotations: replace_indexed(&held.annotations, &page.annotations),
+        group: tri(&held.group, &page.group),
+        thumbnail: tri(&held.thumbnail, &page.thumbnail),
+        struct_parents: tri(&held.struct_parents, &page.struct_parents),
+        transition: tri(&held.transition, &page.transition),
+        duration: tri(&held.duration, &page.duration),
+        metadata: tri(&held.metadata, &page.metadata),
+        additional_actions: (held.additional_actions != page.additional_actions).then(|| page.additional_actions.clone()),
+        extra,
+    };
+    if diff == PdfPageDiff::default() {
         return PdfDiff::default();
     }
-    PdfDiff { pages: Some(PdfPagesDiff { removed: vec![index], added: vec![PdfPageAdded { index, page: page.clone() }], ..Default::default() }), ..Default::default() }
+    page_patch(index, diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_page(index: usize) -> PdfDiff {
@@ -338,7 +362,7 @@ pub fn sequence(first: PdfDiff, second: PdfDiff) -> PdfDiff {
 }
 
 /// 📐 Which optional page box a mutation addresses.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum PdfPageBox {

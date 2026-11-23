@@ -366,6 +366,7 @@ where
     P: Send,
     Mutation: Send,
 {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn close_step(&mut self, _body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit<ValueError>> {
             let grant = effect.grant();

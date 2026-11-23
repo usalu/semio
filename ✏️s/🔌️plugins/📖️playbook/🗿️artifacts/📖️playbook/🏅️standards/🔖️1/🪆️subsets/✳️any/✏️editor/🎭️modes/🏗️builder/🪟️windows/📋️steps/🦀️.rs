@@ -48,8 +48,8 @@ pub fn scene(spec: &PlaybookSpec) -> TableScene {
     TableScene::base(semio_framework_pack_json::to_json_string(&columns), semio_framework_pack_json::to_json_string(&rows))
 }
 
-pub fn render(spec: &PlaybookSpec) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    semio_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_STEPS, semio_ui_contract::SurfaceKind::Table, &scene(spec))
+pub fn render(spec: &PlaybookSpec, labels: &crate::editor::playbook::terminology::PlaybookPlayLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    semio_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_STEPS, semio_ui_contract::SurfaceKind::Table, &scene(spec), labels.surface_steps.as_str(), None)
 }
 
 #[cfg(test)]

@@ -5,7 +5,7 @@ fn empty_catalog() -> Arc<Catalog> {
 }
 
 fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../🏠️workspace/🔗️remote/🧪️tests/🧫️fixtures/🔣️authenticated-hub-descriptor-index.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏠️workspace/🔗️remote/🧪️tests/🧫️fixtures/🔣️authenticated-hub-descriptor-index.json")).unwrap();
     let ready = &fixture["cases"]["memberReady"];
     let page = semio_os_kernel::os_directory::DirectorySpaceAdministrationPageV1::parse_canonical_json(ready["responses"][1]["canonicalBody"].as_str().unwrap()).unwrap();
     let semio_os_kernel::os_directory::DirectorySpaceAdministrationPageV1::Author { space, members, documents, .. } = page else { panic!("author administration page fixture") };
@@ -19,7 +19,7 @@ fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
     let snapshot = AuthorizedDescriptorSnapshot { authenticated_user_id: "user-a".to_string(), session_expires_at_ms: i64::MAX, space, membership: members[0].clone(), observed_event_seq: 8, documents: HashMap::from([(scope, document)]) };
     let binding = Arc::new(HubRemoteBinding::new("https://hub.invalid", "space-a").unwrap());
     binding.install_snapshot_for_test(snapshot);
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text("../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
     let mut lease: semio_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest");
     lease.scope = DocumentScope::new("space-a", "shared-doc");
     let (descriptor, descriptor_bytes) = catalog_contract_descriptor();
@@ -60,7 +60,7 @@ fn authenticated_hub_workspace_resources_are_snapshot_only_scoped_and_fail_close
     assert_eq!(schema["artifactId"], "shared-doc");
     assert_eq!(schema["spaceId"], "space-a");
     assert!(schema["schema"].is_string(), "{schema_body}");
-    let lease:serde_json::Value=serde_json::from_str(fixture_text("../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).unwrap();
+    let lease:serde_json::Value=serde_json::from_str(fixture_text!("../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).unwrap();
     assert_eq!(schema["artifactKind"], lease["manifest"]["parentDialect"]["artifactKind"], "the document kind follows its authenticated parent dialect: {schema_body}");
     for uri in ["semio://artifact/shared-doc", "semio://artifact/shared-doc/validation"] {
         let error = workspace.read_resource(uri).unwrap_err();
@@ -115,7 +115,7 @@ fn authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallb
 /// past the bound; an app's session document is the hub document opened or edited last, a folder's the single one.
 #[test]
 fn a_hub_session_keeps_one_live_link_per_app_within_its_bound_and_edits_the_document_opened_last() {
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../🏠️workspace/🧪️tests/🧫️fixtures/🔗️hub-live-links.json")).expect("hub-live-links fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏠️workspace/🧪️tests/🧫️fixtures/🔗️hub-live-links.json")).expect("hub-live-links fixture parses");
     assert_eq!(fixture["limit"].as_u64(), Some(HUB_SESSION_LIVE_LINK_LIMIT as u64), "the fixture pins the session bound");
     let text = |value: &serde_json::Value| value.as_str().expect("string").to_string();
     for case in fixture["close"].as_array().expect("close cases") {

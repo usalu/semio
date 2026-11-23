@@ -467,5 +467,44 @@
         205
       ]
     }
+  },
+  "vortexHover": {
+    "why": "An unbound scene (no interaction domain) publishes `worldVortexHover` per marker; while the guest has not settled the first hover only the LATEST marker hovered since is held, so three overs send the first and then the last, never the middle one.",
+    "markers": [
+      {
+        "fullId": "vortex-a",
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "radius": 1
+      },
+      {
+        "fullId": "vortex-b",
+        "position": [
+          3,
+          0,
+          0
+        ],
+        "radius": 1
+      },
+      {
+        "fullId": "vortex-c",
+        "position": [
+          6,
+          0,
+          0
+        ],
+        "radius": 1
+      }
+    ],
+    "held": [
+      "vortex-a"
+    ],
+    "settled": [
+      "vortex-a",
+      "vortex-c"
+    ]
   }
 }

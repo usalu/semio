@@ -24,7 +24,7 @@ use crate::tree_kit::tree_window_indexed_rows;
 use crate::tree_kit::tree_window_rows;
 use semio_plugin_window_kits::WindowKit;
 use semio_plugin_interaction::UiAssemblyResult;
-use semio_plugin_window_transient::scene_surface;
+use semio_plugin_window_transient::{scene_surface, surface_name};
 use semio_plugin_interaction::ui_assembly_error;
 use semio_plugin_window_transient::window_kind_definition;
 
@@ -112,7 +112,6 @@ pub fn table_column_window_key(table_id: &str) -> String {
 }
 
 impl WindowKit for TableWindowKit {
-    type ViewModel = TableView;
     const KIND_ID: &'static str = "framework.window.table";
 
     fn window_kind() -> WindowKindDefinition {
@@ -138,14 +137,16 @@ impl WindowKit for TableWindowKit {
                 ))],
         )
     }
+}
 
+impl TableWindowKit {
     /// 📊️ Emits the renderer table contract both hosts read: `columnsJson` as `{id, label}` records
     /// and `rowsJson` as `{id, <column id>: cell}` records, keyed by column and row position.
     ///
     /// 🧬️ M2 fallout (terra-sdk-wire): `TableScene` moved to `semio-ui-scene` and its
     /// `base` constructor is now the E6 sync-by-decree shape (no suspension point) — the
     /// OUTER `build_table_scene` (unmoved, `ui_wgpu::wgpu`) stays a real `async fn`.
-    fn render(view: &TableView) -> UiAssemblyResult<BuiltNode> {
+    pub fn render(view: &TableView, locale: Locale) -> UiAssemblyResult<BuiltNode> {
         let columns: Vec<Value> = view.columns.iter().enumerate().map(|(index, label)| serde_json::json!({ "id": index.to_string(), "label": label })).collect();
         let rows: Vec<Value> = view
             .rows
@@ -163,13 +164,11 @@ impl WindowKit for TableWindowKit {
         let columns_json = serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into());
         let rows_json = serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into());
         let scene = semio_ui_scene::TableScene::base(columns_json, rows_json);
-        scene_surface(Self::KIND_ID, SurfaceKind::Table, &scene)
+        scene_surface(Self::KIND_ID, SurfaceKind::Table, &scene, surface_name(locale, "Table", "Tabelle"), None)
     }
-}
 
-impl TableWindowKit {
     /// ✏️ Emits typed text-input cells that commit artifact-owned actions with stable row and column ordinals.
-    pub fn render_editable(view: &TableView, controller_id: &str, editable_columns: &[EditableTableColumn]) -> UiAssemblyResult<BuiltNode> {
+    pub fn render_editable(view: &TableView, controller_id: &str, editable_columns: &[EditableTableColumn], locale: Locale) -> UiAssemblyResult<BuiltNode> {
         let columns: Vec<Value> = view.columns.iter().enumerate().map(|(index, label)| serde_json::json!({ "id": index.to_string(), "label": label })).collect();
         let rows: Vec<Value> = view
             .rows
@@ -202,11 +201,11 @@ impl TableWindowKit {
         let columns_json = serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into());
         let rows_json = serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into());
         let scene = semio_ui_scene::TableScene::base(columns_json, rows_json);
-        scene_surface(Self::KIND_ID, SurfaceKind::Table, &scene)
+        scene_surface(Self::KIND_ID, SurfaceKind::Table, &scene, surface_name(locale, "Table", "Tabelle"), None)
     }
 
     /// 🎯️ Emits editable cells whose static args carry stable row-specific addresses and revisions.
-    pub fn render_editable_cells(view: &TableView, controller_id: &str, editable_cells: &[EditableTableCell]) -> UiAssemblyResult<BuiltNode> {
+    pub fn render_editable_cells(view: &TableView, controller_id: &str, editable_cells: &[EditableTableCell], locale: Locale) -> UiAssemblyResult<BuiltNode> {
         let columns: Vec<Value> = view.columns.iter().enumerate().map(|(index, label)| serde_json::json!({ "id": index.to_string(), "label": label })).collect();
         let rows = view
             .rows
@@ -236,7 +235,7 @@ impl TableWindowKit {
         let columns_json = serde_json::to_string(&columns).map_err(|_| ui_assembly_error("table-window.editable-cell-columns"))?;
         let rows_json = serde_json::to_string(&rows).map_err(|_| ui_assembly_error("table-window.editable-cell-rows"))?;
         let scene = semio_ui_scene::TableScene::base(columns_json, rows_json);
-        scene_surface(Self::KIND_ID, SurfaceKind::Table, &scene)
+        scene_surface(Self::KIND_ID, SurfaceKind::Table, &scene, surface_name(locale, "Table", "Tabelle"), None)
     }
 }
 
@@ -373,7 +372,7 @@ pub fn editable_table_window_row_at(
                     path_label: path_label.into(),
                     line_label: line_label.into(),
                     column_label: column_label.into(),
-                })?
+                }, locale)?
             }
         } else if let Some(value) = UiText::try_from_str(&cell.value) {
             text(Label::try_from(value.as_str()).map_err(|_| ui_assembly_error("table-window.read-only-cell-label"))?)
@@ -382,7 +381,7 @@ pub fn editable_table_window_row_at(
                 .try_build()
                 .map_err(|_| ui_assembly_error("table-window.read-only-cell"))?
         } else {
-            TextWindowKit::render_read_only(&format!("table-value-{key}-{logical_column}"), &TextView { text: cell.value, language: None })?
+            TextWindowKit::render_read_only(&format!("table-value-{key}-{logical_column}"), &TextView { text: cell.value, language: None }, locale)?
         };
         children.push(child);
     }

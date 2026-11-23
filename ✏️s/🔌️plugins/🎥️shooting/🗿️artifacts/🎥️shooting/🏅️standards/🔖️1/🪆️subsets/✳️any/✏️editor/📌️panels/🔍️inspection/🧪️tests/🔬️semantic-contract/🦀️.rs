@@ -85,13 +85,13 @@ fn shooting_semantic_panels_match_the_json_oracle() {
             assert_eq!(binding["trigger"], "commit");
         }
     }
-    for node in [crate::editor::shooting::modes::edit::windows::scene::render(&snapshot, &cfg, "select").expect("editor scene"), crate::viewer::shooting::modes::view::windows::scene::render(&snapshot).expect("viewer scene")] {
+    for node in [crate::editor::shooting::modes::edit::windows::scene::render(&snapshot, &cfg, "select", semio_ui_locale::Locale::En).expect("editor scene"), crate::viewer::shooting::modes::view::windows::scene::render(&snapshot, semio_ui_locale::Locale::En).expect("viewer scene")] {
         let scene: semio_plugin::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("assembled scene");
         let frame: serde_json::Value = serde_json::from_str(scene.frame_json.as_deref().expect("active frame")).expect("independent frame oracle");
         assert_eq!(frame, vectors["frame"]);
         project(node);
     }
-    let node = crate::editor::shooting::modes::edit::windows::icon::render(&snapshot, &cfg).expect("icon scene");
+    let node = crate::editor::shooting::modes::edit::windows::icon::render(&snapshot, &cfg, semio_ui_locale::Locale::En).expect("icon scene");
     let semio_plugin::Component::Surface(props) = &node.component else { panic!("icon surface") };
     let scene: semio_plugin::IconRenderScene = semio_ui_scene::decode(props).expect("packed icon");
     let request: serde_json::Value = serde_json::from_str(&scene.request_json).expect("independent icon request oracle");

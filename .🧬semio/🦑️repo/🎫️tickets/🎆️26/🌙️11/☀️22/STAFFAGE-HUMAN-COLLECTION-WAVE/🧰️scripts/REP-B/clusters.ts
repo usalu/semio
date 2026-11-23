@@ -1,4 +1,4 @@
-/** 🧭 Worst mismatch clusters per view with the nearest drawn shapes and volume solids, optional in-memory patch (ops json). bun humansb-D-clusters.ts <asset> <scale> [view|all] [ops.json|-] [count] */
+/** 🧭️ Worst mismatch clusters per view with the nearest drawn shapes and volume solids and the drawn shapes that cover the point (after `humansb-D-clusters.ts` of the 2026-11-17 guard ticket), optional ops applied first. bun humansb-D-clusters.ts <asset> <scale> [view|all] [ops.json|-] [count] */
 import type { Asset } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/🟦️.ts";
 import { featureOf } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🧱️rules/🟦️.ts";
 import { evaluate } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
@@ -7,17 +7,7 @@ const [name, scaleArg, only, patch, cnt, px, py, pr] = process.argv.slice(2);
 const scale = Number(scaleArg);
 const FILE = name!.endsWith(".json") ? name! : `/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/${name}/🔣️.json`;
 const { asset } = (await Bun.file(FILE).json()) as { asset: Asset };
-if (patch && patch !== "-") {
-  const find = (list: any[], id: string) => list.find((x) => x.id === id);
-  for (const o of JSON.parse(await Bun.file(patch).text())) {
-    const shapes = (): any[] => (asset as any).representations[o.scale].geometry[o.view];
-    const solids = (): any[] => (asset as any).volumes[o.scale].body;
-    const [list, key] = o.op.startsWith("shape") ? [shapes(), "shape"] : [solids(), "solid"];
-    if (o.op.endsWith("-add")) list.splice(list.indexOf(find(list, o.after)) + 1, 0, o[key]);
-    else if (o.op.endsWith("-set")) Object.assign(find(list, o.id), o.set);
-    else list[list.indexOf(find(list, o.id))] = o[key];
-  }
-}
+if (patch && patch !== "-") (await import("./ops.ts")).applyOps(asset, JSON.parse(await Bun.file(patch).text()));
 const feature = featureOf(scale);
 const state: any = evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, { kind: "scale", scale: { denominator: scale } });
 const solids = worldSolids(asset, state.bones as never, scale).filter((w) => w.texture !== true);
@@ -27,7 +17,9 @@ const near = (view: any, P: any, R: number) => {
   for (const s of state.shapes[view]) { let m = Infinity; for (const ring of s.rings) for (let i = 0; i < ring.length - 1 + (s.closed ? 1 : 0); i++) m = Math.min(m, dseg(P, ring[i], ring[(i + 1) % ring.length])); if (m < R) d.push(`${s.shape.id}[${s.shape.bone}]${m.toFixed(3)}`); }
   const v: string[] = [];
   for (const w of solids) { let m = Infinity; for (let k = 0; k < w.indices.length; k += 3) { const t = [0, 1, 2].map((j) => { const i = w.indices[k + j]! * 3; return project(view, w.positions[i]!, w.positions[i + 1]!, w.positions[i + 2]!); }) as [any, any, any]; m = Math.min(m, distanceToTriangle(P, t)); } if (m < R) v.push(`${w.id}[${w.bone}]${m.toFixed(3)}`); }
-  return `drawn: ${d.join(" ")} | vol: ${v.join(" ")}`;
+  const inside = (ring: any[]): boolean => { let c = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) if ((ring[i].y > P.y) !== (ring[j].y > P.y) && P.x < ((ring[j].x - ring[i].x) * (P.y - ring[i].y)) / (ring[j].y - ring[i].y) + ring[i].x) c = !c; return c; };
+  const over = state.shapes[view].filter((s: any) => s.closed && s.rings.filter(inside).length % 2 === 1).map((s: any) => `${s.shape.id}[${s.shape.bone}${s.shape.solid ? ":" + s.shape.solid.kind : ""}]`);
+  return `drawn: ${d.join(" ")} | vol: ${v.join(" ")} | covering: ${over.join(" ")}`;
 };
 for (const view of VIEWPOINTS) {
   if (process.env.SHOW !== undefined) for (const s of state.shapes[view]) if (String(s.shape.id).includes(process.env.SHOW)) { const xs = s.rings.flat().map((p: any) => p.x), ys = s.rings.flat().map((p: any) => p.y); console.log(`  [shape ${view}] ${s.shape.id} x ${Math.min(...xs).toFixed(3)} ${Math.max(...xs).toFixed(3)} y ${Math.min(...ys).toFixed(3)} ${Math.max(...ys).toFixed(3)} closed=${s.closed} filled=${s.shape.filled}`); }

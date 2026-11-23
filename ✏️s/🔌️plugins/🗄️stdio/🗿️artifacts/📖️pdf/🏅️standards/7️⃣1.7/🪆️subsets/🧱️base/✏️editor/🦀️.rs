@@ -138,6 +138,10 @@ impl ArtifactEditor for Pdf17Editor {
     semio_s_artifact_stdio_pdf_view_lane::view_lane_stores!();
     semio_s_artifact_stdio_pdf_presence_lane::presence_lane_stores!();
 
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_plugin::__kernel::semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
+        semio_plugin::__kernel::semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.pdf.child-projection"), error.to_string()))
+    }
+
     fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
         semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
     }
@@ -207,6 +211,10 @@ impl ArtifactEditor for Pdf17Editor {
         }
     }
 
+    fn fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
+        crate::editor::page::pdf_fault_notices()
+    }
+
     fn command_id(command: &Self::Command) -> &'static str {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |native| match native {
             Pdf17EditorCommand::SetPage { .. } => "set-page",
@@ -231,7 +239,7 @@ impl ArtifactEditor for Pdf17Editor {
                 let edit = crate::editor::page::edit_from_action(other, args)?;
                 Ok(Pdf17EditorCommand::PageEdit { action: edit.action, payload: edit.payload })
             }
-            other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.pdf.unhandled-action"), format!("unknown pdf editor action '{other}'"))),
+            other => Err(crate::editor::page::refuse(crate::editor::page::PdfFault::UnhandledAction, format!("unknown pdf editor action '{other}'")).with_param("action", other)),
         })
     }
 
@@ -252,7 +260,7 @@ impl ArtifactEditor for Pdf17Editor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         match command {
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(command) => emit_page_command(command, doc.snapshot)
-                .unwrap_or_else(|| Err(Fault::from("PNG import requires its retained interactive job"))),
+                .unwrap_or_else(|| Err(crate::editor::page::refuse(crate::editor::page::PdfFault::PngImportJob, "PNG import requires its retained interactive job"))),
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
         }
     }
@@ -269,7 +277,7 @@ impl ArtifactEditor for Pdf17Editor {
                 &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
             .map(built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(crate::editor::page::pdf_editor_labels(view_state.locale).unknown_body.fill(&[("body", body_key)])),
         }
     }
 

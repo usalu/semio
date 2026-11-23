@@ -66,14 +66,14 @@ fn mesh_data_to_dsl(data: &semio_plugin::MeshData) -> semio_framework_value::Dsl
     semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::from(data.clone()))
 }
 
-pub fn render(_document: &CadSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(_document: &CadSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let camera = CadCamera::default();
     let camera_json = world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(&camera));
     let fallback_mesh = vec![semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(CAD_VIEW_FALLBACK_MESH_KIND.to_string())), ("data".to_string(), mesh_data_to_dsl(&mesh_from_kind(CAD_VIEW_FALLBACK_MESH_KIND)))])];
     let meshes_json = semio_framework_pack_json::to_json_string(&fallback_mesh);
     let instances_json = "[]".to_string();
     let selection_json = world3d_selection_json("rectangle", &[], None);
-    MeshWindowKit::render(&MeshView { camera_json, meshes_json, instances_json, selection_json })
+    MeshWindowKit::render(&MeshView { camera_json, meshes_json, instances_json, selection_json }, locale)
 }
 
 //#endregion 🔖️Render

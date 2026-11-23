@@ -22,7 +22,7 @@ test("the corpus is closed by its schema and the policy is the authored one",()=
  const ajv=new Ajv({strict:false});
  expect(ajv.validate(corpusSchema,corpus),JSON.stringify(ajv.errors)).toBe(true);
  expect(ajv.validate(corpusSchema,{...corpus,keys:[{toolchain:"x"}]})).toBe(false);
- expect(policy.namespace).toBe("semio.cargo.unit-cache/v2");expect(corpus.vectors.length).toBeGreaterThan(400);
+ expect(policy.namespace).toBe("semio.cargo.unit-cache/v3");expect(corpus.vectors.length).toBeGreaterThan(400);
 });
 
 test("every command line is parsed, bypassed, normalized and admitted like the Python implementation",()=>{

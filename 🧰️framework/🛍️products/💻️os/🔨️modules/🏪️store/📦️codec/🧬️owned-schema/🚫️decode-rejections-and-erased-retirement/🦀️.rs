@@ -44,6 +44,7 @@ where
     P: Send + Sync + 'static,
     Mutation: Send + Sync + 'static,
 {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
         fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(self.demands(body)?.unwrap_or(semio_framework_value::RetirementDemand{depth:1,..Default::default()}))}
 
 /// 🧱️ A retained decode page is a GRANULE: it is released whole or not at all, so a turn
@@ -174,6 +175,7 @@ where
     P: Send + Sync + 'static,
     Mutation: Send + Sync + 'static,
 {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit<ValueError>> {
         let grant = effect.grant();
         let empty = RetainedCloneProgress::default();

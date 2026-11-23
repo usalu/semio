@@ -240,11 +240,11 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         let labels = semio_plugin::resolve_labels::<crate::editor::rewriting::terminology::TrinityRewritingLabels>(view_state);
         let composed = || crate::standards::v1::subsets::any::content::composed(state, &doc.children).map_err(|fault| semio_plugin::PluginAssemblyError::new("trinity.rewriting.working-graph", fault.message));
         let root = match body_key {
-            TRINITY_REWRITING_PLAY_BODY_BEFORE => edit::windows::before::render(&composed()?, &window_config),
-            TRINITY_REWRITING_PLAY_BODY_AFTER => edit::windows::after::render(&composed()?, &window_config),
-            TRINITY_REWRITING_PLAY_BODY_LHS => edit::windows::lhs::render(state, &window_config),
-            TRINITY_REWRITING_PLAY_BODY_RHS => edit::windows::rhs::render(state, &window_config),
-            TRINITY_REWRITING_PLAY_BODY_JACK => edit::windows::jack::render(state, config),
+            TRINITY_REWRITING_PLAY_BODY_BEFORE => edit::windows::before::render(&composed()?, &window_config, view_state.locale),
+            TRINITY_REWRITING_PLAY_BODY_AFTER => edit::windows::after::render(&composed()?, &window_config, view_state.locale),
+            TRINITY_REWRITING_PLAY_BODY_LHS => edit::windows::lhs::render(state, &window_config, view_state.locale),
+            TRINITY_REWRITING_PLAY_BODY_RHS => edit::windows::rhs::render(state, &window_config, view_state.locale),
+            TRINITY_REWRITING_PLAY_BODY_JACK => edit::windows::jack::render(state, config, view_state.locale),
             TRINITY_REWRITING_PLAY_BODY_PARAMETERS => edit::windows::parameters::render(state, labels),
             TRINITY_REWRITING_PLAY_BODY_ARTIFACT => crate::editor::rewriting::panels::document::render(&composed()?, config, labels, &semio_plugin::TreeWindows::for_body(view_state, TRINITY_REWRITING_PLAY_BODY_ARTIFACT)),
             TRINITY_REWRITING_PLAY_BODY_CATALOGUE => crate::editor::rewriting::panels::catalogue::render(labels, &semio_plugin::TreeWindows::for_body(view_state, TRINITY_REWRITING_PLAY_BODY_CATALOGUE)),

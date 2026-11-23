@@ -1,3 +1,4 @@
+use crate::protocol::Inference as _;
 use crate::SHomeSnapshot;
 
 use crate::standards::v1::subsets::any::schema::inferences::*;

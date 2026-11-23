@@ -18,6 +18,7 @@ pub const LAYER_SETTLEMENT: &str = "settlement";
 pub const LAYER_LOADS: &str = "loads";
 pub const LAYER_CASES: &str = "cases";
 pub const LAYER_ANNOTATIONS: &str = "annotations";
+pub const LAYER_SITE: &str = "site";
 
 pub const STAGE_LAYERS: [(&str, &str, &str); 6] = [
     ("stage0", "Consolidation stage 1", "Konsolidationsstufe 1"),
@@ -28,7 +29,8 @@ pub const STAGE_LAYERS: [(&str, &str, &str); 6] = [
     ("stage5", "Consolidation stage 6", "Konsolidationsstufe 6"),
 ];
 
-const LAYERS: [(&str, &str, &str); 12] = [
+const LAYERS: [(&str, &str, &str); 13] = [
+    (LAYER_SITE, "Site", "Standort"),
     (LAYER_GROUND, "Ground strata", "Baugrundschichten"),
     (LAYER_WATER, "Groundwater", "Grundwasser"),
     (LAYER_FOOTINGS, "Spread footings", "Flächengründungen"),
@@ -534,7 +536,7 @@ pub const OUTCOME_FAMILIES: &[&str] = &[
 ];
 
 /// 📄️ The check families that belong to the document as a whole (design situation, governing combination, integrity and link rules, missing-entity notes); they select the global badge.
-pub const DOCUMENT_CHECKS: &[&str] = &["en1997.design.", "en1997.governing.", "en1997.integrity.", "en1997.gk.", "en1997.link.", "en1997.footing.", "en1997.gi-01.points", "en1997.pile.na", "en1997.slope.na", "en1997.upl.na", "en1997.wall.na"];
+pub const DOCUMENT_CHECKS: &[&str] = &["en1997.design.", "en1997.governing.", "en1997.integrity.", "en1997.gk.", "en1997.link.", "en1997.footing.", "en1997.gi-01.points", "en1997.gi-01.spacing", "en1997.pile.na", "en1997.slope.na", "en1997.upl.na", "en1997.wall.na"];
 
 /// 🧭️ Where a check is drawn: on one document row, or on the global badge.
 #[derive(Clone, Debug, PartialEq, Eq)]

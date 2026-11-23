@@ -1,0 +1,9 @@
+- Power invariants of `⚡️asset-power` (the loops over the whole catalog, run for the 24 by `REP-B/power.ts`): failing 0; 0 people whose manifest entry carries another power than the asset evaluates.
+- Rows (`REP-B/rows.ts`): rows changed: person-eating-standing person-drinking-coffee person-sweeping person-hanging-laundry person-signing painter-at-easel sunbather-on-towel; failing 0
+  - person-eating-standing: row changed (heightM 1.806 -> 1.798); manifest ok
+  - person-drinking-coffee: row changed (heightM 1.75 -> 1.745, widthM 0.547 -> 0.545); manifest ok
+  - person-sweeping: row changed (heightM 1.688 -> 1.679, widthM 1.39 -> 1.326); manifest ok
+  - person-hanging-laundry: row changed (widthM 0.857 -> 0.869); manifest ok
+  - person-signing: row changed (heightM 1.72 -> 1.716, widthM 0.565 -> 0.556); manifest ok
+  - painter-at-easel: row changed (widthM 1.657 -> 1.635); manifest ok
+  - sunbather-on-towel: row changed (widthM 1.833 -> 1.827); manifest ok

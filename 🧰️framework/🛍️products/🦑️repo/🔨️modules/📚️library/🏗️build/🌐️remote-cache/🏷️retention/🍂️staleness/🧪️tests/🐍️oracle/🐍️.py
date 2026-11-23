@@ -8,7 +8,7 @@ def digest(text):
 
 
 def judge(scenario):
-    entries = {row["key"]: row for row in scenario["entries"]}
+    entries = {row["key"]: dict(row, declared=row["declared"] and row.get("version", 2) == 2) for row in scenario["entries"]}
     tree = scenario["tree"]
     toolchains = scenario["toolchains"]
     retired = {digest(name) for name in scenario["retired"]}
@@ -17,6 +17,10 @@ def judge(scenario):
     for key, row in entries.items():
         for blob in row["refs"]:
             holders.setdefault(digest(blob), set()).add(key)
+    named = {}
+    for key, row in entries.items():
+        if row["declared"] and row.get("self") is not None:
+            named.setdefault(row["self"], set()).add(key)
     stale = {}
     for key, row in entries.items():
         if not row["declared"]:
@@ -43,6 +47,14 @@ def judge(scenario):
                     stale[key] = "extern"
                     changed = True
                     break
+            if key in stale:
+                continue
+            for name in row.get("units", []):
+                names = named.get(name, set()) - {key}
+                if names and all(other in stale for other in names):
+                    stale[key] = "extern"
+                    changed = True
+                    break
     young = lambda row: now - row["storedAt"] < grace
     result = {}
     roots = set()
@@ -51,19 +63,23 @@ def judge(scenario):
             result[key] = "undeclared"
         elif key in stale and not young(row):
             result[key] = "stale:" + stale[key]
-        elif row["sources"]:
+        elif row["sources"] or row.get("kind") == "stage-output":
             result[key] = "grace" if key in stale else "live"
             roots.add(key)
     reached, frontier = set(), list(roots)
     while frontier:
         row = entries[frontier.pop()]
+        found = set()
         for blob in row["externs"]:
-            for name in holders.get(digest(blob), set()):
-                other = entries[name]
-                if name in result or name in reached or not other["declared"] or other["sources"]:
-                    continue
-                reached.add(name)
-                frontier.append(name)
+            found |= holders.get(digest(blob), set())
+        for unit in row.get("units", []):
+            found |= named.get(unit, set())
+        for name in found:
+            other = entries[name]
+            if name in result or name in reached or not other["declared"] or other["sources"] or other.get("kind") == "stage-output":
+                continue
+            reached.add(name)
+            frontier.append(name)
     for key, row in entries.items():
         if key in result:
             continue

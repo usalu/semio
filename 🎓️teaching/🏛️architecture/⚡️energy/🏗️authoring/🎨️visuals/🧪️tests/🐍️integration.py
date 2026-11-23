@@ -109,9 +109,10 @@ class SceneIntegrationTest(unittest.TestCase):
         exec(compile(ast.Module(body=[winter_room, winter], type_ignores=[]), module.__file__, "exec"), scope)
         radiator, winter_room = scope["radiator"], scope["room"]
         metre = winter_room["h"] / CASES["physical"]["storey_m"]
-        expected = self.shared.staffage_height("shared-radiator-front-winter") * metre
+        expected = CASES["physical"]["radiator_height_m"] * metre
         self.assertAlmostEqual(radiator.height, expected, delta=CASES["physics"]["radiator_tolerance"] * expected)
-        self.assertAlmostEqual(radiator.get_bottom()[1], winter_room["y_f"], delta=0.02 * expected)
+        self.assertGreaterEqual(radiator.get_bottom()[1], winter_room["y_f"] - 0.02 * expected)
+        self.assertLess(radiator.get_bottom()[1] - winter_room["y_f"], 0.1 * metre)
         self.assertLessEqual(radiator.width, CASES["physical"]["radiator_width_m"] * metre + 1e-6)
         self.assertLess(radiator.get_top()[1], winter_room["win_lo"])
         self.assertAlmostEqual(radiator.get_left()[0], winter_room["x_l"], delta=0.05 * expected)

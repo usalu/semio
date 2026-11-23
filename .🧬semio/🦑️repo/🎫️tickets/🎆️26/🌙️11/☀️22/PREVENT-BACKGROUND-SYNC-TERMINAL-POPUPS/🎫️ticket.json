@@ -1,0 +1,24 @@
+{
+  "title": "Prevent Background Sync Terminal Popups",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Investigate and prevent recurring terminal windows from workfleet, replica, and other background synchronization on Windows while preserving synchronization.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2795"
+  },
+  "goal": "🎯runningrepo",
+  "sessions": [
+    "f202f82a-ddf4-48d5-b01f-23ddc974d2ce"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 16:38:25",
+      "author": "",
+      "system": "windows",
+      "client": "copilot-chat",
+      "checkpoint": "",
+      "prompt": "Investigate and prevent recurring terminal windows from workfleet, replica, and other background synchronization on Windows while preserving synchronization."
+    }
+  ]
+}

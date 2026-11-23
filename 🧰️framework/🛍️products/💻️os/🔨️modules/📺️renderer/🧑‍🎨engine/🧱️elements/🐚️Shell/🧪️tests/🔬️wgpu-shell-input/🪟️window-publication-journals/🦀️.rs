@@ -145,6 +145,7 @@ fn retire_scripted_window_publication_documents(shell: &mut ShellState) {
 
 #[test]
 fn required_window_body_refusal_holds_the_transfer_journal_then_recovers_once() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window publication fixture");
     let recovery = fixture["publicationOutcomes"]["recovery"].as_array().expect("recovery sequence");
@@ -175,6 +176,7 @@ fn required_window_body_refusal_holds_the_transfer_journal_then_recovers_once() 
 
 #[test]
 fn permanent_window_body_refusal_retires_the_journal_at_the_fixture_ceiling() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window publication fixture");
     let outcomes = &fixture["publicationOutcomes"];

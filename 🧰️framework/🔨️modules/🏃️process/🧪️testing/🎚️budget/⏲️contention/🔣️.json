@@ -21,6 +21,10 @@
       "en": "Busy host: load ${load} on ${cores} cores, so the ${budget} s test budget counts at 1/${stretch} speed (${used} s of it used after ${wall} s; a hung test is still stopped after at most ${ceiling} s).",
       "de": "Ausgelasteter Rechner: Last ${load} auf ${cores} Kernen, daher zählt das Testbudget von ${budget} s mit 1/${stretch} der Geschwindigkeit (${used} s davon nach ${wall} s verbraucht; ein hängender Test wird spätestens nach ${ceiling} s beendet)."
     },
+    "clamped": {
+      "en": "Busy host: the ${budget} s test budget would stretch to ${needed} s, but a run is capped at ${ceiling} s, so it runs with ${ceiling} s (budget clamped).",
+      "de": "Ausgelasteter Rechner: das Testbudget von ${budget} s würde auf ${needed} s gedehnt, ein Lauf ist aber auf ${ceiling} s begrenzt, daher läuft er mit ${ceiling} s (Budget begrenzt)."
+    },
     "expired": {
       "en": "Budget of ${budget} s used up after ${wall} s on the wall clock (host stretch ${stretch}, ${used} s counted).",
       "de": "Budget von ${budget} s nach ${wall} s Wanduhrzeit aufgebraucht (Rechnerdehnung ${stretch}, ${used} s gezählt)."

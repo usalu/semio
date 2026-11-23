@@ -1,4 +1,4 @@
-import {mkdir,readdir,readFile,rename,unlink,writeFile} from "node:fs/promises";
+import {appendFile,lstat,mkdir,readdir,readFile,rename,unlink,writeFile} from "node:fs/promises";
 import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import type {CasPolicyV1} from "../🧬️schema/🟦️.ts";
@@ -67,4 +67,66 @@ export async function holdCasPinsV1(root:string,policy:Pick<CasPolicyV1,"leaseMa
  for(const digest of digests){set.delete(digest);set.add(digest);}
  while(set.size>maximum)set.delete(set.values().next().value!);
  await publishHeldCasPinsV1(root,holder,hold,policy.leaseMaxMs);
+}
+
+/** ⏳️ The request header with which a client marks a blob as an input of one action (value `input`): the cache server leases it instead of treating it like a published output. */
+export const CAS_LEASE_HEADER_V1="x-semio-lease";
+
+/** ⏳️ Directory of the transient lease segments of the store: one append-only file per writer process, a line `{d,u}` per digest and lease expiry. */
+export const casTransientDirectoryV1=(root:string):string=>join(root,"v1","x");
+
+/** ⏳️ Leases blobs that are inputs of one action (not outputs): they are protected until `nowMs + ttlMs` (the action runs, plus a grace) and are the first the collector takes after that, unless something read them later. A new lease for a digest replaces the earlier one (renewal). Never pins: outputs are pinned, inputs only lease. */
+export async function leaseCasTransientV1(root:string,policy:Pick<CasPolicyV1,"transientLeaseMs">,writer:string,digests:readonly string[],nowMs:number,ttlMs:number=policy.transientLeaseMs):Promise<void>{
+ if(!HOLDER.test(writer))throw Error("Valid lease writer required / Gültiger Lease-Halter erforderlich");
+ for(const digest of digests)if(!DIGEST.test(digest))throw Error("Valid digest required / Gültiger Digest erforderlich");
+ if(digests.length===0)return;
+ const directory=casTransientDirectoryV1(root),until=nowMs+Math.min(Math.max(ttlMs,0),policy.transientLeaseMs*4);
+ await mkdir(directory,{recursive:true});
+ await appendFile(join(directory,writer+".jsonl"),[...new Set(digests)].map(d=>JSON.stringify({d,u:until})+"\n").join(""));
+}
+
+/** ⏳️ Reads the leases: the latest expiry per digest over every segment; unreadable lines are skipped. */
+export async function readCasTransientsV1(root:string):Promise<Map<string,number>>{
+ const leases=new Map<string,number>(),directory=casTransientDirectoryV1(root);let names:string[];
+ try{names=await readdir(directory);}catch{return leases;}
+ for(const name of names){
+  if(!name.endsWith(".jsonl"))continue;
+  let text:string;try{text=await readFile(join(directory,name),"utf8");}catch{continue;}
+  for(const line of text.split("\n")){
+   if(line==="")continue;
+   try{const row=JSON.parse(line) as {d?:unknown;u?:unknown};if(typeof row.d==="string"&&DIGEST.test(row.d)&&typeof row.u==="number")leases.set(row.d,Math.max(leases.get(row.d)??0,row.u));}catch{}
+  }
+ }
+ return leases;
+}
+
+/** 🧹️ Drops what no longer matters from segments nobody appended to for longer than the lease: lines of blobs that are gone (`exists` false) or whose lease ended and which were taken. A segment that ends up empty is removed. */
+export async function compactCasTransientsV1(root:string,policy:Pick<CasPolicyV1,"transientLeaseMs">,nowMs:number,exists:(digest:string)=>Promise<boolean>):Promise<number>{
+ const directory=casTransientDirectoryV1(root);let names:string[],removed=0;
+ try{names=await readdir(directory);}catch{return 0;}
+ for(const name of names){
+  if(!name.endsWith(".jsonl"))continue;
+  const path=join(directory,name);let info;try{info=await lstat(path);}catch{continue;}
+  if(nowMs-info.mtimeMs<policy.transientLeaseMs*4)continue;
+  let text:string;try{text=await readFile(path,"utf8");}catch{continue;}
+  const kept:string[]=[];
+  for(const line of text.split("\n")){
+   if(line==="")continue;
+   try{const row=JSON.parse(line) as {d:string};if(await exists(row.d))kept.push(line);else removed++;}catch{removed++;}
+  }
+  if(kept.length===0){await unlink(path).catch(()=>undefined);continue;}
+  if(kept.length===text.split("\n").filter(Boolean).length)continue;
+  const temporary=join(directory,`.${name}.${process.pid}`);
+  try{await writeFile(temporary,kept.join("\n")+"\n");await rename(temporary,path);}catch{await unlink(temporary).catch(()=>undefined);}
+ }
+ return removed;
+}
+
+/** ⏳️ A cheap stamp of the lease segments (names, sizes, modification times) that changes whenever a lease was appended, so a long collection reads the segments again only then. */
+export async function stampCasTransientsV1(root:string):Promise<string>{
+ const directory=casTransientDirectoryV1(root);let names:string[];
+ try{names=(await readdir(directory)).sort();}catch{return "";}
+ const parts:string[]=[];
+ for(const name of names)try{const info=await lstat(join(directory,name));parts.push(`${name}:${info.size}:${info.mtimeMs}`);}catch{}
+ return parts.join("|");
 }

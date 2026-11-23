@@ -41,10 +41,12 @@ use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 
 impl protocol::OpBinary for Fem2dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
+        Ok(protocol::os_pack::pack_rt::encode_pack_value(&semio_framework_value::ToValue::to_value(self)))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
+        let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "fem2d mutation", offset: 0, detail };
+        let value = protocol::os_pack::pack_rt::decode_pack_value(bytes).map_err(|error| malformed(error.to_string()))?;
+        semio_framework_value::FromValue::from_value(protocol::os_pack::pack_rt::renormalize_whole_number_floats(value)).map_err(|error| malformed(error.to_string()))
     }
 }
 }

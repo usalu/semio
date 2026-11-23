@@ -32,7 +32,7 @@ pub fn constant_fill_color(fill:&FillStyle)->Result<Option<[f64;4]>,&'static str
  Ok(match shape{Geometry::Linear{length:0.,..}|Geometry::Radial{radius:0.,..}=>Some(sample),_ if stops.len()<=1=>Some(sample),_=>None})
 }
 #[derive(semio_framework_value::RetireOwned)]
-pub struct GradientRamp{stops:Vec<GradientStop>,scratch:Vec<GradientStop>}
+pub struct GradientRamp{pub stops:Vec<GradientStop>,pub scratch:Vec<GradientStop>}
 impl GradientRamp{
  pub fn constant_color(&self)->Option<[f64;4]>{(self.stops.len()<=1).then(||self.stops.first().map_or([0.;4],|stop|stop.color))}
  pub fn sample(&self,position:f64)->Result<[f64;4],&'static str>{if position.is_nan(){return Err("Invalid gradient position")}let Some(first)=self.stops.first()else{return Ok([0.;4])};let right=self.stops.partition_point(|stop|stop.offset<=position);if right==0{return Ok(first.color)}let left=&self.stops[right-1];Ok(self.stops.get(right).map_or(left.color,|right|interpolate(left,right,position)))}
@@ -44,7 +44,7 @@ enum Stage{Geometry,Stops,Scratch,Sort,Complete}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct PreparedFillProgress{pub completed:usize,pub total:usize,pub work:u64,pub done:bool}
 #[derive(semio_framework_value::RetireOwned)]
-pub struct PreparedFill{input:FillStyle,geometry:Option<Geometry>,ramp:GradientRamp,stage:Stage,at:usize,width:usize,left:usize,i:usize,j:usize,k:usize,mid:usize,end:usize,work:u64,last_turn_work:u64,last_turn_semantic_work:u64,step_semantic_error:u64,demand:RetirementDemand,failed:Option<&'static str>,cancelled:bool}
+pub struct PreparedFill{input:FillStyle,geometry:Option<Geometry>,pub ramp:GradientRamp,stage:Stage,at:usize,width:usize,left:usize,i:usize,j:usize,k:usize,mid:usize,end:usize,work:u64,last_turn_work:u64,last_turn_semantic_work:u64,step_semantic_error:u64,demand:RetirementDemand,failed:Option<&'static str>,cancelled:bool}
 impl PreparedFill{
  pub fn new(input:FillStyle)->Self{Self{input,geometry:None,ramp:GradientRamp{stops:Vec::new(),scratch:Vec::new()},stage:Stage::Geometry,at:0,width:1,left:0,i:0,j:0,k:0,mid:0,end:0,work:0,last_turn_work:0,last_turn_semantic_work:0,step_semantic_error:0,demand:RetirementDemand{depth:1,..Default::default()},failed:None,cancelled:false}}
  fn setup(&mut self){let n=self.ramp.stops.len();self.i=self.left;self.mid=(self.left+self.width).min(n);self.j=self.mid;self.k=self.left;self.end=(self.left+2*self.width).min(n);}
@@ -75,6 +75,3 @@ impl PreparedFill{
 }
 semio_framework_value::artifact_retire_leaf!(Stage);
 physical_work_retirement!(PreparedFillRetirement,PreparedFill);
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

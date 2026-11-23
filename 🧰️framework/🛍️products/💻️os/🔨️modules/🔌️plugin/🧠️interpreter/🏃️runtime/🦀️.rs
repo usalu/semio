@@ -107,3 +107,6 @@ mod microsecond_clock_tests;
 mod owned_instance_open_tests;
 
 //#endregion 🧠️OwnedRuntime
+#[cfg(test)]
+#[path="🧪️tests/🪙️close/🦀️.rs"]
+pub(crate) mod original_close;

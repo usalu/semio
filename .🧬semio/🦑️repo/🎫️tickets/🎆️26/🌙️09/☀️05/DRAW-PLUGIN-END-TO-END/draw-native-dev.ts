@@ -33,7 +33,7 @@ const workingDirectory = dirname(script);
 const commandLine = ["repo", script, ...args].map(arg => JSON.stringify(arg)).join(" ");
 const mode = process.env.DRAW_NATIVE_BUILD_MODE ?? "prototype";
 if (mode !== "prototype" && mode !== "release") throw Error("Expected a registered Draw build mode");
-const maximumElapsedMilliseconds = stage.startsWith("component") ? 10_800_000 : 5_400_000;
+const maximumElapsedMilliseconds = stage.startsWith("serve") ? 86_400_000 : stage.startsWith("component") ? 10_800_000 : 5_400_000;
 const capabilities = {
   version: 1,
   buildMode: mode,
@@ -42,11 +42,11 @@ const capabilities = {
   artifactDirectory: resolve(generated),
   command: declaredNativeOwnerCommandV1(target, workingDirectory, commandLine),
   transport: { maximumBytes: 134_217_728, maximumLines: 65_536 },
-  child: { maximumElapsedMilliseconds, idleMilliseconds: 600_000 },
+  child: { maximumElapsedMilliseconds, idleMilliseconds: stage.startsWith("serve") ? 86_400_000 : 600_000 },
   network: { offline: true },
 };
 const log = await open(join(generated, "draw-native-" + stage + ".log"), "a");
-const deadline = Date.now() + 10_800_000;
+const deadline = Date.now() + Math.max(10_800_000, maximumElapsedMilliseconds);
 try {
   for (let attempt = 1; ; attempt++) {
     const budget = Math.min(capabilities.child.maximumElapsedMilliseconds, deadline - Date.now());
@@ -69,12 +69,16 @@ try {
       process.off("SIGINT", interrupt);
       process.off("SIGTERM", terminate);
     });
-    if (status !== 75 || attempt >= 6 || Date.now() >= deadline) {
+    const logFile = Bun.file(join(generated, "draw-native-" + stage + ".log"));
+    const tail = await logFile.slice(Math.max(0, logFile.size - 16_000)).text();
+    const tornArtifact = tail.includes("Original artifact bytes or identity changed");
+    const retry = status === 75 || (status !== 0 && tornArtifact);
+    if (!retry || attempt >= 6 || Date.now() >= deadline) {
       console.log("[DEBUG] Draw native", stage, status);
       process.exitCode = status;
       break;
     }
-    console.log("[DEBUG] Draw native", stage, "recapturing source after exit 75", attempt);
+    console.log("[DEBUG] Draw native", stage, tornArtifact ? "retrying after a torn artifact read" : "recapturing source after exit 75", attempt);
     await Bun.sleep(250 * attempt);
   }
 } finally {

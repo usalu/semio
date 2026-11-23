@@ -1,5 +1,6 @@
 /** 🔗️ The catalogue row activation and the semantic intent action channel tests. */
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { createElement } from "react";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { expect, it } from "vitest";
@@ -153,7 +154,7 @@ export function registerCatalogueRowAndIntentChannelTests(): void {
     }
   });
   it("resolves the projected workflow preview to its registered instance id", () => {
-    const oracle = JSON.parse(readFileSync(new URL("../../../../../../🖥️host/🧪️tests/🧫️fixtures/🚪️workflow-opening/🔣️.json", import.meta.url), "utf8"));
+    const oracle = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../../../../🖥️host/🧪️tests/🧫️fixtures/🚪️workflow-opening/🔣️.json"), "utf8"));
     expect(resolveHostSnapshotWidgetInstanceId(JSON.stringify(oracle.snapshot), oracle.opening.widgetId)).toBe(oracle.opening.instanceId);
   });
 

@@ -20,10 +20,12 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / CASES["root"]).i
 @cache
 def clip_sources():
     """📜 Every clip script under the teaching root, outside tests and tool folders."""
-    return sorted(
-        path for path in ROOT.rglob(CASES["file_name"])
-        if CASES["clip_folder"] in path.parts and not set(CASES["skip_folders"]) & set(path.parts)
-    )
+    skip, found = set(CASES["skip_folders"]), []
+    for directory, folders, files in os.walk(ROOT):
+        folders[:] = [name for name in folders if name not in skip]
+        if CASES["file_name"] in files and CASES["clip_folder"] in Path(directory).parts:
+            found.append(Path(directory, CASES["file_name"]))
+    return sorted(found)
 
 
 def ast_names(source):

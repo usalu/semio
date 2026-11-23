@@ -636,18 +636,19 @@ fn introduced_pulse_is_periodic() {
     assert!((pulse(0.125) - pulse(1.125)).abs() < 1e-5);
 }
 
-/// 🪟️ Gap baseline sits at y = bounds.y + cap_h - stroke
+/// 🪟️ The frame outline is one line along the top edge; each chip's baseline sits at y = bounds.y + cap_h
 ///
-/// Top of controls starts at x = bounds.x + bounds.w - controls_w
+/// The controls chip's left edge starts at x = bounds.x + bounds.w - controls_w
 #[test]
-fn window_silhouette_border_emits_notched_outline_segments() {
+fn window_frame_border_emits_the_outline_and_the_chips_inner_edges() {
     let mut draw = DrawList::default();
-    let silhouette = WindowSilhouette::from_measured_top(Rect::new(10.0, 20.0, 200.0, 100.0), 60.0, 40.0, 24.0);
-    push_window_silhouette_border(&mut draw, &silhouette, 2.0, Rgba::new(1.0, 0.0, 0.0, 1.0));
+    let frame = WindowFrame::from_measured_top(Rect::new(10.0, 20.0, 200.0, 100.0), 60.0, 40.0, 24.0);
+    push_window_frame_border(&mut draw, &frame, 2.0, Rgba::new(1.0, 0.0, 0.0, 1.0));
     let solids: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter().map(|instance| instance.rect)).collect();
-    assert!(solids.len() >= 8, "silhouette must paint every outline segment");
-    assert!(solids.iter().any(|r| (r[1] - (20.0 + 24.0 - 2.0)).abs() < 0.01 && r[0] >= 10.0 + 60.0 - 0.01), "gap baseline must sit under the cutout between tabs and controls");
-    assert!(solids.iter().any(|r| (r[0] - (10.0 + 200.0 - 40.0)).abs() < 0.01 && (r[1] - 20.0).abs() < 0.01), "controls cap top must be part of the silhouette");
+    assert_eq!(solids.len(), 8, "the four outline edges and the four chip inner edges");
+    assert!(solids.iter().any(|r| (r[1] - 20.0).abs() < 0.01 && (r[0] - 10.0).abs() < 0.01 && (r[2] - 200.0).abs() < 0.01), "the top outline runs the full frame width across the chip row");
+    assert!(solids.iter().any(|r| (r[1] - 44.0).abs() < 0.01 && (r[0] - 10.0).abs() < 0.01 && (r[2] - 60.0).abs() < 0.01), "the tabs chip baseline sits at the cap depth");
+    assert!(solids.iter().any(|r| (r[0] - (10.0 + 200.0 - 40.0)).abs() < 0.01 && (r[1] - 20.0).abs() < 0.01 && r[3] > 20.0), "the controls chip's left edge is part of the border");
 }
 //#endregion Pulse
 

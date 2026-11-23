@@ -155,7 +155,7 @@ impl JsonBorrowedWriteCursor {
         if self.phase==3{return Ok(None)}
         for _ in 0..maximum_units {
             let remaining=normal_remaining(grant,self.normal_step_progress)?;let demand=self.normal_step_demands_with_copy(source,remaining.maximum_copy_bytes)?;
-            if !normal_permit(demand,remaining)?{*unmet=Some(demand);break;}
+            if !normal_permit(demand,remaining,false)?{*unmet=Some(demand);break;}
             let next_work=self.last_work.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original JSON writer work overflow"))?;
             control.admit_turn_capacity(remaining.maximum_capacity_bytes)?;control.checkpoint()?;
             if self.phase==3{return Ok(None);}

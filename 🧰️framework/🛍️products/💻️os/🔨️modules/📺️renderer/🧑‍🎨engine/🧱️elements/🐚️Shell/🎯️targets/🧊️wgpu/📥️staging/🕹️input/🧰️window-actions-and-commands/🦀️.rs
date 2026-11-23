@@ -76,7 +76,7 @@ pub fn shell_keybinding_rows(overrides: &HashMap<String, String>) -> Vec<ShellKe
 
 //#endregion ⌨️ShellShortcutTable
 impl ShellInputState {
-    /// 🖱️ The cursor the active utility requests while the pointer is inside the active window silhouette — maps
+    /// 🖱️ The cursor the active utility requests while the pointer is inside the active window frame — maps
     /// `UtilityDefinition.cursor` onto a {@link ui_wgpu::wgpu::SemioCursor} (P5). `None` when no utility/cursor applies.
     pub fn utility_cursor_override(&self, x: f32, y: f32, docs: &DocumentState, windows: &WindowState) -> Option<semio_ui_wgpu_hosting::cursor::SemioCursor> {
         let session = docs.session.as_ref()?;
@@ -84,7 +84,7 @@ impl ShellInputState {
         let utility_id = windows.active_utility_for_window(window_id)?;
         let cursor_name = session.app.utilities.iter().find(|utility| utility.id == utility_id)?.cursor.as_deref()?;
         let geometry = &self.presented_input_geometry;
-        let visible = geometry.window_silhouettes.get(window_id).map_or_else(|| geometry.window_content_rects.get(window_id).is_some_and(|rect| rect.contains(x, y)), |silhouette| silhouette.contains(x, y));
+        let visible = geometry.window_frames.get(window_id).map_or_else(|| geometry.window_content_rects.get(window_id).is_some_and(|rect| rect.contains(x, y)), |frame| frame.contains(x, y));
         visible.then(|| semio_cursor_from_name(cursor_name))
     }
 }

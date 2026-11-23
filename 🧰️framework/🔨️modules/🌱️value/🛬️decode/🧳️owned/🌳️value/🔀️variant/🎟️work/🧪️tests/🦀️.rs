@@ -44,7 +44,7 @@ impl NativeReceiver<DslValue,u64> for Selector{
  let law:serde_json::Value=serde_json::from_str(include_str!("../📐️.json")).unwrap();
  for case in law["cases"].as_array().unwrap(){for cut in std::iter::once(None).chain(law["cancelCuts"].as_array().unwrap().iter().map(|v|Some(v.as_u64().unwrap()))){
   let mut bank=EffectBank::new(Wallet::from_profile(&law["stock"]));let source=driver::admit(&mut bank,DslValue::from(case["input"].clone()));
-  let spec=NativeVariantSpec{all:unsafe{NativeSchemaFields::native(all)},units:unsafe{NativeSchemaFields::native(units)},data:unsafe{NativeSchemaFields::native(data)},count:3,tag:case["tagged"].as_bool().unwrap().then_some(unsafe{NativeSchemaFields::native(tag)})};
+  let spec=NativeVariantSpec{all:unsafe{NativeSchemaFields::native(all)},units:unsafe{NativeSchemaFields::native(units)},data:unsafe{NativeSchemaFields::native(data)},statements:unsafe{NativeSchemaFields::native(all)},count:3,tag:case["tagged"].as_bool().unwrap().then_some(unsafe{NativeSchemaFields::native(tag)})};
   let(inner,heap)=crate::observe_retirement_allocations(||NativeVariantSelector::new(spec));assert_eq!(heap,(0,0));let mut selector=Selector{inner,closing:false,taken:false};
   let selected=driver::receive_cut(&mut selector,source.borrow(),&mut bank,4096,cut);
   if cut.is_none(){assert_eq!(selected,Ok(Some(case["selected"].as_u64().unwrap())));let result=selector.inner.result().unwrap();assert!(!result.direct);assert_eq!(serde_json::Value::from(source.borrow().get()),case["input"]);}else{assert!(matches!(selected,Ok(None)|Err(_)),"{selected:?}")}

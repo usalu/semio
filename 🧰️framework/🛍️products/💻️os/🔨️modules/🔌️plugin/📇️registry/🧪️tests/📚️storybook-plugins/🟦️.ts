@@ -78,7 +78,7 @@ test("wgpu glass-content story receives its plugin argument and reaches a declar
   page.on("pageerror", (error) => pageErrors.push(error));
   await page.goto(`iframe.html?id=${encodeURIComponent("🛠️framework🖥️os-wgpu--glass-content")}&viewMode=story`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("body")).not.toContainText("Couldn't find story matching");
-  await expect(page.getByTestId("wgpu-silhouette-visual-floor")).toBeVisible();
+  await expect(page.getByTestId("wgpu-frame-visual-floor")).toBeVisible();
   await expect(page.locator("body")).not.toContainText("unknown program");
   expect(pageErrors.map((error) => error.message)).toEqual([]);
 });

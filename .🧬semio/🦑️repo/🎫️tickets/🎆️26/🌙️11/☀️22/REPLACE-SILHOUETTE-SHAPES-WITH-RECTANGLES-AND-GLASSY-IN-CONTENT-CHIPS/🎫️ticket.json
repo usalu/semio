@@ -1,0 +1,1323 @@
+{
+  "title": "Replace Silhouette Shapes with Rectangles and Glassy In-Content Chips",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "The UI design system shifts away from the silhouette shape (rectangles with chips outside, producing gap shapes between elements) towards plain rectangles where chips sit inside the content, layered on top of it with a different, glassy background through which the content stays visible. Migrate the complete monorepo end to end: schemas, shared geometry, React, wgpu, TUI and print targets, all consumers, tests, fixtures, stories and docs, so UI elements compose without gap shapes.",
+  "summary": "Replaced the window silhouette model (chips outside, gap cutouts, polygon clip) with window-frame-geometry/v1 (one rectangle, content edge to edge, glass chips inside) across React, styling, wgpu renderer, OS Rust dock and Shell, TUI, print and products. Old names are gone except in absence-check tests. Verified: UI React 1629 passed (5 need Playwright Chromium), typechecks clean, Rust frame, border, renderer, paint-laws 110, CardStack 29, dock laws 76 pass. Open: mounted-layout 1 failure and Shell test crates chrome-4 (4) and input-1 (49) fail on other agents' in-flight job, value-arena and document-lease work; D3D12/Vulkan, Storybook, Python visuals and a live OS shell check were not run. See summary.md in the ticket folder.",
+  "goal": "🎯runningframework",
+  "sessions": [
+    "467708bf-7ed2-4a9b-9055-8ee851147b57",
+    "9eb0b10c-f6af-40a3-8530-273beb29ffb8"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 23:34:36",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "The UI design system shifts away from the silhouette shape (rectangles with chips outside, producing gap shapes between elements) towards plain rectangles where chips sit inside the content, layered on top of it with a different, glassy background through which the content stays visible. Migrate the complete monorepo end to end: schemas, shared geometry, React, wgpu, TUI and print targets, all consumers, tests, fixtures, stories and docs, so UI elements compose without gap shapes.",
+      "llm": "fable-5-2",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 08:11:33",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "508f457ff1e1b2e344827fe80c57ec46a04af505",
+      "summary": "Replaced the window silhouette model (chips outside, gap cutouts, polygon clip) with window-frame-geometry/v1 (one rectangle, content edge to edge, glass chips inside) across React, styling, wgpu renderer, OS Rust dock and Shell, TUI, print and products. Old names are gone except in absence-check tests. Verified: UI React 1629 passed (5 need Playwright Chromium), typechecks clean, Rust frame, border, renderer, paint-laws 110, CardStack 29, dock laws 76 pass. Open: mounted-layout 1 failure and Shell test crates chrome-4 (4) and input-1 (49) fail on other agents' in-flight job, value-arena and document-lease work; D3D12/Vulkan, Storybook, Python visuals and a live OS shell check were not run. See summary.md in the ticket folder.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🏪️stores🗃️📥️staging🗃️🧱️components💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧩️composition🗃️🚪️open🗃️📜️history🗃️🏭️factory💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧩️composition🗃️🚪️open🗃️📜️history💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🗣️dsl🗃️✨️derive⚙️🗂️schemadocumentindex"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧪️tests🗃️🧫️fixtures⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📦️codec🗃️🧬️ownedschema🗃️🚫️decoderejectionsanderasedretirement💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🎯️targets🗃️🧊️wgpu🗃️📥️staging🗃️🗨️viewoverlays🗃️💬️chromedialogandtooltips💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧪️tests🗃️🔬️pluginruntimepluginbuildercontractpart1x💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🧪️tests🗃️🧪️folderarchiverestore💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️⏱️profile💻🟨️d"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference🗃️📦️projectnodes🗃️🧪️tests🗃️⏱️heavybound💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🧪️tests🗃️🕸️graph🗃️🧭️registryfollow💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📡️spr🗃️🧵️channel🗃️📦️archive💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️🔀️shellactions🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🪪️graphstate🗃️🙋️wanted🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧾️document🗃️📜️history🗃️💧️hydration🗃️🧹️hydrationretirementdropandcompletion💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧪️tests🗃️📬️documentobserver💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🚀️offload💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️postalcarrier⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🚪️io🗃️💾️binary🗃️🪪️operationidentity🗃️📑️rows💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧩️composition🗃️👥️spacemember🗃️📥️lifted🗃️🏭️operation💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧩️composition🗃️🚪️open🗃️📜️history🗃️🗂️dictionary🗃️📇️index💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧠️interpreter🗃️🏃️runtime🗃️🧪️tests🗃️🪙️close💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🔗️read🗃️🧮️cursorledgerandvcsretirements💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🗃️document🗃️🧰️storereplacementinitializerandretirement💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧵️operationwire🗃️📦️output💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧠️interpreter🗃️🏛️instancestate💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🪪️extern💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🎮️oneitem🗃️📨️diagnostics💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧩️composition🗃️🚪️open💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧵️operationwire🗃️📦️output🗃️📋️operations💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️📄️docs🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧩️composition🗃️🚪️open🗃️🏭️operation🗃️📥️lifted🗃️🚪️open💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🚢️fleetstatus🗃️🧪️tests🗃️🧫️fixtures⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🔗️read🗃️🔒️registry🗃️♻️retirement💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🧪️tests🗃️🔗️chain⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🏗️initialization🗃️🔁️replay💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️👥️presence🗃️♻️retirement💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🎯️targets🗃️🧊️wgpu🗃️📥️staging🗃️🎛️prefs🗃️📎️localfolders💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remotecache🗃️🏷️retention🗃️🍂️staleness🗃️🧪️tests🗃️🧫️fixtures⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🚀️offload🗃️🧪️tests🗃️🗺️paths💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️📥️caller🗃️🧪️tests🗃️🌐️globals💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🫧️transient🗃️🧵️publication🗃️🧬️native💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️📖️texts⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🔗️read🗃️🗑️envelopegenesisanddisplacedsnapshotretirements💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧩️composition🗃️📬️publication🗃️🤝️group🗃️🔏️digest💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️⌨️command💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📬️oneitemowners🗃️📥️lifted🗃️📬️publication💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🚢️fleetstatus🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧩️composition🗃️🚪️open🗃️📜️history🗃️🗂️dictionary💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️👷️jobs🗃️📥️staging🗃️🧾️typedoperations💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build💻📜️script"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference💻🟨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️⚖️clash🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️📏️runningexample💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📦️codec🗃️🧬️ownedschema🗃️🧱️fields🗃️📥️lifted🗃️🧬️ownedschema🗃️🎟️fielddecoderregistryandemptyarrayauthority💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference🗃️📦️projectnodes🗃️♻️takenmemo🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🔁️replay🗃️🛑️cancel💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📡️spr🗃️🧵️channel🗃️📦️archive🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🔗️read🗃️📖️derivedsnapshotsreplaysandhistoryreadplan💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🕰️history🗃️📐️planning🗃️🎟️admission💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️👁️observation🗃️🔢️rowtable🗃️🧪️tests🗃️🪢️rowpool💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🎮️oneitem🗃️📬️publication💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📒️ledger🗃️📨️messages💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️♻️retirement🗃️📦️backing💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📒️ledger🗃️♻️retirement💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🚀️bootstrap🛅🛠️tools🗃️🔏️authorizers🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️📏️runningexample🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️⚙️engine🗃️🧱️storecomponents🗃️📥️lifted🗃️🏪️store🗃️🏗️storeownersretainedreadsandretirements💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🔀️morph🗃️🎭️stage💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️📦️volume🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️♾️infinite🗃️🎲️board🗃️🔌️ports🗃️➡️directed🗃️➕️normal🗃️🧭️host🗃️🧪️tests🗃️🔬️boardhost🗃️🪝️pointerplansandcommitturns💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧩️composition🗃️🗄️durablegroup🗃️📜️wire🗃️📥️lifted🗃️🗄️durablegroup🗃️🏗️stagedrootretirementandcommitphases💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🫧️ephemeral🗃️📢️publication🗃️🔁️transfer💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️👥️presence💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🧱️construction🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📒️ledger🗃️📥️lifted🗃️🔗️read💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️👥️peer💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️👥️presence🗃️🚫️rejection💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📒️ledger💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️📦️packages🛅🦀️rust💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🎚️config🗃️📥️retained🗃️🧹️hydrationretirementdropandcompletion💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🪢️members🗃️📥️staging🗃️🎞️mediatransfer💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🧪️tests🗃️🌍️crossroot💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️⚙️engine🗃️📥️lifted🗃️🏪️store🗃️🪞️delegatingaccessorsandreads💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🫧️ephemeral🗃️🏛️displacedownedroot💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remotecache🗃️🖥️server💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🗄️cas🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🛟️supervisor💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧵️operationwire🗃️📤️edit🗃️🚪️admission💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference💻🟨️d"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🔗️read🗃️📸️snapshotalias💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧪️testing🗃️🧭️prelude💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🗄️cas🗃️🧪️tests💻🐍️enforcement"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests⚙️🔣️staffageonly"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️🔺️polygonunion💾🥒️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧬️snapshotclone🗃️🚚️handoff💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🧪️tests🗃️🔗️chain💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️📥️staging🗃️🪜️maintenanceladder💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🏗️initialization🗃️🏠️owners💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🔁️replay🗃️🎮️operation🗃️🌱️derived💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🚪️io🗃️💾️binary🗃️🪪️operationidentity💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️🧪️tests🗃️🧫️fixtures⚙️hostoperationpolicy"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🔗️backbone🗃️♻️retirement💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️👥️presencebar🗃️🧪️tests🗃️🔬️wgpuunit💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🚪️io🗃️🧪️tests🗃️🔬️iomechanismlaws💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🏗️buildscript🗃️☁️offload🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️⏱️profile💻🟨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🚀️offload🗃️🧰️toolchain💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests💻🐍️integration"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️tennisplayer⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏃️process🗃️🦀️cargo🗃️🚪️launcher🗃️📥️capture🗃️🧪️tests⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🗄️cas🗃️⌨️command💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🧪️tests🗃️🕸️graph🗃️🩹️repairrounds💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🧪️testing🗃️🎚️levels🗃️🧪️tests🗃️⏲️stretch💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🧪️tests🗃️🔬️wgpushellinput🗃️🔎️quicksearchpalettekeyboard💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️🧊️renderer🗃️🎨️presentationraster💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🧪️tests🗃️🎨️wgputhemeeditorandaccessibility🗃️📐️passiveregionsandgeometry💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🎮️registry🗃️🧪️tests🗃️🔬️unit💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remotecache🗃️🏷️retention🗃️🍂️staleness💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🚀️offload🗃️📜️action💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️load🗃️🧠️admissionmemo💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🖼️posters💾ventilation05mechanischelueftung"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️💧️transmissionhumidity💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️elderlywithcane⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️personinwintercoat⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️sunbatherontowel⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🪡️listdelta💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️personwitharmsling⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️surveyorwithtotalstation⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🧪️tests🗃️🧳️portable💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🧪️testing🗃️🎚️levels🗃️🧪️tests🗃️⏲️stretch💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️🏠️workspace🗃️🧪️tests🗃️🔬️quick🗃️📖️artifactresourcesandprobeedits💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️⚙️engine🗃️🧳️bundle💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧩️composition🗃️🚪️open🗃️🏭️operation🗃️🫴️record🗃️🧪️tests💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🎞️scenes🗃️🎯️targets🗃️🧊️wgpu🗃️🗃️scenestate💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🪜️maintenanceladder💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📡️spr🗃️🧵️channel🗃️📦️archive🗃️🛬️decode🗃️🧪️tests💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🗂️suites💻📜️script"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🗄️cas🗃️🧬️schema💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️📏️runningexample⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️dancer⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🚀️offload🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️👁️observation🗃️📂️sourcenames🗃️🧪️tests🗃️🤖️machinelocalpaths💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️load🗃️🧭️registryfollow💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🏭️primaryenergy🗃️🔊️speech💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🧲️physics🗃️❓️quiz⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🧪️tests🗃️🔬️unit💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🏗️buildscript🗃️🔑️runkey💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📁️workspace💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🗄️cas🗃️📌️pins💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️📒️journal🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🖼️posters⚙️ventilation01warumlueften"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️🪧️shellviewchromeoverlays💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️⚛️reactor🗃️🎟️context🗃️🌉️call💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🧵️shard🗃️🎬️shardloopframeturnsandjobcontrol💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🪐️space🗃️🗿️artifacts🗃️🗂️collection🗃️🚪️io🗃️🪶️sqlite🗃️📸️snapshot🗃️🧪️tests💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️📥️source🗃️🔏️closure🗃️🏗️compiler💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️picnickersittingonground⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧵️operationwire🗃️🧳️replacement🗃️⚖️canonical💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🧭️routers🗃️💡️inferencerouter💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧪️testing🗃️🧪️artifactapplaws🗃️🎟️fixturedispatchstepsanddocumentloading💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚖️laws🗃️🔬️interactivityaudit🗃️🖥️mounted🗃️🔶️reconcile💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️🧮️calculation💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️constructionworkerwithshovel⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📜️spacehistory🗃️🚪️io🗃️🪶️sqlite🗃️📸️snapshot🗃️🛂️validation💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🖼️iconrenderhost🗃️🧪️tests🗃️🧫️fixtures🗃️🖼️framepresentation⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️👷️job🗃️📨️emission🗃️🏛️host💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🫧️transient🗃️🧵️publication💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🔌️appliances🗃️gasboiler⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧪️tests🗃️🧫️fixtures🗃️🧊️wgpu🗃️⌨️nativeentrypoint🗃️📇️catalog⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🚪️launch💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remotecache🗃️🏷️retention🗃️🍂️staleness🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️📥️caller💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🪢️slots🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️👥️internalgains💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️personqueuing⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️📑️multiviewsheet💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧫️fixtures🗃️✂️sectionviews⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🎬️mediatransporthost🗃️🎯️targets🗃️🧊️native🗃️🖼️presenter💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🧭️routers🗃️🎯️mutationrouter💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🪐️space🗃️🗿️artifacts🗃️🗂️collection🗃️🚪️io🗃️🪶️sqlite🗃️📸️snapshot🗃️🫴️receiving🗃️🧪️tests💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️☀️solarradiation💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧩️composition🗃️🚪️open🗃️🏭️operation🗃️🫴️record💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🏗️buildscript🗃️📦️runwire💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🚀️offload🗃️🧪️tests🗃️🔗️nativelink💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🗄️cas🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🚢️fleetstatus💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🧪️tests🗃️🕸️graph🗃️🌊️sealunderchurn💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️personcarryingshoppingbags⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📜️spacehistory🗃️🚪️io🗃️🪶️sqlite🗃️📸️snapshot🗃️🧪️tests🗃️🪙️close💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📦️codec🗃️🪶️snapshotcapability🗃️🛬️nativedecoding🗃️🧪️tests🗃️🚪️control💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️⏯️toolrun🗃️🎞️tick🗃️🎮️operations💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️♾️infinite🗃️🎲️board🗃️🔌️ports🗃️➡️directed🗃️🕸️dag🗃️🕸️graph🗃️📓️graphstatejournalandhits💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🧪️tests🗃️🎨️wgputhemeeditorandaccessibility🗃️🪞️mirroraddressliveness💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🧪️tests🗃️🔬️ownedinstanceopen💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️📨️dispatch🗃️📥️staging🗃️📣️hosteventrouting🗃️🧪️tests⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🧪️tests🗃️🎮️registry💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🚀️offload🗃️🌳️inputs💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🗄️cas🗃️🧪️tests🗃️📋️enforcement⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🖼️posters💾ventilation02luftmenge"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🗺️roadmap🗃️🧪️tests⚙️🔣️cases"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️👷️job💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️⏱️profile🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🗺️roadmap💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🎯️optimization🗃️🎬️clip🗃️🎨️visuals💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📜️spacehistory🗃️🚪️io🗃️🪶️sqlite🗃️📸️snapshot🗃️🚦️native🗃️🧪️tests🗃️🧾️jsonrecovery💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🎯️targets🗃️🧊️wgpu🗃️📥️staging🗃️🖐️pointer🗃️⌨️keyboardandpalette🗃️🔁️deferredmenus💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🎯️targets🗃️🧊️wgpu🗃️📥️staging🗃️🪝️windowactions🗃️🧾️panelrecords💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference🗃️📦️projectnodes🗃️♻️takenmemo💻🟨️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🖼️posters💾ventilation04natuerlichelueftung"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️cardstack🥼stacktest"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🌉️programbridge🗃️🎯️targets🗃️🧊️wgpu🗃️🧩️extensionsplice💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️load🗃️♻️passreuse💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️🏠️workspace🗃️🧪️tests🗃️🔬️quick🗃️📂️folderworkspaceandprobedocuments💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📜️spacehistory🗃️🚪️io🗃️🪶️sqlite🗃️📸️snapshot🗃️🚦️native💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🎬️mediatransporthost🗃️🎯️targets🗃️🧊️native🗃️🔈️audiooutput🗃️🍎️audioqueue💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🧱️construction🗃️📦️original💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🧾️typedoperations🗃️📥️staging🗃️📬️publication🗃️📬️typedoperationunit💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖨️describe🗃️🛠️emitter🗃️🥾️prerequisite💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🎮️registry🗃️🚀️resolveandlaunch💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🏗️buildscript💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🚀️offload🗃️🗺️paths💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️🏠️workspace🗃️🧪️tests🗃️🔬️quick🗃️🤖️headlessagentandpendingexchanges💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️🎛️shellprefs💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️🪟️winitapp🗃️🎞️framegenerationandoshost💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️load💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🗂️workspaces🗃️🦀️cargo💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🖼️posters💾ventilation01warumlueften"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip📃readme"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🎠️activation🗃️🧪️tests🗃️🎠️activation💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🗄️cas🗃️🚦️guard💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🗄️cas🗃️🧹️collector💻🧮️plan"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🖼️posters💾ventilation06uebergabe"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️basketballplayer⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️🏠️workspace🗃️🧪️tests🗃️🔬️quick🗃️🔐️authenticatedhubworkspace💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🖼️iconrenderhost🗃️🧪️tests🗃️🖼️framepresentation💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️👁️observation💻🟨️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️personeatingstanding⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🚀️offload🗃️🧪️tests🗃️🔗️nativelink🗃️🌐️cluster💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🗄️cas🗃️🧹️collector💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🖼️posters⚙️ventilation02luftmenge"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️photographerwithcamera⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️schoolchildwithbackpack⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧫️fixtures🗃️🔺️polygonunion⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📦️codec🗃️🪶️snapshotcapability🗃️🛫️nativeencoding🗃️🧪️tests🗃️🚪️control💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📦️codec🗃️🪶️snapshotcapability🗃️🪆️workspacereceiving💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️⚙️enginecanvas🗃️🧪️tests🗃️🕸️wgpunodegraph💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️🗨️shellviewoverlays💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🧪️tests🗃️🎨️wgputhemeeditorandaccessibility🗃️♿️accessiblenamesandactivation💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🔀️postturnrelay🗃️🗂️mountedregistrylifecycle💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️👁️observation🗃️🔢️rowtable💻🟨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference🗃️🔎️ownerdiscovery💻🟨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🔍️discovery🗃️📖️sourceaccess🗃️🦀️rustevidence💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️persondrinkingcoffee⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📦️codec🗃️📥️lifted🗃️🪆️workspacereceiving💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🗄️content💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🖼️posters⚙️ventilation03waermestromluft"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️workercarryingbox⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️⚙️engine🗃️🧱️storecomponents🗃️📥️lifted🗃️🏪️store🗃️📒️storelogoperations💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️👥️presence🗃️📸️snapshot🗃️🔤️json🗃️🧪️tests🗃️🔬️unit💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🚪️io🗃️📤️serialization🗃️📦️owned🗃️🧪️tests💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🧭️routers🗃️📮️plugincall💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🌳️commandtree🗃️🧪️tests🗃️🔬️unit💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️👁️observation🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📦️codec🗃️📸️nativesnapshot🗃️🫴️receiving🗃️🧪️tests💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🔀️postturnrelay🗃️⚙️mountedregistrypumpandreaper💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🧪️tests🗃️🧫️fixtures🗃️⚠️errorlayout⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖨️describe🗃️🛠️emitter💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧪️testing🗃️🧪️artifactapplaws🗃️🏗️registeredappconstructionandtypedoperationsettlement💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️personsigning⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧪️testing🗃️🧪️artifactapplaws🗃️👯️pairedappshistoryandconvergencelaws💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧪️testing🗃️🧪️artifactapplaws🗃️🔎️declaredverbprobing💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🏡️resident🗃️🧾️exitlog💻🟨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️🧮️derivednodes🗃️🧩️closurekinds🗃️🏭️walkfarm🗃️👷️child💻🟨️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🖼️posters🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️🏠️workspace🗃️🧪️tests🗃️🔬️quick🗃️📡️hubrelayandworkspaceguards💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🎯️targets🗃️🧊️wgpu🗃️📥️staging🗃️📂️docopen🗃️🧭️routenotfound💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧬️schema🗃️🔁️persistentlocal💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🏗️buildscript🗃️🧪️tests🗃️🔓️slotheld💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🖼️posters⚙️ventilation04natuerlichelueftung"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️painterateasel⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🎯️targets🗃️🧊️wgpu🗃️📥️staging🗃️🔀️actions🗃️🎬️shellactions🗃️🎯️dispatchaction💻🌐️open"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🚀️offload🗃️🧰️command🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🚢️fleetstatus🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🔨️modules🗃️🏗️structure💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🏛️ownership🗃️⚠️failure💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️📜️declaration🗃️🧩️app🗃️🛬️lifted🗃️♻️retirement💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖨️describe🗃️🛠️emitter🗃️🥾️prerequisite🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🛰️fleet🗃️🧪️tests🗃️🥀️stale💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🔀️morph🗃️🧪️tests🗃️🎭️stage💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🎯️targets🗃️🧊️wgpu🗃️📥️staging🗃️🪝️windowactions🗃️🧩️sessionandtopology💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️👷️job🗃️🏛️reserved💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚖️laws🗃️🔬️interactivityaudit🗃️🖥️mounted🗃️🟠️reserve💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚖️laws🗃️🔬️interactivityaudit🗃️🖥️mounted🗃️🟢️part4💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️🧮️derivednodes🗃️🧩️closurekinds🗃️🏭️walkfarm💻🟨️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️personhanginglaundry⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️📄️docs🗃️📥️staging🗃️🚪️ingress💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️📐️systemsizing💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️waiterwithtray⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🧭️routers🗃️🚪️iorouter💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️👁️observation💻🟨️d"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🔬️testfile💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️📒️journal💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️⌨️nativeentrypoint🗃️🧪️tests🗃️📇️catalog💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🛰️sidecar🗃️🪜️priority💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🧪️test🗃️🏃️execution🗃️🎬️scenario💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️barista⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️parentwithchildonshoulders⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️📜️declaration🗃️🧩️app🗃️🛬️lifted🗃️♻️retirement🗃️🌱️birth💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🗄️cas🗃️🗃️store💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🔨️modules🗃️🔺️polygon💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️personsweeping⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️standingdeskworker⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🕰️history🗃️🏁️replay💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🖼️render🗃️📥️staging🗃️🏷️reservedjobs💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏃️process🗃️🦀️cargo🗃️🚪️launcher🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🖼️posters⚙️ventilation06uebergabe"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️🧱️conduction💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️🏠️workspace🗃️🧪️tests🗃️🔬️quick🗃️🗂️guestdocumentcodec💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🚀️offload🗃️🧪️tests🗃️🌐️cluster💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🚢️fleetstatus🗃️📥️readers💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️🪀️shellviewpanels💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🧱️construction🗃️🏭️factory💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🛰️sidecar🗃️🧪️tests🗃️🪜️priority💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🪢️slots🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🖼️posters💾ventilation03waermestromluft"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🌳️vegetation🗃️figtree⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️personwithguidedog⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️standingviolinist⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️♾️infinite🗃️🎲️board🗃️🔌️ports🗃️➡️directed🗃️➕️normal🗃️🪣️fill💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📜️spacehistory🗃️🚪️io🗃️🪶️sqlite🗃️📸️snapshot🗃️🚦️native🗃️🧪️tests🗃️🪢️partialprojection💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚖️laws🗃️🔬️interactivityaudit🗃️🖥️mounted🗃️🖼️mountedsurface💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️personcarryingladder⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🛅📇️registry🗃️🎮️playground🗃️🔎️discovery💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧠️interpreter🗃️🏃️runtime🗃️🧪️tests🗃️🔬️ownedinstanceopen💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🚀️bootstrap🛅🛠️tools🗃️🔏️authorizers💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️persontakingselfie⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧪️tests🗃️🔬️interactivitymountedenginesurfacelifetime💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧠️interpreter🗃️🔌️ownedsemioboundary🗃️🌱️preparation💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🔏️key💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference🗃️📦️projectnodes🗃️♻️takenmemo💻🟨️d"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️load🗃️🧠️admissionmemo🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🪢️slots💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree📃readme"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧠️interpreter🗃️🏃️runtime🗃️🎛️operation🗃️📥️input💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🛰️sidecar🗃️🗄️cache💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️personcheckingwatch⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚖️laws🗃️🔬️interactivityaudit🗃️🖥️mounted🗃️🔸️part2💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference🗃️📦️projectnodes💻🟨️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️❓️quiz⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🪐️space🗃️🧪️tests🗃️🪶️sqlite🗃️📏️preflight💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🚀️bootstrap🛅🛠️tools🗃️🔏️authorizers🗃️🧪️tests🗃️🧭️ancestry💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🚢️status💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️👷️worker🗃️📁️folder🗃️✍️write💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🧵️shard🗃️🪪️identity💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️retainedcommand🗃️🔄️fulloperation💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🧹️gc🗃️🪢️supersession🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🏡️resident🗃️🧪️tests🗃️🧾️exitlog💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🧪️tests🗃️🕸️graph🗃️🧊️stalefacts💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📊️excel🗃️🎬️clip🗃️🎨️visuals💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching💻📜️script"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️workerwithjackhammer⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🎭️guestruntime🗃️🤖️mockguestruntime💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️📨️dispatch🗃️📥️staging🗃️📣️hosteventrouting💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️retainedcommand🗃️🔄️fulloperation🗃️📃️mounted🗃️🖼️ui💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remotecache🗃️🏷️retention🗃️🍂️staleness🗃️🧪️tests🗃️🐍️oracle💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🚢️fleetstatus🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🏗️bim🗃️🎬️clip🗃️🎨️visuals💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️👥️presence🗃️📸️snapshot🗃️🔤️json💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🖼️posters💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️courierwithhandtruck⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️wavingperson⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🛋️furniture🗃️cafechair⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️🪝️shellwindowactions💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧪️tests🗃️🔬️interactivitylivereconcile💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🎯️targets🗃️🧊️wgpu🗃️📥️staging🗃️🪀️viewpanels🗃️🖼️chromeframeandmainwindow💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️✂️sectionviews💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️🧊️renderer🗃️📮️mailboximpl🗃️⏳️pendingworkdeadlinesandspawns💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🏛️shellhost🗃️🧵️backboneworker🗃️📬️documenteventmessages💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖥️host🗃️🪞️schemaparity🗃️🧪️tests🗃️🔬️unit💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧠️interpreter🗃️🏗️instance🗃️▶️invocation🗃️🧭️control🗃️🧪️tests🗃️🧫️fixtures⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️📥️staging🗃️🚪️ingress💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🦗️grasshopper🗃️🎬️clip🗃️🎨️visuals💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️📨️runtimemailbox💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🛅📇️registry🗃️🔎️discovery🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧬️guestcontract💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🪐️space🗃️🧪️tests🗃️🪶️sqlite🗃️🫴️nativecaller💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️🎪️hostwinit🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🧱️construction🗃️🧺️sources💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️💾️store💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache🗃️🪪️extern🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️personstretching⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🧵️job🗃️🛬️receiving🗃️🎟️work💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️🏠️workspace🗃️🪪️headlessworkspacestate💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧪️testing🗃️🧪️artifactapplaws💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️💾️storage🗃️🔒️enforcement🗃️🏗️compiler🗃️🛠️nativecompiler🗃️🪟️windows🗃️🧬️lifetime💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🦀️cargo🗃️🗃️unitcache💻📜️script"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️🌤️summerstrategy💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests💻🐍️staffageonly"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️workerwithpalletjack⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️🏠️workspace🗃️🧪️tests🗃️🔬️quick🗃️🏁️childheadshubcommitandprobepack💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️🧮️scenetables💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️⏪️timetravel🗃️🧵️instance🗃️🏃️turndrivingandreplaysteps💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🪐️space🗃️🧪️tests🗃️🪶️sqlite🗃️🔬️oracle💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️🚪️admission💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🖼️posters⚙️ventilation05mechanischelueftung"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️⚖️heatingcomparison💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️❓️quiz⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🎮️registry🗃️🪶️entrydraft💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️📜️spacehistory🗃️🚪️io🗃️🪶️sqlite🗃️📸️snapshot🗃️🚦️native🗃️🧪️tests🗃️🧫️fixtures🗃️🪢️allocationrecovery⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🎯️targets🗃️🧊️wgpu🗃️🖐️shellpointer💻🦀️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🪑️objects🗃️charcoalgrill⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧪️tests🗃️🔬️targetswgpumountedlayoutunit💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🐚️shell🗃️🎯️targets🗃️🧊️wgpu🗃️📥️staging🗃️🗨️viewoverlays🗃️🔖️identityandtypes💻🦀️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-23 08:20:25",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Close the remaining verification gaps: fix the mounted-layout, shell-tests-chrome-4 and shell-tests-input-1 test failures, serve the OS shell natively for a live frame check, and run the Python visuals and Chromium-dependent tests where the project can provision them."
+    }
+  ]
+}

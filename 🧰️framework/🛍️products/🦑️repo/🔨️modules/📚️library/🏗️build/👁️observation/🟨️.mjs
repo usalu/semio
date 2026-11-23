@@ -620,11 +620,36 @@ function sourceAnalysisFailureV1(path,fact){
 
 /** 🔁️ What one validation round has read of the tree: typed listings (or the error they failed with) and hollow verdicts by path. A round is one consistent snapshot, so a directory is read once however many facts walk below it (the top level of a slice lists thousands of directories, each fact of each owner walked below every one of them); outside a round every read is fresh. The seal verifies outside any round. */
 const roundTreeReadsV1=new WeakMap();
-function roundReadsV1(){const round=inferenceValidationScopes.getStore();if(round===undefined)return undefined;let reads=roundTreeReadsV1.get(round);if(reads===undefined){reads={listings:new Map(),hollow:new Map()};roundTreeReadsV1.set(round,reads);}return reads;}
+function roundReadsV1(){const round=inferenceValidationScopes.getStore();if(round===undefined)return undefined;let reads=roundTreeReadsV1.get(round);if(reads===undefined){reads={listings:new Map(),hollow:new Map(),answers:new Map()};roundTreeReadsV1.set(round,reads);}return reads;}
+/** 🗂️ Answers one pure filesystem question (existence, type, module resolution) once per round: every owner of a round asks the same few thousand questions, and a stale answer is caught by the verification of the round's rows, which re-probes the disk without this cache. */
+function roundAnswerV1(key,run){
+ const reads=roundReadsV1();if(reads===undefined)return run();
+ let known=reads.answers.get(key);if(known===undefined){try{known={value:run()};}catch(error){known={error};}reads.answers.set(key,known);}
+ if(known.error!==undefined)throw known.error;return known.value;
+}
+/** 🧽️ Forgets what the current round remembers of the disk, so a retried observation reads it anew. */
+export function forgetRoundReadsV1(){const round=inferenceValidationScopes.getStore();if(round===undefined)return;roundTreeReadsV1.delete(round);roundDirectories.delete(round);}
 function typedListingV1(path){
  const reads=roundReadsV1();if(reads===undefined)return world.readdirSync(path,{withFileTypes:true});
  let known=reads.listings.get(path);if(known===undefined){try{known={entries:world.readdirSync(path,{withFileTypes:true})};}catch(error){known={error};}reads.listings.set(path,known);}
  if(known.error!==undefined)throw known.error;return known.entries;
+}
+const LISTED_INDEX_ENTRIES_V1=64,listedIndexesV1=new WeakMap();
+/** 📇️ Whether the round's listing of the parent directory already proves one recorded fact about a child (its type, its existence, or its absence), so the child is not probed once more: a directory whose listing is verified in the same call (`listed`, the paths of its `readdir` rows) is read once and answers every `lstat`, `exists`, `fileExists` and `directoryExists` row of its entries. Only a confirmation counts: a missing name that differs from a listed one by letter case, a link, any other node type, or a disagreement is left to the real probe, which stays the single authority. */
+function listedChildHoldsV1(kind,path,fact,listed){
+ const cut=Math.max(path.lastIndexOf("/"),path.lastIndexOf("\\")),parent=path.slice(0,cut),name=path.slice(cut+1);
+ if(cut<1||name===""||!listed.has(parent)||roundReadsV1()===undefined)return false;
+ let entries;try{entries=typedListingV1(parent);}catch{return false;}
+ let index;if(entries.length>LISTED_INDEX_ENTRIES_V1){index=listedIndexesV1.get(entries);if(index===undefined){index={exact:new Map(),folded:new Set()};for(const entry of entries){index.exact.set(entry.name,entry);index.folded.add(entry.name.toLowerCase());}listedIndexesV1.set(entries,index);}}
+ const entry=index===undefined?entries.find(row=>row.name===name):index.exact.get(name);
+ if(entry===undefined){
+  const lower=name.toLowerCase();
+  if(index===undefined?entries.some(row=>row.name.toLowerCase()===lower):index.folded.has(lower))return false;
+  return kind==="lstat"?fact==="!ENOENT":fact===false;
+ }
+ const type=nodeType(entry);
+ if(type!=="file"&&type!=="directory")return false;
+ return kind==="lstat"?fact===type:kind==="exists"?fact===true:kind==="fileExists"?fact===(type==="file"):fact===(type==="directory");
 }
 function roundHollowV1(path){
  const reads=roundReadsV1();if(reads===undefined)return hollowDirectoryV1(path,typedListingV1,join);
@@ -1004,7 +1029,7 @@ export const observedFs = Object.freeze({
   },
   existsSync(path) {
     const key = absolute(path);
-    const value = world.existsSync(path);
+    const value = roundAnswerV1("e\0"+key, () => world.existsSync(path));
     record("exists", key, value);
     return value;
   },
@@ -1019,7 +1044,7 @@ export const observedFs = Object.freeze({
     if (value.isDirectory()) directories.set(key, { value, row: canonicalObservationV1("lstat", key, "directory") });
     return value;
   },
-  readdirSync(path, options) {probeCountsV1.readdir++;const typed=options?.withFileTypes===true;return probe(typed?"readdir":"readdirNames",path,()=>world.readdirSync(path,options),value=>directoryFactV1(value,typed,path));},
+  readdirSync(path, options) {probeCountsV1.readdir++;const typed=options?.withFileTypes===true,shared=typed&&typeof path==="string"&&Object.keys(options).length===1;return probe(typed?"readdir":"readdirNames",path,shared?()=>typedListingV1(path).slice():()=>world.readdirSync(path,options),value=>directoryFactV1(value,typed,path));},
   realpathSync: Object.assign((path, options) => probe("realpath", path, () => world.realpathSync(path, options), (value) => String(value)), { native: (path, options) => probe("realpathNative", path, () => world.realpathSync.native(path, options), (value) => String(value)) }),
   async readFile(path, options) {
     let stamp;
@@ -1041,7 +1066,7 @@ const sourceAnalysisContractV1=compileJsonSchemaSubset(sourceAnalysisSchemaV1.$d
 export function observedRequireResolve(from, request) {
   const key = JSON.stringify([absolute(from), request]);
   try {
-    const resolved = createRequire(from).resolve(request);
+    const resolved = roundAnswerV1("r\0"+key, () => createRequire(from).resolve(request));
     record("resolve", key, canonicalResolutionV1(resolved));
     return resolved;
   } catch (error) { record("resolve", key, `!${error.code ?? "EUNKNOWN"}`); throw error; }
@@ -1051,8 +1076,8 @@ export function observedRequireResolve(from, request) {
 export function observedTypeScriptHost(sys) {
   return {
     ...sys,
-    fileExists: (path) => probe("fileExists",path,()=>sys.fileExists(path),value=>value),
-    directoryExists: (path) => probe("directoryExists",path,()=>sys.directoryExists(path),value=>value),
+    fileExists: (path) => probe("fileExists",path,()=>roundAnswerV1("f\0"+absolute(path),()=>sys.fileExists(path)),value=>value),
+    directoryExists: (path) => probe("directoryExists",path,()=>roundAnswerV1("d\0"+absolute(path),()=>sys.directoryExists(path)),value=>value),
     readFile: (path, encoding) => probe("typescriptText",path,()=>sys.readFile(path,encoding),value=>value===undefined?"!missing":sha256HexV1(value)),
     realpath: sys.realpath && ((path) => probe("typescriptRealpath",path,()=>sys.realpath(path),value=>value)),
     getDirectories: (path) => probe("directories",path,()=>sys.getDirectories(path),value=>directoryFactV1(value)),
@@ -1521,12 +1546,12 @@ export async function sweepSupersededObservationBlocksV1(directory,{headerPatter
 
 /**
  * 👯️ {@link current} without blocking: every recorded fact re-checked through the libuv pool, `limit` at a time; false at the first stale
- * fact. The worker limit is a positive safe integer. Existence, type and listing facts about entries of a directory in `stableDirectories` (absolute paths whose entry sets are proven
+ * fact (with `exhaustive` every row is verified and each stale one is reported to `onStale`, so the caller learns the complete set of changed rows of one pass). The worker limit is a positive safe integer. Existence, type and listing facts about entries of a directory in `stableDirectories` (absolute paths whose entry sets are proven
  * unchanged, e.g. by unchanged directory stamps) hold without a probe: an entry can only appear, vanish or change type by changing its parent.
  * Existence follows symbolic links, so a present entry is probed for every entry in `symlinks`, and for every entry when `symlinks` is `true`; an absent entry of a stable directory cannot appear without changing that directory.
  */
-export function observationsHold(observations, limit = OBSERVATION_LIMITS_V1.holdNestingLimit, stableDirectories = new Set(), symlinks = new Set(),signal,onStale,onVerified) {
-  return inferenceValidationScopes.run(inferenceValidationScopes.getStore() ?? new Map(), () => observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified));
+export function observationsHold(observations, limit = OBSERVATION_LIMITS_V1.holdNestingLimit, stableDirectories = new Set(), symlinks = new Set(),signal,onStale,onVerified,exhaustive=false) {
+  return inferenceValidationScopes.run(inferenceValidationScopes.getStore() ?? new Map(), () => observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified,undefined,exhaustive));
 }
 
 const asyncAdmissionChecksV1=new WeakMap();
@@ -1541,19 +1566,22 @@ export function observationsHoldWithinRoundV1(observations,limit,signal,onStale,
  });
 }
 
-async function observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified,sharedChecks) {
+async function observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified,sharedChecks,exhaustive=false) {
   signal?.throwIfAborted();
   if(!Number.isSafeInteger(limit)||limit<1)throw new RangeError("Positive observation worker limit required");
   observations = sharedChecks===undefined?rebaseRowsV1(observations):sharedChecks.rows(observations);
   const verdicts=sharedChecks?.verdicts,metadata=sharedChecks?.metadata;
   await settleClosureRowsV1(observations);signal?.throwIfAborted();
   const conflict=firstObservationConflictV1(observations);
-  if(conflict!==undefined){onStale?.(conflict.row);return false;}
-  let next = 0, stale = false;
+  if(conflict!==undefined){onStale?.(conflict.row);if(!exhaustive)return false;}
+  let next = 0, stale = conflict!==undefined;
+  const listed = new Set();
+  for (const row of observations) if (row.kind === "readdir") listed.add(row.path);
   const check = async ({ kind, path, fact }) => {
     if (machineLocalRowV1(kind, path)) return true;
     const loadedAnswer = loadedImplementationAnswerV1(kind, path, fact);
     if (loadedAnswer !== undefined) return loadedAnswer;
+    if (listed.size !== 0 && (kind === "lstat" || kind === "exists" || kind === "fileExists" || kind === "directoryExists") && listedChildHoldsV1(kind, path, fact, listed)) return true;
     if (stableDirectories.size !== 0) {
       const parent = path.slice(0, Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"))), absent = fact === false;
       if (kind === "lstat" && stableDirectories.has(parent) || kind === "exists" && stableDirectories.has(parent) && (absent || symlinks !== true && !symlinks.has(path)) || (kind === "fileExists" || kind === "directoryExists") && absent && stableDirectories.has(parent) || (kind === "readdir" || kind === "readdirNames") && stableDirectories.has(path)) return true;
@@ -1592,11 +1620,11 @@ async function observationsHoldInRoundV1(observations, limit, stableDirectories,
     if(verified>published){published=verified;onVerified(verified);}
   };
   const worker=async(_slot,index)=>{
-    while(!stale&&next<observations.length){
+    while((exhaustive||!stale)&&next<observations.length){
       signal?.throwIfAborted();
       if(performance.now()-since>=OBSERVATION_LIMITS_V1.yieldMilliseconds){
         since=performance.now();await new Promise(resolve=>setImmediate(resolve));
-        if(stale||next>=observations.length)break;
+        if(!exhaustive&&stale||next>=observations.length)break;
       }
       if(positions!==undefined)positions[index]=next;
       const row=observations[next++];

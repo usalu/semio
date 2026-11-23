@@ -15,7 +15,7 @@
     },
     {
       "maximumBytes": 1,
-      "maximumLines": 65537
+      "maximumLines": 16777217
     },
     {
       "maximumBytes": 1,

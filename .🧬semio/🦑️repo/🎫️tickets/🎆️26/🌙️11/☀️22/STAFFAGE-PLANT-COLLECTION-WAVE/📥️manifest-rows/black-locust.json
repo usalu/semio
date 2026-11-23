@@ -1,0 +1,56 @@
+{
+ "id": "black-locust",
+ "category": "vegetation",
+ "title": {
+  "en": "Black Locust",
+  "de": "Robinie"
+ },
+ "heightM": 19.78,
+ "widthM": 12.686,
+ "powerW": 0,
+ "poses": [
+  "calm",
+  "windy",
+  "storm",
+  "flowering"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "black-locust-symbol",
+  "tree-sign"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A 20 m black locust (Robinia pseudoacacia) with a leaning, deeply furrowed bole forked at 4.7 m, an open irregular crown of fine pinnate leaves about 13 m wide, and white flower racemes hanging below the leaves in the flowering pose.",
+  "de": "Eine 20 m hohe Robinie (Robinia pseudoacacia) mit geneigtem, tief gefurchtem Stamm, in 4,7 m gegabelt, einer offenen, unregelmäßigen Krone aus feinen gefiederten Blättern von etwa 13 m Breite und weißen Blütentrauben, die in der Blütenpose unter den Blättern hängen."
+ },
+ "completion": "authored"
+}

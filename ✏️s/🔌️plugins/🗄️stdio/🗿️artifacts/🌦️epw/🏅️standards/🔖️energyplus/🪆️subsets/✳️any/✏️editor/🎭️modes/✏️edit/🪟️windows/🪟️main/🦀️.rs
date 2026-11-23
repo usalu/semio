@@ -73,7 +73,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Real `EpwSnapshot -> BuiltNode`: one row per hourly record, all 35 spec columns — every column is
 /// a real `set-cell` edit target (`EpwEditorCommand::SetCell`, keyed by row index + column name).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &EpwSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &EpwSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let columns = EPW_TABLE_COLUMNS.iter().map(|column| column.to_string()).collect::<Vec<_>>();
     let rows = document.records.iter().map(|record| record.fields().iter().map(|field| field.to_string()).collect()).collect();
     let editable = document
@@ -94,7 +94,7 @@ pub fn render(document: &EpwSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNod
             Ok(EditableTableCell::new(row, column, "set-cell", UiValue::Map(arguments.finish())))
         })
         .collect::<semio_plugin::UiAssemblyResult<Vec<_>>>()?;
-    TableWindowKit::render_editable_cells(&TableView { columns, rows }, "s.stdio.epw@energyplus/*#editor", &editable)
+    TableWindowKit::render_editable_cells(&TableView { columns, rows }, "s.stdio.epw@energyplus/*#editor", &editable, locale)
 }
 //#endregion 🔖️Render
 

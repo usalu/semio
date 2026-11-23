@@ -2,7 +2,7 @@ import{spawnSync}from"node:child_process";
 import{realpathSync}from"node:fs";
 import imageSchema from"../../🧬️schema/🔣️.json" with { type: "json" };
 import{nativeImageInformationV1}from"../📥️information/🟦️.ts";
-const policy=imageSchema.definitions.ImageProtocol.const.reclaim.availability;
+const policy=imageSchema.definitions.ImageProtocol.const.reclaim.availability,refresh=policy.refresh;
 /** 📏️ The slack within which a volume figure and the container figure still count as the same number. */
 export function nativeImageAvailabilityToleranceV1(containerFreeBytes:number):number{return Math.max(policy.toleranceMinimumBytes,Math.floor(containerFreeBytes/policy.toleranceDivisor));}
 /** ⚖️ Decides the bytes a mounted image volume can really take: the volume figure, unless the container reports more by more than the tolerance, which means the volume sampled the host free space when it mounted and never refreshed it; then the container figure, capped by the host free space when known. Pure and language-agnostic. */
@@ -18,6 +18,21 @@ export function nativeImageRealAvailableBytesV1(volumeAvailableBytes:number,cont
 export function nativeImageVolumeLatchedV1(volumeAvailableBytes:number,containerFreeBytes:number|undefined,hostFreeBytes:number):boolean{
  return volumeAvailableBytes===0&&containerFreeBytes!==undefined&&containerFreeBytes>nativeImageAvailabilityToleranceV1(containerFreeBytes)&&hostFreeBytes>=policy.latchedHostFreeBytes;
 }
+/** 🔄️ Decides whether a detach and attach cycle would cure the volume figure: the effective availability exceeds what the volume reports by more than the tolerance, so the volume sampled the host free space when it attached. Pure and language-agnostic. */
+export function nativeImageRefreshDueV1(volumeAvailableBytes:number,containerFreeBytes:number|undefined,hostFreeBytes?:number):boolean{
+ return containerFreeBytes!==undefined&&nativeImageEffectiveAvailableBytesV1(volumeAvailableBytes,containerFreeBytes,hostFreeBytes)-volumeAvailableBytes>nativeImageAvailabilityToleranceV1(containerFreeBytes);
+}
+/** 🔎️ Decides whether a volume figure is low enough to be worth asking the container: below the probe bound and below the host free space by more than the tolerance. Pure and language-agnostic. */
+export function nativeImageRefreshProbeDueV1(volumeAvailableBytes:number,hostFreeBytes:number):boolean{
+ return volumeAvailableBytes<refresh.probeBelowBytes&&hostFreeBytes-volumeAvailableBytes>nativeImageAvailabilityToleranceV1(hostFreeBytes);
+}
+/** 🧭️ Names how an operating system escalates a refused detach of a quiescent image, or null where no volume of the repository can go stale. */
+export function nativeImageRefreshMechanismV1(platform:string):Readonly<{forceUnmountProgram:string;forceUnmountArguments:readonly string[]}>|null{
+ const row=(refresh.mechanisms as Record<string,{forceUnmountProgram:string;forceUnmountArguments:readonly string[]}>)[platform==="win32"?"windows":platform];
+ return row===undefined?null:Object.freeze({forceUnmountProgram:row.forceUnmountProgram,forceUnmountArguments:Object.freeze([...row.forceUnmountArguments])});
+}
+/** ⏳️ Names how long a cycle that did not cure the figure waits before another may start. */
+export const nativeImageRefreshRetryMillisecondsV1:number=refresh.retryMilliseconds;
 /** 🧯️ Names the closed arguments of the forced detach that only a latched volume may use, because its transactions can never flush and a polite detach reports busy forever. See https://ss64.com/mac/hdiutil.html */
 export const nativeImageForceDetachArgumentsV1:readonly string[]=Object.freeze([...policy.forceDetachArguments]);
 /** 🔎️ Reads the free bytes of the APFS container from the plist of `diskutil info -plist <mount>`; undefined when the document has none. */

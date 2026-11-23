@@ -221,7 +221,7 @@ pub async fn render_registered_fixture_app_over<PA:semio_plugin_reactor_app::Plu
     fixture_end_turn(cx)?;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if cx.should_yield(){break}
-        if app.render(body_key,snapshot_override_json,view,cx).await?.is_some(){
+        if Box::pin(app.render(body_key,snapshot_override_json,view,cx)).await?.is_some(){
             let source=app.original_render_tree_source(cx)?;
             let tree=source.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture render readiness lost its stationary tree"))?;
             let mut remaining=FIXTURE_TREE_MAX_NODES;
@@ -240,7 +240,7 @@ where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+S
     let _arena = super::FixtureUiArena::admit();
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if cx.should_yield(){break}
-        if app.render(body_key,None,view,cx).await?.is_some(){
+        if Box::pin(app.render(body_key,None,view,cx)).await?.is_some(){
             let source=app.original_render_tree_source(cx)?;
             let tree=source.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture render readiness lost its stationary tree"))?;
             let observed=observe(&tree.root);

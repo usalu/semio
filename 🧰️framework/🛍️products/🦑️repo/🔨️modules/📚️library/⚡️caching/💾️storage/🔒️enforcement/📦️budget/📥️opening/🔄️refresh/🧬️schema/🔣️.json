@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defs": {
+    "SkipReason": {
+      "enum": ["platform", "retirement-pending", "backing-unavailable", "not-mounted", "fresh", "measurement-unavailable", "retry-later", "lease-timeout", "lease-failed", "lease-release-failed", "refresh-failed"]
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "kind", "outcome"],
+      "properties": {
+        "version": {"const": 1},
+        "kind": {"const": "repository-image-refresh"},
+        "outcome": {"enum": ["skipped", "refreshed"]},
+        "reason": {"$ref": "#/$defs/SkipReason"},
+        "beforeAvailableBytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "afterAvailableBytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "cured": {"type": "boolean"}
+      },
+      "if": {"properties": {"outcome": {"const": "skipped"}}},
+      "then": {"required": ["reason"], "not": {"anyOf": [{"required": ["cured"]}]}},
+      "else": {"not": {"required": ["reason"]}, "required": ["cured"]}
+    },
+    "Scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "platform", "imageExists", "mounted", "volumeAvailableBytes", "hostFreeBytes", "leaseHeld", "msSinceLastCycle", "afterVolumeAvailableBytes", "outcome", "calls"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "platform": {"enum": ["darwin", "linux", "win32"]},
+        "imageExists": {"type": "boolean"},
+        "mounted": {"type": "boolean"},
+        "retirementPending": {"type": "boolean"},
+        "volumeAvailableBytes": {"type": "integer", "minimum": 0},
+        "containerFreeBytes": {"type": "integer", "minimum": 0},
+        "hostFreeBytes": {"type": "integer", "minimum": 0},
+        "leaseHeld": {"type": "boolean"},
+        "msSinceLastCycle": {"type": ["integer", "null"]},
+        "afterVolumeAvailableBytes": {"type": "integer", "minimum": 0},
+        "outcome": {"enum": ["refreshed", "refreshed-uncured", "platform", "retirement-pending", "backing-unavailable", "not-mounted", "fresh", "measurement-unavailable", "retry-later", "lease-timeout"]},
+        "calls": {"type": "array", "items": {"type": "string"}, "description": "The effects in order: `lease`, `release-reserve`, `detach`, `attach`, `ensure-reserve`, `unlease`."}
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenarios"],
+      "properties": {
+        "scenarios": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/Scenario"}}
+      }
+    }
+  }
+}

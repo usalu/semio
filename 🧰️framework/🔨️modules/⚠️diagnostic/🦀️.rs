@@ -88,6 +88,11 @@ impl FaultCode {
     pub fn new(code: impl Into<String>) -> Self {
         Self(code.into())
     }
+
+    /// 🔤️ The stable code text.
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
 }
 
 impl From<&'static str> for FaultCode {

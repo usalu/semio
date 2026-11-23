@@ -48,8 +48,8 @@ pub fn window_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document_json: &str, envelope: &Puzzle2dScene) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    edit::canvas::render_canvas(document_json, envelope, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID)
+pub fn render(document_json: &str, envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    edit::canvas::render_canvas(document_json, envelope, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID, labels.window_selection.as_str())
 }
 
 pub fn engagement(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dLabels) -> WindowEngagement {

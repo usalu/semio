@@ -8,4 +8,6 @@ export CARGO_UNSTABLE_FEATURE_UNIFICATION=true CARGO_RESOLVER_FEATURE_UNIFICATIO
 cd /Users/ueli/Documents/semio/🌎️hub || exit 1
 cargo build -p semio-hub-stdio-component -p semio-hub-stdio-office-component --lib --target wasm32-wasip2 --profile wasm-prototype \
  --config 'profile.wasm-prototype.inherits="dev"' --config 'profile.wasm-prototype.opt-level="s"' --config 'profile.wasm-prototype.codegen-units=16' --config 'profile.wasm-prototype.lto="thin"' --config 'profile.wasm-prototype.incremental=false' "$@"
-echo "exit $?"
+cargo_exit=$?
+echo "exit $cargo_exit"
+exit $cargo_exit

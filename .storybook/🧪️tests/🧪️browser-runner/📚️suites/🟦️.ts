@@ -8,7 +8,6 @@ import "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/�
 import "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/📚️storybook-plugins/🟦️.ts";
 import "../../../../✏️s/🔌️plugins/🧩️puzzle/🧪️tests/◻️storybook-2d/🟦️.ts";
 import "../../../../✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧊️storybook-spatial/🟦️.ts";
-import "../../../../✏️s/🧪️tests/🎭️storybook-end-to-end/🟦️.ts";
 import "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🎨️storybook/🟦️.ts";
 import "../../../../🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️storybook-new-stories/🟦️.ts";
 import "../../../../🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️storybook-uncovered-components/🟦️.ts";

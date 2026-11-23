@@ -17,6 +17,7 @@ import {incrementalComparisonsV1,incrementalExpectedV1,incrementalLabelV1,increm
 import {incrementalBazelObservationV1,incrementalBazelSpawnsV1,incrementalNxObservationV1} from "../👁️observers/🟦️.ts";
 import {incrementalDetachMountsV1,incrementalMountsInsideV1,incrementalRefreshV1,incrementalChildEnvironmentV1,incrementalCliArgumentsV1,incrementalCliPortsV1,incrementalCloneV1,incrementalDisposableV1,incrementalInsideV1,incrementalPlanTasksV1,incrementalRunScenarioV1,incrementalRunV1,incrementalSelectV1,incrementalSliceFromGraphV1,type IncrementalAdapterV1,type IncrementalHostV1,type IncrementalPortsV1} from "../🏃️runner/🟦️.ts";
 import {incrementalArgumentsV1,incrementalDefaultRootV1,incrementalTrackedFilesV1,incrementalOptionNamesV1,renderIncrementalPlanV1,runIncrementalCommandV1,type IncrementalCommandPortsV1} from "../⌨️command/🟦️.ts";
+import {incrementalBootstrapV1,incrementalFleetProvisionV1} from "../⌨️command/🟦️.ts";
 import catalog from "../../⚙️operations/🔣️catalog.json" with {type:"json"};
 import {bazelCommandPlanV1,bazelTaskReportOptionsV1} from "../../🔧️tools/🏗️bazel/🧭️commands/🟦️.ts";
 import {testScratchRootV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
@@ -394,7 +395,7 @@ test("the command lists, prepares, plans, runs and discards through its ports wi
   expect(stages).toEqual([]);expect(existsSync(join(copy,script))).toBe(false);
   await runIncrementalCommandV1(live,["incremental","prepare","--root="+copy],ports());
   expect(existsSync(join(copy,script))).toBe(true);expect(stages.some(stage=>stage.startsWith("clone:"))).toBe(true);
-  expect(log.map(line=>line.split(" repo ")[1])).toEqual(["--tool=nx preflight","--tool=nx tools setup all","--tool=nx dependencies sync --all","--tool=nx tools setup all"]);
+  expect(log.map(line=>line.split(" repo ")[1])).toEqual(["--tool=nx preflight","--tool=nx dependencies sync --all","--tool=nx tools setup all"]);
   stages.length=0;log.length=0;await runIncrementalCommandV1(live,["incremental","prepare","--root="+copy],ports());
   expect(stages.some(stage=>stage.startsWith("refresh:"))).toBe(true);expect(stages.some(stage=>stage.startsWith("clone:"))).toBe(false);expect(log.length).toBe(4);
   await expect(runIncrementalCommandV1(live,["incremental","plan","--scenario=lib-none","--root="+copy],ports())).rejects.toThrow("Unknown scenario");
@@ -541,3 +542,26 @@ test("a prepared root without a recorded inventory is refreshed without removing
  }finally{rmSync(base,{recursive:true,force:true});}
 });
 
+
+test("the declared prepare stages sync dependencies before tools set up, and an order that violates a requirement is refused",()=>{
+ const stages=schema.definitions.Policy.const.bootstrap,at=(id:string)=>stages.findIndex(stage=>stage.id===id);
+ expect(stages.map(stage=>stage.command.join(" "))).toEqual(["preflight","dependencies sync --all","tools setup all"]);
+ expect(at("dependencies")).toBeLessThan(at("tools"));
+ expect(stages.find(stage=>stage.id==="tools")!.requires).toContain("dependencies");
+ expect(incrementalBootstrapV1().map(command=>command.join(" "))).toEqual(stages.map(stage=>stage.command.join(" ")));
+ expect(()=>incrementalBootstrapV1([...stages].reverse())).toThrow("runs before");
+});
+
+test("prepare provisions the fleet facts, machine record and identity keys into the clone and withholds the admin and origin keys",async()=>{
+ const live=mkdtempSync(join(tmpdir(),"fleet-live-")),clone=mkdtempSync(join(tmpdir(),"fleet-clone-")),f=schema.definitions.Policy.const.fleet,id=join(live,f.directory,f.identityDirectory);
+ try{
+  mkdirSync(id,{recursive:true});
+  for(const name of f.files)writeFileSync(join(live,f.directory,name),name);
+  for(const name of ["admin.key","origin.key","cache-read.key","cache-write.key","submit.key","worker.key"])writeFileSync(join(id,name),name);
+  const copied=await incrementalFleetProvisionV1(live,clone,new AbortController().signal);
+  expect(copied.map(path=>path.slice(clone.length+1)).sort()).toEqual([...f.files.map(name=>join(f.directory,name)),...["cache-read.key","cache-write.key","submit.key","worker.key"].map(name=>join(f.directory,f.identityDirectory,name))].sort());
+  expect(readFileSync(join(clone,f.directory,"machine.json"),"utf8")).toBe("machine.json");
+  for(const name of f.withheld)expect(existsSync(join(clone,f.directory,f.identityDirectory,name))).toBe(false);
+  expect(await incrementalFleetProvisionV1(join(live,"none"),mkdtempSync(join(tmpdir(),"fleet-none-")),new AbortController().signal)).toEqual([]);
+ }finally{rmSync(live,{recursive:true,force:true});rmSync(clone,{recursive:true,force:true});}
+});

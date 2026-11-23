@@ -171,7 +171,7 @@ pub fn scene(document: &Grid2dSnapshot) -> Canvas2dScene {
     Canvas2dScene::base(centre_x, centre_y, 1.0, layers_json(document))
 }
 
-pub fn render(document: &Grid2dSnapshot) -> UiAssemblyResult<BuiltNode> {
-    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene(document))
+pub fn render(document: &Grid2dSnapshot, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene(document), semio_plugin::surface_name(locale, "Preview", "Vorschau"), None)
 }
 //#endregion 🔖️Render

@@ -94,6 +94,7 @@ async fn result_animation_tick_advances_the_clock_and_rearms_while_playing() {
     assert_eq!(clock(&mut app), None, "the clock only exists once a frame landed");
     assert_eq!(tick(&mut app).await, 1, "a playing tick owes the next frame");
     assert_eq!(app.snapshot().expect("snapshot"), before, "the playback clock never touches the document");
+    drop(before);
     let running = clock(&mut app).expect("a frame landed in the transient");
     assert!((running.phase - ANIMATION_TICK_SECONDS).abs() < 1e-9, "{running:?}");
     let state = published(&mut app).await;

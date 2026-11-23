@@ -210,8 +210,10 @@ impl FrameTransaction {
         if !matches!(self.phase, AppFrameTransactionPhase::InputEvents) && app.frame_actions.staged_batch_remaining().is_some() {
             let transfer = {
                 let app = &mut *app;
-                let interaction = app.interaction.as_mut().expect("runtime interaction state is worker-owned");
-                transfer_frame_input_action(&mut interaction.input, &mut app.frame_actions)
+                match app.interaction.as_mut() {
+                    Some(interaction) => transfer_frame_input_action(&mut interaction.input, &mut app.frame_actions),
+                    None => Err("runtime interaction state lost its worker owner"),
+                }
             };
             return match transfer {
                 Ok(FrameInputActionStep::Pending | FrameInputActionStep::Transferred) => AppFrameTransactionStep::Pending,
@@ -244,7 +246,12 @@ impl FrameTransaction {
                         }
                     }
                 }
-                let (step, progress) = match self.scene_camera_cursor.as_mut().unwrap().step(grant) {
+                let Some(cursor) = self.scene_camera_cursor.as_mut() else {
+                    runtime.record_frame_fault("camera original cursor lost its retained owner");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
+                let (step, progress) = match cursor.step(grant) {
                     Ok(receipt) => receipt,
                     Err(error) => {
                         let _ = context.consume_retained(error.retained_progress());
@@ -280,7 +287,12 @@ impl FrameTransaction {
                     self.phase = AppFrameTransactionPhase::Build;
                     return AppFrameTransactionStep::Pending;
                 };
-                self.brush_mesh_cursor = self.brush_mesh_cursor.saturating_add(1);
+                let Some(next) = self.brush_mesh_cursor.checked_add(1) else {
+                    runtime.record_frame_fault("frame brush mesh cursor exceeded index authority");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
+                self.brush_mesh_cursor = next;
                 let action = infinite_world::world::step_world3d_brush_mesh_announce(&mut world.session, &mut world.scene, &mut world.assets);
                 if let Some(action) = action {
                     if let Err(_action) = app.frame_actions.try_push(action) {
@@ -323,8 +335,10 @@ impl FrameTransaction {
             AppFrameTransactionPhase::InputEvents => {
                 let transfer = {
                     let app = &mut *app;
-                    let interaction = app.interaction.as_mut().expect("runtime interaction state is worker-owned");
-                    transfer_frame_input_action(&mut interaction.input, &mut app.frame_actions)
+                    match app.interaction.as_mut() {
+                        Some(interaction) => transfer_frame_input_action(&mut interaction.input, &mut app.frame_actions),
+                        None => Err("runtime interaction state lost its worker owner"),
+                    }
                 };
                 match transfer {
                     Ok(FrameInputActionStep::Pending | FrameInputActionStep::Transferred) => {

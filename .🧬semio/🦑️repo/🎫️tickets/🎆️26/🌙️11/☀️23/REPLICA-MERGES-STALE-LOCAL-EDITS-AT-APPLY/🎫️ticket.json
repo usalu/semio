@@ -1,0 +1,58 @@
+{
+  "title": "Replica Merges Stale Local Edits at Apply",
+  "emoji": "🔀",
+  "status": "closed",
+  "description": "Root fix: when the replica applies an inbound event on a path holding an unpublished local edit made on a stale view (written \u003e30 s after the event), it moves the local bytes to .cache/f/lost and agents lose live work during catch-up (g1-m05 2026-11-23: NativeReceive derive edits lost 3x). Instead, merge three-way at apply time: base = the replica's known (last applied) version from the blob store, ours = local file, theirs = inbound. A clean merge is written and published by the normal publish path; only a real conflict keeps the inbound and moves the local bytes to lost. Own diff3 implementation (no runtime deps), schema-first, language-agnostic test vectors validated against git merge-file.",
+  "summary": "The replica apply now three-way merges a losing local edit with the inbound put. The base is the content it last applied at the path, read from its blob and sha-verified; the new module is 🔁️replica/🔀️merge (mergeTextV1, no dependencies). A clean merge is written over the fleet content (event `merged`) and publishes as a local edit once caught up. Conflicts, binary files, sides over 8 MiB or 4096 line edits, and a missing base keep the old rule: fleet content stays, local bytes go to lost, `stale-base` (now emitted after the install). Schema-first vectors: all 18 agree with git merge-file, plus 300 seeded random cases where every clean merge equals git. The replica scenario fixture gained a merge scenario (passes on Windows). A POSIX fleet test was added but not run here (no Linux bun). The README documents rule (3). The live daemon on g1-m05 runs the new code. Report: replica-apply-merge.md.",
+  "goal": "🎯runningrepo",
+  "sessions": [
+    "080aa383-63cf-46ae-8510-6ff6e9d09e44"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-23 06:12:32",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Root fix: when the replica applies an inbound event on a path holding an unpublished local edit made on a stale view (written \u003e30 s after the event), it moves the local bytes to .cache/f/lost and agents lose live work during catch-up (g1-m05 2026-11-23: NativeReceive derive edits lost 3x). Instead, merge three-way at apply time: base = the replica's known (last applied) version from the blob store, ours = local file, theirs = inbound. A clean merge is written and published by the normal publish path; only a real conflict keeps the inbound and moves the local bytes to lost. Own diff3 implementation (no runtime deps), schema-first, language-agnostic test vectors validated against git merge-file.",
+      "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 08:14:13",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "508f457ff1e1b2e344827fe80c57ec46a04af505",
+      "summary": "The replica apply now three-way merges a losing local edit with the inbound put. The base is the content it last applied at the path, read from its blob and sha-verified; the new module is 🔁️replica/🔀️merge (mergeTextV1, no dependencies). A clean merge is written over the fleet content (event `merged`) and publishes as a local edit once caught up. Conflicts, binary files, sides over 8 MiB or 4096 line edits, and a missing base keep the old rule: fleet content stays, local bytes go to lost, `stale-base` (now emitted after the install). Schema-first vectors: all 18 agree with git merge-file, plus 300 seeded random cases where every clean merge equals git. The replica scenario fixture gained a merge scenario (passes on Windows). A POSIX fleet test was added but not run here (no Linux bun). The README documents rule (3). The live daemon on g1-m05 runs the new code. Report: replica-apply-merge.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧪️tests🗃️🧫️fixtures⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️⌨️command💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️⚖️clash🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️📖️texts⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree📃readme"
+        }
+      ]
+    }
+  ]
+}

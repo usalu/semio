@@ -291,7 +291,7 @@ pub fn edit_selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
 /// CSS/JSX to port for their exact geometry) has anything to port from, so caret/selection styling
 /// (`theme.accent`) is this pass's own independent choice, kept consistent with every control's
 /// focus border, which is `theme.selected` (`--active-base`) because React's border compositor strokes a
-/// `:focus-visible` cell's silhouette in `var(--active-base)` (`🧱️elements/🗂️WindowChrome/shared-border.ts`
+/// `:focus-visible` cell's outline in `var(--active-base)` (`🧱️elements/🗂️WindowChrome/shared-border.ts`
 /// `sharedBorderStroke`); `NodeFlags::FOCUS_VISIBLE` makes the ring keyboard-only on both renderers.
 pub fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let focused = focus_ring_visible(flags);

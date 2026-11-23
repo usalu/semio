@@ -14,7 +14,7 @@ import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/m
 
 const panelHostingSource = readModuleTreeSource(join(import.meta.dirname, "..", "..", "🧱️elements", "🏛️ShellHost", "📋️panel-hosting", "🟦️.tsx"));
 const documentTransferTabsSource = readModuleTreeSource(join(import.meta.dirname, "..", "..", "🧱️elements", "🏛️ShellHost", "📤️document-transfer-tabs", "🟦️.tsx"));
-const shellActionsSource = readModuleTreeSource(join(import.meta.dirname, "..", "..", "🧱️elements", "🏛️ShellHost", "🖱️shell-actions", "🟦️.ts"));
+const inputFunnelSource = readModuleTreeSource(join(import.meta.dirname, "..", "..", "🧱️elements", "🏛️ShellHost", "🖱️shell-actions", "🧭️input-funnel", "🟦️.ts"));
 const shellTreeSource = Object.values(import.meta.glob<string>(["../../🧱️elements/🏛️ShellHost/🟦️.tsx", "../../🧱️elements/🏛️ShellHost/**/🟦️.ts", "../../🧱️elements/🏛️ShellHost/**/🟦️.tsx", "!../../🧱️elements/🏛️ShellHost/🧪️tests/**"], { query: "?raw", import: "default", eager: true })).join("\n");
 // #endregion 🔌️Adapters
 
@@ -48,10 +48,8 @@ describe("actor window actions", () => {
   });
 
   it("forwards a funnelled action of an actor-bound session to its verified browser actor", () => {
-    const funnel = shellActionsSource.slice(shellActionsSource.indexOf("const onAction = useCallback("));
-    expect(funnel.length).toBeGreaterThan(0);
-    expect(funnel).toContain("directBrowserActor = action.commandAddress ? null : directBrowserActorForSession(targetSession);");
-    expect(funnel).toMatch(/if \(directBrowserActor !== null\) \{[\s\S]*?await dispatchDirectBrowserActorCommand\(\s*directBrowserActor,/u);
+    expect(inputFunnelSource).toContain("directBrowserActor = directBrowserActorForSession(targetSession);");
+    expect(inputFunnelSource).toMatch(/if \(directBrowserActor !== null\) \{[\s\S]*?await dispatchDirectBrowserActorCommand\(\s*directBrowserActor,/u);
   });
 });
 //#endregion 🧪️Laws

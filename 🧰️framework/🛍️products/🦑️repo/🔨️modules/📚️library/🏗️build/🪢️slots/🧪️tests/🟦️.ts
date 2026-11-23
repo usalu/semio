@@ -52,7 +52,7 @@ test("documents are checked against the schema and texts exist in both languages
  requireSlotShapeV1("Claim",{entries:[{kind:"nx",key:"abc",slot}]},"claim");
  requireSlotShapeV1("Retention",{graceSeconds:600},"retention");
  requireSlotShapeV1("AuditReport",{version:1,cache:"x",current:0,grace:0,stray:[],unslotted:0},"audit");
- const declaration={version:1,kind:"rust-unit",toolchain:slot,sources:[{path:"a/lib.rs",sha256:slot}],externs:[slot]};
+ const declaration={version:2,kind:"rust-unit",toolchain:slot,sources:[{path:"a/lib.rs",sha256:slot}],externs:[slot]};
  requireSlotShapeV1("Declaration",declaration,"declaration");requireSlotShapeV1("Meta",{version:1,slot,storedAt:1,refs:[],declaration},"meta");
  requireSlotShapeV1("Staleness",{mode:"dry-run",recheckSeconds:3,manifestNames:["unit.json"],generatedRoots:[".cache"],examples:8},"staleness");
  requireSlotShapeV1("StalenessReport",{version:1,mode:"dry-run",sweptAt:1,entries:2,declared:1,live:1,grace:0,stale:{edited:1},unreached:0,retired:0,refused:{},examples:["edited k (a/lib.rs)"]},"report");

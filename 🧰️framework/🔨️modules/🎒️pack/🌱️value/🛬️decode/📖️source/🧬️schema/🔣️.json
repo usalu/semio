@@ -116,7 +116,7 @@
           "const": 1
         },
         "copyBytes": {
-          "const": 17
+          "const": 1024
         },
         "capacityBytes": {
           "const": 65536

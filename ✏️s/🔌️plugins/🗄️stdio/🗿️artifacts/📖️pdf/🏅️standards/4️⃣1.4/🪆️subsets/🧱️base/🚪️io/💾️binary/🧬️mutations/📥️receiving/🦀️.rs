@@ -84,7 +84,7 @@ pub struct Pdf14OperationReceiving {
 
 impl Pdf14OperationReceiving {
     pub fn admit(source: &[u8], range: (usize, usize), grant: RetainedCloneGrant) -> RetainedWorkOutcome<Option<(Self, RetainedCloneProgress)>> {
-        let demand = fixed(size_of::<Self>());
+        let demand = fixed(0);
         let admitted = if source.get(range.0..range.1).is_none() {
             Err(invalid())
         } else if !retained_clone_grant_admits(grant, demand) {

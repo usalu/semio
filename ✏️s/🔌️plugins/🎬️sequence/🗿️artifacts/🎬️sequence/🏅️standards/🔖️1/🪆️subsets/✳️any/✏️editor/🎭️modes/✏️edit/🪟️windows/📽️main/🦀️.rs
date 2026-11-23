@@ -79,12 +79,12 @@ fn dag_host_snapshot_to_workflow(host_snapshot: &semio_os_infinite_directed_pres
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub fn render(host_snapshot: &SequenceHostSnapshot, config: &SequenceMainWindowConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(host_snapshot: &SequenceHostSnapshot, config: &SequenceMainWindowConfig, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let mut host = neural_engine::ColdOwner::new(host_from_host_snapshot(host_snapshot));
     host.layout_expanded_slots();
     let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot);
     let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
-    semio_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_MAIN, semio_ui_contract::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
+    semio_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_MAIN, semio_ui_contract::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) }, semio_plugin::surface_name(locale, "Sequence graph", "Sequenzgraph"), None)
 }
 //#endregion 🔖️Render
 

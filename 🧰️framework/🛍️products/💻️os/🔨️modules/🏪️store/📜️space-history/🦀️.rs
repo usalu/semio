@@ -9,3 +9,6 @@ pub mod sqlite_snapshot_workspace;
 pub mod lifted_serialization;
 #[path="🚪️io/🦀️.rs"]
 pub mod io;
+#[cfg(test)]
+#[path="🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🪙️close/🦀️.rs"]
+pub(crate) mod original_close;

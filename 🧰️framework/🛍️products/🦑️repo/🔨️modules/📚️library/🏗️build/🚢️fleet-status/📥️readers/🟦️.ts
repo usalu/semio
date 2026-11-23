@@ -1,13 +1,16 @@
 import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {existsSync,readFileSync,readdirSync,statSync} from "node:fs";
+import {spawnSync} from "node:child_process";
+import {homedir} from "node:os";
 import {join,resolve} from "node:path";
 import type {LeaseHolderV1} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts";
 import sessionSchema from "../../🔧️tools/🏗️bazel/🧵️sessions/🧬️schema/🔣️.json" with {type:"json"};
+import unitCacheSchema from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json" with {type:"json"};
 import generationSchema from "../../🕸️graph/🕰️generations/🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {fleetTextV1} from "../🟦️.ts";
-import type {FleetBazelSlotFactV1,FleetCapacityWaiterFactV1,FleetFactsV1,FleetGrantFactV1,FleetHolderFactV1,FleetLanguageV1,FleetSealedEntryFactV1,FleetSourceV1,FleetStandingFactV1,FleetWaiterFactV1} from "../🟦️.ts";
+import type {FleetBazelSlotFactV1,FleetCapacityWaiterFactV1,FleetCasFactV1,FleetOffloadFactV1,FleetFactsV1,FleetGrantFactV1,FleetHolderFactV1,FleetLanguageV1,FleetSealedEntryFactV1,FleetSourceV1,FleetStandingFactV1,FleetWaiterFactV1} from "../🟦️.ts";
 
 /** 📥️ The readers of the fleet status: each one asks an existing status reader of the build (leases, capacity, Bazel slots, cache ledger, sealed store, graph generation pointer) and turns the answer into the facts the aggregation reads. A reader never takes a lease, never loads the graph and never writes; a reader that fails is reported in `sources` and leaves its section out.
  * @see ../🟦️.ts the aggregation, ../🧬️schema/🔣️.json the facts */
@@ -144,8 +147,32 @@ export async function readFleetWorkersV1(context:FleetReaderContextV1):Promise<P
  return rows.length===0?{}:{workers:{offlineSeconds:READY_OFFLINE_SECONDS_V1,rows}};
 }
 
+/** 🗄️ Host store: the cap in force with its watermarks and the last finished collection from the usage hint the collector leaves, and the leases of transient offload inputs (count and bytes). It reads no object tree: only the hint, the lease ledger and one stat per leased blob (bytes are null above `maximumLeaseStats`). */
+export const readFleetCasV1:FleetReaderV1=async context=>{
+ const [{CAS_POLICY_V1},{casRootV1,casObjectPathV1},{casEffectiveCapBytesV1,measureCasPartitionV1},{readCasUsageHintV1},{readCasTransientsV1}]=await Promise.all([import("../../🗄️cas/🧬️schema/🟦️.ts"),import("../../🗄️cas/🗃️store/🟦️.ts"),import("../../🗄️cas/🌡️partition/🟦️.ts"),import("../../🗄️cas/🧹️collector/🟦️.ts"),import("../../🗄️cas/📌️pins/🟦️.ts")]);
+ const root=casRootV1(context.environment,process.platform,context.environment.HOME||context.environment.USERPROFILE||homedir()),hint=await readCasUsageHintV1(root),partition=measureCasPartitionV1(root),effective=partition===undefined?CAS_POLICY_V1.capBytes:casEffectiveCapBytesV1(CAS_POLICY_V1,partition,hint?.bytes);
+ const at=context.now(),rows=[...(await readCasTransientsV1(root))],live=rows.filter(([,until])=>until>at),expired=rows.filter(([,until])=>until<=at),limit=policy.readers.maximumLeaseStats;
+ const bytes=(group:readonly (readonly [string,number])[]):number|null=>{if(group.length>limit)return null;let total=0;for(const [digest] of group)try{total+=statSync(casObjectPathV1(root,digest)).size;}catch{}return total;};
+ const cas:FleetCasFactV1={root,capBytes:CAS_POLICY_V1.capBytes,effectiveCapBytes:effective,highWatermarkBytes:Math.floor(effective*CAS_POLICY_V1.highWatermark),lowWatermarkBytes:Math.floor(effective*CAS_POLICY_V1.lowWatermark),incrementBytes:CAS_POLICY_V1.incrementBytes,leases:{leased:live.length,expired:expired.length,leasedBytes:bytes(live),expiredBytes:bytes(expired)},lastCollection:hint===undefined?null:{atMs:hint.atMs,bytes:hint.bytes}};
+ return {cas};
+};
+
+/** 🚀️ Offload: the compile slots and light slots the builds hold right now (a light slot is a unit running on the fleet), grouped by the parent process of each holder (the build), and the offload counters of this machine with the count of every decline or fall-back reason. */
+export const readFleetOffloadV1:FleetReaderV1=async context=>{
+ const [{readOffloadCountersV1,readOffloadReasonCountersV1},{repositoryCachePartitionRootDataV1},{claimHeldV1,claimHolderV1}]=await Promise.all([import("../../🌐️remote-execution/🚀️offload/📊️counters/🟦️.ts"),import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts"),import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts")]);
+ const slots=join(context.environment.SEMIO_UNIT_CACHE_ROOT||join(repositoryCachePartitionRootDataV1(context.root,"rust"),"u"),unitCacheSchema.definitions.Policy.const.layout.slots),held:{pid:number;fleet:boolean}[]=[];
+ let names:string[]=[];try{names=readdirSync(slots);}catch{}
+ for(const name of names){const match=/^(light-)?\d+\.lock$/u.exec(name);if(match===null)continue;const claim=name.slice(0,-5),holder=claimHeldV1(slots,claim)?claimHolderV1(slots,claim):undefined;if(holder!==undefined)held.push({pid:holder.pid,fleet:match[1]!==undefined});}
+ const parents=new Map<number,number>(),pids=[...new Set(held.map(row=>row.pid))].slice(0,policy.readers.maximumBuildOwners);
+ if(pids.length>0&&process.platform!=="win32"){const listed=spawnSync("ps",["-o","pid=,ppid=","-p",pids.join(",")],{encoding:"utf8",timeout:2000});for(const line of String(listed.stdout??"").split("\n")){const [pid,parent]=line.trim().split(/\s+/u).map(Number);if(Number.isSafeInteger(pid)&&Number.isSafeInteger(parent)&&parent>0)parents.set(pid!,parent!);}}
+ const builds=new Map<number,{pid:number;local:number;fleet:number}>();
+ for(const row of held){const pid=parents.get(row.pid)??row.pid,build=builds.get(pid)??{pid,local:0,fleet:0};builds.set(pid,{...build,[row.fleet?"fleet":"local"]:build[row.fleet?"fleet":"local"]+1});}
+ const counters=readOffloadCountersV1(context.root),offload:FleetOffloadFactV1={local:held.filter(row=>!row.fleet).length,fleet:held.filter(row=>row.fleet).length,builds:[...builds.values()],out:counters.out,refused:counters.refused,fellBack:counters.fellBack,reasons:readOffloadReasonCountersV1(context.root)};
+ return {offload};
+};
+
 /** 🏭️ The readers of the real workspace. */
-export const FLEET_READERS_V1:FleetReadersV1=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1,fleet:readFleetLoadV1,workers:readFleetWorkersV1});
+export const FLEET_READERS_V1:FleetReadersV1=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1,fleet:readFleetLoadV1,workers:readFleetWorkersV1,cas:readFleetCasV1,offload:readFleetOffloadV1});
 
 /** 🧺️ Runs every reader at once, times it and merges what it returned; a reader that throws is a failed source, never a failed command. */
 export async function collectFleetFactsV1(context:FleetReaderContextV1,readers:FleetReadersV1=FLEET_READERS_V1,timeoutMilliseconds:number=policy.readers.timeoutMilliseconds):Promise<FleetFactsV1>{

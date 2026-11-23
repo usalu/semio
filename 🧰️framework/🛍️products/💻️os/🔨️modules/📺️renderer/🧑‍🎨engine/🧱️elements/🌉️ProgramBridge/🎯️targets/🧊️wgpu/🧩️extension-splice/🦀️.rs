@@ -212,18 +212,18 @@ pub(super) async fn splice_native_extensions(lease: UiDocumentLease, instance_id
     if !extension_hosts(&nodes, 0).iter().any(|(_, extension, _)| extension_program(extension).is_some()) {
         return Ok(lease);
     }
-    let collected = std::cell::RefCell::new(Vec::new());
+    let collected = std::sync::Mutex::new(Vec::new());
     splice_extension_documents(&mut nodes, |extension, props| {
         let collected = &collected;
         async move {
             let (records, root, mut more) = render_extension(extension, props, instance_id, view_state).await?;
-            collected.borrow_mut().append(&mut more);
+            if let Ok(mut sink) = collected.lock() { sink.append(&mut more) }
             Some((records, root))
         }
     })
     .await;
     if let Some(sink) = refresh_effects {
-        sink.append(&mut collected.into_inner());
+        sink.append(&mut collected.into_inner().unwrap_or_default());
     }
     let identity = ui_contract::UiDocumentAssemblyIdentity { generation: header.generation, revision: header.revision, root: Some(header.root), layout_epoch: header.layout_epoch };
     match UiDocumentLease::try_publish(header.surface, identity, nodes) {

@@ -5,27 +5,13 @@ use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapsh
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Payload
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InsertPage {
     pub index: usize,
-    #[value(deserialize_with = "deserialize_page")]
     pub page: PageDoc,
-}
-
-#[derive(value_derive::FromValue)]
-#[value(deny_unknown_fields)]
-struct PagePayload {
-    width: f64,
-    height: f64,
-    text: String,
-}
-
-fn deserialize_page(value: semio_framework_value::DslValue) -> Result<PageDoc, semio_framework_value::ValueError> {
-    let PagePayload { width, height, text } = semio_framework_value::FromValue::from_value(value)?;
-    Ok(PageDoc { width, height, text })
 }
 //#endregion 🔖️Payload
 

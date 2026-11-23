@@ -58,8 +58,10 @@ async fn showcase_asset_decodes() {
 }
 
 #[test]
-fn dump_rc_frame() {
+fn primary_asset_has_no_failing_check() {
     let snap = semio_s_artifact_norm_en1998_io::text::snapshot::decode_en1998_dsl(crate::seismic_rc_frame::PRIMARY_TEXT).expect("decodes");
     let report = semio_s_artifact_norm_en1998_inferences::evaluate(&snap);
-    for c in &report.checks { eprintln!("[DEBUG] seismic_rc_frame {} {:?} u={} rem={}", c.id, c.status, c.utilization, c.remedies.len()); }
+    let fails: Vec<_> = report.failing().map(|c| c.id.clone()).collect();
+    assert!(!report.checks.is_empty(), "the compliant RC frame emits checks");
+    assert!(fails.is_empty(), "fails={fails:?}");
 }

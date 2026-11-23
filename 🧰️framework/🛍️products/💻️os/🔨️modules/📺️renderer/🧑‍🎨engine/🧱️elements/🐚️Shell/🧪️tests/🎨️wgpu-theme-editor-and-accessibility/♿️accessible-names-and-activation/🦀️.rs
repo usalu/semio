@@ -5,7 +5,7 @@
 /// are the painted text; a control with a chord also publishes its `aria-keyshortcuts`.
 #[test]
 fn chrome_controls_publish_accessible_names_and_shortcuts() {
-    let shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     with_chrome_control_names(|names| {
         names.clear();
     });
@@ -136,6 +136,7 @@ fn field_and_engagement_labels_reach_focusable_child_controls() {
 
 #[test]
 fn accessibility_activation_updates_settings_pressed_button_projection() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = accessibility_fixture();
     let selection = &fixture["nestedPanelSelection"];
     let mut shell = shell_with_nested_app_settings();

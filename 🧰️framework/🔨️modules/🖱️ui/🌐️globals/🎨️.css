@@ -133,7 +133,7 @@
 
 /* #region 👻️PanelGhost */
 [data-ghost="true"] [data-dim]:not([data-active-interaction]):not([data-active-ancestor]),
-[data-ghost="true"] [data-window-silhouette-border]:not([data-active-interaction]):not([data-active-ancestor]) {
+[data-ghost="true"] [data-window-frame-border]:not([data-active-interaction]):not([data-active-ancestor]) {
   opacity: 0 !important;
   pointer-events: none;
   transition: opacity 150ms;

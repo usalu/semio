@@ -8,7 +8,7 @@ use semio_s_artifact_norm_en1999_mut_members::change_plate_thickness::ChangePlat
 use semio_s_artifact_norm_en1999_mut_members::remove_member::RemoveMember;
 use crate::En1999Mutation;
 use semio_s_artifact_norm_en1999_model::En1999Snapshot;
-use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
+use protocol::{ColdDiffAlgebra as _, ColdMutation as _, DiffAlgebra as _, Mutation as _, MutationDiff as _};
 use protocol::ColdMutationDiff;
 
 fn diff_of(mutation: &En1999Mutation, base: &En1999Snapshot) -> En1999Diff {

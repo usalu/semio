@@ -18,7 +18,7 @@ use semio_renderer_wgpu_shell_history::{HistoryState, SHELL_CHROME_IO_FIELD_BYTE
 use semio_renderer_wgpu_shell_input::{OverlayState, PresentedInputCandidateWitness, PresentedInputGeometry, RightClickState, ShellInputState, ShellPaletteKind, note_chrome_control_name, panel_tab_introduction_element_id, panel_tab_scroll_id, tree_hit_item_id, with_chrome_control_names};
 use semio_renderer_wgpu_shell_plugins::{PluginState, ShellPluginInstallPhase};
 use semio_renderer_wgpu_shell_pointer::{PointerCtx, WINDOW_UTILITY_RAIL_PARENT, dock_tab_select_window_id, panel_resize_anchor, tree_row_has_chevron};
-use semio_renderer_wgpu_shell_prefs::{CHROME_ICON_TINY, ChromeGroupItem, DockTabNode, PrefsState, retained_chrome_group_item_width, stored_field_get, stored_field_set};
+use semio_renderer_wgpu_shell_prefs::{CHROME_ICON_TINY, ChromeGroupItem, RETAINED_CHROME_GROUP_LABEL_MAX_BYTES, DockTabNode, PrefsState, retained_chrome_group_item_width, stored_field_get, stored_field_set};
 #[cfg(any(test, feature = "testkit"))]
 use semio_renderer_wgpu_shell_prefs::measure_chrome_group_item;
 use semio_renderer_wgpu_shell_session::{DockTabMoveTarget, SessionCtx, mobile_panel_reconcile_path, panel_state_from_view, shell_navbar_title};

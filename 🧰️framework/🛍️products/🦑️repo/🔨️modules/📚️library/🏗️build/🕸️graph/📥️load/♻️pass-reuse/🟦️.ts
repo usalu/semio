@@ -19,14 +19,19 @@ export function emitGraphPassNoticeV1(notice:Readonly<{round:number;moved:number
 /** 🫀 The live heap of this process in bytes, measured after a collection (the garbage a pass leaves is not what slows the next one). */
 function liveHeapBytesV1():number{(globalThis as {Bun?:{gc?:(force:boolean)=>void}}).Bun?.gc?.(true);return process.memoryUsage().heapUsed;}
 
+/** 🧠️ The taken memo of one read: created once by the read and handed to every attempt of it, so a registry follow that restarts the attempt keeps the owners the earlier passes took (a pass answers an owner from it only while its job is unchanged and every row it consumed still holds).
+ * @see ../🧭️registry-follow/🟦️.ts */
+export function createReadTakenMemoV1():TakenMemoV1{return createTakenMemoV1({holds:rows=>observationRowsHoldV1(rows as never),retain:rows=>retainObservedRowsV1(rows as never)});}
+
 /** ♻️ What one read keeps from one pass over the owners to the next, and when the worker that runs it hands it over: the memo of the owners the read took (a pass answers an owner from it only while its job is unchanged and every row it consumed still holds), and the recycle of the worker at the boundary between two passes when its live heap is above the declared threshold, carrying the counters of the read to the fresh worker (what the read finished is stored on disk and is taken again from there in a fraction of the time).
  * @see ../../📥️inference/📦️project-nodes/♻️taken-memo/🟨️.mjs
  * @see ../../../🧠️memory/♻️recycle/🟨️.mjs
  * @see ./🧪️tests/🟦️.ts */
 export function createPassReuseV1(ports:ReusePortsV1={}){
-  const environment=ports.environment??process.env,carried=sliceRecycleCarriedV1(environment),memo=ports.memo??createTakenMemoV1({holds:rows=>observationRowsHoldV1(rows as never),retain:rows=>retainObservedRowsV1(rows as never)});
+  const environment=ports.environment??process.env,carried=sliceRecycleCarriedV1(environment),memo=ports.memo??createReadTakenMemoV1();
   const say=ports.say??((line:string)=>{process.stderr.write(line);}),measure=ports.heapBytes??liveHeapBytesV1,enabled=Number(environment[SLICE_RECYCLE_POLICY_V1.heapEnvironment])>0;
   let passes=0;
+  if(ports.memo!==undefined)(memo as Partial<{distrust():void}>).distrust?.();
   return Object.freeze({
     memo,carried,
     boundary(input:{readonly round:number;readonly moved:readonly string[]}):void{

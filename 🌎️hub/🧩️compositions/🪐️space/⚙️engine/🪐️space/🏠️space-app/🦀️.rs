@@ -291,7 +291,7 @@ impl ArtifactApp for SpaceApp {
         Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<Self>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<Self>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction: &mut semio_framework_job::OriginalConstructionAdmission, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original tool producer request is absent"))?;
 
         if !SPACE_BOUNDED_TOOL_IDS.contains(&original.tool_id.as_str()) {
@@ -499,7 +499,7 @@ impl ArtifactApp for SpaceApp {
                 crate::modes::main::windows::workflow::render(&SpaceApp, projection, config, view_state).await.map(semio_plugin::built_to_component_tree)
             }
             crate::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::modes::main::windows::media_vfs::render(projection, view_state).await.map(semio_plugin::built_to_component_tree),
-            crate::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::modes::main::windows::compiled_dag::render(projection).await.map(semio_plugin::built_to_component_tree),
+            crate::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::modes::main::windows::compiled_dag::render(projection, view_state.locale).await.map(semio_plugin::built_to_component_tree),
             S_PLAY_CATALOGUE_BODY_KEY => crate::panels::catalogue::build_catalogue_tree(labels, view_state.locale, &semio_plugin::TreeWindows::for_body(view_state, S_PLAY_CATALOGUE_BODY_KEY))
                 .await
                 .map(semio_plugin::built_to_component_tree),

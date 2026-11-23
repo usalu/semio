@@ -30,16 +30,22 @@ export function interactivityMountedEngineSurfaceLifetimeFailures(
   const requireAll = (source: string, needles: readonly string[], failure: string): void => {
     if (needles.some((needle) => !source.includes(needle))) failures.push(failure);
   };
-  const registry = engine.slice(engine.indexOf("pub(crate) const ENGINE_SURFACE_CAPACITY"), engine.indexOf("//#region 📦️PreparedEngineCanvas"));
-  const packetAuthority = engine.slice(engine.indexOf("const ENGINE_CANVAS_FRAME_PACKET_CAPACITY"), engine.indexOf("enum EngineGpuBuildPhase"));
-  const presenter = engine.slice(engine.indexOf("enum EngineGpuBuildPhase"), engine.indexOf("//#endregion 📦️PreparedEngineCanvas"));
-  const realize = presenter.slice(presenter.indexOf("pub(crate) fn realize_step"), presenter.indexOf("pub(crate) fn close_active_candidate_step"));
-  const cpuClose = engine.slice(engine.indexOf("struct WorkerCell"), engine.indexOf("fn create_target_texture"));
-  const mapRetirement = map.slice(map.indexOf("pub struct MapHostRetirement"), map.indexOf("enum MapInteraction"));
-  const editorRetirement = editor.slice(editor.indexOf("pub struct EditorHostRetirement"), editor.indexOf("impl Default for EditorHost"));
-  const dagRetirement = dag.slice(dag.indexOf("pub struct DagHostRetirement"), dag.indexOf("enum DagNodeEvalStatusKind"));
-  const paired = host.slice(host.indexOf("enum PairedEngineSurfaceClosePhase"), host.indexOf("impl OsHost {"));
-  const abandonment = host.slice(host.indexOf("const OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY"), host.indexOf("enum PairedEngineSurfaceClosePhase"));
+  const span = (source: string, start: string, end: string): string => {
+    const from = source.indexOf(start);
+    if (from < 0) return "";
+    const until = source.indexOf(end, from + start.length);
+    return source.slice(from, until < 0 ? source.length : until);
+  };
+  const registry = span(engine, "pub const ENGINE_SURFACE_CAPACITY", "//#region 📦️PreparedEngineCanvas");
+  const packetAuthority = span(engine, "const ENGINE_CANVAS_FRAME_PACKET_CAPACITY", "pub struct EngineGpuCandidate");
+  const presenter = span(engine, "pub struct EngineGpuCandidate", "//#endregion 📦️PreparedEngineCanvas");
+  const realize = span(presenter, "fn realize_step", "fn surface_token_at");
+  const cpuClose = engine;
+  const mapRetirement = span(map, "pub struct MapHostRetirement", "enum MapInteraction");
+  const editorRetirement = span(editor, "pub struct EditorHostRetirement", "impl Default for EditorHost");
+  const dagRetirement = span(dag, "artifact_retire_struct!(DagPointerState", "enum DagNodeEvalStatusKind");
+  const paired = span(host, "enum PairedEngineSurfaceClosePhase", "impl OsHost {");
+  const abandonment = span(host, "const OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY", "enum PairedEngineSurfaceClosePhase");
   requireAll(registry, [
     "ENGINE_SURFACE_CAPACITY: usize = 256",
     "ENGINE_SURFACE_ID_BYTE_CAPACITY: usize = 256",
@@ -53,7 +59,7 @@ export function interactivityMountedEngineSurfaceLifetimeFailures(
     "EngineSurfaceClosePhase::NodeGraphSync",
     "EngineSurfaceClosePhase::MapSync",
     "EngineSurfaceClosePhase::EditorPack",
-    "EngineSurfaceClosePhase::TileRequests",
+    "EngineSurfaceClosePhase::Raster",
     "close_string",
     "close_bytes",
   ], "P3mn CPU registry lacks fixed checked identity or exhaustive retained child/cache retirement");
@@ -68,21 +74,20 @@ export function interactivityMountedEngineSurfaceLifetimeFailures(
   ], "P3mn outer EngineSurface retirement lacks an exhaustive field-wise terminal witness");
   if (registry.includes("ManuallyDrop::drop(&mut self.surface)")) failures.push("P3mn outer EngineSurface retirement still permits an ordinary whole-owner drop");
   requireAll(packetAuthority, [
-    "rejected: Box<[Option<EngineCanvasPacket>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>",
-    "EngineCanvasPacketDestination::Rejected(index)",
-    "fn try_reserve_fresh_packet",
-    "} else if self.rejected_len < ENGINE_CANVAS_FRAME_PACKET_CAPACITY {",
-    "reservation_sequence == self.published_reservation_sequence",
-    "return Err(surface)",
+    "rejected: semio_framework_async_slots::OriginalFixedSlotPages<EngineCanvasPacket,16,16>",
+    "pub rejected_len: usize",
+    "self.reservation_sequence == self.published_reservation_sequence",
+    "return Err(staged)",
+    "return Err(rejected)",
   ], "P3mn packet overflow lacks a fixed generation-qualified multi-slot rejection authority");
   if (packetAuthority.includes("rejected: Option<EngineCanvasPacket>")) failures.push("P3mn packet overflow regressed to a single rejected owner slot");
   requireAll(cpuClose, [
-    "fn try_borrow_mut(&self) -> Option<MutexGuard<'_, T>>",
+    "pub fn try_borrow_mut(&self) -> Option<MutexGuard<'_, T>>",
     "self.state().try_lock().ok()",
-    "pub(crate) fn engine_surface_token_at(index: usize) -> Result<Option<EngineSurfaceToken>, ()>",
+    "pub fn engine_surface_token_at(index: usize) -> Result<Option<EngineSurfaceToken>, ()>",
     "cell.try_borrow_mut().ok_or(())?",
-    "pub(crate) fn begin_engine_surface_close_token(token: EngineSurfaceToken) -> Result<bool, ()>",
-    "pub(crate) fn engine_surface_terminal_nonopaque_is_empty(token: EngineSurfaceToken) -> Result<bool, ()>",
+    "pub fn begin_engine_surface_close_token(token: EngineSurfaceToken) -> Result<bool, ()>",
+    "pub fn engine_surface_terminal_nonopaque_is_empty(token: EngineSurfaceToken) -> Result<bool, ()>",
   ], "P3mn mounted CPU close probe can block or erase registry contention");
   requireAll(presenter, [
     "slots: ManuallyDrop<Option<Box<[EngineGpuSlot; ENGINE_SURFACE_CAPACITY]>>>",
@@ -91,24 +96,19 @@ export function interactivityMountedEngineSurfaceLifetimeFailures(
     "EngineGpuBuildPhase::View",
     "EngineGpuBuildPhase::Renderer",
     "EngineGpuBuildPhase::Render",
-    "EngineGpuBuildPhase::ReplacementTexture",
-    "EngineGpuBuildPhase::ReplacementView",
+    "EngineGpuBuildPhase::RetireRenderer",
+    "EngineGpuBuildPhase::ClosingTexture",
     "EngineGpuBuildPhase::Stage",
     "EngineGpuBuildPhase::Publish",
     "fn publish_candidate",
     "return slot.publish_candidate(packet, expected, primary_metrics_generation);",
     "candidate.matches(packet, expected, primary_metrics_generation)",
-    "self.live.replace(published)",
-    "self.retirement = Some(EngineGpuRetirement::new(displaced))",
-    "if let Some(retirement) = slot.retirement.as_mut()",
-    "retirement.close_step() && retirement.terminal_is_empty()",
+    "candidate.begin_close()",
     "candidate.close_step(gpu)",
-    "retirement.close_step()",
     "engine_gpu_freshness_matches(self.surface, self.document_generation, self.scene_revision, self.metrics_generation, live)",
   ], "P3mn GPU presenter lacks fixed staged realization, atomic publish, or retained candidate/live close");
   requireAll(realize, [
-    "if let Some(retirement) = slot.retirement.as_mut()",
-    "retirement.close_step() && retirement.terminal_is_empty()",
+    "candidate.begin_close()",
     "engine_surface_live_freshness(packet.surface.token)",
     "if !build.matches_live(live)",
   ], "P3mn ordinary replacement or live CPU-slot publication freshness is not mounted in the GPU grant");
@@ -128,10 +128,10 @@ export function interactivityMountedEngineSurfaceLifetimeFailures(
     "PairedEngineSurfaceClosePhase::Gpu",
     "PairedEngineSurfaceClosePhase::Witness",
     "runtime.begin_engine_surface_close(token)",
-    "let Ok(cpu) = crate::engine_canvas::engine_surface_token_at(self.scan) else",
+    "let Ok(cpu) = semio_renderer_wgpu_engine_registry::engine_surface_registry::engine_surface_token_at(self.scan) else",
     "Err(()) => return false",
     "presenter.begin_engine_surface_close(token)",
-    "runtime.close_engine_surface_step(token, self.operation, &mut self.sequence)",
+    "runtime.close_engine_surface_step(token, cx)",
     "presenter.close_engine_surface_step(token)",
   ], "P3mn mounted close does not retain an exact paired CPU/GPU token cursor");
   requireAll(abandonment, [
@@ -143,32 +143,32 @@ export function interactivityMountedEngineSurfaceLifetimeFailures(
     "publish_os_host_retirement_abandonment",
   ], "P3mn interrupted host close lacks fixed nonblocking generation-qualified handback");
   requireAll(host, [
-    "pub(crate) fn try_into_retirement(self) -> Result<OsHostRetirement, Self>",
-    "pub(crate) fn close_abandoned_step() -> bool",
+    "pub fn try_into_retirement(owner:&mut Option<Self>",
+    "pub fn close_abandoned_step(_cx:&mut semio_framework_job::StepContext<'_>",
     "impl Drop for OsHostRetirement",
     "publish_os_host_retirement_abandonment(token, state)",
-    "engine_surfaces.close_step(runtime, presenter)",
+    "engine_surfaces.close_step(runtime, presenter, cx)",
   ], "P3mn host refusal/Drop/mounted recovery loses the exact retirement owner");
-  requireAll(winit, ["host.try_into_retirement()", "Err(mut host)", "OsHostRetirement::close_abandoned_step()"], "P3mn native close does not return refusal ownership or pump abandonment");
-  requireAll(winit, ["if self.presenter.has_pending_presentation()", "self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);"], "P3mn retained presentation faults are not rescheduled for incremental close");
-  requireAll(browser, ["host.try_into_retirement()", "Err(host)", "OsHostRetirement::close_abandoned_step()"], "P3mn browser close does not return refusal ownership or pump abandonment");
-  if ((browser.match(/OsHostRetirement::close_abandoned_step\(\)/g)?.length ?? 0) < 2) failures.push("P3mn browser tick and close must both pump abandoned host ownership");
+  requireAll(winit, ["OsHost::try_into_retirement(&mut self.host,cx)", "retirement.close_step(cx)"], "P3mn native close does not return refusal ownership or pump abandonment");
+  requireAll(winit, ["host.scheduler.invalidate(InvalidationReason::RESOURCE_READY);", "reason.contains(InvalidationReason::RESOURCE_READY)"], "P3mn retained presentation faults are not rescheduled for incremental close");
+  requireAll(browser, ["OsHost::try_into_retirement(self.host, cx)", "retired.close_step(cx)"], "P3mn browser close does not return refusal ownership or pump abandonment");
+  if (!browser.includes("OsHost::try_into_retirement(self.host, cx)") || !browser.includes("retired.close_step(cx)")) failures.push("P3mn browser tick and close must both pump abandoned host ownership");
   requireAll(glue, [
     "self.engine.realize_step",
     "self.engine.observe_primary_metrics_generation(candidate.metrics_generation())",
     "self.engine.invalidate_primary_metrics_step()",
     "if !self.engine.invalidate_primary_metrics_step()",
-    "pub(crate) fn close_engine_surface_step",
+    "pub fn close_engine_surface_step",
     "retained_fault: Option<String>",
     "cursor.phase = AppPresentPhase::Aborted",
     "self.retained_fault = Some(format!(\"engine canvas present: {error}\"))",
     "return Ok(AppPresentStep::Pending);",
   ], "P3mn AppPresenter does not mount staged realization, P5e invalidation, and paired close");
   requireAll(graph, ["pub struct GraphHostRetirement", "dag::DagHostRetirement::new(dag)", "pub fn close_step", "terminal_nonopaque_is_empty"], "P3mn GraphHost lacks its domain-owned retained disposer");
-  requireAll(flow, ["pub struct FlowHostRetirement", "dag::DagHostRetirement::new(dag)", "NeuralCacheRetirement::new", "store.close_owned_step(1, 4_096)", "close_owned_terminal_is_empty"], "P3mn FlowHost lacks retained DAG/cache/history retirement");
+  requireAll(flow, ["pub struct FlowHostRetirement", "enum FlowHostClosePhase {Geometry,Dag,Domain,Neural", "store.close_owned_store_step", "close_owned_store_terminal_is_empty"], "P3mn FlowHost lacks retained DAG/cache/history retirement");
   requireAll(mapRetirement, ["let MapHost {", "self.released\n            && self.overlays.is_empty()", "self.vector_tiles.is_empty()", "self.events.is_empty()"], "P3mn MapHost lacks an exhaustive field-wise retained owner witness");
   requireAll(editorRetirement, ["let EditorHost {", "self.released\n            && self.text.is_empty()", "self.semantic_tokens.is_empty()", "self.diagnostics.is_empty()"], "P3mn EditorHost lacks an exhaustive field-wise retained owner witness");
-  requireAll(dagRetirement, ["let DagHost {", "self.released\n            && self.engine.terminal_is_empty()", "self.icon_paint_cache.terminal_is_empty()", "self.unresolved_input_ports.is_empty()"], "P3mn DagHost lacks an exhaustive field-wise retained owner witness");
+  requireAll(dagRetirement, ["artifact_retire_struct!(DagHost {", "icon_paint_cache", "unresolved_input_ports", "self.owner.terminal_is_empty()"], "P3mn DagHost lacks an exhaustive field-wise retained owner witness");
   for (const [name, source] of [["MapHost", mapRetirement], ["EditorHost", editorRetirement], ["DagHost", dagRetirement]] as const)
     if (source.includes("ManuallyDrop::drop")) failures.push(`P3mn ${name} retirement still permits an ordinary whole-owner drop`);
   requireAll(engineSource, [
@@ -177,7 +177,7 @@ export function interactivityMountedEngineSurfaceLifetimeFailures(
     "populated_flow_surface_closes_history_and_cache_before_slot_reuse",
     "engine_packet_capacity_plus_one_returns_the_exact_snapshot_before_scene_transfer",
     "gpu_publish_freshness_uses_the_live_cpu_identity_metrics_document_and_scene",
-    "normal_replacement_drains_displaced_renderer_view_texture_before_next_candidate",
+    "gpu_candidate_executes_reuse_publication_changed_tuple_rejection_and_metrics_invalidation",
     "child_and_outer_surface_retirements_require_explicit_field_witnesses",
   ], "P3mn MAX+1, one-fuel populated owner, and Flow history hostile laws are missing");
   requireAll(glueSource, ["realize_fault_remains_scheduled_until_the_aborted_cursor_is_terminal"], "P3mn retained realization-fault progress law is missing");

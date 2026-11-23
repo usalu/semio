@@ -65,12 +65,12 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 👁️ Read-only scene with measured initial fitting to the artifact world bounds.
-pub fn render(plan: Option<&DocumentScenePlan>, document: &DrawingSnapshot) -> UiAssemblyResult<BuiltNode> {
-    render_with_camera(plan,document,&config::DrawingViewerCanvasWindowConfig::default())
+pub fn render(plan: Option<&DocumentScenePlan>, document: &DrawingSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
+    render_with_camera(plan,document,&config::DrawingViewerCanvasWindowConfig::default(),locale)
 }
 
 /// 🧭️ Restored local navigation suppresses the initial artwork fit.
-pub fn render_with_camera(plan: Option<&DocumentScenePlan>, document: &DrawingSnapshot,config: &config::DrawingViewerCanvasWindowConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render_with_camera(plan: Option<&DocumentScenePlan>, document: &DrawingSnapshot,config: &config::DrawingViewerCanvasWindowConfig, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let camera = config.viewport;
     let artboard_records = artboard_scene_records(document);
     let scene_nodes = match plan { Some(plan) => semio_s_artifact_draw_drawing_scene::view::nodes(plan, None).map_err(|error| semio_plugin::PluginAssemblyError::new("drawing.viewer.canvas", error.to_string()))?, None => Vec::new() };
@@ -79,7 +79,7 @@ pub fn render_with_camera(plan: Option<&DocumentScenePlan>, document: &DrawingSn
     for node in &scene_nodes {
         records.push(semio_framework_value::ToValue::to_value(node));
     }
-    scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: (!config.framed && plan.is_some()).then(|| semio_plugin::Canvas2dFraming { revision: 0,bounds: semio_s_artifact_draw_drawing_scene::view::bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: (!config.framed).then(|| semio_plugin::Canvas2dFraming { revision: 0,bounds: semio_s_artifact_draw_drawing_scene::view::bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Drawing canvas", "Zeichenfläche"), None)
 }
 
 /// 👁️ Read-only twin of the editor's `edit::artboard_scene_records` frame-only half (no dimension

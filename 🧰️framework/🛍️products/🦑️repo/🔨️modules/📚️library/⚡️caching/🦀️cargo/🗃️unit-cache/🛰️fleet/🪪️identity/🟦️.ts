@@ -5,7 +5,7 @@ import {isAbsolute,join,relative,resolve,win32} from "node:path";
 import {mkdirSync,readFileSync,realpathSync,renameSync,statSync,writeFileSync} from "node:fs";
 import {randomBytes} from "node:crypto";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import {sha256V1,unitKeyV1,UNIT_CACHE_POLICY_V1,type RustcUnitV1} from "../../🔏️key/🟦️.ts";
+import {canonicalMetadataV1,sha256V1,unitKeyV1,UNIT_CACHE_POLICY_V1,type RustcUnitV1} from "../../🔏️key/🟦️.ts";
 
 /** 📐️ The authored fleet-tier policy: timeouts, breaker windows, claim and upload limits, tokens and state layout.
  * @see ../🧬️schema/🔣️.json */
@@ -138,6 +138,14 @@ export function localTextV1(text:string,roots:readonly PortableRootV1[]):string{
 export function portableKeyV1(input:Parameters<typeof unitKeyV1>[0],roots:readonly PortableRootV1[]):string{
  const source=(argument:string)=>argument.endsWith(".rs")&&!argument.startsWith("-")?argument.replaceAll("\\","/"):argument;
  return unitKeyV1({...input,normalized:input.normalized.map(argument=>source(portableTextV1(argument,roots))),environment:input.environment.map(([name,value])=>[name,portableTextV1(value,roots)] as [string,string])});
+}
+
+/** 🆔️ The `-C metadata` of one unit from its slot-level identity: the compiler, the portable command line (its extern names, never their bytes), the slot parts (target, profile, package name and version, member path, crate, kinds, features, cfg) and nothing of its content (sources, extern digests, environment values). Equal in every workspace and across edits, so the stable crate id and the symbol hashes survive a body edit and the early cutoff of metadata-only builds keeps working; two units that differ in package, crate, kind, features, flags, target or compiler never share one. A unit without slot parts is identified by its whole portable environment instead. */
+export function slotMetadataV1(input:Parameters<typeof unitKeyV1>[0],roots:readonly PortableRootV1[],slotParts:readonly string[]|undefined):string{
+ const source=(argument:string)=>argument.endsWith(".rs")&&!argument.startsWith("-")?argument.replaceAll("\\","/"):argument;
+ const normalized=input.normalized.map((argument,index)=>{const text=source(portableTextV1(argument,roots));return input.normalized[index-1]==="--extern"?text.replace(/=#.*$/su,""):text;});
+ const identity=slotParts===undefined?input.environment.map(([name,value])=>[name,portableTextV1(value,roots)]):slotParts.slice(1);
+ return canonicalMetadataV1(JSON.stringify([input.toolchain,normalized,identity]));
 }
 
 /** 🔑️ The key of one unit in the fleet cache: the namespace, the platform and the unit's portable key. A unit whose compiled bytes contain a real path of its machine (`sensitive`: the paths, see `pathSensitiveV1`) is keyed on those paths as well, so two machines share it only when the paths are equal. */

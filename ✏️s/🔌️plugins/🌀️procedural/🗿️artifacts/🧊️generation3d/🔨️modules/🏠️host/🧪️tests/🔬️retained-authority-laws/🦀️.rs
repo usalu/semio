@@ -10,6 +10,14 @@ use semio_s_artifact_procedural_3d_io_binary::mutations::decode_op;
 use semio_s_artifact_procedural_3d_io_binary::mutations::encode_op;
 #[cfg(test)] use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 #[cfg(test)] use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::move_widget::MoveWidget;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_transforms::drag_transforms::DragTransforms;
+
+/// 🪙️ Runs one closure inside one original effect funded by a fresh generous fixture wallet.
+fn cold<R>(run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> R {
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 4_096 };
+    semio_framework_value::AuthoringWallet::new(grant, 1 << 20).run_invoked(grant, 1 << 16, run).expect("the fixture wallet funds its own grant").expect("the fixture work quote is admitted").output
+}
 
 const SEMANTIC_WIRE_CORPUS: &str = include_str!("../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧫️fixtures/🧬️semantic-wire/🔣️.json");
 
@@ -232,13 +240,13 @@ fn close_session(session: &mut Generation3dMutationSession) {
         if maximum_bytes > 0 && !refused_subexact {
             let before = session.retained_allocated_bytes();
             assert_eq!(
-                session.close_step(1, maximum_bytes - 1).expect("P3 subexact retained mutation close"),
+                cold(|effect| session.close_step(1, maximum_bytes - 1, effect)).expect("P3 subexact retained mutation close"),
                 store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }
             );
             assert_eq!(session.retained_allocated_bytes(), before);
             refused_subexact = true;
         }
-        match session.close_step(1, maximum_bytes).expect("P3 retained mutation close") {
+        match cold(|effect| session.close_step(1, maximum_bytes, effect)).expect("P3 retained mutation close") {
             store::mounted_pack_rt::RetainedPackCloseStep::Complete => {
                 assert!(session.terminal_is_empty());
                 assert_eq!(released, admitted);
@@ -266,11 +274,11 @@ fn every_variant_decodes_through_retained_structural_grants() {
                 if let Some(exact) = session.next_retained_allocation_bytes().expect("P3 retained mutation allocation query") {
                     if exact > 0 && !refused_subexact {
                         let before = session.retained_allocated_bytes();
-                        assert_eq!(session.reserve_retained_allocation(exact - 1).expect("P3 subexact retained mutation allocation"), (false, 0));
+                        assert_eq!(cold(|effect| session.reserve_retained_allocation(exact - 1, effect)).expect("P3 subexact retained mutation allocation"), (false, 0));
                         assert_eq!(session.retained_allocated_bytes(), before);
                         refused_subexact = true;
                     }
-                    let (progressed, _) = session.reserve_retained_allocation(exact).expect("P3 retained mutation allocation");
+                    let (progressed, _) = cold(|effect| session.reserve_retained_allocation(exact, effect)).expect("P3 retained mutation allocation");
                     assert!(progressed);
                 } else {
                     session.grant().expect("one retained mutation ingress grant");
@@ -286,7 +294,7 @@ fn every_variant_decodes_through_retained_structural_grants() {
         let mut ready = false;
         for _ in 0..100_000 {
             if let Some(exact) = session.next_retained_allocation_bytes().expect("P3 retained mutation allocation query") {
-                let (progressed, _) = session.reserve_retained_allocation(exact).expect("P3 retained mutation allocation");
+                let (progressed, _) = cold(|effect| session.reserve_retained_allocation(exact, effect)).expect("P3 retained mutation allocation");
                 assert!(progressed);
             } else if session.grant().expect("one retained semantic grant") {
                 ready = true;
@@ -380,7 +388,7 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
         snapshot.host_snapshot.widgets.push(record("translate", "brep.xform.translate", vec![("offset", generation3d_vector_value("vector", [0.0; 3])), ("label", WidgetInputValue::Text(String::new()).neural_value())]));
         snapshot.host_snapshot.widgets.push(record("rotate", "brep.xform.rotate", vec![("axis", generation3d_vector_value("vector", [0.0, 0.0, 1.0])), ("angle", generation3d_number_value(0.0))]));
         snapshot.host_snapshot.widgets.push(record("scale", "brep.xform.scale", vec![("factor", generation3d_vector_value("vector", [1.0; 3])), ("center", generation3d_vector_value("point", [0.0; 3])), ("uniform", WidgetInputValue::Boolean(false).neural_value())]));
-        snapshot.host_snapshot.widgets.push(record("shape", "semantic-wire-law.collections", vec![("items", semio_framework_value::DslValue::Object(vec![("$schema".into(), semio_framework_value::DslValue::String("list".into()))]))]));
+        snapshot.host_snapshot.widgets.push(record("shape", "semantic-wire-law.collections", vec![("items", semio_framework_artifact_flow_flow::neural::Value::Dictionary(semio_framework_artifact_flow_flow::neural::Dictionary::with_schema("list")))]));
         snapshot.host_snapshot.widgets.push(record("section", "semantic-wire-law.sections", vec![("plane", WidgetInputValue::Plane(WidgetInputPlane { origin: [0.0; 3], normal: [0.0, 0.0, 1.0] }).neural_value())]));
         snapshot.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
         let before_schema = snapshot.host_snapshot.schema.clone();
@@ -430,7 +438,7 @@ fn semantic_wire_vectors_cancelled_target_lists_reach_terminal_empty() {
             assert!(session.ingress_ready());
             session.admit_byte(*byte).expect("retained semantic byte");
             for _ in 0..GENERATION3D_OWNER_BYTES {
-                if let Some(exact) = session.next_retained_allocation_bytes().expect("semantic reservation") { assert!(session.reserve_retained_allocation(exact).expect("semantic reserve").0); }
+                if let Some(exact) = session.next_retained_allocation_bytes().expect("semantic reservation") { assert!(cold(|effect| session.reserve_retained_allocation(exact, effect)).expect("semantic reserve").0); }
                 else { session.grant().expect("semantic ingress grant"); }
                 if session.ingress_ready() { break; }
             }
@@ -439,7 +447,7 @@ fn semantic_wire_vectors_cancelled_target_lists_reach_terminal_empty() {
         if prefix == bytes.len() {
             session.seal().expect("semantic seal");
             for _ in 0..100_000 {
-                if let Some(exact) = session.next_retained_allocation_bytes().expect("semantic terminal reservation") { assert!(session.reserve_retained_allocation(exact).expect("semantic terminal reserve").0); }
+                if let Some(exact) = session.next_retained_allocation_bytes().expect("semantic terminal reservation") { assert!(cold(|effect| session.reserve_retained_allocation(exact, effect)).expect("semantic terminal reserve").0); }
                 else if session.grant().expect("semantic terminal grant") { break; }
             }
         }

@@ -70,6 +70,7 @@ impl<P: 'static, M: 'static> crate::ephemeral_preparation::ArtifactEphemeralPrep
     fn begin_close(&mut self) {}
  }
 impl<P: 'static, M: 'static> semio_framework_value::ErasedSnapshotRetirement for TransferTask<P, M> {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
     fn close_step(&mut self,_body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { semio_framework_value::RetirementPollExit::settle(effect, Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))) }
     fn terminal_is_empty(&self) -> bool { true }

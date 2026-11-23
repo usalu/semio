@@ -104,7 +104,7 @@ pub fn preview_window_measures(config: &Generation3dConfig, is_de: bool, procedu
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, preview_eval_text: Option<&str>, session: &FlowEvalSession, run: Option<&semio_plugin::ToolRunView>, active_utility: &str, marks: &PreviewInteractionMarks, labels: &Generation3dLabels, windows: &semio_plugin::TreeWindows<'_>, is_de: bool, hover_groups: &mut Option<semio_s_artifact_procedural_3d_preview_eval::PreviewHoverGroups>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, preview_eval_text: Option<&str>, session: &FlowEvalSession, run: Option<&semio_plugin::ToolRunView>, active_utility: &str, marks: &PreviewInteractionMarks, labels: &Generation3dLabels, windows: &semio_plugin::TreeWindows<'_>, locale: semio_plugin::Locale, hover_groups: &mut Option<semio_s_artifact_procedural_3d_preview_eval::PreviewHoverGroups>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let evaluation = PreviewEvaluation::from_json(preview_eval_text.unwrap_or_default());
     let mut payload = preview_payload(&evaluation, &document.host_snapshot, config, Some(session), marks);
     *hover_groups = Some(std::mem::take(&mut payload.hover_groups));
@@ -133,7 +133,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
     let component_output = marks.component_hover().map(|target| graph_port_id(target.widget, &target.channel(), false));
     let hover = semio_s_artifact_procedural_3d_preview_eval::PreviewChannelHover::new(&document.host_snapshot, &marks.hovered, component_output);
     let hovered_ports = hover.matching(rows.iter().map(|row| row.id.as_str()));
-    semio_s_procedural_core_semantic_ui::scene_with_channel_values(surface, windows, GENERATION_3D_PLAY_APP_ID, "generation3d-preview-values", &semio_s_procedural_core_semantic_ui::ChannelValueLabels::new(is_de, labels.graph_input_port.as_str(), labels.graph_output_port.as_str()), &rows, &hovered_ports)
+    semio_s_procedural_core_semantic_ui::scene_with_channel_values(surface, windows, GENERATION_3D_PLAY_APP_ID, "generation3d-preview-values", &semio_s_procedural_core_semantic_ui::ChannelValueLabels::new(locale, labels.graph_input_port.as_str(), labels.graph_output_port.as_str()), &rows, &hovered_ports)
 }
 //#endregion 🔖️Render
 

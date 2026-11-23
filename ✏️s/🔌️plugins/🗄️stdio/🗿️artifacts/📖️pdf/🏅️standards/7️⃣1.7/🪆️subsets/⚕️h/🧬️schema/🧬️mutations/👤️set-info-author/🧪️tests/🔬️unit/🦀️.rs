@@ -1,5 +1,5 @@
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::h::schema::mutations::PdfHMutation;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::diff::{PdfDiff, PdfInfoDiff, PdfSet};
@@ -16,7 +16,7 @@ fn sets_and_can_restore_the_document_author() {
     let mutation = SetInfoAuthor { author: "after".to_string() };
     let next = applied(&base, &PdfHMutation::SetInfoAuthor(mutation.clone()));
     assert_eq!(next.info.author.as_deref(), Some("after"));
-    assert_eq!(<SetInfoAuthor as MutationKind<PdfSnapshot, PdfHMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfHMutation::SetInfoAuthor(SetInfoAuthor { author: "before".to_string() })]);
+    assert_eq!(<SetInfoAuthor as ColdMutationKind<PdfSnapshot, PdfHMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfHMutation::SetInfoAuthor(SetInfoAuthor { author: "before".to_string() })]);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -16,8 +16,8 @@ use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 #[cfg(test)] use semio_plugin::component::NoConfigMutation;
 #[cfg(test)] use semio_framework::Fault;
 
-fn demo() -> Fem3dSnapshot {
-    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
+fn demo() -> crate::context::Retiring<Fem3dSnapshot> {
+    crate::context::Retiring::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot"))
 }
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchElement) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
@@ -53,17 +53,17 @@ async fn patch_element_refuses_a_roll_on_a_bar_and_unknown_fields_3d() {
 /// 👥️ Two inspector commands authored on one base compose their independent intent in either replay order.
 #[test]
 fn sibling_field_commands_and_inverse_preserve_concurrent_intent(){
-    let base=semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral fixture");
+    let base=crate::context::Retiring::new(semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral fixture"));
     let first=emit(&base,PatchElement{id:"e1".into(),field:"start".into(),value:"n3".into()}).unwrap().artifact_mutations.remove(0);
     let second=emit(&base,PatchElement{id:"e1".into(),field:"kind".into(),value:"frame".into()}).unwrap().artifact_mutations.remove(0);
-    let first_then_second=vcs::apply_mutation(&vcs::apply_mutation(&base,&first).unwrap().0,&second).unwrap().0;
-    let combined=vcs::apply_mutation(&vcs::apply_mutation(&base,&second).unwrap().0,&first).unwrap().0;
+    let first_then_second=crate::context::applied(&crate::context::applied(&base,&first),&second);
+    let combined=crate::context::applied(&crate::context::applied(&base,&second),&first);
     assert_eq!(combined,first_then_second);
     assert!(matches!(&combined.elements[0],FemElement::Frame{start,..} if start=="n3"));
-    let mut undo=combined.clone();for inverse in protocol::ColdMutation::inverse(&first,&base).unwrap().iter().rev(){undo=vcs::apply_mutation(&undo,inverse).unwrap().0;}
-    assert_eq!(undo,vcs::apply_mutation(&base,&second).unwrap().0,"undo owns no sibling field");
-    let first_diff=protocol::ColdMutation::diff(&first,&base).into_parts().0;let second_diff=protocol::ColdMutation::diff(&second,&base).into_parts().0;
-    let mut sum=first_diff.clone();protocol::ColdMutationDiff::absorb(&mut sum,second_diff);
-    assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);
-    assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
+    let mut undo=crate::context::Retiring::new(combined.clone());for inverse in protocol::ColdMutation::inverse(&first,&*base).unwrap().iter().rev(){undo=crate::context::applied(&undo,inverse);}
+    assert_eq!(undo,crate::context::applied(&base,&second),"undo owns no sibling field");
+    let first_diff=protocol::ColdMutation::diff(&first,&*base).into_parts().0;let second_diff=protocol::ColdMutation::diff(&second,&*base).into_parts().0;
+    let mut sum=first_diff.clone();protocol::ColdMutationDiff::<Fem3dSnapshot>::absorb(&mut sum,second_diff);
+    assert_eq!(crate::context::Retiring::new(protocol::apply_diff_cold(&sum,&*base).unwrap()),combined);
+    assert_eq!(crate::context::Retiring::new(protocol::apply_diff_cold(&protocol::ColdDiffAlgebra::inverse(&sum,&*base),&*combined).unwrap()),base);
 }

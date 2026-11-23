@@ -198,7 +198,7 @@ fn the_introduction_read_arms_the_tour() {
 fn the_tour_card_carries_reacts_own_controls() {
     let source = wgpu_shell_source();
     let card = source.split("fn render_chrome_tour_step").nth(1).expect("the tour card renderer exists");
-    let card = &card[..card.find("//#region SilhouetteContent").unwrap_or(card.len())];
+    let card = &card[..card.find("//#region FrameContent").unwrap_or(card.len())];
     let layout = source.split("fn chrome_tour_layout").nth(1).expect("the tour card measurer exists");
     let layout = &layout[..layout.find("//#endregion").unwrap_or(layout.len())];
     for needle in ["introduction.skip", "introduction.back", "introduction.next", "introduction.done", "let counter_text = format!(\"{} / {step_count}\", step_index + 1)"] {

@@ -5222,9 +5222,7 @@
       "dynamics": "quasi-static",
       "supports": [
         "contact-rear-left",
-        "contact-rear-right",
-        "contact-front-left",
-        "contact-front-right"
+        "contact-rear-right"
       ],
       "assumptions": [
         {
@@ -6335,34 +6333,6 @@
             "anchor": "contact-rear-right"
           },
           {
-            "id": "support-contact-front-left",
-            "kind": "revolve",
-            "bone": "leg-front",
-            "material": "polyamide-glide",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.0125], [0.008, 0.0125], [0.008, 0.0]],
-            "axis": [0.99905, -0.04362, 0.0],
-            "origin": [0.0, 0.0, 0.21],
-            "member": "leg-front",
-            "part": "support",
-            "anchor": "contact-front-left"
-          },
-          {
-            "id": "support-contact-front-right",
-            "kind": "revolve",
-            "bone": "leg-front",
-            "material": "polyamide-glide",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.0125], [0.008, 0.0125], [0.008, 0.0]],
-            "axis": [0.99905, -0.04362, 0.0],
-            "origin": [0.0, 0.0, -0.21],
-            "member": "leg-front",
-            "part": "support",
-            "anchor": "contact-front-right"
-          },
-          {
             "id": "mass-rear-l",
             "kind": "ellipsoid",
             "bone": "leg-rear",
@@ -7233,34 +7203,6 @@
             "anchor": "contact-rear-right"
           },
           {
-            "id": "support-contact-front-left",
-            "kind": "revolve",
-            "bone": "leg-front",
-            "material": "polyamide-glide",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.015], [0.015, 0.015], [0.015, 0.0]],
-            "axis": [0.99905, -0.04362, 0.0],
-            "origin": [0.0, 0.0, 0.21],
-            "member": "leg-front",
-            "part": "support",
-            "anchor": "contact-front-left"
-          },
-          {
-            "id": "support-contact-front-right",
-            "kind": "revolve",
-            "bone": "leg-front",
-            "material": "polyamide-glide",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.015], [0.015, 0.015], [0.015, 0.0]],
-            "axis": [0.99905, -0.04362, 0.0],
-            "origin": [0.0, 0.0, -0.21],
-            "member": "leg-front",
-            "part": "support",
-            "anchor": "contact-front-right"
-          },
-          {
             "id": "mass-rear-l",
             "kind": "ellipsoid",
             "bone": "leg-rear",
@@ -8026,34 +7968,6 @@
             "anchor": "contact-rear-right"
           },
           {
-            "id": "support-contact-front-left",
-            "kind": "revolve",
-            "bone": "leg-front",
-            "material": "polyamide-glide",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.02], [0.03, 0.02], [0.03, 0.0]],
-            "axis": [0.99905, -0.04362, 0.0],
-            "origin": [0.0, 0.0, 0.21],
-            "member": "leg-front",
-            "part": "support",
-            "anchor": "contact-front-left"
-          },
-          {
-            "id": "support-contact-front-right",
-            "kind": "revolve",
-            "bone": "leg-front",
-            "material": "polyamide-glide",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.02], [0.03, 0.02], [0.03, 0.0]],
-            "axis": [0.99905, -0.04362, 0.0],
-            "origin": [0.0, 0.0, -0.21],
-            "member": "leg-front",
-            "part": "support",
-            "anchor": "contact-front-right"
-          },
-          {
             "id": "mass-rear-l",
             "kind": "ellipsoid",
             "bone": "leg-rear",
@@ -8692,34 +8606,6 @@
             "member": "leg-rear",
             "part": "support",
             "anchor": "contact-rear-right"
-          },
-          {
-            "id": "support-contact-front-left",
-            "kind": "revolve",
-            "bone": "leg-front",
-            "material": "polyamide-glide",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.0375], [0.075, 0.0375], [0.075, 0.0]],
-            "axis": [0.99905, -0.04362, 0.0],
-            "origin": [0.0, 0.0, 0.21],
-            "member": "leg-front",
-            "part": "support",
-            "anchor": "contact-front-left"
-          },
-          {
-            "id": "support-contact-front-right",
-            "kind": "revolve",
-            "bone": "leg-front",
-            "material": "polyamide-glide",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.0375], [0.075, 0.0375], [0.075, 0.0]],
-            "axis": [0.99905, -0.04362, 0.0],
-            "origin": [0.0, 0.0, -0.21],
-            "member": "leg-front",
-            "part": "support",
-            "anchor": "contact-front-right"
           },
           {
             "id": "mass-rear-l",

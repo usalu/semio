@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:fleet-identity:v1",
+  "title": "Fleet Origin Identity",
+  "description": "🪪️ How the machines of a fleet group prove who they are to the cache and the execution scheduler without a shared secret. Every origin (machine) generates Ed25519 keys on its own disk, one per role, and publishes only the public halves, signed by its origin key, in its own directory of the group store (origins/<origin>/fleet-auth.json). A request carries the origin, the role, the audience, a timestamp and a nonce and is signed over method, target and content hash, so no secret ever crosses the wire. Servers pin the origin key of the first registration they accept; a later registration with another origin key must be signed by the pinned one, or the origin must have been retired and re-admitted.",
+  "oneOf": [
+    { "$ref": "#/definitions/Registration" },
+    { "$ref": "#/definitions/Pins" },
+    { "$ref": "#/definitions/Divergences" }
+  ],
+  "definitions": {
+    "Origin": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+    "PublicKey": { "description": "Ed25519 public key, SPKI DER, base64url without padding.", "type": "string", "pattern": "^[A-Za-z0-9_-]{59}$" },
+    "Signature": { "description": "Ed25519 signature, base64url without padding.", "type": "string", "pattern": "^[A-Za-z0-9_-]{86}$" },
+    "Role": { "type": "string", "enum": ["cache-read", "cache-write", "submit", "worker", "admin"] },
+    "Milliseconds": { "type": "integer", "minimum": 0 },
+    "Keys": {
+      "description": "One public key per role; admin exists only for the origin of the group server.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cache-read", "cache-write", "submit", "worker"],
+      "properties": {
+        "cache-read": { "$ref": "#/definitions/PublicKey" },
+        "cache-write": { "$ref": "#/definitions/PublicKey" },
+        "submit": { "$ref": "#/definitions/PublicKey" },
+        "worker": { "$ref": "#/definitions/PublicKey" },
+        "admin": { "$ref": "#/definitions/PublicKey" }
+      }
+    },
+    "Registration": {
+      "description": "origins/<origin>/fleet-auth.json. signature covers the canonical JSON of every other field. rotatedFrom is present when the origin key changed: the previous origin key signed the same canonical text.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "originId", "group", "sequence", "createdAtMs", "origin", "keys", "signature"],
+      "properties": {
+        "version": { "const": 1 },
+        "originId": { "$ref": "#/definitions/Origin" },
+        "group": { "$ref": "#/definitions/Origin" },
+        "sequence": { "type": "integer", "minimum": 1 },
+        "createdAtMs": { "$ref": "#/definitions/Milliseconds" },
+        "origin": { "$ref": "#/definitions/PublicKey" },
+        "keys": { "$ref": "#/definitions/Keys" },
+        "rotatedFrom": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["publicKey", "signature"],
+          "properties": { "publicKey": { "$ref": "#/definitions/PublicKey" }, "signature": { "$ref": "#/definitions/Signature" } }
+        },
+        "signature": { "$ref": "#/definitions/Signature" }
+      }
+    },
+    "Pins": {
+      "description": "The private memory of one server: the origin key it accepted first for every origin.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "pins"],
+      "properties": {
+        "version": { "const": 1 },
+        "pins": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["publicKey", "pinnedAtMs"],
+            "properties": { "publicKey": { "$ref": "#/definitions/PublicKey" }, "pinnedAtMs": { "$ref": "#/definitions/Milliseconds" } }
+          }
+        }
+      }
+    },
+    "Divergences": {
+      "description": "The cache server's record of a key that two origins produced differently: the first stays, the later one was refused. Both fingerprints are kept as evidence, with the class of the result and the output paths that differ. `total` and `classes` count every divergence since `since` (the newest 1000 rows are kept). Notes and ledgers that two machines write differently by design are no divergence.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "since", "total", "classes", "rows"],
+      "properties": {
+        "version": { "const": 1 },
+        "since": { "$ref": "#/definitions/Milliseconds" },
+        "total": { "type": "integer", "minimum": 0 },
+        "classes": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "rows": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["namespace", "kind", "key", "keptOrigin", "keptSha256", "refusedOrigin", "refusedSha256", "sort", "differing", "atMs"],
+            "properties": {
+              "namespace": { "type": "string" },
+              "kind": { "enum": ["ac", "cas", "nx"] },
+              "key": { "type": "string" },
+              "keptOrigin": { "type": "string" },
+              "keptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "refusedOrigin": { "type": "string" },
+              "refusedSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "sort": { "type": "string", "description": "unit, project-inference, closure or other" },
+              "differing": { "type": "array", "maxItems": 16, "items": { "type": "string" }, "description": "The output paths whose digests differ between the kept and the refused result." },
+              "atMs": { "$ref": "#/definitions/Milliseconds" }
+            }
+          }
+        }
+      }
+    },
+    "Consumption": {
+      "description": "The cache server's tally of which origin read the action results of which origin: one row per producer>consumer pair (the id `unknown` stands for an entry stored before the server kept provenance, `static` and `anonymous` for readers without a fleet identity, `*>*` for all pairs beyond the bound of 1024), the reads and, among them, the compiled units; `since` is the time of the first read.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "since", "total", "pairs"],
+      "properties": {
+        "version": { "const": 1 },
+        "since": { "$ref": "#/definitions/Milliseconds" },
+        "total": { "type": "integer", "minimum": 0 },
+        "pairs": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Za-z0-9*][A-Za-z0-9._*-]{0,63}>[A-Za-z0-9*][A-Za-z0-9._*-]{0,63}$": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["hits", "units"],
+              "properties": { "hits": { "type": "integer", "minimum": 0 }, "units": { "type": "integer", "minimum": 0 } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

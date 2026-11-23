@@ -4,7 +4,7 @@
 
 use semio_renderer_wgpu_shell_async::{debug_log, resolve_language_axes};
 use semio_renderer_wgpu_shell_chrome_state::{ChromePrefsState, ChromeState, RefusedGuestFault, ThemeDocument, ThemeNumber, ThemePaintRef, UiPrefsSnapshot, appearance_id, apply_theme_document_metrics, default_compute_worker_count, shell_theme_document_base, theme_document_geometry};
-use semio_renderer_wgpu_shell_history::{HistoryState, SHELL_CHROME_IO_FIELD_BYTES, prefs_get, prefs_set, raw_prefs_get, raw_prefs_set};
+use semio_renderer_wgpu_shell_history::{HistoryState, LocalFileRow, SHELL_CHROME_IO_FIELD_BYTES, prefs_get, prefs_set, raw_prefs_get, raw_prefs_set};
 use semio_renderer_wgpu_shell_plugins::{DEFAULT_APP_NONE_VALUE, PluginState, ShellPluginFault, ShellSurfaceFault, flatten_panel_tab_leaves};
 use semio_framework::{AppDefinition, IconName, ViewModel};
 use semio_os_config::io::text::mutations::decode_ui_preferences_config_mutation_json;

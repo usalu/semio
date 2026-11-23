@@ -4916,6 +4916,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
+ "serde",
 ]
 
 [[package]]
@@ -10356,6 +10357,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-value",
  "semio-os-kernel",
+ "semio-plugin-command",
  "semio-plugin-decl-app",
  "semio-plugin-instance-app",
  "semio-plugin-instance-initialization",
@@ -14235,6 +14237,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-job-payload",
  "semio-framework-machine",
+ "semio-framework-mesh-component-references",
  "semio-framework-mesh-engine",
  "semio-framework-pack",
  "semio-framework-pack-json",
@@ -14286,6 +14289,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-mut-transforms",
  "semio-s-artifact-procedural-3d-mut-widgets",
  "semio-s-artifact-procedural-3d-mutations",
+ "semio-s-artifact-procedural-3d-navigate-graph",
  "semio-s-artifact-procedural-3d-node-graph-edit",
  "semio-s-artifact-procedural-3d-preview-eval",
  "semio-s-artifact-procedural-3d-rotate-selection",

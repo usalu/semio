@@ -104,24 +104,7 @@ pub mod standards {
             pub mod a {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "."]
-                    pub mod mutations {
-                        pub use semio_s_artifact_stdio_pdf_mutations::standards::v1_4::subsets::a::schema::mutations::*;
-                        #[path = "."]
-                        pub mod set_page_text {
-                            pub use semio_s_artifact_stdio_pdf_tests::standards::v1_4::subsets::a::schema::mutations::set_page_text::*;
-                            #[cfg(test)]
-                            #[path = "../../../../../../../../4️⃣1.4/🪆️subsets/🗄️a/🧬️schema/🧬️mutations/📝️set-page-text/🧪️tests/🔬️unit/🦀️.rs"]
-                            pub mod tests;
-                        }
-                        #[path = "."]
-                        pub mod clear_page_text {
-                            pub use semio_s_artifact_stdio_pdf_mutations::standards::v1_4::subsets::a::schema::mutations::clear_page_text::*;
-                            #[cfg(test)]
-                            #[path = "../../../../../../../../4️⃣1.4/🪆️subsets/🗄️a/🧬️schema/🧬️mutations/🧹️clear-page-text/🧪️tests/🔬️unit/🦀️.rs"]
-                            pub mod tests;
-                        }
-                    }
+                    pub use semio_s_artifact_stdio_pdf_mutations::standards::v1_4::subsets::a::schema::mutations;
                 }
                 #[path = "../../../../../../../../4️⃣1.4/🪆️subsets/🗄️a/🚪️io/🦀️.rs"]
                 pub mod io;
@@ -130,24 +113,7 @@ pub mod standards {
             pub mod x {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "."]
-                    pub mod mutations {
-                        pub use semio_s_artifact_stdio_pdf_mutations_2::standards::v1_4::subsets::x::schema::mutations::*;
-                        #[path = "."]
-                        pub mod set_page_size {
-                            pub use semio_s_artifact_stdio_pdf_tests::standards::v1_4::subsets::x::schema::mutations::set_page_size::*;
-                            #[cfg(test)]
-                            #[path = "../../../../../../../../4️⃣1.4/🪆️subsets/🖨️x/🧬️schema/🧬️mutations/📐️set-page-size/🧪️tests/🔬️unit/🦀️.rs"]
-                            pub mod tests;
-                        }
-                        #[path = "."]
-                        pub mod collapse_page_size {
-                            pub use semio_s_artifact_stdio_pdf_mutations_2::standards::v1_4::subsets::x::schema::mutations::collapse_page_size::*;
-                            #[cfg(test)]
-                            #[path = "../../../../../../../../4️⃣1.4/🪆️subsets/🖨️x/🧬️schema/🧬️mutations/📉️collapse-page-size/🧪️tests/🔬️unit/🦀️.rs"]
-                            pub mod tests;
-                        }
-                    }
+                    pub use semio_s_artifact_stdio_pdf_mutations_2::standards::v1_4::subsets::x::schema::mutations;
                 }
                 #[path = "../../../../../../../../4️⃣1.4/🪆️subsets/🖨️x/🚪️io/🦀️.rs"]
                 pub mod io;

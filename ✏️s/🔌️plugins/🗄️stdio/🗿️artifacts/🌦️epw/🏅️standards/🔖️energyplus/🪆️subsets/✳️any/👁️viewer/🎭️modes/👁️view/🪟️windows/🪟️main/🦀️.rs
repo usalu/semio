@@ -67,10 +67,10 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `EpwSnapshot -> BuiltNode` read: one row per hourly record, all 35 spec columns, no edit
 /// affordances.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &EpwSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &EpwSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let columns = EPW_TABLE_COLUMNS.iter().map(|column| column.to_string()).collect();
     let rows = document.records.iter().map(|record| record.fields().iter().map(|field| field.to_string()).collect()).collect();
-    TableWindowKit::render(&TableView { columns, rows })
+    TableWindowKit::render(&TableView { columns, rows }, locale)
 }
 //#endregion 🔖️Render
 

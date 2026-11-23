@@ -498,6 +498,10 @@
       "en": "{path} was republished with older content and is not applied; the newer content is published again.",
       "de": "{path} wurde mit älterem Inhalt erneut veröffentlicht und wird nicht übernommen; der neuere Inhalt wird erneut veröffentlicht."
     },
+    "event.merged": {
+      "en": "{path} was edited here while newer fleet content arrived; both changes were merged and the merge publishes as a local edit (the local bytes before the merge are in .cache/f/{lost}).",
+      "de": "{path} wurde hier bearbeitet, während neuerer Inhalt der Flotte eintraf; beide Änderungen wurden zusammengeführt, das Ergebnis wird als lokale Änderung veröffentlicht (die lokalen Bytes vor dem Zusammenführen liegen in .cache/f/{lost})."
+    },
     "event.stale-base": {
       "en": "{path} was edited here on a view that lacked newer fleet content ({seconds} s after it was published); the fleet content stays and the local bytes are in .cache/f/lost.",
       "de": "{path} wurde hier auf einer Sicht ohne den neueren Inhalt der Flotte bearbeitet ({seconds} s nach dessen Veröffentlichung); der Flotteninhalt bleibt, die lokalen Bytes liegen in .cache/f/lost."

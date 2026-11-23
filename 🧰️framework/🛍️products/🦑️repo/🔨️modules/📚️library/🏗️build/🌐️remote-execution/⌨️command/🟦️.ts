@@ -25,12 +25,13 @@ export type RemoteExecutionCommandContextV1=Readonly<{root:string;environment:Re
 /** 🏁️ How a command ended: the process exit code and an optional machine-readable document to print. */
 export type RemoteExecutionCommandResultV1=Readonly<{exitCode:number;result?:unknown}>;
 
-type Operation="serve"|"status"|"workers";
+type Operation="serve"|"status"|"workers"|"cancel";
 
 const LANGUAGES=texts.languages as readonly RemoteCacheLanguageV1[],LOOPBACK=["127.0.0.1","localhost","::1","[::1]"],
  OPTIONS:Readonly<Record<Operation,Readonly<{valued:readonly string[];plain:readonly string[]}>>>={
   serve:{valued:["--bind","--grpc-port","--worker-port","--cache","--local-workers","--concurrency","--advertise","--tls-certificate","--tls-key","--sandbox","--work-directory","--lang"],plain:[]},
   status:{valued:["--join","--lang"],plain:[]},
+  cancel:{valued:["--join","--lang"],plain:[]},
   workers:{valued:["--join","--name","--origin","--concurrency","--sandbox","--properties","--work-directory","--load-interval","--lang"],plain:[]},
  };
 
@@ -46,15 +47,24 @@ export function remoteExecutionTextV1(language:RemoteCacheLanguageV1,key:string,
 
 const both=(key:string,variables:Readonly<Record<string,string|number>>={}):string=>LANGUAGES.map(language=>remoteExecutionTextV1(language,key,variables)).join("\n");
 
-/** 📝️ The closed arguments of one `remote-execution` operation. */
+/** 🎯️ What `cancel` may name: one operation by at least 8 characters of its id or action digest, or `all-stuck`. */
+const CANCEL_TARGET=/^(?:all-stuck|[A-Za-z0-9-]{8,64})$/u;
+
+/** 📝️ The closed arguments of one `remote-execution` operation; `cancel` carries its target as `values.target`. */
 export type RemoteExecutionArgumentsV1=Readonly<{operation:Operation;values:Readonly<Record<string,string>>}>;
 
-/** 🧭️ Reads `serve|status|workers` with its options (`--name value` or `--name=value`); every unknown, misplaced or repeated option is refused in both languages. */
+/** 🧭️ Reads `serve|status|workers|cancel <operation|all-stuck>` with its options (`--name value` or `--name=value`); every unknown, misplaced or repeated option is refused in both languages. */
 export function parseRemoteExecutionArgumentsV1(args:readonly string[]):RemoteExecutionArgumentsV1{
  const operation=args[0];
- if(operation!=="serve"&&operation!=="status"&&operation!=="workers")throw Error(both("error.syntax"));
+ if(operation!=="serve"&&operation!=="status"&&operation!=="workers"&&operation!=="cancel")throw Error(both("error.syntax"));
  const allowed=OPTIONS[operation],seen=new Set<string>(),values:Record<string,string>={};
- for(let index=1;index<args.length;index++){
+ let first=1;
+ if(operation==="cancel"){
+  const target=args[1];
+  if(target===undefined||!CANCEL_TARGET.test(target))throw Error(both("error.target"));
+  values.target=target;first=2;
+ }
+ for(let index=first;index<args.length;index++){
   const argument=args[index]!,cut=argument.indexOf("="),name=cut<0?argument:argument.slice(0,cut);
   if(seen.has(name))throw Error(both("error.repeated",{option:name}));
   if(!allowed.valued.includes(name))throw Error(both("error.option",{operation,option:argument}));
@@ -210,11 +220,30 @@ export async function remoteExecutionStatusV1(args:readonly string[],context:Rem
  return status;
 }
 
-/** 🎬️ Routes `remote-execution serve|status|workers`; `args` are the words after `remote-execution`. */
+/** 🛑️ Frees a wedged build without restarting anything: asks the scheduler to end one operation (its id or action digest from `GET /v1/fleet/load`, at least 8 characters) or every `all-stuck` one older than the policy's `stuckSeconds`. The clients that wait for them hear a cancellation and compile the unit locally; a worker that still runs one is told to stop it. Prints what was ended in both languages and the closed `Cancellation` document. */
+export async function remoteExecutionCancelV1(args:readonly string[],context:RemoteExecutionCommandContextV1):Promise<RemoteExecutionCommandResultV1>{
+ const parsed=parseRemoteExecutionArgumentsV1(["cancel",...args]),flags=parsed.values,languages=remoteCacheLanguagesV1(flags["--lang"],context.environment),say=reporter(context,languages);
+ const policy=readRemoteExecutionPolicyV1(),cachePolicy=readRemoteCachePolicyV1(),names=policy.environment,environment=context.environment,target=flags.target!;
+ const endpoint=resolveRemoteExecutionEndpointV1({environment,root:context.root})?.endpoint,named=flags["--join"]??optional(environment,names.scheduler),scheduler=named??(endpoint===undefined?undefined:(await resolveRemoteExecutionSchedulerV1({environment,root:context.root},endpoint))?.url);
+ if(scheduler===undefined)throw Error(both("error.join",{variable:names.scheduler}));
+ const token=optional(environment,cachePolicy.server.tokenEnvironment.write)??optional(environment,cachePolicy.defaults.tokenEnvironment),workerToken=optional(environment,names.workerToken);
+ await context.progress("remote-execution:cancel");say("cancel.start",{target});
+ const response=await remoteCacheFetchV1({...environment,SEMIO_WORKSPACE_ROOT:context.root},{root:context.root,audience:"execution",roleOf:()=>"submit"})(`${scheduler.replace(/\/+$/u,"")}/v1/operations/${target}/cancel`,{method:"POST",signal:AbortSignal.any([context.signal,AbortSignal.timeout(policy.worker.heartbeatSeconds*2000)]),headers:workerToken?{authorization:`Bearer ${workerToken}`}:token?{authorization:`Bearer ${token}`}:{}});
+ if(!response.ok){await response.body?.cancel();throw Error(both("error.cancel",{status:response.status}));}
+ const answer=await response.json() as {cancelled:readonly {id:string;action:string;stage:string;worker:string|null;elapsedSeconds:number}[]},document={version:1,target,cancelled:answer.cancelled};
+ requireRemoteExecutionShapeV1("Cancellation",document,"Closed cancellation required");
+ if(answer.cancelled.length===0)say("cancel.none");
+ for(const row of answer.cancelled)say("cancel.row",{id:row.id,action:row.action,stage:row.stage,worker:row.worker??"-",seconds:row.elapsedSeconds});
+ say("cancel.done",{count:answer.cancelled.length});
+ return {exitCode:0,result:document};
+}
+
+/** 🎬️ Routes `remote-execution serve|status|workers|cancel`; `args` are the words after `remote-execution`. */
 export async function runRemoteExecutionCommandV1(args:readonly string[],context:RemoteExecutionCommandContextV1):Promise<RemoteExecutionCommandResultV1>{
  const parsed=parseRemoteExecutionArgumentsV1(args);
  if(parsed.operation==="serve")return serveRemoteExecutionV1(args.slice(1),context);
  if(parsed.operation==="workers")return runRemoteExecutionWorkersV1(args.slice(1),context);
+ if(parsed.operation==="cancel")return remoteExecutionCancelV1(args.slice(1),context);
  return {exitCode:0,result:await remoteExecutionStatusV1(args.slice(1),context)};
 }
 

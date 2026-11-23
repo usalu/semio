@@ -172,5 +172,5 @@ fn mcp_probe_document_transport_binds_full_scope_and_exact_surface_authority() {
         store::sync::PersistenceBinding::Hub { surface, .. } => assert_eq!(surface.as_deref(), Some(PROBE_SURFACE_ID)),
         store::sync::PersistenceBinding::Folder { .. } => panic!("hub origin must bind a hub persistence binding"),
     }
-    assert!(!fixture_text("../../🏠️workspace/🦀️.rs").contains("probe_document_socket_surface"));
+    assert!(!fixture_text!("../../🏠️workspace/🦀️.rs").contains("probe_document_socket_surface"));
 }

@@ -43,37 +43,28 @@
     "retirementCopy": {
       "payloadBytes": 3,
       "cancelledBytes": 3,
+      "publicationHeaderCount": 1,
       "headers": [
-        {
-          "nativeWordBytes": 4,
-          "headerBytes": 12,
-          "aggregateBytes": 27
-        },
         {
           "nativeWordBytes": 8,
           "headerBytes": 24,
-          "aggregateBytes": 51
+          "intermediateRetirementBytes": 720,
+          "aggregateBytes": 747
         }
-      ],
-      "intermediateHeaderCount": 1,
-      "publicationHeaderCount": 1
+      ]
     },
     "cursorRetirementCopy": {
       "payloadBytes": 3,
       "cancelledBytes": 3,
       "cancelledHeaderCount": 1,
-      "intermediateHeaderCount": 2,
+      "cursorHandoffHeaderCount": 1,
       "publicationHeaderCount": 1,
       "headers": [
         {
-          "nativeWordBytes": 4,
-          "headerBytes": 12,
-          "aggregateBytes": 39
-        },
-        {
           "nativeWordBytes": 8,
           "headerBytes": 24,
-          "aggregateBytes": 75
+          "intermediateRetirementBytes": 808,
+          "aggregateBytes": 859
         }
       ]
     }

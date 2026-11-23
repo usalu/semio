@@ -126,7 +126,7 @@ fn a_picked_entity_selects_its_governing_check_in_every_window() {
 }
 //#endregion 🛰️LiveWiring
 
-semio_plugin::history_edit_acceptance_law!("norm", crate::En1999PlayApp, || semio_plugin::App { definition: crate::create_en1999_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("norm", crate::En1999PlayApp, || semio_plugin::App { definition: crate::create_en1999_app(), examples: Vec::new() }, "../../..");
 
 #[test]
 fn the_new_document_palette_offers_the_full_showcase_and_its_dsl_round_trips_to_the_committed_fixture() {

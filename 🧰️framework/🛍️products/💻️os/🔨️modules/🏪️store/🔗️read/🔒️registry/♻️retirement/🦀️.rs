@@ -68,6 +68,7 @@ pub fn snapshot_registry_alias_close_step(slot:&mut Option<SnapshotReadRegistryA
 }
 
 impl ErasedSnapshotRetirement for SnapshotReadRegistryAliasRetirement {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
  fn next_demand(&self,_body:usize)->Result<RetirementDemand,ValueError>{self.demands()}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.copy_bytes)}
  fn next_capacity_byte_demand(&self,_body:usize)->Result<usize,ValueError>{Ok(self.demands()?.capacity_bytes)}

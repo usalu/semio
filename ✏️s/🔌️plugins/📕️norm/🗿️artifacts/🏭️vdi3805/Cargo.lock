@@ -5719,6 +5719,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-value",
  "semio-os-kernel",
+ "semio-plugin-command",
  "semio-plugin-decl-app",
  "semio-plugin-instance-app",
  "semio-plugin-instance-initialization",
@@ -7649,6 +7650,23 @@ dependencies = [
 
 [[package]]
 name = "semio-s-artifact-norm-vdi3805-examples"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-schema",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-norm-vdi3805-examples-blatt-3-to-8",
+ "semio-s-artifact-norm-vdi3805-inferences",
+ "semio-s-artifact-norm-vdi3805-io",
+ "semio-s-artifact-norm-vdi3805-model",
+ "semio-s-plugin-norm-compliance",
+ "semio-ui-locale",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-vdi3805-examples-blatt-3-to-8"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",

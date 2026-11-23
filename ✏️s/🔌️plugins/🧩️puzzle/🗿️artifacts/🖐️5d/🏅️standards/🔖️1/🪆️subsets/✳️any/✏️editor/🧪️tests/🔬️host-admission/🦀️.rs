@@ -204,12 +204,12 @@ fn puzzle5d_host_admission_neutral_projection_and_granular_inverse_match_indepen
     let mut state = before.clone();
     let mut inverses = Vec::new();
     for operation in &operations {
-        inverses.extend(protocol::Mutation::<Puzzle5dSnapshot>::inverse(operation, &state).expect("typed inverse"));
-        state = protocol::apply_diff_cold(protocol::Mutation::<Puzzle5dSnapshot>::diff(operation, &state).diff(), &state).expect("typed intent");
+        inverses.extend(protocol::ColdMutation::<Puzzle5dSnapshot>::inverse(operation, &state).expect("typed inverse"));
+        state = protocol::apply_diff_cold(protocol::ColdMutation::<Puzzle5dSnapshot>::diff(operation, &state).diff(), &state).expect("typed intent");
     }
     assert_eq!(state, after);
     for inverse in inverses.iter().rev() {
-        state = protocol::apply_diff_cold(protocol::Mutation::<Puzzle5dSnapshot>::diff(inverse, &state).diff(), &state).expect("typed inverse intent");
+        state = protocol::apply_diff_cold(protocol::ColdMutation::<Puzzle5dSnapshot>::diff(inverse, &state).diff(), &state).expect("typed inverse intent");
     }
     assert_eq!(state, before);
     let projected = puzzle5d_document_from_snapshot(&after).expect("owned native projection");

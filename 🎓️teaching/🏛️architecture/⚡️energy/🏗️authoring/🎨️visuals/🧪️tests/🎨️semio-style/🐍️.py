@@ -43,35 +43,36 @@ class ClipStyleTest(unittest.TestCase):
         cls.settings.__exit__(None, None, None)
         cls.directory.cleanup()
 
-    def test_portable_silhouette_vertices(self):
-        for case in CASES["silhouettes"]:
+    def test_portable_frame_outline_and_chip_regions(self):
+        for case in CASES["frames"]:
             with self.subTest(case=case["id"]):
-                actual = self.visuals.window_silhouette_outline(**case["input"])
+                size = (case["input"]["width"], case["input"]["height"])
+                actual = self.visuals.window_frame_outline(*size, inset=case["input"].get("inset", 1))
                 self.assertEqual([list(point) for point in actual], case["outline"])
+                chips = {key: value for key, value in case["input"].items() if key not in ("width", "height", "inset")}
+                self.assertEqual(self.visuals.window_frame_chip_regions(*size, **chips), case["chips"])
 
-    def test_silhouette_matches_independent_skia_union(self):
+    def test_frame_matches_independent_skia_union_with_its_chips(self):
         import pathops
 
-        for case in CASES["silhouettes"]:
+        def rectangle(left, top, right, bottom):
+            path = pathops.Path()
+            path.moveTo(left, top)
+            path.lineTo(right, top)
+            path.lineTo(right, bottom)
+            path.lineTo(left, bottom)
+            path.close()
+            return path
+
+        for case in CASES["frames"]:
             with self.subTest(case=case["id"]):
-                result = pathops.Path()
-                for left, top, right, bottom in case["regions"]:
-                    rectangle = pathops.Path()
-                    rectangle.moveTo(left, top)
-                    rectangle.lineTo(right, top)
-                    rectangle.lineTo(right, bottom)
-                    rectangle.lineTo(left, bottom)
-                    rectangle.close()
-                    result = pathops.op(result, rectangle, pathops.PathOp.UNION)
-                actual = self.visuals.window_silhouette_outline(**case["input"])
-                self.assertAlmostEqual(polygon_area(actual), abs(result.area))
-                expected = pathops.Path()
-                expected.moveTo(*actual[0])
-                for point in actual[1:]:
-                    expected.lineTo(*point)
-                expected.close()
-                difference = pathops.op(expected, result, pathops.PathOp.XOR)
-                self.assertAlmostEqual(abs(difference.area), 0)
+                outline = self.visuals.window_frame_outline(case["input"]["width"], case["input"]["height"], inset=case["input"].get("inset", 1))
+                frame = rectangle(outline[0][0], outline[0][1], outline[2][0], outline[2][1])
+                union = frame
+                for chip in case["chips"]:
+                    union = pathops.op(union, rectangle(chip["x"], chip["y"], chip["x"] + chip["width"], chip["y"] + chip["height"]), pathops.PathOp.UNION)
+                self.assertAlmostEqual(polygon_area(outline), abs(frame.area))
+                self.assertAlmostEqual(abs(pathops.op(union, frame, pathops.PathOp.XOR).area), 0)
 
     def test_fonts_palette_and_spacing_follow_canonical_semio_tokens(self):
         tokens = json.loads((ROOT / "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json").read_text(encoding="utf-8"))
@@ -170,15 +171,20 @@ class ClipStyleTest(unittest.TestCase):
         self.assertNotEqual(changed, state)
         self.assertFalse(runtime.reusable_clip(Path(tempfile.gettempdir()) / "absent.mp4", state))
 
-    def test_window_frame_is_one_fused_square_corner_polygon(self):
+    def test_window_frame_is_one_rectangle_with_a_glass_chip_inside_it(self):
         import numpy as np
         from manim import Polygon
 
         case = CASES["chrome"]
         frame = self.visuals.window_frame(**case["frame"])
         self.assertIsInstance(frame, Polygon)
-        self.assertEqual(len(frame.submobjects), 0)
         np.testing.assert_allclose(frame.get_vertices()[:, :2], case["frame_vertices"], atol=1e-8)
+        chip = frame.submobjects[0]
+        np.testing.assert_allclose(chip.get_vertices()[:, :2], case["chip_vertices"], atol=1e-8)
+        self.assertEqual(chip.get_stroke_width(), 0)
+        self.assertLess(chip.get_fill_opacity(), 1)
+        self.assertNotEqual(chip.get_fill_color().to_hex().lower(), self.theme.CHROME_FILL.lower())
+        np.testing.assert_allclose([frame.get_left()[0], frame.get_right()[0], frame.get_top()[1], frame.get_bottom()[1]], [-2, 2, 1, -1], atol=1e-8)
         self.assertEqual(frame.get_stroke_width(), self.theme.CHROME_BORDER)
         self.assertEqual(frame.get_fill_color().to_hex().lower(), self.theme.CHROME_FILL.lower())
 
@@ -198,8 +204,8 @@ class ClipStyleTest(unittest.TestCase):
         self.assertGreater(frame.width, label.width)
         self.assertGreater(frame.height, label.height)
         frame, body = self.visuals.stat_card(**case["card"])
-        self.assertEqual(len(frame.get_vertices()), 6)
-        self.assertEqual(len(frame.submobjects), 0)
+        self.assertEqual(len(frame.get_vertices()), 4)
+        self.assertGreaterEqual(len(frame.submobjects), 1)
         self.assertLess(body[1].get_top()[1], body[0].get_bottom()[1])
         self.assertGreaterEqual(body.get_left()[0], frame.get_left()[0])
         self.assertLessEqual(body.get_right()[0], frame.get_right()[0])

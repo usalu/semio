@@ -194,6 +194,7 @@
             "edges": []
         });
         assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture.to_string(),&mut control)});
+        host.focus.set_selection_options("lasso", "replace", true, false, false);
         host.pointer_down_screen(380.0, 280.0, 0, false, false);
         for (x, y) in [(380.0, 320.0), (420.0, 320.0), (420.0, 280.0)] {
             let preview = host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Move, x, y, shift: false, ctrl_or_meta: false, alt: false }).expect("lasso preview plan");

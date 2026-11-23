@@ -1,8 +1,9 @@
 {
   "title": "Used Household Objects Staffage Collection",
   "emoji": "🛋",
-  "status": "open",
+  "status": "closed",
   "description": "Use a massive wave of Opus 5.5 agents to extend the staffage with a huge collection of used apartment/house objects. Forty handcrafted second-hand household objects (living, bedroom, kitchen, bathroom, hallway, utility, children, home office, balcony) in the staffage archive `🎓️teaching/🏛️architecture/🧍️staffage`, categories furniture, appliances and objects, each with rig, poses (stored, carried, in use), clips, thermal and structural model, 2D representations and 3D volumes at 1:50, 1:100, 1:200, 1:500, manifest rows and the collection `used-household-objects`, verified by the product's validators and tests.",
+  "summary": "35 used household objects are published in the staffage catalog and manifest; each validates with 0 issues and all pass the product check CLI in the catalog-wide run of 2026-11-23 (objects 58 of 58, appliances 39 of 39, furniture 39 of 39). The sewing machine was repaired. Rows 36 to 40 of the assignment were never started and stay unstarted by the dev's order to finish started rows only. Not every sheet was opened and the reference tables were not re-researched. Evidence: household.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS.",
   "goal": "animate",
   "sessions": [
     "ab50d100-8491-4eac-a0c1-80dc7759a8a1"
@@ -18,6 +19,15 @@
       "prompt": "Use a massive wave of Opus 5.5 agents to extend the staffage with a huge collection of used apartment/house objects. Forty handcrafted second-hand household objects (living, bedroom, kitchen, bathroom, hallway, utility, children, home office, balcony) in the staffage archive `🎓️teaching/🏛️architecture/🧍️staffage`, categories furniture, appliances and objects, each with rig, poses (stored, carried, in use), clips, thermal and structural model, 2D representations and 3D volumes at 1:50, 1:100, 1:200, 1:500, manifest rows and the collection `used-household-objects`, verified by the product's validators and tests.",
       "llm": "opus-5-5",
       "effort": "high"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 12:38:48",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "508f457ff1e1b2e344827fe80c57ec46a04af505",
+      "summary": "35 used household objects are published in the staffage catalog and manifest; each validates with 0 issues and all pass the product check CLI in the catalog-wide run of 2026-11-23 (objects 58 of 58, appliances 39 of 39, furniture 39 of 39). The sewing machine was repaired. Rows 36 to 40 of the assignment were never started and stay unstarted by the dev's order to finish started rows only. Not every sheet was opened and the reference tables were not re-researched. Evidence: household.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS."
     }
   ]
 }

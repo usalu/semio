@@ -1,7 +1,7 @@
 import {createHash,randomBytes} from "node:crypto";
 import {appendFileSync,chmodSync,constants,copyFileSync,existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,readlinkSync,renameSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {basename,dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
-import {differingComponentsV1,extraNeutralV1,extraRestoreV1,laneNeutralV1,laneRestoreV1,parseDepInfoV1,sha256V1,UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+import {buildDependencyPathsV1,differingComponentsV1,extraNeutralV1,extraRestoreV1,laneNeutralV1,laneRestoreV1,parseDepInfoV1,sha256V1,UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 import {compilerWrittenV1} from "../🔏️key/🔗️sources/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {casObjectPathV1,casRootV1} from "../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
@@ -197,7 +197,7 @@ function stampFile(path:string,sha:string,stampDirectory:string):void{
 }
 
 /** 📥️ Publishes one successful compilation. Objects are content-addressed and the entry is renamed into place last, so a reader sees all of it or none of it. Returns the digests, `undefined` when the dependency file is missing, an `expected` output is absent (an entry that cannot serve its dependants is never stored) or the outputs exceed the bound. */
-export function publishUnitV1(root:string,input:Readonly<{key:string;crate:string;cwd:string;outDir:string;laneRoot:string|undefined;outputs:readonly string[];stdout:string;stderr:string;stampDirectory:string|undefined;provenance?:UnitEntryV1["provenance"];slot?:string;retention?:Readonly<{workspace:string|undefined;externs:readonly string[];toolchain:string}>;spill?:boolean;session?:boolean;expected?:readonly string[];extra?:string}>):UnitEntryV1|undefined{
+export function publishUnitV1(root:string,input:Readonly<{key:string;crate:string;cwd:string;outDir:string;laneRoot:string|undefined;outputs:readonly string[];stdout:string;stderr:string;stampDirectory:string|undefined;provenance?:UnitEntryV1["provenance"];slot?:string;retention?:Readonly<{workspace:string|undefined;externs:readonly string[];units?:readonly string[];toolchain:string}>;spill?:boolean;session?:boolean;expected?:readonly string[];extra?:string}>):UnitEntryV1|undefined{
  const putObject=input.spill===true?putSpillObjectV1:putObjectCas;
  if(input.expected&&uncoveredOutputsV1(input.outputs.map(path=>basename(path)),input.expected).length>0)return undefined;
  const depInfoPath=input.outputs.find(path=>path.endsWith(".d"));if(!depInfoPath||!existsSync(depInfoPath))return undefined;
@@ -212,7 +212,7 @@ export function publishUnitV1(root:string,input:Readonly<{key:string;crate:strin
   if(!template&&input.stampDirectory&&input.spill!==true)stampFile(path,sha,input.stampDirectory);
  }
  const dependencies=info.dependencies.filter(path=>!compilerWrittenV1(path)).map(path=>({path:laneNeutralV1(path,input.laneRoot),sha256:digestFileV1(resolveStored(input.cwd,path),input.stampDirectory)}));
- const retention=input.retention===undefined?undefined:declareV1({kind:"rust-unit",toolchain:input.retention.toolchain,sources:workspaceRowsV1({dependencies,cwd:input.cwd,workspace:input.retention.workspace,generatedRoots:buildPolicy.remoteCache.server.staleness.generatedRoots}),externs:input.retention.externs});
+ const retention=input.retention===undefined?undefined:declareV1({kind:"rust-unit",toolchain:input.retention.toolchain,sources:workspaceRowsV1({dependencies,cwd:input.cwd,workspace:input.retention.workspace,generatedRoots:buildPolicy.remoteCache.server.staleness.generatedRoots}),externs:input.retention.externs,self:input.key,units:input.retention.units});
  const entry:UnitEntryV1={version:1,key:input.key,...(input.slot===undefined?{}:{slot:input.slot}),...(input.session===true?{session:true as const}:{}),...(retention===undefined?{}:{retention}),crate:input.crate,dependencies,environment:info.environment.map(row=>({name:row.name,value:row.value===null?null:laneNeutralV1(row.value,input.laneRoot)})),outputs,stderr:input.stderr?putObject(root,neutral(input.stderr)):null,stdout:input.stdout?putObject(root,neutral(input.stdout)):null,createdMs:Date.now(),provenance:input.provenance??null};
  writeEntryV1(root,entry);
  return entry;
@@ -304,7 +304,7 @@ export function buildFactsV1(input:Readonly<{cwd:string;directives:Readonly<{fil
 }
 
 /** 🔨️ One cached build script run: the facts it depends on, its OUT_DIR tree, and the two output streams (lane-neutral). */
-export type BuildEntryV1={version:1;key:string;package:string;facts:{path:string;kind:"file"|"tree"|"package";sha256:string}[];environment:{name:string;value:string|null}[];outputs:{path:string;sha256:string;bytes:number;executable:boolean;template:boolean}[];stdout:string|null;stderr:string|null;createdMs:number};
+export type BuildEntryV1={version:1;key:string;retention?:DeclarationV1;package:string;facts:{path:string;kind:"file"|"tree"|"package";sha256:string}[];environment:{name:string;value:string|null}[];outputs:{path:string;sha256:string;bytes:number;executable:boolean;template:boolean}[];stdout:string|null;stderr:string|null;createdMs:number};
 const runDirectory=(root:string,key:string)=>join(root,layout.runs,key.slice(0,2),key);
 
 /** ▶️ Returns the newest recorded run of `key` whose facts and environment still hold. */
@@ -332,9 +332,9 @@ export function lookupBuildRunV1(root:string,key:string,context:Readonly<{cwd:st
 function isText(bytes:Buffer):boolean{if(bytes.includes(0))return false;try{new TextDecoder("utf-8",{fatal:true}).decode(bytes);return true;}catch{return false;}}
 
 /** 📢️ Publishes one successful build script run. `undefined` when the run is not cacheable: a declared path is missing, the OUT_DIR holds a link, is too large, or a binary file embeds the lane path. */
-export function publishBuildRunV1(root:string,input:Readonly<{key:string;package:string;cwd:string;laneRoot:string|undefined;directives:Readonly<{files:readonly string[];variables:readonly string[]}>;environment:Readonly<Record<string,string|undefined>>;outDir:string;stdout:string;stderr:string;stampDirectory:string|undefined}>):BuildEntryV1|undefined{
+export function publishBuildRunV1(root:string,input:Readonly<{key:string;package:string;cwd:string;laneRoot:string|undefined;directives:Readonly<{files:readonly string[];variables:readonly string[]}>;environment:Readonly<Record<string,string|undefined>>;outDir:string;stdout:string;stderr:string;stampDirectory:string|undefined;retention?:DeclarationV1}>):BuildEntryV1|undefined{
  const known=buildFactsV1({cwd:input.cwd,directives:input.directives,laneRoot:input.laneRoot,environment:input.environment,stampDirectory:input.stampDirectory});if(!known)return undefined;
- const outputs:BuildEntryV1["outputs"]=[];let total=0,refused=false;
+ const outputs:BuildEntryV1["outputs"]=[],dependencies=buildDependencyPathsV1(input.environment);let total=0,refused=false;
  const walk=(directory:string):void=>{
   let entries;try{entries=readdirSync(directory,{withFileTypes:true});}catch{return;}
   for(const entry of entries.sort((left,right)=>left.name<right.name?-1:1)){
@@ -342,7 +342,7 @@ export function publishBuildRunV1(root:string,input:Readonly<{key:string;package
    if(entry.isDirectory()){walk(path);continue;}
    if(!entry.isFile()){refused=true;return;}
    const stat=statSync(path);total+=stat.size;if(total>policy.buildScript.maximumOutputBytes){refused=true;return;}
-   const bytes=readFileSync(path),text=isText(bytes),neutral=text?buildRunNeutralV1(bytes.toString("utf8"),input.outDir,input.laneRoot):undefined;
+   const bytes=readFileSync(path),text=isText(bytes),neutral=text?buildRunNeutralV1(bytes.toString("utf8"),input.outDir,input.laneRoot,dependencies):undefined;
    if(!text&&[input.outDir,...(input.laneRoot?[input.laneRoot]:[])].some(own=>bytes.includes(Buffer.from(own)))){refused=true;return;}
    const template=neutral!==undefined&&neutral!==bytes.toString("utf8"),stored=template?Buffer.from(neutral!):bytes;
    outputs.push({path:name,sha256:putObject(root,stored),bytes:stored.length,executable:(stat.mode&0o111)!==0,template});
@@ -350,9 +350,9 @@ export function publishBuildRunV1(root:string,input:Readonly<{key:string;package
  };
  walk(input.outDir);
  if(refused)return undefined;
- const neutral=(text:string)=>buildRunNeutralV1(text,input.outDir,input.laneRoot);
+ const neutral=(text:string)=>buildRunNeutralV1(text,input.outDir,input.laneRoot,dependencies);
  if(input.laneRoot&&[input.stdout,input.stderr].some(stream=>foreignLanePathV1(neutral(stream),input.laneRoot!)))return undefined;
- const entry:BuildEntryV1={version:1,key:input.key,package:input.package,facts:known.facts,environment:known.environment,outputs,stdout:input.stdout?putObject(root,neutral(input.stdout)):null,stderr:input.stderr?putObject(root,neutral(input.stderr)):null,createdMs:Date.now()};
+ const entry:BuildEntryV1={version:1,key:input.key,...(input.retention===undefined?{}:{retention:input.retention}),package:input.package,facts:known.facts,environment:known.environment,outputs,stdout:input.stdout?putObject(root,neutral(input.stdout)):null,stderr:input.stderr?putObject(root,neutral(input.stderr)):null,createdMs:Date.now()};
  writeBuildRunV1(root,entry);
  return entry;
 }
@@ -373,10 +373,18 @@ export function newestBuildRunV1(root:string,key:string):BuildEntryV1|undefined{
 }
 
 /** 🧭️ The text of a build script run without the paths of the lane that ran it: the script's own OUT_DIR (which its `cargo:rustc-link-search` and generated sources name) becomes the output token, then the lane root becomes the lane token, so a replay in any lane names that lane's own OUT_DIR and never the directory of a lane that a collector may remove. Neutralizing the lane root alone is not enough: it is only the lane when the caller names the lane, and a build driver names its run directory. */
-export function buildRunNeutralV1(text:string,outDir:string,laneRoot:string|undefined):string{return laneNeutralV1(text.split(outDir).join(policy.key.outputToken),laneRoot);}
+export function buildRunNeutralV1(text:string,outDir:string,laneRoot:string|undefined,dependencies:readonly (readonly [string,string])[]=[]):string{
+ let result=text.split(outDir).join(policy.key.outputToken);
+ for(const [token,path] of dependencies)result=result.split(path).join(token);
+ return laneNeutralV1(result,laneRoot);
+}
 
 /** ⏮️ The inverse of {@link buildRunNeutralV1} in the lane that replays the run. */
-export function buildRunRestoreV1(text:string,outDir:string,laneRoot:string|undefined):string{return laneRestoreV1(text,laneRoot).split(policy.key.outputToken).join(outDir);}
+export function buildRunRestoreV1(text:string,outDir:string,laneRoot:string|undefined,dependencies:readonly (readonly [string,string])[]=[]):string{
+ let result=laneRestoreV1(text,laneRoot).split(policy.key.outputToken).join(outDir);
+ for(const [token,path] of dependencies)result=result.split(token).join(path);
+ return result;
+}
 
 /** 🚧️ Whether a text still names the directory of another lane of the same pool once this lane's root is neutralized, which a replay in a third lane could never resolve. */
 export function foreignLanePathV1(neutralText:string,laneRoot:string):boolean{
@@ -385,17 +393,17 @@ export function foreignLanePathV1(neutralText:string,laneRoot:string):boolean{
 }
 
 /** ⏪️ Writes a cached run's OUT_DIR tree, and returns the streams to replay, as the script would have produced them; throws (the caller runs the script) when a recorded file is not in place afterwards. */
-export function restoreBuildRunV1(root:string,entry:BuildEntryV1,context:Readonly<{outDir:string;laneRoot:string|undefined}>):{stdout:string;stderr:string}{
- ensure(context.outDir);
+export function restoreBuildRunV1(root:string,entry:BuildEntryV1,context:Readonly<{outDir:string;laneRoot:string|undefined;environment?:Readonly<Record<string,string|undefined>>}>):{stdout:string;stderr:string}{
+ ensure(context.outDir);const dependencies=buildDependencyPathsV1(context.environment??{});
  for(const row of entry.outputs){
   const destination=join(context.outDir,row.path),source=objectPath(row.sha256);ensure(dirname(destination));
-  if(row.template){const text=buildRunRestoreV1(readFileSync(source,"utf8"),context.outDir,context.laneRoot);placeV1(destination,temporary=>writeFileSync(temporary,text));}else placeV1(destination,temporary=>{copyFileSync(source,temporary,constants.COPYFILE_FICLONE);chmodSync(temporary,0o644);});
+  if(row.template){const text=buildRunRestoreV1(readFileSync(source,"utf8"),context.outDir,context.laneRoot,dependencies);placeV1(destination,temporary=>writeFileSync(temporary,text));}else placeV1(destination,temporary=>{copyFileSync(source,temporary,constants.COPYFILE_FICLONE);chmodSync(temporary,0o644);});
   if(row.executable)chmodSync(destination,0o755);
   touchCasObjectSyncV1(casRootV1(),row.sha256);
  }
  for(const row of entry.outputs)if(!lstatSync(join(context.outDir,row.path)).isFile())throw Error("Restored OUT_DIR file absent: "+row.path);
- const text=(sha:string|null)=>sha===null?"":buildRunRestoreV1(readObject(root,sha)?.toString("utf8")??"",context.outDir,context.laneRoot);
- const streams={stdout:text(entry.stdout),stderr:text(entry.stderr)},foreign=context.laneRoot===undefined?undefined:[streams.stdout,streams.stderr].find(stream=>foreignLanePathV1(buildRunNeutralV1(stream,context.outDir,context.laneRoot),context.laneRoot!)),missing=missingLinkSearchPathV1(streams.stdout);
+ const text=(sha:string|null)=>sha===null?"":buildRunRestoreV1(readObject(root,sha)?.toString("utf8")??"",context.outDir,context.laneRoot,dependencies);
+ const streams={stdout:text(entry.stdout),stderr:text(entry.stderr)},foreign=context.laneRoot===undefined?undefined:[streams.stdout,streams.stderr].find(stream=>foreignLanePathV1(buildRunNeutralV1(stream,context.outDir,context.laneRoot,dependencies),context.laneRoot!)),missing=missingLinkSearchPathV1(streams.stdout);
  if(foreign!==undefined)throw Error("Replayed output names the directory of another lane");
  if(missing!==undefined)throw Error("Replayed link search path absent: "+missing);
  return streams;

@@ -6,7 +6,7 @@ import{nativeImageAttachArgumentsV1,nativeImageAttachProgramV1}from"../👤️ow
 import{nativeImageInformationV1}from"../📥️information/🟦️.ts";
 import{invalidateNativeImageRosterV1}from"../📡️roster/🟦️.ts";
 import{nativeImageHdiutilProgramV1}from"../🛠️hdiutil/🟦️.ts";
-import{nativeImageContainerFreeBytesSyncV1,nativeImageForceDetachArgumentsV1,nativeImageVolumeLatchedV1}from"../⚖️availability/🟦️.ts";
+import{nativeImageContainerFreeBytesSyncV1,nativeImageForceDetachArgumentsV1,nativeImageRefreshMechanismV1,nativeImageVolumeLatchedV1}from"../⚖️availability/🟦️.ts";
 const protocol=imageSchema.definitions.ImageProtocol.const.reclaim;
 /** 📏️ Names the three numbers that decide when host blocks held by an image count as bloat. */
 export type NativeImageReclaimRuleV1=Readonly<{reclaimFloorBytes:number;reclaimRatioPercent:number;reclaimTightHostFreeBytes:number}>;
@@ -19,8 +19,8 @@ export function nativeImageReclaimDueV1(rule:NativeImageReclaimRuleV1,allocatedB
 export function nativeImageReclaimMechanismV1(platform:string):Readonly<{mechanism:string;program:string;detachProgram:string;imageName:string}>|null{
  return (protocol.mechanisms as Record<string,{mechanism:string;program:string;detachProgram:string;imageName:string}>)[platform==="win32"?"windows":platform]??null;
 }
-/** 🔌️ Supplies the effects of one reclaim cycle; every platform implements the same steps; `trim` is the explicit step of the platforms whose attach does not trim by itself; `mountsCanonically` says that `attach` mounts the image at its own mount point instead of a private scratch mount, so the cycle can give an image that was attached back attached and no exit path leaves it anywhere else. */
-export type NativeImageReclaimPortV1=Readonly<{attachedDevice(phase?:"cleanup"):Promise<string|null>;detach(device:string,phase?:"cleanup"):Promise<void>;attach(phase?:"cleanup"):Promise<void>;trim?():Promise<void>;allocatedBytes():number;dispose():void;mountsCanonically?:boolean}>;
+/** 🔌️ Supplies the effects of one reclaim cycle; every platform implements the same steps; `volumeAvailableBytes` reads what the mounted volume reports as available; `trim` is the explicit step of the platforms whose attach does not trim by itself; `mountsCanonically` says that `attach` mounts the image at its own mount point instead of a private scratch mount, so the cycle can give an image that was attached back attached and no exit path leaves it anywhere else. */
+export type NativeImageReclaimPortV1=Readonly<{attachedDevice(phase?:"cleanup"):Promise<string|null>;detach(device:string,phase?:"cleanup"):Promise<void>;attach(phase?:"cleanup"):Promise<void>;trim?():Promise<void>;allocatedBytes():number;dispose():void;mountsCanonically?:boolean;volumeAvailableBytes?():number|undefined}>;
 /** 🚦️ Supplies cancellation and progress to the cycle. */
 export type NativeImageReclaimHooksV1=Readonly<{check:()=>void;progress?:(done:number,total:number)=>void;sleep?:(milliseconds:number)=>Promise<void>}>;
 /** 📊️ Reports the host allocation before and after one cycle and whether it settled within the bound. */
@@ -58,12 +58,45 @@ export async function reclaimNativeImageV1(port:NativeImageReclaimPortV1,hooks:N
  return Object.freeze({beforeBytes,afterBytes,settled});
 }
 
+/** 🚦️ Supplies cancellation, progress and the two reserve steps to a refresh cycle: `before` runs while the image is still attached and gives the volume room to flush, `after` runs once it is attached again. */
+export type NativeImageRefreshHooksV1=NativeImageReclaimHooksV1&Readonly<{before?:()=>void;after?:()=>void}>;
+/** 📊️ Reports what the volume reported as available before and after one refresh cycle; `refreshed` is true when the volume was attached again by the cycle. */
+export type NativeImageRefreshOutcomeV1=Readonly<{beforeAvailableBytes:number|undefined;afterAvailableBytes:number|undefined;refreshed:boolean}>;
+/** 🔄️ Makes a mounted volume sample its available space again without touching the bytes, the size or the identity of its image: it detaches the attached image (a busy refusal escalates only on a port built `quiescent`, whose caller holds the exclusive image lease) and attaches it at its own mount point, so every exit path gives the image back attached and the links into it never dangle; an image that was not attached has no stale figure and is left alone. Cancellation is honored between the steps and the cleanup attaches again when the cycle left it detached. The port must mount canonically. The caller holds the exclusive image lease.
+ * @see ../⚖️availability/🟦️.ts */
+export async function refreshNativeImageV1(port:NativeImageReclaimPortV1,hooks:NativeImageRefreshHooksV1):Promise<NativeImageRefreshOutcomeV1>{
+ if(port.mountsCanonically!==true)throw Error("Canonical image mount required for a refresh");
+ const progress=hooks.progress??(()=>{}),total=3;
+ hooks.check();progress(0,total);
+ const beforeAvailableBytes=port.volumeAvailableBytes?.(),prior=await port.attachedDevice();
+ if(prior===null){progress(total,total);return Object.freeze({beforeAvailableBytes,afterAvailableBytes:beforeAvailableBytes,refreshed:false});}
+ const failures:unknown[]=[];
+ try{hooks.before?.();}catch(error){failures.push(error);}
+ let refreshed=false;
+ try{
+  if(failures.length===0){
+   hooks.check();progress(1,total);await port.detach(prior);invalidateNativeImageRosterV1();
+   hooks.check();progress(2,total);await port.attach();invalidateNativeImageRosterV1();refreshed=true;
+  }
+ }catch(error){failures.push(error);}
+ try{
+  const device=await port.attachedDevice("cleanup");
+  if(device===null)await port.attach("cleanup");
+  port.dispose();
+ }catch(error){failures.push(error);}finally{invalidateNativeImageRosterV1();}
+ try{hooks.after?.();}catch(error){failures.push(error);}
+ if(failures.length>1)throw new AggregateError(failures,"Native image refresh and cleanup failed",{cause:failures[0]});
+ if(failures.length===1)throw failures[0];
+ progress(total,total);
+ return Object.freeze({beforeAvailableBytes,afterAvailableBytes:port.volumeAvailableBytes?.(),refreshed});
+}
+
 /** 🧹️ Removes only the empty private mount directory after the image is detached. */
 function removeReclaimScratchV1(scratch:string):void{
  try{rmdirSync(scratch);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
 }
-/** 🍎️ Builds the macOS port of one image: attach through `diskutil image attach` at a private scratch mount point, detach the whole device through `hdiutil detach`, allocation from the blocks of the backing file. See https://ss64.com/mac/diskutil.html */
-export function createNativeImageDarwinReclaimPortV1(given:Readonly<{image:string;cwd:string;mountPoint?:string;run:CommandRunnerV1;cleanupRun?:CommandRunnerV1;latched?:(mountPoint:string)=>boolean;sleep?:(milliseconds:number)=>Promise<void>;signal?:AbortSignal;commandMilliseconds?:number}>):NativeImageReclaimPortV1{
+/** 🍎️ Builds the macOS port of one image: attach through `diskutil image attach` at a private scratch mount point, detach the whole device through `hdiutil detach`, allocation from the blocks of the backing file. A `quiescent` port belongs to a caller that holds the exclusive image lease, so a busy refusal escalates without waiting for a latched volume: `hdiutil detach -force`, then `diskutil unmount force` of the mount point and `hdiutil detach -force` again. See https://ss64.com/mac/diskutil.html */
+export function createNativeImageDarwinReclaimPortV1(given:Readonly<{image:string;cwd:string;mountPoint?:string;run:CommandRunnerV1;cleanupRun?:CommandRunnerV1;latched?:(mountPoint:string)=>boolean;quiescent?:boolean;sleep?:(milliseconds:number)=>Promise<void>;signal?:AbortSignal;commandMilliseconds?:number}>):NativeImageReclaimPortV1{
  const bound=(run:CommandRunnerV1,signal=given.signal)=>nativeImageBoundedRunnerV1(run,{milliseconds:given.commandMilliseconds,...signal===undefined?{}:{signal}}),options={...given,run:bound(given.run),...given.cleanupRun===undefined?{}:{cleanupRun:bound(given.cleanupRun,undefined)}};
  let scratch:string|undefined,mounted:string|undefined,failedAttach=false;
  const latched=options.latched??((mountPoint:string)=>{try{const volume=statfsSync(mountPoint),host=statfsSync(dirname(options.image));return nativeImageVolumeLatchedV1(Number(volume.bavail)*volume.bsize,nativeImageContainerFreeBytesSyncV1(mountPoint),Number(host.bavail)*host.bsize);}catch{return false;}});
@@ -88,10 +121,23 @@ export function createNativeImageDarwinReclaimPortV1(given:Readonly<{image:strin
   },
   async detach(device:string,phase?:"cleanup"){
    try{await runner(phase)(nativeImageHdiutilProgramV1,["detach",device]);}
-   catch(error){if(phase!=="cleanup"&&(!/busy/iu.test(error instanceof Error?error.message:String(error))||mounted===undefined||!latched(mounted)))throw error;await runner(phase)(nativeImageHdiutilProgramV1,[...nativeImageForceDetachArgumentsV1,device]);}
+   catch(error){
+    const busy=/busy/iu.test(error instanceof Error?error.message:String(error));
+    if(phase!=="cleanup"&&(!busy||mounted===undefined||options.quiescent!==true&&!latched(mounted)))throw error;
+    const point=mounted;
+    try{await runner(phase)(nativeImageHdiutilProgramV1,[...nativeImageForceDetachArgumentsV1,device]);}
+    catch(forced){
+     const unmount=options.quiescent===true?nativeImageRefreshMechanismV1("darwin"):null;
+     if(unmount===null||point===undefined)throw forced;
+     await runner(phase)(unmount.forceUnmountProgram,[...unmount.forceUnmountArguments,point]);
+     try{await runner(phase)(nativeImageHdiutilProgramV1,[...nativeImageForceDetachArgumentsV1,device]);}
+     catch(last){if(await find(phase)!==null)throw last;}
+    }
+   }
   },
   async attach(phase?:"cleanup"){const target=options.mountPoint??(scratch=mkdtempSync(join(tmpdir(),protocol.scratchPrefix)));try{await runner(phase)(nativeImageAttachProgramV1,[...nativeImageAttachArgumentsV1(target,options.image)]);}catch(error){failedAttach=true;throw error;}},
   allocatedBytes(){return lstatSync(options.image).blocks*512;},
+  volumeAvailableBytes(){const point=options.mountPoint??mounted;if(point===undefined)return undefined;try{const row=statfsSync(point);return Number(row.bavail)*row.bsize;}catch{return undefined;}},
   dispose(){if(scratch!==undefined){removeReclaimScratchV1(scratch);scratch=undefined;}},
   mountsCanonically:options.mountPoint!==undefined
  });
@@ -163,7 +209,7 @@ export function createNativeImageWindowsReclaimPortV1(given:Readonly<{image:stri
  });
 }
 /** 🧭️ Chooses the port of an operating system for one image: the same cycle on every platform, null where the repository has no image that could hold freed blocks. */
-export function createNativeImageReclaimPortV1(platform:string,options:Readonly<{image:string;cwd:string;mountPoint?:string;run:CommandRunnerV1;cleanupRun?:CommandRunnerV1;signal?:AbortSignal;commandMilliseconds?:number}>):NativeImageReclaimPortV1|null{
+export function createNativeImageReclaimPortV1(platform:string,options:Readonly<{image:string;cwd:string;mountPoint?:string;run:CommandRunnerV1;cleanupRun?:CommandRunnerV1;quiescent?:boolean;signal?:AbortSignal;commandMilliseconds?:number}>):NativeImageReclaimPortV1|null{
  if(platform==="darwin")return createNativeImageDarwinReclaimPortV1(options);
  if(platform==="linux")return createNativeImageLinuxReclaimPortV1(options);
  if(platform==="windows"||platform==="win32")return createNativeImageWindowsReclaimPortV1(options);

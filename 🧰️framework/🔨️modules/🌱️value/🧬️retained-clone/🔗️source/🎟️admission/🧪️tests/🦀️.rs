@@ -15,17 +15,20 @@ impl Bank{
 fn source_wrappers_forward_actual_allocation_markers_and_refuse_unposted_reentry(){
  let f=fixture();
  for text in f["texts"].as_array().unwrap(){
-  let value=text.as_str().unwrap().to_owned();let pointer=value.as_ptr();let mut staged=crate::StagedSourceAdmission::<String,String>::owned(value);let mut output=None;let mut bank=Bank::new(&f);
-  for phase in f["phases"].as_array().unwrap(){
-   let grant=bank.grant();let(turn,heap)=observed(grant,CPU,&mut bank.actual,|effect|staged.advance(&mut output,effect));let allocating=f["allocationPhases"].as_array().unwrap().contains(phase);
-   assert_eq!(bank.actual,allocating.then_some(heap.0));assert!(output.is_none());
-   if allocating{let marker=bank.actual;let demand=staged.next_demand().unwrap();let(denied,effects)=observed(grant,CPU,&mut bank.actual,|effect|staged.advance(&mut output,effect));assert_eq!(denied.work,0);assert_eq!(denied.result.unwrap_err().kind,ValueRefusalKind::InvariantViolated);assert_eq!(effects,(0,0));assert_eq!(bank.actual,marker);assert_eq!(staged.next_demand().unwrap(),demand);assert!(output.is_none());}
-   bank.post(turn,heap).unwrap();assert!(bank.actual.is_none());
+  let value=text.as_str().unwrap().to_owned();let pointer=value.as_ptr();let mut staged=crate::StagedSourceAdmission::<String,String>::owned(value);let mut output=None;let mut bank=Bank::new(&f);let mut allocating_turns=Vec::new();
+  for _ in 0..f["maximumTurns"].as_u64().unwrap(){
+   if staged.terminal_is_empty(){break}
+   let grant=bank.grant();let(turn,heap)=observed(grant,CPU,&mut bank.actual,|effect|staged.advance_owned(&mut output,effect));let allocating=heap.0>0;
+   assert_eq!(bank.actual,allocating.then_some(heap.0));
+   if allocating{let marker=bank.actual;let demand=staged.next_owned_demand().unwrap();let(denied,effects)=observed(grant,CPU,&mut bank.actual,|effect|staged.advance_owned(&mut output,effect));assert_eq!(denied.work,0);assert_eq!(denied.result.unwrap_err().kind,ValueRefusalKind::InvariantViolated);assert_eq!(effects,(0,0));assert_eq!(bank.actual,marker);assert_eq!(staged.next_owned_demand().unwrap(),demand);}
+   bank.post(turn,heap).unwrap();assert!(bank.actual.is_none());allocating_turns.push(allocating);
   }
-  let grant=bank.grant();let(turn,heap)=observed(grant,CPU,&mut bank.actual,|effect|staged.advance(&mut output,effect));assert!(bank.actual.is_none());bank.post(turn,heap).unwrap();assert!(staged.terminal_is_empty());let source=output.unwrap();assert_eq!(source.try_borrow().unwrap().get().as_ptr(),pointer);close_value(source,&mut bank,&f);
+  assert!(staged.terminal_is_empty());let source=output.unwrap();assert_eq!(source.try_borrow().unwrap().get().as_ptr(),pointer);
+  let expected:Vec<bool>=f["allocatingTurns"].as_array().unwrap_or_else(||panic!("observed allocating turns {allocating_turns:?}")).iter().map(|turn|turn.as_bool().unwrap()).collect();assert_eq!(allocating_turns,expected);
+  close_value(source,&mut bank,&f);
  }
 }
-fn close_value<T:crate::retirement::RetireOwned>(value:T,bank:&mut Bank,f:&serde_json::Value){let mut close=crate::retirement::controlled::ControlledRetirement::retain(value);for _ in 0..f["maximumTurns"].as_u64().unwrap(){if close.terminal_is_empty(){break}let g=bank.grant();let(turn,heap)=observed(g,CPU,&mut None,|effect|settled(close.step(effect)));bank.post(turn,heap).unwrap();}assert!(close.terminal_is_empty());assert_eq!(observe_retirement_allocations(||drop(close)).1,(0,0));}
+fn close_value<T:crate::retirement::RetireOwned>(value:T,bank:&mut Bank,f:&serde_json::Value){let mut close=crate::retirement::controlled::ControlledRetirement::retain(value);for _ in 0..f["maximumTurns"].as_u64().unwrap(){if close.terminal_is_empty(){break}let g=bank.grant();let(turn,heap)=observed(g,CPU,&mut None,|effect|settled(close.step(effect.grant().maximum_copy_bytes,effect)));bank.post(turn,heap).unwrap();}assert!(close.terminal_is_empty());assert_eq!(observe_retirement_allocations(||drop(close)).1,(0,0));}
 fn cancel(owner:&mut RetainedCloneSourceAdmission<String,String,()>,bank:&mut Bank,pointer:*const u8,f:&serde_json::Value){let mut returned=None;for _ in 0..f["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let g=bank.grant();let(turn,heap)=observed(g,CPU,&mut None,|effect|owner.return_inputs(&mut returned,effect));bank.post(turn,heap).unwrap();}assert!(owner.terminal_is_empty());let(value,())=returned.take().unwrap();assert_eq!(value.as_ptr(),pointer);let actual=serde_json::to_value(&value).unwrap();assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&value).unwrap()).unwrap(),value);assert_eq!(actual,value);close_value(value,bank,f);assert_eq!(observe_retirement_allocations(||drop(returned)).1,(0,0));}
 #[test]
 fn every_actual_source_allocation_null_keeps_the_same_inputs_and_reports_direct_attempt_work(){
@@ -45,9 +48,9 @@ fn each_partial_source_cancels_under_the_original_bank_and_denied_turns_are_unch
 #[test]
 fn complete_source_publication_is_separate_and_original_handback_closes_every_actual_backing(){
  let f=fixture();for text in f["texts"].as_array().unwrap(){let value=text.as_str().unwrap().to_owned();let pointer=value.as_ptr();let mut owner=RetainedCloneSourceAdmission::<String,String,()>::new(value,());let mut bank=Bank::new(&f);
- for _ in 0..f["maximumTurns"].as_u64().unwrap(){if owner.phase()=="ready"{break}let g=bank.grant();let(turn,heap)=observed(g,CPU,&mut bank.actual,|effect|owner.advance(effect));bank.post(turn,heap).unwrap();}assert_eq!(owner.phase(),"ready");let mut source=None;let(turn,heap)=observe_retirement_allocations(||owner.take_output(&mut source,G{maximum_items:0,..bank.grant()}));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),P::default());assert!(source.is_none());assert_eq!(heap,(0,0));
- let g=bank.grant();let(turn,heap)=observe_retirement_allocations(||owner.take_output(&mut source,g));bank.post(turn,heap).unwrap();assert!(owner.terminal_is_empty());let mut source=source.unwrap();assert_eq!(source.borrow().get().as_ptr(),pointer);assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),*text);let mut output=None;
- for _ in 0..f["maximumTurns"].as_u64().unwrap(){if source.terminal_is_empty(){break}let g=bank.grant();let(turn,heap)=observed(g,CPU,&mut None,|effect|settled(source.take_authority(effect)));let work=turn.work;let mapped=turn.result.map(|step|match step{crate::RetainedCloneSourceTake::Pending(p)=>S::Progress(p),crate::RetainedCloneSourceTake::Ready(value,p)=>{output=Some(value);S::Complete(p)}});bank.post(crate::RetainedWorkOutcome{result:mapped,work},heap).unwrap();}
+ crate::source_law_bank::Bank::new().advance_to_ready(&mut owner);assert_eq!(owner.phase(),"ready");let mut source=None;let(turn,heap)=observed(G{maximum_items:0,..bank.grant()},CPU,&mut None,|effect|owner.take_output(&mut source,effect));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),P::default());assert!(source.is_none());assert_eq!(heap,(0,0));
+ for _ in 0..2{if owner.terminal_is_empty(){break}let g=bank.grant();let(turn,heap)=observed(g,CPU,&mut bank.actual,|effect|owner.take_output(&mut source,effect));bank.post(turn,heap).unwrap();}assert!(owner.terminal_is_empty());let mut source=source.unwrap();assert_eq!(source.borrow().get().as_ptr(),pointer);assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),*text);let mut output=None;
+ for _ in 0..f["maximumTurns"].as_u64().unwrap(){if source.terminal_is_empty(){break}let g=bank.grant();let(turn,heap)=crate::source_law_bank::drive_take(&mut source,&mut output,g,CPU);bank.post(turn,heap).unwrap();}
  assert!(source.terminal_is_empty());assert_eq!(output.as_ref().unwrap().as_ptr(),pointer);assert_eq!(observe_retirement_allocations(||drop((source,owner))).1,(0,0));close_value(output.unwrap(),&mut bank,&f);
  }
 }
@@ -63,11 +66,11 @@ fn cancelling_a_prepared_typed_payload_returns_both_distinct_original_allocation
 fn a_published_source_is_reported_and_must_be_taken_before_inputs_return(){
  let f=fixture();let value=f["texts"][0].as_str().unwrap().to_owned();let pointer=value.as_ptr();let mut owner=RetainedCloneSourceAdmission::<String,String,()>::new(value,());let mut bank=Bank::new(&f);
  assert!(owner.phase()!="ready");
- for _ in 0..f["maximumTurns"].as_u64().unwrap(){if owner.phase()=="ready"{break}let g=bank.grant();let(turn,heap)=observed(g,CPU,&mut bank.actual,|effect|owner.advance(effect));bank.post(turn,heap).unwrap();}
+ crate::source_law_bank::Bank::new().advance_to_ready(&mut owner);
  assert!(owner.phase()=="ready");
  let mut returned=None;let refused=observed(bank.grant(),CPU,&mut None,|effect|owner.return_inputs(&mut returned,effect)).0;assert_eq!(refused.result.unwrap_err().kind,ValueRefusalKind::InvalidValue);assert!(returned.is_none());assert!(owner.phase()=="ready");
- let mut source=None;let g=bank.grant();let(turn,heap)=observe_retirement_allocations(||owner.take_output(&mut source,g));bank.post(turn,heap).unwrap();
+ let mut source=None;for _ in 0..2{if owner.terminal_is_empty(){break}let g=bank.grant();let(turn,heap)=observed(g,CPU,&mut bank.actual,|effect|owner.take_output(&mut source,effect));bank.post(turn,heap).unwrap();}
  assert!(owner.phase()!="ready");assert!(owner.terminal_is_empty());let mut source=source.unwrap();assert_eq!(source.borrow().get().as_ptr(),pointer);
- let mut output=None;for _ in 0..f["maximumTurns"].as_u64().unwrap(){if source.terminal_is_empty(){break}let g=bank.grant();let(turn,heap)=observed(g,CPU,&mut None,|effect|settled(source.take_authority(effect)));let work=turn.work;let mapped=turn.result.map(|step|match step{crate::RetainedCloneSourceTake::Pending(p)=>S::Progress(p),crate::RetainedCloneSourceTake::Ready(value,p)=>{output=Some(value);S::Complete(p)}});bank.post(crate::RetainedWorkOutcome{result:mapped,work},heap).unwrap();}
+ let mut output=None;for _ in 0..f["maximumTurns"].as_u64().unwrap(){if source.terminal_is_empty(){break}let g=bank.grant();let(turn,heap)=crate::source_law_bank::drive_take(&mut source,&mut output,g,CPU);bank.post(turn,heap).unwrap();}
  assert!(source.terminal_is_empty());assert_eq!(output.as_ref().unwrap().as_ptr(),pointer);drop((source,owner));close_value(output.unwrap(),&mut bank,&f);
 }

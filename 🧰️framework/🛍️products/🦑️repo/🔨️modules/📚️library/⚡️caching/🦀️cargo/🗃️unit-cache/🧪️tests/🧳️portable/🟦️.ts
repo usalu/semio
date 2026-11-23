@@ -83,10 +83,23 @@ test.each(flagRows)("normalised environment value: %s",(_,given,expected)=>{expe
 
 test("an SDK is its resolved name, wherever it is installed, and the key environment carries that name",()=>{
  const xcode=sdkAt("x",["Applications","Xcode.app","Contents","Developer","Platforms","MacOSX.platform","Developer","SDKs","MacOSX.sdk"]),tools=sdkAt("t",["Library","Developer","CommandLineTools","SDKs","MacOSX15.4.sdk"]);
- expect(sdkIdentityV1(xcode)).toBe("MacOSX15.4.sdk");expect(sdkIdentityV1(tools)).toBe("MacOSX15.4.sdk");
- expect(sdkIdentityV1("/missing/MacOSX99.sdk/")).toBe("MacOSX99.sdk");
+ expect(sdkIdentityV1(xcode)).toBe("macosx15.4");expect(sdkIdentityV1(tools)).toBe("macosx15.4");
+ expect(sdkIdentityV1("/missing/MacOSX99.sdk/")).toBe("macosx99");
  expect(keyEnvironmentV1({SDKROOT:xcode},undefined)).toEqual(keyEnvironmentV1({SDKROOT:tools},undefined));
  expect(keyEnvironmentV1({SDKROOT:xcode,HOME:"/h",PWD:"/p",TMPDIR:"/t"},undefined).map(([name])=>name),"HOME, PWD and TMPDIR never enter the key").toEqual(["SDKROOT"]);
+});
+
+test("an SDK is its declared version: Xcode's unversioned MacOSX.sdk behind a versioned link equals the same SDK of the command line tools and differs from another version",()=>{
+ const settings=(dir:string,name:string)=>writeFileSync(join(dir,"SDKSettings.json"),JSON.stringify({CanonicalName:name,Version:name.slice(6)}));
+ const xcodeDirectory=directory("xs"),xcodeSdks=join(xcodeDirectory,"Xcode.app","SDKs"),unversioned=join(xcodeSdks,"MacOSX.sdk");mkdirSync(unversioned,{recursive:true});settings(unversioned,"macosx27.2");
+ const link=join(xcodeSdks,"MacOSX27.2.sdk");symlinkSync(unversioned,link);
+ const toolsDirectory=directory("ts"),toolsSdk=join(toolsDirectory,"CommandLineTools","SDKs","MacOSX27.2.sdk");mkdirSync(toolsSdk,{recursive:true});settings(toolsSdk,"macosx27.2");
+ const toolsLink=join(toolsDirectory,"CommandLineTools","SDKs","MacOSX.sdk");symlinkSync(toolsSdk,toolsLink);
+ const olderDirectory=directory("os"),older=join(olderDirectory,"MacOSX.sdk");mkdirSync(older,{recursive:true});settings(older,"macosx26.5");
+ for(const path of [unversioned,link,toolsSdk,toolsLink])expect(sdkIdentityV1(path)).toBe("macosx27.2");
+ expect(sdkIdentityV1(older)).toBe("macosx26.5");
+ expect(keyEnvironmentV1({SDKROOT:link},undefined)).toEqual(keyEnvironmentV1({SDKROOT:toolsLink},undefined));
+ expect(keyEnvironmentV1({SDKROOT:link},undefined)).not.toEqual(keyEnvironmentV1({SDKROOT:older},undefined));
 });
 
 test.each([["breaker: denied","breaker"],["incomplete: a.rlib,b.rmeta","incomplete"],["no-artifact-messages","no-artifact-messages"],["Native Link!","native-link"],["","other"],["crate-type:cdylib","crate-type"]])("skip reason name of %p is %p",(text,name)=>{expect(skipNameV1(text)).toBe(name);});

@@ -1,5 +1,5 @@
 //! 📝️ Sparse Drawing diff strings receive original paged UTF8 directly under their declared physical capacity and copy grants.
-type DrawingNativeText=semio_framework_value::paged::PagedUtf8<{usize::MAX}>;
+pub type DrawingNativeText=semio_framework_value::paged::PagedUtf8<{usize::MAX}>;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,retained_clone_grant_admits,close_retained_binding}};
 use semio_framework_value::RetainedAllocationEffect;
 use super::original::close_result;
@@ -37,5 +37,3 @@ impl DrawingOriginalText{
  pub fn terminal_is_empty(&self)->bool{self.output.is_none()&&self.binding.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for DrawingOriginalText{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Drawing original text retains its source or partial output");}}
-
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

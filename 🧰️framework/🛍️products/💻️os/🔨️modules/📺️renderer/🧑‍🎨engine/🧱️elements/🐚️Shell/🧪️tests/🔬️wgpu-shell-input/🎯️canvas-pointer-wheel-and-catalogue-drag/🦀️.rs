@@ -66,6 +66,7 @@ fn published_canvas_pointer_capture_preserves_modifiers_and_cancels_exactly_once
 
 #[test]
 fn renderer_escape_aborts_a_live_transform_before_disarming_its_utility() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     semio_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut InputState::default());
     let fixture: Value = serde_json::from_str(include_str!("../../../../📐️Canvas2dHost/🧪️tests/🧫️fixtures/🧫️gumball-dispatch/🔣️.json")).unwrap();

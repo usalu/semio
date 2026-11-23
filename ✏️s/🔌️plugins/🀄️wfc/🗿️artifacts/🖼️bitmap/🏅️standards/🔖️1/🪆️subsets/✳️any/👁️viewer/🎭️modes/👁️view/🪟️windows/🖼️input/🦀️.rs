@@ -47,10 +47,10 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 👁️ Builds the read-only sample canvas and propagates assembly failures.
-pub fn render(document: &BitmapSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &BitmapSnapshot, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
     let indices = document.input.indices().unwrap_or_default();
     let layers = crate::bitmap_layers_json("in", document.input.width, document.input.height, &document.input.palette, &indices, &[]);
-    scene_surface(SURFACE_ID, ContractSurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, VIEW_ZOOM, layers))
+    scene_surface(SURFACE_ID, ContractSurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, VIEW_ZOOM, layers), semio_plugin::surface_name(locale, "Input", "Eingabe"), None)
 }
 //#endregion 🔖️Render
 

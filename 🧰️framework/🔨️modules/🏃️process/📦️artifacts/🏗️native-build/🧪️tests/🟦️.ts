@@ -302,6 +302,16 @@ test("compiler diagnostics stay inside their line budget while the complete stre
   expect(new BoundedDiagnosticsV1(null, () => {}, spec.live, spec.newest).finish(true, null)).toEqual([]);
 });
 
+test("a failing diagnostics log write never aborts the diagnostics stream a compiler build drains", () => {
+  const spec = fixture.diagnostics, shown: string[] = [], fd = openSync(join(mkdtempSync(join(directFixtureOutput(), "g-")), "cargo.log"), "w");
+  closeSync(fd);
+  const diagnostics = new BoundedDiagnosticsV1(fd, (line) => shown.push(line), spec.live, spec.newest);
+  const rows = Array.from({ length: spec.lines }, (_, index) => `line ${index}`);
+  expect(() => rows.forEach((row) => diagnostics.line(row))).not.toThrow();
+  expect(shown).toEqual(rows.slice(0, spec.live));
+  expect(diagnostics.suppressed).toBe(spec.lines - spec.live);
+});
+
 /** 🎛️ Owns this fixture compiler phase with its actual signal and fixed test deadline. */
 /** 🗄️ Runs one fixture build inside an original compiler reservation derived from a fresh issued invocation and the test's own cancellation. */
 function withBuildStorageV1<T>(signal:AbortSignal,body:(held:LawStorageV1,control:CompilerAdmissionControl,invocation:ScriptInvocation)=>Promise<T>):Promise<T>{return relayInvocation(original=>withIssuedLawStorageV1(original,signal,body));}

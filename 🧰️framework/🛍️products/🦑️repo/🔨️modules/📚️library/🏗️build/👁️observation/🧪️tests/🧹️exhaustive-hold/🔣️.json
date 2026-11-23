@@ -1,0 +1,587 @@
+{
+ "version": 1,
+ "scenarios": [
+  {
+   "name": "some rows changed, some hold",
+   "entries": [
+    "a.ts",
+    "b.ts",
+    "c.ts"
+   ],
+   "rows": [
+    {
+     "name": "a.ts",
+     "fact": true
+    },
+    {
+     "name": "gone-1",
+     "fact": true
+    },
+    {
+     "name": "b.ts",
+     "fact": true
+    },
+    {
+     "name": "fresh",
+     "fact": false
+    },
+    {
+     "name": "c.ts",
+     "fact": false
+    },
+    {
+     "name": "gone-2",
+     "fact": false
+    }
+   ]
+  },
+  {
+   "name": "a hundred rows all changed after the first stale one",
+   "entries": [
+    "x-0",
+    "x-1",
+    "x-2",
+    "x-3",
+    "x-4",
+    "x-5",
+    "x-6",
+    "x-7",
+    "x-8",
+    "x-9",
+    "x-10",
+    "x-11",
+    "x-12",
+    "x-13",
+    "x-14",
+    "x-15",
+    "x-16",
+    "x-17",
+    "x-18",
+    "x-19",
+    "x-20",
+    "x-21",
+    "x-22",
+    "x-23",
+    "x-24",
+    "x-25",
+    "x-26",
+    "x-27",
+    "x-28",
+    "x-29",
+    "x-30",
+    "x-31",
+    "x-32",
+    "x-33",
+    "x-34",
+    "x-35",
+    "x-36",
+    "x-37",
+    "x-38",
+    "x-39",
+    "x-40",
+    "x-41",
+    "x-42",
+    "x-43",
+    "x-44",
+    "x-45",
+    "x-46",
+    "x-47",
+    "x-48",
+    "x-49",
+    "x-50",
+    "x-51",
+    "x-52",
+    "x-53",
+    "x-54",
+    "x-55",
+    "x-56",
+    "x-57",
+    "x-58",
+    "x-59",
+    "x-60",
+    "x-61",
+    "x-62",
+    "x-63",
+    "x-64",
+    "x-65",
+    "x-66",
+    "x-67",
+    "x-68",
+    "x-69",
+    "x-70",
+    "x-71",
+    "x-72",
+    "x-73",
+    "x-74",
+    "x-75",
+    "x-76",
+    "x-77",
+    "x-78",
+    "x-79",
+    "x-80",
+    "x-81",
+    "x-82",
+    "x-83",
+    "x-84",
+    "x-85",
+    "x-86",
+    "x-87",
+    "x-88",
+    "x-89",
+    "x-90",
+    "x-91",
+    "x-92",
+    "x-93",
+    "x-94",
+    "x-95",
+    "x-96",
+    "x-97",
+    "x-98",
+    "x-99"
+   ],
+   "rows": [
+    {
+     "name": "x-0",
+     "fact": false
+    },
+    {
+     "name": "x-1",
+     "fact": false
+    },
+    {
+     "name": "x-2",
+     "fact": false
+    },
+    {
+     "name": "x-3",
+     "fact": false
+    },
+    {
+     "name": "x-4",
+     "fact": false
+    },
+    {
+     "name": "x-5",
+     "fact": false
+    },
+    {
+     "name": "x-6",
+     "fact": false
+    },
+    {
+     "name": "x-7",
+     "fact": false
+    },
+    {
+     "name": "x-8",
+     "fact": false
+    },
+    {
+     "name": "x-9",
+     "fact": false
+    },
+    {
+     "name": "x-10",
+     "fact": false
+    },
+    {
+     "name": "x-11",
+     "fact": false
+    },
+    {
+     "name": "x-12",
+     "fact": false
+    },
+    {
+     "name": "x-13",
+     "fact": false
+    },
+    {
+     "name": "x-14",
+     "fact": false
+    },
+    {
+     "name": "x-15",
+     "fact": false
+    },
+    {
+     "name": "x-16",
+     "fact": false
+    },
+    {
+     "name": "x-17",
+     "fact": false
+    },
+    {
+     "name": "x-18",
+     "fact": false
+    },
+    {
+     "name": "x-19",
+     "fact": false
+    },
+    {
+     "name": "x-20",
+     "fact": false
+    },
+    {
+     "name": "x-21",
+     "fact": false
+    },
+    {
+     "name": "x-22",
+     "fact": false
+    },
+    {
+     "name": "x-23",
+     "fact": false
+    },
+    {
+     "name": "x-24",
+     "fact": false
+    },
+    {
+     "name": "x-25",
+     "fact": false
+    },
+    {
+     "name": "x-26",
+     "fact": false
+    },
+    {
+     "name": "x-27",
+     "fact": false
+    },
+    {
+     "name": "x-28",
+     "fact": false
+    },
+    {
+     "name": "x-29",
+     "fact": false
+    },
+    {
+     "name": "x-30",
+     "fact": false
+    },
+    {
+     "name": "x-31",
+     "fact": false
+    },
+    {
+     "name": "x-32",
+     "fact": false
+    },
+    {
+     "name": "x-33",
+     "fact": false
+    },
+    {
+     "name": "x-34",
+     "fact": false
+    },
+    {
+     "name": "x-35",
+     "fact": false
+    },
+    {
+     "name": "x-36",
+     "fact": false
+    },
+    {
+     "name": "x-37",
+     "fact": false
+    },
+    {
+     "name": "x-38",
+     "fact": false
+    },
+    {
+     "name": "x-39",
+     "fact": false
+    },
+    {
+     "name": "x-40",
+     "fact": false
+    },
+    {
+     "name": "x-41",
+     "fact": false
+    },
+    {
+     "name": "x-42",
+     "fact": false
+    },
+    {
+     "name": "x-43",
+     "fact": false
+    },
+    {
+     "name": "x-44",
+     "fact": false
+    },
+    {
+     "name": "x-45",
+     "fact": false
+    },
+    {
+     "name": "x-46",
+     "fact": false
+    },
+    {
+     "name": "x-47",
+     "fact": false
+    },
+    {
+     "name": "x-48",
+     "fact": false
+    },
+    {
+     "name": "x-49",
+     "fact": false
+    },
+    {
+     "name": "x-50",
+     "fact": false
+    },
+    {
+     "name": "x-51",
+     "fact": false
+    },
+    {
+     "name": "x-52",
+     "fact": false
+    },
+    {
+     "name": "x-53",
+     "fact": false
+    },
+    {
+     "name": "x-54",
+     "fact": false
+    },
+    {
+     "name": "x-55",
+     "fact": false
+    },
+    {
+     "name": "x-56",
+     "fact": false
+    },
+    {
+     "name": "x-57",
+     "fact": false
+    },
+    {
+     "name": "x-58",
+     "fact": false
+    },
+    {
+     "name": "x-59",
+     "fact": false
+    },
+    {
+     "name": "x-60",
+     "fact": false
+    },
+    {
+     "name": "x-61",
+     "fact": false
+    },
+    {
+     "name": "x-62",
+     "fact": false
+    },
+    {
+     "name": "x-63",
+     "fact": false
+    },
+    {
+     "name": "x-64",
+     "fact": false
+    },
+    {
+     "name": "x-65",
+     "fact": false
+    },
+    {
+     "name": "x-66",
+     "fact": false
+    },
+    {
+     "name": "x-67",
+     "fact": false
+    },
+    {
+     "name": "x-68",
+     "fact": false
+    },
+    {
+     "name": "x-69",
+     "fact": false
+    },
+    {
+     "name": "x-70",
+     "fact": false
+    },
+    {
+     "name": "x-71",
+     "fact": false
+    },
+    {
+     "name": "x-72",
+     "fact": false
+    },
+    {
+     "name": "x-73",
+     "fact": false
+    },
+    {
+     "name": "x-74",
+     "fact": false
+    },
+    {
+     "name": "x-75",
+     "fact": false
+    },
+    {
+     "name": "x-76",
+     "fact": false
+    },
+    {
+     "name": "x-77",
+     "fact": false
+    },
+    {
+     "name": "x-78",
+     "fact": false
+    },
+    {
+     "name": "x-79",
+     "fact": false
+    },
+    {
+     "name": "x-80",
+     "fact": false
+    },
+    {
+     "name": "x-81",
+     "fact": false
+    },
+    {
+     "name": "x-82",
+     "fact": false
+    },
+    {
+     "name": "x-83",
+     "fact": false
+    },
+    {
+     "name": "x-84",
+     "fact": false
+    },
+    {
+     "name": "x-85",
+     "fact": false
+    },
+    {
+     "name": "x-86",
+     "fact": false
+    },
+    {
+     "name": "x-87",
+     "fact": false
+    },
+    {
+     "name": "x-88",
+     "fact": false
+    },
+    {
+     "name": "x-89",
+     "fact": false
+    },
+    {
+     "name": "x-90",
+     "fact": false
+    },
+    {
+     "name": "x-91",
+     "fact": false
+    },
+    {
+     "name": "x-92",
+     "fact": false
+    },
+    {
+     "name": "x-93",
+     "fact": false
+    },
+    {
+     "name": "x-94",
+     "fact": false
+    },
+    {
+     "name": "x-95",
+     "fact": false
+    },
+    {
+     "name": "x-96",
+     "fact": false
+    },
+    {
+     "name": "x-97",
+     "fact": false
+    },
+    {
+     "name": "x-98",
+     "fact": false
+    },
+    {
+     "name": "x-99",
+     "fact": false
+    }
+   ]
+  },
+  {
+   "name": "every row holds",
+   "entries": [
+    "a.ts",
+    "b.ts"
+   ],
+   "rows": [
+    {
+     "name": "a.ts",
+     "fact": true
+    },
+    {
+     "name": "b.ts",
+     "fact": true
+    },
+    {
+     "name": "gone",
+     "fact": false
+    }
+   ]
+  },
+  {
+   "name": "two rows that contradict each other about one path",
+   "entries": [
+    "a.ts"
+   ],
+   "rows": [
+    {
+     "name": "a.ts",
+     "fact": true
+    },
+    {
+     "name": "a.ts",
+     "fact": false
+    },
+    {
+     "name": "b.ts",
+     "fact": true
+    }
+   ]
+  }
+ ]
+}

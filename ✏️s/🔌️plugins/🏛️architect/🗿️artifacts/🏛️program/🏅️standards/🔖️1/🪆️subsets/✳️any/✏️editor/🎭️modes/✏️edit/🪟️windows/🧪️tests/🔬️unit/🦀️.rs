@@ -50,7 +50,7 @@ async fn definition_declares_the_node_graph_surface_and_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn the_graph_body_emits_a_node_graph_scene() {
     let program = sample_plugin();
-    let node = render(&program, &config::ArchitectGraphWindowConfig::default()).expect("graph");
+    let node = render(&program, &config::ArchitectGraphWindowConfig::default(), semio_plugin::Locale::En).expect("graph");
     let semio_plugin::Component::Surface(props) = &node.component else { panic!("graph surface") };
     let scene: NodeGraphScene = semio_ui_scene::decode(props).expect("packed graph");
     assert_eq!(scene.nodes.len(), program.elements.len());
@@ -131,7 +131,7 @@ async fn definition_declares_the_block_list_surface_and_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_active_registers_rows_become_block_list_steps() {
-    let node = render(&sample_plugin(), &config::ArchitectRegisterWindowConfig::default()).expect("register");
+    let node = render(&sample_plugin(), &config::ArchitectRegisterWindowConfig::default(), semio_plugin::Locale::En).expect("register");
     let semio_plugin::Component::Surface(props) = &node.component else { panic!("register surface") };
     let scene: BlockListScene = semio_ui_scene::decode(props).expect("packed register");
     let steps: serde_json::Value = serde_json::to_value(&scene.steps).expect("independent step oracle");

@@ -29,3 +29,16 @@ async fn viewer_declares_the_main_window() {
     let def = create_pdf17_viewer();
     assert!(def.window_kinds.iter().any(|w| w.id == main::WINDOW_KIND_ID));
 }
+
+#[test]
+fn view_layout_leaves_window_titles_to_the_localized_window_label() {
+    fn titles(node: &semio_plugin::WindowLayoutNode, found: &mut Vec<Option<String>>) {
+        match node {
+            semio_plugin::WindowLayoutNode::Window { title, .. } => found.push(title.clone()),
+            semio_plugin::WindowLayoutNode::Stack { children, .. } | semio_plugin::WindowLayoutNode::Split { children, .. } => children.iter().for_each(|child| titles(child, found)),
+        }
+    }
+    let mut found = Vec::new();
+    titles(&view::layout().root, &mut found);
+    assert!(!found.is_empty() && found.iter().all(Option::is_none), "{found:?}");
+}

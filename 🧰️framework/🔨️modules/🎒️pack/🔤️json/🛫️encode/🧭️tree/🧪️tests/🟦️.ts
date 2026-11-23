@@ -42,7 +42,7 @@ test("native canonical paged traversal retains original byte prefixes and closes
   const source = readFileSync(fileURLToPath(new URL("🦀️.rs", root)), "utf8");
   expect(source).toContain("pub struct ArtifactCanonicalJsonTreeCursor");
   const owner = readFileSync(fileURLToPath(new URL("../../🦀️.rs", root)), "utf8");
-  expect(owner).toContain("pub use native_tree");
+  expect(owner).toContain("pub use semio_framework_pack_json_canonical::{");expect(owner).toContain("ArtifactCanonicalJsonTreeCursor");
   expect(source).toContain("PagedList<NativeFrame");
   expect(source).toContain("RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>");
   expect(source).not.toContain("transmute");
@@ -80,7 +80,7 @@ test("original CQT header transfer agrees with strict neutral authority and SQLi
 test("original scalar traversal uses real initialized bytes and independent positive grant policy",()=>{
  const root=new URL("../",import.meta.url);const rows=JSON.parse(readFileSync(new URL("🧪️tests/🧫️fixtures/🔣️.json",root),"utf8"));
  for(const row of rows.scalarCases){expect(JSON.stringify(row.value)).toBe(row.expected);}
- expect(rows.retainedPolicy).toEqual({maximumItems:1,maximumCopyBytes:4096,maximumCapacityBytes:4096,maximumReleaseBytes:4096,maximumDepth:64});
+ expect(rows.retainedPolicy).toEqual({maximumItems:1,maximumCopyBytes:8192,maximumCapacityBytes:4096,maximumReleaseBytes:4096,maximumDepth:64});
  for(const value of [true,false,null,42,-42,0.125]){const bytes=Buffer.from(JSON.stringify(value));expect([...bytes]).toEqual([...new TextEncoder().encode(JSON.stringify(value))]);expect(bytes.length).toBeLessThanOrEqual(64);}
  const source=readFileSync(new URL("🦀️.rs",root),"utf8");expect(source).toContain("frame.scalar.write_node(scalar)");expect(source).not.toContain("frame.scalar = ScalarBytes::from_node");
  const native=readFileSync(new URL("🧪️tests/🦀️.rs",root),"utf8");expect(native).toContain("rows[\"retainedPolicy\"]");expect(native).not.toContain("maximum_copy_bytes:demand.copy_bytes");expect(existsSync(new URL("🧬️schema/🔣️.json",root))).toBe(false);

@@ -8,7 +8,10 @@ async fn a_guest_backed_codec_with_no_registered_route_refuses_and_counts_its_ca
     let store::VcsError::Deserialize(message) = &refused else { panic!("print-mirror must refuse by decode, got {refused:?}") };
     assert!(message.contains("no registered guest codec prints this pair") && message.contains("candidate(s)"), "{message}");
 
-    let applied = guest_apply_ops_binary(b"not-a-pack", b"not-an-spr", b"").await.expect_err("no component applies a batch onto bytes that are not a pair");
+    let mut observer_function = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let observer: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer_function;
+    let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("identity authority");
+    let applied = guest_apply_ops_binary(b"not-a-pack", b"not-an-spr", b"", &mut identity).await.expect_err("no component applies a batch onto bytes that are not a pair");
     let store::VcsError::Deserialize(message) = &applied else { panic!("apply-ops must refuse by decode, got {applied:?}") };
     assert!(message.contains("no registered guest codec applies this batch") && message.contains("candidate(s)"), "{message}");
 }
@@ -25,12 +28,12 @@ async fn a_guest_backed_codec_refuses_the_two_operations_the_wit_does_not_export
     let envelope = store::os_spr::MutationEnvelope {
         mutation_id: store::os_spr::MutationId("m1".to_string()),
         document_id: store::os_spr::ArtifactId("doc".to_string()),
-        actor: store::os_spr::ActorId("agent:test#sess".to_string()),
+        actor: store::os_spr::ActorId("agent:test#sess".into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: store::os_spr::ArtifactDiff { schema: store::os_spr::SchemaId("gis.map".to_string()), payload: Vec::new() },
-        inverse: store::os_spr::InverseMutation { schema: store::os_spr::SchemaId("gis.map".to_string()), payload: Vec::new() },
+        diff: store::os_spr::ArtifactDiff { schema: store::os_spr::SchemaId("gis.map".to_string()), payload: Default::default() },
+        inverse: store::os_spr::InverseMutation { schema: store::os_spr::SchemaId("gis.map".to_string()), payload: Default::default() },
         timestamp: store::os_spr::HybridLogicalTimestamp::new(1, 1),
         transaction: None, verb: None, line: None,
     };

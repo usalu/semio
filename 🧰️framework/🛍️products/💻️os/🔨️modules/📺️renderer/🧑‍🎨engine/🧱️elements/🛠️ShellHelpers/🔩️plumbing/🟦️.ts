@@ -21,14 +21,14 @@ export const FRAMEWORK_CATEGORY_COMMAND_ID = "framework.category.command";
  * bottom-middle, ordered left of the Command branch (mirrors Command's own bundling on the same anchor). */
 export const FRAMEWORK_CATEGORY_TOOL_ID = "framework.category.tool";
 
-/** 🎛️ Corner/top-middle/bottom-middle anchors park their *folded* root tab row in navbar/footer chrome (via {@link PanelChromeTabBar}); while open, the floating {@link Panel} hosts the full strip on its {@link WindowChrome}. The two side-middle anchors have no navbar/footer slot, so they're absent here and fall back to `"panel"` (see the `?..:"panel"` read site), carrying their own tab bar when folded too. */
-export const PANEL_TAB_BAR_HOSTS: Partial<Record<Anchor, "navbar" | "footer">> = {
+/** 🎛️ Corner/top-middle/bottom-middle anchors park their *folded* root tab row in the navbar chrome or as a glass chip on the canvas frame's bottom edge (via {@link PanelChromeTabBar}); while open, the floating {@link Panel} hosts the full strip on its {@link WindowChrome}. The two side-middle anchors have no navbar/footer slot, so they're absent here and fall back to `"panel"` (see the `?..:"panel"` read site), carrying their own tab bar when folded too. */
+export const PANEL_TAB_BAR_HOSTS: Partial<Record<Anchor, "navbar" | "canvas-bottom">> = {
   "top-left": "navbar",
   "top-middle": "navbar",
   "top-right": "navbar",
-  "bottom-left": "footer",
-  "bottom-middle": "footer",
-  "bottom-right": "footer",
+  "bottom-left": "canvas-bottom",
+  "bottom-middle": "canvas-bottom",
+  "bottom-right": "canvas-bottom",
 };
 export const APP_BREADCRUMB_SEPARATOR = " · ";
 

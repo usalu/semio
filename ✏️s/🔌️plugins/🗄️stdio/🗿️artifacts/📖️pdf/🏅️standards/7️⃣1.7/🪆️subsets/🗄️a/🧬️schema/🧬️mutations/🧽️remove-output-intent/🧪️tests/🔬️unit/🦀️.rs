@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::a::schema::mutations::PdfAMutation;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::a::schema::mutations::set_output_intent::SetOutputIntent;
@@ -22,7 +22,7 @@ fn removes_the_catalog_output_intent() {
     let next = applied(&base, &PdfAMutation::RemoveOutputIntent(mutation.clone()));
     assert!(support::output_intent_identifier(&next).is_none());
     assert_eq!(next.objects.len(), 1, "the intent and its profile leave with the entry");
-    assert_eq!(<RemoveOutputIntent as MutationKind<PdfSnapshot, PdfAMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
+    assert_eq!(<RemoveOutputIntent as ColdMutationKind<PdfSnapshot, PdfAMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]

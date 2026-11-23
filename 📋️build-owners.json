@@ -9268,6 +9268,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/ui-window-frame-rs",
+      "root": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔲️WindowFrame/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔲️WindowFrame/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/unicode-mappings-rs",
       "root": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/🔁️mappings/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/🔁️mappings/📦️packages/🦀️rust/📋️project.json",

@@ -5,6 +5,7 @@
   "elastic": {
     "graph": {
       "needBytes": 3221225472,
+      "floorBytes": 3221225472,
       "headroomPercent": 300,
       "hostFreeReservePercent": 92,
       "alignBytes": 1073741824,
@@ -18,6 +19,7 @@
     },
     "products": {
       "needBytes": 22548578304,
+      "floorBytes": 4294967296,
       "headroomPercent": 50,
       "hostFreeReservePercent": 88,
       "alignBytes": 1073741824,
@@ -31,6 +33,7 @@
     },
     "rust": {
       "needBytes": 34359738368,
+      "floorBytes": 17179869184,
       "headroomPercent": 25,
       "hostFreeReservePercent": 66,
       "alignBytes": 1073741824,
@@ -69,7 +72,12 @@
       "directory": ".cache/b/d",
       "capacityBytes": 38654705664,
       "maximumLogicalBytes": 38653657088,
-      "hostSharePercent": 20
+      "hostSharePercent": 20,
+      "needBytes": {
+        "darwin": 7491026944,
+        "linux": 37808504832,
+        "win32": 37808504832
+      }
     },
     "products": {
       "directory": ".cache/b/p",

@@ -26,11 +26,11 @@ async fn a_mounted_render_uses_its_own_source_revision() {
         output_height: snapshot.output.height,
         source_revision: encode_base64(&[1; 32]),
     };
-    let empty = BitmapEditor::render_bodies(output::BODY_KEY, &doc, &config, &BitmapTransient::default(), None).expect("empty output");
-    let fresh = BitmapEditor::render_bodies(output::BODY_KEY, &doc, &config, &cache, None).expect("matching output");
+    let empty = BitmapEditor::render_bodies(output::BODY_KEY, &doc, &config, &BitmapTransient::default(), None, semio_ui_locale::Locale::En).expect("empty output");
+    let fresh = BitmapEditor::render_bodies(output::BODY_KEY, &doc, &config, &cache, None, semio_ui_locale::Locale::En).expect("matching output");
     let empty = project_and_retire_fixture_tree(empty).expect("empty output tree");
     assert_ne!(project_and_retire_fixture_tree(fresh).expect("fresh output tree"), empty);
     let changed = ArtifactView::with_render_context(&snapshot, &history, semio_plugin::ChildContentView::EMPTY, semio_plugin::AppRenderOperationContext { canonical_base_revision: [2; 32], ..context }, "bitmap", None).await;
-    let stale = BitmapEditor::render_bodies(output::BODY_KEY, &changed, &config, &cache, None).expect("stale output");
+    let stale = BitmapEditor::render_bodies(output::BODY_KEY, &changed, &config, &cache, None, semio_ui_locale::Locale::En).expect("stale output");
     assert_eq!(project_and_retire_fixture_tree(stale).expect("stale output tree"), empty);
 }

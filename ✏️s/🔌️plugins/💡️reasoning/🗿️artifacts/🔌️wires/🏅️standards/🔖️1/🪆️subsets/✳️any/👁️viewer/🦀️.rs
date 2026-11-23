@@ -99,9 +99,9 @@ impl ArtifactViewer for WiresViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            canvas::WIRES_VIEW_BODY_CANVAS => canvas::render(&crate::wires_composed_from_children(doc.snapshot, &doc.children).map_err(|fault| semio_plugin::PluginAssemblyError::new(fault.code.0, fault.message))?),
+            canvas::WIRES_VIEW_BODY_CANVAS => canvas::render(&crate::wires_composed_from_children(doc.snapshot, &doc.children).map_err(|fault| semio_plugin::PluginAssemblyError::new(fault.code.0, fault.message))?, view_state.locale),
             _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires diagnostic admission failed")),
         }
         .map(semio_plugin::built_to_component_tree)

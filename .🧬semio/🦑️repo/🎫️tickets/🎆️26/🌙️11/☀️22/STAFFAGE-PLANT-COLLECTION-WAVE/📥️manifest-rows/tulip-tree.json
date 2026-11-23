@@ -1,0 +1,56 @@
+{
+ "id": "tulip-tree",
+ "category": "vegetation",
+ "title": {
+  "en": "Tulip Tree",
+  "de": "Tulpenbaum"
+ },
+ "heightM": 30.314,
+ "widthM": 13.509,
+ "powerW": 0,
+ "poses": [
+  "calm",
+  "windy",
+  "storm",
+  "wet-snow"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "tulip-tree-symbol",
+  "tree-sign"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A 30 m tulip tree (Liriodendron tulipifera) with a straight columnar bole clear to 7 m, a single leader to the top and a dense columnar-oval crown of large four-lobed leaves, about 14 m wide.",
+  "de": "Ein 30 m hoher Tulpenbaum (Liriodendron tulipifera) mit geradem, säulenförmigem Stamm, astfrei bis 7 m, einem Leittrieb bis zur Spitze und einer dichten, säulenförmig-ovalen Krone aus großen vierlappigen Blättern von etwa 14 m Breite."
+ },
+ "completion": "authored"
+}

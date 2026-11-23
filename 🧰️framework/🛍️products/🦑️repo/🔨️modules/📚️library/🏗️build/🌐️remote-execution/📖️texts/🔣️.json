@@ -6,8 +6,16 @@
   ],
   "messages": {
     "error.syntax": {
-      "en": "Expected repo remote-execution serve|status|workers.",
-      "de": "Erwartet wird repo remote-execution serve|status|workers."
+      "en": "Expected repo remote-execution serve|status|workers|cancel <operation|all-stuck>.",
+      "de": "Erwartet wird repo remote-execution serve|status|workers|cancel <operation|all-stuck>."
+    },
+    "error.target": {
+      "en": "cancel needs one target: an operation id or action digest of at least 8 characters, or all-stuck.",
+      "de": "cancel braucht ein Ziel: eine Operations-Kennung oder einen Aktions-Digest mit mindestens 8 Zeichen, oder all-stuck."
+    },
+    "error.cancel": {
+      "en": "The scheduler refused the cancellation (HTTP {status}).",
+      "de": "Der Scheduler hat den Abbruch abgelehnt (HTTP {status})."
     },
     "error.option": {
       "en": "Unknown option for remote-execution {operation}: {option}",
@@ -88,6 +96,22 @@
     "serve.join": {
       "en": "Another machine joins with: repo remote-execution workers --join {url}",
       "de": "Ein anderer Rechner tritt bei mit: repo remote-execution workers --join {url}"
+    },
+    "cancel.start": {
+      "en": "Cancelling {target}.",
+      "de": "Abbruch von {target}."
+    },
+    "cancel.row": {
+      "en": "Ended {id} (action {action}, {stage}, machine {worker}, {seconds} s old); its clients compile locally.",
+      "de": "Beendet: {id} (Aktion {action}, {stage}, Maschine {worker}, {seconds} s alt); die Clients kompilieren lokal."
+    },
+    "cancel.none": {
+      "en": "No unfinished operation matches.",
+      "de": "Keine unfertige Operation passt."
+    },
+    "cancel.done": {
+      "en": "{count} operation(s) ended.",
+      "de": "{count} Operation(en) beendet."
     },
     "serve.stopping": {
       "en": "Stopping the remote execution service.",

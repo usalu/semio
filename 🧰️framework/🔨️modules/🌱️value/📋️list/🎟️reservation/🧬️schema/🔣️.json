@@ -11,7 +11,8 @@
     "payloadCopies",
     "partialFinalRows",
     "interruptAfter",
-    "allocationPolicy"
+    "allocationPolicy",
+    "metadataReuse"
   ],
   "properties": {
     "contract": {
@@ -93,6 +94,13 @@
             "quarantined": false
           }
         ]
+      }
+    },
+    "metadataReuse": {
+      "const": {
+        "backingSlots": 1,
+        "allocatedBytes": 0,
+        "releasedBytes": 0
       }
     }
   }

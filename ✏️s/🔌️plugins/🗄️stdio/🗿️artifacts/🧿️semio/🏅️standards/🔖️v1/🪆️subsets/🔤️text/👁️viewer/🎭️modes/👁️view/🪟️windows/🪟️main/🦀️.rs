@@ -58,7 +58,7 @@ fn world_instances_json(document: &SemioTextSnapshot) -> String {
 /// 👁️ Pure `SemioTextSnapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &SemioTextSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &SemioTextSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(vec![semio_framework_pack_json::object([
         ("id".to_string(), semio_framework_pack_json::Value::from(SEMIO_TEXT_VIEW_FALLBACK_MESH_KIND)),
         ("data".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&mesh_from_kind(SEMIO_TEXT_VIEW_FALLBACK_MESH_KIND)))),
@@ -69,7 +69,7 @@ pub fn render(document: &SemioTextSnapshot) -> semio_plugin::UiAssemblyResult<Bu
         instances_json: world_instances_json(document),
         selection_json: world3d_selection_json("rectangle", &[], None),
     };
-    MeshWindowKit::render(&view)
+    MeshWindowKit::render(&view, locale)
 }
 //#endregion 🔖️Render
 

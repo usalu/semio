@@ -46,7 +46,7 @@ pub use semio_ui_render_packet::ReadbackImage;
 pub use semio_ui_render_packet::{
     AtlasId, BackendError, DeviceCapabilities, DeviceStatus, DrawBatch, FinishParams, FrameStats, GlassInstance, GlassStyle, GpuTier, GraphicsBackend, LayerState, LayoutRect, LineVertex3, LossReason, MemoryClass, MeshId, MeshInstance, PhysicalSize,
     PipelineKind, PointVertex3, QuadInstance, RecoveredResources, RenderPacket, RenderReport, ResourceKind, ResourceOp, ResourceRegistry, Scene, SceneBuilder, SceneError, ScissorRect, SurfaceFormat, SurfaceLighting, SurfaceMaterial, SurfacePass, SurfacePointDraw, SurfaceShadow,
-    TextureId, VectorVertex,
+    TextureId, VectorVertex, viewport_scissor,
 };
 pub use semio_ui_render_shader_contract::{
     BindGroupEntrySpec, BindGroupSpec, BindingKind, BlendMode, ColorWriteMask, CompareFunction, CullMode, DepthBiasSpec, DepthStencilFormat, DepthStencilSpec, PipelineSpec, PrimitiveTopology, ShaderStageVisibility, StencilOperation,

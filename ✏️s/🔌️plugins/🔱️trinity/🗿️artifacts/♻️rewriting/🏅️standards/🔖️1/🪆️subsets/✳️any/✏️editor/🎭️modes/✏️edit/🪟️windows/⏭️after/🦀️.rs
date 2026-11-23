@@ -2,7 +2,7 @@
 
 use crate::editor::rewriting::window_config::RewritingWindowConfig;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-pub fn render(state: &RewritingSnapshot, cfg: &RewritingWindowConfig) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render(state: &RewritingSnapshot, cfg: &RewritingWindowConfig, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let snapshot_json = crate::editor::rewriting::document::rewritten_graph(state).map_err(|error|semio_plugin::PluginAssemblyError::new("trinity.graph.invalid",error))?;
-    crate::editor::rewriting::ui::render_graph_snapshot(crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_SURFACE_AFTER, &snapshot_json, cfg, false)
+    crate::editor::rewriting::ui::render_graph_snapshot(crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_SURFACE_AFTER, &snapshot_json, cfg, false, semio_plugin::surface_name(locale, "Graph after rewriting", "Graph nach Umschreibung"))
 }

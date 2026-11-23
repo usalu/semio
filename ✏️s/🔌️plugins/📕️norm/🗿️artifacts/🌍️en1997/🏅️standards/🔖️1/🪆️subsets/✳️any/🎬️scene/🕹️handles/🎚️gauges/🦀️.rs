@@ -7,6 +7,7 @@ use crate::model::{Anchor, EmbeddedWall, Investigation, LabTest, LayerWater, Pil
 pub const STEPS_PER_METRE: f64 = 20.0;
 const PITCH: f64 = 0.4;
 const ANGLE: f64 = 90.0;
+const PHI_PRIME_MAX: f64 = 50.0;
 const STRESS: f64 = 1.0e9;
 const FORCE: f64 = 1.0e10;
 const OPEN: f64 = 1.0e12;
@@ -110,7 +111,7 @@ pub const LAB_TESTS: &[Gauge<LabTest>] = &[
 pub const LAYERS: &[Gauge<SoilLayer>] = &[
     gauge!("gamma", "gamma", |r| r.gamma, "N/m3", 500.0, 0.0, 3.0e4, "Unit weight of layer", "Wichte der Schicht"),
     gauge!("gamma-prime", "gammaPrime", |r| r.gamma_prime, "N/m3", 500.0, 0.0, 3.0e4, "Buoyant unit weight of layer", "Wichte unter Auftrieb der Schicht"),
-    gauge!("phi-prime", "phiPrimeDeg", |r| r.phi_prime_deg, "deg", 0.5, 0.0, ANGLE, "Effective friction angle of layer", "Effektiver Reibungswinkel der Schicht"),
+    gauge!("phi-prime", "phiPrimeDeg", |r| r.phi_prime_deg, "deg", 0.5, 0.0, PHI_PRIME_MAX, "Effective friction angle of layer", "Effektiver Reibungswinkel der Schicht"),
     gauge!("cohesion-effective", "cohesionEffective", |r| r.cohesion_effective, "Pa", 1000.0, 0.0, STRESS, "Effective cohesion of layer", "Effektive Kohäsion der Schicht"),
     gauge!("cohesion-undrained", "cohesionUndrained", |r| r.cohesion_undrained, "Pa", 1000.0, 0.0, STRESS, "Undrained cohesion of layer", "Undränierte Kohäsion der Schicht"),
     gauge!("oedometric-modulus", "oedometricModulus", |r| r.oedometric_modulus, "Pa", 1.0e6, 0.0, OPEN, "Oedometric modulus of layer", "Steifemodul der Schicht"),

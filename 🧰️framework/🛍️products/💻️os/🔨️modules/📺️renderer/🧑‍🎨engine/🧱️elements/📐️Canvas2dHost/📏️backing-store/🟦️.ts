@@ -6,12 +6,11 @@ export function resizeCanvasBackingStore(canvas: HTMLCanvasElement | null | unde
   if (!canvas) return false;
   const pixelW = Math.max(1, Math.round(logicalW * dpr));
   const pixelH = Math.max(1, Math.round(logicalH * dpr));
-  const changed = canvas.width !== pixelW || canvas.height !== pixelH;
-  if (changed) {
-    canvas.width = pixelW;
-    canvas.height = pixelH;
-  }
+  const widthChanged = canvas.width !== pixelW;
+  const heightChanged = canvas.height !== pixelH;
+  if (widthChanged) canvas.width = pixelW;
+  if (heightChanged) canvas.height = pixelH;
   canvas.style.width = `${Math.max(1, Math.round(logicalW))}px`;
   canvas.style.height = `${Math.max(1, Math.round(logicalH))}px`;
-  return changed;
+  return widthChanged || heightChanged;
 }

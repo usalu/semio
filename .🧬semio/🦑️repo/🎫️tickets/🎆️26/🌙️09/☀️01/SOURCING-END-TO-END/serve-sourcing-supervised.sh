@@ -5,7 +5,7 @@
 cd "$(dirname "$0")/../../../../../../.." || exit 1
 LOG="$1"
 while :; do
-  bun nx run @semio-tech/framework-os-dev:serve-sourcing-react-dev >> "$LOG" 2>&1 &
+  repo run @semio-tech/framework-os-dev:serve-sourcing-react-prototype >> "$LOG" 2>&1 &
   SERVE=$!
   DEAD=0
   while kill -0 "$SERVE" 2>/dev/null; do

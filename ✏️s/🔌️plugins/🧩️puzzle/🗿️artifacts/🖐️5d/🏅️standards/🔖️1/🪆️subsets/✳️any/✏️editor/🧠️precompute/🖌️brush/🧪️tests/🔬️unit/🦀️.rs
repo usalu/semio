@@ -12,7 +12,6 @@ use crate::editor::puzzle5d::testkit::{app_with_registry, close_app, dispatch, d
 
 
 
-use crate::editor::puzzle5d::unit_tests::context::Puzzle5dApp;
 use semio_plugin::kernel::Effect;
 use semio_plugin::ArtifactApp;
 use semio_plugin::PluginApp;
@@ -33,7 +32,13 @@ fn target(app: &mut Puzzle5dTestApp, grip: Option<&str>, what: &str, until: impl
     let args = grip.map_or_else(|| semio_framework_pack_json::json!({}), |grip| semio_framework_pack_json::json!({ "fullId": grip }));
     dispatch_armed(app, "targetBrushSuggestions", Some(&args), world3d::WINDOW_KIND_ID, UTILITY_ID).expect("targetBrushSuggestions");
     for _ in 0..FILL_RUN_TURNS {
-        for effect in ::semio_framework_async::poll::resolve_ready(app.pending_effects(Some(&armed_view()))) {
+        let view = armed_view();
+        let effects = {
+            let inner = &mut app.0;
+            let cx = app.1.cx();
+            ::semio_framework_async::poll::resolve_ready(inner.pending_effects(Some(&view), cx)).expect("pending effects").unwrap_or_default()
+        };
+        for effect in effects {
             if let Effect::DispatchAction { action, args, .. } = effect {
                 tool_run_action(app, &action, args.as_ref().map_or(serde_json::Value::Null, serde_json::Value::from));
             }
@@ -132,7 +137,13 @@ fn the_grip_suggestion_submenu_searches_without_the_brush_and_accepts_a_candidat
     }
     let mut listed = serde_json::Value::Null;
     for _ in 0..FILL_RUN_TURNS {
-        for effect in ::semio_framework_async::poll::resolve_ready(app.pending_effects(Some(&select_view()))) {
+        let view = select_view();
+        let effects = {
+            let inner = &mut app.0;
+            let cx = app.1.cx();
+            ::semio_framework_async::poll::resolve_ready(inner.pending_effects(Some(&view), cx)).expect("pending effects").unwrap_or_default()
+        };
+        for effect in effects {
             if let Effect::DispatchAction { action, args, .. } = effect {
                 tool_run_action(&mut app, &action, args.as_ref().map_or(serde_json::Value::Null, serde_json::Value::from));
             }

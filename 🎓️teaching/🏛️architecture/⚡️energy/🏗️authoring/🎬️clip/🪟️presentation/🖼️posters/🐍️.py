@@ -1,7 +1,7 @@
 """🖼️ Poster frames of the teaching overview: every card shows a stored, card-sized frame of its authored chapter, never a placeholder and never a render of a foreign lesson.
 
-A chapter's poster is the end state of its last segment (the summary state), or the authored `poster` of the manifest chapter (`segment`, `animation`). The asset is a 640x360 PNG with a fingerprint sidecar, stored beside the lesson's clip sources (`<lesson clip folder>/🖼️posters/<chapter>.png|json`) and checked into the repository.
-The overview reads only these assets: a missing one fails loudly, a stale one (an authored source changed since the capture) is listed in one warning line and used as is.
+A chapter's poster is the end state of its last segment (the summary state), or the authored `poster` of the manifest chapter (`segment`, `animation`). The asset is a 640x360 PNG with a fingerprint sidecar, stored beside the lesson's clip sources, one folder per language (`<lesson clip folder>/🖼️posters/<language>/<chapter>.png|json`), and checked into the repository. A poster never crosses languages: a render in one language reads only that language's posters.
+The overview reads only these assets: a missing one (also one not yet captured in the render language) fails loudly, a stale one (an authored source changed since the capture) is listed in one warning line and used as is.
 Posters are captured as a by-product: rendering a chapter takes its poster from the last frame of the segment clip it produced anyway. `script.ts posters` (re)captures them from an up-to-date clip of the output root, else by one single Manim frame of the scene.
 A lesson card shows the poster of its designated chapter (the manifest lesson's `poster.chapter`, else its first chapter); topic and course cards show the first poster below them; a topic without lessons shows an explicit empty card.
 
@@ -108,15 +108,15 @@ def _digest(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def asset(scene: str) -> tuple[Path, Path]:
-    """📦 The stored poster image and its fingerprint sidecar."""
-    folder = chapters()[scene]["folder"]
+def asset(scene: str, language: str) -> tuple[Path, Path]:
+    """📦 The stored poster image and its fingerprint sidecar of one render language."""
+    folder = chapters()[scene]["folder"] / language
     return folder / f"{scene}.png", folder / f"{scene}.json"
 
 
-def stored(scene: str) -> dict | None:
-    """📄 The sidecar of a stored poster whose image is intact, or `None` when it is missing or damaged."""
-    image, sidecar = asset(scene)
+def stored(scene: str, language: str) -> dict | None:
+    """📄 The sidecar of a stored poster of this language whose image is intact, or `None` when it is missing or damaged."""
+    image, sidecar = asset(scene, language)
     try:
         record = json.loads(sidecar.read_text(encoding="utf-8"))
         return record if image.is_file() and record["sha256"] == _digest(image) else None
@@ -124,9 +124,9 @@ def stored(scene: str) -> dict | None:
         return None
 
 
-def stale(scene: str) -> bool:
-    """⌛ A stored poster is stale when its moment changed or any authored source it was captured from changed or vanished."""
-    record, root = stored(scene), _runtime()._WORKSPACE_ROOT
+def stale(scene: str, language: str) -> bool:
+    """⌛ A poster is stale when none is stored for this language, its moment changed, or any authored source it was captured from changed or vanished."""
+    record, root = stored(scene, language), _runtime()._WORKSPACE_ROOT
     if record is None or record.get("moment") != chapters()[scene]["declaration"]:
         return True
     try:
@@ -149,11 +149,11 @@ def coverage(image) -> float:
 
 
 def store(scene: str, frame: Path, settings: dict, *, sources_state: dict[str, str] | None = None) -> Path:
-    """💾 Atomically publish a captured frame as the card-sized poster asset and its sidecar."""
+    """💾 Atomically publish a captured frame as the card-sized poster asset and its sidecar in the language of `settings`."""
     from PIL import Image
 
     runtime = _runtime()
-    image, sidecar = asset(scene)
+    image, sidecar = asset(scene, settings["language"])
     image.parent.mkdir(parents=True, exist_ok=True)
     temporary = image.with_name(f".{scene}.{time.time_ns():x}.png")
     try:
@@ -168,7 +168,7 @@ def store(scene: str, frame: Path, settings: dict, *, sources_state: dict[str, s
     finally:
         temporary.unlink(missing_ok=True)
     runtime._write_state(sidecar, {"scene": scene, "moment": chapters()[scene]["declaration"], "sources": sources_state or sources(scene, settings),
-                                   "captured": {key: settings.get(key) for key in ("language", "profile", "audience")}, "size": list(SIZE), "sha256": _digest(image)})
+                                   "captured": {key: settings.get(key) for key in ("profile", "audience")}, "size": list(SIZE), "sha256": _digest(image)})
     return image
 
 
@@ -244,7 +244,7 @@ def capture(scenes, settings: dict, output_root: Path, *, jobs: int = 1, force: 
     root, how = Path(output_root).resolve(), {}
 
     def work(scene, session):
-        if not force and not stale(scene):
+        if not force and not stale(scene, settings["language"]):
             how[scene] = "current"
             return
         clip = _segment_clip(scene, settings, root) if known[scene]["declaration"]["animation"] is None else None
@@ -262,26 +262,26 @@ def capture(scenes, settings: dict, output_root: Path, *, jobs: int = 1, force: 
     return how
 
 
-def resolve(scenes) -> dict[str, dict]:
-    """📚 Read only stored assets: a missing one fails loudly, stale ones are listed once and used as is; returns `{scene: {file, sha256}}`."""
+def resolve(scenes, language: str) -> dict[str, dict]:
+    """📚 Read only the stored assets of one language: a missing one fails loudly, stale ones are listed once and used as is; returns `{scene: {file, sha256}}`."""
     scenes = list(dict.fromkeys(scenes))
     known = chapters()
-    missing = [scene for scene in scenes if scene not in known or stored(scene) is None]
+    missing = [scene for scene in scenes if scene not in known or stored(scene, language) is None]
     if missing:
-        raise FileNotFoundError("Missing stored chapter posters (capture them with `script.ts posters`): " + ", ".join(missing))
+        raise FileNotFoundError(f"Missing stored chapter posters (capture them with `script.ts posters --language {language} --profile final`): " + ", ".join(missing))
     from PIL import Image
 
     empty = []
     for scene in scenes:
-        with Image.open(asset(scene)[0]) as image:
+        with Image.open(asset(scene, language)[0]) as image:
             if coverage(image) < MINIMUM_COVERAGE:
                 empty.append(scene)
     if empty:
         raise ValueError("Almost empty stored chapter posters; declare a `poster` moment (segment, animation) for: " + ", ".join(empty))
-    outdated = [scene for scene in scenes if stale(scene)]
+    outdated = [scene for scene in scenes if stale(scene, language)]
     if outdated:
         print("[poster] Warning: stale stored posters, not re-rendered: " + ", ".join(outdated), flush=True)
-    return {scene: {"file": str(asset(scene)[0]), "sha256": stored(scene)["sha256"]} for scene in scenes}
+    return {scene: {"file": str(asset(scene, language)[0]), "sha256": stored(scene, language)["sha256"]} for scene in scenes}
 
 
 def prepare(rendered, settings: dict) -> dict[str, dict]:
@@ -289,6 +289,6 @@ def prepare(rendered, settings: dict) -> dict[str, dict]:
     hierarchy, info = _hierarchy(), chapters()
     for scene, clips in rendered:
         moment = info[scene]["declaration"]
-        if moment["animation"] is None and clips and Path(clips[moment["segment"]]).is_file() and stale(scene):
+        if moment["animation"] is None and clips and Path(clips[moment["segment"]]).is_file() and stale(scene, settings["language"]):
             capture_clip(scene, clips[moment["segment"]], settings)
-    return resolve(shown for scene, _ in rendered for shown in required(hierarchy.path(scene)))
+    return resolve((shown for scene, _ in rendered for shown in required(hierarchy.path(scene))), settings["language"])

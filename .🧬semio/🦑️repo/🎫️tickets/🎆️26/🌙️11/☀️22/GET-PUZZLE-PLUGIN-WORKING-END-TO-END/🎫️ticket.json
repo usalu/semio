@@ -1,0 +1,21 @@
+{
+  "title": "Get Puzzle Plugin Working End to End",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Get puzzle plugin working end to end across 2D, 3D, and 5D artifacts, schemas, mutations, editors, viewers, WASM/component builds, Storybook, and live app/editor lifecycles using native tools as fallback.",
+  "goal": "🎯runningpuzzle",
+  "sessions": [
+    "79ddf861-df43-4307-8b7e-cc1024786a8f"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 21:01:13",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "01324745f8082082a02880b731dd024f640dc29b",
+      "prompt": "Get puzzle plugin working end to end across 2D, 3D, and 5D artifacts, schemas, mutations, editors, viewers, WASM/component builds, Storybook, and live app/editor lifecycles using native tools as fallback."
+    }
+  ]
+}

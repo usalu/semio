@@ -108,9 +108,9 @@ export function policyMutateRustSourceEvidence(evidence: PolicyRustSourceEvidenc
 
 export const POLICY_RUST_TEST_EVIDENCE_BOUNDARY = "\n//#region 🧪️DeclaredCanonicalTestEvidence:";
 
-/** ♻️ The live reconcile as the one text the unsplit module held: the authority, cursor and primitives crate roots with their mounted children. */
+/** ♻️ The live reconcile as the one text the unsplit module held: production of the authority, cursor and primitives roots with their mounted children, then every declared test. */
 export function policyReadUiReconcileSource(repoRoot: string): string {
-  return [INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_CURSOR_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_PRIMITIVES_FILE].map((file) => policyReadRustPolicySource(repoRoot, file)).join("\n");
+  return policyReadRustPolicyFamily(repoRoot, [INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_CURSOR_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_PRIMITIVES_FILE]);
 }
 
 /** 🧩️ Source of a crate family: the production source of every crate root of one carved db module first, then the test evidence of all of them. */

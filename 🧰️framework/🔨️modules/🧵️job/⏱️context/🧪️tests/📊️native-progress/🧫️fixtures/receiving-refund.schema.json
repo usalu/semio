@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scopes", "heldAfterSettle", "claimsAfterSettle"],
+  "properties": {
+    "scopes": {"type": "integer", "minimum": 2},
+    "heldAfterSettle": {"const": 0},
+    "claimsAfterSettle": {"const": 0}
+  }
+}

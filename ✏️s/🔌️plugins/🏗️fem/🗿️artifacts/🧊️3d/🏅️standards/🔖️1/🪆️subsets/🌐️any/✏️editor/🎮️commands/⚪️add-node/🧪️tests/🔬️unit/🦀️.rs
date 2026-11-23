@@ -23,7 +23,7 @@ async fn add_node_action_emits_op_3d() {
     let mut app: Fem3dApp = fem3d_empty_app().await;
     dispatch(&mut app, Fem3dCommand::AddNode(AddNode { x: 1.0, y: 2.0, z: 3.0 })).await;
     let snapshot = app.snapshot().expect("snapshot");
-    let node = snapshot.nodes.last().expect("node added");
+    let node = snapshot.nodes.iter().last().expect("node added");
     assert_eq!((node.x, node.y, node.z), (1.0, 2.0, 3.0));
 }
 
@@ -32,7 +32,7 @@ async fn add_material_action_emits_op_3d() {
     let mut app: Fem3dApp = fem3d_empty_app().await;
     dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11, g: 8.1e10 })).await;
     let snapshot = app.snapshot().expect("snapshot");
-    assert_eq!(snapshot.materials.last().expect("material added").g, 8.1e10);
+    assert_eq!(snapshot.materials.iter().last().expect("material added").g, 8.1e10);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -51,8 +51,8 @@ async fn add_frame_action_emits_op_3d() {
     dispatch(&mut app, Fem3dCommand::AddNode(AddNode { x: 0.0, y: 0.0, z: 0.0 })).await;
     dispatch(&mut app, Fem3dCommand::AddNode(AddNode { x: 1.0, y: 0.0, z: 0.0 })).await;
     let snapshot = app.snapshot().expect("snapshot");
-    let (start, end) = (snapshot.nodes[0].id.clone(), snapshot.nodes[1].id.clone());
-    let (material_id, section_id) = (snapshot.materials[0].id.clone(), snapshot.sections[0].id.clone());
+    let (start, end) = (snapshot.nodes[0].id.get().clone(), snapshot.nodes[1].id.get().clone());
+    let (material_id, section_id) = (snapshot.materials[0].id.get().clone(), snapshot.sections[0].id.clone());
     dispatch(&mut app, Fem3dCommand::AddFrame(add_frame::AddFrame { start, end, material_id, section_id, roll: 0.5 })).await;
     let snapshot = app.snapshot().expect("snapshot");
     match snapshot.elements.last().expect("element added") {
@@ -65,7 +65,7 @@ async fn add_frame_action_emits_op_3d() {
 async fn add_solid_action_emits_set_solid_3d() {
     let mut app: Fem3dApp = fem3d_empty_app().await;
     dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Concrete".into(), e: 3.0e10, g: 1.25e10 })).await;
-    let material_id = app.snapshot().expect("snapshot").materials[0].id.clone();
+    let material_id = app.snapshot().expect("snapshot").materials[0].id.get().clone();
     dispatch(&mut app, Fem3dCommand::AddSolid(add_solid::AddSolid { x: 0.0, y: 0.0, width: 2.0, depth: 1.0, height: 0.5, material_id, base_z: None, layers: None, mesh_size: None, axis: None })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let solid = snapshot.solids.last().expect("solid added");

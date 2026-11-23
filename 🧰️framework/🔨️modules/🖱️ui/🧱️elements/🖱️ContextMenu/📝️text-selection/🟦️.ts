@@ -56,7 +56,7 @@ export interface TextSelectionContextMenuActions {
 /** 🔨️ Builds the shared schema's rows (`🧬️schema/📝️text-selection-menu`) for a DOM text selection. */
 export function buildTextSelectionContextMenuItems(input: { readonly editable: boolean; readonly hasSelection: boolean }, labels: TextSelectionContextMenuLabels, actions: TextSelectionContextMenuActions): ContextMenuItem[] {
   return textSelectionMenu.rows.flatMap((row): ContextMenuItem[] => {
-    if (!("verb" in row)) return [{ id: row.id, label: uiDataLabel(""), separator: true }];
+    if (!row.verb || !row.chord) return [{ id: row.id, label: uiDataLabel(""), separator: true }];
     if (row.editableOnly && !input.editable) return [];
     const verb = row.verb as keyof TextSelectionContextMenuActions;
     return [{ id: row.id, label: labels[verb], icon: row.icon as ContextMenuItem["icon"], shortcut: formatKeybindingShortcut(row.chord), ...(row.needsSelection ? { disabled: !input.hasSelection } : {}), onSelect: () => actions[verb]() }];

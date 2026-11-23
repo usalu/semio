@@ -18,7 +18,7 @@ impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,cons
  fn duplicate()->ValueError{ValueError::literal(crate::ValueRefusalKind::InvalidValue,"native original map contains a duplicate key")}
  fn relay_close<'reply>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>,recover:bool)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{
   let begin=self.stage()==12;let g=effect.grant();let child=self.child.as_mut().ok_or_else(invalid)?;
-  let answer=native_relay(reply.progress(),|inner|if begin{if recover{child.recover_begin_close_into(effect,inner)}else{child.begin_close_into(effect,inner)}}else if recover{child.recover_close_step(body,&mut effect.nested(child_grant(g,0)),inner)}else{child.close_step(body,&mut effect.nested(child_grant(g,0)),inner)})?;
+  let answer=native_relay(reply.progress(),|inner|if begin{if recover{child.recover_begin_close_into(effect,inner)}else{child.begin_close_into(effect,inner)}}else if recover{child.recover_close_step(body,&mut effect.nested(g),inner)}else{child.close_step(body,&mut effect.nested(g),inner)})?;
   if begin&&child.is_closing(){self.phase=7}Ok(answer)
  }
  fn stage(&self)->u8{if self.phase==6&&self.entries.is_some(){12}else{self.phase}}
@@ -59,8 +59,8 @@ impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,cons
   match result{Ok(poll)=>poll,Err(error)=>Complete(RetainedWorkOutcome{result:Err(error),work:0})}
  }
  fn advance_local<'reply>(&mut self,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{
-  if self.binding.is_some(){let child=self.child.as_mut().ok_or_else(invalid)?;if !child.output_ready(){return child.advance_local(input,body,effect,reply)}}
-  if self.binding.is_some()&&self.phase==6&&self.entries.is_none(){return self.child.as_mut().ok_or_else(invalid)?.take(&mut self.entries,effect,reply)}
+  if self.binding.is_some()&&self.phase==5{let g=effect.grant();if let Some(child)=self.child.as_mut(){if !child.output_ready(){return child.advance_local(input,body,&mut effect.nested(child_grant(g,0)),reply)}}}
+  if self.binding.is_some()&&self.phase==6&&self.entries.is_none(){let g=effect.grant();return self.child.as_mut().ok_or_else(invalid)?.take(&mut self.entries,&mut effect.nested(child_grant(g,0)),reply)}
   if self.binding.is_some()&&matches!(self.stage(),7|12)&&self.child.as_ref().is_some_and(|child|!child.terminal_is_empty()){
    let d=match self.demands(input,body,effect.maximum_work_units()){Ok(d)=>d,Err(error)=>return Ok(reply.complete(Err(error.into())))};if !retained_clone_grant_admits(effect.grant(),d){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
    return self.relay_close(body,effect,reply,false)
@@ -82,7 +82,7 @@ impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,cons
    Ok(if self.phase==8{RetainedCloneStep::Complete(receipt(d))}else{RetainedCloneStep::Progress(receipt(d))})})();
   Ok(reply.complete(result))
  }
- fn recover_advance_local<'reply>(&mut self,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{if matches!(self.stage(),7|12)&&self.child.as_ref().is_some_and(|child|!child.terminal_is_empty()){return self.relay_close(body,effect,reply,true)}if self.phase==5{if let Some(child)=self.child.as_mut(){return child.recover_advance_local(input,body,effect,reply)}}Ok(reply.pending())}
+ fn recover_advance_local<'reply>(&mut self,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{if matches!(self.stage(),7|12)&&self.child.as_ref().is_some_and(|child|!child.terminal_is_empty()){return self.relay_close(body,effect,reply,true)}if self.phase==5{let g=effect.grant();if let Some(child)=self.child.as_mut(){return child.recover_advance_local(input,body,&mut effect.nested(child_grant(g,0)),reply)}}Ok(reply.pending())}
  fn output_ready(&self)->bool{!self.closing&&self.phase==8&&self.output.is_some()}
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.output_ready(){return Err(invalid())}native_output_demand::<PagedMap<V,N>>(size_of::<u8>())}
  fn take_work_demand(&self)->Result<u64,ValueError>{self.take_demand().map(|_|1)}

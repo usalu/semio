@@ -36,7 +36,7 @@ class BrowserLifecycleTest(unittest.TestCase):
                     losing = 1 - dominant
                     self.assertFalse(any(pixel[losing] >= 64 and all(pixel[losing] >= channel + 40 for index, channel in enumerate(pixel) if index != losing) for pixel in samples))
 
-    def test_composited_silhouette_readiness(self):
+    def test_composited_frame_readiness(self):
         runtime = importlib.import_module(PACKAGE + ".🎬️clip.⚙️runtime.🐍️")
         browser = importlib.import_module(PACKAGE + ".🎬️clip.🪟️presentation.🌐️browser.🐍️")
         output = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]).resolve()

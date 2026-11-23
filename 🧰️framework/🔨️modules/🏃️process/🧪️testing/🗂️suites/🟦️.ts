@@ -5,6 +5,8 @@ import type{ProcessPlatformCauseV1}from"./🖥️platforms/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import table from"./🔣️.json"with{type:"json"};
 import{refuseProcessV1}from"../../📖️texts/🟦️.ts";
+import{testToolsUsedByFilesV1}from"../🧰️toolchain/🟦️.ts";
+import{findToolV1}from"../../🧰️tools/📖️registry/🟦️.ts";
 
 /** 🗂️ Names one suite of the process module's route table: the files and trees it runs, its budget, its typecheck, the capabilities its route authors for every child birth and where its scratch directory lives (a per-run sandbox outside the checkout, or one inside the checkout for tests that read checkout-relative sources), the hosts it can run on (any other host reports it skipped), the host-bound facts that keep a host out and the registered tools whose pinned binary its laws receive. */
 export type ProcessTestSuiteV1=Readonly<{id:string;budgetMs:number;typecheck:"none"|"strict"|"strict-indexed";files?:readonly string[];trees?:readonly string[];typecheckFiles?:readonly string[];function?:Readonly<{module:string;export:string}>;testNamePattern?:string;parallel?:number;capabilities?:Readonly<{artifacts?:true;command?:string}>;scratch?:ProcessTestScratchV1;fileLaunchers?:Readonly<Record<string,string>>;platforms?:readonly("darwin"|"linux"|"win32")[];platformCauses?:readonly ProcessPlatformCauseV1[];tools?:readonly string[]}>;
@@ -62,11 +64,20 @@ export function routeProcessTestFilesV1(discovered:readonly string[],declared:Pr
 /** 🖥️ Tells whether a suite can run on a host: a suite without a platform tag runs everywhere, a tagged one only on the hosts it names. */
 export function processTestSuiteRunsOnV1(suite:ProcessTestSuiteV1,platform:string=process.platform):boolean{return suite.platforms===undefined||(suite.platforms as readonly string[]).includes(platform);}
 
+/** 🧰️ Names the registered tools a suite binds for the given module-relative files: the ones it declares plus the ones the sources name (the Python oracle helper and its siblings), so the binding follows the files instead of a hand-kept list; a tool the registry does not know stays a host lookup. */
+export function processTestSuiteToolsV1(suite:ProcessTestSuiteV1,root:string,files:readonly string[],read?:(path:string)=>string|null):readonly string[]{
+ const used=testToolsUsedByFilesV1(files.map(file=>resolve(root,file)),read).filter(tool=>findToolV1(tool)!==undefined);
+ return[...new Set([...(suite.tools??[]),...used])].sort();
+}
+
 /** 🧮️ Expands one suite to its sorted unique files: the files it owns among the discovered ones plus its explicit files outside the module. */
 export function expandProcessTestSuiteV1(suite:ProcessTestSuiteV1,discovered:readonly string[],declared:ProcessTestTableV1=readProcessTestTableV1()):readonly string[]{
  const owned=[...routeProcessTestFilesV1(discovered,declared)].filter(([,owners])=>owners.includes(suite)).map(([file])=>file),known=new Set(discovered);
  return[...new Set([...owned,...(suite.files??[]).filter(file=>!known.has(file))])].sort();
 }
+
+/** 🎟️ Tells whether a suite of a route table binds a tool for its files, declared or named by its sources. */
+export function processTestSuiteBindsToolV1(suite:ProcessTestSuiteV1,root:string,declared:ProcessTestTableV1,tool:string):boolean{return processTestSuiteToolsV1(suite,root,expandProcessTestSuiteV1(suite,discoverProcessTestFilesV1(root),declared)).includes(tool);}
 
 /** ⚖️ Compares the route table with the files of the module: a discovered file no suite runs, a file two suites both run entirely, a file only name-filtered suites run, a declared file that does not exist, and a helper that is not a discovered file. */
 export function processTestCoverageV1(root:string,declared:ProcessTestTableV1=readProcessTestTableV1(),discovered:readonly string[]=discoverProcessTestFilesV1(root)):Readonly<{unrouted:readonly string[];duplicated:readonly string[];filtered:readonly string[];missing:readonly string[];staleHelpers:readonly string[]}>{

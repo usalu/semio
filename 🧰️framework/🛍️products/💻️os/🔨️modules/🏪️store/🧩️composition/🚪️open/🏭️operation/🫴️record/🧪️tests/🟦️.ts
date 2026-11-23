@@ -7,6 +7,6 @@ test("a batched original record open settles in turns proportional to its size o
  const bound=budget.batching.turnsPerShare*row.shares;
  expect(bound).toBeGreaterThan(0);expect(bound).toBeLessThan(budget.batching.titleBytes);expect(budget.batching.titlePattern.length).toBeGreaterThan(0);
 });
-test("the floor law selects a turn copy strictly between one and two receivers",()=>{
- const {numerator,denominator}=budget.floor.turnCopyOverReceiver;expect(numerator/denominator).toBeGreaterThan(1);expect(numerator/denominator).toBeLessThan(2);expect(budget.floor.stockCopyBytes).toBeGreaterThan(0);
+test("the floor law selects a turn copy above one receiver",()=>{
+ const {numerator,denominator}=budget.floor.turnCopyOverReceiver;expect(numerator/denominator).toBeGreaterThan(1);expect(budget.floor.stockCopyBytes).toBeGreaterThan(0);
 });

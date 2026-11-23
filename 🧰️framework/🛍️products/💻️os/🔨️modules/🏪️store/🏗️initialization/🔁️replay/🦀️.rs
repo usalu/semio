@@ -97,6 +97,7 @@ pub enum Phase {
     Fault,
 }
 
+#[derive(Debug)]
 enum Turn {
     Yield,
     Complete,

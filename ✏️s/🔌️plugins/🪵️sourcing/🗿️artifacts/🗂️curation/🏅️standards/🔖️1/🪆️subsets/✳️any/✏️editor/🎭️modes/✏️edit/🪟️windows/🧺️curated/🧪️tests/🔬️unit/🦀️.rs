@@ -41,7 +41,7 @@ async fn renders_curated_table_scene() {
 #[semio_framework_async_macros::async_test]
 async fn curated_columns_are_sortable_and_echo_the_active_sort() {
     let cfg = SourcingCurationConfig { filters: Filters { sort: Some(crate::TableSort { column_id: "count".into(), direction: crate::SortDirection::Desc }), ..Default::default() }, ..Default::default() };
-    let node = render(&curated_document(), &cfg, labels()).expect("bounded curated table");
+    let node = render(&curated_document(), &cfg, labels(), semio_ui_locale::Locale::En).expect("bounded curated table");
     let semio_plugin::Component::Surface(props) = &node.component else { panic!("expected a table surface") };
     let scene = crate::editor_unit_tests::context::table_scene_of(&node).expect("complete retained table scene");
     let columns: serde_json::Value = serde_json::from_str(&scene.columns_json).unwrap();

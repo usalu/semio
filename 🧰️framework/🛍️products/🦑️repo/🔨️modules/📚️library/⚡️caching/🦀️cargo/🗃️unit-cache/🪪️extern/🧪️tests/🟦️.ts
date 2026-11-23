@@ -1,9 +1,10 @@
 import {expect,test} from "bun:test";
-import {mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {createHash} from "node:crypto";
-import {externIdentityV1,markExternIdentityV1} from "../🟦️.ts";
+import {externIdentityV1,markExternIdentityV1,markProducerKeyV1,producerKeyV1} from "../🟦️.ts";
+import {buildRunKeyV1,buildScriptKeyV1,markBuildRunKeyV1,markBuildScriptIdentityV1} from "../../🏗️buildscript/🔑️run-key/🟦️.ts";
 
 const sha=(bytes:string)=>createHash("sha256").update(bytes).digest("hex");
 test("a library enters by the identity of its unit and its crate hash, only while the file is the one that was marked",()=>{
@@ -29,5 +30,25 @@ test("a library enters by the identity of its unit and its crate hash, only whil
   expect(second).not.toBe(first);
   markExternIdentityV1([library],"b".repeat(64),["/x"],undefined,()=>hash);
   expect(externIdentityV1(library,sha("two"),undefined),"real paths are part of the identity").not.toBe(second);
+ }finally{rmSync(base,{recursive:true,force:true});}
+});
+
+test("a library, a build script executable and an OUT_DIR name the entry that produced them, only while the bytes are the ones that were marked",()=>{
+ const base=realpathSync(mkdtempSync(join(realpathSync(tmpdir()),"producer-")));
+ try{
+  const key="c".repeat(64),library=join(base,"libpm-abc.dylib"),rmeta=join(base,"libx-abc.rmeta"),text=join(base,"x.d"),script=join(base,"build_script_build-abc.real"),outDir=join(base,"build","pkg","out");
+  writeFileSync(library,"one");writeFileSync(rmeta,"m");writeFileSync(text,"d");writeFileSync(script,"exe");
+  expect(producerKeyV1(library,sha("one"))).toBeUndefined();
+  markProducerKeyV1([library,rmeta,text],key,undefined);
+  expect(producerKeyV1(library,sha("one")),"a proc-macro library names its producer").toBe(key);
+  expect(producerKeyV1(rmeta,sha("m")),"metadata too").toBe(key);
+  expect(producerKeyV1(text,sha("d")),"only libraries").toBeUndefined();
+  writeFileSync(rmeta,"rebased");
+  expect(producerKeyV1(rmeta,sha("rebased")),"a rebased file is not trusted until it is marked again").toBeUndefined();
+  markProducerKeyV1([rmeta],key,undefined);expect(producerKeyV1(rmeta,sha("rebased"))).toBe(key);
+  markBuildScriptIdentityV1(script,"p".repeat(64),[],sha("exe"),key);
+  expect(buildScriptKeyV1(script,sha("exe"))).toBe(key);expect(buildScriptKeyV1(script,sha("other"))).toBeUndefined();
+  mkdirSync(outDir,{recursive:true});expect(buildRunKeyV1(outDir)).toBeUndefined();expect(buildRunKeyV1(undefined)).toBeUndefined();
+  markBuildRunKeyV1(outDir,"d".repeat(64));expect(buildRunKeyV1(outDir)).toBe("d".repeat(64));
  }finally{rmSync(base,{recursive:true,force:true});}
 });

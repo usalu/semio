@@ -1,14 +1,28 @@
 {
   "title": "Sourcing End to End",
   "emoji": "🪵️",
-  "status": "closed",
+  "status": "open",
   "description": "Get sourcing working end to end. Reported blocker: `bun run dev:sourcing` exits with status 1 (nx run @semio-tech/framework-os-dev:dev -- sourcing). Diagnose and fix the launch path, then verify the sourcing app (curate document: Pool/Curated/Preview, beams/windows/slabs modules) actually boots and works interactively in the s product dev target (port 6081): artifact builds, editor/viewer render, commands, io and mutations round-trip through the pipeline.",
+  "summary": "Sourcing runs end to end on :6081: boot, curation, drag, filters, sort, undo, 3D grid, Preview selection, example switch and saved-archive reload. The composed kit catalogue child is now derived where the parent is loaded — a new ArtifactApp::genesis_child_pack hook seeds it at boot through open_child and completes any archive that omits it before the member roster is reserved, minted from bytes via genesis_member_envelope_pack; non-flow s.stdio.semio members open through the new PackMemberSnapshotOpen instead of rejecting Decode; and PollDocumentArchiveLoad drives the maintenance rotation under a 4 ms wall budget, taking a whole-document load from 97 s to ~300 ms in the browser. Sourcing editor/viewer run over SemioMembers. Verified by 128 passing sourcing tests (the archive-door example load and a saved-archive reload among them), a store round-trip test for the genesis envelope, and a live browser pass with no faults.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2592"
   },
-  "goal": "🎯r2603",
+  "goal": "🎯runningcuration",
   "sessions": [
-    "⚪e839446108d74b1ea55bfa2f78e00ef6"
+    "⚪e839446108d74b1ea55bfa2f78e00ef6",
+    "9bd652ce-b1d7-4e89-a2df-2d7a1cd9b723"
   ],
-  "summary": "Sourcing runs end to end on :6081: boot, curation, drag, filters, sort, undo, 3D grid, Preview selection, example switch and saved-archive reload. The composed kit catalogue child is now derived where the parent is loaded — a new ArtifactApp::genesis_child_pack hook seeds it at boot through open_child and completes any archive that omits it before the member roster is reserved, minted from bytes via genesis_member_envelope_pack; non-flow s.stdio.semio members open through the new PackMemberSnapshotOpen instead of rejecting Decode; and PollDocumentArchiveLoad drives the maintenance rotation under a 4 ms wall budget, taking a whole-document load from 97 s to ~300 ms in the browser. Sourcing editor/viewer run over SemioMembers. Verified by 128 passing sourcing tests (the archive-door example load and a saved-archive reload among them), a store round-trip test for the genesis envelope, and a live browser pass with no faults."
+  "interactions": [
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-23 04:14:26",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get sourcing working end to end again (2026-11-23): plugin compiles, tests pass, sourcing app boots in s and the curation editor (Pool/Curated/Preview/Grid, beams/windows/slabs) works interactively — curation add/count/remove, drag, filters, sort, undo/redo, example switch, 3D grid and preview, archive save/reload. Fix any regressions introduced since September.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    }
+  ]
 }

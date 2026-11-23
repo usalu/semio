@@ -141,7 +141,7 @@ class PosterAssetTest(unittest.TestCase):
         empty = self.directory / "empty.png"
         Image.new("RGB", (854, 480), (0, 10, 15)).save(empty)
         with self.assertRaisesRegex(ValueError, self.scene + ".*almost empty"):
-            self.posters.store(self.scene, empty, {}, sources_state={self.source: self.digest})
+            self.posters.store(self.scene, empty, {"language": "de"}, sources_state={self.source: self.digest})
         self.assertFalse((self.directory / "poster.png").exists())
         self.assertFalse((self.directory / "poster.json").exists())
 
@@ -149,10 +149,14 @@ class PosterAssetTest(unittest.TestCase):
         from PIL import Image
 
         for scene, info in self.posters.chapters().items():
-            with self.subTest(scene=scene):
-                self.assertNotIn("Fahrplan", info["segment"]["scene"])
-                with Image.open(info["folder"] / f"{scene}.png") as picture:
-                    self.assertGreaterEqual(self.posters.coverage(picture), self.posters.MINIMUM_COVERAGE)
+            self.assertNotIn("Fahrplan", info["segment"]["scene"])
+            for language in ("de", "en"):
+                with self.subTest(scene=scene, language=language):
+                    image = info["folder"] / language / f"{scene}.png"
+                    if not image.is_file():
+                        continue
+                    with Image.open(image) as picture:
+                        self.assertGreaterEqual(self.posters.coverage(picture), self.posters.MINIMUM_COVERAGE)
 
     def test_a_roadmap_poster_segment_is_refused(self):
         runtime = self.runtime
@@ -177,29 +181,29 @@ class PosterAssetTest(unittest.TestCase):
         with Image.open(self.directory / "poster.png") as image:
             self.assertEqual(image.size, tuple(CASES["size"]))
         record = json.loads((self.directory / "poster.json").read_text(encoding="utf-8"))
-        self.assertEqual(record["captured"], settings)
+        self.assertEqual(record["captured"], {"profile": "preview", "audience": "speaker"})
         self.assertEqual(record["moment"], {"segment": 2, "animation": None})
-        self.assertFalse(self.posters.stale(self.scene))
+        self.assertFalse(self.posters.stale(self.scene, "de"))
         self.posters.store(self.scene, self.frame((200, 30, 30)), settings, sources_state={self.source: "0" * 64})
-        self.assertTrue(self.posters.stale(self.scene))
-        self.assertEqual(self.posters.resolve([self.scene])[self.scene]["sha256"], self.posters._digest(self.directory / "poster.png"))
+        self.assertTrue(self.posters.stale(self.scene, "de"))
+        self.assertEqual(self.posters.resolve([self.scene], "de")[self.scene]["sha256"], self.posters._digest(self.directory / "poster.png"))
 
     def test_the_overview_reads_only_stored_assets_and_fails_loudly_on_a_missing_or_damaged_one(self):
         with self.assertRaisesRegex(FileNotFoundError, self.scene):
-            self.posters.resolve([self.scene])
-        self.posters.store(self.scene, self.frame((230, 200, 40)), {}, sources_state={self.source: self.digest})
+            self.posters.resolve([self.scene], "de")
+        self.posters.store(self.scene, self.frame((230, 200, 40)), {"language": "de"}, sources_state={self.source: self.digest})
         (self.directory / "poster.png").write_bytes(b"damaged")
         with self.assertRaisesRegex(FileNotFoundError, self.scene):
-            self.posters.resolve([self.scene])
+            self.posters.resolve([self.scene], "de")
 
     def test_stale_posters_are_listed_in_one_warning_line_and_never_rerendered(self):
         import contextlib
         import io
 
-        self.posters.store(self.scene, self.frame((230, 200, 40)), {}, sources_state={self.source: "1" * 64})
+        self.posters.store(self.scene, self.frame((230, 200, 40)), {"language": "de"}, sources_state={self.source: "1" * 64})
         output = io.StringIO()
         with contextlib.redirect_stdout(output), patch.object(self.posters, "render_frame", side_effect=AssertionError("must not render")):
-            self.posters.resolve([self.scene])
+            self.posters.resolve([self.scene], "de")
         self.assertEqual(output.getvalue().count("\n"), 1)
         self.assertIn("stale stored posters", output.getvalue())
         self.assertIn(self.scene, output.getvalue())
@@ -226,6 +230,7 @@ class PosterAssetTest(unittest.TestCase):
             self.assertEqual(self.posters.prepare([(self.scene, clips)], {"language": "de"}), {"x": 1})
         capture.assert_called_once_with(self.scene, clips[2], {"language": "de"})
         self.assertEqual(list(read.call_args.args[0]), self.posters.required(module("🪟️presentation.🥞️hierarchy.🐍️").path(self.scene)))
+        self.assertEqual(read.call_args.args[1], "de")
         with patch.object(self.posters, "capture_clip") as capture, patch.object(self.posters, "resolve", return_value={}), patch.object(self.posters, "stale", return_value=False):
             self.posters.prepare([(self.scene, clips)], {"language": "de"})
         capture.assert_not_called()
@@ -235,6 +240,60 @@ class PosterAssetTest(unittest.TestCase):
             self.assertEqual(self.posters.capture([self.scene, self.scene], {"language": "de", "profile": "preview", "audience": "speaker"}, self.directory), {self.scene: "current"})
         with self.assertRaises(ValueError):
             self.posters.capture(["Missing"], {}, self.directory)
+
+
+class PosterLanguageTest(unittest.TestCase):
+    def setUp(self):
+        self.posters = module("🪟️presentation.🖼️posters.🐍️")
+        self.scene = "Ventilation_01_WarumLueften"
+        self.directory = Path(self.enterContext(tempfile.TemporaryDirectory(dir=os.environ["SEMIO_TEACHING_OUTPUT_ROOT"])))
+        self.source = "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/🔣️.json"
+        self.digest = self.posters._digest(ROOT / self.source)
+
+    def frame(self, colour):
+        from PIL import Image, ImageDraw
+
+        path = self.directory / "frame.png"
+        image = Image.new("RGB", (854, 480), (0, 10, 15))
+        ImageDraw.Draw(image).rectangle((200, 120, 650, 360), fill=colour)
+        image.save(path)
+        return path
+
+    def keyed(self, scene, language):
+        folder = self.directory / language
+        return folder / f"{scene}.png", folder / f"{scene}.json"
+
+    def test_assets_live_in_one_folder_per_language_beside_the_lesson_sources(self):
+        folder = self.posters.chapters()[self.scene]["folder"]
+        for language in ("de", "en"):
+            image, sidecar = self.posters.asset(self.scene, language)
+            self.assertEqual((image.parent, sidecar.parent), (folder / language,) * 2)
+            self.assertEqual((image.name, sidecar.name), (f"{self.scene}.png", f"{self.scene}.json"))
+        self.assertNotEqual(self.posters.asset(self.scene, "de"), self.posters.asset(self.scene, "en"))
+
+    def test_a_german_poster_is_never_resolved_for_an_english_render(self):
+        with patch.object(self.posters, "asset", side_effect=self.keyed):
+            self.posters.store(self.scene, self.frame((200, 30, 30)), {"language": "de"}, sources_state={self.source: self.digest})
+            self.assertIsNotNone(self.posters.stored(self.scene, "de"))
+            self.assertIsNone(self.posters.stored(self.scene, "en"))
+            self.assertFalse(self.posters.stale(self.scene, "de"))
+            self.assertTrue(self.posters.stale(self.scene, "en"))
+            self.assertIn(self.scene, self.posters.resolve([self.scene], "de"))
+            with self.assertRaisesRegex(FileNotFoundError, "--language en.*" + self.scene):
+                self.posters.resolve([self.scene], "en")
+            record = json.loads((self.directory / "de" / f"{self.scene}.json").read_text(encoding="utf-8"))
+            self.assertNotIn("language", record["captured"])
+            self.posters.store(self.scene, self.frame((30, 30, 200)), {"language": "en"}, sources_state={self.source: self.digest})
+            self.assertNotEqual(self.posters.resolve([self.scene], "en")[self.scene]["sha256"], self.posters.resolve([self.scene], "de")[self.scene]["sha256"])
+
+    def test_preparing_an_english_render_recaptures_a_poster_that_exists_only_in_german(self):
+        clips = [str(self.directory / name) for name in ("first.mp4", "second.mp4", "third.mp4")]
+        for name in clips:
+            Path(name).write_bytes(b"clip")
+        with patch.object(self.posters, "asset", side_effect=self.keyed), patch.object(self.posters, "capture_clip") as capture, patch.object(self.posters, "resolve", return_value={}):
+            self.posters.store(self.scene, self.frame((200, 30, 30)), {"language": "de"}, sources_state={self.source: self.digest})
+            self.posters.prepare([(self.scene, clips)], {"language": "en"})
+            capture.assert_called_once_with(self.scene, clips[2], {"language": "en"})
 
 
 class PosterBrowserTest(unittest.TestCase):
@@ -319,7 +378,7 @@ class PosterRenderTest(unittest.TestCase):
             root = Path(name).resolve()
             with patch.object(posters, "asset", return_value=(root / "poster.png", root / "poster.json")):
                 made = posters.render_frame(scene, settings, root / "frame", runtime.ToolSession())
-                self.assertFalse(posters.stale(scene))
+                self.assertFalse(posters.stale(scene, settings["language"]))
             clip = runtime.render_segment(posters.chapters()[scene]["segment"], root / "s", settings, output_root=root)
             last = root / "last.png"
             runtime.run_command([*runtime.ffmpeg_command(), "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-sseof", "-0.3", "-i", str(clip), "-update", "1", "-frames:v", "1", str(last)])

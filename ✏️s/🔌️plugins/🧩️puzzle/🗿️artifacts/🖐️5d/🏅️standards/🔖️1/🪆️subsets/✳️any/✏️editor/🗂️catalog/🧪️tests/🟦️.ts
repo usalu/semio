@@ -14,9 +14,9 @@ test("Puzzle5D dictionary publication preserves normalized wire values", async (
     expect(JSON.parse(JSON.stringify(actual))).toEqual(row.expected);
   }
   const source = await Bun.file(new URL("../../👆️gestures/🎛️selection-and-weights/🦀️.rs", import.meta.url)).text();
-  expect(source).toContain("cursor.next_advance_demands(");
-  expect(source).toContain("admit_original_tool_construction_scoped(cx, &mut self.insert");
-  expect(source).toContain("insert: self.insert.take()");
+  expect(source).toContain("cursor.advance_turn");
+  expect(source).toContain("cx.with_original_source_effect");
+  expect(source).toContain("from_original_construction");
   expect(source).not.toContain("HashMap::with_capacity");
   expect(source).not.toContain("HashSet::with_capacity");
   const driver = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧵️retained-command-job/🦀️.rs", import.meta.url)).text();

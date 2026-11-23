@@ -14,8 +14,8 @@
   },
   "expected": {
     "productionFiles": 28,
-    "libraryTestFiles": 30,
-    "individualTests": 15,
+    "libraryTestFiles": 17,
+    "individualTests": 19,
     "integrationTargets": 7
   },
   "owners": [
@@ -26,12 +26,15 @@
         {
           "path": "📝️text/🚶️utf8/🧪️tests/🦀️.rs",
           "tests": [
+            "original_utf8_byte_validation_matches_independent_decoder_across_boundaries",
+            "original_utf8_byte_validation_keeps_source_and_reports_inspected_work",
             "original_utf8_cursor_pages_match_portable_scalar_offsets_without_allocations",
             "original_utf8_buffer_funds_transfer_and_every_cancellation_frontier"
           ],
-          "assertionTokens": 30,
-          "bodySha256": "b0057fe833fa5c91e83d6bc06ebc62c42dcec26f3b5178c0fa5a986bf350b1fa",
+          "assertionTokens": 50,
+          "bodySha256": "f712a885faca6c051b7375696807ae4836d545fd6ad36d0faac80ae3ba9b08bd",
           "fixtureLiterals": [
+            "🧫️fixtures/🔤️bytes.json",
             "../../📝️text/🚶️utf8/🧪️tests/🧫️fixtures/🔣️.json",
             "../../📝️text/🚶️utf8/🧪️tests/🧫️fixtures/🔣️.json"
           ]
@@ -46,12 +49,14 @@
           "path": "📣️publication/🌳️root/🧪️tests/🦀️.rs",
           "tests": [
             "original_publication_root_reveals_all_candidates_at_one_decision_and_returns_original_owners",
-            "original_publication_roots_close_both_sources_before_and_after_shared_visibility"
+            "original_publication_roots_close_both_sources_before_and_after_shared_visibility",
+            "original_publication_root_forwards_actual_close_work_and_caches_zero"
           ],
-          "assertionTokens": 25,
-          "bodySha256": "e64dee214c17d76129f91ab3a581fe1795e192eeaf5dc4188bca11194984a06c",
+          "assertionTokens": 40,
+          "bodySha256": "5d275d1f9e527e145673571d3cd34a07ee0821f3182849527923c5aefb898316",
           "fixtureLiterals": [
-            "🔣️.json"
+            "🔣️.json",
+            "work.json"
           ]
         }
       ]
@@ -66,7 +71,7 @@
             "original_indexed_record_keeps_literal_key_order_and_actual_entry_addresses"
           ],
           "assertionTokens": 5,
-          "bodySha256": "8b53ff255206f81a7edb3c891db53d5a3c10d8d99469812d335d9e004dd44a8d",
+          "bodySha256": "cf80b8a78f5ddc4b63147e81b7e18e3c4c157bc164ed87fb2717314716e13899",
           "fixtureLiterals": [
             "🧪️.json"
           ]
@@ -99,9 +104,10 @@
           "tests": [
             "original_paged_text_admits_exact_unicode_and_closes_every_partial_owner"
           ],
-          "assertionTokens": 9,
-          "bodySha256": "4c27cc4c4ff848fa3543e5ce34d17994d5ae78fce52d4bddd9e49bf047c81327",
+          "assertionTokens": 14,
+          "bodySha256": "5f12bd7a0149b2e7088ce54c57b5aad38500e9143b0d721145a99bd0b92083a9",
           "fixtureLiterals": [
+            "../../🎮️append/🎟️work/📐️.json",
             "🔣️.json"
           ]
         },
@@ -111,38 +117,10 @@
             "original_map_keys_receive_in_authored_order_and_reject_duplicates",
             "shared_original_paged_map_supports_erased_receiving_and_funded_default"
           ],
-          "assertionTokens": 14,
-          "bodySha256": "87b0f9a0e08fd40ec641d76a9f829092bd0ce744357e94694ab2c655633ba229",
+          "assertionTokens": 18,
+          "bodySha256": "8433a47cbcf9c1fdb8739813d16d24436d3ad6dedaf3b9da1299edd23855c9fd",
           "fixtureLiterals": [
             "🔣️.json"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "value-sort",
-      "entry": "📶️sort/🧪️tests/🦀️.rs",
-      "sources": [
-        {
-          "path": "📶️sort/🧪️tests/🦀️.rs",
-          "tests": [
-            "retained_index_sort_matches_portable_order_and_bounds_every_action",
-            "retained_index_sort_refuses_wrong_observation_without_changing_cursor"
-          ],
-          "assertionTokens": 9,
-          "bodySha256": "1d0eb41e7ea218fd2bf62a31012b48bc1d73738f4b574c0b6ffaed9b13ed26d7",
-          "fixtureLiterals": [
-            "🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🧫️fixtures/🔣️.json"
-          ],
-          "revisions": [
-            {
-              "reason": "Manifest-dependent fixture lookup replaced by existing repository-relative reader; the same unchanged sort fixture bytes and assertions are used.",
-              "previousBodySha256": "729163a062b84b02bbd02523594c27cf2b42404207fa84561d138f767e3eb39d",
-              "previousAssertionTokens": 9,
-              "previousFixtureLiterals": [
-                "../../../../📶️sort/🧪️tests/🧫️fixtures/🔣️.json"
-              ]
-            }
           ]
         }
       ]
@@ -168,6 +146,27 @@
       ]
     },
     {
+      "id": "value-paged-append-work",
+      "entry": "📦️paged/🎮️append/🎟️work/🧪️tests/🦀️.rs",
+      "sources": [
+        {
+          "path": "📦️paged/🎮️append/🎟️work/🧪️tests/🦀️.rs",
+          "tests": [
+            "actual_append_normal_uses_real_work_with_partial_utf8_and_original_stock_through_close",
+            "actual_append_rejects_changed_source_utf8_before_publishing_and_caches_only_the_real_fault",
+            "append_close_preserves_real_header_and_counts_new_failure_not_cached_failure"
+          ],
+          "assertionTokens": 43,
+          "bodySha256": "9b9b5ef72a2e4c27eacb4fb0e035376cc9d8bcfcb1d3b527f2fe91850f8bd179",
+          "fixtureLiterals": [
+            "../📐️.json",
+            "../📐️.json",
+            "../📐️.json"
+          ]
+        }
+      ]
+    },
+    {
       "id": "lib",
       "entry": "📦️packages/🦀️rust/🦀️.rs",
       "sources": [
@@ -176,8 +175,8 @@
           "tests": [
             "neutral_structural_reservations_match_ordered_reference"
           ],
-          "assertionTokens": 13,
-          "bodySha256": "9e40ce36bb9ed7076514771a0fd2b6cefd75a60c7b2840860d67cf98fc409174",
+          "assertionTokens": 12,
+          "bodySha256": "ae583a59f810fcc3c6de736d87ec0b910129238d2bfb5b378e125b36841ab9c8",
           "fixtureLiterals": [
             "🧫️fixtures/🔣️.json"
           ],

@@ -1,19 +1,20 @@
 /** 🔗️ Closes what `volumes-connected` reports at a scale: two parts of the structure that should meet get a joint capsule between their nearest points (in the frame of the bone of the second part); a loose body solid is moved by the measured gap onto what carries it. The rule is run again after every change, the ops are merged into the repair file of the person.
- *  bun bridge.ts <slug> [--scales 50,100] [--file <asset.json>] [--dry] [--skip idA,idB] */
+ *  bun bridge.ts <slug> [--scales 50,100] [--file <asset.json>] [--dry] [--skip idA,idB] [--grip memberId: what is found near this held member is joined to the nearest hand or arm bone instead] */
 import { parseArgs } from "node:util";
 import { checkVolumes, featureOf } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🟦️.ts";
 import { evaluate } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
 import { worldSolids } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts";
-import { applyOp, mergeOps, readOps, writeOps, type Op } from "./ops.ts";
+import { applyOp, applyOps, mergeOps, readOps, writeOps, type Op } from "./ops.ts";
 import { catalogFile, opsFile } from "./people.ts";
 
 type V = [number, number, number];
-const { values, positionals } = parseArgs({ allowPositionals: true, options: { scales: { type: "string" }, file: { type: "string" }, dry: { type: "boolean" }, skip: { type: "string" } } });
+const { values, positionals } = parseArgs({ allowPositionals: true, options: { scales: { type: "string" }, file: { type: "string" }, dry: { type: "boolean" }, skip: { type: "string" }, grip: { type: "string" } } });
 const slug = positionals[0]!;
 const asset = (await Bun.file(values.file ?? catalogFile(slug)).json()).asset;
 const existing = await readOps(opsFile(slug));
-for (const o of existing) applyOp(asset, o);
+applyOps(asset, existing);
 const skip = new Set((values.skip ?? "").split(",").filter(Boolean));
+const grip = new Set((values.grip ?? "").split(",").filter(Boolean));
 const sub = (a: V, b: V): V => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const dot = (a: V, b: V): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const add = (a: V, b: V, s = 1): V => [a[0] + b[0] * s, a[1] + b[1] * s, a[2] + b[2] * s];
@@ -52,6 +53,7 @@ const nearest = (a: W, b: W): { p: V; q: V; d: number } => {
   one(b, a, true);
   return best;
 };
+const boxOf = (w: W): { min: V; max: V } => { const min: V = [Infinity, Infinity, Infinity], max: V = [-Infinity, -Infinity, -Infinity]; for (let i = 0; i < w.positions.length; i++) { const k = i % 3; if (w.positions[i]! < min[k]!) min[k] = w.positions[i]!; if (w.positions[i]! > max[k]!) max[k] = w.positions[i]!; } return { min, max }; };
 const r5 = (x: number): number => Number(x.toFixed(5));
 const ops: Op[] = [];
 for (const scale of (values.scales ?? "50,100,200,500").split(",").map(Number).filter((d) => asset.volumes[String(d)]?.status === "authored")) {
@@ -65,21 +67,49 @@ for (const scale of (values.scales ?? "50,100,200,500").split(",").map(Number).f
       const list = f.path.endsWith(".structure") ? "structure" : "body";
       const worlds = worldSolids(asset, state.bones as never, scale, list as never) as unknown as W[];
       for (const m of f.message.en.matchAll(/"([^"]+)"(?: \(\+\d+\))? ([\d.]+) mm from "([^"]+)"/gu)) {
-        const [, idA, , idB] = m as unknown as [string, string, string, string];
-        if (skip.has(idA) || skip.has(idB)) continue;
-        const [a, b] = [worlds.find((w) => w.id === idA), worlds.find((w) => w.id === idB)];
+        const [, named, reported, idB] = m as unknown as [string, string, string, string];
+        if (skip.has(named) || skip.has(idB)) continue;
+        const b = worlds.find((w) => w.id === idB);
+        let idA = named;
+        if (b !== undefined && /\(\+\d+\)/u.test(m[0]!)) {
+          const want = Number(reported) / 1000, bb = boxOf(b);
+          let bestGap = Infinity;
+          for (const w of worlds) {
+            if (w.id === idB) continue;
+            const wb = boxOf(w);
+            if ([0, 1, 2].some((k) => wb.min[k]! - bb.max[k]! > want + 0.002 || bb.min[k]! - wb.max[k]! > want + 0.002)) continue;
+            const gap = Math.abs(nearest(w, b).d - want);
+            if (gap < bestGap) { bestGap = gap; idA = w.id; }
+          }
+        }
+        if (grip.has(idB) && b !== undefined) {
+          const structure = asset.volumes[String(scale)][list] as any[], bodies = asset.volumes[String(scale)].body as any[];
+          let bestD = Infinity;
+          for (const w of worlds) {
+            const so = structure.find((y) => y.id === w.id);
+            const bone = String(so?.bone ?? bodies.find((y) => y.id === so?.of)?.bone ?? "");
+            if (w.id === idB || !/^(hand|forearm|arm|finger|thumb|index|middle|ring|little)/u.test(bone)) continue;
+            const d = nearest(w, b).d;
+            if (d < bestD) { bestD = d; idA = w.id; }
+          }
+        }
+        const a = worlds.find((w) => w.id === idA);
         const [sa, sb] = [asset.volumes[String(scale)][list].find((s: any) => s.id === idA), asset.volumes[String(scale)][list].find((s: any) => s.id === idB)];
         if (a === undefined || b === undefined || sa === undefined || sb === undefined) { console.log(`[DEBUG] 1:${scale} ${list} ${idA} / ${idB}: not found`); continue; }
+        const bodyList = asset.volumes[String(scale)].body as any[];
+        const boneOf = (x: any): string | undefined => x.bone ?? bodyList.find((y) => y.id === x.of)?.bone;
+        const host = sb.bone !== undefined ? sb : sa.bone !== undefined ? sa : { ...(asset.volumes[String(scale)][list] as any[]).find((y) => y.material !== undefined && y.part === "member"), bone: boneOf(sb), member: sb.member };
+        if (list === "structure" ? state.bones[host.bone] === undefined : state.bones[sa.bone] === undefined) { console.log(`[DEBUG] 1:${scale} ${list} ${idA} (${sa.bone}) / ${idB} (${sb.bone}): bone without a frame`); continue; }
         const { p, q, d } = nearest(a, b);
         const fr = (bone: string) => state.bones[bone].frame as { o: any; u: any; v: any; w: any };
         const local = (bone: string, x: V): V => { const g = fr(bone); const r: V = [x[0] - g.o.x, x[1] - g.o.y, x[2] - g.o.z]; return [dot(r, [g.u.x, g.u.y, g.u.z]), dot(r, [g.v.x, g.v.y, g.v.z]), dot(r, [g.w.x, g.w.y, g.w.z])]; };
         let op: Op;
         if (list === "structure") {
-          if (sb.weights !== undefined) { console.log(`[DEBUG] 1:${scale} ${idB} is skinned: no joint added`); continue; }
+          if (host.weights !== undefined) { console.log(`[DEBUG] 1:${scale} ${host.id} is skinned: no joint added`); continue; }
           const n = d > 1e-9 ? (sub(q, p).map((x) => x / d) as V) : ([0, 1, 0] as V);
-          const r = Math.max(0.006, feature / 2 * 0.2 + 0.002, Math.min(0.012, d / 2));
-          const [p0, p1] = [local(sb.bone, add(p, n, -0.004)), local(sb.bone, add(q, n, 0.004))];
-          op = { op: "solid-add", scale: String(scale), list, solid: { id: `joint-${idA}-${idB}`.slice(0, 60), kind: "capsule", bone: sb.bone, material: sb.material, role: sb.role, tone: sb.tone, p0: p0.map(r5), p1: p1.map(r5), r0: r5(r), r1: r5(r), member: sb.member ?? sb.bone, part: "joint" } };
+          const r = Math.max(0.006, feature / 2 + 0.0005, Math.min(0.012, d / 2));
+          const [p0, p1] = [local(host.bone, add(p, n, -0.004)), local(host.bone, add(q, n, 0.004))];
+          op = { op: "solid-add", scale: String(scale), list, solid: { id: `joint-${idA}-${idB}`.slice(0, 60), kind: "capsule", bone: host.bone, material: host.material, role: host.role, tone: host.tone, p0: p0.map(r5), p1: p1.map(r5), r0: r5(r), r1: r5(r), member: host.member ?? host.bone, part: "joint" } };
         } else {
           if (sa.weights !== undefined) { console.log(`[DEBUG] 1:${scale} ${idA} is skinned: not moved`); continue; }
           const g = fr(sa.bone);

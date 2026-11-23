@@ -140,9 +140,9 @@ fn report_table_json(scene: &RemodelingSnapshot, table: &str) -> (String, String
     (semio_framework_pack_json::to_string(&semio_framework_pack_json::array(columns)), semio_framework_pack_json::to_string(&semio_framework_pack_json::array(rows)))
 }
 
-pub fn render(scene: &RemodelingSnapshot, config: &RemodelingReportWindowConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &RemodelingSnapshot, config: &RemodelingReportWindowConfig, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let (columns_json, rows_json) = report_table_json(scene, &config.report_table);
-    semio_plugin::scene_surface(REMODELING_PLAY_SURFACE_REPORT, ContractSurfaceKind::Table, &TableScene::base(columns_json, rows_json))
+    semio_plugin::scene_surface(REMODELING_PLAY_SURFACE_REPORT, ContractSurfaceKind::Table, &TableScene::base(columns_json, rows_json), semio_plugin::surface_name(locale, "Report", "Bericht"), None)
 }
 //#endregion 🔖️Scene
 

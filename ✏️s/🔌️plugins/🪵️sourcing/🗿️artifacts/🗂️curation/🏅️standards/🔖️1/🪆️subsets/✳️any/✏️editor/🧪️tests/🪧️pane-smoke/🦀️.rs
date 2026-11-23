@@ -1,5 +1,6 @@
 //! 🪧️ Aussuchen pane smoke: the bundled curation demo loads, one `CurationAdd` applies, undo, redo and a second undo restore it and the app closes, in en and de, through its exact retained close.
 
+#![recursion_limit = "512"]
 
 use semio_plugin::artifact_app_laws::{self as laws, OriginalFixtureScope};
 use semio_plugin::{App, EditorApp, MountedOwnerPolicyV1, PluginApp as _, VcsArtifactApp};

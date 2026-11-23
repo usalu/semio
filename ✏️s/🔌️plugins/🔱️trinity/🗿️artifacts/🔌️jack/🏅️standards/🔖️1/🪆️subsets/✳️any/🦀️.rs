@@ -66,6 +66,3 @@ pub fn subset<PA: crate::standards::v1::subsets::any::registration::ArtifactApps
     }
 }
 
-#[cfg(test)]
-#[path = "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚪️io/🦀️.rs"]
-mod sqlite_snapshot_declaration_tests;

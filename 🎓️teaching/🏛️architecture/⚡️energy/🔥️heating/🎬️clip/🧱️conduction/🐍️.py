@@ -40,6 +40,7 @@ FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 section_material = _manim_module.section_material
 PASTEL_PURPLE = _manim_module.PASTEL_PURPLE
 PASTEL_WHITE = _manim_module.PASTEL_WHITE
@@ -146,24 +147,6 @@ DU_WB = (0.10, 0.05)
 
 
 #region Beat helpers
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
-
-    Part 2 rests on the same norms Module 1's conduction beats cite, so this
-    mirrors ``_din_ref`` in ``1_introduction/scene_1.py`` exactly (same size,
-    colour, opacity, corner): DIN EN ISO 6946 for the R- and U-value of a
-    building component, DIN EN ISO 13789 for the envelope-wide transmission
-    coefficient, DIN 4108-2 for the envelope insulation requirement the
-    air-pocket beat is really about. Dim so it reads as a footnote, never
-    competing with the diagram. The formula panel sits on the bottom edge, so
-    this corner is clear in every beat.
-    """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-
-
 #region Formula panel morphs
 def _formula_zone(mob):
     """🏷️ Mark a flying copy as formula content so the layout guard treats it like the panel."""
@@ -282,7 +265,7 @@ def _zoom_inset(kind: str, fill: float, source, color: str):
     disc.move_to(source.get_center() + side * (1.45 + ZOOM_RADIUS) + UP * (0.12 + ZOOM_RADIUS - source.height / 2))
     item.move_to(disc)
     leader = DashedLine(source.get_edge_center(side) + side * 0.05, disc.get_edge_center(-side), color=PASTEL_WHITE, stroke_width=1.4, dash_length=0.06)
-    tag = body_text(f"{int(factor)}×", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE)
+    tag = body_text(tr(f"magnified {int(factor)}×", f"{int(factor)}× vergrößert"), font_size=LABEL_FONT_SIZE - 2, color=PASTEL_WHITE)
     tag.next_to(disc, DOWN, buff=0.08)
     return VGroup(leader, disc, item, tag)
 
@@ -384,7 +367,7 @@ class Beat1_MakroUndMikro(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Macroscopic and microscopic", "Makroskopisch und mikroskopisch"))
-        din = _din_ref(_references.cite("din-4108-2"))
+        din = reference_chip(_references.cite("din-4108-2"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "macro"))
@@ -453,6 +436,7 @@ class Beat1_MakroUndMikro(Scene):
             *balanced(1.5),
             run_time=1.5,
         )
+        self.remove(left_read, right_read)
         hold_for(self, self.NARRATION, "equilibrium", during=balanced)
 
         micro_sub = section_heading(tr("Microscopic lattice & thermal barrier", "Mikroskopisches Gitter & Wärmebarriere"))
@@ -576,7 +560,7 @@ class Beat2_RWert(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Thermal resistance R", "Wärmedurchlasswiderstand R"))
-        din = _din_ref(_references.cite("din-en-iso-6946"))
+        din = reference_chip(_references.cite("din-en-iso-6946"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -694,7 +678,7 @@ class Beat3_UWertUndGradient(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("U-value and temperature gradient", "U-Wert und Temperaturgradient"))
-        din = _din_ref(_references.cite("din-en-iso-6946"))
+        din = reference_chip(_references.cite("din-en-iso-6946"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "u_intro"))
@@ -720,7 +704,7 @@ class Beat3_UWertUndGradient(Scene):
 
         side = 1.8
         depth = np.array([0.95, 0.55, 0.0]) * (D_INSULATED / 0.52)
-        o = np.array([-1.3, -0.85, 0.0])
+        o = np.array([-1.3, -0.6, 0.0])
         tile = _slab(o, side, depth)
         w_dim = dim_arrow(o + DOWN * 0.25, o + RIGHT * side + DOWN * 0.25, color=PASTEL_WHITE)
         w_lbl = math_label(r"1\,\mathrm{m}", o + RIGHT * side / 2 + DOWN * 0.62, size=LABEL_FONT_SIZE)
@@ -879,7 +863,7 @@ class Beat4_WattVergleich(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("How many watts pass through the wall?", "Wie viel Watt gehen durch die Wand?"))
-        din = _din_ref(_references.cite("din-en-iso-6946"))
+        din = reference_chip(_references.cite("din-en-iso-6946"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -1042,7 +1026,7 @@ class Beat5_Gebaeudehuelle(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("The thermal building envelope", "Die thermische Gebäudehülle"))
-        din = _din_ref(_references.cite(("din-en-iso-13789", "transmission")))
+        din = reference_chip(_references.cite(("din-en-iso-13789", "transmission")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -1238,7 +1222,7 @@ class Beat6_Waermebruecken(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Thermal bridges", "Wärmebrücken"))
-        din = _din_ref(_references.cite("din-4108-beiblatt-2", "din-ts-18599-2"))
+        din = reference_chip(_references.cite("din-4108-beiblatt-2", "din-ts-18599-2"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "paper"))
@@ -1246,7 +1230,7 @@ class Beat6_Waermebruecken(Scene):
 
         s = 1.8
         D, L = CORNER_D * s, CORNER_LEG * s
-        O = np.array([-6.0, -1.45, 0.0])
+        O = np.array([-6.0, -1.05, 0.0])
         corner = Polygon(O, O + RIGHT * L, O + RIGHT * L + UP * D, O + RIGHT * D + UP * D, O + RIGHT * D + UP * L, O + UP * L,
                          color=PASTEL_WHITE, stroke_width=2, fill_color=BRICK, fill_opacity=0.6)
         inside_lbl = body_text(tr("inside", "innen"), font_size=LABEL_FONT_SIZE, color=PASTEL_RED).move_to(O + np.array([2.0, 1.7, 0.0]))
@@ -1371,8 +1355,9 @@ class Beat6_Waermebruecken(Scene):
         ext_a = _span(O + RIGHT * 0.0 + DOWN * 0.22, O + RIGHT * D + DOWN * 0.22, color=PASTEL_ORANGE)
         ext_b = _span(O + LEFT * 0.22, O + LEFT * 0.22 + UP * D, color=PASTEL_ORANGE)
         ext_lbl = math_label(r"2\,d", O + LEFT * 0.45 + UP * (D / 2 - 0.07), size=LABEL_FONT_SIZE, color=PASTEL_ORANGE, edge="right")
-        self.play(FadeOut(st_i), FadeOut(gap), *[l.animate.set_stroke(opacity=1.0) for l in lines.values()],
+        self.play(FadeOut(st_i), FadeOut(gap), FadeOut(psi_e), FadeOut(psi_i), *[l.animate.set_stroke(opacity=1.0) for l in lines.values()],
                   *[t.animate.set_opacity(1.0) for t in tags], *corner_heat(0.5), run_time=0.5)
+        self.remove(psi_e, psi_i)
         self.play(GrowFromCenter(ext_a), GrowFromCenter(ext_b), FadeIn(ext_lbl), *corner_heat(0.8), run_time=0.8)
         p_diff = math_panel([
             ("psi", r"\psi_{\mathrm{i}} - \psi_{\mathrm{e}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_WHITE),
@@ -1386,7 +1371,7 @@ class Beat6_Waermebruecken(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "balcony"))
         plan = VGroup(corner, lines["e"], lines["a"], lines["i"], tags, inside_lbl, outside_lbl, t_dim, t_lbl,
                       ext_a, ext_b, ext_lbl, heads, name_e, name_a, name_i, parts_e, parts_a, parts_i,
-                      real_line, real_lbl, cut_e, add_i, psi_e, psi_i)
+                      real_line, real_lbl, cut_e, add_i)
         self.play(FadeOut(plan), FadeOut(p_diff[0]), FadeOut(p_diff[1]), run_time=0.6)
         wx0, wx1, wy0, wy1 = -4.6, -3.4, -1.3, 1.9
         brick = Rectangle(width=0.75, height=wy1 - wy0, stroke_width=1.2, stroke_color=PASTEL_WHITE, fill_color=BRICK, fill_opacity=0.45)
@@ -1424,7 +1409,7 @@ class Beat6_Waermebruecken(Scene):
 
         self.play(FadeIn(strip_lbl), *bridge_heat(0.3), run_time=0.3)
         self.add(strip, l_span, l_read, chi_read)
-        self.play(l_trk.animate.set_value(BALCONY_L), *bridge_heat(3.0), run_time=3.0)
+        self.play(l_trk.animate.set_value(BALCONY_L), *bridge_heat(1.6), run_time=1.6)
         hold_for(self, N, "balcony", during=bridge_heat)
 
         caption = swap_caption(self, caption, subtitle_text(N, "methods"))
@@ -1485,6 +1470,7 @@ class Beat6_Waermebruecken(Scene):
         ])
         self.play(stage.transition("heating.conduction.flat.formula-head", source=p_det[0], target=p_flat[0]), stage.transition("heating.conduction.flat.formula-box", source=p_det[1], target=p_flat[1]),
                   FadeIn(labels_b[2:]), FadeIn(notes_vg[1:]), run_time=0.9)
+        self.remove(*p_det[0].submobjects)
         self.add(base_bars[2], base_bars[3], add_bars[1], add_bars[2], tops[2], tops[3])
         self.play(grow_b[2].animate.set_value(1.0), grow_b[3].animate.set_value(1.0), run_time=1.2)
         hold_for(self, N, "pauschal")

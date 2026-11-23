@@ -16,6 +16,12 @@ impl std::ops::Deref for Fem2dSnapshotRetiring {
     }
 }
 
+impl std::ops::DerefMut for Fem2dSnapshotRetiring {
+    fn deref_mut(&mut self) -> &mut Fem2dSnapshot {
+        self.0.as_mut().unwrap_or_else(|| unreachable!("a retiring snapshot holds its value until dropped"))
+    }
+}
+
 impl Drop for Fem2dSnapshotRetiring {
     fn drop(&mut self) {
         let Some(snapshot) = self.0.take() else { return };

@@ -10,7 +10,7 @@ pub(crate) mod context {
         semio_plugin::App { definition: create_en1990_app(), examples: Vec::new() }
     }
 
-    semio_plugin::history_edit_acceptance_law!("norm", En1990PlayApp, en1990_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("norm", En1990PlayApp, en1990_manifest_for_tests, "../../..");
     
     /// 📜️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
     /// scope pays the caller's terminal retirement after the app's paid close.
@@ -133,8 +133,8 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pinned_wire_bytes() {
     let hex = |command: &En1990Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    assert_eq!(hex(&En1990Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01010001000402");
-    assert_eq!(hex(&En1990Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01010000");
+    assert_eq!(hex(&En1990Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01000001000402");
+    assert_eq!(hex(&En1990Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01000000");
 }
 //#endregion ðï¸CommandSurface
 

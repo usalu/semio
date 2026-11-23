@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::ua::schema::mutations::remove_display_doc_title::RemoveDisplayDocTitle;
 use crate::standards::v1_7::subsets::ua::schema::mutations::PdfUaMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ fn changes_the_owned_catalog_axis_and_plans_its_inverse() {
     let mutation = SetDisplayDocTitle { display: true, entry_index: None };
     let next = applied(&base, &PdfUaMutation::SetDisplayDocTitle(mutation.clone()));
     assert_eq!(support::catalog_flag(&next, "ViewerPreferences", "DisplayDocTitle"), Some(true));
-    assert_eq!(<SetDisplayDocTitle as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::RemoveDisplayDocTitle(RemoveDisplayDocTitle {})]);
+    assert_eq!(<SetDisplayDocTitle as ColdMutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::RemoveDisplayDocTitle(RemoveDisplayDocTitle {})]);
 }
 
 #[semio_framework_async_macros::async_test]

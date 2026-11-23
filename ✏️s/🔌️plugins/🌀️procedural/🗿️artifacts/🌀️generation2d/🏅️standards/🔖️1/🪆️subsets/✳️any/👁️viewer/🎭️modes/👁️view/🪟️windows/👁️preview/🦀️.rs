@@ -52,7 +52,7 @@ pub fn definition() -> WindowKindDefinition {
 /// per-session camera — `Config = NoConfig`), one schematic box per widget at its stored layout
 /// position — no evaluated drawing-handle overlay (that needs a live `semio_os_flow::FlowEvalSession`, an
 /// editor-dispatch-time concept a stateless viewer render never has access to).
-pub fn render(document: &Generation2dSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation2dSnapshot, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.host_snapshot;
     let layers: Vec<semio_framework_value::DslValue> = fixture
         .widgets
@@ -76,6 +76,8 @@ pub fn render(document: &Generation2dSnapshot) -> semio_plugin::UiAssemblyResult
         SURFACE_ID,
         semio_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
         &Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        semio_plugin::surface_name(locale, "Preview", "Vorschau"),
+        None,
     )
 }
 //#endregion 🔖️Render

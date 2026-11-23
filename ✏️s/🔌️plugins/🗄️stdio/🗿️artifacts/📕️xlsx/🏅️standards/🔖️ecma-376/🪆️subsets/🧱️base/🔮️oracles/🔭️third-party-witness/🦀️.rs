@@ -11,7 +11,7 @@ use super::*;
 ///   references is invisible to a reader that resolves cells, so any visible movement is a leak.
 ///
 /// 🪞️ What this cannot see is an entry no cell references, which is the one thing the insert and remove kinds move; `calamine` keeps that table private. That residue
-/// stays with the `zip` + `quick-xml` pool reader, and is named in the evidence rather than claimed here.
+/// is the committed openpyxl string table of `🕳️unreferenced-shared-string`: `read_string_table` reads every `si`, and the pool reader is held to that list.
 pub fn calamine_shared_string_law(before: &[u8], after: &[u8], forward: &Json) -> Result<(), String> {
     let kind = forward.str("kind");
     let seen_before = read_workbook_grid(before)?;

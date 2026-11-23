@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:process:native-image-cleanup-command",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumCommands": 3,
+        "maximumDeactivations": 1,
+        "maximumPendingCommands": 1,
+        "maximumOutputBytes": 1048576,
+        "maximumOutputLines": 32768,
+        "maximumOwners": 32,
+        "maximumAncestors": 64,
+        "maximumObservedImages": 4096,
+        "maximumObservedEntities": 16384,
+        "maximumBodyCommands": 3
+      }
+    },
+    "Evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "platform",
+        "phase",
+        "creator",
+        "mapping",
+        "pending",
+        "deactivations",
+        "observations",
+        "persistent"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "phase": {
+          "enum": [
+            "body",
+            "cleanup"
+          ]
+        },
+        "creator": {
+          "enum": [
+            "none",
+            "exact",
+            "unknown",
+            "changed"
+          ]
+        },
+        "mapping": {
+          "enum": [
+            "unknown",
+            "inactive",
+            "exact-active",
+            "ambiguous",
+            "changed"
+          ]
+        },
+        "pending": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "deactivations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "observations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "persistent": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Action": {
+      "enum": [
+        "refuse-platform",
+        "join-accepted",
+        "stop-body",
+        "settled-no-effects",
+        "observe",
+        "deactivate",
+        "verify-inactive",
+        "remove-created",
+        "persistent-transfer",
+        "retain-unresolved"
+      ]
+    }
+  }
+}

@@ -118,7 +118,7 @@ fn existing_template_definition_sets_are_checked_before_retained_identity_collis
 #[test]
 fn native_factory_transfers_original_payload_and_never_publishes_without_semantic_authority() {
     use semio_plugin::{
-        app_testing::OriginalWorkFixture,
+        artifact_app_laws::OriginalWorkFixture,
         retained_command::{ArtifactCommandInputs, ArtifactCommandSnapshotRead, ArtifactCommandWork, ArtifactCommandWorkStep},
         AppOperationContext, HistoryView, NoConfig,
     };
@@ -193,29 +193,7 @@ fn native_factory_transfers_original_payload_and_never_publishes_without_semanti
             caller.close(&mut work, grant).unwrap();
         }
         assert!(work.terminal_is_empty());
-        let mut incoming = Some(command);
-        let mut retirement = semio_framework_value::retained_clone::RetainedCloneClose::default();
-        for _ in 0..100_000 {
-            if incoming.is_none() && retirement.is_empty() {
-                break;
-            }
-            caller
-                .turn(grant, |cx| {
-                    cx.with_original_retirement(|cx| {
-                        let demand = retirement.next_owner_demands::<crate::editor::Ifc4x3EditCommand>(incoming.is_some(), &None, 4096)?;
-                        semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-                            if retirement.is_empty() {
-                                retirement.begin_granted(&mut incoming, grant)?.ok_or_else(|| receive::invalid("Template test incoming command omitted its owner"))
-                            } else {
-                                retirement.step_granted(grant)
-                            }
-                        })?;
-                        Ok(())
-                    })
-                })
-                .unwrap();
-        }
-        assert!(incoming.is_none() && retirement.is_empty());
+        caller.retire_owned(command, grant);
         caller.finish();
     }
 }

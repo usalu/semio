@@ -21,29 +21,27 @@ describe("styling resolve", () => {
     expect(uiCss).toMatch(/:root,\s*\.dark\s*\{[^}]*--color-emphasized:\s*var\(--foreground\)/);
   });
 
-  it("keeps panel-tab toggle dividers normal even when the active fill recolors other borders", () => {
-    expect(uiCss).toMatch(/\[data-slot="panel-tabs"\] > \[data-slot="panel-tab-button"\]:not\(:last-child\)\s*\{\s*box-shadow:\s*inset calc\(-1 \* var\(--stroke-hairline\)\) 0 0 0 var\(--border-normal-color\);/);
+  it("leaves panel-tab dividers to the border compositor instead of native box-shadow lines", () => {
+    expect(uiCss).not.toMatch(/\[data-slot="panel-tab-button"\]:not\(:last-child\)\s*\{\s*box-shadow/);
   });
 
-  it("leaves flowing chips borderless while their silhouette owns the continuous outline", () => {
+  it("leaves flowing chips borderless while the frame border owns the continuous outline", () => {
+    expect(uiCss).toMatch(/\[data-window-frame-chip\]\s*\{\s*border-width:\s*0;\s*border-style:\s*none;\s*\}/);
     expect(uiCss).toMatch(
-      /\[data-window-silhouette-chip\],\s*\[data-window-silhouette-chip\] > \*\s*\{\s*border-width:\s*0 !important;\s*border-style:\s*none !important;\s*box-shadow:\s*none;/,
-    );
-    expect(uiCss).toMatch(
-      /\[data-window-silhouette-chip\] > :is\([\s\S]*?\[data-slot="button-group"\][\s\S]*?\)\s*\{\s*-webkit-backdrop-filter:\s*none !important;\s*backdrop-filter:\s*none !important;\s*background-color:\s*transparent !important;/,
+      /\[data-window-frame-chip\] > :is\([\s\S]*?\[data-slot="button-group"\][\s\S]*?\)\s*\{\s*-webkit-backdrop-filter:\s*none !important;\s*backdrop-filter:\s*none !important;\s*background-color:\s*transparent !important;/,
     );
   });
 
-  it("keeps accessibility glass fallbacks scoped to painted regions while gaps stay cut out", () => {
+  it("keeps accessibility glass fallbacks scoped to painted regions while chip rows never paint a fill", () => {
     expect(uiCss).toMatch(
       /@supports not \(\(-webkit-backdrop-filter: blur\(1px\)\) or \(backdrop-filter: blur\(1px\)\)\) \{[\s\S]*?:is\(\.ui-glass, \.ui-veil\) \{\s*background-color: var\(--surface-bg\);/,
     );
     expect(uiCss).toMatch(
-      /@media \(prefers-reduced-transparency: reduce\) \{[\s\S]*?:is\(\.ui-glass, \.ui-veil\) \{[\s\S]*?backdrop-filter: none;[\s\S]*?background-color: var\(--surface-bg\);[\s\S]*?\[data-window-silhouette-gap\] \{\s*background: transparent !important;\s*background-color: transparent !important;/,
+      /@media \(prefers-reduced-transparency: reduce\) \{[\s\S]*?:is\(\.ui-glass, \.ui-veil\) \{[\s\S]*?backdrop-filter: none;[\s\S]*?background-color: var\(--surface-bg\);/,
     );
     expect(uiCss).toMatch(
-      /@media \(forced-colors: active\) \{[\s\S]*?:is\(\.ui-glass, \.ui-veil\) \{[\s\S]*?background-color: Canvas;\s*color: CanvasText;[\s\S]*?\[data-window-silhouette-border\] path \{\s*stroke: CanvasText !important;[\s\S]*?\[data-window-silhouette-gap\] \{\s*background: transparent !important;\s*background-color: transparent !important;\s*forced-color-adjust: none;/,
-        );
+      /@media \(forced-colors: active\) \{[\s\S]*?:is\(\.ui-glass, \.ui-veil\) \{[\s\S]*?background-color: Canvas;\s*color: CanvasText;[\s\S]*?\[data-window-frame-border\] path \{\s*stroke: CanvasText !important;/,
+    );
   });
 
   it("tints the hovered card with the veil so the page behind it stays the crisp surface", () => {
@@ -58,17 +56,24 @@ describe("styling resolve", () => {
 );
   });
 
-  it("expands the clipped content plane without changing document or auto-size clearances", () => {
+  it("fills the frame with the content plane and keeps the chip row depth as its initial clearance", () => {
+    expect(uiCss).not.toMatch(/\.window-frame-content-plane\s*\{[^}]*margin-block/);
     expect(uiCss).toMatch(
-      /\.window-silhouette-content-plane\s*\{\s*margin-block-start: calc\(-1 \* var\(--window-silhouette-top-clearance, 0px\)\);\s*margin-block-end: calc\(-1 \* var\(--window-silhouette-bottom-clearance, 0px\)\);\s*padding-block-start: var\(--window-silhouette-top-clearance, 0px\);\s*padding-block-end: var\(--window-silhouette-bottom-clearance, 0px\);/,
+      /\.window-frame-content-plane\s*\{\s*padding-block-start: var\(--window-frame-top-clearance, 0px\);\s*padding-block-end: var\(--window-frame-bottom-clearance, 0px\);/,
     );
     expect(uiCss).toMatch(
-      /\.window-silhouette-content-plane:has\(\s*\[data-window-content-layout="edgeless"\],\s*\[data-slot="window-dead-line-scroll"\]\s*\):not\(:has\(\[data-slot="window"\]\)\)\s*\{\s*padding-block-start: 0;\s*padding-block-end: 0;/,
+      /\.window-frame-content-plane:has\(\s*\[data-window-content-layout="edgeless"\],\s*\[data-slot="window-dead-line-scroll"\]\s*\):not\(:has\(\[data-slot="window"\]\)\)\s*\{\s*padding-block-start: 0;\s*padding-block-end: 0;/,
     );
   });
 
+  it("keeps chip rows pointer-transparent and chips pointer-active, with no gap rule left", () => {
+    expect(uiCss).toMatch(/:is\(\[data-slot="window-chrome-cap"\], \[data-slot="window-chrome-footer"\]\)\s*\{\s*pointer-events: none;/);
+    expect(uiCss).toMatch(/\[data-window-frame-chip\]\s*\{\s*pointer-events: auto;/);
+    expect(uiCss).not.toMatch(/window-frame-gap|window-chrome-gap|mode-dock-tab-gap|window-silhouette|data-window-silhouette/);
+  });
+
   it("never lets a content plane that hosts a whole window drop its chrome clearance", () => {
-    const optOut = uiCss.slice(uiCss.indexOf(".window-silhouette-content-plane:has("));
+    const optOut = uiCss.slice(uiCss.indexOf(".window-frame-content-plane:has("));
     const selector = optOut.slice(0, optOut.indexOf("{")).replace(/\s+/g, " ").trim();
     expect(selector).toContain(':not(:has([data-slot="window"]))');
     expect(selector.indexOf(':not(:has([data-slot="window"]))')).toBeGreaterThan(selector.indexOf('[data-slot="window-dead-line-scroll"]'));

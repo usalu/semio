@@ -44,9 +44,9 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 🗺️ Pure `ModelSnapshot × ModelInference × window configuration × selected element ids -> Canvas2d surface` of the plan of the configured storey.
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimViewerPlanWindowConfig, selected: &[String]) -> UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimViewerPlanWindowConfig, selected: &[String], locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let plan = semio_s_artifact_bim_model_tests_5::render::plan_storey(snapshot, &config.storey).and_then(|storey| inference.plan_linework.get(&storey));
-    scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene(plan, &config.viewport, config.framed, selected))
+    scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene(plan, &config.viewport, config.framed, selected), semio_plugin::surface_name(locale, "Floor plan", "Grundriss"), None)
 }
 //#endregion 🔖️Render
 

@@ -3,8 +3,13 @@ use crate::standards::v1::subsets::any::io::export::serializers::artifacts::json
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::obj::v3_0::any::obj_text;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::stl::v_ascii::any::stl_text;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotRetiring;
 use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
+use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text as parse_dsl_text;
+
+fn from_dsl_text(text: &str) -> Result<Fem3dSnapshotRetiring, semio_framework::io_schema::IoError> {
+    parse_dsl_text(text).map(Fem3dSnapshotRetiring::new)
+}
 
 /// 📄️ This subset's handcrafted `.semio` DSL example asset — the same bytes the shipped example
 /// serves to the shell.
@@ -14,13 +19,13 @@ const EXAMPLE: &str = crate::examples::demo::PRIMARY_TEXT;
 async fn txt_round_trips_the_example() {
     let snapshot = from_dsl_text(EXAMPLE).expect("the shipped example must parse");
     let printed = dsl_text(&snapshot);
-    assert_eq!(from_dsl_text(&printed).unwrap(), snapshot, "txt is not a fixed point");
+    assert_eq!(*from_dsl_text(&printed).unwrap(), *snapshot, "txt is not a fixed point");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn json_round_trips_the_example() {
     let snapshot = from_dsl_text(EXAMPLE).expect("the shipped example must parse");
-    assert_eq!(from_json_text(&json_text(&snapshot)).expect("json must read back"), snapshot, "json is not a lossless round trip");
+    assert_eq!(*Fem3dSnapshotRetiring::new(from_json_text(&json_text(&snapshot)).expect("json must read back")), *snapshot, "json is not a lossless round trip");
 }
 
 /// 🔮️ The third-party `csv` reader (test-only) reads the node table back coordinate for coordinate.

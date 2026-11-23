@@ -206,7 +206,7 @@ fn render_body(
 ) -> UiAssemblyResult<ComponentTree> {
     let node = match body_key {
         structure::BODY_KEY => structure::render(doc.snapshot, view_state.locale)?,
-        zones::BODY_KEY => zones::render(doc.snapshot)?,
+        zones::BODY_KEY => zones::render(doc.snapshot, view_state.locale)?,
         simulation::BODY_KEY => simulation::render(doc.original_tool_run(), cfg.snapshot, doc.snapshot.model.read().run_period, doc.snapshot.weather_link.get().as_ref(), view_state.locale),
         model_window::BODY_KEY => {
             let energy=doc.original_tool_run().filter(|run|run.tool_id==crate::editor_edit::tools::simulation::TOOL_ID).and_then(|run|run.payload).and_then(crate::editor_results::indexed::IndexedEnergyResults::new);

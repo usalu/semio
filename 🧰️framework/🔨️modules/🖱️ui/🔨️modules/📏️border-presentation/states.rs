@@ -1,4 +1,4 @@
-//! 🫧 State ownership of controls and enclosing silhouettes.
+//! 🫧 State ownership of controls and enclosing outlines.
 
 use super::SharedBorderState;
 
@@ -72,7 +72,7 @@ fn innermost<Id: Copy + Ord>(boxes: &[BoxStateInput<Id>], index: &[(Id, usize)],
     Err(BoxStateError::Cycle)
 }
 
-/// 🏆 Resolves local keyboard and marked states, plus hover on the innermost enabled control and opted-in silhouettes in its pointer path.
+/// 🏆 Resolves local keyboard and marked states, plus hover on the innermost enabled control and opted-in outlines in its pointer path.
 pub fn resolve_box_states<Id: Copy + Ord>(boxes: &[BoxStateInput<Id>], pointer: Option<Id>, focus_visible: Option<Id>) -> Result<Vec<SharedBorderState>, BoxStateError> {
     box_state_allocation_byte_demand::<Id>(boxes.len())?;
     let mut index: Vec<(Id, usize)> = boxes.iter().enumerate().map(|(slot, entry)| (entry.id, slot)).collect();

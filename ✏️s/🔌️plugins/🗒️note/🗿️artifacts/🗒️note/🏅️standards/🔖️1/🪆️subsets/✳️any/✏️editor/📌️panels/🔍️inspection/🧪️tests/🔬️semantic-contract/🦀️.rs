@@ -69,7 +69,7 @@ fn note_ink_canvas_payload_matches_the_json_oracle() {
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
     let camera = serde_json::from_value(fixture["camera"].clone()).expect("camera oracle");
     for mode in ["composite", "navigator"] {
-        let node = crate::editor::note::modes::edit::windows::composite::render_canvas_scene(&snapshot, &camera, fixture["utility"].as_str().expect("utility"), "note.fixture.canvas", mode).expect("canvas");
+        let node = crate::editor::note::modes::edit::windows::composite::render_canvas_scene(&snapshot, &camera, fixture["utility"].as_str().expect("utility"), "note.fixture.canvas", mode, "Note canvas").expect("canvas");
         let semio_plugin::Component::Surface(props) = &node.component else { panic!("semantic canvas surface") };
         let scene: semio_ui_scene::InkCanvasScene = semio_ui_scene::decode(props).expect("decode actual packed scene");
         let actual: serde_json::Value = serde_json::from_str(&scene.document_json).expect("independent canvas JSON oracle");

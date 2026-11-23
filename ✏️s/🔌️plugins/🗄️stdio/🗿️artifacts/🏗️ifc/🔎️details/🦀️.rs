@@ -550,13 +550,13 @@ fn next_entity_id_controlled(snapshot: &IfcSnapshot, tick: &mut dyn FnMut() -> R
     }
     Ok(candidate)
 }
-pub(crate) fn next_entity_id(snapshot: &IfcSnapshot) -> Result<u64, Fault> {
+pub fn next_entity_id(snapshot: &IfcSnapshot) -> Result<u64, Fault> {
     next_entity_id_controlled(snapshot, &mut || Ok(()))
 }
 
 #[path = "../🪪️identity/🦀️.rs"]
 mod identity;
-pub(crate) fn encode_global_id(value: u128) -> String {
+pub fn encode_global_id(value: u128) -> String {
     identity::encode_global_id(value)
 }
 
@@ -583,7 +583,7 @@ fn fresh_global_id_controlled(snapshot: &IfcSnapshot, id: u64, tick: &mut dyn Fn
     }
 }
 
-pub(crate) fn fresh_global_id(snapshot: &IfcSnapshot, id: u64) -> String {
+pub fn fresh_global_id(snapshot: &IfcSnapshot, id: u64) -> String {
     fresh_global_id_controlled(snapshot, id, &mut || Ok(())).expect("unlimited identity generation")
 }
 

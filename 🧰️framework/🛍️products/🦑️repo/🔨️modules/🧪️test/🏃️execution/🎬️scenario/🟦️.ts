@@ -28,7 +28,7 @@ export async function executeOne(repoRoot: string, discovered: DiscoveredCase, l
   const host = materializeHost(repoRoot, discovered, role, implementation, planPath, plan.resultsPath);
   if (host.problems.length > 0) return { results: [], problems: [...problems, ...host.problems] };
   const environment = repositoryTestArtifactEnvironmentV1(repoRoot, host.env);
-  const limits = { maximumBytes: 16777216, maximumLines: 65536 };
+  const limits = { maximumBytes: 16777216, maximumLines: 16777216 };
   const capture = (command: string, parent: ResourceLeaseControl) =>
     withRequestedIssuedResourceControlV1(parent, testLevelBudgetMs(level), control =>
       withIssuedResourceOperationV1(control, () => captureOwnedCommandResultV1(command, host.args, host.cwd, {

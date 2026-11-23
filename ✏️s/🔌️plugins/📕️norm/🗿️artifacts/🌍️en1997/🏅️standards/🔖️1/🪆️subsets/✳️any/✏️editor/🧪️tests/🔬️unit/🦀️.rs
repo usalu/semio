@@ -1,6 +1,6 @@
 pub(crate) mod context {
     use crate::*;
-    use semio_s_artifact_norm_en1997_editor::modes::edit::windows::checks;
+    use crate::modes::edit::windows::checks;
     use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
@@ -72,16 +72,16 @@ pub(crate) mod context {
 
 use crate::*;
 use semio_plugin::PluginApp;
-use semio_s_artifact_norm_en1997_editor::commands::selected_check;
-use semio_s_artifact_norm_en1997_editor::commands::set_field;
-use semio_s_artifact_norm_en1997_editor::modes::edit::windows::checks;
-use semio_s_artifact_norm_en1997_editor::modes::edit::windows::diagrams;
-use semio_s_artifact_norm_en1997_editor::modes::edit::windows::outliner;
-use semio_s_artifact_norm_en1997_editor::modes::edit::windows::properties;
-use semio_s_artifact_norm_en1997_editor::modes::edit::windows::viewport;
-use semio_s_artifact_norm_en1997_editor::panels::catalogue as catalogue_panel;
-use semio_s_artifact_norm_en1997_editor::panels::document as document_panel;
-use semio_s_artifact_norm_en1997_editor::panels::inspection as inspection_panel;
+use crate::commands::selected_check;
+use crate::commands::set_field;
+use crate::modes::edit::windows::checks;
+use crate::modes::edit::windows::diagrams;
+use crate::modes::edit::windows::outliner;
+use crate::modes::edit::windows::properties;
+use crate::modes::edit::windows::viewport;
+use crate::panels::catalogue as catalogue_panel;
+use crate::panels::document as document_panel;
+use crate::panels::inspection as inspection_panel;
 use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 use semio_plugin::InteractiveJobClassification;
 
@@ -127,8 +127,8 @@ async fn command_ids_cover_every_row_and_are_unique() {
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
     let keywords = ["selected-check"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
-        let printed = protocol::OpText::print_op(&command);
+        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        let printed = semio_os_kernel::OpText::print_op(&command);
         assert!(printed.starts_with(keyword), "row {} printed {printed:?}, expected keyword {keyword}", command.command_id());
     }
 }
@@ -140,9 +140,9 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 /// of the three payload shapes involves the per-standard `En1997Snapshot`.
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pinned_wire_bytes() {
-    let hex = |command: &En1997Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    assert_eq!(hex(&En1997Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01010001000402");
-    assert_eq!(hex(&En1997Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01010000");
+    let hex = |command: &En1997Command| semio_os_kernel::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    assert_eq!(hex(&En1997Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01000001000402");
+    assert_eq!(hex(&En1997Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01000000");
 }
 //#endregion ðï¸CommandSurface
 
@@ -264,7 +264,7 @@ fn a_picked_entity_selects_its_governing_check_in_every_window() {
 }
 //#endregion 🛰️LiveWiring
 
-semio_plugin::history_edit_acceptance_law!("norm", crate::En1997PlayApp, || semio_plugin::App { definition: crate::create_en1997_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("norm", crate::En1997PlayApp, || semio_plugin::App { definition: crate::create_en1997_app(), examples: Vec::new() }, "../../..");
 
 //#region ♿️ScreenReader
 /// ♿️ Every check row, scene entity, handle and diagram of the default document has an accessible node (label, role, value or position) in English and German.
@@ -287,7 +287,7 @@ fn the_full_showcase_populates_every_collection_and_is_in_the_palette() {
     let d = semio_s_artifact_norm_en1997_showcase::full_showcase();
     assert!(!d.layers.is_empty() && !d.footings.is_empty() && !d.piles.is_empty() && !d.retaining_walls.is_empty() && !d.slopes.is_empty() && !d.uplift_cases.is_empty() && !d.anchors.is_empty() && !d.embedded_walls.is_empty() && !d.pile_groups.is_empty() && !d.lab_tests.is_empty() && !d.layer_waters.is_empty() && !d.placements.is_empty() && !d.cases.is_empty() && !d.characteristic_bases.is_empty());
     assert!(d.investigations.iter().any(|i| !i.readings.is_empty()) && d.investigations.len() >= 3);
-    assert!(En1997PlayApp::examples().iter().any(|e| e.id() == "full-showcase"));
+    assert!(<En1997PlayApp as semio_plugin::ArtifactEditor>::examples().iter().any(|e| e.id() == "full-showcase"));
 }
 
 #[test]

@@ -1,0 +1,55 @@
+{
+  "id": "dawn-redwood",
+  "category": "vegetation",
+  "title": {
+    "en": "Dawn Redwood",
+    "de": "Urweltmammutbaum"
+  },
+  "heightM": 30,
+  "widthM": 8.799,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "rain-laden"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "dawn-redwood-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A 30 m deciduous conifer in summer leaf, a narrow layered cone of opposite branches over a buttressed, deeply fluted trunk with a hollow under every lower branch.",
+    "de": "Ein 30 m hoher laubabwerfender Nadelbaum im Sommerlaub, ein schmaler, geschichteter Kegel aus gegenständigen Ästen über einem tief gerillten Stamm mit Brettwurzeln und einer Mulde unter jedem unteren Ast."
+  },
+  "completion": "authored"
+}

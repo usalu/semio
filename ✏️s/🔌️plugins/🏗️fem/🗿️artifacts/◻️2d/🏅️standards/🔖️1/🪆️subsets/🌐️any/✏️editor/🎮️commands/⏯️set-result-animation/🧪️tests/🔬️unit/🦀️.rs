@@ -97,6 +97,7 @@ async fn set_result_animation_never_touches_the_document() {
     settle(&mut app).await;
     assert!(result.mutations.is_empty(), "setResultAnimation must not emit a document VCS operation");
     assert_eq!(app.snapshot().expect("snapshot"), before);
+    drop(before);
     close(&mut app);
 }
 

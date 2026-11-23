@@ -15,6 +15,25 @@ fn decode<T: FromValue>(fixture: &DslValue, key: &str) -> T {
     T::from_value(fixture.get(key).expect("fixture field").clone()).expect("typed fixture")
 }
 
+/// 🔢️ JSON-vector equality: a number equals its counterpart by value, so a typed `f64` field written as `5.0` matches the language-neutral vector's `5`.
+fn assert_same(actual: &DslValue, expected: &DslValue) {
+    match (actual, expected) {
+        (DslValue::Number(a), DslValue::Number(b)) => assert_eq!(a.as_f64(), b.as_f64()),
+        (DslValue::Array(a), DslValue::Array(b)) => {
+            assert_eq!(a.len(), b.len(), "{actual:?} != {expected:?}");
+            a.iter().zip(b).for_each(|(a, b)| assert_same(a, b));
+        }
+        (DslValue::Object(a), DslValue::Object(b)) => {
+            assert_eq!(a.len(), b.len(), "{actual:?} != {expected:?}");
+            a.iter().zip(b).for_each(|((ka, a), (kb, b))| {
+                assert_eq!(ka, kb);
+                assert_same(a, b);
+            });
+        }
+        _ => assert_eq!(actual, expected),
+    }
+}
+
 fn apply(base: &Fem3dSnapshotValue, mutation: &Fem3dMutation) -> Fem3dSnapshotValue {
     let mut snapshot = base.clone();
     semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation(&mut snapshot, mutation).expect("valid mutation");
@@ -28,20 +47,20 @@ fn transform_authors_only_changed_geometry_and_preserves_peer_fields() {
     let motion: Fem3dMutation = decode(&vector, "move");
     let peers: Vec<Fem3dMutation> = decode(&vector, "peer");
     let forward = motion.diff(&base);
-    assert_eq!(forward.diff().nodes.as_ref().unwrap().modified[0].patch.to_value(), *vector.get("nodePatch").unwrap());
-    assert_eq!(forward.diff().solids.as_ref().unwrap().modified[0].patch.to_value(), *vector.get("solidPatch").unwrap());
+    assert_same(&forward.diff().nodes.as_ref().unwrap().modified[0].patch.to_value(), vector.get("nodePatch").unwrap());
+    assert_same(&forward.diff().solids.as_ref().unwrap().modified[0].patch.to_value(), vector.get("solidPatch").unwrap());
     let peer = peers.iter().fold(base.clone(), |state, event| apply(&state, event));
     let combined = protocol::apply_diff_cold(forward.diff(), &peer).unwrap();
-    assert_eq!(combined.nodes[0].to_value(), *vector.get("combinedNode").unwrap());
-    assert_eq!(combined.solids[0].to_value(), *vector.get("combinedSolid").unwrap());
+    assert_same(&combined.nodes[0].to_value(), vector.get("combinedNode").unwrap());
+    assert_same(&combined.solids[0].to_value(), vector.get("combinedSolid").unwrap());
     let reverse = peers.iter().fold(apply(&base, &motion), |state, event| apply(&state, event));
     assert_eq!(combined, reverse, "same-base independent geometry and inspector edits converge");
     assert_eq!(apply(&peer, &motion), combined, "semantic replay recalculates against peer geometry");
     let inverse = motion.inverse(&base).unwrap();
-    assert_eq!(inverse.to_value(), *vector.get("inverse").unwrap());
+    assert_same(&inverse.to_value(), vector.get("inverse").unwrap());
     let undone = inverse.iter().rev().fold(combined.clone(), |state, event| apply(&state, event));
-    assert_eq!(undone.nodes[0].to_value(), *vector.get("undoneNode").unwrap());
-    assert_eq!(undone.solids[0].to_value(), *vector.get("undoneSolid").unwrap());
+    assert_same(&undone.nodes[0].to_value(), vector.get("undoneNode").unwrap());
+    assert_same(&undone.solids[0].to_value(), vector.get("undoneSolid").unwrap());
     assert_eq!(undone, peer, "inverse restores only authored geometry");
     assert_eq!(apply(&undone, &motion), combined, "redo retains peer fields");
     assert_eq!(protocol::apply_diff_cold(&protocol::ColdDiffAlgebra::inverse(forward.diff(), &base), &combined).unwrap(), peer);

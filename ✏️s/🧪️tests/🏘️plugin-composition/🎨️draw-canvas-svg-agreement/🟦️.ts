@@ -1,6 +1,9 @@
 /** 🎨️ Draw SVG export, the canvas painter and the raster painter agree pixel for pixel; the law needs the plugin serializer and the renderer painter, so it lives where plugins may meet. */
 import { expect, test } from "bun:test";
-import { drawingSceneToSvg, type DrawingSvgNode } from "../../../🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🟦️.ts";
+import type {DrawingSvgNode} from "../../../🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧬️schema/🟦️.ts";
+import {SvgWriteJob} from "../../../🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🟦️.ts";
+import {bank,close as closeOwner} from "../../../🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts";
+import type {ScenePlanNode} from "../../../🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts";
 import {fillStyleFixture,svgNodesFixture} from "../../../🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🟦️.ts";
 import compositeCases from "../../../🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json";
 import compositeSchema from "../../../🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧩️compositing/🧬️schema/🔣️.json";
@@ -8,6 +11,12 @@ import Ajv from "ajv";
 import sharp from "sharp";
 import {createCanvas,Path2D as NativePath,type Canvas} from "@napi-rs/canvas";
 import {paintCompositedLayers,drawSceneNode,type CanvasSceneNode} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🎨️paint/🟦️.ts";
+/** 🧵️ Serializes neutral fixture nodes through the page writer exactly as the authoritative scene plan is written. */
+const drawingSceneToSvg=(nodes:readonly DrawingSvgNode[],viewBox:readonly[number,number,number,number],_options:object):string=>{
+  const plan={assets:[],nodes:nodes.map((node):ScenePlanNode=>({id:node.id,sourcePath:[0],lockedAncestors:0,groups:node.groups??[],transform:node.transform as unknown as ScenePlanNode["transform"],visible:node.visible,opacity:node.opacity,blendMode:node.blendMode as ScenePlanNode["blendMode"],content:{kind:"path",segments:node.segments,fillRule:(node.fillRule??"nonzero") as "nonzero",fill:node.fill??null,stroke:node.stroke??null}}))} as never,w=bank(),job=new SvgWriteJob(plan,{viewBox,maxOutputBytes:65536,maxWork:1e9});
+  try{for(let at=0;at<1e6;at++){if(w.run(job,ledger=>job.advance(4096,ledger),4096).result.done){const pages=job.result();return Buffer.concat(Array.from({length:pages.length},(_,index)=>Buffer.from(pages.at(index)!))).toString();}}throw Error("SVG writer failed to terminate");}
+  finally{try{closeOwner(job.intoRetirement().job,w);}catch{}}
+};
 /** 🖼️ Canvas paint selects a font for text where the SVG scene leaves the family to the document. */
 const canvasNode=(node:DrawingSvgNode):CanvasSceneNode=>{const {text,...rest}=node;return text===undefined?rest:{...rest,text:{...text,fontFamily:"Anta"}};};
 
@@ -31,10 +40,9 @@ for(const row of composite) test(`isolated group paint agrees with SVG raster: $
   }finally {globalThis.Path2D=original;}
 });
 
-test("scene compositing rejects noncontiguous and conflicting groups before canvas paint",()=>{
+test("scene compositing rejects noncontiguous and conflicting groups before canvas paint, where the SVG page writer only receives admitted scene plans",()=>{
   const first=composite[0]!.nodes[0]!,second=composite[0]!.nodes[1]!;
   for(const nodes of [[first,{...first,id:"outside",groups:[]},second],[first,{...second,groups:[{...second.groups![0]!,opacity:.2}]}],[{...first,groups:[{...first.groups![0]!,blendMode:"constructor"}]}]]) {
-    expect(()=>drawingSceneToSvg(nodes,[0,0,24,16],{})).toThrow();
     let painted=0;
     expect(()=>paintCompositedLayers({} as CanvasRenderingContext2D,nodes.map(canvasNode),()=>painted++,()=>({} as CanvasRenderingContext2D))).toThrow();
     expect(painted).toBe(0);

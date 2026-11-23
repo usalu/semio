@@ -4,9 +4,7 @@ strict-mode=false catalog=file=header-version="3805" manufacturer=DEMO created="
 extensions=fields={
 }
 products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
-  SOLAR-01 {manufacturer-code=DEMO product-group=SOLAR article-number=SOLAR-01} [ {locale=de text="Thermischer Solarkollektor"} {locale=en text="Thermal solar collector"} ] 19 [ {family="100" fields=[ "100" DEMO SOLAR SOLAR-01 "19" ] extensions=fields={
-  }
-  } {family="700" fields=[ "700" de "Thermischer Solarkollektor" en "Thermal solar collector" ] extensions=fields={
+  SOLAR-01 {manufacturer-code=DEMO product-group=SOLAR article-number=SOLAR-01} [ {locale=de text="Thermischer Solarkollektor"} {locale=en text="Thermal solar collector"} ] 19 [ {family="700" fields=[ "700" de "Thermischer Solarkollektor" en "Thermal solar collector" ] extensions=fields={
   }
   } ] {id=cfg.SOLAR-01 attributes={
     entries=[ ] kind="generic"

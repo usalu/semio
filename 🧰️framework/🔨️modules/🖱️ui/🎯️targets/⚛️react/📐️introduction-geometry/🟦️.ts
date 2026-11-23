@@ -126,7 +126,7 @@ export function useIntroductionAnchorRect(selector: string | null): Introduction
 
 /** 🔝️ Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
  * veil, by stamping `data-introduction-elevated` (see `framework/ui/styling/js/🎨️ui.css`) on its nearest
- * `[data-slot="mode-dock-stack"]` (full window silhouette: tabs + gap + controls + body) or else its
+ * `[data-slot="mode-dock-stack"]` (the whole window frame: tab chips, controls and body) or else its
  * nearest `[data-elevation-root]` ancestor — the panel/window/navbar/footer that owns a real, root-level
  * stacking context (a deeply-nested target such as a tree row can't be raised on its own; CSS stacking
  * contexts trap it inside its panel/window regardless of its own z-index). An id with no enclosing

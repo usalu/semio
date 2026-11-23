@@ -222,7 +222,12 @@ fn a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names() {
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
     let mut world = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-    caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_chrome_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, &mut world, cx)).expect("original fixture caller turn");
+    let mut turns = 0;
+    while !with_chrome_control_names(|names| names.is_empty()) {
+        turns += 1;
+        assert!(turns <= SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY + 64, "the discarded chrome walk clears its names within one pass of its setup steps");
+        caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_chrome_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, &mut world, cx)).expect("original fixture caller turn");
+    }
     assert!(with_chrome_control_names(|names| names.is_empty()));
     assert_eq!(shell.chrome.presented_chrome_accessibility, accepted);
     note_chrome_control_name("successor", Some("Successor label"));

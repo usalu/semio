@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["quoteCopyBytes", "refusalTurns", "settlingTurns"],
+  "properties": {
+    "quoteCopyBytes": {"type": "integer", "minimum": 1},
+    "refusalTurns": {"type": "integer", "minimum": 2},
+    "settlingTurns": {"type": "integer", "minimum": 0}
+  }
+}

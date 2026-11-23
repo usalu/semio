@@ -109,6 +109,13 @@ export async function registerFolderArchiveRestoreTests(
         expect(reads.count).toBe(3);
         expect(events(posted, "commandOutcome")).toEqual([]);
         expect(events(posted, "documentArchiveReplaced")).toEqual([]);
+        const acknowledged = events(posted, "documentArchiveHeld") as { readonly kind: string; readonly archive: Uint8Array }[];
+        const written = encodeDocumentArchiveBytes(before.archive());
+        expect(acknowledged.map((event) => event.kind)).toEqual(["documentArchiveHeld"]);
+        expect([...acknowledged[0]!.archive]).toEqual([...written]);
+        const acknowledgedWire = { kind: "event" as const, documentId, clientInstanceId: first, event: { kind: "documentArchiveHeld" as const, archive: written } };
+        expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(acknowledgedWire))).toEqual(acknowledgedWire);
+        expect(() => encodeBackboneWorkerResponse({ kind: "event", documentId, clientInstanceId: first, event: { kind: "documentArchiveHeld", archive: new Uint8Array([2]) } })).toThrow("unsupported or missing version");
         worker.closeArtifact(documentId, undefined, first);
 
         posted.length = 0;
@@ -116,6 +123,7 @@ export async function registerFolderArchiveRestoreTests(
         expect(after.positions.A).toEqual([86, 11]);
         worker.handleTsRequest(config(second));
         await settle(() => events(posted, "documentArchiveReplaced").length === 1);
+        expect(events(posted, "documentArchiveHeld")).toEqual([]);
         const replaced = events(posted, "documentArchiveReplaced")[0] as { readonly archive: Uint8Array };
         const painted: { positions: Record<string, Point> | null; rows: readonly string[] | null } = { positions: null, rows: null };
         const restored = await restoreDocumentArchiveV1(decodeDocumentArchiveBytes(Uint8Array.from(replaced.archive)), () => true, {

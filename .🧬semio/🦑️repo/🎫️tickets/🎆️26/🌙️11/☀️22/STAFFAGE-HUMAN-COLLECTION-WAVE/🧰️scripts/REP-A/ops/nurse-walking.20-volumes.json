@@ -1,0 +1,42 @@
+[
+ {
+  "op": "solid-set",
+  "scale": "500",
+  "list": "body",
+  "id": "hand-r",
+  "set": {
+   "radii": [
+    0.066,
+    0.046,
+    0.0375
+   ],
+   "transform": {
+    "translation": [
+     0.054,
+     0,
+     0.01
+    ]
+   }
+  }
+ },
+ {
+  "op": "solid-set",
+  "scale": "200",
+  "list": "body",
+  "id": "hand-r",
+  "set": {
+   "radii": [
+    0.063,
+    0.044,
+    0.036
+   ],
+   "transform": {
+    "translation": [
+     0.051,
+     0,
+     0.016
+    ]
+   }
+  }
+ }
+]

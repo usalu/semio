@@ -486,7 +486,7 @@ test("pane roster", () => {
 //#endregion 🧪️PaneConsistency
 
 //#region 🃏️OverviewCards
-/** 🃏️ Landing overview cards use window silhouettes (icon title chips, no drag handles), worded in the browser's language. */
+/** 🃏️ Landing overview cards are window frames with glass in-content title chips (no drag handles), worded in the browser's language. */
 for (const { language, browserLocale } of LANGUAGE_CASES) test.describe(`overview ${language}`, () => {
 test.use({ locale: browserLocale });
 test(`overview chrome ${language}`, async ({ page }) => {
@@ -504,9 +504,9 @@ test(`overview chrome ${language}`, async ({ page }) => {
   for (const paneId of brandPaneIds()) {
     const card = page.locator(`[data-layered-card="${paneId}"] [data-overview-card]`);
     await expect(card).toBeVisible();
-    await expect(card.locator("[data-window-silhouette]")).toHaveCount(1);
-    await expect(card.locator('[data-window-silhouette-border][data-kind="normal"]')).toHaveCount(1);
-    await expect(card.locator('[data-slot="window-chrome-chip-cap"]')).toHaveClass(/ui-glass/);
+    await expect(card.locator("[data-window-frame]")).toHaveCount(1);
+    await expect(card.locator('[data-window-frame-border][data-kind="normal"]')).toHaveCount(1);
+    await expect(card.locator('[data-window-frame-chip][data-dock="top"]')).toHaveClass(/ui-glass/);
     await expect(card.locator('[data-slot="window-chrome-body-surface"]')).toHaveClass(/ui-glass/);
     await expect(card.locator('[data-slot="window-chrome-body"]')).not.toHaveClass(/ui-surface/);
     await expect(card.locator('[data-slot="demonstrator-pane-card-title-chip"] svg')).toHaveCount(1);

@@ -1006,110 +1006,10 @@
        }
       },
       {
-       "id": "arm-l-110",
-       "bone": "post-l",
-       "role": "detail",
-       "z": 0.003,
-       "filled": true,
-       "tone": 0.25,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 1.1,
-        "y": 0.0,
-        "z": -0.165
-       },
-       "to": {
-        "x": 1.1,
-        "y": 0.0,
-        "z": 0.165
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.016
-       }
-      },
-      {
-       "id": "arm-l-145",
-       "bone": "post-l",
-       "role": "detail",
-       "z": 0.004,
-       "filled": true,
-       "tone": 0.25,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 1.45,
-        "y": 0.0,
-        "z": -0.165
-       },
-       "to": {
-        "x": 1.45,
-        "y": 0.0,
-        "z": 0.165
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.016
-       }
-      },
-      {
-       "id": "arm-r-110",
-       "bone": "post-r",
-       "role": "detail",
-       "z": 0.005,
-       "filled": true,
-       "tone": 0.25,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 1.1,
-        "y": 0.0,
-        "z": -0.165
-       },
-       "to": {
-        "x": 1.1,
-        "y": 0.0,
-        "z": 0.165
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.016
-       }
-      },
-      {
-       "id": "arm-r-145",
-       "bone": "post-r",
-       "role": "detail",
-       "z": 0.006,
-       "filled": true,
-       "tone": 0.25,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 1.45,
-        "y": 0.0,
-        "z": -0.165
-       },
-       "to": {
-        "x": 1.45,
-        "y": 0.0,
-        "z": 0.165
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.016
-       }
-      },
-      {
        "id": "wire-fruit",
        "bone": "wires",
        "role": "detail",
-       "z": 0.007,
+       "z": 0.003,
        "filled": false,
        "tone": 0.2,
        "region": "wires",
@@ -1124,106 +1024,6 @@
         "x": 3.9,
         "y": 0.0,
         "z": 0.0
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.0025
-       }
-      },
-      {
-       "id": "wire-catch-1l",
-       "bone": "wires",
-       "role": "detail",
-       "z": 0.008,
-       "filled": false,
-       "tone": 0.2,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 0.0,
-        "y": 0.3,
-        "z": 0.14
-       },
-       "to": {
-        "x": 3.9,
-        "y": 0.3,
-        "z": 0.14
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.0025
-       }
-      },
-      {
-       "id": "wire-catch-1r",
-       "bone": "wires",
-       "role": "detail",
-       "z": 0.009,
-       "filled": false,
-       "tone": 0.2,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 0.0,
-        "y": 0.3,
-        "z": -0.14
-       },
-       "to": {
-        "x": 3.9,
-        "y": 0.3,
-        "z": -0.14
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.0025
-       }
-      },
-      {
-       "id": "wire-catch-2l",
-       "bone": "wires",
-       "role": "detail",
-       "z": 0.01,
-       "filled": false,
-       "tone": 0.2,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 0.0,
-        "y": 0.65,
-        "z": 0.14
-       },
-       "to": {
-        "x": 3.9,
-        "y": 0.65,
-        "z": 0.14
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.0025
-       }
-      },
-      {
-       "id": "wire-catch-2r",
-       "bone": "wires",
-       "role": "detail",
-       "z": 0.011,
-       "filled": false,
-       "tone": 0.2,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 0.0,
-        "y": 0.65,
-        "z": -0.14
-       },
-       "to": {
-        "x": 3.9,
-        "y": 0.65,
-        "z": -0.14
        },
        "section": {
         "kind": "circle",
@@ -1234,7 +1034,7 @@
        "id": "wire-top",
        "bone": "wires",
        "role": "detail",
-       "z": 0.012,
+       "z": 0.004,
        "filled": false,
        "tone": 0.2,
        "region": "wires",
@@ -1259,7 +1059,7 @@
        "id": "trunk-1",
        "bone": "trunk-1",
        "role": "body",
-       "z": 0.013,
+       "z": 0.005,
        "filled": true,
        "tone": 0.25,
        "region": "vine-wood",
@@ -1284,7 +1084,7 @@
        "id": "cordon-1",
        "bone": "cordon-1",
        "role": "body",
-       "z": 0.014,
+       "z": 0.006,
        "filled": true,
        "tone": 0.3,
        "region": "vine-wood",
@@ -1309,7 +1109,7 @@
        "id": "canopy-1",
        "bone": "canopy-1",
        "role": "body",
-       "z": 0.015,
+       "z": 0.007,
        "filled": true,
        "tone": 0.42,
        "region": "leaves",
@@ -1324,7 +1124,7 @@
        "id": "trunk-2",
        "bone": "trunk-2",
        "role": "body",
-       "z": 0.016,
+       "z": 0.008,
        "filled": true,
        "tone": 0.25,
        "region": "vine-wood",
@@ -1349,7 +1149,7 @@
        "id": "cordon-2",
        "bone": "cordon-2",
        "role": "body",
-       "z": 0.017,
+       "z": 0.009,
        "filled": true,
        "tone": 0.3,
        "region": "vine-wood",
@@ -1374,7 +1174,7 @@
        "id": "canopy-2",
        "bone": "canopy-2",
        "role": "body",
-       "z": 0.018,
+       "z": 0.01,
        "filled": true,
        "tone": 0.42,
        "region": "leaves",
@@ -1389,7 +1189,7 @@
        "id": "trunk-3",
        "bone": "trunk-3",
        "role": "body",
-       "z": 0.019,
+       "z": 0.011,
        "filled": true,
        "tone": 0.25,
        "region": "vine-wood",
@@ -1414,7 +1214,7 @@
        "id": "cordon-3",
        "bone": "cordon-3",
        "role": "body",
-       "z": 0.02,
+       "z": 0.012,
        "filled": true,
        "tone": 0.3,
        "region": "vine-wood",
@@ -1439,7 +1239,7 @@
        "id": "canopy-3",
        "bone": "canopy-3",
        "role": "body",
-       "z": 0.021,
+       "z": 0.013,
        "filled": true,
        "tone": 0.42,
        "region": "leaves",
@@ -1454,7 +1254,7 @@
        "id": "trunk-4",
        "bone": "trunk-4",
        "role": "body",
-       "z": 0.022,
+       "z": 0.014,
        "filled": true,
        "tone": 0.25,
        "region": "vine-wood",
@@ -1479,7 +1279,7 @@
        "id": "cordon-4",
        "bone": "cordon-4",
        "role": "body",
-       "z": 0.023,
+       "z": 0.015,
        "filled": true,
        "tone": 0.3,
        "region": "vine-wood",
@@ -1504,7 +1304,7 @@
        "id": "canopy-4",
        "bone": "canopy-4",
        "role": "body",
-       "z": 0.024,
+       "z": 0.016,
        "filled": true,
        "tone": 0.42,
        "region": "leaves",
@@ -1519,7 +1319,7 @@
        "id": "canopy-1-end",
        "bone": "canopy-1",
        "role": "body",
-       "z": 0.025,
+       "z": 0.017,
        "filled": true,
        "tone": 0.44,
        "region": "leaves",
@@ -1534,7 +1334,7 @@
        "id": "canopy-4-end",
        "bone": "canopy-4",
        "role": "body",
-       "z": 0.026,
+       "z": 0.018,
        "filled": true,
        "tone": 0.44,
        "region": "leaves",
@@ -1549,7 +1349,7 @@
        "id": "canopy-1-join",
        "bone": "canopy-1",
        "role": "body",
-       "z": 0.027,
+       "z": 0.019,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -1564,7 +1364,7 @@
        "id": "canopy-2-join",
        "bone": "canopy-2",
        "role": "body",
-       "z": 0.028,
+       "z": 0.02,
        "filled": true,
        "tone": 0.38,
        "region": "leaves",
@@ -1579,7 +1379,7 @@
        "id": "canopy-3-join",
        "bone": "canopy-3",
        "role": "body",
-       "z": 0.029,
+       "z": 0.021,
        "filled": true,
        "tone": 0.4,
        "region": "leaves",
@@ -1594,7 +1394,7 @@
        "id": "canopy-1-band",
        "bone": "canopy-1",
        "role": "body",
-       "z": 0.03,
+       "z": 0.022,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -1609,7 +1409,7 @@
        "id": "canopy-2-band",
        "bone": "canopy-2",
        "role": "body",
-       "z": 0.031,
+       "z": 0.023,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -1624,7 +1424,7 @@
        "id": "canopy-3-band",
        "bone": "canopy-3",
        "role": "body",
-       "z": 0.032,
+       "z": 0.024,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -1639,7 +1439,7 @@
        "id": "canopy-4-band",
        "bone": "canopy-4",
        "role": "body",
-       "z": 0.033,
+       "z": 0.025,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -1654,7 +1454,7 @@
        "id": "bunch-1a-0",
        "bone": "bunch-1a",
        "role": "body",
-       "z": 0.034,
+       "z": 0.026,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -1669,7 +1469,7 @@
        "id": "bunch-1b-0",
        "bone": "bunch-1b",
        "role": "body",
-       "z": 0.035,
+       "z": 0.027,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -1684,7 +1484,7 @@
        "id": "bunch-2a-0",
        "bone": "bunch-2a",
        "role": "body",
-       "z": 0.036,
+       "z": 0.028,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -1699,7 +1499,7 @@
        "id": "bunch-2b-0",
        "bone": "bunch-2b",
        "role": "body",
-       "z": 0.037,
+       "z": 0.029,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -1714,7 +1514,7 @@
        "id": "bunch-3a-0",
        "bone": "bunch-3a",
        "role": "body",
-       "z": 0.038,
+       "z": 0.03,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -1729,7 +1529,7 @@
        "id": "bunch-3b-0",
        "bone": "bunch-3b",
        "role": "body",
-       "z": 0.039,
+       "z": 0.031,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -1744,7 +1544,7 @@
        "id": "bunch-4a-0",
        "bone": "bunch-4a",
        "role": "body",
-       "z": 0.04,
+       "z": 0.032,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -1759,7 +1559,7 @@
        "id": "bunch-4b-0",
        "bone": "bunch-4b",
        "role": "body",
-       "z": 0.041,
+       "z": 0.033,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -1823,110 +1623,10 @@
        }
       },
       {
-       "id": "arm-l-110",
-       "bone": "post-l",
-       "role": "detail",
-       "z": 0.003,
-       "filled": true,
-       "tone": 0.25,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 1.1,
-        "y": 0.0,
-        "z": -0.165
-       },
-       "to": {
-        "x": 1.1,
-        "y": 0.0,
-        "z": 0.165
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.016
-       }
-      },
-      {
-       "id": "arm-l-145",
-       "bone": "post-l",
-       "role": "detail",
-       "z": 0.004,
-       "filled": true,
-       "tone": 0.25,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 1.45,
-        "y": 0.0,
-        "z": -0.165
-       },
-       "to": {
-        "x": 1.45,
-        "y": 0.0,
-        "z": 0.165
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.016
-       }
-      },
-      {
-       "id": "arm-r-110",
-       "bone": "post-r",
-       "role": "detail",
-       "z": 0.005,
-       "filled": true,
-       "tone": 0.25,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 1.1,
-        "y": 0.0,
-        "z": -0.165
-       },
-       "to": {
-        "x": 1.1,
-        "y": 0.0,
-        "z": 0.165
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.016
-       }
-      },
-      {
-       "id": "arm-r-145",
-       "bone": "post-r",
-       "role": "detail",
-       "z": 0.006,
-       "filled": true,
-       "tone": 0.25,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 1.45,
-        "y": 0.0,
-        "z": -0.165
-       },
-       "to": {
-        "x": 1.45,
-        "y": 0.0,
-        "z": 0.165
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.016
-       }
-      },
-      {
        "id": "wire-fruit",
        "bone": "wires",
        "role": "detail",
-       "z": 0.007,
+       "z": 0.003,
        "filled": false,
        "tone": 0.2,
        "region": "wires",
@@ -1941,106 +1641,6 @@
         "x": 3.9,
         "y": 0.0,
         "z": 0.0
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.0025
-       }
-      },
-      {
-       "id": "wire-catch-1l",
-       "bone": "wires",
-       "role": "detail",
-       "z": 0.008,
-       "filled": false,
-       "tone": 0.2,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 0.0,
-        "y": 0.3,
-        "z": 0.14
-       },
-       "to": {
-        "x": 3.9,
-        "y": 0.3,
-        "z": 0.14
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.0025
-       }
-      },
-      {
-       "id": "wire-catch-1r",
-       "bone": "wires",
-       "role": "detail",
-       "z": 0.009,
-       "filled": false,
-       "tone": 0.2,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 0.0,
-        "y": 0.3,
-        "z": -0.14
-       },
-       "to": {
-        "x": 3.9,
-        "y": 0.3,
-        "z": -0.14
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.0025
-       }
-      },
-      {
-       "id": "wire-catch-2l",
-       "bone": "wires",
-       "role": "detail",
-       "z": 0.01,
-       "filled": false,
-       "tone": 0.2,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 0.0,
-        "y": 0.65,
-        "z": 0.14
-       },
-       "to": {
-        "x": 3.9,
-        "y": 0.65,
-        "z": 0.14
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.0025
-       }
-      },
-      {
-       "id": "wire-catch-2r",
-       "bone": "wires",
-       "role": "detail",
-       "z": 0.011,
-       "filled": false,
-       "tone": 0.2,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 0.0,
-        "y": 0.65,
-        "z": -0.14
-       },
-       "to": {
-        "x": 3.9,
-        "y": 0.65,
-        "z": -0.14
        },
        "section": {
         "kind": "circle",
@@ -2051,7 +1651,7 @@
        "id": "wire-top",
        "bone": "wires",
        "role": "detail",
-       "z": 0.012,
+       "z": 0.004,
        "filled": false,
        "tone": 0.2,
        "region": "wires",
@@ -2076,7 +1676,7 @@
        "id": "trunk-1",
        "bone": "trunk-1",
        "role": "body",
-       "z": 0.013,
+       "z": 0.005,
        "filled": true,
        "tone": 0.25,
        "region": "vine-wood",
@@ -2101,7 +1701,7 @@
        "id": "cordon-1",
        "bone": "cordon-1",
        "role": "body",
-       "z": 0.014,
+       "z": 0.006,
        "filled": true,
        "tone": 0.3,
        "region": "vine-wood",
@@ -2126,7 +1726,7 @@
        "id": "canopy-1",
        "bone": "canopy-1",
        "role": "body",
-       "z": 0.015,
+       "z": 0.007,
        "filled": true,
        "tone": 0.42,
        "region": "leaves",
@@ -2142,7 +1742,7 @@
        "id": "trunk-2",
        "bone": "trunk-2",
        "role": "body",
-       "z": 0.016,
+       "z": 0.008,
        "filled": true,
        "tone": 0.25,
        "region": "vine-wood",
@@ -2167,7 +1767,7 @@
        "id": "cordon-2",
        "bone": "cordon-2",
        "role": "body",
-       "z": 0.017,
+       "z": 0.009,
        "filled": true,
        "tone": 0.3,
        "region": "vine-wood",
@@ -2192,7 +1792,7 @@
        "id": "canopy-2",
        "bone": "canopy-2",
        "role": "body",
-       "z": 0.018,
+       "z": 0.01,
        "filled": true,
        "tone": 0.42,
        "region": "leaves",
@@ -2208,7 +1808,7 @@
        "id": "trunk-3",
        "bone": "trunk-3",
        "role": "body",
-       "z": 0.019,
+       "z": 0.011,
        "filled": true,
        "tone": 0.25,
        "region": "vine-wood",
@@ -2233,7 +1833,7 @@
        "id": "cordon-3",
        "bone": "cordon-3",
        "role": "body",
-       "z": 0.02,
+       "z": 0.012,
        "filled": true,
        "tone": 0.3,
        "region": "vine-wood",
@@ -2258,7 +1858,7 @@
        "id": "canopy-3",
        "bone": "canopy-3",
        "role": "body",
-       "z": 0.021,
+       "z": 0.013,
        "filled": true,
        "tone": 0.42,
        "region": "leaves",
@@ -2274,7 +1874,7 @@
        "id": "trunk-4",
        "bone": "trunk-4",
        "role": "body",
-       "z": 0.022,
+       "z": 0.014,
        "filled": true,
        "tone": 0.25,
        "region": "vine-wood",
@@ -2299,7 +1899,7 @@
        "id": "cordon-4",
        "bone": "cordon-4",
        "role": "body",
-       "z": 0.023,
+       "z": 0.015,
        "filled": true,
        "tone": 0.3,
        "region": "vine-wood",
@@ -2324,7 +1924,7 @@
        "id": "canopy-4",
        "bone": "canopy-4",
        "role": "body",
-       "z": 0.024,
+       "z": 0.016,
        "filled": true,
        "tone": 0.42,
        "region": "leaves",
@@ -2340,7 +1940,7 @@
        "id": "canopy-1-end",
        "bone": "canopy-1",
        "role": "body",
-       "z": 0.025,
+       "z": 0.017,
        "filled": true,
        "tone": 0.44,
        "region": "leaves",
@@ -2356,7 +1956,7 @@
        "id": "canopy-4-end",
        "bone": "canopy-4",
        "role": "body",
-       "z": 0.026,
+       "z": 0.018,
        "filled": true,
        "tone": 0.44,
        "region": "leaves",
@@ -2372,7 +1972,7 @@
        "id": "canopy-1-join",
        "bone": "canopy-1",
        "role": "body",
-       "z": 0.027,
+       "z": 0.019,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -2388,7 +1988,7 @@
        "id": "canopy-2-join",
        "bone": "canopy-2",
        "role": "body",
-       "z": 0.028,
+       "z": 0.02,
        "filled": true,
        "tone": 0.38,
        "region": "leaves",
@@ -2404,7 +2004,7 @@
        "id": "canopy-3-join",
        "bone": "canopy-3",
        "role": "body",
-       "z": 0.029,
+       "z": 0.021,
        "filled": true,
        "tone": 0.4,
        "region": "leaves",
@@ -2420,7 +2020,7 @@
        "id": "canopy-1-band",
        "bone": "canopy-1",
        "role": "body",
-       "z": 0.03,
+       "z": 0.022,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -2435,7 +2035,7 @@
        "id": "canopy-2-band",
        "bone": "canopy-2",
        "role": "body",
-       "z": 0.031,
+       "z": 0.023,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -2450,7 +2050,7 @@
        "id": "canopy-3-band",
        "bone": "canopy-3",
        "role": "body",
-       "z": 0.032,
+       "z": 0.024,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -2465,7 +2065,7 @@
        "id": "canopy-4-band",
        "bone": "canopy-4",
        "role": "body",
-       "z": 0.033,
+       "z": 0.025,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -2480,7 +2080,7 @@
        "id": "bunch-1a-0",
        "bone": "bunch-1a",
        "role": "body",
-       "z": 0.034,
+       "z": 0.026,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -2496,7 +2096,7 @@
        "id": "bunch-1b-0",
        "bone": "bunch-1b",
        "role": "body",
-       "z": 0.035,
+       "z": 0.027,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -2512,7 +2112,7 @@
        "id": "bunch-2a-0",
        "bone": "bunch-2a",
        "role": "body",
-       "z": 0.036,
+       "z": 0.028,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -2528,7 +2128,7 @@
        "id": "bunch-2b-0",
        "bone": "bunch-2b",
        "role": "body",
-       "z": 0.037,
+       "z": 0.029,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -2544,7 +2144,7 @@
        "id": "bunch-3a-0",
        "bone": "bunch-3a",
        "role": "body",
-       "z": 0.038,
+       "z": 0.03,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -2560,7 +2160,7 @@
        "id": "bunch-3b-0",
        "bone": "bunch-3b",
        "role": "body",
-       "z": 0.039,
+       "z": 0.031,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -2576,7 +2176,7 @@
        "id": "bunch-4a-0",
        "bone": "bunch-4a",
        "role": "body",
-       "z": 0.04,
+       "z": 0.032,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -2592,7 +2192,7 @@
        "id": "bunch-4b-0",
        "bone": "bunch-4b",
        "role": "body",
-       "z": 0.041,
+       "z": 0.033,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -2657,110 +2257,10 @@
        }
       },
       {
-       "id": "arm-l-110",
-       "bone": "post-l",
-       "role": "detail",
-       "z": 0.003,
-       "filled": true,
-       "tone": 0.25,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 1.1,
-        "y": 0.0,
-        "z": -0.165
-       },
-       "to": {
-        "x": 1.1,
-        "y": 0.0,
-        "z": 0.165
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.016
-       }
-      },
-      {
-       "id": "arm-l-145",
-       "bone": "post-l",
-       "role": "detail",
-       "z": 0.004,
-       "filled": true,
-       "tone": 0.25,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 1.45,
-        "y": 0.0,
-        "z": -0.165
-       },
-       "to": {
-        "x": 1.45,
-        "y": 0.0,
-        "z": 0.165
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.016
-       }
-      },
-      {
-       "id": "arm-r-110",
-       "bone": "post-r",
-       "role": "detail",
-       "z": 0.005,
-       "filled": true,
-       "tone": 0.25,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 1.1,
-        "y": 0.0,
-        "z": -0.165
-       },
-       "to": {
-        "x": 1.1,
-        "y": 0.0,
-        "z": 0.165
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.016
-       }
-      },
-      {
-       "id": "arm-r-145",
-       "bone": "post-r",
-       "role": "detail",
-       "z": 0.006,
-       "filled": true,
-       "tone": 0.25,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 1.45,
-        "y": 0.0,
-        "z": -0.165
-       },
-       "to": {
-        "x": 1.45,
-        "y": 0.0,
-        "z": 0.165
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.016
-       }
-      },
-      {
        "id": "wire-fruit",
        "bone": "wires",
        "role": "detail",
-       "z": 0.007,
+       "z": 0.003,
        "filled": false,
        "tone": 0.2,
        "region": "wires",
@@ -2775,106 +2275,6 @@
         "x": 3.9,
         "y": 0.0,
         "z": 0.0
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.0025
-       }
-      },
-      {
-       "id": "wire-catch-1l",
-       "bone": "wires",
-       "role": "detail",
-       "z": 0.008,
-       "filled": false,
-       "tone": 0.2,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 0.0,
-        "y": 0.3,
-        "z": 0.14
-       },
-       "to": {
-        "x": 3.9,
-        "y": 0.3,
-        "z": 0.14
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.0025
-       }
-      },
-      {
-       "id": "wire-catch-1r",
-       "bone": "wires",
-       "role": "detail",
-       "z": 0.009,
-       "filled": false,
-       "tone": 0.2,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 0.0,
-        "y": 0.3,
-        "z": -0.14
-       },
-       "to": {
-        "x": 3.9,
-        "y": 0.3,
-        "z": -0.14
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.0025
-       }
-      },
-      {
-       "id": "wire-catch-2l",
-       "bone": "wires",
-       "role": "detail",
-       "z": 0.01,
-       "filled": false,
-       "tone": 0.2,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 0.0,
-        "y": 0.65,
-        "z": 0.14
-       },
-       "to": {
-        "x": 3.9,
-        "y": 0.65,
-        "z": 0.14
-       },
-       "section": {
-        "kind": "circle",
-        "d": 0.0025
-       }
-      },
-      {
-       "id": "wire-catch-2r",
-       "bone": "wires",
-       "role": "detail",
-       "z": 0.011,
-       "filled": false,
-       "tone": 0.2,
-       "region": "wires",
-       "material": "trellis-wire",
-       "kind": "member",
-       "from": {
-        "x": 0.0,
-        "y": 0.65,
-        "z": -0.14
-       },
-       "to": {
-        "x": 3.9,
-        "y": 0.65,
-        "z": -0.14
        },
        "section": {
         "kind": "circle",
@@ -2885,7 +2285,7 @@
        "id": "wire-top",
        "bone": "wires",
        "role": "detail",
-       "z": 0.012,
+       "z": 0.004,
        "filled": false,
        "tone": 0.2,
        "region": "wires",
@@ -2910,7 +2310,7 @@
        "id": "trunk-1",
        "bone": "trunk-1",
        "role": "body",
-       "z": 0.013,
+       "z": 0.005,
        "filled": true,
        "tone": 0.25,
        "region": "vine-wood",
@@ -2935,7 +2335,7 @@
        "id": "cordon-1",
        "bone": "cordon-1",
        "role": "body",
-       "z": 0.014,
+       "z": 0.006,
        "filled": true,
        "tone": 0.3,
        "region": "vine-wood",
@@ -2960,7 +2360,7 @@
        "id": "canopy-1",
        "bone": "canopy-1",
        "role": "body",
-       "z": 0.015,
+       "z": 0.007,
        "filled": true,
        "tone": 0.42,
        "region": "leaves",
@@ -2975,7 +2375,7 @@
        "id": "trunk-2",
        "bone": "trunk-2",
        "role": "body",
-       "z": 0.016,
+       "z": 0.008,
        "filled": true,
        "tone": 0.25,
        "region": "vine-wood",
@@ -3000,7 +2400,7 @@
        "id": "cordon-2",
        "bone": "cordon-2",
        "role": "body",
-       "z": 0.017,
+       "z": 0.009,
        "filled": true,
        "tone": 0.3,
        "region": "vine-wood",
@@ -3025,7 +2425,7 @@
        "id": "canopy-2",
        "bone": "canopy-2",
        "role": "body",
-       "z": 0.018,
+       "z": 0.01,
        "filled": true,
        "tone": 0.42,
        "region": "leaves",
@@ -3040,7 +2440,7 @@
        "id": "trunk-3",
        "bone": "trunk-3",
        "role": "body",
-       "z": 0.019,
+       "z": 0.011,
        "filled": true,
        "tone": 0.25,
        "region": "vine-wood",
@@ -3065,7 +2465,7 @@
        "id": "cordon-3",
        "bone": "cordon-3",
        "role": "body",
-       "z": 0.02,
+       "z": 0.012,
        "filled": true,
        "tone": 0.3,
        "region": "vine-wood",
@@ -3090,7 +2490,7 @@
        "id": "canopy-3",
        "bone": "canopy-3",
        "role": "body",
-       "z": 0.021,
+       "z": 0.013,
        "filled": true,
        "tone": 0.42,
        "region": "leaves",
@@ -3105,7 +2505,7 @@
        "id": "trunk-4",
        "bone": "trunk-4",
        "role": "body",
-       "z": 0.022,
+       "z": 0.014,
        "filled": true,
        "tone": 0.25,
        "region": "vine-wood",
@@ -3130,7 +2530,7 @@
        "id": "cordon-4",
        "bone": "cordon-4",
        "role": "body",
-       "z": 0.023,
+       "z": 0.015,
        "filled": true,
        "tone": 0.3,
        "region": "vine-wood",
@@ -3155,7 +2555,7 @@
        "id": "canopy-4",
        "bone": "canopy-4",
        "role": "body",
-       "z": 0.024,
+       "z": 0.016,
        "filled": true,
        "tone": 0.42,
        "region": "leaves",
@@ -3170,7 +2570,7 @@
        "id": "canopy-1-end",
        "bone": "canopy-1",
        "role": "body",
-       "z": 0.025,
+       "z": 0.017,
        "filled": true,
        "tone": 0.44,
        "region": "leaves",
@@ -3186,7 +2586,7 @@
        "id": "canopy-4-end",
        "bone": "canopy-4",
        "role": "body",
-       "z": 0.026,
+       "z": 0.018,
        "filled": true,
        "tone": 0.44,
        "region": "leaves",
@@ -3202,7 +2602,7 @@
        "id": "canopy-1-join",
        "bone": "canopy-1",
        "role": "body",
-       "z": 0.027,
+       "z": 0.019,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -3217,7 +2617,7 @@
        "id": "canopy-2-join",
        "bone": "canopy-2",
        "role": "body",
-       "z": 0.028,
+       "z": 0.02,
        "filled": true,
        "tone": 0.38,
        "region": "leaves",
@@ -3232,7 +2632,7 @@
        "id": "canopy-3-join",
        "bone": "canopy-3",
        "role": "body",
-       "z": 0.029,
+       "z": 0.021,
        "filled": true,
        "tone": 0.4,
        "region": "leaves",
@@ -3247,7 +2647,7 @@
        "id": "canopy-1-band",
        "bone": "canopy-1",
        "role": "body",
-       "z": 0.03,
+       "z": 0.022,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -3262,7 +2662,7 @@
        "id": "canopy-2-band",
        "bone": "canopy-2",
        "role": "body",
-       "z": 0.031,
+       "z": 0.023,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -3277,7 +2677,7 @@
        "id": "canopy-3-band",
        "bone": "canopy-3",
        "role": "body",
-       "z": 0.032,
+       "z": 0.024,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -3292,7 +2692,7 @@
        "id": "canopy-4-band",
        "bone": "canopy-4",
        "role": "body",
-       "z": 0.033,
+       "z": 0.025,
        "filled": true,
        "tone": 0.36,
        "region": "leaves",
@@ -3307,7 +2707,7 @@
        "id": "bunch-1a-0",
        "bone": "bunch-1a",
        "role": "body",
-       "z": 0.034,
+       "z": 0.026,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -3322,7 +2722,7 @@
        "id": "bunch-1b-0",
        "bone": "bunch-1b",
        "role": "body",
-       "z": 0.035,
+       "z": 0.027,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -3337,7 +2737,7 @@
        "id": "bunch-2a-0",
        "bone": "bunch-2a",
        "role": "body",
-       "z": 0.036,
+       "z": 0.028,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -3352,7 +2752,7 @@
        "id": "bunch-2b-0",
        "bone": "bunch-2b",
        "role": "body",
-       "z": 0.037,
+       "z": 0.029,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -3367,7 +2767,7 @@
        "id": "bunch-3a-0",
        "bone": "bunch-3a",
        "role": "body",
-       "z": 0.038,
+       "z": 0.03,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -3382,7 +2782,7 @@
        "id": "bunch-3b-0",
        "bone": "bunch-3b",
        "role": "body",
-       "z": 0.039,
+       "z": 0.031,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -3397,7 +2797,7 @@
        "id": "bunch-4a-0",
        "bone": "bunch-4a",
        "role": "body",
-       "z": 0.04,
+       "z": 0.032,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -3412,7 +2812,7 @@
        "id": "bunch-4b-0",
        "bone": "bunch-4b",
        "role": "body",
-       "z": 0.041,
+       "z": 0.033,
        "filled": true,
        "tone": 0.14,
        "region": "bunches",
@@ -21330,122 +20730,6 @@
       ]
      },
      {
-      "id": "arm-l-110",
-      "kind": "revolve",
-      "bone": "post-l",
-      "material": "trellis-wire",
-      "role": "detail",
-      "tone": 0.25,
-      "profile": [
-       [
-        0,
-        0.008
-       ],
-       [
-        0.33,
-        0.008
-       ]
-      ],
-      "axis": [
-       0.0,
-       0.0,
-       1.0
-      ],
-      "origin": [
-       1.1,
-       0.0,
-       -0.165
-      ],
-      "slender": true
-     },
-     {
-      "id": "arm-l-145",
-      "kind": "revolve",
-      "bone": "post-l",
-      "material": "trellis-wire",
-      "role": "detail",
-      "tone": 0.25,
-      "profile": [
-       [
-        0,
-        0.008
-       ],
-       [
-        0.33,
-        0.008
-       ]
-      ],
-      "axis": [
-       0.0,
-       0.0,
-       1.0
-      ],
-      "origin": [
-       1.45,
-       0.0,
-       -0.165
-      ],
-      "slender": true
-     },
-     {
-      "id": "arm-r-110",
-      "kind": "revolve",
-      "bone": "post-r",
-      "material": "trellis-wire",
-      "role": "detail",
-      "tone": 0.25,
-      "profile": [
-       [
-        0,
-        0.008
-       ],
-       [
-        0.33,
-        0.008
-       ]
-      ],
-      "axis": [
-       0.0,
-       0.0,
-       1.0
-      ],
-      "origin": [
-       1.1,
-       0.0,
-       -0.165
-      ],
-      "slender": true
-     },
-     {
-      "id": "arm-r-145",
-      "kind": "revolve",
-      "bone": "post-r",
-      "material": "trellis-wire",
-      "role": "detail",
-      "tone": 0.25,
-      "profile": [
-       [
-        0,
-        0.008
-       ],
-       [
-        0.33,
-        0.008
-       ]
-      ],
-      "axis": [
-       0.0,
-       0.0,
-       1.0
-      ],
-      "origin": [
-       1.45,
-       0.0,
-       -0.165
-      ],
-      "slender": true
-     },
-     {
       "id": "wire-fruit",
       "kind": "revolve",
       "bone": "wires",
@@ -21471,122 +20755,6 @@
        0.0,
        0.0,
        0.0
-      ],
-      "slender": true
-     },
-     {
-      "id": "wire-catch-1l",
-      "kind": "revolve",
-      "bone": "wires",
-      "material": "trellis-wire",
-      "role": "detail",
-      "tone": 0.2,
-      "profile": [
-       [
-        0,
-        0.00125
-       ],
-       [
-        3.9,
-        0.00125
-       ]
-      ],
-      "axis": [
-       1.0,
-       0.0,
-       0.0
-      ],
-      "origin": [
-       0.0,
-       0.3,
-       0.14
-      ],
-      "slender": true
-     },
-     {
-      "id": "wire-catch-1r",
-      "kind": "revolve",
-      "bone": "wires",
-      "material": "trellis-wire",
-      "role": "detail",
-      "tone": 0.2,
-      "profile": [
-       [
-        0,
-        0.00125
-       ],
-       [
-        3.9,
-        0.00125
-       ]
-      ],
-      "axis": [
-       1.0,
-       0.0,
-       0.0
-      ],
-      "origin": [
-       0.0,
-       0.3,
-       -0.14
-      ],
-      "slender": true
-     },
-     {
-      "id": "wire-catch-2l",
-      "kind": "revolve",
-      "bone": "wires",
-      "material": "trellis-wire",
-      "role": "detail",
-      "tone": 0.2,
-      "profile": [
-       [
-        0,
-        0.00125
-       ],
-       [
-        3.9,
-        0.00125
-       ]
-      ],
-      "axis": [
-       1.0,
-       0.0,
-       0.0
-      ],
-      "origin": [
-       0.0,
-       0.65,
-       0.14
-      ],
-      "slender": true
-     },
-     {
-      "id": "wire-catch-2r",
-      "kind": "revolve",
-      "bone": "wires",
-      "material": "trellis-wire",
-      "role": "detail",
-      "tone": 0.2,
-      "profile": [
-       [
-        0,
-        0.00125
-       ],
-       [
-        3.9,
-        0.00125
-       ]
-      ],
-      "axis": [
-       1.0,
-       0.0,
-       0.0
-      ],
-      "origin": [
-       0.0,
-       0.65,
-       -0.14
       ],
       "slender": true
      },
@@ -22406,48 +21574,8 @@
       "region": "posts"
      },
      {
-      "id": "th-arm-l-110",
-      "of": "arm-l-110",
-      "region": "wires"
-     },
-     {
-      "id": "th-arm-l-145",
-      "of": "arm-l-145",
-      "region": "wires"
-     },
-     {
-      "id": "th-arm-r-110",
-      "of": "arm-r-110",
-      "region": "wires"
-     },
-     {
-      "id": "th-arm-r-145",
-      "of": "arm-r-145",
-      "region": "wires"
-     },
-     {
       "id": "th-wire-fruit",
       "of": "wire-fruit",
-      "region": "wires"
-     },
-     {
-      "id": "th-wire-catch-1l",
-      "of": "wire-catch-1l",
-      "region": "wires"
-     },
-     {
-      "id": "th-wire-catch-1r",
-      "of": "wire-catch-1r",
-      "region": "wires"
-     },
-     {
-      "id": "th-wire-catch-2l",
-      "of": "wire-catch-2l",
-      "region": "wires"
-     },
-     {
-      "id": "th-wire-catch-2r",
-      "of": "wire-catch-2r",
       "region": "wires"
      },
      {
@@ -22645,56 +21773,8 @@
       "part": "member"
      },
      {
-      "id": "m-arm-l-110",
-      "of": "arm-l-110",
-      "member": "post-l",
-      "part": "member"
-     },
-     {
-      "id": "m-arm-l-145",
-      "of": "arm-l-145",
-      "member": "post-l",
-      "part": "member"
-     },
-     {
-      "id": "m-arm-r-110",
-      "of": "arm-r-110",
-      "member": "post-r",
-      "part": "member"
-     },
-     {
-      "id": "m-arm-r-145",
-      "of": "arm-r-145",
-      "member": "post-r",
-      "part": "member"
-     },
-     {
       "id": "m-wire-fruit",
       "of": "wire-fruit",
-      "member": "wires",
-      "part": "member"
-     },
-     {
-      "id": "m-wire-catch-1l",
-      "of": "wire-catch-1l",
-      "member": "wires",
-      "part": "member"
-     },
-     {
-      "id": "m-wire-catch-1r",
-      "of": "wire-catch-1r",
-      "member": "wires",
-      "part": "member"
-     },
-     {
-      "id": "m-wire-catch-2l",
-      "of": "wire-catch-2l",
-      "member": "wires",
-      "part": "member"
-     },
-     {
-      "id": "m-wire-catch-2r",
-      "of": "wire-catch-2r",
       "member": "wires",
       "part": "member"
      },
@@ -22965,12 +22045,12 @@
     ],
     "decisions": [
      {
-      "en": "Minimal: the structure of 1:500 is one member per bone and per drawn bar and one support per anchor, as at 1:200; fewer would leave a drawn wire or bone without its member.",
-      "de": "Minimal: das Tragwerk von 1:500 ist ein Stab je Knochen und je gezeichnetem Stab und ein Auflager je Anker, wie bei 1:200; weniger ließe einen gezeichneten Draht oder Knochen ohne seinen Stab."
+      "en": "Minimal: the structure of 1:500 is one member per bone and per drawn bar and one support per anchor; fewer would leave a drawn wire or bone without its member.",
+      "de": "Minimal: das Tragwerk von 1:500 ist ein Stab je Knochen und je gezeichnetem Stab und ein Auflager je Anker; weniger ließe einen gezeichneten Draht oder Knochen ohne seinen Stab."
      },
      {
-      "en": "Body at 1:500: one lobe per vine (0.56 m deep), bunches of 90 mm, trunks of 80 mm, the 2.5 mm wires as slender rods.",
-      "de": "Körper bei 1:500: ein Lappen je Stock (0,56 m tief), Trauben von 90 mm, Stämme von 80 mm, die Drähte von 2,5 mm als schlanke Stäbe."
+      "en": "Body at 1:500: one lobe per vine (0.56 m deep), bunches of 90 mm, trunks of 80 mm, the fruit wire and the top wire as slender rods of 2.5 mm; the cross arms and the four catch wires they carry are left out (a 16 mm arm does not print at 1:500).",
+      "de": "Körper bei 1:500: ein Lappen je Stock (0,56 m tief), Trauben von 90 mm, Stämme von 80 mm, der Tragdraht und der oberste Draht als schlanke Stäbe von 2,5 mm; die Querarme und die vier Heftdrähte, die sie tragen, sind weggelassen (ein Arm von 16 mm druckt bei 1:500 nicht)."
      },
      {
       "en": "Thermal and structure by reference; supports of 80 mm.",

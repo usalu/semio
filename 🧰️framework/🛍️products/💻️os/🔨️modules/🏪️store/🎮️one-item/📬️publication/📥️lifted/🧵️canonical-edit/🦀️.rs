@@ -17,6 +17,11 @@ use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_os_store_canonical_json::ARTIFACT_CANONICAL_JSON_CHUNK_BYTES;
 use semio_os_store_canonical_json::CANONICAL_EDIT_MAXIMUM_BYTES;
 use semio_os_store_canonical_json::CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES;
+/// 🩺️ Names, once per process, which condition answered a silent `Blocked`; compiled out of tests so heap-exact laws stay exact.
+#[cfg(not(test))]
+pub fn blocked_once(reason: std::fmt::Arguments<'_>) { static SEEN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false); if !SEEN.swap(true, std::sync::atomic::Ordering::Relaxed) { eprintln!("[DEBUG] sealer blocked: {reason}"); } }
+#[cfg(test)]
+pub fn blocked_once(_: std::fmt::Arguments<'_>) {}
 //#region 🔣️ByteEncoder
 
 
@@ -318,10 +323,10 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         self.ownership=Default::default();self.last_work=0;self.last_length=0;self.last_canonical=false;
         if self.cancelled||self.closing{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         if self.prepared.is_some(){return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.progress(),self.ownership));}
-        if !grant.permits_one(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+        if !grant.permits_one(){blocked_once(format_args!("permits_one false grant {grant:?}"));return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         if self.replay.is_some(){self.cancelled=true;return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.native-checkpoint-unsupported"));}
         let demand=match self.preparation_demands(){Ok(demand)=>demand,Err(error)=>{self.cancelled=true;self.ownership=error.retained_progress();return Err(error)}};
-        if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+        if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{blocked_once(format_args!("demand {demand:?} exceeds grant {grant:?} phase {}",self.phase));return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         let work_demand=match self.native.as_ref(){Some(owner)if !owner.terminal_is_empty()&&!owner.ready()=>owner.next_work_demand()?,_=>1};
         let retained=grant.retained_grant();
         let ran=receiving.with_allocated_effect_reported(demand,work_demand,|_,effect|{
@@ -350,7 +355,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
             if progress.retained_capacity_bytes!=0&&effect.actual().is_none(){*effect.actual()=Some(progress.retained_capacity_bytes);}
             result
         });
-        let (result,work)=match ran{Ok(Some(ran))=>ran,Ok(None)=>return Ok(ArtifactStoreOneItemPreparationStep::Blocked),Err(error)=>{self.cancelled=true;self.ownership=error.retained_progress();return Err(error)}};
+        let (result,work)=match ran{Ok(Some(ran))=>ran,Ok(None)=>{blocked_once(format_args!("work quote {work_demand} denied demand {demand:?} phase {}",self.phase));return Ok(ArtifactStoreOneItemPreparationStep::Blocked)},Err(error)=>{self.cancelled=true;self.ownership=error.retained_progress();return Err(error)}};
         self.last_work=u64::try_from(work).unwrap_or(u64::MAX);
         let (progress,error)=match result{Ok(progress)=>(progress,None),Err(error)=>(error.retained_progress(),Some(error))};
         self.ownership=progress;
@@ -362,7 +367,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         }
         if let Some(error)=error{return Err(error);}
         if !progress.fits(retained){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"canonical-edit.original-child-receipt-exceeds-grant").with_retained_progress(progress));}
-        Ok(if self.prepared.is_some(){ArtifactStoreOneItemPreparationStep::Prepared(self.progress(),progress)}else if progress==RetainedCloneProgress::default(){ArtifactStoreOneItemPreparationStep::Blocked}else{ArtifactStoreOneItemPreparationStep::Progress(self.progress(),progress)})
+        Ok(if self.prepared.is_some(){ArtifactStoreOneItemPreparationStep::Prepared(self.progress(),progress)}else if progress==RetainedCloneProgress::default(){blocked_once(format_args!("zero progress demand {demand:?} grant {grant:?} phase {}",self.phase));ArtifactStoreOneItemPreparationStep::Blocked}else{ArtifactStoreOneItemPreparationStep::Progress(self.progress(),progress)})
     }
 }
 

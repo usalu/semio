@@ -5,6 +5,7 @@ use semio_framework_job_payload::{JobPayloadStream,RetainedPayloadBuilder,Retain
 use semio_framework_job_testing_caller::bank_run;
 use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
 fn funded(cx:&mut StepContext<'_>,run:impl FnOnce(&mut StepContext<'_>)->RetainedWorkOutcome){let step=run(cx).result.unwrap();cx.consume_retained(step.progress()).unwrap();}
+fn turn<R>(owner:&mut StepContextOwner,policy:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>)->R)->R{let mut sequence=0;let mut actual=RetainedCloneProgress::default();let mut cx=owner.context(StepBudget::new(64,u64::MAX,policy),root_cancel_token(),default_now_us,&mut sequence,&mut actual).unwrap();run(&mut cx)}
 fn close_builder(builder:&mut RetainedPayloadBuilder){let mut bank=EffectBank::new(Wallet::from_profile(&serde_json::json!({"items":1<<16,"copyBytes":1<<28,"capacityBytes":1<<28,"releaseBytes":1<<28,"depth":1<<16,"fuel":1<<16})));while !builder.terminal_is_empty(){let d=builder.retirement_demands().unwrap();let issued=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let work=builder.retirement_work().unwrap();let(_,admitted)=bank_run(&mut bank,issued,work,|effect|semio_framework_value::RetainedWorkPoll::Complete(builder.close_step(effect)));assert_eq!(admitted,Some(true));}}
 
 #[test]
@@ -67,13 +68,10 @@ fn retained_step_context_owner_preserves_original_ledger_until_context_and_write
         let mut actual_retained_progress=RetainedCloneProgress::default();let context = owner.context(StepBudget::new(64, u64::MAX,policy), root_cancel_token(), default_now_us, &mut sequence,&mut actual_retained_progress).unwrap();
         let mut context = Some(context);
         if kind != 0 {
-            let cx = context.as_mut().unwrap();
-            for _ in 0..1024 { if builder.is_initialized() { break } funded(cx, |cx| builder.advance_initialization(cx)); }
+            drop(context.take());
+            turn(&mut owner, policy, |cx| { for _ in 0..1024 { if builder.is_initialized() { break } funded(cx, |cx| builder.advance_initialization(cx)); } });
             assert!(builder.is_initialized());
-        }
-        if kind != 0 {
-            let cx = context.as_mut().unwrap();
-            for _ in 0..16 { if builder.staged_page_len().is_some() { break } funded(cx, |cx| builder.begin_staged_page_funded(cx)); }
+            for _ in 0..16 { if builder.staged_page_len().is_some() { break } turn(&mut owner, policy, |cx| funded(cx, |cx| builder.begin_staged_page_funded(cx))); }
             assert!(builder.staged_page_len().is_some());
         }
         if kind != 0 { drop(context.take()); }

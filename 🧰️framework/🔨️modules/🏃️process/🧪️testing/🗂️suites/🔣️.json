@@ -515,9 +515,10 @@
       "budgetMs": 120000,
       "typecheck": "none",
       "files": [
-        "📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🧪️tests/🟦️.ts"
+        "📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/💾️storage/🍎️image/🛟️reserve/🧪️tests/🟦️.ts"
       ],
-      "testNamePattern": "availability corpus|storage floor corpus",
+      "testNamePattern": "availability corpus|storage floor corpus|refresh|reserve|creation corpus",
       "platforms": [
         "darwin",
         "linux"

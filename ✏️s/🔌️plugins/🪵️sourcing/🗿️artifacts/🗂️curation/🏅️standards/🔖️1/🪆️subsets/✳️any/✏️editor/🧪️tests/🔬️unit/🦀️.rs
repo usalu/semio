@@ -7,6 +7,24 @@ pub(crate) mod context {
     use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as new_app_with_registry_impl, observe_registered_fixture_app, render_registered_fixture_app, OriginalFixtureScope};
     use semio_plugin::{App, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
+    /// 🏟️ One test's UI value arena; leaving it first drains the built-node pages the test's dropped trees queued, since those pages still own arena values the arena cannot close over.
+    pub(crate) struct ArenaScope(Option<semio_ui_contract_values::testkit::UiArenaFixture>);
+
+    impl Drop for ArenaScope {
+        fn drop(&mut self) {
+            for _ in 0..1_000_000 {
+                if semio_plugin::plugin_app_close_prelude::close_built_node_page_one() {
+                    break;
+                }
+            }
+            drop(self.0.take());
+        }
+    }
+
+    pub(crate) fn arena() -> ArenaScope {
+        ArenaScope(Some(semio_ui_contract_values::testkit::UiArenaFixture::new()))
+    }
+
     pub type SourcingApp = VcsArtifactApp<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
     /// 🧪️ Framework test context gap (contract §2.5, w0-f Gap 3 handoff): `new_app_with_registry` and
@@ -88,27 +106,8 @@ pub(crate) mod context {
 
     /// 🏁️ Drains every pending typed operation for instance 1, returning the document effects it published.
     pub async fn settle(app: &mut SourcingTestApp) -> Vec<semio_framework::kernel::Effect> {
-        let mut effects = Vec::new();
-        for turn in 0usize..100_000 {
-            app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance step");
-            app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("typed operation publication");
-            if let Some(mut page) = semio_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("typed operation result page") {
-                let token = semio_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
-                assert!(app.acknowledge_typed_operation_result(token).expect("typed operation acknowledgement"));
-            }
-            if let Some(effect) = app.take_typed_operation_effect() {
-                effects.push(effect);
-            }
-            app.take_typed_operation_event();
-            app.take_typed_operation_ui_scope();
-            drain_auxiliary_outboxes(app).await;
-            if !app.has_pending_typed_operations() {
-                break;
-            }
-            std::thread::yield_now();
-        }
-        assert!(!app.has_pending_typed_operations(), "complete original typed operation settlement");
-        effects
+        let receipt = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("complete original typed operation settlement");
+        receipt.effects
     }
     
     pub(super) async fn drain_auxiliary_outboxes(app: &mut SourcingApp) {
@@ -196,34 +195,20 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
     for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
         let mut app = new_app().await;
         app.bind_instance_id(7).await;
+        let live = PluginApp::document_archive(&*app).await.expect("live document archive");
+        let live_id = protocol::os_spr::decode_history(&live.parent_spr, &protocol::os_spr::DecodeOptions::default()).await.unwrap().doc_id;
         semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_plugin::ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+        let receipt = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 7, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("complete instance7 example settlement");
+        let terminal = receipt.lanes.contains(&TypedOperationResultLane::Terminal);
         let mut document = None;
-        let mut terminal = false;
-        for turn in 0usize..100_000 {
-            app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
-            app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-            if let Some(mut page) = semio_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 7, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap() {
-                assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
-                terminal |= page.lane == TypedOperationResultLane::Terminal;
-                let token = semio_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
-                assert!(app.acknowledge_typed_operation_result(token).unwrap());
-            }
-            if let Some(effect) = app.take_typed_operation_effect() {
-                let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect else { panic!("example must publish a document load") };
-                let history = protocol::os_spr::decode_history(&spr, &protocol::os_spr::DecodeOptions::default()).await.unwrap();
-                assert_eq!(history.doc_id, "s.sourcing.curation@1/*#editor", "the load names the live store, not the app-minted id");
-                assert!(history.composition.as_ref().and_then(|composition| composition.dialect.as_ref()).is_some(), "the load carries the dialect archive hydration checks");
-                assert_eq!(history.schema, SOURCING_CURATION_SCHEMA);
-                assert!(history.edits.is_empty());
-                document = Some(<CurationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).unwrap());
-            }
-            app.take_typed_operation_event();
-            app.take_typed_operation_ui_scope();
-            context::drain_auxiliary_outboxes(&mut app).await;
-            if !app.has_pending_typed_operations() {
-                break;
-            }
-            std::thread::yield_now();
+        for effect in receipt.effects {
+            let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect else { panic!("example must publish a document load") };
+            let history = protocol::os_spr::decode_history(&spr, &protocol::os_spr::DecodeOptions::default()).await.unwrap();
+            assert_eq!(history.doc_id, live_id, "the load names the live store, not the app-minted id");
+            assert!(history.composition.as_ref().and_then(|composition| composition.dialect.as_ref()).is_some(), "the load carries the dialect archive hydration checks");
+            assert_eq!(history.schema, SOURCING_CURATION_SCHEMA);
+            assert!(history.edits.is_empty());
+            document = Some(<CurationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).unwrap());
         }
         assert!(!app.has_pending_typed_operations(), "complete instance7 example settlement");
         assert!(terminal);
@@ -234,13 +219,7 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
         } else {
             assert!(stock.is_empty());
         }
-        for turn in 0usize..100_000 {
-            if app.close_terminal_is_empty() {
-                break;
-            }
-            app.0.close_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).unwrap();
-            std::thread::yield_now();
-        }
+        app.close_fixture();
         assert!(app.close_terminal_is_empty());
     }
 }
@@ -254,39 +233,11 @@ async fn example_load_settles_through_the_host_document_archive_door() {
     let mut app = new_app().await;
     app.bind_instance_id(7).await;
     semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_plugin::ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-    let mut loaded = None;
-    for _ in 0..100_000 {
-        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
-        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-        if let Some(mut page) = semio_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 7, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap() {
-            let token = semio_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
-            assert!(app.acknowledge_typed_operation_result(token).unwrap());
-        }
-        if let Some(semio_framework::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
-            loaded = Some((pack, spr));
-        }
-        app.take_typed_operation_event();
-        app.take_typed_operation_ui_scope();
-        if !app.has_pending_typed_operations() {
-            break;
-        }
-        std::thread::yield_now();
-    }
+    let receipt = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 7, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example settlement");
+    let loaded = receipt.effects.into_iter().find_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, spr } => Some((pack, spr)), _ => None });
     let (parent_pack, parent_spr) = loaded.expect("example publishes a document load");
-    PluginApp::begin_document_archive_load(&mut app.0, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
-    let mut status = None;
-    for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
-        if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
-            status = Some(polled);
-            break;
-        }
-        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
-        std::thread::yield_now();
-    }
-    let status = status.expect("archive load reaches a terminal state");
-    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
-    PluginApp::acknowledge_document_archive_load(&mut app.0, 91).expect("archive acknowledgement");
+    semio_plugin::artifact_app_laws::admit_document_archive_load(&mut app.0, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }, app.1.cx()).expect("archive admission");
+    semio_plugin::artifact_app_laws::settle_document_archive_load(&mut app.0, 91, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive load settles Ready");
     assert_eq!(crate::stock_of(&app.snapshot().expect("loaded snapshot")), oracle);
 }
 
@@ -304,19 +255,8 @@ async fn a_saved_curation_archive_carries_its_catalog_member_and_reloads_with_it
     let archive = PluginApp::document_archive(&*app).await.expect("document archive");
     assert_eq!(archive.members.len(), 1, "boot genesis opened exactly the catalog member");
     assert_eq!((archive.members[0].owner.slot.as_str(), archive.members[0].reference.artifact_id.as_str(), archive.members[0].reference.subset.as_str()), (crate::CATALOG_CHILD_SLOT, catalog_id.as_str(), "kit"));
-    PluginApp::begin_document_archive_load(&mut app.0, 92, archive).expect("archive admission");
-    let mut status = None;
-    for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut app.0, 92, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
-        if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
-            status = Some(polled);
-            break;
-        }
-        std::thread::yield_now();
-    }
-    let status = status.expect("archive reload reaches a terminal state");
-    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
-    PluginApp::acknowledge_document_archive_load(&mut app.0, 92).expect("archive acknowledgement");
+    semio_plugin::artifact_app_laws::admit_document_archive_load(&mut app.0, 92, archive, app.1.cx()).expect("archive admission");
+    semio_plugin::artifact_app_laws::settle_document_archive_load(&mut app.0, 92, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive reload settles Ready");
     let reloaded = app.snapshot().expect("reloaded snapshot");
     assert_eq!(reloaded.catalog.child_id, catalog_id);
     assert_eq!(reloaded.curated.iter().map(|item| (item.object_id.as_str(), item.count)).collect::<Vec<_>>(), vec![(object_id.as_str(), 1)]);
@@ -404,6 +344,13 @@ fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_wire()
     let distilled = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&pack, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     assert!(distilled.len() <= SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "what is RETAINED is the distilled roster, never the pack");
     assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: distilled })).is_ok());
+}
+
+/// 🎁️ LAW: the real demonstrator pack, dispatched as the typed `setContributions` operation, settles instead of stalling.
+#[semio_framework_async_macros::async_test]
+async fn the_real_demonstrator_pack_settles_through_the_typed_set_contributions_operation() {
+    let mut app = new_app().await;
+    dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: demonstrator_contributions_pack() })).await;
 }
 //#endregion 🧪️RetainedConfigOracle
 use crate::editor_unit_tests::context::{dispatch, new_app, sourcing_manifest_for_tests};
@@ -675,7 +622,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 fn retained_table_lanes_restore_complete_neutral_owner() {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚚️retained-table/🔣️.json")).unwrap();
     let scene = semio_plugin::TableScene::base(fixture["columnsJson"].as_str().unwrap(), fixture["rowsJson"].as_str().unwrap());
-    let node = semio_plugin::scene_surface("neutral-retained-table", semio_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene).unwrap();
+    let node = semio_plugin::scene_surface("neutral-retained-table", semio_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene, "Retained table", None).unwrap();
     assert_eq!(node.children.len(), 2);
     assert!(serde_json::to_string(&node).unwrap_err().to_string().contains("BuiltChildren requires retained page transport"));
     let semio_plugin::Component::Surface(props) = &node.component else { panic!("typed table surface") };

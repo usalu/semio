@@ -1,7 +1,7 @@
-import {existsSync,readFileSync,statSync} from "node:fs";
+import {existsSync,readFileSync,readdirSync,statSync} from "node:fs";
 import {basename,dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import {parseDepInfoV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
-import {OFFLOAD_POLICY_V1,offloadLinkArgumentV1,offloadLinkLibraryRefusalV1,offloadSystemDirectoryV1,offloadWasmLinkArgumentV1,type OffloadReasonV1} from "../📐️policy/🟦️.ts";
+import {OFFLOAD_POLICY_V1,offloadCrateTypesOfV1,offloadLinkArgumentV1,offloadLinkLibraryRefusalV1,offloadSystemDirectoryV1,offloadWasmLinkArgumentV1,type OffloadReasonV1} from "../📐️policy/🟦️.ts";
 import {dependencyClosureV1,walkFilesV1} from "../🌳️inputs/🟦️.ts";
 import {installNameArgumentsV1,remappedNameV1,remapsOfV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧭️remap/🟦️.ts";
 
@@ -20,11 +20,11 @@ const SYSTEM=["/usr/","/bin/","/sbin/","/Library/","/System/","/Applications/","
 const within=(parent:string,path:string):boolean=>path===parent||path.startsWith(parent.endsWith(sep)?parent:parent+sep);
 const commonAncestor=(left:string,right:string):string=>{let at=left;while(!within(at,right)){const up=dirname(at);if(up===at)return at;at=up;}return at;};
 const INLINE_MODULES=/^[ \t]*(?:pub(?:\([^)]*\))?[ \t]+)?mod[ \t]+([A-Za-z_][A-Za-z0-9_]*)[ \t]*\{/gmu;
-const INCLUDES=/#\s*\[\s*path\s*=\s*"([^"\n]{1,512})"\s*\]|\bcfg_attr\s*\([^\]"]*(?:"[^"\n]*"[^\]"]*)*,\s*path\s*=\s*"([^"\n]{1,512})"|include(?:_[A-Za-z0-9_]+)?!\s*\(\s*(?:r(#*)"([^"\n]{1,512})"\3|"([^"\n]{1,512})")|include(?:_[A-Za-z0-9_]+)?!\s*\(\s*concat!\s*\(\s*env!\s*\(\s*"CARGO_MANIFEST_DIR"\s*\)\s*,\s*"([^"\n]{1,512})"/gu,MODULES=/^[ \t]*(?:pub(?:\([^)]*\))?[ \t]+)?mod[ \t]+([A-Za-z_][A-Za-z0-9_]*)[ \t]*;/gmu;
-/** 🔗️ Every file that rustc reads for the root source, found without compiling: the files of `mod name;` declarations (`name.rs` or `name/mod.rs` below the directory the declaring file owns), the targets of `#[path = "..."]` and of the `path = "..."` of a `#[cfg_attr(..., path = "...")]` (their children live beside them) and the literal paths of `include!` and of any `include_<name>!` (`include_str!`, `include_bytes!`, `include_wgsl!`, `include_spirv!`, `include_glsl!`, including a `macro_rules!` of that shape), as a plain `"..."`, a raw `r#*"..."#*`, or `concat!(env!("CARGO_MANIFEST_DIR"), "...")` (the last relative to the manifest), transitively through Rust files, existing files only, bounded; `undefined` beyond the bound. Only `.rs` targets are queued. The module layout of this repository keeps the code of a crate in the module directory above its manifest and includes it from a one-line shim, so a directory walk would ship whole module trees (tests, generators, other crates) for a few source files. */
+const INCLUDES=/#\s*\[\s*path\s*=\s*"([^"\n]{1,512})"\s*\]|\bcfg_attr\s*\([^\]"]*(?:"[^"\n]*"[^\]"]*)*,\s*path\s*=\s*"([^"\n]{1,512})"|include(?:_[A-Za-z0-9_]+)?!\s*\(\s*(?:r(#*)"([^"\n]{1,512})"\3|"([^"\n]{1,512})")|include(?:_[A-Za-z0-9_]+)?!\s*\(\s*concat!\s*\(\s*env!\s*\(\s*"CARGO_MANIFEST_DIR"\s*\)\s*,\s*"([^"\n]{1,512})"/gu,BINDINGS=/\b(?:bindgen|generate|from_witx|wasmtime_integration)!\s*\(\s*\{[\s\S]{0,8192}?\b(?:path|witx)\s*:\s*(\[[^\]]{0,2048}\]|"[^"\n]{1,512}")/gu,QUOTED=/"([^"\n]{1,512})"/gu,MODULES=/^[ \t]*(?:pub(?:\([^)]*\))?[ \t]+)?mod[ \t]+([A-Za-z_][A-Za-z0-9_]*)[ \t]*;/gmu;
+/** 🔗️ Every file that rustc reads for the root source, found without compiling: the files of `mod name;` declarations (`name.rs` or `name/mod.rs` below the directory the declaring file owns), the targets of `#[path = "..."]` and of the `path = "..."` of a `#[cfg_attr(..., path = "...")]` (their children live beside them) and the literal paths of `include!` and of any `include_<name>!` (`include_str!`, `include_bytes!`, `include_wgsl!`, `include_spirv!`, `include_glsl!`, including a `macro_rules!` of that shape), as a plain `"..."`, a raw `r#*"..."#*`, or `concat!(env!("CARGO_MANIFEST_DIR"), "...")` (the last relative to the manifest), the `path` of a `bindgen!` or `generate!` WIT binding macro and the `witx` of a `from_witx!` or `wasmtime_integration!` one (files or directories of files, relative to the manifest; the directory of a file whose `use` declarations name its siblings travels with it), transitively through Rust files, existing files only, bounded; `undefined` beyond the bound. Only `.rs` targets are queued. The module layout of this repository keeps the code of a crate in the module directory above its manifest and includes it from a one-line shim, so a directory walk would ship whole module trees (tests, generators, other crates) for a few source files. */
 export function reachedFilesV1(entry:string,read:(path:string)=>string|undefined=path=>{try{return readFileSync(path,"utf8");}catch{return undefined;}},maximumFiles:number=512,manifest?:string):readonly string[]|undefined{
  const seen=new Set<string>([entry]),queue:{file:string;children:string;outer:readonly string[]}[]=[{file:entry,children:dirname(entry),outer:[]}],found:string[]=[];
- const take=(target:string,children:string,outer:readonly string[]):void=>{if(seen.has(target)||!existsSync(target))return;seen.add(target);found.push(target);if(target.endsWith(".rs"))queue.push({file:target,children,outer});};
+ const take=(target:string,children:string,outer:readonly string[]):void=>{if(seen.has(target)||!existsSync(target))return;seen.add(target);if(statSync(target).isDirectory()){for(const name of readdirSync(target).sort())if(seen.size<=maximumFiles)take(join(target,name),children,outer);return;}found.push(target);if(target.endsWith(".rs"))queue.push({file:target,children,outer});else if(target.endsWith(".witx"))for(const name of readdirSync(dirname(target)).sort())take(join(dirname(target),name),children,outer);};
  while(queue.length>0){
   if(seen.size>maximumFiles)return undefined;
   const {file,children,outer}=queue.shift()!,text=read(file),owned=[children,...outer];
@@ -34,6 +34,7 @@ export function reachedFilesV1(entry:string,read:(path:string)=>string|undefined
    const literal=match[1]??match[2]??match[4]??match[5];if(literal===undefined)continue;
    const target=resolve(dirname(file),literal);take(target,dirname(target),owned);
   }
+  if(manifest!==undefined)for(const match of text.matchAll(BINDINGS))for(const quoted of match[1]!.matchAll(QUOTED)){const target=resolve(manifest,"."+(quoted[1]!.startsWith("/")?"":"/")+quoted[1]!);take(target,dirname(target),owned);}
   const inline=[...text.matchAll(INLINE_MODULES)].map(match=>match[1]!);
   for(const match of text.matchAll(MODULES)){
    const homes=owned.flatMap(home=>[home,...inline.map(name=>join(home,name))]);
@@ -59,7 +60,7 @@ export function semioEnvironmentReadV1(files:Iterable<string>,environment:Enviro
  return undefined;
 }
 
-const READ_NAMES=/\b(?:option_)?env!\s*\(\s*"([A-Za-z_][A-Za-z0-9_]{0,255})"/gu,CARRIED_NAMES=new Set(["OUT_DIR","SDKROOT","MACOSX_DEPLOYMENT_TARGET","IPHONEOS_DEPLOYMENT_TARGET","RUSTC_BOOTSTRAP"]),CARRIED_PREFIXES=["CARGO_","RUSTC_","DEP_"];
+const READ_NAMES=/\b(?:option_)?env!\s*\(\s*"([A-Za-z_][A-Za-z0-9_]{0,255})"/gu,CARRIED_NAMES=new Set(["OUT_DIR","RUST_MIN_STACK","SDKROOT","MACOSX_DEPLOYMENT_TARGET","IPHONEOS_DEPLOYMENT_TARGET","RUSTC_BOOTSTRAP"]),CARRIED_PREFIXES=["CARGO_","RUSTC_","DEP_"];
 /** 🌱️ The environment names a compilation can read: the names of `env!` and `option_env!` in the shipped Rust sources, those Cargo and the compiler hand every unit (`CARGO_*`, `RUSTC_*`, `OUT_DIR`, the SDK and deployment targets). Every other variable of the requester (`NATIVE_PLAY_OUT`, `__CARGO_TEST_ROOT`, a shell's own) is nothing the unit reads, so it neither travels nor blocks the offload. */
 export function environmentReadNamesV1(files:Iterable<string>,read:(path:string)=>string|undefined=path=>{try{return readFileSync(path,"utf8");}catch{return undefined;}}):ReadonlySet<string>{
  const names=new Set<string>();
@@ -253,8 +254,8 @@ export function planOffloadV1(input:Readonly<{args:readonly string[];environment
  }
  const names:string[]=[];
  if(!anchored)names.push(`${virtual.package}=${nameOf(shipped)}`,...inside);
- const dependencyInputs=dependencyClosureV1([...directoryNames.keys()],[...direct.values()].flat());
- if(dependencyInputs===undefined)return decline("inputs-too-large","dependency closure");
+ const crateTypes=offloadCrateTypesOfV1(args),dependencyInputs=dependencyClosureV1([...directoryNames.keys()],[...direct.values()].flat(),undefined,(crateTypes.length>0?crateTypes:["bin"]).some(type=>type!=="lib"&&type!=="rlib"));
+ if(dependencyInputs===undefined)return decline("inputs-too-large","dependency closure: more than "+policy.limits.maximumClosureFiles+" artifacts");
  for(const [directory,name] of directoryNames){
   mappings.push({real:directory,virtual:name});
   for(const file of dependencyInputs.get(directory)??[])place(name+"/"+file,join(directory,file));

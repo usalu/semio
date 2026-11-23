@@ -21,8 +21,9 @@ pub fn parse_bytes(input: &[u8], policy: JsonMemberPolicy) -> Result<Value, Json
     parse(text, policy)
 }
 
-pub(super) fn normal_permit(demand:RetirementDemand,grant:RetainedCloneGrant)->Result<bool,ValueError>{
+pub(super) fn normal_permit(demand:RetirementDemand,grant:RetainedCloneGrant,started:bool)->Result<bool,ValueError>{
     if grant.maximum_items==0{return Ok(false);}
+    if grant.maximum_depth<demand.depth&&started{return Ok(false);}
     if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"JSON normal frontier exceeds original admitted depth"));}
     Ok(demand.copy_bytes<=grant.maximum_copy_bytes&&demand.capacity_bytes<=grant.maximum_capacity_bytes&&demand.release_bytes<=grant.maximum_release_bytes)
 }
@@ -150,7 +151,7 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
         let grant = effect.grant();
         let limit = available.min(OWNED_TURN_UNITS).min(grant.maximum_items).min(tail.len());
         let limit = if writing { limit.min(grant.maximum_copy_bytes) } else { limit };
-        if limit == 0 || !normal_permit(RetirementDemand { depth: self.frames.len() + 1, ..Default::default() }, grant)? {
+        if limit == 0 || !normal_permit(RetirementDemand { depth: self.frames.len() + 1, ..Default::default() }, grant, false)? {
             return Ok(None);
         }
         control.checkpoint()?;
@@ -208,7 +209,7 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
         let result=(||{
         for _ in 0..maximum_units{
             let remaining=normal_remaining(grant,self.normal_step_progress)?;let demand=self.normal_step_demands(input)?;
-            if !normal_permit(demand,remaining)?{break;}
+            if !normal_permit(demand,remaining,self.normal_step_progress!=RetainedCloneProgress::default())?{break;}
             control.checkpoint()?;
             if self.complete{if self.result.is_some(){let work=self.normal_step_work.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON grammar work counter overflow"))?;self.normal_step_progress=self.normal_step_progress.checked_add(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.normal_step_work=work;}return Ok(self.result.take());}
             control.admit_turn_capacity(remaining.maximum_capacity_bytes)?;
@@ -505,7 +506,7 @@ impl JsonValueProjection {
     pub fn step(&mut self,maximum_units:usize,maximum_bytes:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<DslValue>,ValueError>{
         let grant=effect.grant();self.normal_step_progress=Default::default();if maximum_bytes==0{return Ok(None);}
         for _ in 0..maximum_units{
-            let remaining=normal_remaining(grant,self.normal_step_progress)?;let demand=self.normal_step_demands()?;if !normal_permit(demand,remaining)?{break;}
+            let remaining=normal_remaining(grant,self.normal_step_progress)?;let demand=self.normal_step_demands()?;if !normal_permit(demand,remaining,self.normal_step_progress!=RetainedCloneProgress::default())?{break;}
             control.checkpoint()?;let before=control.owned_bytes();control.admit_turn_capacity(remaining.maximum_capacity_bytes)?;
             let mut released_bytes=0;let value=if let Some(retirement)=self.retirement.as_mut(){
                 use semio_framework_value::retirement::{RetirementCursor,RetirementStep};

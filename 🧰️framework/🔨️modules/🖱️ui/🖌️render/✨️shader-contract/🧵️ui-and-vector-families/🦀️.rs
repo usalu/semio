@@ -184,11 +184,11 @@ const UI_VERTEX_BUFFERS: &[VertexBufferSpec] = &[
     },
 ];
 
-/// 🩹️ The stencil-only silhouette mask pass: writes no color (`ColorWriteMask::None`), stamps the
-/// clip region into the stencil buffer (`Always`/`Replace`) so `UI_CONTENT_PIPELINE` can clip
-/// against it with an `Equal` test.
-pub const UI_MASK_PIPELINE: PipelineSpec = PipelineSpec {
-    label: "silhouette_mask_pipeline",
+/// 🩹️ The stencil-only viewport mask pass: writes no color (`ColorWriteMask::None`), stamps a world
+/// pass's viewport rectangle into the stencil buffer (`Always`/`Replace`) so the world content
+/// pipelines can clip against it with an `Equal` test.
+pub const VIEWPORT_MASK_PIPELINE: PipelineSpec = PipelineSpec {
+    label: "viewport_mask_pipeline",
     vertex_entry: "vs_main",
     fragment_entry: "fs_main",
     vertex_buffers: UI_VERTEX_BUFFERS,
@@ -207,8 +207,8 @@ pub const UI_MASK_PIPELINE: PipelineSpec = PipelineSpec {
     }),
 };
 
-/// 🖌️ The content pass: alpha-blended, clipped against `UI_MASK_PIPELINE`'s stencil silhouette via
-/// an `Equal` read (`write_mask: 0x00` — it reads the mask, never writes it).
+/// 🖌️ The content pass: alpha-blended, read against the stencil buffer with an `Equal` test
+/// (`write_mask: 0x00` — it never writes it); rectangular clips are the batch scissor.
 pub const UI_CONTENT_PIPELINE: PipelineSpec = PipelineSpec {
     label: "ui_pipeline",
     vertex_entry: "vs_main",
@@ -229,7 +229,7 @@ pub const UI_CONTENT_PIPELINE: PipelineSpec = PipelineSpec {
     }),
 };
 
-pub const UI_FAMILY: ShaderFamily = ShaderFamily { name: "ui", variants: &[ShaderVariant { name: "ui", wgsl: UI_SHADER, pipelines: &[UI_MASK_PIPELINE, UI_CONTENT_PIPELINE] }] };
+pub const UI_FAMILY: ShaderFamily = ShaderFamily { name: "ui", variants: &[ShaderVariant { name: "ui", wgsl: UI_SHADER, pipelines: &[VIEWPORT_MASK_PIPELINE, UI_CONTENT_PIPELINE] }] };
 //#endregion 🧵️UiFamily
 
 //#region 🔺️VectorFamily

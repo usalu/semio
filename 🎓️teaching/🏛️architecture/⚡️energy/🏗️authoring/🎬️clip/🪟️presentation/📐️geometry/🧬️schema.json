@@ -12,6 +12,8 @@
     "outline",
     "border_outline",
     "top_chips",
+    "chip_regions",
+    "safe_clearances",
     "title_text",
     "metrics"
   ],
@@ -34,6 +36,7 @@
     "outline": {
       "type": "array",
       "minItems": 4,
+      "maxItems": 4,
       "items": {
         "$ref": "#/$defs/point"
       }
@@ -41,6 +44,7 @@
     "border_outline": {
       "type": "array",
       "minItems": 4,
+      "maxItems": 4,
       "items": {
         "$ref": "#/$defs/point"
       }
@@ -50,7 +54,18 @@
       "minItems": 1,
       "maxItems": 2,
       "items": {
-        "$ref": "#/$defs/point"
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "number"
+          }
+        ],
+        "items": false,
+        "minItems": 2,
+        "maxItems": 2
       }
     },
     "title_text": {
@@ -144,6 +159,42 @@
           "exclusiveMinimum": 0
         }
       }
+    },
+    "chip_regions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/$defs/chip_region"
+      }
+    },
+    "safe_clearances": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ],
+      "properties": {
+        "top": {
+          "type": "number",
+          "minimum": 0
+        },
+        "right": {
+          "type": "number",
+          "minimum": 0
+        },
+        "bottom": {
+          "type": "number",
+          "minimum": 0
+        },
+        "left": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
     }
   },
   "$defs": {
@@ -186,6 +237,36 @@
       "items": false,
       "minItems": 2,
       "maxItems": 2
+    },
+    "chip_region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height",
+        "dock"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "dock": {
+          "const": "top"
+        }
+      }
     }
   }
 }

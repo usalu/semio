@@ -82,7 +82,7 @@ async fn produces_committed_diff() {
 /// 🩹️ Applying the committed diff to `before` yields the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: RewritingDiff = crate::standards::v1::subsets::any::io::text::diff::decode_rewriting_diff_json((*DIFF)).map(|mut value|{if let Some(parent)=&mut value.working_graph{let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json((*AFTER_CHILD)).expect("declared diff Semio child decodes");semio_s_artifact_trinity_jack_semio_content::materialize_jack_snapshot(&mut parent.content,child);}value}).expect("committed diff decodes");
+    let decoded: RewritingDiff = crate::standards::v1::subsets::any::io::text::diff::decode_rewriting_diff_json((*DIFF)).map(|mut value|{if let Some(parent)=&mut value.working_graph{let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json((*AFTER_CHILD)).expect("declared diff Semio child decodes");if let Some(content)=&mut parent.content{semio_s_artifact_trinity_jack_semio_content::materialize_jack_snapshot(content,child);}}value}).expect("committed diff decodes");
     let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies");
     assert_eq!(produced, expected_after(), "set-rule-layout-points/📍️places: the committed diff did not carry before to after");
 }

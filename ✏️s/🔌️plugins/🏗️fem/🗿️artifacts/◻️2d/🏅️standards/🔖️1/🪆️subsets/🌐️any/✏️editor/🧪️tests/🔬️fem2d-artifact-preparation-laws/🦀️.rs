@@ -51,6 +51,7 @@ fn admitted_document_mutations_make_bounded_progress_and_retire() {
         }
     }
     assert!(work.terminal_is_empty());
-    assert_eq!(released, allocated + capacity);
+    let issuers = 2 * (2 * std::mem::size_of::<usize>());
+    assert_eq!(released, allocated + capacity + issuers);
     assert!(matches!(close(&mut work, policy).result, Ok(RetainedCloneStep::Complete(progress)) if progress == Default::default()));
 }

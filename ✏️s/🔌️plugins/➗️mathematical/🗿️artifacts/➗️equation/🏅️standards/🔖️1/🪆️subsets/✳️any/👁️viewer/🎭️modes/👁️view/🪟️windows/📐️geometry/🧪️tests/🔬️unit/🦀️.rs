@@ -12,7 +12,7 @@ async fn render_produces_a_table_scene_with_one_row_per_point() {
     let document = EquationSnapshot::default();
     let points = document.geometry.points.clone();
     assert!(!points.is_empty());
-    let node = render(&document).expect("table surface");
+    let node = render(&document, semio_plugin::Locale::En).expect("table surface");
     let scene = semio_plugin::artifact_app_laws::built_surface_scene::<semio_ui_scene::TableScene>(&node).expect("the assembled table scene: the spine with its column/row lanes merged back in");
     let columns: Vec<String> = serde_json::from_str::<Vec<serde_json::Value>>(&scene.columns_json).unwrap().into_iter().map(|column| column["label"].as_str().expect("column label").to_string()).collect();
     assert_eq!(columns, ["#", "x", "y"]);

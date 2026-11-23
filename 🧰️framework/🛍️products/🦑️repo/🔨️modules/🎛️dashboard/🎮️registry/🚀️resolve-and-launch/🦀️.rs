@@ -88,7 +88,7 @@ impl Registry {
         }
         let mut values: Vec<Option<Value>> = Vec::with_capacity(parameters.len());
         for parameter in &parameters {
-            let typed = chosen.iter().rev().find(|(key, _)| key == &parameter.id).map(|(_, text)| Value { text: canonical_value(parameter, text), stated: true });
+            let typed = chosen.iter().rev().find(|(key, _)| key == &parameter.id).map(|(_, text)| Value { text: text.to_string(), stated: true });
             let declared = pins.iter().find(|(key, _)| key == &parameter.id).map(|(_, text)| (text, true)).or_else(|| parameter.default.as_ref().map(|text| (text, false)));
             let value = match (typed, declared) {
                 (Some(value), _) => Some(value),

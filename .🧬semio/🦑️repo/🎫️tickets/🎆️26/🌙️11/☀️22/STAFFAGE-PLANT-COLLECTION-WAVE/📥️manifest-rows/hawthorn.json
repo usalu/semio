@@ -1,0 +1,57 @@
+{
+  "id": "hawthorn",
+  "category": "vegetation",
+  "title": {
+    "en": "Common Hawthorn",
+    "de": "Eingriffeliger Weißdorn"
+  },
+  "heightM": 6,
+  "widthM": 6.3942,
+  "powerW": 0,
+  "poses": [
+    "summer-calm",
+    "may-blossom",
+    "fresh-breeze",
+    "gale",
+    "autumn-haws",
+    "wet-snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "hawthorn-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A dense small tree on a short leaning stem: six crooked limbs and an upright centre limb from one head under a low dome of small lobed leaves that reaches down to 1.2 m, with blossom and haws as seasonal loads of the heaviest wood of the collection.",
+    "de": "Ein dichter kleiner Baum auf kurzem, geneigtem Stamm: sechs knorrige Äste und ein aufrechter Mittelast aus einem Kopf unter einer tiefen Kuppel aus kleinen gelappten Blättern, die bis auf 1,2 m herabreicht, mit Blüten und Früchten als jahreszeitlichen Lasten des schwersten Holzes der Sammlung."
+  },
+  "completion": "authored"
+}

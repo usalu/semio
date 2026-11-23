@@ -52,8 +52,8 @@ pub fn scene(spec: &PlaybookSpec) -> EventFeedScene {
     EventFeedScene { entries_json: semio_framework_pack_json::to_json_string(&entries), follow: Some(false), activate_action: None, domain_id: None }
 }
 
-pub fn render(spec: &PlaybookSpec) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    semio_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_ACTIVITY, semio_ui_contract::SurfaceKind::EventFeed, &scene(spec))
+pub fn render(spec: &PlaybookSpec, labels: &crate::editor::playbook::terminology::PlaybookPlayLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    semio_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_ACTIVITY, semio_ui_contract::SurfaceKind::EventFeed, &scene(spec), labels.surface_activity.as_str(), None)
 }
 
 #[cfg(test)]

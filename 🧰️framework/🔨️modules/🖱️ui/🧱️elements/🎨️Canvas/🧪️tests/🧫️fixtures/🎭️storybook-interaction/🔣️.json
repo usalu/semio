@@ -26,8 +26,8 @@
   "glass": {
     "window": "flow",
     "alternative": "reference",
-    "content": "silhouette-visual-content",
-    "label": "silhouette-visual-label",
+    "content": "frame-visual-content",
+    "label": "frame-visual-label",
     "layout": "edgeless",
     "transparentClass": "bg-transparent"
   }

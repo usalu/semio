@@ -190,6 +190,12 @@ fn subject(case: &Case) -> SubjectRef {
     SubjectRef::new(&case.id, format!("catalogue[id={}]", case.id), loc(&case.id, &case.id))
 }
 
+/// 🧾 Raw outcomes of one top-level catalogue evaluation: registry reads logged earlier on this thread belong to other checks and are dropped, so the citations of the outcomes never depend on the evaluation order.
+pub fn evaluate_standalone(entry_id: &str, case: &Case) -> R {
+    let _ = semio_s_plugin_norm_compliance::drain_ndp_reads();
+    evaluate_outcomes(entry_id, case)
+}
+
 /// 🧾 Raw outcomes of one catalogue entry, `Err` with the reason when inputs are missing or the id is unknown.
 pub fn evaluate_outcomes(entry_id: &str, case: &Case) -> R {
     (entry(entry_id).ok_or_else(|| format!("unknown catalogue entry {entry_id}"))?.eval)(case)
@@ -199,7 +205,7 @@ pub fn evaluate_outcomes(entry_id: &str, case: &Case) -> R {
 pub fn evaluate_case(entry_id: &str, case: &Case) -> Vec<CheckResult> {
     match entry(entry_id) {
         None => outcomes_to_results(entry_id, case, Err(String::new())),
-        Some(e) => outcomes_to_results(entry_id, case, (e.eval)(case)),
+        Some(_) => outcomes_to_results(entry_id, case, evaluate_standalone(entry_id, case)),
     }
 }
 

@@ -40,10 +40,11 @@
     "messages": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["stretched", "expired"],
+      "required": ["stretched", "expired", "clamped"],
       "properties": {
         "stretched": { "$ref": "#/definitions/Text" },
-        "expired": { "$ref": "#/definitions/Text" }
+        "expired": { "$ref": "#/definitions/Text" },
+        "clamped": { "$ref": "#/definitions/Text" }
       }
     }
   },

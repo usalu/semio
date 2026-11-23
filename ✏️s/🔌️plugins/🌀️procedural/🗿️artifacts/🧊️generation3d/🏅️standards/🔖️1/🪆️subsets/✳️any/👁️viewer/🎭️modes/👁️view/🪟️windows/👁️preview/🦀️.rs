@@ -251,7 +251,7 @@ pub fn preview_selection_json(config: &Generation3dViewConfig, payload: &ViewPre
 /// 👁️ Pure `(Generation3dSnapshot, Generation3dViewConfig, marks) -> BuiltNode` read: the camera,
 /// shading mode, LOD and sun all come from the viewer's own config, hover/selection from the
 /// framework-owned `graph` domain, geometry from the ephemeral evaluation when one exists.
-pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_os_flow::FlowEvalSession>, run: Option<&semio_plugin::ToolRunView>, marks: &Generation3dViewMarks, labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels, windows: &semio_plugin::TreeWindows<'_>, is_de: bool, hover_groups: &mut Option<semio_s_artifact_procedural_3d_preview_eval::PreviewHoverGroups>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_os_flow::FlowEvalSession>, run: Option<&semio_plugin::ToolRunView>, marks: &Generation3dViewMarks, labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels, windows: &semio_plugin::TreeWindows<'_>, locale: semio_plugin::Locale, hover_groups: &mut Option<semio_s_artifact_procedural_3d_preview_eval::PreviewHoverGroups>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let evaluation = preview_eval::PreviewEvaluation::from_json(eval_json.unwrap_or_default());
     let mut payload = preview_payload(&evaluation, &document.host_snapshot, config, session, marks);
     *hover_groups = Some(std::mem::take(&mut payload.hover_groups));
@@ -289,6 +289,6 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
     let graph_ids: Vec<_> = marks.hovered.iter().cloned().collect();
     let hover = preview_eval::PreviewChannelHover::new(&document.host_snapshot, &graph_ids, None);
     let hovered_ports = hover.matching(rows.iter().map(|row| row.id.as_str()));
-    semio_s_procedural_core_semantic_ui::scene_with_channel_values(surface, windows, "procedural3d-view", "generation3d-view-values", &semio_s_procedural_core_semantic_ui::ChannelValueLabels::new(is_de, labels.graph_input_port.as_str(), labels.graph_output_port.as_str()), &rows, &hovered_ports)
+    semio_s_procedural_core_semantic_ui::scene_with_channel_values(surface, windows, "procedural3d-view", "generation3d-view-values", &semio_s_procedural_core_semantic_ui::ChannelValueLabels::new(locale, labels.graph_input_port.as_str(), labels.graph_output_port.as_str()), &rows, &hovered_ports)
 }
 //#endregion 🔖️Render

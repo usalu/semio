@@ -143,8 +143,9 @@ function primaryUnion(polygons: Point[][]): Point[][] {
           const denominator = dx * ey - dy * ex;
           const along = (q: Point): number => ((q.x - a.x) * dx + (q.y - a.y) * dy) / length2;
           const distance = (q: Point): number => Math.abs((q.x - a.x) * dy - (q.y - a.y) * dx) / Math.sqrt(length2);
-          if (Math.abs(denominator) < EPS * Math.sqrt(length2) * portable.hypot(ex, ey)) {
-            for (const q of [c, d]) if (distance(q) < SAME_M) cuts.add(along(q));
+          const near = [c, d].filter((q) => distance(q) < SAME_M);
+          if (near.length === 2 || Math.abs(denominator) < EPS * Math.sqrt(length2) * portable.hypot(ex, ey)) {
+            for (const q of near) cuts.add(along(q));
             return;
           }
           const t = ((c.x - a.x) * ey - (c.y - a.y) * ex) / denominator;

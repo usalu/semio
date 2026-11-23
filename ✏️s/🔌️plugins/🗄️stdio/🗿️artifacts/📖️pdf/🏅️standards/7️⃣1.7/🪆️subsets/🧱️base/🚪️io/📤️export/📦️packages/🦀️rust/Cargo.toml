@@ -57,3 +57,6 @@ semio-s-artifact-stdio-pdf-mut-family-9 = { path = "../../../../../🖨️x/🚪
 semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-s-artifact-stdio-pdf-test-oracle = { path = "../../../../../../../../🔮️oracles/📦️packages/🦀️rust" }

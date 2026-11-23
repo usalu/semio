@@ -29,26 +29,26 @@ function solve(node: Node, rect: Rect, separator: number, stacks: Record<string,
   });
 }
 
-function solveFixture(tokenPixels: number): Record<string, Rect> {
+function solveFixture(separator: number, inset: number): Record<string, Rect> {
   const viewport = fixture.viewport;
   const stacks: Record<string, Rect> = {};
-  solve(fixture.layout as Node, { x: tokenPixels, y: tokenPixels, width: viewport.width - tokenPixels * 2, height: viewport.height - tokenPixels * 2 }, tokenPixels, stacks);
+  solve(fixture.layout as Node, { x: inset, y: inset, width: viewport.width - inset * 2, height: viewport.height - inset * 2 }, separator, stacks);
   return stacks;
 }
 
 describe("📐️ dock axis geometry", () => {
   
 
-  test("each axis reserves exactly one themed separator before weighted distribution", () => {
-    const actual = solveFixture(fixture.oracleSample.tokenPixels);
+  test("abutting frames share one border line: each axis reserves exactly the fixture separator before weighted distribution", () => {
+    const actual = solveFixture(fixture.oracleSample.separatorPixels, fixture.canvasInsetPixels);
     for (const [id, expected] of Object.entries(fixture.oracleSample.stacks)) {
       for (const field of ["x", "y", "width", "height"] as const) expect(actual[id]![field]).toBeCloseTo(expected[field], 6);
     }
     const left = actual.left!;
     const top = actual["right-top"]!;
     const bottom = actual["right-bottom"]!;
-    expect(top.x - (left.x + left.width)).toBeCloseTo(fixture.oracleSample.tokenPixels, 6);
-    expect(bottom.y - (top.y + top.height)).toBeCloseTo(fixture.oracleSample.tokenPixels, 6);
+    expect(top.x - (left.x + left.width)).toBeCloseTo(fixture.oracleSample.separatorPixels, 6);
+    expect(bottom.y - (top.y + top.height)).toBeCloseTo(fixture.oracleSample.separatorPixels, 6);
   });
 
   test("React moves a percentage-weighted split by the physical pointer delta", () => {

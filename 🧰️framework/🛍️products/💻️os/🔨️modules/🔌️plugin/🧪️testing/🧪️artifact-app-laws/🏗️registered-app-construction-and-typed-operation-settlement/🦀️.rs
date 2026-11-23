@@ -112,7 +112,7 @@ pub async fn new_app_with_registry_and_members<A: ArtifactApp + Default, M: stor
     *new_app_with_registry_boxed_and_members::<A, M>(manifest, actor, mounted_policy, identity).await
 }
 
-/// 📦️ [`new_app_with_registry_and_members`] whose app lives on the heap from its construction, never as a megabyte inline value.
+/// 📦️ [`new_app_with_registry_and_members`] whose app handle lives on the heap from its construction.
 pub async fn new_app_with_registry_boxed_and_members<A: ArtifactApp + Default, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(manifest: fn() -> App, actor: protocol::ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Box<VcsArtifactApp<A, M>> {
     publish_framework_schemas();
     let definition = manifest().definition;
@@ -161,7 +161,7 @@ where
     *new_registered_app_boxed_with_members::<A, M, Manifest>(manifest, actor, mounted_policy, identity).await
 }
 
-/// 📦️ [`new_registered_app_with_members`] whose app lives on the heap from its construction: a mounted instance is about a megabyte inline, so laws that hold several of them across awaits keep the box, never the value.
+/// 📦️ [`new_registered_app_with_members`] whose app lives on the heap from its construction: laws that hold several instances across awaits may keep the box.
 pub async fn new_registered_app_boxed_with_members<A, M, Manifest>(manifest: Manifest, actor: protocol::ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Box<VcsArtifactApp<A, M>>
 where
     A: ArtifactApp + Default,
@@ -492,11 +492,12 @@ pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A, mounted_policy: s
         let grant = fixture_close_grant(mounted_policy);
         let work_before = cx.original_work_units_spent();
         let mut batch_progress = RetainedCloneProgress::default();
-        let mut step;
+        let mut step = semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default());
         let mut batched = 0usize;
         loop {
             let demand = app.close_retirement_demands(grant.maximum_copy_bytes)?;
             let available = semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx, grant);
+            if batched > 0 && available.maximum_copy_bytes < grant.maximum_copy_bytes { break; }
             last_quote = Some((demand, available, cx.fuel_remaining()));
             step = semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
                 let step = app.close_step(same, grant)?;

@@ -220,11 +220,13 @@ pub fn meta_record(utility: &str) -> DslValue {
 }
 
 /// 🖼️ Publishes the records as the window's canvas surface, framed on `bounds` until the author has navigated.
-pub fn canvas_surface(surface_id: &str, viewport: store::Viewport2d, framing: Option<semio_plugin::Canvas2dFraming>, records: &[DslValue]) -> UiAssemblyResult<BuiltNode> {
+pub fn canvas_surface(surface_id: &str, viewport: store::Viewport2d, framing: Option<semio_plugin::Canvas2dFraming>, records: &[DslValue], name: &str) -> UiAssemblyResult<BuiltNode> {
     semio_plugin::scene_surface(
         surface_id,
         semio_ui_contract::SurfaceKind::Canvas2d,
         &semio_plugin::Canvas2dScene { framing, camera_x: viewport.x, camera_y: viewport.y, zoom: viewport.zoom, layers_json: semio_framework_pack_json::to_json_string(&records.to_vec()), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        name,
+        None,
     )
 }
 //#endregion 🔖️CanvasRecords

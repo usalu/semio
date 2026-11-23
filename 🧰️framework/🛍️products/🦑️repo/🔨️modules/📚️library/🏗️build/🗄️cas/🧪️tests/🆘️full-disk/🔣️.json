@@ -1,0 +1,18 @@
+{
+  "$comment": "🆘️ Authored cases of the first collection of the reclaim commands: the command line after `repo`, the free bytes of the partition (`null` is not measurable) and whether the host store is collected before anything of the command writes. Language-neutral; read by the TypeScript rule.",
+  "reserveBytes": 67108864,
+  "cases": [
+    {"name": "cas gc on a full disk", "args": ["cache","cas","gc"], "freeBytes": 0, "collects": true},
+    {"name": "plain gc on a full disk", "args": ["cache","gc"], "freeBytes": 0, "collects": true},
+    {"name": "cas gc with a language", "args": ["cache","cas","gc","--lang=de"], "freeBytes": 1024, "collects": true},
+    {"name": "cas gc just below the reserve", "args": ["cache","cas","gc"], "freeBytes": 67108863, "collects": true},
+    {"name": "cas gc at the reserve", "args": ["cache","cas","gc"], "freeBytes": 67108864, "collects": false},
+    {"name": "cas gc with room", "args": ["cache","cas","gc"], "freeBytes": 1073741824, "collects": false},
+    {"name": "preview never deletes", "args": ["cache","cas","gc","--dry-run"], "freeBytes": 0, "collects": false},
+    {"name": "area gc is owned by its lease", "args": ["cache","gc","--area","x"], "freeBytes": 0, "collects": false},
+    {"name": "status writes nothing to reclaim", "args": ["cache","cas","status"], "freeBytes": 0, "collects": false},
+    {"name": "verify is no reclaim", "args": ["cache","verify","--deep"], "freeBytes": 0, "collects": false},
+    {"name": "unmeasurable partition is left alone", "args": ["cache","cas","gc"], "freeBytes": null, "collects": false},
+    {"name": "other commands are left alone", "args": ["run","x:y"], "freeBytes": 0, "collects": false}
+  ]
+}

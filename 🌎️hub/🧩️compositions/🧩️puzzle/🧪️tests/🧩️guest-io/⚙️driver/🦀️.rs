@@ -91,7 +91,7 @@ impl Actor{
   let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|_|panic!("actual test source supports paid retirement"));
   for _ in 0..law["execution"]["maximumTurns"].as_u64().unwrap(){
    if owner.terminal_is_empty(){return}
-   self.turn(|_,_,cx|cx.with_original_retirement(|cx|{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;Ok(())}));
+   self.turn(|_,_,cx|cx.with_original_retirement(|cx|{let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.selected_demand(body)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect))?;Ok(())}));
   }
   panic!("actual test source did not reach paid terminal retirement")
  }

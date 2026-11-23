@@ -7,7 +7,7 @@ export function descriptorEmitterPrerequisiteResourceV1(intent:Readonly<{mode:st
 export type DescriptorEmitterStateV1=Readonly<{kind:"fresh"}|{kind:"missing"}|{kind:"stale";changed:number;first:string}|{kind:"unreadable";reason:string}>;
 export type DescriptorEmitterPrerequisitePortsV1=Readonly<{
  inspect():Promise<DescriptorEmitterStateV1>;
- publish():Promise<void>;
+ publish(publishing:(body:()=>Promise<void>)=>Promise<void>):Promise<void>;
  serialize<T>(body:()=>Promise<T>):Promise<T>;
  report(line:string):void;
  signal?:AbortSignal;
@@ -23,25 +23,37 @@ export function descriptorEmitterRebuildReasonV1(state:Exclude<DescriptorEmitter
  }
 }
 
+/** 🧾️ The failure text with every child of an aggregate failure and the cause chain named, so the generic headline never hides the root cause. */
+export function descriptorEmitterFailureDetailV1(cause:unknown,depth:number=0):string{
+ const text=cause instanceof Error?cause.message:String(cause);
+ const children=cause instanceof AggregateError?cause.errors.map((child,index)=>"["+(index+1)+"] "+descriptorEmitterFailureDetailV1(child,depth+1)).filter(line=>!text.includes(line)).join("; "):"";
+ const root=cause instanceof Error&&cause.cause!==undefined&&depth<4&&!text.includes(String((cause.cause as Error)?.message??cause.cause))?" <- "+descriptorEmitterFailureDetailV1(cause.cause,depth+1):"";
+ return text+(children?" ("+children+")":"")+root;
+}
+
 /** 🚧️ Wraps a failed prerequisite build so the dev learns the exact target to run for the full output, in English and German. */
 export function descriptorEmitterBuildFailureV1(cause:unknown):Error{
- const detail=cause instanceof Error?cause.message:String(cause);
+ const detail=descriptorEmitterFailureDetailV1(cause);
  return new Error(`Descriptor emitter prerequisite build failed: ${detail}. Run "repo run ${DESCRIPTOR_EMITTER_BUILD_TARGET_V1}" for the full output. / Der Voraussetzungs-Build des Deskriptor-Emitters ist fehlgeschlagen: ${detail}. "repo run ${DESCRIPTOR_EMITTER_BUILD_TARGET_V1}" zeigt die vollständige Ausgabe.`,{cause});
 }
 
 /** 🥾️ Makes the published descriptor emitter current before a component build: a fresh one is left alone, a missing, stale or unusable one is rebuilt and republished through the `:build` path.
- * The inspection holds no custody when it returns, so the publisher never waits on its own reader; `serialize` lets one of several concurrent callers republish while the rest re-inspect and find it fresh.
+ * The inspection holds no custody when it returns, so the publisher never waits on its own reader. The build, with its registry fetch, runs outside `serialize`; only the final publication is serialized, where one of several concurrent callers publishes while the rest re-inspect and find it fresh, so the tool singleton is never held while waiting for the registry fetch lease (rank 8) of another build.
  * @see ../🌡️freshness/🟦️.ts */
 export async function ensureFreshDescriptorEmitterWithV1(ports:DescriptorEmitterPrerequisitePortsV1):Promise<"fresh"|"built">{
- if((await ports.inspect()).kind==="fresh")return "fresh";
- return ports.serialize(async()=>{
-  const state=await ports.inspect();
-  if(state.kind==="fresh")return "fresh";
-  ports.report(descriptorEmitterRebuildReasonV1(state));
-  try{await ports.publish();}catch(error){
-   ports.signal?.throwIfAborted();
-   throw descriptorEmitterBuildFailureV1(error);
-  }
-  return "built";
- });
+ const first=await ports.inspect();
+ if(first.kind==="fresh")return "fresh";
+ ports.report(descriptorEmitterRebuildReasonV1(first));
+ let published=false;
+ try{
+  await ports.publish(body=>ports.serialize(async()=>{
+   if((await ports.inspect()).kind==="fresh")return;
+   await body();
+   published=true;
+  }));
+ }catch(error){
+  ports.signal?.throwIfAborted();
+  throw descriptorEmitterBuildFailureV1(error);
+ }
+ return published?"built":"fresh";
 }

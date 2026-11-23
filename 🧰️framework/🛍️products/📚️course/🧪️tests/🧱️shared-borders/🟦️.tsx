@@ -4,7 +4,7 @@
  * segmented choice is a frame whose buttons are cells, or a flush row; a row button and a problem note of a flush card
  * have no border utility. The stylesheet draws no border on a row of a shared list and no dashed guess; cells laid side
  * by side declare no divider at all: the compositor resolves every divider and every hover, focus and selection stroke
- * of a cell as a closed silhouette, and `lightningcss` (the CSS engine Tailwind runs on) is the third-party oracle that
+ * of a cell as a closed outline, and `lightningcss` (the CSS engine Tailwind runs on) is the third-party oracle that
  * the stylesheet declares no state line and no cell divider.
  *
  * @see ../../🎯️targets/⚛️react/🔨️modules/🪟️chrome/🟦️.tsx
@@ -316,7 +316,7 @@ describe("🛟️ the load fallback and the quiz actions", () => {
     expect(source.match(/<CardAction[^>]*\{\.\.\.CELL\}/gu)?.length).toBe(3);
   });
 
-  it("stacks the result cards with no gap so they interlock", () => {
+  it("stacks the result cards with no gap so they abut", () => {
     const source = readFileSync(resolve(import.meta.dirname, "../../🎯️targets/⚛️react/🔨️modules/🏁️results/🟦️.tsx"), "utf8");
     expect(source).toMatch(/className="course-results flex flex-col"/u);
   });

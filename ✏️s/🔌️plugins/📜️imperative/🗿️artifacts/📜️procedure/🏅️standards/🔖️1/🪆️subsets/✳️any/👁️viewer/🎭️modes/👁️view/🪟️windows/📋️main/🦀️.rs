@@ -32,7 +32,7 @@ pub fn render(scene: &ProcedureScene, view_state: &semio_plugin::ViewModel) -> s
     let path = &scene.path;
     let rows = path.steps.iter().enumerate().map(|(index, step)| vec![(index + 1).to_string(), step.id.clone(), step.kind.clone()]).collect();
     let columns = if view_state.locale == semio_ui_locale::Locale::De { vec!["#".into(), "ID".into(), "Art".into()] } else { vec!["#".into(), "Id".into(), "Kind".into()] };
-    TableWindowKit::render(&TableView { columns, rows })
+    TableWindowKit::render(&TableView { columns, rows }, view_state.locale)
 }
 //#endregion 🔖️Render
 

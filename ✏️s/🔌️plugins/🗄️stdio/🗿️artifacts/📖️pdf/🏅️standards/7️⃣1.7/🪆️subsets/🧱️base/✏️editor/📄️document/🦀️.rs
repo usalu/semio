@@ -1,10 +1,14 @@
 //! 📄️ Document and page properties edited through typed PDF mutations.
 
 use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::schema::{diff::PdfPageBox, mutations::*, snapshot::*};
-use semio_plugin::{Fault, FaultCode, FaultOrigin};
+use semio_plugin::Fault;
+
+#[path = "🚨️faults/🦀️.rs"]
+mod faults;
+pub use self::faults::*;
 
 pub fn fault(message: impl Into<String>) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new("stdio.pdf.page-edit"), message)
+    refuse(PdfFault::PageEdit, message)
 }
 
 /// 📝️ Appends a position-only PDF text adjustment in original font units.

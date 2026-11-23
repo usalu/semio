@@ -76,7 +76,7 @@ pub(super) fn evaluated_preview_payload(owner: &mut ModuleGeometryOwner, host_sn
     (json_to_string(&Value::Array(meshes)), json_to_string(&Value::Array(instances)))
 }
 
-pub(super) fn render_preview_body(owner: &mut ModuleGeometryOwner, payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltNode> {
+pub(super) fn render_preview_body(owner: &mut ModuleGeometryOwner, payload: &ModuleRenderPayload, labels: &ModuleLabels) -> UiAssemblyResult<BuiltNode> {
     let slug = payload.example_id.as_str();
     let Some(snapshot_json) = learning_program_json(slug) else {
         return text_node(format!("Unknown learning example: {slug}"));
@@ -85,7 +85,7 @@ pub(super) fn render_preview_body(owner: &mut ModuleGeometryOwner, payload: &Mod
     let params = effective_params(payload);
     let (meshes_json, instances_json) = evaluated_preview_payload(owner, &host_snapshot, &params);
     host_snapshot.retire_cold();
-    scene_surface(PREVIEW_SURFACE, SurfaceKind::World3d, &world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("single", &[], None), &WorldSunConfig::default()))
+    scene_surface(PREVIEW_SURFACE, SurfaceKind::World3d, &world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("single", &[], None), &WorldSunConfig::default()), labels.preview_surface.as_str(), None)
 }
 //#endregion 🔖️Preview
 
@@ -145,9 +145,8 @@ pub(super) fn render_question_control(question: &PlaybookBlock, value: &Value, p
     let args = value_map(args)?;
     if matches!(question.kind.as_str(), "text" | "longText") {
         let scene = text_parameter_scene(question, value, payload, &args);
-        let mut control = scene_surface(&format!("playbook-module.{key}.editor"), SurfaceKind::TextEditor, &scene)?;
+        let mut control = scene_surface(&format!("playbook-module.{key}.editor"), SurfaceKind::TextEditor, &scene, &question.label, None)?;
         control.disabled = !payload.interactive;
-        control.accessibility.label = Some(ui_label(&question.label)?);
         let wrapper = ui_admit(field(ui_label(&question.label)?).try_id(format!("playbook-module.{key}")))?;
         return ui_admit(ui_admit(wrapper.try_child(control))?.try_build());
     }

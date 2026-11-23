@@ -109,6 +109,7 @@ export function observationLookupClockV1():Record<string,number>;
 export function observationRowFreshV1(row:unknown):boolean;
 /** 🏃️ The running validation round, if any. */
 export function observationRoundV1():object|undefined;
+export function forgetRoundReadsV1():void;
 /** 🔂️ Runs `compute` inside one validation round (the open one when there is one), so stored facts and memoized computations are validated once per round. */
 export function withObservationRoundV1<T>(compute:()=>T):T;
 /** ▶️ Runs a computation with its observations detached from the running inference; returns its rows and the shared row arrays it reused. */
@@ -146,7 +147,7 @@ export function inferenceHeaderLine(path:string):string|null;
 /** 🖋️ A persisted record header with its fact blocks expanded. */
 export function readInferenceHeaderV1(path:string):{digest:string;resultSha256:string;authorityObservations:readonly SourceObservationV1[];blocks:readonly string[];observations:readonly SourceObservationV1[]};
 /** ✅️ Rechecks untrusted captured facts without admitting a provider or renewing Source authority. */
-export function observationsHold(observations:readonly unknown[],limit?:number,stableDirectories?:Set<string>,symlinks?:Set<string>|true,signal?:AbortSignal,onStale?:((row:SourceObservationV1)=>void)|undefined,onVerified?:(rows:number)=>void):Promise<boolean>;
+export function observationsHold(observations:readonly unknown[],limit?:number,stableDirectories?:Set<string>,symlinks?:Set<string>|true,signal?:AbortSignal,onStale?:((row:SourceObservationV1)=>void)|undefined,onVerified?:(rows:number)=>void,exhaustive?:boolean):Promise<boolean>;
 export function observationsHoldWithinRoundV1(observations:readonly unknown[],limit:number,signal?:AbortSignal,onStale?:(row:SourceObservationV1)=>void,onVerified?:(rows:number)=>void):Promise<boolean>;
 /** 📊️ Exposes owned computation counts without affecting admission. */
 export function projectInferenceCountsV1():Record<string,number>;

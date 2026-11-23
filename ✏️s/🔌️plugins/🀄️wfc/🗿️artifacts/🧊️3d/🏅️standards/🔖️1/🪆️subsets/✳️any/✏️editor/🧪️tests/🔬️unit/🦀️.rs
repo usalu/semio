@@ -147,7 +147,7 @@ fn both_window_bodies_render_for_every_example() {
     let transient = crate::editor::wfc3d::transient::Wfc3dTransient::default();
     for document in [crate::examples::two_room_corridor::snapshot(), crate::examples::wall_roof_facade_strip::snapshot(), crate::examples::tower_stack::snapshot()] {
         for body in [graph::WFC_GRAPH_BODY, preview::WFC_3D_PREVIEW_BODY] {
-            let tree = render_body(body, &document, &config, &transient, None, None).unwrap_or_else(|error| panic!("{body} must render: {error:?}"));
+            let tree = render_body(body, &document, &config, &transient, None, None, semio_ui_locale::Locale::En).unwrap_or_else(|error| panic!("{body} must render: {error:?}"));
             assert!(!format!("{tree:?}").is_empty());
         }
     }
@@ -155,7 +155,7 @@ fn both_window_bodies_render_for_every_example() {
 
 #[test]
 fn an_unknown_body_key_renders_a_label_instead_of_failing() {
-    assert!(render_body("nope", &document(), &Wfc3dConfig::default(), &crate::editor::wfc3d::transient::Wfc3dTransient::default(), None, None).is_ok());
+    assert!(render_body("nope", &document(), &Wfc3dConfig::default(), &crate::editor::wfc3d::transient::Wfc3dTransient::default(), None, None, semio_ui_locale::Locale::En).is_ok());
 }
 
 /// 🕸️ The graph view drops `z` deliberately: the canvas is a plan of an arbitrary graph, and the
@@ -429,7 +429,7 @@ async fn mounted_graph3d_preview_is_bound_to_its_render_revision() {
     let mut cache = crate::editor::wfc3d::transient::testing::solved_preview(&document);
     cache.source_revision = vec![1;32];
     let render = |doc: &semio_plugin::ArtifactView<'_, crate::Wfc3dSnapshot>, cache: &crate::editor::wfc3d::transient::Wfc3dTransient| {
-        let tree = crate::editor::wfc3d::render_with_transient(preview::WFC_3D_PREVIEW_BODY, doc, &cfg, &semio_plugin::TransientView { snapshot: cache, window: None }).unwrap();
+        let tree = crate::editor::wfc3d::render_with_transient(preview::WFC_3D_PREVIEW_BODY, doc, &cfg, &semio_plugin::TransientView { snapshot: cache, window: None }, semio_ui_locale::Locale::En).unwrap();
         tree_json(tree)
     };
     let empty = render(&doc, &Default::default());
@@ -457,13 +457,13 @@ async fn mounted_live_fill_obeys_the_portable_revision_contract() {
             Some(revision) => semio_plugin::ArtifactView::with_render_context(&document, &history, semio_plugin::ChildContentView::EMPTY, semio_plugin::AppRenderOperationContext { app_instance_id: 1, base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(1), canonical_base_revision: revision, mounted_policy: semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT }, "wfc3d", None).await,
             None => semio_plugin::ArtifactView::new(&document, &history),
         };
-        let baseline = crate::editor::wfc3d::render_with_transient(preview::WFC_3D_PREVIEW_BODY, &doc, &cfg, &lane).unwrap();
+        let baseline = crate::editor::wfc3d::render_with_transient(preview::WFC_3D_PREVIEW_BODY, &doc, &cfg, &lane, semio_ui_locale::Locale::En).unwrap();
         let payload = crate::editor::wfc3d::modes::edit::tools::fill::Wfc3dFillTickPayload { source_revision: source.clone(), assignments: document.slots.iter().map(|slot| (slot.id.clone(), Some(document.tiles[0].id.clone()))).collect(), contradiction: false, done: false, trace: Vec::new() };
         let identity = semio_framework_tool_run::ToolRunIdentity::new(semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 9 }, source.try_into().unwrap_or([9;32]));
         let mut run = semio_plugin::ToolRunView::new("fill", identity, semio_framework_tool_run::ToolRunState::Running);
         run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(crate::editor::wfc3d::modes::edit::tools::fill::encode_fill_payload(&payload)));
         let mut doc = doc.with_tool_run(Some(run));
-        let actual = crate::editor::wfc3d::render_with_transient(preview::WFC_3D_PREVIEW_BODY, &doc, &cfg, &lane).unwrap();
+        let actual = crate::editor::wfc3d::render_with_transient(preview::WFC_3D_PREVIEW_BODY, &doc, &cfg, &lane, semio_ui_locale::Locale::En).unwrap();
         let different = tree_json(actual) != tree_json(baseline);
         retire_run(doc.take_tool_run().expect("the run is bound"));
         assert_eq!(different, case["visible"].as_bool().unwrap(), "{}", case["id"]);
@@ -490,8 +490,8 @@ fn completed_live_preview_uses_authoritative_assignments_and_partial_preview_kee
         let mut run = semio_plugin::ToolRunView::new("fill", identity, state);
         run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(fill::encode_fill_payload(&payload)));
         let expected = Wfc3dTransient { source_revision: revision.to_vec(), assignments: vec![Wfc3dAssignment { slot_id: slot, tile_id: tile("expected") }], ..Default::default() };
-        let actual = crate::editor::wfc3d::render_body(preview::WFC_3D_PREVIEW_BODY, &document, &config, &Wfc3dTransient::default(), Some(&run), Some(revision)).unwrap();
-        let baseline = crate::editor::wfc3d::render_body(preview::WFC_3D_PREVIEW_BODY, &document, &config, &expected, None, Some(revision)).unwrap();
+        let actual = crate::editor::wfc3d::render_body(preview::WFC_3D_PREVIEW_BODY, &document, &config, &Wfc3dTransient::default(), Some(&run), Some(revision), semio_ui_locale::Locale::En).unwrap();
+        let baseline = crate::editor::wfc3d::render_body(preview::WFC_3D_PREVIEW_BODY, &document, &config, &expected, None, Some(revision), semio_ui_locale::Locale::En).unwrap();
         retire_run(run);
         assert_eq!(tree_json(actual), tree_json(baseline), "{}", case["id"]);
     }

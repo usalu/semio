@@ -1,0 +1,23 @@
+import {createRequire} from "node:module";
+import {resolve} from "node:path";
+import {fileURLToPath} from "node:url";
+const ticket = fileURLToPath(new URL(".", import.meta.url));
+const require = createRequire(resolve(ticket, "../../../../../../../🏢️semio-tech/🎡️play/package.json"));
+const {chromium} = require("playwright");
+const base = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:6047/";
+const browser = await chromium.launch({args:["--in-process-gpu","--enable-unsafe-swiftshader","--disable-renderer-backgrounding"]});
+const page = await browser.newPage({locale:"en-US"});
+page.on("console", m => console.log(m.type(), m.text().slice(0, 1500)));
+page.on("pageerror", e => console.log("pageerror", String(e.stack ?? e).slice(0, 1500)));
+await page.context().route(url => decodeURIComponent(url.pathname).endsWith("norm-energy/🌉️bridge.js"), async route => {
+  const response = await route.fetch();
+  let source = await response.text();
+  const marker = "result = await reactor.poll(slice);";
+  if (!source.includes(marker)) throw Error("poll marker unavailable");
+  source = source.replace(marker, `console.info("[DEBUG] poll", JSON.stringify({events: events.map(e => e.kind), cursor: commandPage?.cursor, bytes: commandPage?.bytes?.length, cold: coldPairPage ? Object.keys(coldPairPage) : null, fuel: String(slice.fuel), policy: slice.retainedPolicy, input: turn.input.grant}, (_, v) => typeof v === "bigint" ? v.toString() : v));
+        ${marker}`);
+  await route.fulfill({response, body: source});
+});
+await page.goto(new URL("#din18599", base).href, {waitUntil: "commit"});
+await page.waitForTimeout(Number(process.env.WAIT_MS ?? 30000));
+await browser.close();

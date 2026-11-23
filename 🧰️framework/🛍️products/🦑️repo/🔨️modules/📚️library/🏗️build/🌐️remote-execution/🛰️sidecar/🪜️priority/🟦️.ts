@@ -63,7 +63,16 @@ export function servicePriorityTextV1(result:ServicePriorityResultV1):string{
 
 /** 🪜️ Puts this process into the class declared for its role, once, when the role starts: the nice value (Linux, macOS; on Windows libuv turns it into the priority class) and on Linux the input/output class through `ionice`. A process can only lower itself below its parent, so a class above the current value is tried on Linux and Windows (it succeeds where the service was provisioned at that class or the account may raise) and left to the service definition on macOS, where only the `ProcessType` of the LaunchAgent decides. Never throws: a refusal is a result, the role runs on at the priority it has. */
 export function applyServicePriorityV1(role:string,ports:ServicePriorityPortsV1=realServicePriorityPortsV1()):ServicePriorityResultV1{
- const name=servicePriorityOfRoleV1(role),declared=servicePriorityV1.classes[name],before=(()=>{try{return ports.current();}catch{return declared.nice;}})();
+ return applyServicePriorityClassV1(role,servicePriorityOfRoleV1(role),ports);
+}
+
+/** 🛎️ Puts the process of a provisioned service (`replica`, `cache`, `relay`, `compact`) into its declared class the same way `applyServicePriorityV1` does for a role, so a service runs at its class even where its service manager starts it at another one (a Windows Scheduled Task registered without `<Priority>` runs at 7, below normal, and a stale definition is only replaced from an elevated shell). See https://learn.microsoft.com/windows/win32/procthread/scheduling-priorities */
+export function applyServiceUnitPriorityV1(service:string,ports:ServicePriorityPortsV1=realServicePriorityPortsV1()):ServicePriorityResultV1{
+ return applyServicePriorityClassV1(service,servicePriorityOfServiceV1(service),ports);
+}
+
+function applyServicePriorityClassV1(role:string,name:ServicePriorityNameV1,ports:ServicePriorityPortsV1):ServicePriorityResultV1{
+ const declared=servicePriorityV1.classes[name],before=(()=>{try{return ports.current();}catch{return declared.nice;}})();
  let outcome:ServicePriorityResultV1["outcome"]="applied",reason:string|undefined,nice=before;
  if(before!==declared.nice){
   if(declared.nice<before&&ports.platform==="darwin")outcome="inherited";

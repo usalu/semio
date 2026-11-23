@@ -1,0 +1,17 @@
+{
+  "dialect": { "artifactKind": "s.layout.layout", "standard": "1", "subset": "*" },
+  "examples": [
+    { "id": "demo", "fixture": "🖼️assets/🎬️demo/🗣️.dsl.semio" },
+    { "id": "demo-session", "fixture": "✏️editor/📚️examples/🎬️demo-session/🖼️assets/🎮️.cmd.semio" },
+    { "id": "linked-asset", "fixture": "🖼️assets/🔗️linked-asset/🗣️.dsl.semio" }
+  ],
+  "bootQuery": [
+    { "search": "?example=demo", "fallback": null, "resolved": "demo", "offered": true },
+    { "search": "?plugin=layout&example=demo-session", "fallback": null, "resolved": "demo-session", "offered": true },
+    { "search": "?example=linked-asset", "fallback": "demo", "resolved": "linked-asset", "offered": true },
+    { "search": "?example=", "fallback": "demo", "resolved": "demo", "offered": true },
+    { "search": "", "fallback": null, "resolved": null, "offered": false },
+    { "search": "?example=unknown", "fallback": null, "resolved": "unknown", "offered": false }
+  ],
+  "dslSections": ["schema", "name", "grid", "paragraph-styles", "character-styles", "stories", "links", "parent-pages", "spreads", "pages"]
+}

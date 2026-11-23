@@ -46,6 +46,7 @@ impl<P,Mu> PreparedHistoryReadRetirement<P,Mu> where P:Send+Sync+'static,Mu:semi
     }
 }
 impl<P,Mu> ErasedSnapshotRetirement for PreparedHistoryReadRetirement<P,Mu> where P:Send+Sync+'static,Mu:semio_os_spr::Mutation<P>+Send+'static {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let Some(owner)=self.owner.as_ref()else{return Ok(Default::default())};if owner.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{release_bytes:size_of::<ArtifactHistoryReadRetirement<P,Mu>>(),depth:1,..Default::default()})}let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||refusal("prepared history depth overflow"))?;Ok(demand)}
     fn close_step(&mut self,_body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         if self.owner.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}

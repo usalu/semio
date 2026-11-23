@@ -53,6 +53,26 @@ pub struct NormalProjectionCursor {
 }
 
 impl NormalProjectionCursor {
+    /// 🧭 Names the projection stage so a zero-work reply can be told from a stage change.
+    pub fn trace(&self) -> &'static str {
+        match self.phase {
+            Phase::Frame => "frame",
+            Phase::CloseFrame => "close-frame",
+            Phase::Shape(Shape::Classify) => "classify",
+            Phase::Shape(Shape::Decode) => "decode",
+            Phase::Shape(Shape::CloseDecoder { .. }) => "close-decoder",
+            Phase::Shape(Shape::Sanitize) => "sanitize",
+            Phase::Shape(Shape::Ready) => "ready",
+            Phase::Shape(Shape::Reference) => "reference",
+            Phase::Shape(Shape::Omitted) => "omitted",
+            Phase::Cancelled => "cancelled",
+            Phase::Closing => "closing",
+            Phase::Closed => "closed",
+        }
+    }
+}
+
+impl NormalProjectionCursor {
     pub fn new(id: ObjRef, offset: usize, limits: CosLimits, maximum_stream_bytes: usize) -> Self {
         Self {
             id, frame: PdfNormalObjectCursor::new(offset, limits), frame_closed: false, current: None,

@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:remote-execution:sidecar:priority:v1",
+  "title": "The operating system scheduling class of every supervised service and sidecar role",
+  "description": "A latency-critical service (the fleet cache server, the scheduler, the graph host that serves clients) must not be throttled by the operating system; a batch role (readiness stages, the owner puller, idle compaction) must stay in the background. The class of every role is declared once, here, and used twice: the sidecar applies it to its own process when a role starts (so it takes effect on the next restart of the role, without reinstalling anything), and provisioning renders it into the service definitions (the LaunchAgent plist, the launch script of the systemd units (which grant CAP_SYS_NICE to the account), the Scheduled Task). A process can lower itself below its parent but never raise itself above it, so the service that hosts interactive roles (the replica daemon) is itself provisioned as interactive and the lower classes are applied downwards.",
+  "type": "object",
+  "required": ["definitions"],
+  "definitions": {
+    "Class": {
+      "type": "object",
+      "required": ["nice", "darwin", "linux", "windows"],
+      "additionalProperties": false,
+      "properties": {
+        "nice": {"type": "integer", "minimum": -20, "maximum": 19, "description": "POSIX nice value; libuv maps it to the priority class on Windows (below -7 above normal, 0 to 9 normal, 10 to 18 below normal, 19 idle)."},
+        "darwin": {"type": "object", "required": ["processType", "lowPriorityIo"], "additionalProperties": false, "properties": {"processType": {"enum": ["Interactive", "Standard", "Adaptive", "Background"]}, "lowPriorityIo": {"type": "boolean"}}},
+        "linux": {"type": "object", "required": ["cpuSchedulingPolicy", "ioSchedulingClass"], "additionalProperties": false, "properties": {"cpuSchedulingPolicy": {"enum": ["other", "batch", "idle"]}, "ioSchedulingClass": {"enum": ["best-effort", "idle"]}, "ioSchedulingPriority": {"type": "integer", "minimum": 0, "maximum": 7}}},
+        "windows": {"type": "object", "required": ["taskPriority"], "additionalProperties": false, "properties": {"taskPriority": {"type": "integer", "minimum": 0, "maximum": 10, "description": "Task Scheduler priority: 0 realtime, 1 high, 2 and 3 above normal, 4 to 6 normal, 7 and 8 below normal, 9 and 10 idle. A task without the element runs at 7."}}}
+      }
+    },
+    "Classes": {
+      "const": {
+        "interactive": {"nice": -5, "darwin": {"processType": "Interactive", "lowPriorityIo": false}, "linux": {"cpuSchedulingPolicy": "other", "ioSchedulingClass": "best-effort", "ioSchedulingPriority": 2}, "windows": {"taskPriority": 3}},
+        "standard": {"nice": 0, "darwin": {"processType": "Standard", "lowPriorityIo": false}, "linux": {"cpuSchedulingPolicy": "other", "ioSchedulingClass": "best-effort", "ioSchedulingPriority": 4}, "windows": {"taskPriority": 5}},
+        "background": {"nice": 10, "darwin": {"processType": "Background", "lowPriorityIo": true}, "linux": {"cpuSchedulingPolicy": "idle", "ioSchedulingClass": "idle"}, "windows": {"taskPriority": 8}}
+      }
+    },
+    "Roles": {
+      "const": {"cache": "interactive", "scheduler": "interactive", "graph": "interactive", "agent": "standard", "pool": "background", "ready": "background"}
+    },
+    "Services": {
+      "const": {"replica": "interactive", "cache": "interactive", "relay": "standard", "compact": "background"}
+    },
+    "Texts": {
+      "const": {
+        "en": {"line": "{role} scheduling: class {class}, nice {nice}, {outcome}{io}", "applied": "applied", "inherited": "inherited from the service that hosts the role", "refused": "not applied ({reason})", "io": ", input/output {ioClass}"},
+        "de": {"line": "{role} Scheduling: Klasse {class}, Nice {nice}, {outcome}{io}", "applied": "angewendet", "inherited": "vom Dienst übernommen, der die Rolle beherbergt", "refused": "nicht angewendet ({reason})", "io": ", Ein-/Ausgabe {ioClass}"}
+      }
+    }
+  }
+}

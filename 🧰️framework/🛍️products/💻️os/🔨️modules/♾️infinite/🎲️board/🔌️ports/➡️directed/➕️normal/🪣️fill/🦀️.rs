@@ -86,7 +86,7 @@ impl BoardFillJob {
     pub fn admit_original(admission: &mut semio_framework_job::OriginalConstructionAdmission, snapshot: &mut Option<BoardFillSnapshot>, max_count: u32, semantic_operation: semio_framework_job::Operation, output: &mut Option<Self>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_action_bus::{admit_original_tool_construction_settled, ToolJobAdmissionDemand};
         use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
-        if snapshot.is_none() || output.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "board fill admission requires its original snapshot and empty output").into()); }
+        if snapshot.is_some() == output.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "board fill admission requires its original snapshot or its admitted output").into()); }
         if snapshot.as_ref().is_some_and(|snapshot| snapshot.original_source.is_some_and(|source| !source.matches(cx))) { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "board fill admission refused a foreign original snapshot").into()); }
         let demand = Self::admission_demands()?;
         let mut allocation_failed = false;

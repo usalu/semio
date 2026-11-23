@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "maximumBytes": 206158430208,
+  "maximumControlBytes": 8388608,
+  "elastic": {
+    "graph": {
+      "needBytes": 3221225472,
+      "headroomPercent": 300,
+      "hostFreeReservePercent": 92,
+      "alignBytes": 1073741824,
+      "automatic": true,
+      "pressureFreeBytes": 1073741824,
+      "reclaimFloorBytes": 2147483648,
+      "reclaimRatioPercent": 300,
+      "reclaimTightHostFreeBytes": 51539607552,
+      "minimumBytes": 6442450944,
+      "maximumBytes": 25769803776
+    },
+    "products": {
+      "needBytes": 22548578304,
+      "headroomPercent": 50,
+      "hostFreeReservePercent": 88,
+      "alignBytes": 1073741824,
+      "automatic": true,
+      "pressureFreeBytes": 2147483648,
+      "reclaimFloorBytes": 6442450944,
+      "reclaimRatioPercent": 300,
+      "reclaimTightHostFreeBytes": 51539607552,
+      "minimumBytes": 6442450944,
+      "maximumBytes": 42949672960
+    },
+    "rust": {
+      "needBytes": 34359738368,
+      "headroomPercent": 25,
+      "hostFreeReservePercent": 66,
+      "alignBytes": 1073741824,
+      "automatic": true,
+      "pressureFreeBytes": 6442450944,
+      "reclaimFloorBytes": 8589934592,
+      "reclaimRatioPercent": 300,
+      "reclaimTightHostFreeBytes": 51539607552,
+      "minimumBytes": 34359738368,
+      "maximumBytes": 103080263680
+    }
+  },
+  "reclaim": {
+    "reclaimFloorBytes": 8589934592,
+    "reclaimRatioPercent": 300,
+    "reclaimTightHostFreeBytes": 51539607552
+  },
+  "partitions": {
+    "rust": {
+      "directory": ".cache/b/r",
+      "capacityBytes": 103080263680,
+      "maximumLogicalBytes": 103079215104
+    },
+    "tools": {
+      "directory": ".cache/b/t",
+      "capacityBytes": 8589934592,
+      "maximumLogicalBytes": 8588886016,
+      "hostSharePercent": 10
+    },
+    "graph": {
+      "directory": ".cache/b/g",
+      "capacityBytes": 6442450944,
+      "maximumLogicalBytes": 6441402368
+    },
+    "dependencies": {
+      "directory": ".cache/b/d",
+      "capacityBytes": 38654705664,
+      "maximumLogicalBytes": 38653657088,
+      "hostSharePercent": 20
+    },
+    "products": {
+      "directory": ".cache/b/p",
+      "capacityBytes": 25769803776,
+      "maximumLogicalBytes": 25768755200
+    },
+    "diagnostics": {
+      "directory": ".cache/b/o",
+      "capacityBytes": 2147483648,
+      "maximumLogicalBytes": 2146435072,
+      "hostSharePercent": 2
+    },
+    "nx": {
+      "directory": ".cache/b/n",
+      "capacityBytes": 1610612736,
+      "maximumArtifactBytes": 536870912,
+      "maximumLogicalBytes": 1609564160,
+      "hostSharePercent": 3
+    },
+    "leases": {
+      "directory": ".cache/b/l",
+      "capacityBytes": 67108864,
+      "maximumLogicalBytes": 62914560,
+      "hostSharePercent": 1
+    }
+  }
+}

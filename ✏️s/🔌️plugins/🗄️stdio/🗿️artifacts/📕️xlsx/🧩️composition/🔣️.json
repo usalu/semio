@@ -98,7 +98,8 @@
       "ports": {
         "react": 6272,
         "wgpu": 6372
-      }
+      },
+      "devContribution": "✏️s/🧑‍💻dev/🎭️variants/📕️stdio-xlsx/🧬️schema/🔣️.json"
     },
     {
       "owner": "stdio-office",
@@ -110,7 +111,8 @@
       "ports": {
         "react": 6273,
         "wgpu": 6373
-      }
+      },
+      "devContribution": "✏️s/🧑‍💻dev/🎭️variants/📕️stdio-xlsx/🧬️schema/🔣️.json"
     },
     {
       "owner": "stdio-office",
@@ -122,7 +124,8 @@
       "ports": {
         "react": 6275,
         "wgpu": 6375
-      }
+      },
+      "devContribution": "✏️s/🧑‍💻dev/🎭️variants/📕️stdio-xlsx/🧬️schema/🔣️.json"
     }
   ],
   "mutationDescriptors": [

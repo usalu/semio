@@ -64,7 +64,7 @@ pub fn window_measures(definition: &Block3dSnapshot, config: &Block3dConfig, win
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, active_utility: &str, brush_preview: Option<&Block3dBrushPreview>) -> UiAssemblyResult<BuiltNode> {
+pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &str, active_utility: &str, brush_preview: Option<&Block3dBrushPreview>, labels: &Block3dLabels) -> UiAssemblyResult<BuiltNode> {
     let view = block3d_window_view(config, window_id);
     let visible = visible_representations(definition, &view);
     let mut scene = World3dScene::base(world_camera_json(definition, config), world_meshes_json(definition, &visible), world_instances_json(definition, &visible, &view), world_selection_json(config));
@@ -72,7 +72,7 @@ pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &
     scene.interaction_json = Some(world_interaction_json(active_utility));
     scene.fit_json = Some(world3d_fit_json(semio_s_artifact_block_3d_model::block3d_world_fit_revision(definition), semio_s_artifact_block_3d_model::BLOCK3D_FIT_PADDING, None));
     scene.domain_id = None;
-    semio_plugin::scene_surface(BLOCK3D_PLAY_SURFACE_ID, ContractSurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(BLOCK3D_PLAY_SURFACE_ID, ContractSurfaceKind::World3d, &scene, labels.window_world.as_str(), None)
 }
 //#endregion 🔖️Render
 

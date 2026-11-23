@@ -1,0 +1,14 @@
+{
+  "unit": "kWh/(m²·a)",
+  "useful": 100,
+  "gas": {"final": 140, "primary": 154, "e_E": 1.4, "f_P": 1.1, "class": "E"},
+  "heat_pump": {"final": 31, "primary": 56, "e_E": 0.31, "f_P": 1.8, "class": "A"},
+  "classes": [["A+", 30], ["A", 50], ["B", 75], ["C", 100], ["D", 130], ["E", 160], ["F", 200], ["G", 250], ["H", null]],
+  "boundaries": {"30": "A+", "31": "A", "50": "A", "51": "B", "160": "E", "161": "F", "250": "G", "251": "H"},
+  "forbidden_source": ["\\;[\\mathrm", "\\,[\\mathrm", "Delta Theta", "Delta-Theta", "vartheta", "Q_{Senke}", "Q_{Quelle}"],
+  "chapters": ["🏷️certificate", "🧪️practice"],
+  "narration_values": {
+    "🏷️certificate": {"gas": ["140\\,\\mathrm{kWh/(m^2\\,a)}", "100\\,\\mathrm{kWh/(m^2\\,a)}", "40\\,\\mathrm{kWh/(m^2\\,a)}"], "wp": ["31\\,\\mathrm{kWh/(m^2\\,a)}"]},
+    "🧪️practice": {"zahlen_zaehler": ["Q_{E}=140\\,\\mathrm{kWh/(m^2\\,a)}"], "zahlen_quelle": ["Q_{P}=154\\,\\mathrm{kWh/(m^2\\,a)}"], "zahlen_wp": ["Q_{E}=31\\,\\mathrm{kWh/(m^2\\,a)}"], "zahlen_wp_quelle": ["Q_{P}=56\\,\\mathrm{kWh/(m^2\\,a)}"]}
+  }
+}

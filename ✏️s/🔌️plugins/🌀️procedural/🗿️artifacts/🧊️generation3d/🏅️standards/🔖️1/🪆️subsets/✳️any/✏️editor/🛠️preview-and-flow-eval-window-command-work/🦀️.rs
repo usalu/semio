@@ -156,7 +156,7 @@ pub(super) struct Generation3dFlowEvalWindowWork {
 }
 
 impl Generation3dFlowEvalWindowWork {
-    pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self { Self { tool_id, instance_owner, tessellate: preview_eval::PreviewTessellateReceive::new(),evaluation:preview_eval::PreviewEvalReceive::new(), tick: Default::default(), complete: false, closing: false } }
+    pub fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self { Self { tool_id, instance_owner, tessellate: preview_eval::PreviewTessellateReceive::new(),evaluation:preview_eval::PreviewEvalReceive::new(), tick: Default::default(), complete: false, closing: false } }
 
     fn close_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if !self.tick.terminal_is_empty() {

@@ -409,7 +409,7 @@ fn painting_a_hovered_number_stepper_preserves_its_center_background() {
 }
 //#endregion 🔖️W2WidgetVisuals
 
-//#region 🔖️ClosedStateSilhouetteLaws
+//#region 🔖️ClosedStateOutlineLaws
 fn resolved_border_instances(draw: &mut DrawList) -> Vec<([f32; 4], [f32; 4])> {
     while !draw.finalize_shared_borders_step().unwrap() {}
     draw.layers.iter().flat_map(|layer| layer.ui_instances.iter().chain(&layer.overlay_ui_instances)).filter(|item| item.rect[2] > 0.0 && item.rect[3] > 0.0).map(|item| (item.rect, item.color)).collect()
@@ -443,7 +443,7 @@ fn a_hovered_cell_of_a_shared_group_paints_its_whole_perimeter_in_hover_colour_a
 }
 
 #[test]
-fn the_selected_presence_silhouette_stays_on_the_boxes_own_seams() {
+fn the_selected_presence_outline_stays_on_the_boxes_own_seams() {
     let (_, _, theme, _) = setup(&toggle("t"));
     let bounds = Rect::new(20.0, 10.0, 30.0, 20.0);
     let presence = UiPresence { selected: true, ..Default::default() };
@@ -473,7 +473,7 @@ fn an_ancestor_in_the_hover_chain_without_ownership_does_not_paint_hover() {
     assert_eq!(paint_with(&[NodeFlags::HOVERED]), paint_with(&[]));
     assert_ne!(paint_with(&[NodeFlags::HOVERED, NodeFlags::HOVER_OWNER]), paint_with(&[]));
 }
-//#endregion 🔖️ClosedStateSilhouetteLaws
+//#endregion 🔖️ClosedStateOutlineLaws
 
 #[test]
 fn a_focused_cell_next_to_a_selected_cell_keeps_its_full_perimeter_in_focus_colour() {

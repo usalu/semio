@@ -51,13 +51,15 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 🖼️ The read-only canvas: the schema's own `wires_canvas_layers` projection — the viewer stays
 /// independent of the editor (contract §2.2) by sharing the schema, never an editor window.
-pub fn render(composed: &WiresComposed) -> UiAssemblyResult<BuiltNode> {
+pub fn render(composed: &WiresComposed, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let (camera_x, camera_y, zoom) = board_snapshot_camera(&composed.board);
     let layers: Vec<Value> = crate::schema::wires_canvas_layers(&composed.board, &composed.identity_snapshot).iter().map(semio_framework_pack_json::from_dsl_value).collect();
     semio_plugin::scene_surface(
         WIRES_VIEW_CANVAS_SURFACE_ID,
         semio_ui_contract::SurfaceKind::Canvas2d,
         &Canvas2dScene { framing: None, camera_x, camera_y, zoom, layers_json: semio_framework_pack_json::to_string(&Value::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        semio_plugin::surface_name(locale, "Wire canvas", "Leitungsfläche"),
+        None,
     )
 }
 //#endregion 🔖️Render

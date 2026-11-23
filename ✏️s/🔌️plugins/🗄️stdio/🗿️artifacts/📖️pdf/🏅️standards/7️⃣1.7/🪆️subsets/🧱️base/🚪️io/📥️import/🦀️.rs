@@ -75,6 +75,7 @@ pub fn decode_pdf_with_password(data: &[u8], password: &str) -> PResult<PdfSnaps
     if !snapshot.objects.is_empty() {
         let mut number = objects.iter().map(|object| object.id.num).max().unwrap_or(0);
         for mut object in std::mem::take(&mut snapshot.objects) {
+            if objects.iter().any(|existing| existing.value == object.value) { continue; }
             number = number.checked_add(1).ok_or_else(|| PdfEngineError::Unsupported("PDF native custody exhausted".into()))?;
             object.id.num = number;
             objects.push(object);

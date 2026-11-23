@@ -40,9 +40,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(history: &HistoryView) -> UiAssemblyResult<BuiltNode> {
+pub fn render(history: &HistoryView, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let scene = GraphTimelineScene { columns_json: semio_framework_pack_json::to_json_string(&history.columns) };
-    scene_surface(VCS_PLAY_SURFACE_HISTORY, semio_plugin::plugin_app_close_prelude::SurfaceKind::GraphTimeline, &scene)
+    scene_surface(VCS_PLAY_SURFACE_HISTORY, semio_plugin::plugin_app_close_prelude::SurfaceKind::GraphTimeline, &scene, semio_plugin::surface_name(locale, "Version history", "Versionsverlauf"), None)
 }
 //#endregion 🔖️Render
 

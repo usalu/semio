@@ -85,7 +85,7 @@ fn the_scene_places_accessor_triangles_by_the_node_transform() {
     let (positions, triangles, markers) = semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::scene_geometry(&snapshot.document, &snapshot.buffers);
     assert_eq!((triangles, markers.len()), (vec![0, 1, 2], 0));
     assert_eq!(positions.iter().map(|point| point.to_vec()).collect::<Vec<_>>(), rows(reference().get("triangleWorld").unwrap()));
-    assert!(main::render(&snapshot).is_ok());
+    assert!(main::render(&snapshot, semio_ui_locale::Locale::En).is_ok());
 }
 
 #[test]

@@ -340,8 +340,8 @@ fn booting_renders_and_evaluates_without_dropping_a_live_flow_owner() {
     let view_state = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let labels = flow_play_labels(&view_state);
     let bodies = [
-        main::render(&snapshot, &config, &session, &[]),
-        compiled::render(&snapshot, &config, &session),
+        main::render(&snapshot, &config, &session, &[], view_state.locale),
+        compiled::render(&snapshot, &config, &session, view_state.locale),
         catalogue_panel::render(&snapshot, &config, &session, labels, &semio_plugin::TreeWindows::for_body(&view_state, FLOW_PLAY_BODY_CATALOGUE)),
         document_panel::render(&snapshot, labels, &semio_plugin::TreeWindows::for_body(&view_state, FLOW_PLAY_BODY_ARTIFACT)),
     ];

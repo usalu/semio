@@ -25637,7 +25637,7 @@
             "angleDeg": -35.6866
           },
           "foot-r": {
-            "angleDeg": 19.5423
+            "angleDeg": 19.2376
           },
           "toe-r": {
             "angleDeg": 17.9941
@@ -26041,7 +26041,7 @@
             "angleDeg": -35.6866
           },
           "foot-l": {
-            "angleDeg": 19.5423
+            "angleDeg": 19.2376
           },
           "toe-l": {
             "angleDeg": 17.9941
@@ -26446,7 +26446,7 @@
         "fps": 30,
         "loop": true,
         "rootMotion": "plant",
-        "advanceM": 0.9619,
+        "advanceM": 0.963122,
         "keys": [
           {
             "t": 0,
@@ -26472,7 +26472,7 @@
                 "angleDeg": -35.6866
               },
               "foot-r": {
-                "angleDeg": 19.5423
+                "angleDeg": 19.2376
               },
               "toe-r": {
                 "angleDeg": 17.9941
@@ -28351,10 +28351,10 @@
                 "angleDeg": 14.6684
               },
               "thigh-r": {
-                "angleDeg": 24.9126
+                "angleDeg": 24.9172
               },
               "shank-r": {
-                "angleDeg": -20.7141
+                "angleDeg": -20.4293
               },
               "foot-r": {
                 "angleDeg": 1.7663
@@ -28410,7 +28410,7 @@
                 "angleDeg": -35.6866
               },
               "foot-l": {
-                "angleDeg": 19.5423
+                "angleDeg": 19.2376
               },
               "toe-l": {
                 "angleDeg": 17.9941
@@ -30289,10 +30289,10 @@
             "ease": "smooth",
             "bones": {
               "thigh-l": {
-                "angleDeg": 24.9126
+                "angleDeg": 24.9172
               },
               "shank-l": {
-                "angleDeg": -20.7141
+                "angleDeg": -20.4293
               },
               "foot-l": {
                 "angleDeg": 1.7663

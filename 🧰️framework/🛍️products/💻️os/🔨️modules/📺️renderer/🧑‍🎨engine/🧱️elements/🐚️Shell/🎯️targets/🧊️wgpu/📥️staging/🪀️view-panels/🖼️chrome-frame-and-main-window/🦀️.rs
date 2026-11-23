@@ -258,10 +258,6 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                     0 => {
                         self.docs.reconcile_host_introduction_policy(&mut self.chrome, &self.tutorial);
                         draw.set_screen_height(h);
-                        self.input.retained_body_rects_staging.clear();
-                        self.input.retained_hit_windows_staging.clear();
-                        self.input.retained_scene_hits_staging.clear();
-                        with_chrome_control_names(|names| names.clear());
                         semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
                     }
                     1 => overlay.set_screen_height(h),
@@ -358,6 +354,26 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                         self.as_session().chrome_tour_frame_begin();
                     }
                     20 => {
+                        if self.input.retained_body_rects_staging.pop().is_some() {
+                            return false;
+                        }
+                    }
+                    21 => {
+                        if self.input.retained_hit_windows_staging.extract_if(|_, _| true).next().is_some() {
+                            return false;
+                        }
+                    }
+                    22 => {
+                        if self.input.retained_scene_hits_staging.extract_if(|_, _| true).next().is_some() {
+                            return false;
+                        }
+                    }
+                    23 => {
+                        if with_chrome_control_names(|names| names.pop_first().is_some()) {
+                            return false;
+                        }
+                    }
+                    24 => {
                         cursor.phase = ShellChromeFramePhase::MainWindow;
                         return false;
                     }
@@ -728,11 +744,13 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                     let collapsed_sections = &mut self.input.collapsed_sections;
                     let open_selects = &mut self.input.open_selects;
                     let widget_maps = &mut self.input.widget_maps_staging;
+                    let engine_host_attached = self.surfaces.engine_host_id_for_window(&window_id).is_some();
                     let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window_id.as_str() };
                     let viewport_height_for_widgets = draw.screen_height();
                     let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(window_rect);
-                    render_ui_document_step(&mut cursor.document, &document, window_rect, &mut ctx, window_id.as_str(), controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
+                    let document_rect = pane_document_rect(window_rect, self.dock.window_frames.get(&window_id), engine_host_attached);
+                    render_ui_document_step(&mut cursor.document, &document, document_rect, &mut ctx, window_id.as_str(), controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
                 };
                 self.docs.restore_window_document(&window_id, document);
                 if !complete {

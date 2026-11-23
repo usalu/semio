@@ -1,5 +1,7 @@
 //! 🧪️ Integration tests of the `s.fem.fem3d` play app editor that drive the whole mounted app through the shared `context` harness.
 
+#![recursion_limit = "256"]
+
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as vcs;
 
@@ -39,6 +41,37 @@ pub mod context {
         fn drop(&mut self) {
             if !std::thread::panicking() {
                 semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::artifact_app_laws::fixture_mounted_policy(), self.1.cx()).expect("original caller paid app close");
+            }
+        }
+    }
+
+    /// ♻️ Retires one original value (a snapshot a test births or replays itself) through a funded original fixture, because the sealed storage refuses a plain drop of its last owner.
+    pub fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T) {
+        let mut fixture = semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
+        fixture.retire_owned(value, semio_plugin::artifact_app_laws::OriginalWorkFixture::stock());
+        fixture.finish();
+    }
+
+    /// 🧷️ An original value that retires itself when the test scope ends, holding the UI value arena for the tree it builds.
+    pub struct Retiring<T: semio_framework_value::retirement::RetireOwned>(Option<T>, semio_plugin::artifact_app_laws::FixtureUiArena);
+
+    impl<T: semio_framework_value::retirement::RetireOwned> Retiring<T> {
+        pub fn new(value: T) -> Self { Self(Some(value), semio_plugin::artifact_app_laws::FixtureUiArena::admit()) }
+    }
+
+    impl<T: semio_framework_value::retirement::RetireOwned> std::ops::Deref for Retiring<T> {
+        type Target = T;
+        fn deref(&self) -> &T { self.0.as_ref().expect("retiring value is live") }
+    }
+
+    impl<T: semio_framework_value::retirement::RetireOwned> std::ops::DerefMut for Retiring<T> {
+        fn deref_mut(&mut self) -> &mut T { self.0.as_mut().expect("retiring value is live") }
+    }
+
+    impl<T: semio_framework_value::retirement::RetireOwned> Drop for Retiring<T> {
+        fn drop(&mut self) {
+            if let Some(value) = self.0.take() {
+                if std::thread::panicking() { std::mem::forget(value); } else { retire(value); }
             }
         }
     }

@@ -62,7 +62,7 @@ function oracleCompare(store:string,who:Machine):{status:number|null;report:{ok:
 }
 
 type Step={machine:string;op:"write"|"remove"|"publish"|"follow"|"settle";path?:string;text?:string;mtime?:"future"};
-type Scenario={name:string;machines:string[];steps:Step[];expect:{tree?:Record<string,string>;absent?:string[];absentOn?:string[];absentFromStore?:string[];converged?:string[];lost?:Record<string,number>;lostTexts?:Record<string,string[]>;staleOn?:string[];keptOn?:string[];silent?:string[]}};
+type Scenario={name:string;machines:string[];steps:Step[];expect:{tree?:Record<string,string>;absent?:string[];absentOn?:string[];absentFromStore?:string[];converged?:string[];lost?:Record<string,number>;lostTexts?:Record<string,string[]>;staleOn?:string[];keptOn?:string[];mergedOn?:string[];silent?:string[]}};
 
 for(const scenario of fixture.scenarios as unknown as Scenario[])test(`scenario ${scenario.name} converges and agrees with the Python oracle`,async()=>{
  const {store,machines}=await fleet(scenario.machines),by=new Map(machines.map(who=>[who.name,who] as const));
@@ -83,6 +83,7 @@ for(const scenario of fixture.scenarios as unknown as Scenario[])test(`scenario 
   for(const [name,texts] of Object.entries(wanted.lostTexts??{}))expect(lostFiles(by.get(name)!).map(file=>readFileSync(file,"utf8")).sort()).toEqual([...texts].sort());
   for(const name of wanted.staleOn??[])expect(by.get(name)!.events.some(event=>event.event==="stale-base")).toBe(true);
   for(const name of wanted.keptOn??[])expect(by.get(name)!.events.some(event=>event.event==="kept")).toBe(true);
+  for(const name of wanted.mergedOn??[])expect(by.get(name)!.events.filter(event=>event.event==="merged"||event.event==="stale-base").map(event=>event.event)).toEqual(["merged"]);
   for(const name of wanted.silent??[])expect(await readHeadV1(store,name)).toBeUndefined();
   const journal=walk(store).filter(file=>file.includes("origins")).map(file=>readFileSync(file,"utf8")).join("\n"),names=walk(store).join("\n");
   for(const needle of wanted.absentFromStore??[]){expect(journal).not.toContain(needle);expect(names).not.toContain(needle);}

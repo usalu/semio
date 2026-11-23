@@ -28,12 +28,12 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `BinarySnapshot -> BuiltNode` read: the first `HEX_PREVIEW_CAP_BYTES` bytes as contiguous
 /// lowercase hex, always `read_only: true`, plus a trailing `#`-prefixed byte-count comment.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &BinarySnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &BinarySnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let total = document.bytes.len();
     let shown = total.min(HEX_PREVIEW_CAP_BYTES);
     let hex: String = document.bytes[..shown].iter().map(|byte| format!("{byte:02x}")).collect();
     let text = if total > shown { format!("{hex}\n# total bytes: {total} (showing first {shown})") } else { format!("{hex}\n# total bytes: {total}") };
-    TextWindowKit::render(&TextView { text, language: Some("hex".into()) })
+    TextWindowKit::render(&TextView { text, language: Some("hex".into()) }, locale)
 }
 //#endregion 🔖️Render
 

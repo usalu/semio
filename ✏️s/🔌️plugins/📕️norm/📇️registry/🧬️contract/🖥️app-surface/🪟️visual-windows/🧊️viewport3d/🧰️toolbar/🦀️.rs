@@ -327,7 +327,7 @@ pub fn render_viewport_panel(body_key: &str, scene: &StructuralScene, view: &Vie
     children.extend(touch);
     let windows = view.tree_context.map_or_else(TreeWindows::unhosted, |(host, body)| TreeWindows::for_body(host, body));
     children.push(render_shortcut_help(&windows, locale, cfg!(target_os = "macos"))?);
-    let (mut surface, page, total) = render_viewport_page(body_key, &lowered, domain_id, view.config.sun, view.lane.scene_page as usize, additional_nodes)?;
+    let (mut surface, page, total) = render_viewport_page(body_key, &lowered, domain_id, view.config.sun, view.lane.scene_page as usize, additional_nodes, &chrome("Model view", "Modellansicht", locale))?;
     if crate::controller_is_live(controller_id) && controller_id.ends_with("#editor") {
         for binding in gesture_bindings(view, controller_id)? {
             surface.bindings.try_push(binding).map_err(|_| ui_error("ui.node.binding"))?;

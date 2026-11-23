@@ -265,7 +265,7 @@ def summarize(facts,language):
      "bazel":{"slots":len(servers),"live":len([s for s in servers if s["live"]]),"held":len([s for s in servers if s["held"]]),"rssMegabytes":sum(s["treeMegabytes"] or 0 for s in servers),"servers":servers},
      "storage":{"hostFreeBytes":st["hostFreeBytes"] if st else None,"hostFreeFloorBytes":st["hostFreeFloorBytes"] if st else 0,"machine":st["machine"] if st else {"totalBytes":0,"effectiveTotalBytes":0,"usedBytes":0,"footprintBytes":0,"overBytes":0,"evictBytes":0,"blockedBytes":0,"source":"default"},"overAreas":sorted(st["overAreas"]) if st else [],"images":images},
      "sealed":{"mode":(facts.get("sealed") or {}).get("mode","live"),"drifted":len([e for e in sealed if e["fresh"] is False]),"blocked":len([e for e in sealed if "blocked" in e]),"entries":sealed},
-     "generation":generation,"findings":findings[:POLICY["findings"]["maximum"]],"sources":facts["sources"],**fleet_section(facts),**workers_section(facts)}
+     "generation":generation,"findings":findings[:POLICY["findings"]["maximum"]],"sources":facts["sources"],**fleet_section(facts),**workers_section(facts),**cas_section(facts),**retention_section(facts),**offload_section(facts)}
 
 def fleet_section(facts):
     f=facts.get("fleet")
@@ -282,6 +282,25 @@ def workers_section(facts):
     if not f: return {}
     rows=sorted(f["rows"],key=lambda r:r["origin"]);count=lambda state:len([r for r in rows if r["liveness"]==state])
     return {"workers":{"offlineSeconds":f["offlineSeconds"],"counts":{k:count(k) for k in ("ready","working","idle","silent","offline","absent")},"rows":rows}}
+
+def cas_section(facts):
+    f=facts.get("cas")
+    if not f: return {}
+    used=f["lastCollection"]["bytes"] if f["lastCollection"] else None;last=f["lastCollection"]
+    return {"cas":{"root":f["root"],"usedBytes":used,"usedBasisPoints":None if used is None or f["effectiveCapBytes"]==0 else used*10000//f["effectiveCapBytes"],"capBytes":f["capBytes"],"effectiveCapBytes":f["effectiveCapBytes"],"highWatermarkBytes":f["highWatermarkBytes"],"lowWatermarkBytes":f["lowWatermarkBytes"],"incrementBytes":f["incrementBytes"],"leases":f["leases"],"lastCollection":None if last is None else {"atMs":last["atMs"],"ageSeconds":max(0,(facts["atMs"]-last["atMs"])//1000),"bytes":last["bytes"]}}}
+
+def retention_section(facts):
+    fl=facts.get("fleet")
+    if not fl: return {}
+    r=fl.get("retention")
+    if not r: return {"retention":None}
+    return {"retention":{"mode":r["mode"],"sweptAt":r["sweptAt"],"ageSeconds":None if r["sweptAt"]==0 else max(0,(facts["atMs"]-r["sweptAt"])//1000),"entries":r["entries"],"judged":r["declared"],"live":r["live"],"grace":r["grace"],"stale":sum(r["stale"].values()),"staleByReason":r["stale"],"unreached":r["unreached"],"undeclared":max(0,r["entries"]-r["declared"]),"retired":r["retired"],"refused":r["refused"]}}
+
+def offload_section(facts):
+    f=facts.get("offload")
+    if not f: return {}
+    rs=f["reasons"]
+    return {"offload":{"local":f["local"],"fleet":f["fleet"],"builds":sorted(f["builds"],key=lambda b:b["pid"]),"out":f["out"],"refused":f["refused"],"fellBack":f["fellBack"],"deadline":rs.get("deadline",0),"lost":rs.get("operation-lost",0),"silent":rs.get("silent",0),"reasons":rs}}
 
 def generate(seed,count):
     rnd=random.Random(seed);out=[]
@@ -362,6 +381,8 @@ def generate(seed,count):
             if fr.random()<0.5:
                 ds=[{"crate":"c%d"%i,"slot":"a"*64,"origins":["g1-m01","g1-m02"],"differs":fr.sample(["args.metadata","platform","source","extern:x"],fr.randint(1,3)),"sameSource":fr.random()<0.5} for i in range(fr.randint(0,4))]
                 facts["fleet"]["keys"]={"origins":2,"units":len(ds),"diffs":ds,"byComponent":{"platform":1}}
+            if fr.random()<0.6:
+                total=fr.randint(0,5000);facts["fleet"]["retention"]={"version":1,"mode":fr.choice(["off","dry-run","enforce"]),"sweptAt":fr.choice([0,at-fr.randint(0,10**6)]),"entries":total,"declared":fr.randint(0,total),"live":fr.randint(0,total),"grace":fr.randint(0,50),"stale":{name:fr.randint(1,300) for name in fr.sample(["edited","deleted","toolchain","extern"],fr.randint(0,4))},"unreached":fr.randint(0,90),"retired":fr.randint(0,200),"refused":{name:fr.randint(1,9) for name in fr.sample(["stale-on-arrival","would-refuse-stale-on-arrival"],fr.randint(0,2))},"examples":[]}
             if fr.random()<0.5: facts["fleet"]["claims"]={"active":fr.randint(0,5),"waiting":fr.randint(0,5),"oldestSeconds":fr.randint(0,300)}
         wr=random.Random(seed*104729+index)
         if wr.random()<0.5:
@@ -370,6 +391,13 @@ def generate(seed,count):
                 none=live=="absent"
                 return {"origin":origin,"platform":None if none and wr.random()<0.5 else wr.choice(["linux","macos","windows"]),"liveness":live,"recorded":None if none else wr.choice(["running","waiting","backoff","ready","observing"]),"stage":None if none else wr.choice(["tools","workspace","dependencies",None]),"stageIndex":0 if none else wr.randint(0,5),"stageCount":0 if none else 5,"attempts":0 if none else wr.randint(0,60),"recordAgeSeconds":None if none else wr.choice([0,5,95,599,600,7200,86400]),"heartbeatAgeSeconds":wr.choice([None,0,3,700,86400]),"refusal":wr.choice([None,{"code":"stage-timeout","en":"timed out","de":"Zeit überschritten"}])}
             facts["workers"]={"offlineSeconds":600,"rows":[worker(n) for n in wr.sample(["g1-m01","g1-m04","g1-m09","g1-m12","g1-server"],wr.randint(1,5))]}
+        xr=random.Random(seed*15485863+index)
+        if xr.random()<0.6:
+            gb=2**30;cap=xr.choice([8,30,33,50])*gb;cb=lambda:xr.choice([None,xr.randint(0,5*gb)])
+            facts["cas"]={"root":"/h/.cache/semio/cas","capBytes":50*gb,"effectiveCapBytes":cap,"highWatermarkBytes":cap*9//10,"lowWatermarkBytes":cap*3//4,"incrementBytes":2*gb,"leases":{"leased":xr.randint(0,900),"expired":xr.randint(0,900),"leasedBytes":cb(),"expiredBytes":cb()},"lastCollection":xr.choice([None,{"atMs":at-xr.randint(0,10**7),"bytes":xr.randint(0,60*gb)}])}
+        if xr.random()<0.6:
+            pids=xr.sample(range(1000,9000),xr.randint(0,4));builds=[{"pid":p,"local":xr.randint(0,9),"fleet":xr.randint(0,30)} for p in pids]
+            facts["offload"]={"local":sum(b["local"] for b in builds),"fleet":sum(b["fleet"] for b in builds),"builds":builds,"out":xr.randint(0,9999),"refused":xr.randint(0,99),"fellBack":xr.randint(0,99),"reasons":{name:xr.randint(1,40) for name in xr.sample(["deadline","operation-lost","silent","infrastructure","no-idle-machine","worker-policy"],xr.randint(0,6))}}
         for s in facts["sources"]:
             if s["ok"]: s.pop("error",None)
         if facts["generation"] is None: del facts["generation"]

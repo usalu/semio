@@ -84,7 +84,7 @@ fn preview_fit_json(kind: &ObjectKind) -> String {
 /// selection" placeholder until a future wave threads interaction into render. Flagged as a discovered
 /// framework gap, not worked around here — kept as a parameter (rather than deleted outright) so that
 /// future wave has a slot to fill in.
-pub fn render(document: &CurationSnapshot, selected_ids: &[String], labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &CurationSnapshot, selected_ids: &[String], labels: &SourcingLabels, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let stock = crate::stock_of(document);
     let Some(kind) = selected_ids.first().and_then(|id| stock.iter().find(|kind| &kind.id == id)) else {
         return semio_plugin::built_text_node(Label::data(labels.no_selection.as_str())).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sourcing preview placeholder admission failed"));
@@ -99,7 +99,7 @@ pub fn render(document: &CurationSnapshot, selected_ids: &[String], labels: &Sou
     let instances_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(kind_instances_json(kind, [0.0, 0.0, 0.0], 1.0, false)));
     let sun = WorldSunConfig::default();
     let scene = World3dScene { fit_json: Some(preview_fit_json(kind)), ..world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("rectangle", &[], None), &sun) };
-    scene_surface(SOURCING_CURATION_SURFACE_PREVIEW, semio_plugin::plugin_app_close_prelude::SurfaceKind::World3d, &scene)
+    scene_surface(SOURCING_CURATION_SURFACE_PREVIEW, semio_plugin::plugin_app_close_prelude::SurfaceKind::World3d, &scene, semio_plugin::surface_name(locale, "Object preview", "Objektvorschau"), None)
 }
 //#endregion 🔖️Render
 

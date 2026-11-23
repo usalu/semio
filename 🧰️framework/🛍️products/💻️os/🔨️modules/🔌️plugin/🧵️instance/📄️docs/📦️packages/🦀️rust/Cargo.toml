@@ -60,6 +60,7 @@ semio_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/�
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }
 
 [features]
 artifact-app-testing = []

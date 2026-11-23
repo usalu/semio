@@ -44,10 +44,10 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(graph: &EquationGraph, camera: &EquationCamera) -> UiAssemblyResult<BuiltNode> {
+pub fn render(graph: &EquationGraph, camera: &EquationCamera, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges) = workflow_json(graph);
     let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };
-    semio_plugin::scene_surface(MATH_PLAY_BODY_GRAPH, semio_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
+    semio_plugin::scene_surface(MATH_PLAY_BODY_GRAPH, semio_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) }, semio_plugin::surface_name(locale, "Equation graph", "Gleichungsgraph"), None)
 }
 //#endregion 🔖️Render
 

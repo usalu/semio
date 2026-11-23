@@ -14,7 +14,7 @@
       "maximumReleaseBytes",
       "maximumDepth"
     ],
-    "copyBytes": 0
+    "copyWords": 2
   },
   "error": {
     "cause": "original λ🙂",
@@ -63,20 +63,23 @@
         "headerBytes": 12,
         "zeroCopyBytes": 1,
         "oneShortCopyBytes": 12,
-        "exactCopyBytes": 13
+        "exactCopyBytes": 13,
+        "measureCopyBytes": 1048576
       },
       {
         "nativeWordBytes": 8,
         "headerBytes": 24,
         "zeroCopyBytes": 1,
         "oneShortCopyBytes": 24,
-        "exactCopyBytes": 25
+        "exactCopyBytes": 25,
+        "measureCopyBytes": 1048576
       }
     ],
     "cases": [
       "zero",
       "oneShort",
-      "exact"
+      "exact",
+      "measure"
     ],
     "admissionDenials": [
       "maximumItems",

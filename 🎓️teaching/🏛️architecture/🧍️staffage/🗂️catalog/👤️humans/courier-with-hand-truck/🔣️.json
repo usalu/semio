@@ -11228,7 +11228,7 @@
         "fps": 30,
         "loop": true,
         "rootMotion": "plant",
-        "advanceM": 1.14,
+        "advanceM": 1.140001,
         "keys": [
           {
             "t": 0,
@@ -13546,10 +13546,10 @@
             "ease": "smooth",
             "bones": {
               "thigh-l": {
-                "angleDeg": 37.0315
+                "angleDeg": 36.9891
               },
               "shank-l": {
-                "angleDeg": -19.8741
+                "angleDeg": -19.7246
               },
               "foot-l": {
                 "angleDeg": -0.0667

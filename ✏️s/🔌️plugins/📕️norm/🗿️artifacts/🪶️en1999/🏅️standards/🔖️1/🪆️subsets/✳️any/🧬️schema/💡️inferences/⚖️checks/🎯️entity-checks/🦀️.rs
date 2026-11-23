@@ -224,7 +224,8 @@ fn member_patch(load: &PatchLoad, member: &AluminiumMember, doc: &En1999Snapshot
 /// 🧱 Properties of the insulation of a fire scenario (EN 1999-1-2 4.3.4): the thickness is not negative (0 = unprotected member), and conductivity, specific heat and density are positive once there is a thickness; the insulation names an existing fire scenario.
 pub fn check_fire_insulation(insulation: &semio_s_artifact_norm_en1999_model::FireInsulation, doc: &En1999Snapshot, annex: AnnexChoice) -> Vec<CheckResult> {
     let label = loc(&format!("Fire insulation {}", insulation.id), &format!("Brandschutzbekleidung {}", insulation.id));
-    let subject = |path: &str| SubjectRef::new(&insulation.id, format!("fireInsulations[id={}].{path}", insulation.id), label.clone());
+    let owner = if doc.fire_scenarios.iter().any(|f| f.id == insulation.fire_id) { &insulation.fire_id } else { &insulation.id };
+    let subject = |path: &str| SubjectRef::new(owner, format!("fireInsulations[id={}].{path}", insulation.id), label.clone());
     let (part, cl) = ("DIN EN 1999-1-2", ClauseId::new("EN 1999-1-2", "§4.3.4", "4.3.4"));
     if !doc.fire_scenarios.iter().any(|f| f.id == insulation.fire_id) {
         return vec![reference_fail(format!("en1999.1-2.insulation-ref.{}", insulation.id), part, cl, subject("fireId"), loc("Fire scenario of the insulation", "Brandszenario der Bekleidung"), loc("The insulation names no existing fire scenario.", "Die Bekleidung nennt kein vorhandenes Brandszenario."), doc.fire_scenarios.iter().map(|f| f.id.clone()).collect(), annex, loc("Point fireId at an existing fire scenario.", "fireId auf ein vorhandenes Brandszenario setzen."))];
@@ -248,7 +249,8 @@ pub fn check_fire_insulation(insulation: &semio_s_artifact_norm_en1999_model::Fi
 /// 🪗 Geometry of the trapezoidal rib of a profiled sheet (EN 1999-1-4 5.5): positive flanges and height and a pitch that holds both flanges, `b_t + b_b ≤ p`; the profile names an existing sheet.
 pub fn check_sheet_profile(profile: &semio_s_artifact_norm_en1999_model::SheetProfile, doc: &En1999Snapshot, annex: AnnexChoice) -> Vec<CheckResult> {
     let label = loc(&format!("Sheet profile {}", profile.id), &format!("Blechprofil {}", profile.id));
-    let subject = |path: &str| SubjectRef::new(&profile.id, format!("sheetProfiles[id={}].{path}", profile.id), label.clone());
+    let owner = if doc.cold_formed.iter().any(|s| s.id == profile.sheet_id) { &profile.sheet_id } else { &profile.id };
+    let subject = |path: &str| SubjectRef::new(owner, format!("sheetProfiles[id={}].{path}", profile.id), label.clone());
     let (part, cl) = ("DIN EN 1999-1-4", ClauseId::new("EN 1999-1-4", "§5.5", "5.5"));
     let Some(sheet) = doc.cold_formed.iter().find(|s| s.id == profile.sheet_id) else {
         return vec![reference_fail(format!("en1999.1-4.profile-ref.{}", profile.id), part, cl, subject("sheetId"), loc("Sheet of the profile", "Blech des Profils"), loc("The profile names no existing sheet.", "Das Profil nennt kein vorhandenes Blech."), doc.cold_formed.iter().map(|s| s.id.clone()).collect(), annex, loc("Point sheetId at an existing sheet.", "sheetId auf ein vorhandenes Blech setzen."))];
@@ -290,8 +292,7 @@ pub fn check_ring_stiffener(ring: &RingStiffener, doc: &En1999Snapshot, annex: A
     out.push(place.build());
     let factor_id = "ndp.en1999.ring-stiffener.effective-width-factor";
     let required_id = "ndp.en1999.ring-stiffener.required-inertia-factor";
-    let factor = semio_s_plugin_norm_compliance::ndp_number_opt(factor_id, annex);
-    let margin = semio_s_plugin_norm_compliance::ndp_number_opt(required_id, annex);
+    let ((factor, margin), _) = semio_s_plugin_norm_compliance::record_ndp_reads(|| (semio_s_plugin_norm_compliance::ndp_number_opt(factor_id, annex), semio_s_plugin_norm_compliance::ndp_number_opt(required_id, annex)));
     let gamma_r = margin.unwrap_or(1.0);
     let b_e = thin::ring_effective_width(shell.radius, shell.thickness, factor.unwrap_or(0.0));
     let (area, inertia, z_c) = thin::ring_section(shell.thickness, b_e, ring.depth, ring.thickness);
@@ -418,7 +419,7 @@ pub fn check_transverse_stiffener(st: &TransverseStiffener, doc: &En1999Snapshot
 pub fn check_edge_stiffeners(member: &AluminiumMember, section: &AluminiumSection, material: &AluminiumMaterial, annex: AnnexChoice) -> Vec<CheckResult> {
     let Some(alloy) = part_1_1::resolve_alloy_for_section(&material.designation, section) else { return Vec::new() };
     let limit_id = "ndp.en1999.stiffener.edge-slenderness-limit";
-    let limit = semio_s_plugin_norm_compliance::ndp_number_opt(limit_id, annex);
+    let (limit, _) = semio_s_plugin_norm_compliance::record_ndp_reads(|| semio_s_plugin_norm_compliance::ndp_number_opt(limit_id, annex));
     let (part, cl) = ("DIN EN 1999-1-1", ClauseId::new("EN 1999-1-1", "§6.7.7", "6.7.7"));
     let mut out = Vec::new();
     for el in section.elements.iter().filter(|e| e.edge_stiffener_depth > 0.0 && e.edge_stiffener_thickness > 0.0 && e.outstand && e.width > 0.0 && e.thickness > 0.0) {

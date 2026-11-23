@@ -1,0 +1,41 @@
+{
+  "$schema": "./stack.schema.json",
+  "cases": [
+    {
+      "name": "one card without chips is its rectangle",
+      "left": 0, "top": 0, "width": 200,
+      "cards": [{ "height": 80, "row": 28, "topChip": 0, "bottomChip": 0 }],
+      "expected": { "frames": [{ "rect": [0, 0, 200, 80], "chips": [] }] }
+    },
+    {
+      "name": "cards abut on shared edges and nothing is lifted onto a neighbour",
+      "left": 10, "top": 20, "width": 200,
+      "cards": [{ "height": 80, "row": 28, "topChip": 0, "bottomChip": 0 }, { "height": 60, "row": 28, "topChip": 0, "bottomChip": 0 }, { "height": 40, "row": 28, "topChip": 0, "bottomChip": 0 }],
+      "expected": { "frames": [{ "rect": [10, 20, 200, 80], "chips": [] }, { "rect": [10, 100, 200, 60], "chips": [] }, { "rect": [10, 160, 200, 40], "chips": [] }] }
+    },
+    {
+      "name": "title and footer chips sit inside the frame and draw only their inner edges",
+      "left": 0, "top": 0, "width": 200,
+      "cards": [{ "height": 100, "row": 28, "topChip": 90, "bottomChip": 70 }],
+      "expected": { "frames": [{ "rect": [0, 0, 200, 100], "chips": [{ "rect": [0, 0, 90, 28], "dock": "top", "innerEdges": [false, true, true, false] }, { "rect": [130, 72, 70, 28], "dock": "bottom", "innerEdges": [true, false, false, true] }] }] }
+    },
+    {
+      "name": "a chip as wide as the frame draws only its bottom edge",
+      "left": 0, "top": 0, "width": 200,
+      "cards": [{ "height": 100, "row": 28, "topChip": 200, "bottomChip": 0 }],
+      "expected": { "frames": [{ "rect": [0, 0, 200, 100], "chips": [{ "rect": [0, 0, 200, 28], "dock": "top", "innerEdges": [false, false, true, false] }] }] }
+    },
+    {
+      "name": "a chip wider than the frame is clamped to the frame",
+      "left": 0, "top": 0, "width": 200,
+      "cards": [{ "height": 100, "row": 28, "topChip": 0, "bottomChip": 260 }],
+      "expected": { "frames": [{ "rect": [0, 0, 200, 100], "chips": [{ "rect": [0, 72, 200, 28], "dock": "bottom", "innerEdges": [true, false, false, false] }] }] }
+    },
+    {
+      "name": "a chip row taller than the frame is clamped to the frame height",
+      "left": 0, "top": 0, "width": 200,
+      "cards": [{ "height": 20, "row": 28, "topChip": 50, "bottomChip": 0 }],
+      "expected": { "frames": [{ "rect": [0, 0, 200, 20], "chips": [{ "rect": [0, 0, 50, 20], "dock": "top", "innerEdges": [false, true, false, false] }] }] }
+    }
+  ]
+}

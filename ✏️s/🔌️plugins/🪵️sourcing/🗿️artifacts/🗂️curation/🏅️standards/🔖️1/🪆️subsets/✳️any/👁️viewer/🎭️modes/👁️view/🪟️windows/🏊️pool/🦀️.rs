@@ -28,8 +28,8 @@ pub fn view_model(document: &CurationSnapshot) -> TableView {
     TableView { columns: vec!["Id".into(), "Name".into(), "Module".into(), "Typology".into(), "Availability".into()], rows }
 }
 
-pub fn render(document: &CurationSnapshot) -> UiAssemblyResult<BuiltNode> {
-    TableWindowKit::render(&view_model(document))
+pub fn render(document: &CurationSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
+    TableWindowKit::render(&view_model(document), locale)
 }
 //#endregion 🔖️Render
 

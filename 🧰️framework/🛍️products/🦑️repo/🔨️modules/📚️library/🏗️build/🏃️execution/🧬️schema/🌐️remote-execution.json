@@ -127,7 +127,10 @@
         "maximumBatchBytes",
         "defaultInstance",
         "loadExpireSeconds",
-        "refusalCooldownSeconds"
+        "refusalCooldownSeconds",
+        "keepAliveSeconds",
+        "cancelGraceSeconds",
+        "stuckSeconds"
       ],
       "properties": {
         "host": {
@@ -221,6 +224,24 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 3600
+        },
+        "keepAliveSeconds": {
+          "description": "How often an execution stream repeats its operation while nothing changed, so a client can tell a silent server from a patient one.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300
+        },
+        "cancelGraceSeconds": {
+          "description": "How long a worker has to acknowledge the cancellation of an executing operation before the scheduler frees the operation itself.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "stuckSeconds": {
+          "description": "The age after which an operation that still has not finished counts as stuck for `repo remote-execution cancel all-stuck`.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
         }
       }
     },
@@ -612,6 +633,68 @@
         },
         "known": {
           "type": "boolean"
+        }
+      }
+    },
+    "Cancellation": {
+      "description": "What `repo remote-execution cancel` ended: the operation it named (an id or action digest prefix, or all-stuck) and one row per operation the scheduler freed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "target",
+        "cancelled"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^(?:all-stuck|[A-Za-z0-9-]{8,64})$"
+        },
+        "cancelled": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "action",
+              "stage",
+              "worker",
+              "elapsedSeconds"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "action": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "stage": {
+                "enum": [
+                  "QUEUED",
+                  "EXECUTING"
+                ]
+              },
+              "worker": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "elapsedSeconds": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
         }
       }
     },

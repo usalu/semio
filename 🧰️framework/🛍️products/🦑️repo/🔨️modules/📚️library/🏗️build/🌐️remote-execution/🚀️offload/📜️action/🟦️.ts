@@ -80,12 +80,12 @@ export async function shipOffloadActionV1(input:Readonly<{spec:OffloadActionSpec
   output_files:[],output_directories:[],output_paths:[...spec.outputPaths],platform:{properties},working_directory:"",
  }));
  const action=stage(encodeProtobufV1(REAPI_V1.action,{command_digest:command,input_root_digest:rootDigest,timeout:{seconds:spec.seconds},platform:{properties}}));
- const absent=new Set((await content.missing(instance,[...blobs.values()].map(row=>({hash:row.digest.hash,size:row.digest.size_bytes})),signal)).map(row=>row.hash));
+ const absent=new Set((await content.missing(instance,[...blobs.values()].map(row=>({hash:row.digest.hash,size:row.digest.size_bytes})),signal,"input")).map(row=>row.hash));
  const rows=[...blobs.values()].filter(row=>absent.has(row.digest.hash));let next=0;
   const travelling=rows.reduce((sum,row)=>sum+row.digest.size_bytes,0);
  if(travelling>policy.limits.maximumUploadBytes)return{declined:"inputs-too-large",detail:`upload ${travelling}`};
  await Promise.all(Array.from({length:Math.min(8,rows.length)},async()=>{
-  for(;;){const row=rows[next++];if(row===undefined)return;await content.write(instance,{hash:row.digest.hash,size:row.digest.size_bytes},row.bytes??readFileSync(row.path!),signal);}
+  for(;;){const row=rows[next++];if(row===undefined)return;await content.write(instance,{hash:row.digest.hash,size:row.digest.size_bytes},row.bytes??readFileSync(row.path!),signal,"input");}
  }));
  return{digest:action,files:spec.files.size,bytes,uploaded:rows.length};
 }

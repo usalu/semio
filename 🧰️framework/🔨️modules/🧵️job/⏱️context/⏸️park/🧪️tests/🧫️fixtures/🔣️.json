@@ -6,6 +6,7 @@
   "generation": 9,
   "epoch": 19,
   "initialFuel": 7,
+  "admissionWork": 4,
   "deadlineUs": 12345,
   "clockUs": 1000,
   "originalGrant": [
@@ -21,9 +22,9 @@
     0,
     0
   ],
-  "ownedFuel": 5,
+  "ownedFuel": 3,
   "guestWork": 2,
-  "remainingFuel": 3,
+  "remainingFuel": 1,
   "guestReceipt": [
     1,
     7,

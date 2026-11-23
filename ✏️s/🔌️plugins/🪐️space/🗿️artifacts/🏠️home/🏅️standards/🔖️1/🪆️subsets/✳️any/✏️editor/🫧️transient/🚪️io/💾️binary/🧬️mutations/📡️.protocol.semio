@@ -1,0 +1,15 @@
+dialect protocol
+protocol home.transient.mutations
+version 1
+schema space.home.transient.mutations
+start record
+framing record
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record apply-directory-page tag=0
+field payload bytes

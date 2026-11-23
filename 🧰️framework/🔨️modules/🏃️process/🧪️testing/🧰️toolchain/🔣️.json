@@ -1,12 +1,35 @@
 {
   "version": 1,
   "binding": {
-    "maximumPathUnits": 256
+    "maximumPathUnits": 256,
+    "probeTimeoutMilliseconds": 60000
   },
   "languages": [
     "en",
     "de"
   ],
+  "usage": {
+    "closure": {
+      "directory": "🧪️tests",
+      "maximumFiles": 512
+    },
+    "hints": {
+      "python": [
+        "testPythonV1",
+        "requireTestToolV1(\"python\"",
+        "requireTestToolV1('python'",
+        "testToolPathV1(\"python\"",
+        "testToolPathV1('python'",
+        "requirePinnedTestToolV1(\"python\"",
+        "requirePinnedTestToolV1('python'"
+      ],
+      "ripgrep": [
+        "testRipgrepV1",
+        "requireTestToolV1(\"ripgrep\"",
+        "testToolPathV1(\"ripgrep\""
+      ]
+    }
+  },
   "tools": {
     "python": {
       "candidates": [

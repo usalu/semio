@@ -129,7 +129,7 @@ fn the_board_publishes_the_open_grip_suggestion_menu() {
     let record: serde_json::Value = serde_json::from_str(&board_suggestion_menu_json(&open, labels, None).expect("an open menu publishes")).expect("board suggestion json");
     assert_eq!(
         record,
-        semio_framework_pack_json::json!({ "open": true, "x": 3.0, "y": 4.0, "windowId": WINDOW_KIND_ID, "handleId": "teil-ä:g1", "hoveredIndex": 2, "submenu": true, "pending": true, "candidates": [] })
+        serde_json::json!({ "open": true, "x": 3.0, "y": 4.0, "windowId": WINDOW_KIND_ID, "handleId": "teil-ä:g1", "hoveredIndex": 2, "submenu": true, "pending": true, "candidates": [] })
     );
 }
 

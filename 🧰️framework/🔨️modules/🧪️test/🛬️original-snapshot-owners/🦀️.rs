@@ -159,6 +159,33 @@ pub fn with_encoding_observed<T>(callback: &mut dyn FnMut(semio_framework_value:
     result
 }
 
+/// 🕑️ Drives `future` to completion on the calling thread, which keeps its synchronous original loans lent for every await point.
+fn drive<F: std::future::Future>(future: F) -> F::Output {
+    let mut future = std::pin::pin!(future);
+    let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+    loop {
+        match future.as_mut().poll(&mut context) {
+            std::task::Poll::Ready(output) => return output,
+            std::task::Poll::Pending => std::thread::yield_now(),
+        }
+    }
+}
+
+/// 🕑️ Runs an async `operation` under an original native encode owner that holds the lent Work and construction authorities across its awaits and closes every retired owner afterwards.
+pub async fn with_encoding_async<T>(operation: impl AsyncFnOnce(&mut NativeSnapshotEncodeOwner<'_, '_>) -> T) -> T {
+    let grant = original_grant();
+    let mut callback = |_| true;
+    let mut recipient = NativeEncodeRetirementRecipient::new();
+    let mut native = NativeEncodeControl::new(NATIVE_MAXIMUM_BYTES, &mut callback);
+    native.install_retirement_recipient(&mut recipient).expect("original encode recipient installs");
+    let result = lend!(&mut Lent::new(), native, |native: &mut NativeEncodeControl<'_>| drive(operation(&mut NativeSnapshotEncodeOwner::new(native, grant))));
+    let mut bank = original_bank();
+    while native.has_retirement_owner() {
+        encode_turn(&mut bank, "original encode recipient closes", &mut native);
+    }
+    result
+}
+
 /// 🗄️ Runs `operation` under a SQLite snapshot control whose caller installed the original retirement recipient, then closes it.
 pub fn with_sqlite_recipient<T>(limits: SqliteDatabaseLimits, accept: &mut dyn FnMut(SqliteSnapshotProgress) -> bool, operation: impl FnOnce(&mut SqliteSnapshotControl<'_>) -> T) -> T {
     let mut recipient = NativeDecodeRetirementRecipient::new();

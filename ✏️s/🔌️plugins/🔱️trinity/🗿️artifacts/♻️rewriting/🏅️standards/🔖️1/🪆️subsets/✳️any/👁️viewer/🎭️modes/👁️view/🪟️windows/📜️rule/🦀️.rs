@@ -34,8 +34,8 @@ pub fn rule_text(state: &RewritingSnapshot) -> String {
     semio_framework_pack_json::to_string_pretty(&document)
 }
 
-pub fn render(document: &RewritingSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    TextWindowKit::render(&TextView { text: rule_text(document), language: Some("json".into()) })
+pub fn render(document: &RewritingSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    TextWindowKit::render(&TextView { text: rule_text(document), language: Some("json".into()) }, locale)
 }
 //#endregion 🔖️Render
 

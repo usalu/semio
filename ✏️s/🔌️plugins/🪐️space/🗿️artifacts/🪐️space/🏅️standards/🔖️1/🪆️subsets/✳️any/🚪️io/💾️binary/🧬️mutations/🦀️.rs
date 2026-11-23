@@ -9,6 +9,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use protocol::OpBinary;
 
+dsl::original_tagged_operation_receiving!(SSpaceMutation, COMPONENT_PROTOCOL_SEMIO);
+
 pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[
     ("create-artifact", create_artifact::BINARY_TAG),
     ("delete-artifact", delete_artifact::BINARY_TAG),

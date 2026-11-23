@@ -95,7 +95,7 @@ describe("shared-border language-neutral cases", () => {
     expect((css.nodes[1] as import("postcss").AtRule).params).toBe("shared-border-ownership, shared-border-priority");
     const rules: import("postcss").Rule[] = [];
     css.walkRules(rule => { rules.push(rule); });
-    const participant = /shared-border-cell|shared-border-cells|\[data-shared-border-frame\]|\.shared-border-frame|data-window-silhouette-chip/;
+    const participant = /shared-border-cell|shared-border-cells|\[data-shared-border-frame\]|\.shared-border-frame|data-window-frame-chip/;
     for (const rule of rules.filter(rule => participant.test(rule.selector) && /:hover|:focus|:has\(\+|\[data-active|\[data-state|aria-(selected|pressed)|border-(loading|waiting)|data-(introduced|celebrated)/.test(rule.selector))) {
       for (const node of rule.nodes) if (node.type === "decl") {
         expect(/^(border(-[a-z-]+)?-color|outline-color|box-shadow)$/.test(node.prop) && !/^(none|transparent)$/.test(node.value) && !(node.prop === "box-shadow" && node.value === "none"), `${rule.selector} { ${node.prop}: ${node.value} }`).toBe(false);
@@ -103,14 +103,14 @@ describe("shared-border language-neutral cases", () => {
     }
     expect(rules.some(rule => rule.selector.includes(":has(+ :is(.shared-border-cell"))).toBe(false);
     expect(rules.some(rule => rule.selector.includes("[data-overview-card]:is(button):focus-visible"))).toBe(false);
-    expect(rules.some(rule => rule.selector.startsWith("[data-window-silhouette]:hover"))).toBe(false);
+    expect(rules.some(rule => rule.selector.startsWith("[data-window-frame]:hover"))).toBe(false);
     const hover = rules.find(rule => rule.selector === '[data-shared-border-segment][data-shared-border-state="hover"]');
     expect(hover?.nodes.some(n => n.type === "decl" && n.prop === "stroke" && !n.important)).toBe(true);
     const forced = rules.filter(rule => (rule.parent as import("postcss").AtRule).params === "(forced-colors: active)" && rule.selector.includes("[data-shared-border-segment]"));
     expect(forced.some(rule => rule.nodes.some(n => n.type === "decl" && n.prop === "stroke" && n.value === "CanvasText"))).toBe(true);
     expect(forced.some(rule => rule.selector.includes("[data-shared-border-disabled]") && rule.nodes.some(n => n.type === "decl" && n.prop === "stroke" && n.value === "GrayText"))).toBe(true);
     expect(forced.some(rule => ["hover", "focus", "active"].every(state => rule.selector.includes(`[data-shared-border-state="${state}"]`)) && rule.nodes.some(n => n.type === "decl" && n.prop === "stroke" && n.value === "Highlight"))).toBe(true);
-    expect(rules.some(rule => rule.selector.includes('[data-window-silhouette-chip] > *'))).toBe(false);
+    expect(rules.some(rule => rule.selector.includes('[data-window-frame-chip] > *'))).toBe(false);
     expect(rules.some(rule => /::after/.test(rule.selector) && /(border-loading|border-waiting|data-celebrated)/.test(rule.selector))).toBe(false);
     expect(rules.some(rule => /data-introduced/.test(rule.selector) && rule.nodes.some(n => n.type === "decl" && /box-shadow|animation/.test(n.prop)))).toBe(false);
     expect(rules.some(rule => rule.selector === ".semio-scope[data-contrast=\"more\"] :focus-visible")).toBe(false);

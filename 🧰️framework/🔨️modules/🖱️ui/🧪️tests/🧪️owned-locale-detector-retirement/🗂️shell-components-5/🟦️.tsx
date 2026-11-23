@@ -10,7 +10,7 @@ export async function registerShellComponents5Tests(vitest: Tests1Vitest, depend
 
 describe("Shell components", () => {
 
-    it("Mode tab stack clips one active payload beneath every chip while preserving the gap cutout", async () => {
+    it("Mode tab stack shows one active payload full-bleed beneath every glass chip with no gap element", async () => {
       const ControlledMode = () => {
         const [activeWindowId, setActiveWindowId] = reactHostPort.useState<string | null>("energy");
         return (
@@ -40,9 +40,10 @@ describe("Shell components", () => {
       expect(stack.querySelectorAll('[data-slot="mode-dock-tab"]')).toHaveLength(2);
       expect(stack.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("ui-glass");
       expect(stack.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
-      expect(stack.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass");
-      expect(stackBody.hasAttribute("data-window-silhouette-content")).toBe(true);
-      expect(stackBody.style.clipPath).toBe("inset(100%)");
+      expect(stack.querySelector('[data-slot="mode-dock-tab-cap"]')?.hasAttribute("data-window-frame-chip")).toBe(true);
+      expect(stackBody.hasAttribute("data-window-frame-content")).toBe(true);
+      expect(stackBody.style.clipPath).toBe("");
+      expect(stackBody.outerHTML).not.toContain("clip-path");
       expect(screen.getByText("Energy Body")).toBeTruthy();
       expect(screen.queryByText("Shape Body")).toBeNull();
       const inactiveTab = stack.querySelector('[data-slot="mode-dock-tab"][data-window-id="shape"]');
@@ -63,11 +64,11 @@ describe("Shell components", () => {
       expect(inactiveTabButton?.getAttribute("aria-selected")).toBe("true");
       expect(activeTabButton?.getAttribute("aria-selected")).toBe("false");
       expect(stack.getAttribute("data-active")).toBe("true");
-      expect(stack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      expect(stack.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("active");
       fireEvent.pointerDown(stackBody);
       await waitFor(() => {
         expect(stack.getAttribute("data-active")).toBe("true");
-        expect(stack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+        expect(stack.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("active");
       });
     });
 

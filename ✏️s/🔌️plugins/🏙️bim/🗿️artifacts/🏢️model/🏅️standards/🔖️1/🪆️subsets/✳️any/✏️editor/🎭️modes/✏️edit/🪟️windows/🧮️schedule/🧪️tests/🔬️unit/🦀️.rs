@@ -127,7 +127,7 @@ async fn the_window_renders_the_list_the_table_and_the_editor_in_both_languages(
         assert!(render(&snapshot, &inference, &config("sch-vanished", false), labels).is_ok(), "an unknown schedule falls back to the list");
     }
     assert!(matches!(definition().surface_kind, SurfaceKind::Table));
-    assert!(render(&ModelSnapshot::default(), &ModelInference::default(), &BimScheduleWindowConfig::default(), &BimLabels::NATIVE_EN).is_ok());
+    assert!(render(&ModelSnapshot::default(), &ModelInference::default(), &BimScheduleWindowConfig::default(), &BimLabels::NATIVE_EN, semio_plugin::Locale::En).is_ok());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -148,6 +148,6 @@ async fn a_row_is_picked_under_the_kind_of_the_elements_it_stands_for_and_never_
     assert_eq!(kind("material"), None, "a material take-off stands for library entries, which the elements domain does not hold");
     assert_eq!(row_kind(&snapshot, &inference, "sch-nothing"), None);
     for key in ["wall", "room", "material"] {
-        assert!(render(&snapshot, &inference, &config(&format!("sch-{key}"), false), &BimLabels::NATIVE_EN).is_ok(), "{key} renders with or without a pick kind");
+        assert!(render(&snapshot, &inference, &config(&format!("sch-{key}"), false), &BimLabels::NATIVE_EN, semio_plugin::Locale::En).is_ok(), "{key} renders with or without a pick kind");
     }
 }

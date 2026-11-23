@@ -155,7 +155,7 @@ fn payload_invariants_are_fatal() {
 /// base slider whole (range included).
 #[test]
 fn a_slider_value_is_absolute_and_inverts_to_the_whole_base_slider() {
-    use semio_framework_diagnostic::Severity::Error;
+    use semio_framework_diagnostic::Severity::{Error, Warning};
     let base = base([0.0; 3]);
     for (value, range) in [(7.5, (0.0, 10.0)), (42.0, (0.0, 50.0))] {
         let applied = applied_and_restored(&change_slider_value("height", value), &base);
@@ -313,7 +313,7 @@ fn fresh_fold(base: &Generation3dSnapshot, log: &[Generation3dMutation]) -> Gene
 #[semio_framework_async_macros::async_test]
 async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
     use protocol::OpBinary;
-    let log = vec![
+    let log: Vec<Generation3dMutation> = vec![
         drag_transforms(vec![TRANSLATE.into()], [1.0, 0.0, 0.0]),
         change_slider_value("height", 7.5),
         drag_transforms(vec![TRANSLATE.into()], [0.0, 2.0, 0.0]),
@@ -322,7 +322,8 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
         change_widget_input(ROTATE, "angle", WidgetInputValue::Number(0.25)),
         change_widget_input(ROTATE, "angle", WidgetInputValue::Number(0.75)),
     ];
-    for (edited_at, edited) in [(0, drag_transforms(vec![TRANSLATE.into()], [3.0, 0.0, -1.0])), (1, change_slider_value("height", 2.5)), (3, move_nodes(vec!["note".into()], 40.0, -12.5)), (5, change_widget_input(ROTATE, "angle", WidgetInputValue::Number(1.5)))] {
+    let edits: [(usize, Generation3dMutation); 4] = [(0, drag_transforms(vec![TRANSLATE.into()], [3.0, 0.0, -1.0])), (1, change_slider_value("height", 2.5)), (3, move_nodes(vec!["note".into()], 40.0, -12.5)), (5, change_widget_input(ROTATE, "angle", WidgetInputValue::Number(1.5)))];
+    for (edited_at, edited) in edits {
         {
             let base = base([1.0, 1.0, 1.0]);
             let mut store = semio_s_artifact_procedural_3d_testkit::store_fixture::document_store(base.clone()).await;
@@ -331,7 +332,7 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
             }
             let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
             let target = ids[edited_at].clone();
-            let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(target.clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+            let drafts: protocol::HistoryInputDrafts = [(target.clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
             let preview_base = store.state_before(&target, &drafts).expect("the preview base folds");
             let preview = preview_base.as_ref().clone();
             if let Ok(state) = std::sync::Arc::try_unwrap(preview_base) {
@@ -366,11 +367,11 @@ async fn a_gesture_edited_onto_a_missing_target_blocks_finalizing() {
     {
         let base = base([0.0; 3]);
         let mut store = semio_s_artifact_procedural_3d_testkit::store_fixture::document_store(base.clone()).await;
-        for mutation in [change_slider_value("height", 7.5), drag_transforms(vec![TRANSLATE.into()], [1.0, 0.0, 0.0])] {
+        for mutation in [change_slider_value::<Generation3dMutation>("height", 7.5), drag_transforms(vec![TRANSLATE.into()], [1.0, 0.0, 0.0])] {
             store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the gesture applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
-        let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA.into(), payload: change_slider_value("ghost", 7.5).encode_op().expect("encodes") })].into_iter().collect();
+        let drafts: protocol::HistoryInputDrafts = [(ids[0].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA.into(), payload: change_slider_value::<Generation3dMutation>("ghost", 7.5).encode_op().expect("encodes") })].into_iter().collect();
         let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins");
         assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
         let result = replay.finish().expect("finished");

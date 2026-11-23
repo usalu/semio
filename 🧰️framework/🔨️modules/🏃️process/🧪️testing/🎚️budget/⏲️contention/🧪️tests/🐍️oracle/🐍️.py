@@ -1,5 +1,6 @@
 """⏲️ Independent Python oracle of the load-aware test budget clock. It shares no code with the TypeScript module and integrates exactly where the module steps: reads {"policy":…,"clocks":[…],"probes":[…]} on stdin and answers, per clock, the wall time at which a budget of work is used up on a host whose load is a piecewise constant trace (`expiry`), and the wall time at which a replay that needs `work` milliseconds on an idle host finishes there (`finish`); per probe sequence, the smoothed contention a probing platform reports."""
-import json, sys
+import json
+import math, sys
 
 def stretch(policy, ratio):
     low = policy["stretch"]["minimumBasisPoints"] / 10000
@@ -47,9 +48,17 @@ def probes(policy, rows):
         out.append(answers)
     return out
 
+def funding(policy, ceiling, rows):
+    out = []
+    for row in rows:
+        needed = math.ceil(row["budget"] * stretch(policy, row["ratio"]))
+        cap = max(row["budget"], ceiling)
+        out.append({"funded": min(needed, cap), "needed": needed, "clamped": needed > cap})
+    return out
+
 def main():
     request = json.load(sys.stdin)
     policy = request["policy"]
-    json.dump({"clocks": clocks(policy, request.get("clocks", [])), "probes": probes(policy, request.get("probes", []))}, sys.stdout)
+    json.dump({"clocks": clocks(policy, request.get("clocks", [])), "probes": probes(policy, request.get("probes", [])), "funding": funding(policy, request.get("ceiling", 0), request.get("funding", []))}, sys.stdout)
 
 main()

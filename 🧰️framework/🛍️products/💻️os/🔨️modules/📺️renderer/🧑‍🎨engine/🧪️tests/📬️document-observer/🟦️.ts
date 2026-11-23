@@ -38,6 +38,24 @@ it("delivers unchanged archive bytes to the observer and real ordinary archive b
   expect(restored.mock.calls[0]?.[0]).toEqual(pack);
   expect(entry.rejectReady).not.toHaveBeenCalled();
 });
+
+it("delivers a held archive acknowledgement to the save waiter without reloading the open document", async () => {
+  const bytes = encodeDocumentArchiveBytes({ parent_pack: [9], parent_spr: [], members: [] }), observed = vi.fn(), restored = vi.fn(async () => "held" as const), bootstrap = vi.fn();
+  const entry = { documentId: "document", clientInstanceId: "live", plugin: {}, session: { pluginId: "stdio", instanceId: 7, app: { id: "text", label: { en: "Text" } } }, readBack: { archive: restored }, creationMount: null, rejectReady: vi.fn() };
+  const sessions = { current: new Map([["document", entry]]) };
+  const message = { kind: "event", documentId: "document", clientInstanceId: "live", event: { kind: "documentArchiveHeld", archive: bytes } };
+  const consumed = routeLocalDocumentObserverV1({ localDocumentOwnersRef: { current: new Map([["live", { archive: observed }]]) }, openDocumentSessionsRef: sessions, message } as unknown as Parameters<typeof routeLocalDocumentObserverV1>[0]);
+  expect(consumed).toBe(false);
+  expect(observed).toHaveBeenCalledWith(bytes);
+  handleDocumentEventMessage({
+    openDocumentSessionsRef: sessions, dispatch: vi.fn(), message, uiTerminologyRef: { current: "native" }, uiLocaleRef: { current: "en" },
+    core: { localDocumentOwnerRegistry: { acquire: () => ({}) }, localSourceRevisions: { acquire: () => null } },
+    documentArchivePorts: () => ({}), rebootstrapDiscardedSessionsRef: { current: new Map() }, setBootstrapUiByDocument: bootstrap,
+  } as unknown as Parameters<typeof handleDocumentEventMessage>[0]);
+  await Promise.resolve();
+  expect(restored).not.toHaveBeenCalled();
+  expect(bootstrap).not.toHaveBeenCalled();
+});
 it("leaves non-event messages and unrelated clients to the normal route", () => {
   const status = vi.fn();
   const port = { localDocumentOwnersRef: { current: new Map([["live", { status }]]) }, openDocumentSessionsRef: { current: new Map() }, message: { kind: "stopped" } };

@@ -1,6 +1,9 @@
 //! 🧪️ Real original Drawing issuance lends every authored vector kind without a scene allocation or payload clone.
-use super::*;
-use semio_framework_value::retained_clone::RetainedCloneSource;
+use semio_framework_io_ports::{VectorSegment, vector::{VectorContentRef, VectorGraphSourceV1, VectorShapeRef}};
+use semio_framework_value::paged::Utf8Text;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneSource};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::vector_source::DRAWING_VECTOR_SOURCE;
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:16*1024*1024,maximum_capacity_bytes:16*1024*1024,maximum_release_bytes:16*1024*1024,maximum_depth:256}}
 fn text(value:&dyn Utf8Text)->String{let mut output=String::new();for at in 0..value.text_chunk_count(){output.push_str(value.text_chunk(at).unwrap())}output}
 #[test]

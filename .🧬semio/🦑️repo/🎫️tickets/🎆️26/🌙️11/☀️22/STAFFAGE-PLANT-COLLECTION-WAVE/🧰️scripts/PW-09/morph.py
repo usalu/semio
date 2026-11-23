@@ -853,7 +853,8 @@ class WorldAffine:
 
 def inflate(asset, dy, is_leafy, centre_bones):
     """☁️ Thickens leaf masses vertically by `dy` about the mean height of the finest body of their bone (`centre_bones`), or about their own
-    mean height when bound elsewhere; a vertical scale about a height needs no depth, so every view and scale agrees."""
+    mean height when bound elsewhere; a vertical scale about a height needs no depth, so every view and scale agrees. A solid declared `slender`
+    or `sheet` (a single leaf, a twig) is carried unchanged by the rise of its point nearest to the centre height (where it is attached): thickening it would end its declaration. Twigs stay as they are: they stand on a limb that does not move and end inside a mass that only grows."""
     fr = frames(asset["rig"]["bones"])
 
     def world(bone, q):
@@ -888,7 +889,7 @@ def inflate(asset, dy, is_leafy, centre_bones):
             continue
         for view, shapes in rep["geometry"].items():
             for s in shapes:
-                if not is_leafy(s):
+                if not is_leafy(s) or "twig" in s["id"]:
                     continue
                 pts = []
                 if view == "elevation":
@@ -940,6 +941,14 @@ def inflate(asset, dy, is_leafy, centre_bones):
                     sc = [sc, sc, sc]
                 t = tr.get("translation", [0, 0, 0])
                 t2 = local(s["bone"], m(world(s["bone"], t)))
+                if "twig" in s["id"]:
+                    continue
+                if s.get("slender") or s.get("sheet"):
+                    low = min(pts, key=lambda q: q[1]) if cy <= sum(q[1] for q in pts) / len(pts) else max(pts, key=lambda q: q[1])
+                    shift = mat_vec(transpose(fr[s["bone"]][1]), [0, m(low)[1] - low[1], 0])
+                    tr["translation"] = [r(t[i] + shift[i], 6) for i in range(3)]
+                    s["transform"] = tr
+                    continue
                 o, R = fr[s["bone"]]
                 D = [[1, 0, 0], [0, dy, 0], [0, 0, 1]]
                 M = mat_mul(mat_mul(transpose(R), D), R)

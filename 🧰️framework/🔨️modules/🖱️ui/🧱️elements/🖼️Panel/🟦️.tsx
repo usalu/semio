@@ -203,7 +203,7 @@ export interface PanelProps {
   maxSize?: number;
   zIndex?: 10 | 20 | 30 | 40;
   className?: string;
-  /** 🌀️ Drives the panel chrome silhouette while a tab body is still loading. */
+  /** 🌀️ Drives the panel chrome frame border while a tab body is still loading. */
   status?: UiStatus;
   /**
    * ⚓️ Where this anchor's folded root tab row lives — `"panel"` (default) keeps the chip-only

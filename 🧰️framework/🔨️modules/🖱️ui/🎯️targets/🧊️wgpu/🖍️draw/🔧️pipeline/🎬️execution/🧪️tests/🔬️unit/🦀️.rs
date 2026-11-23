@@ -17,78 +17,97 @@ fn scissor_covers_fractional_rect_edges_without_pixel_seams() {
     assert_eq!(ScissorRect::from_rect(Rect::new(10.25, 20.75, 30.5, 40.5), 100.0), ScissorRect { x: 10, y: 20, w: 31, h: 42 });
 }
 
-//#region SilhouetteClipTests
+//#region FrameClipTests
 
-#[test]
-fn clip_region_preserves_disjoint_cutouts_and_intersects_scissor() {
-    let clip = ClipRegion::from_rects(&[Rect::new(0.0, 0.0, 40.0, 20.0), Rect::new(80.0, 0.0, 20.0, 20.0), Rect::new(0.0, 20.0, 100.0, 80.0)], 100.0);
-    let scissors = clip.effective_scissors(Some(ScissorRect { x: 10, y: 0, w: 80, h: 100 }), 100.0, 100.0);
-    assert_eq!(scissors, vec![ScissorRect { x: 10, y: 0, w: 30, h: 20 }, ScissorRect { x: 80, y: 0, w: 10, h: 20 }, ScissorRect { x: 10, y: 20, w: 80, h: 80 }]);
+const FRAME: [f32; 4] = [10.0, 20.0, 200.0, 120.0];
+
+fn frame_rect() -> Rect {
+    Rect::new(FRAME[0], FRAME[1], FRAME[2], FRAME[3])
+}
+
+fn inside(rect: [f32; 4], frame: [f32; 4]) -> bool {
+    rect[0] >= frame[0] && rect[1] >= frame[1] && rect[0] + rect[2] <= frame[0] + frame[2] && rect[1] + rect[3] <= frame[1] + frame[3]
 }
 
 #[test]
-fn draw_list_nests_and_restores_clip_regions() {
+fn a_frame_clips_with_exactly_its_rectangular_scissor_and_no_clip_region() {
     let mut draw = DrawList::default();
-    draw.begin_silhouette_clip(&[Rect::new(0.0, 0.0, 100.0, 100.0)]);
-    draw.begin_silhouette_clip(&[Rect::new(25.0, 25.0, 100.0, 100.0)]);
+    draw.push_scissor(frame_rect());
+    draw.push_solid(FRAME, Rgba::new(1.0, 1.0, 1.0, 1.0));
+    let layer = draw.layers.last().expect("frame content layer");
+    assert_eq!(layer.scissor, Some(ScissorRect::from_rect(frame_rect(), 200.0)));
+    assert!(layer.clip.is_none(), "a frame never opens a clip region");
+    draw.pop_scissor();
+    assert!(draw.layers.iter().all(|layer| layer.clip.is_none()));
+    assert_eq!(draw.layers.last().and_then(|layer| layer.scissor), None);
+}
+
+#[test]
+fn chip_glass_is_recorded_after_the_frame_content_and_inside_the_frame() {
+    let theme = crate::theme::Theme::default();
+    let mut draw = DrawList::default();
+    draw.push_scissor(frame_rect());
+    draw.push_solid(FRAME, theme.canvas_clear);
+    let content_layer = draw.layers.len() - 1;
+    draw.pop_scissor();
+    let chip = [FRAME[0] + 8.0, FRAME[1], 80.0, 28.0];
+    let region = draw.push_glass(chip, 0.0, theme.glass(crate::theme::Level::Window));
+    draw.begin_glass_content(region);
+    draw.push_solid(chip, theme.selected);
+    draw.end_glass_content();
+    let glass = draw.glass_regions[region];
+    assert!(glass.layer_index > content_layer, "chip glass samples content recorded before it");
+    assert!(inside(glass.rect, FRAME), "chip glass stays inside the frame rect");
+    assert!(draw.layers[content_layer].ui_instances.len() == 1 && draw.layers[content_layer].foreground_of.is_none(), "the content plane is backdrop for the chip glass");
+    assert_eq!(draw.layers.iter().filter(|layer| layer.foreground_of == Some(region)).map(|layer| layer.ui_instances.len()).sum::<usize>(), 1, "chip content paints above the glass");
+    assert!(draw.layers.iter().all(|layer| layer.clip.is_none()));
+}
+
+#[test]
+fn chip_glass_is_translucent_blurred_and_one_level_above_the_content_surface() {
+    use crate::theme::Level;
+    let theme = crate::theme::Theme::default();
+    let chip = theme.glass(Level::Window);
+    assert_eq!(Level::Window.index(), Level::Base.index() + 1);
+    assert!(chip.alpha < 1.0, "the content must stay visible through a chip");
+    assert!(chip.blur_px > 0.0, "a chip blurs the content behind it");
+    assert_eq!(theme.glass(Level::Base).blur_px, 0.0, "the content surface itself does not blur");
+}
+
+//#endregion FrameClipTests
+
+//#region ScanlineClipTests
+
+#[test]
+fn draw_list_nests_and_restores_scanline_clips() {
+    let mut draw = DrawList::default();
+    assert!(draw.begin_scanline_clip(&[[0, 0, 100, 100]]));
+    assert!(draw.begin_scanline_clip(&[[25, 25, 100, 100]]));
     assert_eq!(draw.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.iter().copied().collect::<Vec<_>>()), Some(vec![ScissorRect { x: 25, y: 25, w: 75, h: 75 }]));
-    draw.end_silhouette_clip();
+    draw.end_clip();
     assert_eq!(draw.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.iter().copied().collect::<Vec<_>>()), Some(vec![ScissorRect { x: 0, y: 0, w: 100, h: 100 }]));
-    draw.end_silhouette_clip();
+    draw.end_clip();
     assert!(draw.layers.last().is_some_and(|layer| layer.clip.is_none()));
 }
 
 #[test]
-fn glass_foreground_inherits_active_silhouette_clip() {
+fn glass_foreground_inherits_active_scanline_clip() {
     let mut draw = DrawList::default();
-    draw.begin_silhouette_clip(&[Rect::new(0.0, 0.0, 40.0, 20.0), Rect::new(0.0, 20.0, 100.0, 80.0)]);
+    assert!(draw.begin_scanline_clip(&[[0, 0, 40, 20], [0, 20, 100, 80]]));
     let glass = draw.push_glass([0.0, 0.0, 40.0, 20.0], 0.0, crate::theme::Theme::default().glass(crate::theme::Level::Window));
     draw.begin_glass_content(glass);
     assert_eq!(draw.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.len()), Some(2));
 }
 
 #[test]
-fn fractional_adjacent_silhouette_pieces_keep_one_physical_owner_per_pixel() {
-    let mut draw = DrawList::default();
-    draw.begin_retained_output(16, 4_096).expect("bounded retained output grant");
-    draw.begin_silhouette_clip(&[Rect::new(10.0, 48.8, 600.0, 371.2), Rect::new(10.0, 20.0, 170.4, 28.8)]);
-    assert!(draw.finish_retained_output().is_ok(), "logical adjacency must survive conservative physical scissor rounding");
-    let pieces = &draw.layers.last().expect("clipped layer").clip.as_ref().expect("silhouette clip").scissors;
-    assert_eq!(pieces.len(), 2);
-    assert!(pieces[0].intersect(&pieces[1]).w == 0 || pieces[0].intersect(&pieces[1]).h == 0, "one physical pixel cannot belong to both alpha pieces");
-}
-
-#[test]
-fn silhouette_stencil_states_write_masks_then_require_equality() {
-    let mask = mask_stencil_state();
-    assert_eq!(mask.front.compare, gpu_device::CompareFunction::Always);
-    assert_eq!(mask.front.pass_op, gpu_device::StencilOperation::Replace);
-    assert_eq!(mask.write_mask, 0xff);
+fn content_stencil_requires_equality_and_never_writes() {
     let content = content_stencil_state();
     assert_eq!(content.front.compare, gpu_device::CompareFunction::Equal);
     assert_eq!(content.front.pass_op, gpu_device::StencilOperation::Keep);
     assert_eq!(content.write_mask, 0x00);
 }
 
-#[test]
-fn silhouette_mask_reset_is_bounded_to_previous_and_current_unions() {
-    let previous = Some(ScissorRect { x: 10, y: 10, w: 30, h: 20 });
-    let clip = ClipRegion { scissors: vec![ScissorRect { x: 80, y: 15, w: 20, h: 25 }].into() };
-    let (instances, current) = mask_instances(None, Some(&clip), previous, 500.0, 400.0);
-    assert_eq!(instances[0].rect, [10.0, 10.0, 90.0, 30.0]);
-    assert_eq!(instances[1].rect, [80.0, 15.0, 20.0, 25.0]);
-    assert_eq!(current, Some(ScissorRect { x: 80, y: 15, w: 20, h: 25 }));
-}
-
-#[test]
-fn empty_silhouette_clip_writes_no_visible_stencil_region() {
-    let empty = ClipRegion { scissors: Vec::new().into() };
-    let (instances, current) = mask_instances(None, Some(&empty), None, 500.0, 400.0);
-    assert!(instances.is_empty(), "a cleared pass needs neither a reset nor a reference-one mask draw");
-    assert_eq!(current, None);
-}
-
-//#endregion SilhouetteClipTests
+//#endregion ScanlineClipTests
 
 #[test]
 fn scissor_from_rect_uses_top_left_origin() {

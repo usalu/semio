@@ -102,3 +102,20 @@ test("a dependency of the earlier compilation inside OUT_DIR (a lane target dire
   expect([...planned.files.values()]).toContain(join(generated,"private.rs"));
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test("the WIT and witx files of a bindgen!, generate! or from_witx! macro are reached: every file below it ships next to the source, because rustc reads it only through the macro and a first compilation has no dependency file",()=>{
+ const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-wit-")));
+ try{
+  mkdirSync(join(root,"src"));mkdirSync(join(root,"wit","deps"),{recursive:true});mkdirSync(join(root,"other"));
+  writeFileSync(join(root,"Cargo.toml"),'[package]\nname = "bindings"\nversion = "0.1.0"\n');
+  writeFileSync(join(root,"src","lib.rs"),'wasmtime::component::bindgen!({\n    path: "wit",\n    with: { "a:b/c": crate::C },\n});\nwit_bindgen::generate!({ world: "w", path: ["other/w.wit"] });\nwiggle::from_witx!({\n    witx: ["witx/p0/a.witx"],\n    async: { a::* },\n});\n');
+  mkdirSync(join(root,"witx","p0"),{recursive:true});writeFileSync(join(root,"witx","p0","a.witx"),"use \"b.witx\"\n");writeFileSync(join(root,"witx","p0","b.witx"),";;\n");
+  writeFileSync(join(root,"wit","world.wit"),"package a:b;\n");writeFileSync(join(root,"wit","deps","io.wit"),"package c:d;\n");writeFileSync(join(root,"other","w.wit"),"package e:f;\n");
+  const entry=join(root,"src","lib.rs"),reached=includedSourcesV1(entry,undefined,undefined,root);
+  expect([...reached].sort()).toEqual([join(root,"other","w.wit"),join(root,"wit","deps","io.wit"),join(root,"wit","world.wit"),join(root,"witx","p0","a.witx"),join(root,"witx","p0","b.witx")]);
+  expect(includedSourcesV1(entry)).toEqual([]);
+  const planned=planOffloadV1({args:["--crate-name","bindings","--edition=2021","src/lib.rs","--crate-type","lib","--emit=metadata","--out-dir","out","--remap-path-prefix",`${root}=.`],environment:{CARGO_MANIFEST_DIR:root,CARGO_PKG_NAME:"bindings",CARGO_PKG_VERSION:"0.1.0",CARGO_CRATE_NAME:"bindings"},cwd:root});
+  if("declined" in planned)throw Error(planned.declined+" "+planned.detail);
+  for(const path of reached)expect([...planned.files.values()]).toContain(path);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

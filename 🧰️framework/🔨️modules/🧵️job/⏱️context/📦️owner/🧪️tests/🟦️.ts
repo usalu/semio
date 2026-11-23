@@ -4,7 +4,7 @@ import { applyPatch } from "fast-json-patch";
 import {consumeRetainedProgress,remainingRetainedGrant} from "../../../⏱️budget/🟨️.js";
 import { readFileSync, existsSync } from "node:fs";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readSourceFamilySource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("retained step context neutral ledger alias and whole-frame authority", () => {
   for (const row of fixture.cases) {
@@ -47,7 +47,7 @@ test("original job budget consumes only actual independent retained receipts", (
   }
   expect(original).toEqual(law.remaining);
   expect(Buffer.from(law.source).byteLength).toBe(law.receipts[1].copiedBytes);
-  const source=readModuleTreeSource(new URL("../../../🦀️.rs",import.meta.url));
+  const source=readSourceFamilySource(new URL("../../../",import.meta.url));
   for(const method of ["pub retained: RetainedCloneGrant","pub fn retained_grant","pub fn consume_retained","pub fn retained_progress"])expect(source).toContain(method);
   expect(source).toContain("budget.retained");
 });
@@ -58,7 +58,7 @@ test("retained context constructor accepts the original full grant and returns i
 });
 
 test("original refused Job close retains all actual failed currencies",()=>{
- const source=readModuleTreeSource(new URL("../../../🦀️.rs",import.meta.url));expect(source).toContain("Result<InteractiveJobCloseStep,OriginalTurnFailure>");expect(source).toContain("Err(failure)=>failure.retained_progress()");
+ const source=readSourceFamilySource(new URL("../../../",import.meta.url));expect(source).toContain("Result<InteractiveJobCloseStep,OriginalTurnFailure>");expect(source).toContain("Err(failure)=>failure.retained_progress()");
  const actual=applyPatch({copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0},[{op:"replace",path:"/copiedItems",value:1},{op:"replace",path:"/retainedCapacityBytes",value:64}],true).newDocument;expect(actual).toEqual(fixture.failedCloseReceipt);
 });
 

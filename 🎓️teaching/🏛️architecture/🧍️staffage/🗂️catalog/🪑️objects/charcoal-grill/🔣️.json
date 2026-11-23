@@ -7027,7 +7027,6 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "leg-front",
         "wheel-left",
         "wheel-right"
       ],
@@ -44877,21 +44876,6 @@
             "part": "joint"
           },
           {
-            "id": "support-leg-front",
-            "kind": "box",
-            "bone": "bowl",
-            "material": "steel-black",
-            "role": "body",
-            "tone": 0.3,
-            "size": [0.04, 0.012, 0.04],
-            "transform": {
-              "translation": [0.3, 0.006, 0]
-            },
-            "member": "bowl",
-            "part": "support",
-            "anchor": "leg-front"
-          },
-          {
             "id": "support-wheel-left",
             "kind": "box",
             "bone": "wheels",
@@ -65291,21 +65275,6 @@
             "part": "joint"
           },
           {
-            "id": "support-leg-front",
-            "kind": "box",
-            "bone": "bowl",
-            "material": "steel-black",
-            "role": "body",
-            "tone": 0.3,
-            "size": [0.04, 0.015, 0.04],
-            "transform": {
-              "translation": [0.3, 0.0075, 0]
-            },
-            "member": "bowl",
-            "part": "support",
-            "anchor": "leg-front"
-          },
-          {
             "id": "support-wheel-left",
             "kind": "box",
             "bone": "wheels",
@@ -77757,21 +77726,6 @@
             "part": "joint"
           },
           {
-            "id": "support-leg-front",
-            "kind": "box",
-            "bone": "bowl",
-            "material": "steel-black",
-            "role": "body",
-            "tone": 0.3,
-            "size": [0.04, 0.03, 0.04],
-            "transform": {
-              "translation": [0.3, 0.015, 0]
-            },
-            "member": "bowl",
-            "part": "support",
-            "anchor": "leg-front"
-          },
-          {
             "id": "support-wheel-left",
             "kind": "box",
             "bone": "wheels",
@@ -84162,21 +84116,6 @@
             "of": "wheel-right",
             "member": "wheels",
             "part": "member"
-          },
-          {
-            "id": "support-leg-front",
-            "kind": "box",
-            "bone": "bowl",
-            "material": "steel-black",
-            "role": "body",
-            "tone": 0.3,
-            "size": [0.075, 0.075, 0.075],
-            "transform": {
-              "translation": [0.29, 0.0375, 0]
-            },
-            "member": "bowl",
-            "part": "support",
-            "anchor": "leg-front"
           },
           {
             "id": "support-wheel-left",

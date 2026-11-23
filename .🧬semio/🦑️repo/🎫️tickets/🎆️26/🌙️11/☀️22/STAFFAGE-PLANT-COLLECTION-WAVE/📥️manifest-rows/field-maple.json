@@ -1,0 +1,57 @@
+{
+  "id": "field-maple",
+  "category": "vegetation",
+  "title": {
+    "en": "Field Maple",
+    "de": "Feldahorn"
+  },
+  "heightM": 10.25,
+  "widthM": 8.263,
+  "powerW": 0,
+  "poses": [
+    "summer-calm",
+    "summer-breeze",
+    "storm",
+    "summer-downpour",
+    "autumn-colour"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "field-maple-plan-crown",
+    "tree-sign"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A small field maple (Acer campestre) of about 10 m whose short stem forks at 1.9 m into three ascending stems; dense, rounded, slightly irregular crown of small blunt-lobed leaves, corky plated bark, horizontally spread samaras.",
+    "de": "Ein kleiner Feldahorn (Acer campestre) von etwa 10 m, dessen kurzer Stamm sich in 1,9 m in drei aufsteigende Stämmlinge teilt; dichte, rundliche, leicht unregelmäßige Krone aus kleinen, stumpf gelappten Blättern, korkige, gefelderte Borke, waagerecht gespreizte Flügelfrüchte."
+  },
+  "completion": "authored"
+}

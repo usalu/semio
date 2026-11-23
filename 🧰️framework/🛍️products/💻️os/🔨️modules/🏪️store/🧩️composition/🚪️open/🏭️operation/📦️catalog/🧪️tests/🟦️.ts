@@ -44,6 +44,6 @@ test("member opening admits original sources then funds tickets before snapshot 
   expect(source.includes("producer.member_store_owners(source_grant)")).toBe(true);
   expect(source.includes("progress.fits(source_grant)")).toBe(true);
   expect(source.includes("owners.constructor_is_complete()")).toBe(true);
-  expect(source.includes("owners.admit_constructor(grant)")).toBe(true);
+  expect(source.includes("owners.admit_constructor(effect)")).toBe(true);
   expect(source.includes("self.owners.take().expect(")).toBe(true);
 });

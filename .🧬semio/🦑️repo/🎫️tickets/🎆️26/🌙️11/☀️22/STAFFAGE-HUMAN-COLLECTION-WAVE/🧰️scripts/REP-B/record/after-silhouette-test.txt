@@ -1,0 +1,16 @@
+AssertionError: dancer 1:500 front: expected 0.9055993531433192 to be greater than or equal to 0.92
+AssertionError: painter-at-easel 1:50 elevation Hausdorff: expected 0.017286645857424163 to be less than or equal to 0.015
+AssertionError: person-carrying-ladder 1:500 elevation Hausdorff: expected 0.16209358532236462 to be less than or equal to 0.15
+AssertionError: person-carrying-shopping-bags 1:50 front Hausdorff: expected 0.025502757203878956 to be less than or equal to 0.015
+AssertionError: person-checking-watch 1:50 plan Hausdorff: expected 0.0278738789012222 to be less than or equal to 0.015
+AssertionError: person-drinking-coffee 1:50 axis 2: 0.5514731728520788 m against 0.564 m: expected 0.012526827147921193 to be less than or equal to 0.0075
+AssertionError: person-eating-standing 1:50 elevation Hausdorff: expected 0.01957557470420728 to be less than or equal to 0.015
+AssertionError: person-hanging-laundry 1:100 plan Hausdorff: expected 0.03354101966249685 to be less than or equal to 0.03
+AssertionError: person-signing 1:100 axis 2: 0.522942725758124 m against 0.548 m: expected 0.025057274241876093 to be less than or equal to 0.015
+AssertionError: person-sweeping 1:50 axis 1: 1.6646940663731662 m against 1.679 m: expected 0.014305933626833855 to be less than or equal to 0.0075
+AssertionError: person-taking-selfie 1:50 elevation Hausdorff: expected 0.016978847134007657 to be less than or equal to 0.015
+AssertionError: person-with-guide-dog 1:50 elevation Hausdorff: expected 0.020194368026754388 to be less than or equal to 0.015
+AssertionError: photographer-with-camera 1:50 plan Hausdorff: expected 0.01993152339887747 to be less than or equal to 0.015
+AssertionError: standing-violinist 1:100 front Hausdorff: expected 0.030923292192132454 to be less than or equal to 0.03
+AssertionError: sunbather-on-towel 1:100 axis 0: 1.8 m against 1.827 m: expected 0.026999999999999913 to be less than or equal to 0.015
+AssertionError: worker-with-pallet-jack 1:50 elevation Hausdorff: expected 0.01590990257669732 to be less than or equal to 0.015

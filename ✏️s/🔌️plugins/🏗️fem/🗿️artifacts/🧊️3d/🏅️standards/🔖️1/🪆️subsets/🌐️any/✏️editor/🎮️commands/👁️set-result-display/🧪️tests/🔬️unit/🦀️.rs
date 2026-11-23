@@ -17,5 +17,5 @@ use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 #[semio_framework_async_macros::async_test]
 async fn set_result_display_writes_config_not_artifact_mutations() {
     let mut app = fem3d_app();
-    dispatch(&mut app, Fem3dCommand::SetResultDisplay(SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1, field: None, value: None, window_id: None })).await;
+    dispatch(&mut app, Fem3dCommand::SetResultDisplay(SetResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode: "modal".into(), mode_index: 1, field: None, value: None, window_id: None })).await;
 }

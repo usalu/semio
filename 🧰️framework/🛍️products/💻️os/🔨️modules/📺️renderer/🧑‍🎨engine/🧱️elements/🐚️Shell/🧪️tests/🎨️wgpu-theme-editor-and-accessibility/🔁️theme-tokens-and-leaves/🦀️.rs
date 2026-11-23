@@ -34,6 +34,7 @@ fn editing_the_document_re_tokenises_the_painted_theme() {
 /// React's DOM tree has no node ceiling; virtualized windows keep the retained document under 128.
 #[test]
 fn every_open_theme_section_publishes_within_the_retained_document_ceiling() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     while !ui_contract::close_ui_value_page_one() {}
     let baseline = ui_contract::ui_value_headroom();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);

@@ -11,16 +11,16 @@ fn inference_determinism_law() {
     use protocol::Inference;
 
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
-    assert_eq!(Fem3dInference::infer(&snapshot).expect("valid materialized inference fixture"), Fem3dInference::infer(&snapshot).expect("valid materialized inference fixture"));
+    let snapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotRetiring::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses"));
+    assert_eq!(Fem3dInference::infer(&*snapshot).expect("valid materialized inference fixture"), Fem3dInference::infer(&*snapshot).expect("valid materialized inference fixture"));
 }
 
 #[test]
 fn inference_default_law() {
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::inferences::Fem3dInference;
-    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::{Fem3dSnapshot, Fem3dSnapshotRetiring};
     use protocol::Inference;
 
-    assert_eq!(Fem3dInference::infer(&Fem3dSnapshot::default()).expect("valid materialized inference fixture"), Fem3dInference::default());
+    assert_eq!(Fem3dInference::infer(&*Fem3dSnapshotRetiring::new(Fem3dSnapshot::default())).expect("valid materialized inference fixture"), Fem3dInference::default());
 }
 //#endregion 🧪️InferenceLaws

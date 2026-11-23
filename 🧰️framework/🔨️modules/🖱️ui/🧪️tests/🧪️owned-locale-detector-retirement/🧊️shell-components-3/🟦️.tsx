@@ -3,15 +3,17 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { TestSource, Tests1Vitest, Tests1Dependencies } from "../🧰️harness/🟦️.ts";
 
 export async function registerShellComponents3Tests(vitest: Tests1Vitest, dependencies: Tests1Dependencies, testSource: TestSource): Promise<void> {
-  const { Button, Canvas, DEFAULT_UI_DRIVER, Label, Layout, Navbar, Panel, PanelTabBar, React, Toggle, TreeContext, UI_ELEMENT_REGISTRY, UiDriverProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, chromeStatusBorderClass, computeTabDockDropZone, createWindowSilhouetteGeometry, isWindowChromeIntroducedTarget, modeDockChromeGridPlacement, modeDockTabLabelClassName, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, renderToStaticMarkup, resolveWindowSilhouetteBorderKind, singleTreeLeaf, useFlow, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath } = dependencies;
+  const { Button, Canvas, DEFAULT_UI_DRIVER, Label, Layout, Navbar, Panel, PanelTabBar, React, Toggle, TreeContext, UI_ELEMENT_REGISTRY, UiDriverProvider, WINDOW_FRAME_BORDER_KINDS, WINDOW_FRAME_GEOMETRY_SCHEMA, WINDOW_FRAME_PATH_INSET, Window, chromeStatusBorderClass, computeTabDockDropZone, createWindowFrameGeometry, isWindowChromeIntroducedTarget, modeDockChromeGridPlacement, modeDockTabLabelClassName, normalizeWindowFrameChips, normalizeWindowFrameMetrics, renderToStaticMarkup, resolveWindowFrameBorderKind, singleTreeLeaf, useFlow, windowFrameBorderPaint, windowFrameContains, windowFrameBorderPath } = dependencies;
   type Anchor = any;
   type PanelTabNode = any;
   type PanelTabRowDropTarget = any;
-  type WindowSilhouetteChip = any;
-  type WindowSilhouetteEdge = any;
-  type WindowSilhouetteMetrics = any;
+  type WindowFrameChip = any;
+  type WindowFrameEdge = any;
+  type WindowFrameMetrics = any;
   const { describe, expect, it } = vitest;
   const { render, screen } = await import("@testing-library/react");
+  const clippingModule = await import("polygon-clipping");
+  const clipping = "default" in clippingModule ? (clippingModule.default as typeof clippingModule) : clippingModule;
 
 describe("Shell components", () => {
 
@@ -169,93 +171,21 @@ describe("Shell components", () => {
       expect(grid.gapCol).toBeLessThan(grid.controlsCol);
     });
 
-    it("windowSilhouettePath follows tabs, gap cutout, and controls", () => {
-      const dockTop = (titleRight = 60, controlsLeft = 160, depth = 24): WindowSilhouetteEdge => ({
-        depth,
-        chips: [
-          { left: 0, right: titleRight },
-          { left: controlsLeft, right: 200 },
-        ],
-      });
-      const metrics = (top: WindowSilhouetteEdge, bottom: WindowSilhouetteEdge = { depth: 0, chips: [] }): WindowSilhouetteMetrics => ({
-        width: 200,
-        height: 100,
-        top,
-        bottom,
-      });
-      expect(windowSilhouettePath(metrics(dockTop()), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H0 Z");
-      expect(windowSilhouettePath(metrics(dockTop()))).toBe("M1,1 H60 V25 H160 V1 H199 V99 H1 Z");
-      expect(
-        windowSilhouettePath(
-          metrics(dockTop(), {
-            depth: 24,
-            chips: [
-              { left: 0, right: 50 },
-              { left: 140, right: 200 },
-            ],
-          }),
-          0,
-        ),
-      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H50 V100 H0 Z");
-      expect(
-        windowSilhouettePath(
-          metrics(dockTop(), {
-            depth: 24,
-            chips: [
-              { left: 0, right: 50 },
-              { left: 140, right: 200 },
-            ],
-          }),
-        ),
-      ).toBe("M1,1 H60 V25 H160 V1 H199 V99 H140 V75 H50 V99 H1 Z");
-      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 140, right: 200 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H0 Z");
-      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V76 H50 V100 H0 Z");
-      expect(
-        windowSilhouettePath(
-          metrics(dockTop(), {
-            depth: 24,
-            chips: [
-              { left: 0, right: 50 },
-              { left: 80, right: 120 },
-              { left: 140, right: 200 },
-            ],
-          }),
-          0,
-        ),
-      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H120 V100 H80 V76 H50 V100 H0 Z");
-      expect(
-        windowSilhouettePath(
-          metrics(dockTop(), {
-            depth: 24,
-            chips: [
-              { left: 0, right: 50 },
-              { left: 80, right: 120 },
-            ],
-          }),
-          0,
-        ),
-      ).toBe("M0,0 H60 V24 H160 V0 H200 V76 H120 V100 H80 V76 H50 V100 H0 Z");
-      expect(
-        windowSilhouettePath(
-          metrics(dockTop(), {
-            depth: 24,
-            chips: [
-              { left: 80, right: 120 },
-              { left: 140, right: 200 },
-            ],
-          }),
-          0,
-        ),
-      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H120 V100 H80 V76 H0 Z");
-      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 80, right: 120 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V76 H120 V100 H80 V76 H0 Z");
-      expect(windowSilhouettePath(metrics({ depth: 24, chips: [{ left: 0, right: 60 }] }), 0)).toBe("M0,0 H60 V24 H200 V100 H0 Z");
-      expect(windowSilhouettePath(metrics({ depth: 0, chips: [] }), 0)).toBe("M0,0 H200 V100 H0 Z");
-      expect(WINDOW_SILHOUETTE_PATH_INSET).toBeGreaterThanOrEqual(1);
+    it("windowFrameBorderPath is the inset rectangle whatever the chips are", () => {
+      const chipSets: WindowFrameChip[][] = [[], [{ left: 0, right: 60 }], [{ left: 0, right: 60 }, { left: 160, right: 200 }], [{ left: 0, right: 50 }, { left: 80, right: 120 }, { left: 140, right: 200 }]];
+      for (const top of chipSets) {
+        for (const bottom of chipSets) {
+          const metrics: WindowFrameMetrics = { width: 200, height: 100, top: { depth: top.length > 0 ? 24 : 0, chips: top }, bottom: { depth: bottom.length > 0 ? 24 : 0, chips: bottom } };
+          expect(windowFrameBorderPath(metrics, 0)).toBe("M0,0 H200 V100 H0 Z");
+          expect(windowFrameBorderPath(metrics)).toBe("M1,1 H199 V99 H1 Z");
+        }
+      }
+      expect(WINDOW_FRAME_PATH_INSET).toBeGreaterThanOrEqual(1);
     });
 
     it("normalizes physical chip spans deterministically across RTL order and malformed input", () => {
       expect(
-        normalizeWindowSilhouetteChips(
+        normalizeWindowFrameChips(
           [
             { left: 160, right: 220 },
             { left: 60.25, right: 90 },
@@ -272,7 +202,7 @@ describe("Shell components", () => {
         { left: 160, right: 200 },
       ]);
       expect(
-        normalizeWindowSilhouetteMetrics({
+        normalizeWindowFrameMetrics({
           width: 200,
           height: 30,
           top: { depth: 24, chips: [{ left: 160, right: 200 }] },
@@ -286,8 +216,8 @@ describe("Shell components", () => {
       });
     });
 
-    it("derives zero-inset content, inset border, glass, containment, and safe clearances from one schema", () => {
-      const geometry = createWindowSilhouetteGeometry({
+    it("derives frame, inset border, chip overlays, containment, and safe clearances from one schema", () => {
+      const geometry = createWindowFrameGeometry({
         width: 200,
         height: 100,
         top: {
@@ -305,39 +235,56 @@ describe("Shell components", () => {
           ],
         },
       });
-      expect(geometry.schema).toBe(WINDOW_SILHOUETTE_GEOMETRY_SCHEMA);
+      expect(geometry.schema).toBe(WINDOW_FRAME_GEOMETRY_SCHEMA);
       expect(geometry.state).toBe("ready");
-      expect(geometry.contentPath).toBe("M0,0 H60 V24 H160 V0 H200 V84 H120 V100 H80 V84 H40 V100 H0 Z");
-      expect(geometry.borderPath).toBe("M1,1 H60 V25 H160 V1 H199 V83 H120 V99 H80 V83 H40 V99 H1 Z");
-      expect(geometry.contentClipPath).toBe("polygon(0px 0px, 60px 0px, 60px 24px, 160px 24px, 160px 0px, 200px 0px, 200px 84px, 120px 84px, 120px 100px, 80px 100px, 80px 84px, 40px 84px, 40px 100px, 0px 100px)");
-      expect(geometry.bodyRegion).toEqual({ x: 0, y: 24, width: 200, height: 60, kind: "body" });
-      expect(geometry.glassRegions).toEqual([
-        { x: 0, y: 0, width: 60, height: 24, kind: "chip", dock: "top" },
-        { x: 160, y: 0, width: 40, height: 24, kind: "chip", dock: "top" },
-        { x: 0, y: 84, width: 40, height: 16, kind: "chip", dock: "bottom" },
-        { x: 80, y: 84, width: 40, height: 16, kind: "chip", dock: "bottom" },
+      expect(geometry.frame).toEqual({ x: 0, y: 0, width: 200, height: 100 });
+      expect(geometry.borderPath).toBe("M1,1 H199 V99 H1 Z");
+      expect(geometry.chipRegions).toEqual([
+        { x: 0, y: 0, width: 60, height: 24, dock: "top" },
+        { x: 160, y: 0, width: 40, height: 24, dock: "top" },
+        { x: 0, y: 84, width: 40, height: 16, dock: "bottom" },
+        { x: 80, y: 84, width: 40, height: 16, dock: "bottom" },
       ]);
       expect(geometry.safeClearances).toEqual({ top: 24, right: 0, bottom: 16, left: 0 });
-      expect(windowSilhouetteContains(geometry.metrics, 20, 12)).toBe(true);
-      expect(windowSilhouetteContains(geometry.metrics, 100, 12)).toBe(false);
-      expect(windowSilhouetteContains(geometry.metrics, 100, 50)).toBe(true);
-      expect(windowSilhouetteContains(geometry.metrics, 60, 92)).toBe(false);
-      expect(windowSilhouetteContains(geometry.metrics, 100, 92)).toBe(true);
+      for (const removed of ["contentClipPath", "contentPath", "bodyRegion", "contentRegions", "glassRegions", "gapRegions"]) expect(geometry).not.toHaveProperty(removed);
+      for (const [x, y] of [[20, 12], [100, 12], [100, 50], [60, 92], [100, 92], [0, 0], [200, 100]] as const) expect(windowFrameContains(geometry.metrics, x, y)).toBe(true);
+      for (const [x, y] of [[-1, 50], [201, 50], [100, -1], [100, 101]] as const) expect(windowFrameContains(geometry.metrics, x, y)).toBe(false);
     });
 
-    it("keeps pending and chipless chrome bands as conservative pure cutouts", () => {
-      const pending = createWindowSilhouetteGeometry(null, { width: 200, height: 100, topClearance: 24, bottomClearance: 12 });
+    it("keeps chip overlays inside the frame, pairwise disjoint, and the uncovered chip row as content (independent polygon-clipping oracle)", () => {
+      const chipSets: WindowFrameChip[][] = [[], [{ left: 0, right: 60 }], [{ left: 140, right: 200 }], [{ left: 0, right: 50 }, { left: 80, right: 120 }, { left: 140, right: 200 }]];
+      const toRing = (r: { x: number; y: number; width: number; height: number }) => [[r.x, r.y], [r.x + r.width, r.y], [r.x + r.width, r.y + r.height], [r.x, r.y + r.height], [r.x, r.y]] as [number, number][];
+      const area = (multi: ReturnType<typeof clipping.union>) => multi.reduce((sum, polygon) => sum + polygon.reduce((acc, ring, index) => acc + (index === 0 ? 1 : -1) * Math.abs(ring.slice(1).reduce((a, [x, y], i) => a + ring[i]![0] * y - x * ring[i]![1], 0) / 2), 0), 0);
+      for (const top of chipSets) {
+        for (const bottom of chipSets) {
+          const geometry = createWindowFrameGeometry({ width: 200, height: 100, top: { depth: top.length > 0 ? 24 : 0, chips: top }, bottom: { depth: bottom.length > 0 ? 24 : 0, chips: bottom } });
+          const frame = [[toRing(geometry.frame)]] as [number, number][][][];
+          const regions = geometry.chipRegions.map((region) => [[toRing(region)]] as [number, number][][][]);
+          expect(regions).toHaveLength(top.length + bottom.length);
+          for (const region of regions) expect(area(clipping.difference(region, frame))).toBe(0);
+          for (let i = 0; i < regions.length; i += 1) for (let j = i + 1; j < regions.length; j += 1) expect(area(clipping.intersection(regions[i]!, regions[j]!))).toBe(0);
+          const chipArea = regions.reduce((sum, region) => sum + area(region), 0);
+          const uncovered = regions.length === 0 ? area(frame) : area(clipping.difference(frame, clipping.union(regions[0]!, ...regions.slice(1))));
+          expect(uncovered).toBe(20000 - chipArea);
+          expect(windowFrameBorderPath(geometry.metrics, 0)).toBe("M0,0 H200 V100 H0 Z");
+        }
+      }
+    });
+
+    it("pending and chipless chrome keep the full frame and report conservative clearances", () => {
+      const pending = createWindowFrameGeometry(null, { width: 200, height: 100, topClearance: 24, bottomClearance: 12 });
       expect(pending.state).toBe("pending");
-      expect(pending.glassRegions).toEqual([]);
-      expect(pending.bodyRegion).toEqual({ x: 0, y: 24, width: 200, height: 64, kind: "body" });
-      expect(pending.contentRegions).toEqual([pending.bodyRegion]);
-      expect(pending.contentPath).toBe("M0,24 H200 V88 H0 Z");
-      expect(pending.contentClipPath).toBe("polygon(0px 24px, 200px 24px, 200px 88px, 0px 88px)");
-      expect(windowSilhouetteContains(pending.metrics, 100, 12)).toBe(false);
-      expect(windowSilhouetteContains(pending.metrics, 100, 50)).toBe(true);
-      expect(windowSilhouetteContains(pending.metrics, 100, 94)).toBe(false);
-      expect(windowSilhouettePath({ width: 200, height: 100, top: { depth: 24, chips: [] }, bottom: { depth: 0, chips: [] } }, 0)).toBe("M0,24 H200 V100 H0 Z");
-      expect(createWindowSilhouetteGeometry(null).contentClipPath).toBe("inset(100%)");
+      expect(pending.frame).toEqual({ x: 0, y: 0, width: 200, height: 100 });
+      expect(pending.chipRegions).toEqual([]);
+      expect(pending.safeClearances).toEqual({ top: 24, right: 0, bottom: 12, left: 0 });
+      expect(pending.borderPath).toBe("M1,1 H199 V99 H1 Z");
+      for (const removed of ["contentClipPath", "contentPath", "bodyRegion", "contentRegions"]) expect(pending).not.toHaveProperty(removed);
+      for (const y of [12, 50, 94]) expect(windowFrameContains(pending.metrics, 100, y)).toBe(true);
+      const chipless = createWindowFrameGeometry({ width: 200, height: 100, top: { depth: 24, chips: [] }, bottom: { depth: 0, chips: [] } });
+      expect(chipless.chipRegions).toEqual([]);
+      expect(chipless.frame).toEqual({ x: 0, y: 0, width: 200, height: 100 });
+      expect(createWindowFrameGeometry(null).chipRegions).toEqual([]);
+      expect(createWindowFrameGeometry(null)).not.toHaveProperty("contentClipPath");
     });
 
     it("UI_ELEMENT_REGISTRY lists chrome components with status axis coverage", () => {
@@ -352,44 +299,12 @@ describe("Shell components", () => {
       expect(chromeStatusBorderClass(undefined)).toBe("");
     });
 
-    it("windowSilhouetteOutlineViolations stays empty across absent chip slots", () => {
-      const footerSlots = [
-        { left: false, center: false, right: false },
-        { left: true, center: false, right: false },
-        { left: false, center: true, right: false },
-        { left: false, center: false, right: true },
-        { left: true, center: true, right: false },
-        { left: true, center: false, right: true },
-        { left: false, center: true, right: true },
-        { left: true, center: true, right: true },
-      ] as const;
-      const titleModes = [
-        { title: true, controls: true },
-        { title: true, controls: false },
-        { title: false, controls: true },
-      ] as const;
-      for (const titleMode of titleModes) {
-        for (const footer of footerSlots) {
-          const topChips: WindowSilhouetteChip[] = [];
-          if (titleMode.title) topChips.push({ left: 0, right: 60 });
-          if (titleMode.controls) topChips.push({ left: 160, right: 200 });
-          const bottomChips: WindowSilhouetteChip[] = [];
-          if (footer.left) bottomChips.push({ left: 0, right: 50 });
-          if (footer.center) bottomChips.push({ left: 80, right: 120 });
-          if (footer.right) bottomChips.push({ left: 140, right: 200 });
-          const outline = windowSilhouetteOutline({
-            width: 200,
-            height: 100,
-            top: { depth: topChips.length > 0 ? 24 : 0, chips: topChips },
-            bottom: { depth: bottomChips.length > 0 ? 24 : 0, chips: bottomChips },
-          });
-          expect(windowSilhouetteOutlineViolations(outline, { x0: 0, y0: 0, x1: 200, y1: 100 })).toEqual([]);
-        }
-      }
+    it("window frame exports no outline polygon, violation or gap API", () => {
+      for (const removed of ["windowSilhouetteOutline", "windowSilhouetteOutlineViolations", "windowSilhouettePath", "createWindowSilhouetteGeometry"]) expect(dependencies).not.toHaveProperty(removed);
     });
 
-    it("windowSilhouetteBorderPaint shares one path across every border kind", () => {
-      const metrics: WindowSilhouetteMetrics = {
+    it("windowFrameBorderPaint shares one rectangular path across every border kind", () => {
+      const metrics: WindowFrameMetrics = {
         width: 200,
         height: 100,
         top: {
@@ -407,52 +322,53 @@ describe("Shell components", () => {
           ],
         },
       };
-      const path = windowSilhouettePath(metrics, 0);
-      for (const kind of WINDOW_SILHOUETTE_BORDER_KINDS) {
-        expect(windowSilhouetteBorderPaint(kind).className).toContain("window-silhouette-border");
-        expect(windowSilhouettePath(metrics, 0)).toBe(path);
+      const path = windowFrameBorderPath(metrics, 0);
+      for (const kind of WINDOW_FRAME_BORDER_KINDS) {
+        expect(windowFrameBorderPaint(kind).className).toContain("window-frame-border");
+        expect(windowFrameBorderPath(metrics, 0)).toBe(path);
+        expect(path).toBe("M0,0 H200 V100 H0 Z");
       }
     });
 
-    it("resolveWindowSilhouetteBorderKind prefers introduced over loading/waiting and falls back to active/normal", () => {
+    it("resolveWindowFrameBorderKind prefers introduced over loading/waiting and falls back to active/normal", () => {
       const el = document.createElement("div");
       el.className = "border-loading border-waiting";
-      expect(resolveWindowSilhouetteBorderKind(el)).toBe("loading");
+      expect(resolveWindowFrameBorderKind(el)).toBe("loading");
       el.setAttribute("data-introduced", "true");
-      expect(resolveWindowSilhouetteBorderKind(el)).toBe("introduced");
+      expect(resolveWindowFrameBorderKind(el)).toBe("introduced");
       el.removeAttribute("data-introduced");
       el.className = "border-waiting-active";
-      expect(resolveWindowSilhouetteBorderKind(el)).toBe("waiting");
+      expect(resolveWindowFrameBorderKind(el)).toBe("waiting");
       el.className = "";
-      expect(resolveWindowSilhouetteBorderKind(el)).toBe("normal");
-      expect(resolveWindowSilhouetteBorderKind(el, true)).toBe("active");
+      expect(resolveWindowFrameBorderKind(el)).toBe("normal");
+      expect(resolveWindowFrameBorderKind(el, true)).toBe("active");
       const scroll = document.createElement("div");
       scroll.id = "framework.window.puzzle3dMain";
       scroll.setAttribute("data-introduced", "true");
       el.appendChild(scroll);
-      expect(resolveWindowSilhouetteBorderKind(el)).toBe("introduced");
+      expect(resolveWindowFrameBorderKind(el)).toBe("introduced");
       const utility = document.createElement("button");
       utility.id = "transform";
       utility.setAttribute("data-introduced", "true");
       el.replaceChildren(utility);
       expect(isWindowChromeIntroducedTarget(utility)).toBe(false);
-      expect(resolveWindowSilhouetteBorderKind(el)).toBe("normal");
+      expect(resolveWindowFrameBorderKind(el)).toBe("normal");
     });
 
-    it("resolveWindowSilhouetteBorderKind prefers celebrated over a lingering introduced stamp", () => {
+    it("resolveWindowFrameBorderKind prefers celebrated over a lingering introduced stamp", () => {
       const el = document.createElement("div");
       el.setAttribute("data-introduced", "true");
-      expect(resolveWindowSilhouetteBorderKind(el)).toBe("introduced");
+      expect(resolveWindowFrameBorderKind(el)).toBe("introduced");
       el.setAttribute("data-celebrated", "true");
-      expect(resolveWindowSilhouetteBorderKind(el)).toBe("celebrated");
+      expect(resolveWindowFrameBorderKind(el)).toBe("celebrated");
       el.removeAttribute("data-introduced");
-      expect(resolveWindowSilhouetteBorderKind(el)).toBe("celebrated");
+      expect(resolveWindowFrameBorderKind(el)).toBe("celebrated");
       const scroll = document.createElement("div");
       scroll.id = "framework.window.puzzle3dMain";
       scroll.setAttribute("data-celebrated", "true");
       const outer = document.createElement("div");
       outer.appendChild(scroll);
-      expect(resolveWindowSilhouetteBorderKind(outer)).toBe("celebrated");
+      expect(resolveWindowFrameBorderKind(outer)).toBe("celebrated");
     });
 });
 }

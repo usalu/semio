@@ -47,7 +47,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Overlays evaluated draw-handle layers, plus (in `"wire"` show mode) a schematic node box per
 /// visible widget.
-pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, window_config: &config::Generation2dEditPreviewWindowConfig, session: &FlowEvalSession) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, window_config: &config::Generation2dEditPreviewWindowConfig, session: &FlowEvalSession, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.host_snapshot;
     let eval_json = session.eval_json();
     let prefix = "generation2d-preview";
@@ -85,6 +85,8 @@ pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, 
         GENERATION2D_PLAY_SURFACE_PREVIEW,
         semio_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
         &Canvas2dScene { framing: None, camera_x: window_config.viewport.x, camera_y: window_config.viewport.y, zoom: window_config.viewport.zoom, layers_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        semio_plugin::surface_name(locale, "Preview", "Vorschau"),
+        None,
     )
 }
 //#endregion 🔖️Render

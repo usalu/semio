@@ -36,8 +36,8 @@
         "de": "Vegetation"
       },
       "description": {
-        "en": "Trees, hedges and grasses with wind sway, storm and snow load states and leaf transpiration over the day.",
-        "de": "Bäume, Hecken und Gräser mit Windschwingung, Sturm- und Schneelastzuständen und Blatttranspiration im Tagesgang."
+        "en": "Trees, conifers, palms, succulents, shrubs, hedges, grasses, climbers, crops and indoor plants with wind sway, storm, snow, flowering and fruit states and leaf transpiration over the day.",
+        "de": "Bäume, Nadelbäume, Palmen, Sukkulenten, Sträucher, Hecken, Gräser, Kletter-, Nutz- und Zimmerpflanzen mit Windschwingung, Sturm-, Schnee-, Blüten- und Fruchtzuständen und Blatttranspiration im Tagesgang."
       },
       "folder": "🌳️vegetation"
     },
@@ -518,6 +518,180 @@
         "person-in-winter-coat",
         "parent-with-child-on-shoulders",
         "walking-toddler"
+      ]
+    },
+    {
+      "id": "park-and-street-trees",
+      "title": {
+        "en": "Park and Street Trees",
+        "de": "Park- und Straßenbäume"
+      },
+      "description": {
+        "en": "Large deciduous trees for avenues, parks and squares, from maples and beech to ginkgo and plane.",
+        "de": "Große Laubbäume für Alleen, Parks und Plätze, von Ahorn und Buche bis Ginkgo und Platane."
+      },
+      "assets": [
+        "norway-maple",
+        "sycamore-maple",
+        "field-maple",
+        "horse-chestnut",
+        "european-beech",
+        "common-ash",
+        "ginkgo",
+        "honey-locust",
+        "sweetgum",
+        "tulip-tree",
+        "red-oak",
+        "black-locust",
+        "english-oak",
+        "small-leaved-lime",
+        "london-plane-pollarded",
+        "lombardy-poplar"
+      ]
+    },
+    {
+      "id": "flowering-and-small-trees",
+      "title": {
+        "en": "Flowering and Small Trees",
+        "de": "Blühende und kleine Bäume"
+      },
+      "description": {
+        "en": "Ornamental and native small trees with blossom, fruit and berry states for gardens and courtyards.",
+        "de": "Zier- und heimische Kleinbäume mit Blüten-, Frucht- und Beerenzuständen für Gärten und Höfe."
+      },
+      "assets": [
+        "japanese-cherry",
+        "saucer-magnolia",
+        "crab-apple",
+        "apple-tree",
+        "rowan",
+        "hawthorn",
+        "black-alder",
+        "japanese-maple",
+        "multi-stem-birch",
+        "weeping-willow"
+      ]
+    },
+    {
+      "id": "conifers",
+      "title": {
+        "en": "Conifers",
+        "de": "Nadelbäume"
+      },
+      "description": {
+        "en": "Evergreen and deciduous conifers from narrow columns to tiered plates, with snow load states.",
+        "de": "Immergrüne und sommergrüne Nadelbäume von schmalen Säulen bis zu Etagenkronen, mit Schneelastzuständen."
+      },
+      "assets": [
+        "norway-spruce",
+        "european-larch",
+        "atlas-cedar",
+        "italian-cypress",
+        "english-yew",
+        "dawn-redwood",
+        "scots-pine",
+        "stone-pine"
+      ]
+    },
+    {
+      "id": "mediterranean-and-desert",
+      "title": {
+        "en": "Mediterranean and Desert",
+        "de": "Mediterran und Wüste"
+      },
+      "description": {
+        "en": "Drought-adapted trees, palms and succulents for hot, dry climates, including CAM plants that transpire at night.",
+        "de": "Trockenheitsangepasste Bäume, Palmen und Sukkulenten für heiße, trockene Klimate, darunter CAM-Pflanzen mit nächtlicher Transpiration."
+      },
+      "assets": [
+        "olive-tree",
+        "fig-tree",
+        "stone-pine",
+        "date-palm",
+        "windmill-palm",
+        "saguaro-cactus",
+        "prickly-pear",
+        "yucca",
+        "agave",
+        "rosemary-bush",
+        "lavender-bush"
+      ]
+    },
+    {
+      "id": "shrubs-and-hedges",
+      "title": {
+        "en": "Shrubs and Hedges",
+        "de": "Sträucher und Hecken"
+      },
+      "description": {
+        "en": "Flowering shrubs, clipped hedges and topiary for gardens, borders and boundaries.",
+        "de": "Blühende Sträucher, geschnittene Hecken und Formgehölze für Gärten, Rabatten und Grenzen."
+      },
+      "assets": [
+        "common-lilac",
+        "hydrangea",
+        "rhododendron",
+        "boxwood-ball",
+        "privet-hedge",
+        "cherry-laurel",
+        "hornbeam-hedge",
+        "shrub-rose",
+        "lavender-bush",
+        "rosemary-bush"
+      ]
+    },
+    {
+      "id": "grasses-and-perennials",
+      "title": {
+        "en": "Grasses and Perennials",
+        "de": "Gräser und Stauden"
+      },
+      "description": {
+        "en": "Ornamental grasses, reeds, perennials and tropical foliage plants with wind and transpiration states.",
+        "de": "Ziergräser, Röhricht, Stauden und tropische Blattpflanzen mit Wind- und Transpirationszuständen."
+      },
+      "assets": [
+        "pampas-grass",
+        "common-reed",
+        "sunflower",
+        "miscanthus-grass",
+        "bamboo-clump",
+        "hosta-clump",
+        "banana-plant",
+        "tree-fern"
+      ]
+    },
+    {
+      "id": "climbers-and-crops",
+      "title": {
+        "en": "Climbers and Crops",
+        "de": "Kletterpflanzen und Nutzpflanzen"
+      },
+      "description": {
+        "en": "Climbing plants on supports and agricultural rows for facades, pergolas and productive landscapes.",
+        "de": "Kletterpflanzen an Rankhilfen und landwirtschaftliche Reihen für Fassaden, Pergolen und produktive Landschaften."
+      },
+      "assets": [
+        "wisteria-pergola",
+        "ivy-on-trellis",
+        "grapevine-row",
+        "maize-row"
+      ]
+    },
+    {
+      "id": "indoor-plants",
+      "title": {
+        "en": "Indoor Plants",
+        "de": "Zimmerpflanzen"
+      },
+      "description": {
+        "en": "Potted foliage plants for interiors in still indoor air, with watered and dry states.",
+        "de": "Topfpflanzen für Innenräume in ruhender Raumluft, mit gegossenen und trockenen Zuständen."
+      },
+      "assets": [
+        "potted-monstera",
+        "fiddle-leaf-fig",
+        "snake-plant"
       ]
     }
   ],
@@ -1068,7 +1242,7 @@
         "de": "Joggende Person"
       },
       "heightM": 1.764,
-      "widthM": 0.984,
+      "widthM": 0.962,
       "powerW": 895,
       "poses": [
         "initial-contact-l",
@@ -1269,443 +1443,6 @@
       "distinction": {
         "en": "Carries a fixed pointer in the right hand and a flag on a revolute pole in the left hand, so its pointing and waving gestures are authored on the arms.",
         "de": "Trägt einen starr verbundenen Zeigestab in der rechten und eine Fahne an einem drehbaren Stab in der linken Hand; Zeig- und Winkbewegungen sind an den Armen festgelegt."
-      },
-      "completion": "authored"
-    },
-    {
-      "id": "english-oak",
-      "category": "vegetation",
-      "title": {
-        "en": "English Oak",
-        "de": "Stieleiche"
-      },
-      "heightM": 17.302,
-      "widthM": 19.07,
-      "powerW": 0,
-      "poses": [
-        "calm",
-        "windy",
-        "storm",
-        "wet-snow"
-      ],
-      "clips": [
-        "wind-sway",
-        "gust",
-        "diurnal-transpiration"
-      ],
-      "representations": {
-        "50": "authored",
-        "100": "authored",
-        "200": "authored",
-        "500": "authored"
-      },
-      "symbols": [
-        "english-oak-symbol"
-      ],
-      "analytics": [
-        "thermal",
-        "transport",
-        "structural"
-      ],
-      "exports": [
-        "svg",
-        "pdf",
-        "dxf",
-        "dwg",
-        "png-sequence",
-        "mp4",
-        "webm",
-        "component",
-        "glb",
-        "fbx",
-        "model",
-        "model-zip"
-      ],
-      "distinction": {
-        "en": "A mature open-grown oak with a short massive bole that divides at about 3 m into widely spreading limbs under a broad dome-shaped crown, unlike the columnar poplar or the flat-topped pine.",
-        "de": "Ausgewachsene, frei stehende Eiche mit kurzem, massigem Stamm, der bei etwa 3 m in weit ausladende Äste teilt und eine breite, kuppelförmige Krone trägt; anders als die säulenförmige Pappel oder die flachkronige Kiefer."
-      },
-      "completion": "authored"
-    },
-    {
-      "id": "lombardy-poplar",
-      "category": "vegetation",
-      "title": {
-        "en": "Lombardy Poplar",
-        "de": "Pyramidenpappel"
-      },
-      "heightM": 25.8,
-      "widthM": 4.464,
-      "powerW": 0,
-      "poses": [
-        "calm",
-        "windy",
-        "storm"
-      ],
-      "clips": [
-        "wind-sway",
-        "gust",
-        "diurnal-transpiration"
-      ],
-      "representations": {
-        "50": "authored",
-        "100": "authored",
-        "200": "authored",
-        "500": "authored"
-      },
-      "symbols": [
-        "lombardy-poplar-symbol"
-      ],
-      "analytics": [
-        "thermal",
-        "transport",
-        "structural"
-      ],
-      "exports": [
-        "svg",
-        "pdf",
-        "dxf",
-        "dwg",
-        "png-sequence",
-        "mp4",
-        "webm",
-        "component",
-        "glb",
-        "fbx",
-        "model",
-        "model-zip"
-      ],
-      "distinction": {
-        "en": "A single straight stem with four trunk bones and steeply ascending branch tiers forming a narrow, flame-shaped column of foliage, unlike the multi-stem birch or the spreading oak.",
-        "de": "Ein gerader Einzelstamm mit vier Stammknochen und steil aufsteigenden Astetagen, die eine schmale, flammenförmige Blattsäule bilden; anders als die Mehrstamm-Birke oder die ausladende Eiche."
-      },
-      "completion": "authored"
-    },
-    {
-      "id": "multi-stem-birch",
-      "category": "vegetation",
-      "title": {
-        "en": "Multi-stem Birch",
-        "de": "Mehrstämmige Birke"
-      },
-      "heightM": 13.018,
-      "widthM": 9.205,
-      "powerW": 0,
-      "poses": [
-        "calm",
-        "windy",
-        "storm",
-        "ice"
-      ],
-      "clips": [
-        "wind-sway",
-        "gust",
-        "diurnal-transpiration"
-      ],
-      "representations": {
-        "50": "authored",
-        "100": "authored",
-        "200": "authored",
-        "500": "authored"
-      },
-      "symbols": [
-        "multi-stem-birch-symbol"
-      ],
-      "analytics": [
-        "thermal",
-        "transport",
-        "structural"
-      ],
-      "exports": [
-        "svg",
-        "pdf",
-        "dxf",
-        "dwg",
-        "png-sequence",
-        "mp4",
-        "webm",
-        "component",
-        "glb",
-        "fbx",
-        "model",
-        "model-zip"
-      ],
-      "distinction": {
-        "en": "Three slender stems grow from one stool, each a separate two-bone chain from the shared root plate, so the ice pose can bow the outer stems apart.",
-        "de": "Drei schlanke Stämme wachsen aus einem gemeinsamen Stock, jeder als eigene Zweiknochenkette von der gemeinsamen Wurzelplatte; in der Eispose können sich die äußeren Stämme auseinanderbiegen."
-      },
-      "completion": "authored"
-    },
-    {
-      "id": "scots-pine",
-      "category": "vegetation",
-      "title": {
-        "en": "Scots Pine",
-        "de": "Waldkiefer"
-      },
-      "heightM": 22.179,
-      "widthM": 12.076,
-      "powerW": 0,
-      "poses": [
-        "calm",
-        "windy",
-        "storm",
-        "snow"
-      ],
-      "clips": [
-        "wind-sway",
-        "gust",
-        "diurnal-transpiration"
-      ],
-      "representations": {
-        "50": "authored",
-        "100": "authored",
-        "200": "authored",
-        "500": "authored"
-      },
-      "symbols": [
-        "scots-pine-symbol"
-      ],
-      "analytics": [
-        "thermal",
-        "transport",
-        "structural"
-      ],
-      "exports": [
-        "svg",
-        "pdf",
-        "dxf",
-        "dwg",
-        "png-sequence",
-        "mp4",
-        "webm",
-        "component",
-        "glb",
-        "fbx",
-        "model",
-        "model-zip"
-      ],
-      "distinction": {
-        "en": "A straight, bare bole under a high, flat-topped crown of horizontal needle plates, whose two needle-leaf regions total 150 m² against 450 m² for the English oak.",
-        "de": "Gerader, astfreier Stamm unter einer hohen, flachen Krone aus waagerechten Nadelplatten; die beiden Nadelblattregionen ergeben zusammen 150 m², gegenüber 450 m² bei der Stieleiche."
-      },
-      "completion": "authored"
-    },
-    {
-      "id": "date-palm",
-      "category": "vegetation",
-      "title": {
-        "en": "Date Palm",
-        "de": "Dattelpalme"
-      },
-      "heightM": 12.5,
-      "widthM": 6.3,
-      "powerW": 0,
-      "poses": [
-        "calm",
-        "windy",
-        "storm"
-      ],
-      "clips": [
-        "wind-sway",
-        "gust",
-        "diurnal-transpiration"
-      ],
-      "representations": {
-        "50": "authored",
-        "100": "authored",
-        "200": "authored",
-        "500": "authored"
-      },
-      "symbols": [
-        "date-palm-symbol"
-      ],
-      "analytics": [
-        "thermal",
-        "transport",
-        "structural"
-      ],
-      "exports": [
-        "svg",
-        "pdf",
-        "dxf",
-        "dwg",
-        "png-sequence",
-        "mp4",
-        "webm",
-        "component",
-        "glb",
-        "fbx",
-        "model",
-        "model-zip"
-      ],
-      "distinction": {
-        "en": "An unbranched trunk with a terminal rosette of pinnate fronds; the rig is one stem plus frond bones that droop under wind instead of swaying branches.",
-        "de": "Unverzweigter Stamm mit einer endständigen Rosette gefiederter Wedel; das Modell besteht aus einem Stamm und Wedelknochen, die sich im Wind senken, statt Äste schwingen zu lassen."
-      },
-      "completion": "authored"
-    },
-    {
-      "id": "weeping-willow",
-      "category": "vegetation",
-      "title": {
-        "en": "Weeping Willow",
-        "de": "Trauerweide"
-      },
-      "heightM": 11.1,
-      "widthM": 16.212,
-      "powerW": 0,
-      "poses": [
-        "calm",
-        "windy",
-        "storm"
-      ],
-      "clips": [
-        "wind-sway",
-        "gust",
-        "diurnal-transpiration"
-      ],
-      "representations": {
-        "50": "authored",
-        "100": "authored",
-        "200": "authored",
-        "500": "authored"
-      },
-      "symbols": [
-        "weeping-willow-symbol"
-      ],
-      "analytics": [
-        "thermal",
-        "transport",
-        "structural"
-      ],
-      "exports": [
-        "svg",
-        "pdf",
-        "dxf",
-        "dwg",
-        "png-sequence",
-        "mp4",
-        "webm",
-        "component",
-        "glb",
-        "fbx",
-        "model",
-        "model-zip"
-      ],
-      "distinction": {
-        "en": "Eight long curtains of pendulous whips hang from arching limbs almost to the ground and shape a bell-shaped silhouette in the calm, windy and storm poses.",
-        "de": "Acht lange Vorhänge aus hängenden Ruten an überhängenden Ästen reichen fast bis zum Boden und formen in den Posen Ruhe, frischer Wind und Sturm eine glockenförmige Silhouette."
-      },
-      "completion": "authored"
-    },
-    {
-      "id": "hornbeam-hedge",
-      "category": "vegetation",
-      "title": {
-        "en": "Hornbeam Hedge",
-        "de": "Hainbuchenhecke"
-      },
-      "heightM": 1.87,
-      "widthM": 3.14,
-      "powerW": 0,
-      "poses": [
-        "calm",
-        "windy",
-        "storm",
-        "snow"
-      ],
-      "clips": [
-        "wind-sway",
-        "gust",
-        "diurnal-transpiration"
-      ],
-      "representations": {
-        "50": "authored",
-        "100": "authored",
-        "200": "authored",
-        "500": "authored"
-      },
-      "symbols": [
-        "hornbeam-hedge-symbol"
-      ],
-      "analytics": [
-        "thermal",
-        "transport",
-        "structural"
-      ],
-      "exports": [
-        "svg",
-        "pdf",
-        "dxf",
-        "dwg",
-        "png-sequence",
-        "mp4",
-        "webm",
-        "component",
-        "glb",
-        "fbx",
-        "model",
-        "model-zip"
-      ],
-      "distinction": {
-        "en": "A clipped hedge segment of six stem bundles and six flat-topped blocks rather than an individual tree, whose snow pose loads the clipped top surfaces.",
-        "de": "Geschnittenes Heckenstück aus sechs Stammbündeln und sechs flach geschnittenen Blöcken statt eines Einzelbaums; in der Schneepose lastet Schnee auf den geschnittenen Oberflächen."
-      },
-      "completion": "authored"
-    },
-    {
-      "id": "miscanthus-grass",
-      "category": "vegetation",
-      "title": {
-        "en": "Miscanthus Grass",
-        "de": "Chinaschilf"
-      },
-      "heightM": 1.75,
-      "widthM": 2.14,
-      "powerW": 0,
-      "poses": [
-        "calm",
-        "windy",
-        "storm",
-        "snow"
-      ],
-      "clips": [
-        "wind-sway",
-        "gust",
-        "diurnal-transpiration"
-      ],
-      "representations": {
-        "50": "authored",
-        "100": "authored",
-        "200": "authored",
-        "500": "authored"
-      },
-      "symbols": [
-        "miscanthus-grass-symbol"
-      ],
-      "analytics": [
-        "thermal",
-        "transport",
-        "structural"
-      ],
-      "exports": [
-        "svg",
-        "pdf",
-        "dxf",
-        "dwg",
-        "png-sequence",
-        "mp4",
-        "webm",
-        "component",
-        "glb",
-        "fbx",
-        "model",
-        "model-zip"
-      ],
-      "distinction": {
-        "en": "A trunkless clump of arching blades and four stiff culms, each culm a chain of two revolute bones that bends under wind; in its wet-snow pose the blades bow down by 15 degrees.",
-        "de": "Stammloser Horst aus bogigen Blättern und vier steifen Halmen; jeder Halm ist eine Kette aus zwei Drehgelenk-Knochen, die sich im Wind biegt, und in der Nassschneepose neigen sich die Blätter um 15 Grad."
       },
       "completion": "authored"
     },
@@ -4696,7 +4433,7 @@
         "de": "Malender an der Staffelei"
       },
       "heightM": 1.867,
-      "widthM": 1.657,
+      "widthM": 1.635,
       "powerW": 167.5,
       "poses": [
         "painting",
@@ -5007,8 +4744,8 @@
         "en": "Person Drinking Coffee",
         "de": "Kaffee trinkende Person"
       },
-      "heightM": 1.75,
-      "widthM": 0.547,
+      "heightM": 1.745,
+      "widthM": 0.545,
       "powerW": 122.6,
       "poses": [
         "holding-cup",
@@ -5059,7 +4796,7 @@
         "en": "Person Eating Standing",
         "de": "Stehend essende Person"
       },
-      "heightM": 1.806,
+      "heightM": 1.798,
       "widthM": 0.519,
       "powerW": 145.7,
       "poses": [
@@ -5111,7 +4848,7 @@
         "de": "Person beim Wäscheaufhängen"
       },
       "heightM": 1.89,
-      "widthM": 0.857,
+      "widthM": 0.869,
       "powerW": 259.6,
       "poses": [
         "pegging-shirt",
@@ -5266,8 +5003,8 @@
         "en": "Person Signing",
         "de": "Gebärdende Person"
       },
-      "heightM": 1.72,
-      "widthM": 0.565,
+      "heightM": 1.716,
+      "widthM": 0.556,
       "powerW": 146.1,
       "poses": [
         "relaxed",
@@ -5371,8 +5108,8 @@
         "en": "Person Sweeping",
         "de": "Kehrende Person"
       },
-      "heightM": 1.688,
-      "widthM": 1.39,
+      "heightM": 1.679,
+      "widthM": 1.326,
       "powerW": 321.4,
       "poses": [
         "push-start",
@@ -6064,7 +5801,7 @@
         "de": "Sonnenbadende Person auf Strandtuch"
       },
       "heightM": 0.245,
-      "widthM": 1.833,
+      "widthM": 1.827,
       "powerW": 95.7,
       "poses": [
         "supine",
@@ -7108,6 +6845,61 @@
       "completion": "authored"
     },
     {
+      "id": "atlas-cedar",
+      "category": "vegetation",
+      "title": {
+        "en": "Atlas Cedar",
+        "de": "Atlaszeder"
+      },
+      "heightM": 25.0,
+      "widthM": 16.395,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "atlas-cedar-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A broad crown of eleven flat, horizontal needle plates in tiers on long ascending limbs, with sky between the plates: the widest and only plate-tiered conifer, drought-adapted, with the lowest stomatal conductance of the conifers.",
+        "de": "Eine breite Krone aus elf flachen, waagerechten Nadelplatten in Etagen auf langen, aufsteigenden Starkästen, mit Himmel zwischen den Platten: der breiteste und einzige plattengestufte Nadelbaum, trockenheitsangepasst, mit der niedrigsten Spaltöffnungsleitfähigkeit der Nadelbäume."
+      },
+      "completion": "authored"
+    },
+    {
       "id": "bamboo-clump",
       "category": "vegetation",
       "title": {
@@ -7159,6 +6951,1344 @@
       "distinction": {
         "en": "A clump of six running-type bamboo culms (Phyllostachys aureosulcata, 29 mm culms, grown in a rhizome barrier) from 2.4 to 4.6 m tall: nodes, a groove along the culm and leaf-bearing branches in the upper half that stream in the wind.",
         "de": "Ein Horst aus sechs Bambushalmen (Phyllostachys aureosulcata, Halme von 29 mm, in einer Rhizomsperre gezogen) von 2,4 bis 4,6 m Höhe: Knoten, eine Rille entlang des Halms und beblätterte Äste in der oberen Hälfte, die im Wind wehen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "hydrangea",
+      "category": "vegetation",
+      "title": {
+        "en": "Bigleaf Hydrangea, Mophead",
+        "de": "Bauernhortensie, Ballhortensie"
+      },
+      "heightM": 1.598,
+      "widthM": 1.879,
+      "powerW": 0,
+      "poses": [
+        "flowering-calm",
+        "flowering-breeze",
+        "storm",
+        "rain-laden"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "hydrangea-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A low mound shrub clothed to the ground whose ball-shaped mopheads soak up rain and pull the arching canes outwards in the rain pose.",
+        "de": "Ein niedriger, bis zum Boden belaubter Hügelstrauch, dessen ballförmige Blütenstände Regen aufsaugen und in der Regenpose die gewölbten Ruten nach außen ziehen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "black-alder",
+      "category": "vegetation",
+      "title": {
+        "en": "Black Alder",
+        "de": "Schwarz-Erle"
+      },
+      "heightM": 20,
+      "widthM": 7.9611,
+      "powerW": 0,
+      "poses": [
+        "summer-calm",
+        "fresh-breeze",
+        "gale",
+        "summer-flood",
+        "early-wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "black-alder-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A tall riverbank tree with one straight dark stem running through a conical, open crown of short spiral limbs; the only plant of the archive with a flood pose, in which the stem base stands in flowing water (contact with the water and a hydrodynamic drag load).",
+        "de": "Ein hoher Ufergehölzbaum mit einem geraden dunklen Stamm, der durch eine kegelige, offene Krone aus kurzen Spiralästen läuft; die einzige Pflanze des Archivs mit einer Hochwasserpose, in der der Stammfuß in fließendem Wasser steht (Kontakt mit dem Wasser und eine Strömungslast)."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "black-locust",
+      "category": "vegetation",
+      "title": {
+        "en": "Black Locust",
+        "de": "Robinie"
+      },
+      "heightM": 19.78,
+      "widthM": 12.686,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "flowering"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "black-locust-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A 20 m black locust (Robinia pseudoacacia) with a leaning, deeply furrowed bole forked at 4.7 m, an open irregular crown of fine pinnate leaves about 13 m wide, and white flower racemes hanging below the leaves in the flowering pose.",
+        "de": "Eine 20 m hohe Robinie (Robinia pseudoacacia) mit geneigtem, tief gefurchtem Stamm, in 4,7 m gegabelt, einer offenen, unregelmäßigen Krone aus feinen gefiederten Blättern von etwa 13 m Breite und weißen Blütentrauben, die in der Blütenpose unter den Blättern hängen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "boxwood-ball",
+      "category": "vegetation",
+      "title": {
+        "en": "Boxwood Ball",
+        "de": "Buchskugel"
+      },
+      "heightM": 0.8013,
+      "widthM": 0.8053,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "boxwood-ball-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A single clipped topiary sphere of boxwood planted in the ground: a stiff evergreen leaf skin on five short stems, the smallest clipped plant of the collection, whose snow pose loads the cap.",
+        "de": "Eine einzelne geschnittene Formkugel aus Buchs, im Boden gepflanzt: eine steife immergrüne Laubhaut auf fünf kurzen Stämmen, die kleinste Schnittpflanze der Sammlung; in der Schneepose lastet Schnee auf der Kappe."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "cherry-laurel",
+      "category": "vegetation",
+      "title": {
+        "en": "Cherry Laurel",
+        "de": "Kirschlorbeer"
+      },
+      "heightM": 3.017,
+      "widthM": 3.6362,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "cherry-laurel-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A loose, unclipped evergreen shrub of five stems carrying lumpy masses of large leathery leaves, broader than high, whose wet-snow pose splays the masses outwards.",
+        "de": "Ein lockerer, ungeschnittener immergrüner Strauch aus fünf Stämmen mit knolligen Massen großer ledriger Blätter, breiter als hoch; in der Nassschneepose spreizen sich die Massen nach außen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "common-ash",
+      "category": "vegetation",
+      "title": {
+        "en": "Common Ash",
+        "de": "Gemeine Esche"
+      },
+      "heightM": 25.6,
+      "widthM": 15.769,
+      "powerW": 0,
+      "poses": [
+        "summer-calm",
+        "summer-breeze",
+        "gale",
+        "spring-flush",
+        "seed-keys",
+        "wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "common-ash-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A 25.6 m common ash (Fraxinus excelsior) with a tall pale grey stem of 0.8 m forking at 10 m into three leaders, upturned limb tips and an open 15 m crown of pinnate-leaf clusters through which the sky shows.",
+        "de": "Eine 25,6 m hohe Gemeine Esche (Fraxinus excelsior) mit hohem, hellgrauem Stamm von 0,8 m, der sich in 10 m in drei Leittriebe gabelt, aufgebogenen Astspitzen und einer offenen Krone von 15 m aus Fiederblattbüscheln, durch die der Himmel scheint."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "hawthorn",
+      "category": "vegetation",
+      "title": {
+        "en": "Common Hawthorn",
+        "de": "Eingriffeliger Weißdorn"
+      },
+      "heightM": 6,
+      "widthM": 6.3942,
+      "powerW": 0,
+      "poses": [
+        "summer-calm",
+        "may-blossom",
+        "fresh-breeze",
+        "gale",
+        "autumn-haws",
+        "wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "hawthorn-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A dense small tree on a short leaning stem: six crooked limbs and an upright centre limb from one head under a low dome of small lobed leaves that reaches down to 1.2 m, with blossom and haws as seasonal loads of the heaviest wood of the collection.",
+        "de": "Ein dichter kleiner Baum auf kurzem, geneigtem Stamm: sechs knorrige Äste und ein aufrechter Mittelast aus einem Kopf unter einer tiefen Kuppel aus kleinen gelappten Blättern, die bis auf 1,2 m herabreicht, mit Blüten und Früchten als jahreszeitlichen Lasten des schwersten Holzes der Sammlung."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "common-lilac",
+      "category": "vegetation",
+      "title": {
+        "en": "Common Lilac, Multi-Stem",
+        "de": "Gewöhnlicher Flieder, mehrstämmig"
+      },
+      "heightM": 4.094,
+      "widthM": 3.614,
+      "powerW": 0,
+      "poses": [
+        "flowering-calm",
+        "flowering-breeze",
+        "storm",
+        "rain-laden"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "common-lilac-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A suckering multi-stem flowering shrub with a bare-legged vase of seven stems and upright panicles at the shoot tips, whose rain pose bows the stems under soaked flower heads.",
+        "de": "Ein ausläufertreibender, mehrstämmiger Blütenstrauch mit kahler Stammvase aus sieben Stämmen und aufrechten Rispen an den Triebspitzen; in der Regenpose biegen die vollgesogenen Blütenstände die Stämme nach außen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "common-reed",
+      "category": "vegetation",
+      "title": {
+        "en": "Common Reed",
+        "de": "Schilfrohr"
+      },
+      "heightM": 3.0,
+      "widthM": 1.56,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "common-reed-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A vertical wetland grass: nine tall, separate culms with broad two-ranked flag leaves and dense nodding purplish panicles; it whips quickly in the wind and lodges in a gale, unlike the fountain of a tussock grass.",
+        "de": "Ein senkrechtes Sumpfgras: neun hohe, einzeln stehende Halme mit breiten, zweizeiligen Fahnenblättern und dichten, nickenden, violetten Rispen; es peitscht schnell im Wind und legt sich im Sturm um, anders als die Fontäne eines Horstgrases."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "crab-apple",
+      "category": "vegetation",
+      "title": {
+        "en": "Crab Apple, Wild, with Fruit",
+        "de": "Holzapfel, wild, mit Früchten"
+      },
+      "heightM": 6.992,
+      "widthM": 7.659,
+      "powerW": 0,
+      "poses": [
+        "summer-green-fruit",
+        "autumn-fruit",
+        "fruit-breeze",
+        "autumn-gale"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "crab-apple-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A mature European wild crab apple (Malus sylvestris): a short, slightly leaning and twisted stem of 1.3 m, four low limbs spreading almost horizontally, a central leader and thorny spur shoots under a dense, broad and rounded crown hung with small yellow-green crab apples of 3 cm, carried as a seasonal fruit load from green fruit set to the full autumn load.",
+        "de": "Ein ausgewachsener Europäischer Holzapfel (Malus sylvestris): ein kurzer, leicht geneigter und gedrehter Stamm von 1,3 m, vier tiefe, fast waagerecht ausladende Leitäste, ein Mitteltrieb und dornige Kurztriebe unter einer dichten, breiten und runden Krone, behängt mit kleinen gelbgrünen Holzäpfeln von 3 cm, als jahreszeitliche Fruchtlast vom grünen Fruchtansatz bis zur vollen Herbstlast geführt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "date-palm",
+      "category": "vegetation",
+      "title": {
+        "en": "Date Palm",
+        "de": "Dattelpalme"
+      },
+      "heightM": 12.5,
+      "widthM": 6.3,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "date-palm-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "An unbranched trunk with a terminal rosette of pinnate fronds; the rig is one stem plus frond bones that droop under wind instead of swaying branches.",
+        "de": "Unverzweigter Stamm mit einer endständigen Rosette gefiederter Wedel; das Modell besteht aus einem Stamm und Wedelknochen, die sich im Wind senken, statt Äste schwingen zu lassen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "dawn-redwood",
+      "category": "vegetation",
+      "title": {
+        "en": "Dawn Redwood",
+        "de": "Urweltmammutbaum"
+      },
+      "heightM": 30,
+      "widthM": 8.799,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "rain-laden"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "dawn-redwood-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A 30 m deciduous conifer in summer leaf, a narrow layered cone of opposite branches over a buttressed, deeply fluted trunk with a hollow under every lower branch.",
+        "de": "Ein 30 m hoher laubabwerfender Nadelbaum im Sommerlaub, ein schmaler, geschichteter Kegel aus gegenständigen Ästen über einem tief gerillten Stamm mit Brettwurzeln und einer Mulde unter jedem unteren Ast."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "lavender-bush",
+      "category": "vegetation",
+      "title": {
+        "en": "English Lavender",
+        "de": "Echter Lavendel"
+      },
+      "heightM": 0.6,
+      "widthM": 0.8,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [
+        "lavender-bush-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A low evergreen subshrub: a grey leaf cushion on a woody crown with a fanned crown of single flower stalks and spikes, whose stalks, not the mass, carry the wind sway.",
+        "de": "Niedriger immergrüner Halbstrauch: ein graues Blattpolster auf verholztem Wurzelhals mit einer Fächerkrone einzelner Blütenstiele und Ähren, deren Stiele, nicht die Masse, die Windschwingung tragen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "english-oak",
+      "category": "vegetation",
+      "title": {
+        "en": "English Oak",
+        "de": "Stieleiche"
+      },
+      "heightM": 17.302,
+      "widthM": 19.07,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "english-oak-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A mature open-grown oak with a short massive bole that divides at about 3 m into widely spreading limbs under a broad dome-shaped crown, unlike the columnar poplar or the flat-topped pine.",
+        "de": "Ausgewachsene, frei stehende Eiche mit kurzem, massigem Stamm, der bei etwa 3 m in weit ausladende Äste teilt und eine breite, kuppelförmige Krone trägt; anders als die säulenförmige Pappel oder die flachkronige Kiefer."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "english-yew",
+      "category": "vegetation",
+      "title": {
+        "en": "English Yew",
+        "de": "Gemeine Eibe"
+      },
+      "heightM": 12.226,
+      "widthM": 10.75,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "english-yew-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A 12 m old yew with a short, fluted trunk under a dark, lumpy dome 10.7 m wide that sweeps down to a skirt, the densest and stiffest evergreen crown of the archive.",
+        "de": "Eine 12 m hohe alte Eibe mit kurzem, spannrückigem Stamm unter einer dunklen, knolligen Kuppel von 10,7 m Breite, die zu einer Schleppe herabschwingt, die dichteste und steifste immergrüne Krone des Archivs."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "european-beech",
+      "category": "vegetation",
+      "title": {
+        "en": "European Beech",
+        "de": "Rotbuche"
+      },
+      "heightM": 29.6,
+      "widthM": 21.299,
+      "powerW": 0,
+      "poses": [
+        "summer-calm",
+        "summer-breeze",
+        "gale",
+        "wet-snow",
+        "autumn-copper",
+        "mast-year"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "european-beech-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A 30 m open-grown European beech (Fagus sylvatica) with a smooth grey stem of 1.05 m on an elephant-foot flare, steep main limbs and a dense 20 m dome whose lowest sprays hang down to 2.2 m.",
+        "de": "Eine 30 m hohe, frei stehende Rotbuche (Fagus sylvatica) mit glattem grauem Stamm von 1,05 m auf elefantenfußartigem Anlauf, steilen Hauptästen und einer dichten Kuppel von 20 m, deren unterste Zweigfächer bis 2,2 m herabhängen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "european-larch",
+      "category": "vegetation",
+      "title": {
+        "en": "European Larch",
+        "de": "Europäische Lärche"
+      },
+      "heightM": 30.0,
+      "widthM": 9.223,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "autumn"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "european-larch-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "The only deciduous conifer of the collection: an open, airy cone of eleven thin, widely spaced storeys with the stem showing between them, pendulous branchlets and 180 m² of soft needles with the highest stomatal conductance of the conifers.",
+        "de": "Der einzige sommergrüne Nadelbaum der Sammlung: ein lichter, luftiger Kegel aus elf dünnen, weit gestellten Etagen mit dem Stamm dazwischen, hängenden Zweigen und 180 m² weichen Nadeln mit der höchsten Spaltöffnungsleitfähigkeit der Nadelbäume."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "fiddle-leaf-fig",
+      "category": "vegetation",
+      "title": {
+        "en": "Fiddle-Leaf Fig in a Pot",
+        "de": "Geigenfeige im Topf"
+      },
+      "heightM": 1.797,
+      "widthM": 0.772,
+      "powerW": 0,
+      "poses": [
+        "still-air",
+        "ventilation-draught",
+        "freshly-watered",
+        "drought-drooping"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [
+        "fiddle-leaf-fig-plan-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A potted fiddle-leaf fig (Ficus lyrata) 1.8 m high: a slender single trunk with twenty-two large, leathery violin-shaped leaves in a spiral, in a 0.32 m terracotta pot on a saucer.",
+        "de": "Eine Geigenfeige (Ficus lyrata) im Topf, 1,8 m hoch: ein schlanker einzelner Stamm mit zweiundzwanzig großen, ledrigen, geigenförmigen Blättern in einer Spirale, in einem Terrakottatopf von 0,32 m auf einem Untersetzer."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "field-maple",
+      "category": "vegetation",
+      "title": {
+        "en": "Field Maple",
+        "de": "Feldahorn"
+      },
+      "heightM": 10.25,
+      "widthM": 8.263,
+      "powerW": 0,
+      "poses": [
+        "summer-calm",
+        "summer-breeze",
+        "storm",
+        "summer-downpour",
+        "autumn-colour"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "field-maple-plan-crown",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A small field maple (Acer campestre) of about 10 m whose short stem forks at 1.9 m into three ascending stems; dense, rounded, slightly irregular crown of small blunt-lobed leaves, corky plated bark, horizontally spread samaras.",
+        "de": "Ein kleiner Feldahorn (Acer campestre) von etwa 10 m, dessen kurzer Stamm sich in 1,9 m in drei aufsteigende Stämmlinge teilt; dichte, rundliche, leicht unregelmäßige Krone aus kleinen, stumpf gelappten Blättern, korkige, gefelderte Borke, waagerecht gespreizte Flügelfrüchte."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "fig-tree",
+      "category": "vegetation",
+      "title": {
+        "en": "Fig Tree, Multi-Stem",
+        "de": "Feigenbaum, mehrstämmig"
+      },
+      "heightM": 5.011,
+      "widthM": 7.021,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "fruit-laden",
+        "storm"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "fig-tree-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A multi-stemmed common fig with smooth silver-grey stems and a broad, dense, rounded crown of large lobed leaves; the late-summer crop of figs is carried as a pose and load.",
+        "de": "Ein mehrstämmiger Echter Feigenbaum mit glatten silbergrauen Stämmen und einer breiten, dichten, runden Krone aus großen gelappten Blättern; der spätsommerliche Feigenbehang wird als Pose und Last geführt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "ginkgo",
+      "category": "vegetation",
+      "title": {
+        "en": "Ginkgo, Street Tree",
+        "de": "Ginkgo, Straßenbaum"
+      },
+      "heightM": 14.9,
+      "widthM": 7.701,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "autumn-gold"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "ginkgo-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A 15 m male street ginkgo (Ginkgo biloba) with one continuous leader, irregular ascending tiers of scaffold limbs and clumpy fan-leaf foliage on spur shoots: an open, irregularly conical crown about 8 m wide, golden yellow in autumn.",
+        "de": "Ein 15 m hoher männlicher Straßen-Ginkgo (Ginkgo biloba) mit durchgehender Stammverlängerung, unregelmäßigen aufsteigenden Etagen von Gerüstästen und büscheligem Fächerlaub an Kurztrieben: eine offene, unregelmäßig kegelförmige Krone von etwa 8 m Breite, im Herbst goldgelb."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "grapevine-row",
+      "category": "vegetation",
+      "title": {
+        "en": "Grapevine Row",
+        "de": "Rebzeile"
+      },
+      "heightM": 1.8,
+      "widthM": 4.0,
+      "powerW": 0,
+      "poses": [
+        "summer-calm",
+        "breezy",
+        "storm",
+        "ripe-harvest"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "grapevine-row-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A vineyard row of four cordon-trained grapevines (Vitis vinifera) on a vertical-shoot-positioned wire trellis between two pine posts, 4.0 m long and 1.8 m high: a hedged leaf wall 0.56 m thick above the fruiting wire and two bunches per vine in the open fruit zone. Trellis and vines are one asset.",
+        "de": "Eine Weinbergzeile aus vier kordonerzogenen Weinreben (Vitis vinifera) an einem Drahtrahmen mit senkrechter Triebführung zwischen zwei Kiefernpfählen, 4,0 m lang und 1,8 m hoch: eine gestutzte Laubwand von 0,56 m Dicke über dem Biegedraht und je zwei Trauben in der offenen Traubenzone. Drahtrahmen und Reben sind ein Asset."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "hornbeam-hedge",
+      "category": "vegetation",
+      "title": {
+        "en": "Hornbeam Hedge",
+        "de": "Hainbuchenhecke"
+      },
+      "heightM": 1.87,
+      "widthM": 3.14,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "hornbeam-hedge-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A clipped hedge segment of six stem bundles and six flat-topped blocks rather than an individual tree, whose snow pose loads the clipped top surfaces.",
+        "de": "Geschnittenes Heckenstück aus sechs Stammbündeln und sechs flach geschnittenen Blöcken statt eines Einzelbaums; in der Schneepose lastet Schnee auf den geschnittenen Oberflächen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "horse-chestnut",
+      "category": "vegetation",
+      "title": {
+        "en": "Horse Chestnut",
+        "de": "Rosskastanie"
+      },
+      "heightM": 24.168,
+      "widthM": 19.047,
+      "powerW": 0,
+      "poses": [
+        "candle-bloom",
+        "summer-calm",
+        "summer-breeze",
+        "gale",
+        "conker-fruit",
+        "wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration",
+        "candle-emergence"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "horse-chestnut-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A 24 m horse chestnut (Aesculus hippocastanum) with a short stem of 0.95 m, a broad 16.5 m dome of sweeping lower limbs and palmate leaves, and white flower candles that stand on the crown in May and withdraw into it afterwards.",
+        "de": "Eine 24 m hohe Rosskastanie (Aesculus hippocastanum) mit kurzem Stamm von 0,95 m, einer breiten Kuppel von 16,5 m aus ausschwingenden unteren Ästen und gefingerten Blättern sowie weißen Blütenkerzen, die im Mai auf der Krone stehen und danach in ihr verschwinden."
       },
       "completion": "authored"
     },
@@ -7217,6 +8347,61 @@
       "completion": "authored"
     },
     {
+      "id": "italian-cypress",
+      "category": "vegetation",
+      "title": {
+        "en": "Italian Cypress",
+        "de": "Säulenzypresse"
+      },
+      "heightM": 18,
+      "widthM": 2.636,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "italian-cypress-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A slim 18 m column of fastigiate scale-leaf sprays only 2.6 m across, clothed almost to the ground, the narrowest evergreen of the archive next to the deciduous Lombardy poplar.",
+        "de": "Eine schlanke, 18 m hohe Säule aus aufrechten Schuppenblattzweigen von nur 2,6 m Breite, fast bis zum Boden belaubt, der schmalste Immergrüne des Archivs neben der laubabwerfenden Pyramidenpappel."
+      },
+      "completion": "authored"
+    },
+    {
       "id": "ivy-on-trellis",
       "category": "vegetation",
       "title": {
@@ -7268,6 +8453,117 @@
       "distinction": {
         "en": "English ivy (Hedera helix) climbing a freestanding timber trellis, 1.9 m wide and 2.15 m high, on two timber posts in galvanised steel shoes: four main stems carry leaf mats that cover the upper lattice and shoots that overhang the top rail. Trellis and plant are one asset.",
         "de": "Gemeiner Efeu (Hedera helix) klettert an einem freistehenden Holzspalier von 1,9 m Breite und 2,15 m Höhe auf zwei Holzpfosten in verzinkten Stahlschuhen: vier Haupttriebe tragen Blattteppiche, die das obere Gitter decken, und Triebe, die über den oberen Riegel hängen. Spalier und Pflanze sind ein Asset."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "japanese-cherry",
+      "category": "vegetation",
+      "title": {
+        "en": "Japanese Cherry 'Kanzan', in Bloom",
+        "de": "Japanische Blütenkirsche 'Kanzan', in Blüte"
+      },
+      "heightM": 8.072,
+      "widthM": 8.052,
+      "powerW": 0,
+      "poses": [
+        "full-bloom",
+        "bloom-breeze",
+        "spring-gale",
+        "april-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "japanese-cherry-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A mature ornamental Japanese cherry (Prunus serrulata 'Kanzan') in full bloom: a top-grafted standard with a clear stem of 1.9 m and the graft swelling below the fork, five scaffolds rising steeply in a funnel and arching out into a broad, flat-topped vase crown hung with clusters of double pink flowers among the young bronze leaves.",
+        "de": "Eine ausgewachsene Japanische Blütenkirsche (Prunus serrulata 'Kanzan') in voller Blüte: ein kopfveredelter Hochstamm mit 1,9 m Stammhöhe und der Veredelungswulst unter der Verzweigung, fünf Leitäste, die steil trichterförmig aufsteigen und in eine breite, flach gewölbte Vasenkrone überbiegen, behängt mit Büscheln gefüllter rosa Blüten zwischen dem jungen bronzefarbenen Laub."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "banana-plant",
+      "category": "vegetation",
+      "title": {
+        "en": "Japanese Fibre Banana",
+        "de": "Japanische Faserbanane"
+      },
+      "heightM": 5.493,
+      "widthM": 4.399,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "midday-wilt"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "banana-plant-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A herbaceous clump, not a tree: a soft pseudostem of rolled leaf sheaths with nine huge paddle leaves torn into strips by the wind, a furled cigar leaf, dead leaves and two suckers; the whole plant leans and streams in wind and its leaves fold in the midday heat.",
+        "de": "Ein krautiger Horst, kein Baum: ein weicher Scheinstamm aus gerollten Blattscheiden mit neun riesigen, vom Wind in Streifen gerissenen Paddelblättern, einem eingerollten Zigarrenblatt, toten Blättern und zwei Kindeln; die ganze Pflanze neigt sich und strömt im Wind, und ihre Blätter falten sich in der Mittagshitze."
       },
       "completion": "authored"
     },
@@ -7329,6 +8625,60 @@
       "completion": "authored"
     },
     {
+      "id": "lombardy-poplar",
+      "category": "vegetation",
+      "title": {
+        "en": "Lombardy Poplar",
+        "de": "Pyramidenpappel"
+      },
+      "heightM": 25.8,
+      "widthM": 4.464,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "lombardy-poplar-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A single straight stem with four trunk bones and steeply ascending branch tiers forming a narrow, flame-shaped column of foliage, unlike the multi-stem birch or the spreading oak.",
+        "de": "Ein gerader Einzelstamm mit vier Stammknochen und steil aufsteigenden Astetagen, die eine schmale, flammenförmige Blattsäule bilden; anders als die Mehrstamm-Birke oder die ausladende Eiche."
+      },
+      "completion": "authored"
+    },
+    {
       "id": "london-plane-pollarded",
       "category": "vegetation",
       "title": {
@@ -7386,6 +8736,1004 @@
       "completion": "authored"
     },
     {
+      "id": "maize-row",
+      "category": "vegetation",
+      "title": {
+        "en": "Maize Row",
+        "de": "Maisreihe"
+      },
+      "heightM": 2.5,
+      "widthM": 2.35573,
+      "powerW": 0,
+      "poses": [
+        "tasseling-calm",
+        "windy",
+        "storm",
+        "ripe-ears"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "maize-row-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A field row of six maize plants (Zea mays) at tasseling on an earthed-up ridge, 2.5 m high: arching strap leaves in alternating ranks, ears in husk with silk and branched tassels. A C4 crop.",
+        "de": "Eine Feldreihe aus sechs Maispflanzen (Zea mays) zur Rispenblüte auf einem angehäufelten Damm, 2,5 m hoch: überhängende Bandblätter in wechselnden Zeilen, Kolben in Lieschen mit Narbenfäden und verzweigte Rispen. Eine C4-Kultur."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "miscanthus-grass",
+      "category": "vegetation",
+      "title": {
+        "en": "Miscanthus Grass",
+        "de": "Chinaschilf"
+      },
+      "heightM": 1.75,
+      "widthM": 2.14,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "miscanthus-grass-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A trunkless clump of arching blades and four stiff culms, each culm a chain of two revolute bones that bends under wind; in its wet-snow pose the blades bow down by 15 degrees.",
+        "de": "Stammloser Horst aus bogigen Blättern und vier steifen Halmen; jeder Halm ist eine Kette aus zwei Drehgelenk-Knochen, die sich im Wind biegt, und in der Nassschneepose neigen sich die Blätter um 15 Grad."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "multi-stem-birch",
+      "category": "vegetation",
+      "title": {
+        "en": "Multi-stem Birch",
+        "de": "Mehrstämmige Birke"
+      },
+      "heightM": 13.018,
+      "widthM": 9.205,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "ice"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "multi-stem-birch-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "Three slender stems grow from one stool, each a separate two-bone chain from the shared root plate, so the ice pose can bow the outer stems apart.",
+        "de": "Drei schlanke Stämme wachsen aus einem gemeinsamen Stock, jeder als eigene Zweiknochenkette von der gemeinsamen Wurzelplatte; in der Eispose können sich die äußeren Stämme auseinanderbiegen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "norway-maple",
+      "category": "vegetation",
+      "title": {
+        "en": "Norway Maple",
+        "de": "Spitzahorn"
+      },
+      "heightM": 20.05,
+      "widthM": 14.869,
+      "powerW": 0,
+      "poses": [
+        "summer-calm",
+        "summer-breeze",
+        "storm",
+        "autumn-colour",
+        "early-wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "norway-maple-plan-crown",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A mature Norway maple (Acer platanoides) of about 20 m: a straight stem with one leader and five whorls of ascending limbs under a dense, rounded-ovoid crown that is closed to the ground of the crown; obtuse samaras.",
+        "de": "Ein ausgewachsener Spitzahorn (Acer platanoides) von etwa 20 m: ein gerader Stamm mit einer Stammverlängerung und fünf Quirlen aufsteigender Äste unter einer dichten, rundlich-eiförmigen, geschlossenen Krone; stumpfwinklige Flügelfrüchte."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "norway-spruce",
+      "category": "vegetation",
+      "title": {
+        "en": "Norway Spruce",
+        "de": "Gemeine Fichte"
+      },
+      "heightM": 30.0,
+      "widthM": 8.483,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "norway-spruce-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A narrow, dense cone of fifteen drooping comb tiers on a straight 30 m stem, the tallest and slimmest of the conifers, with 340 m² of needles against 150 m² for the Scots pine.",
+        "de": "Ein schmaler, dichter Kegel aus fünfzehn hängenden Kammetagen an einem geraden 30-m-Stamm, der höchste und schlankste der Nadelbäume, mit 340 m² Nadeln gegenüber 150 m² bei der Waldkiefer."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "olive-tree",
+      "category": "vegetation",
+      "title": {
+        "en": "Olive Tree, Old and Gnarled",
+        "de": "Ölbaum, alt und knorrig"
+      },
+      "heightM": 6.891,
+      "widthM": 8.163,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "fruit-laden",
+        "storm"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "olive-tree-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "An old, gnarled olive tree with a massive, fissured stem and a broad, silvery evergreen crown; the olive crop is carried as a seasonal pose and load in a hot, dry summer climate.",
+        "de": "Ein alter, knorriger Ölbaum mit mächtigem, rissigem Stamm und breiter, silbriger immergrüner Krone; der Olivenbehang wird als jahreszeitliche Pose und Last in heißem, trockenem Sommerklima geführt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "pampas-grass",
+      "category": "vegetation",
+      "title": {
+        "en": "Pampas Grass",
+        "de": "Pampasgras"
+      },
+      "heightM": 2.5,
+      "widthM": 2.2,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "pampas-grass-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "The tallest grass of the catalog: a stout evergreen tussock with eight dense, upright, silvery plumes high above a fountain of sharp blades; heavy plumes swing slowly and hold snow in winter.",
+        "de": "Das höchste Gras des Katalogs: ein kräftiger, wintergrüner Horst mit acht dichten, aufrechten, silbrigen Wedeln hoch über einer Fontäne scharfer Blätter; die schweren Wedel schwingen langsam und halten im Winter Schnee."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "potted-monstera",
+      "category": "vegetation",
+      "title": {
+        "en": "Potted Monstera",
+        "de": "Monstera im Topf"
+      },
+      "heightM": 1.61,
+      "widthM": 1.247,
+      "powerW": 0,
+      "poses": [
+        "still-air",
+        "ventilation-draught",
+        "freshly-watered",
+        "drought-wilted"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [
+        "potted-monstera-plan-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A potted Swiss cheese plant (Monstera deliciosa) 1.6 m high on a coir moss pole: nine glossy leaves in two ranks, the older ones deeply split and perforated, in a 0.36 m cream-glazed pot on a saucer.",
+        "de": "Ein Fensterblatt (Monstera deliciosa) im Topf, 1,6 m hoch an einem Kokos-Moosstab: neun glänzende Blätter in zwei Zeilen, die älteren tief geschlitzt und gelocht, in einem cremeweiß glasierten Topf von 0,36 m auf einem Untersetzer."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "prickly-pear",
+      "category": "vegetation",
+      "title": {
+        "en": "Prickly Pear",
+        "de": "Feigenkaktus"
+      },
+      "heightM": 2.5812,
+      "widthM": 2.0432,
+      "powerW": 0,
+      "poses": [
+        "fruiting",
+        "night-stomata-open",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "prickly-pear-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "The archive's only cladode cactus: a 3 m clump of forty flat obovate pads in four generations on a short woody trunk, each pad on its own bone at the margin of its parent, with ripe fruits on the young pads; CAM, transpiring at night.",
+        "de": "Der einzige Flachsprosskaktus des Archivs: ein 3 m hoher Busch aus vierzig flachen, verkehrt eiförmigen Sprossen in vier Generationen auf kurzem holzigem Stamm, jeder Spross an eigenem Knochen am Rand seines Muttersprosses, mit reifen Früchten an den jungen Sprossen; CAM, transpiriert nachts."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "privet-hedge",
+      "category": "vegetation",
+      "title": {
+        "en": "Privet Hedge",
+        "de": "Ligusterhecke"
+      },
+      "heightM": 2,
+      "widthM": 4,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "privet-hedge-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A clipped hedge of eight multi-stemmed privet plants, taller and squarer than the hornbeam hedge and leafy almost to the ground, whose snow pose loads the flat top.",
+        "de": "Eine geschnittene Hecke aus acht mehrstämmigen Ligusterpflanzen, höher und kantiger als die Hainbuchenhecke und fast bis zum Boden belaubt; in der Schneepose lastet Schnee auf der ebenen Oberseite."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "red-oak",
+      "category": "vegetation",
+      "title": {
+        "en": "Red Oak",
+        "de": "Roteiche"
+      },
+      "heightM": 21.098,
+      "widthM": 18.394,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "red-oak-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A 22 m northern red oak (Quercus rubra) with a short, stout bole of flat-ridged bark that divides into big spreading limbs from 3 m on, and a broad, round crown of large bristle-lobed leaves about 19 m wide.",
+        "de": "Eine 22 m hohe Roteiche (Quercus rubra) mit kurzem, kräftigem Stamm aus flachrippiger Borke, der sich ab 3 m in große, ausladende Äste teilt, und einer breiten, runden Krone aus großen, grannig gelappten Blättern von etwa 19 m Breite."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "rhododendron",
+      "category": "vegetation",
+      "title": {
+        "en": "Rhododendron, Evergreen Dome",
+        "de": "Rhododendron, immergrüne Kuppel"
+      },
+      "heightM": 3.075,
+      "widthM": 3.378,
+      "powerW": 0,
+      "poses": [
+        "flowering-calm",
+        "flowering-breeze",
+        "storm",
+        "late-frost"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "rhododendron-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A dense evergreen dome shrub clothed almost to the ground with flower trusses on the shoot tips, whose late-frost pose lets the leathery leaves droop and close their stomata.",
+        "de": "Ein dichter immergrüner Kuppelstrauch, fast bis zum Boden belaubt, mit Blütenständen an den Triebspitzen; in der Spätfrostpose hängen die ledrigen Blätter und schließen ihre Spaltöffnungen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "rosemary-bush",
+      "category": "vegetation",
+      "title": {
+        "en": "Rosemary",
+        "de": "Rosmarin"
+      },
+      "heightM": 1.2219,
+      "widthM": 0.8468,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "rosemary-bush-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "An upright evergreen herb shrub of nine woody stems with columnar needle-leaved shoots and axillary flowers, whose stiff shoots sway little and splay under wet snow.",
+        "de": "Aufrechter immergrüner Kräuterstrauch aus neun verholzten Trieben mit säulenförmigen, nadelblättrigen Sprossen und Blüten in den Blattachseln, dessen steife Sprosse wenig schwingen und sich unter Nassschnee spreizen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "rowan",
+      "category": "vegetation",
+      "title": {
+        "en": "Rowan, Mountain Ash",
+        "de": "Eberesche, Vogelbeere"
+      },
+      "heightM": 10,
+      "widthM": 6.1998,
+      "powerW": 0,
+      "poses": [
+        "late-summer-calm",
+        "fresh-breeze",
+        "gale",
+        "berry-laden",
+        "early-wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "rowan-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A small native tree with a continuous silver-grey leader, steeply ascending limbs and an ovoid crown of pinnate leaves, the only plant of the archive that carries hanging berry corymbs as drawn clusters and a berry crop as a seasonal load.",
+        "de": "Ein kleiner heimischer Baum mit durchgehendem silbergrauem Leittrieb, steil aufsteigenden Ästen und einer eiförmigen Krone aus gefiederten Blättern, die einzige Pflanze des Archivs, die hängende Beerendolden als gezeichnete Büschel und einen Beerenbehang als jahreszeitliche Last trägt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "saguaro-cactus",
+      "category": "vegetation",
+      "title": {
+        "en": "Saguaro Cactus",
+        "de": "Saguaro-Kaktus"
+      },
+      "heightM": 10,
+      "widthM": 1.8982,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "night-stomata-open",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "saguaro-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "The archive's only columnar cactus: a 10 m fluted saguaro of 18 ribs with five arms bending up through smooth elbows, a corky base and a woody rib skeleton inside; a CAM stem that transpires at night.",
+        "de": "Der einzige Säulenkaktus des Archivs: ein 10 m hoher gerippter Saguaro mit 18 Rippen und fünf Armen, die sich durch weiche Ellbogen aufrichten, mit verkorkter Basis und einem Skelett aus Holzrippen; ein CAM-Stamm, der nachts transpiriert."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "saucer-magnolia",
+      "category": "vegetation",
+      "title": {
+        "en": "Saucer Magnolia, Multi-Stem, in Bloom",
+        "de": "Tulpen-Magnolie, mehrstämmig, in Blüte"
+      },
+      "heightM": 6.051,
+      "widthM": 6.498,
+      "powerW": 0,
+      "poses": [
+        "late-bloom",
+        "bloom-breeze",
+        "spring-gale",
+        "wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "saucer-magnolia-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A mature saucer magnolia (Magnolia × soulangeana) of four smooth grey stems from one root crown, low and wider than high, in late bloom: upright goblet flowers of 14 cm, white inside and flushed purple-pink outside, stand on the branch tips while the first leaves unfold.",
+        "de": "Eine ausgewachsene Tulpen-Magnolie (Magnolia × soulangeana) aus vier glatten grauen Stämmen aus einem Wurzelstock, niedrig und breiter als hoch, in später Blüte: aufrechte, kelchförmige Blüten von 14 cm, innen weiß und außen purpurrosa überhaucht, stehen auf den Zweigspitzen, während sich die ersten Blätter entfalten."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "scots-pine",
+      "category": "vegetation",
+      "title": {
+        "en": "Scots Pine",
+        "de": "Waldkiefer"
+      },
+      "heightM": 22.179,
+      "widthM": 12.076,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "scots-pine-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A straight, bare bole under a high, flat-topped crown of horizontal needle plates, whose two needle-leaf regions total 150 m² against 450 m² for the English oak.",
+        "de": "Gerader, astfreier Stamm unter einer hohen, flachen Krone aus waagerechten Nadelplatten; die beiden Nadelblattregionen ergeben zusammen 150 m², gegenüber 450 m² bei der Stieleiche."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "shrub-rose",
+      "category": "vegetation",
+      "title": {
+        "en": "Shrub Rose",
+        "de": "Strauchrose"
+      },
+      "heightM": 1.5,
+      "widthM": 1.6585,
+      "powerW": 0,
+      "poses": [
+        "flowering",
+        "windy",
+        "storm",
+        "rain-laden"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "shrub-rose-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A deciduous flowering shrub of eleven arching three-part canes with bloom clusters on the nodding tips, whose rain-laden pose sinks the arches under held water.",
+        "de": "Sommergrüner Blütenstrauch aus elf bogigen dreiteiligen Ruten mit Blütenbüscheln an den nickenden Spitzen, dessen regenschwere Pose die Bögen unter gehaltenem Wasser sinken lässt."
+      },
+      "completion": "authored"
+    },
+    {
       "id": "small-leaved-lime",
       "category": "vegetation",
       "title": {
@@ -7393,7 +9741,7 @@
         "de": "Winterlinde"
       },
       "heightM": 14.386,
-      "widthM": 9.357,
+      "widthM": 8.954,
       "powerW": 0,
       "poses": [
         "summer-calm",
@@ -7440,6 +9788,675 @@
       "distinction": {
         "en": "A mature park lime (Tilia cordata) with a straight stem, one continuous leader and a dense, domed crown of small heart-shaped leaves; epicormic shoots sprout from the stem base.",
         "de": "Eine ausgewachsene Parklinde (Tilia cordata) mit geradem Stamm, durchgehender Stammverlängerung und dichter, gewölbter Krone aus kleinen herzförmigen Blättern; am Stammfuß treiben Stammaustriebe."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "snake-plant",
+      "category": "vegetation",
+      "title": {
+        "en": "Snake Plant in a Pot",
+        "de": "Bogenhanf im Topf"
+      },
+      "heightM": 0.887,
+      "widthM": 0.352,
+      "powerW": 0,
+      "poses": [
+        "still-air",
+        "ventilation-draught",
+        "freshly-watered",
+        "drought-stressed",
+        "night-stomata-open"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [
+        "snake-plant-plan-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A potted snake plant (Dracaena trifasciata) 0.9 m high: ten stiff, banded sword leaves in three rosettes in a 0.25 m glazed stoneware pot on a saucer; a CAM succulent that transpires at night.",
+        "de": "Ein Bogenhanf (Dracaena trifasciata) im Topf, 0,9 m hoch: zehn steife, gebänderte Schwertblätter in drei Rosetten in einem glasierten Steinzeugtopf von 0,25 m auf einem Untersetzer; eine CAM-Sukkulente, die nachts transpiriert."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "tree-fern",
+      "category": "vegetation",
+      "title": {
+        "en": "Soft Tree Fern",
+        "de": "Tasmanischer Baumfarn"
+      },
+      "heightM": 5.708,
+      "widthM": 4.957,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "dry-spell"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "tree-fern-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A fern with a trunk of roots: a 4 m column of fibrous root mantle flaring at the base, crowned by a 5 m shuttlecock of arching bipinnate fronds with unrolling crosiers and a skirt of dead fronds; it stands in light shade and its fronds sag in a dry spell.",
+        "de": "Ein Farn mit einem Stamm aus Wurzeln: eine 4 m hohe Säule aus faserigem Wurzelmantel, am Fuß verbreitert, gekrönt von einem 5 m weiten Federball überhängender doppelt gefiederter Wedel mit sich entrollenden Farnschnecken und einem Rock toter Wedel; er steht im lichten Schatten und seine Wedel hängen in einer Trockenperiode durch."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "stone-pine",
+      "category": "vegetation",
+      "title": {
+        "en": "Stone Pine, Umbrella Crown",
+        "de": "Pinie, Schirmkrone"
+      },
+      "heightM": 20.494,
+      "widthM": 14.452,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "stone-pine-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A tall Mediterranean stone pine with a long, straight bole in red-brown plated bark and a dense, flat-topped umbrella crown on a few rising limbs.",
+        "de": "Eine hohe mediterrane Pinie mit langem, geradem Stamm in rotbrauner Plattenborke und einer dichten, flachen Schirmkrone auf wenigen aufsteigenden Ästen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "sunflower",
+      "category": "vegetation",
+      "title": {
+        "en": "Sunflower",
+        "de": "Sonnenblume"
+      },
+      "heightM": 2.48,
+      "widthM": 1.17,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "ripening",
+        "evening-sun"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration",
+        "heliotropic-tracking"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "sunflower-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "The only annual crop flower among the grasses and perennials: three stout stems with spiral heart-shaped leaves and large east-facing heads that follow the sun by day and droop with ripening seed.",
+        "de": "Die einzige einjährige Kulturblume unter den Gräsern und Stauden: drei kräftige Stängel mit spiralig gestellten herzförmigen Blättern und großen, nach Osten gerichteten Körben, die tagsüber der Sonne folgen und mit reifenden Kernen herabhängen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "sweetgum",
+      "category": "vegetation",
+      "title": {
+        "en": "Sweetgum",
+        "de": "Amberbaum"
+      },
+      "heightM": 18,
+      "widthM": 9.443,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "autumn-colour",
+        "wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "sweetgum-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "An 18 m sweetgum (Liquidambar styraciflua) with a dominant central leader and twelve spiral limbs: a dense, tall pyramidal crown about 9.5 m wide of star-shaped leaves, the most colourful autumn tree of the avenues.",
+        "de": "Ein 18 m hoher Amberbaum (Liquidambar styraciflua) mit durchgehender Stammverlängerung und zwölf spiralig gestellten Ästen: eine dichte, hohe Pyramidenkrone von etwa 9,5 m Breite aus sternförmigen Blättern, der farbigste Herbstbaum der Alleen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "sycamore-maple",
+      "category": "vegetation",
+      "title": {
+        "en": "Sycamore Maple",
+        "de": "Bergahorn"
+      },
+      "heightM": 25.1,
+      "widthM": 20.795,
+      "powerW": 0,
+      "poses": [
+        "summer-calm",
+        "summer-breeze",
+        "storm",
+        "samara-laden",
+        "midsummer-drought"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "sycamore-maple-plan-crown",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A mature sycamore maple (Acer pseudoplatanus) of about 25 m: a massive stem with four whorls of heavy, wide-spreading limbs under a broad, billowing dome; grey bark flaking in plates, hanging clusters of right-angled samaras.",
+        "de": "Ein ausgewachsener Bergahorn (Acer pseudoplatanus) von etwa 25 m: ein mächtiger Stamm mit vier Quirlen schwerer, weit ausladender Äste unter einer breiten, wolkigen Kuppel; graue, in Platten schuppende Borke, hängende Trauben rechtwinkliger Flügelfrüchte."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "honey-locust",
+      "category": "vegetation",
+      "title": {
+        "en": "Thornless Honey Locust",
+        "de": "Dornenlose Gleditschie"
+      },
+      "heightM": 15,
+      "widthM": 11.146,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "autumn-gold"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "honey-locust-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A 15 m thornless honey locust (Gleditsia triacanthos f. inermis) whose short stem forks at 3 m into four arching main limbs: a broad vase-to-umbrella crown about 12 m wide of small flat sprays of fine pinnate leaves with sky between them, the lightest shade of the street trees.",
+        "de": "Eine 15 m hohe dornenlose Gleditschie (Gleditsia triacanthos f. inermis), deren kurzer Stamm sich in 3 m Höhe in vier bogige Hauptäste gabelt: eine breite Vasen- bis Schirmkrone von etwa 12 m Breite aus kleinen flachen Büscheln feinen Fiederlaubs mit Himmel dazwischen, der lichteste Schatten der Straßenbäume."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "tulip-tree",
+      "category": "vegetation",
+      "title": {
+        "en": "Tulip Tree",
+        "de": "Tulpenbaum"
+      },
+      "heightM": 30.314,
+      "widthM": 13.509,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "tulip-tree-symbol",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A 30 m tulip tree (Liriodendron tulipifera) with a straight columnar bole clear to 7 m, a single leader to the top and a dense columnar-oval crown of large four-lobed leaves, about 14 m wide.",
+        "de": "Ein 30 m hoher Tulpenbaum (Liriodendron tulipifera) mit geradem, säulenförmigem Stamm, astfrei bis 7 m, einem Leittrieb bis zur Spitze und einer dichten, säulenförmig-ovalen Krone aus großen vierlappigen Blättern von etwa 14 m Breite."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "weeping-willow",
+      "category": "vegetation",
+      "title": {
+        "en": "Weeping Willow",
+        "de": "Trauerweide"
+      },
+      "heightM": 11.1,
+      "widthM": 16.212,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "weeping-willow-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "Eight long curtains of pendulous whips hang from arching limbs almost to the ground and shape a bell-shaped silhouette in the calm, windy and storm poses.",
+        "de": "Acht lange Vorhänge aus hängenden Ruten an überhängenden Ästen reichen fast bis zum Boden und formen in den Posen Ruhe, frischer Wind und Sturm eine glockenförmige Silhouette."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "windmill-palm",
+      "category": "vegetation",
+      "title": {
+        "en": "Windmill Palm",
+        "de": "Chinesische Hanfpalme"
+      },
+      "heightM": 7.807,
+      "widthM": 2.916,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "windmill-palm-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "The hardy fan palm of temperate gardens: an 8 m stem wrapped in brown leaf-sheath fibre under a round crown of stiff palmate leaves with split, drooping segments, plus a skirt of dead leaves; fans fold and roll edge-on in wind and bend under snow.",
+        "de": "Die winterharte Fächerpalme gemäßigter Gärten: ein 8 m hoher, in braune Blattscheidenfasern gehüllter Stamm unter einer runden Krone steifer handförmiger Blätter mit geteilten, überhängenden Segmenten, dazu ein Rock toter Blätter; die Fächer falten und drehen sich im Wind hochkant und biegen sich unter Schnee."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "wisteria-pergola",
+      "category": "vegetation",
+      "title": {
+        "en": "Wisteria on Pergola",
+        "de": "Glyzinie an der Pergola"
+      },
+      "heightM": 3.1,
+      "widthM": 3.6,
+      "powerW": 0,
+      "poses": [
+        "flowering-calm",
+        "breezy",
+        "storm",
+        "flowering-night"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "wisteria-pergola-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "An old Chinese wisteria (Wisteria sinensis) in full flower on a freestanding C24 timber pergola, 3.6 m by 2.8 m and 3.1 m high: a twined trunk beside one post, leaders over six rafters and lilac racemes hanging between them. The pergola is passive structure.",
+        "de": "Eine alte Chinesische Glyzinie (Wisteria sinensis) in voller Blüte an einer freistehenden Holzpergola aus C24, 3,6 m mal 2,8 m und 3,1 m hoch: ein verwundener Stamm neben einem Pfosten, Leittriebe über sechs Sparren und lilafarbene Trauben, die zwischen ihnen hängen. Die Pergola ist passive Struktur."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "yucca",
+      "category": "vegetation",
+      "title": {
+        "en": "Yucca",
+        "de": "Palmlilie"
+      },
+      "heightM": 2.8606,
+      "widthM": 1.9821,
+      "powerW": 0,
+      "poses": [
+        "calm",
+        "night",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "yucca-symbol"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "distinction": {
+        "en": "A tree-like spineless yucca of 3 m: an elephant-foot base, a trunk forked into four stems, and four rosettes of twenty thin strap leaves each on their own bones; a C3 plant that transpires by day, the counterpart of the CAM cacti.",
+        "de": "Eine baumartige Riesen-Palmlilie von 3 m: ein Elefantenfuß, ein in vier Stämme gegabelter Stamm und vier Rosetten aus je zwanzig dünnen Riemenblättern an eigenen Knochen; eine C3-Pflanze, die tagsüber transpiriert, das Gegenstück zu den CAM-Kakteen."
       },
       "completion": "authored"
     },

@@ -6,8 +6,31 @@ fn labels() -> &'static Fem3dLabels {
     semio_plugin::resolve_labels::<Fem3dLabels>(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native))
 }
 
+/// 🌲️ The boot snapshot, holding the UI value arena the panel tree is built in and retiring itself when the law ends.
+struct Boot(Option<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot>, semio_plugin::artifact_app_laws::FixtureUiArena);
+
+fn boot() -> Boot {
+    let arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
+    Boot(Some(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot")), arena)
+}
+
+impl std::ops::Deref for Boot {
+    type Target = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+    fn deref(&self) -> &Self::Target { self.0.as_ref().expect("boot snapshot is live") }
+}
+
+impl Drop for Boot {
+    fn drop(&mut self) {
+        let Some(value) = self.0.take() else { return };
+        if std::thread::panicking() { std::mem::forget(value); return; }
+        let mut fixture = semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
+        fixture.retire_owned(value, semio_plugin::artifact_app_laws::OriginalWorkFixture::stock());
+        fixture.finish();
+    }
+}
+
 fn panel_json(window: &Fem3dResultsWindowConfig) -> String {
-    let doc = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot");
+    let doc = boot();
     let node = render(&doc, Some(window), None, "results-left", labels()).expect("results panel admission");
     semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("fixture projection")
 }
@@ -50,7 +73,7 @@ async fn results_panel_play_button_switches_to_pause_while_running() {
 /// 📚️ LAW: the source select offers every load case AND every combination of the live document.
 #[semio_framework_async_macros::async_test]
 async fn results_panel_source_select_offers_cases_and_combinations() {
-    let doc = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot");
+    let doc = boot();
     let json = panel_json(&Fem3dResultsWindowConfig::default());
     for case in &doc.load_cases {
         assert!(json.contains(case.id.as_str()), "missing load case {}: {json}", case.id);
@@ -86,7 +109,7 @@ async fn results_panel_tag_resolves_to_the_partition_the_command_writes() {
 /// play/pause toggle naming only the window — and says which pane to focus for live readouts.
 #[semio_framework_async_macros::async_test]
 async fn results_panel_without_a_captured_window_offers_a_toggle_and_a_focus_hint() {
-    let doc = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot");
+    let doc = boot();
     let node = render(&doc, None, None, "results-left", labels()).expect("results panel admission");
     let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("fixture projection");
     assert!(json.contains(labels().focus_results_hint.as_str()), "{json}");

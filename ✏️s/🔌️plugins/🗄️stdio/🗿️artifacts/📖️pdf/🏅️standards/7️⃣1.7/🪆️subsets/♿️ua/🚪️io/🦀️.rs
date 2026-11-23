@@ -129,7 +129,7 @@ use semio_framework_diagnostic::Severity;
                     PdfDictEntry { key: "Pages".into(), value: PdfObject::Ref(ObjRef { num: 5, gen: 0 }) },
                     PdfDictEntry { key: "MarkInfo".into(), value: PdfObject::Ref(ObjRef { num: 2, gen: 0 }) },
                     PdfDictEntry { key: "StructTreeRoot".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) },
-                    PdfDictEntry { key: "Lang".into(), value: PdfObject::Str(lang.into_bytes()) },
+                    PdfDictEntry { key: "Lang".into(), value: PdfObject::Text(lang) },
                     PdfDictEntry { key: "ViewerPreferences".into(), value: PdfObject::Ref(ObjRef { num: 4, gen: 0 }) },
                 ]),
             },
@@ -291,7 +291,7 @@ use semio_framework_diagnostic::TextSpan;
     /// 🗣️ Real check: `/Root/Lang` is a non-empty text string.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn has_nonempty_lang(catalog: &PdfObject) -> bool {
-        catalog.dict_get("Lang").is_some_and(|v| matches!(v, PdfObject::Str(s) if !s.is_empty()))
+        catalog.dict_get("Lang").is_some_and(|v| match v { PdfObject::Str(s) => !s.is_empty(), PdfObject::Text(s) => !s.is_empty(), _ => false })
     }
 
     /// 🏷️ Real check: `/Root/ViewerPreferences` resolves to a dict carrying `/DisplayDocTitle true`.

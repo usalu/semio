@@ -39,7 +39,15 @@ impl ArtifactEditor for SourcingCurationApp {
     type Command = SourcingCurationCommand;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(std::sync::Arc::new(SourcingCurationArtifactPreparationFactory))
+        Some(sourcing_curation_artifact_preparation_factory())
+    }
+
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        sourcing_curation_store_owners_source_demands()
+    }
+
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(admit_sourcing_curation_store_owners(grant))
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -197,10 +205,10 @@ impl ArtifactEditor for SourcingCurationApp {
         let labels = sourcing_curation_labels(view_state);
         let grid_window = grid_config::current(cfg);
         match body_key {
-            pool::SOURCING_CURATION_BODY_POOL => pool::render(snapshot, config, labels).map(semio_plugin::built_to_component_tree),
-            curated::SOURCING_CURATION_BODY_CURATED => curated::render(snapshot, config, labels).map(semio_plugin::built_to_component_tree),
-            preview::SOURCING_CURATION_BODY_PREVIEW => preview::render(snapshot, &[], labels).map(semio_plugin::built_to_component_tree),
-            grid::SOURCING_CURATION_BODY_GRID => grid::render(snapshot, config, &grid_window).map(semio_plugin::built_to_component_tree),
+            pool::SOURCING_CURATION_BODY_POOL => pool::render(snapshot, config, labels, view_state.locale).map(semio_plugin::built_to_component_tree),
+            curated::SOURCING_CURATION_BODY_CURATED => curated::render(snapshot, config, labels, view_state.locale).map(semio_plugin::built_to_component_tree),
+            preview::SOURCING_CURATION_BODY_PREVIEW => preview::render(snapshot, &[], labels, view_state.locale).map(semio_plugin::built_to_component_tree),
+            grid::SOURCING_CURATION_BODY_GRID => grid::render(snapshot, config, &grid_window, view_state.locale).map(semio_plugin::built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(Label::data("")),
         }
     }
@@ -220,7 +228,7 @@ impl ArtifactEditor for SourcingCurationApp {
         let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         if body_key == preview::SOURCING_CURATION_BODY_PREVIEW {
             let selected_ids = interaction.selection(SOURCING_ROWS_DOMAIN).ids.clone();
-            return preview::render(doc.snapshot, &selected_ids, sourcing_curation_labels(view_state)).map(semio_plugin::built_to_component_tree);
+            return preview::render(doc.snapshot, &selected_ids, sourcing_curation_labels(view_state), view_state.locale).map(semio_plugin::built_to_component_tree);
         }
         Self::render(body_key, doc, cfg, view_state)
 

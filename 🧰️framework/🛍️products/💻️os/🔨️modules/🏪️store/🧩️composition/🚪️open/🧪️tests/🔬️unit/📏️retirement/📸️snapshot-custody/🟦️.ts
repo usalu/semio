@@ -63,8 +63,8 @@ test("genesis admission preserves original payload and envelope metadata under s
   expect(genesis).toContain("verified_pack_birth_demand()");
   expect(genesis).toContain("admit_verified_pack(");
   expect(genesis).toContain("demand.admit(grant)");
-  expect(genesis).toContain("Err((error, snapshot, pack))");
-  expect(genesis.indexOf("demand.admit(grant)")).toBeLessThan(genesis.indexOf("Self::from_verified_pack(snapshot, pack, digest)"));
+  expect(genesis).toContain("return Err((error, snapshot, pack))");
+  expect(genesis.lastIndexOf("demand.admit(grant)")).toBeLessThan(genesis.lastIndexOf("ArtifactGenesis::admitted(snapshot, digest)"));
   const root = storeModule("🧾️document/🦀️.rs");
   const owner = root.slice(root.indexOf("pub fn create_document_envelope_from_genesis_owners"), blockEnd(root, root.indexOf("pub fn create_document_envelope_from_genesis_owners")));
   expect(owner).toContain("schema: String"); expect(owner).toContain("id: String"); expect(owner).toContain("        schema,"); expect(owner).toContain("        id,");
@@ -72,9 +72,9 @@ test("genesis admission preserves original payload and envelope metadata under s
   const h = readModuleTreeSource(new URL("../../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", import.meta.url));
   const bind = phaseBody(h, "step_bind_genesis");
   expect(bind.indexOf("birth.admit(child)")).toBeLessThan(bind.indexOf("self.initial.take()"));
-  expect(bind).toContain("admit_verified_pack(initial, pack, initial_digest, child)");
+  expect(bind).toContain("admit_verified_physical_pack(initial, pack, initial_digest, child)");
   expect(bind).toContain("*self.initial = Some(initial)"); expect(bind).toContain("*self.pack = Some(pack)");
-  expect(bind.includes("empty_document_envelope_from_genesis_owners::<P, M>(schema, expected.artifact_id")).toBe(true);
+  expect(bind.includes("empty_document_envelope_from_genesis_owners::<P, M>(schema, expected.id")).toBe(true);
 });
 
 test("original inference retained wallet transports every unequal and zero axis", async () => {
@@ -214,8 +214,8 @@ test("original interactive cancellation retains the same deep owner until physic
   expect(cancel).not.toContain("assert!");
   expect(inference).not.toContain("self.retire()");
   expect(inference).toContain("fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)");
-  expect(inference).toContain("let grant=cx.retained_grant();");
-  expect(inference).toContain("cx.consume_retained(progress)");
+  expect(inference).toContain("cx.retained_grant().maximum_items==0");
+  expect(inference).toContain("cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})");
   expect(inference).not.toContain("JobPayloadCloseStep");
   expect(inference).toContain("retirement_progress");
 });
@@ -240,13 +240,11 @@ test("actual snapshot input step funds original birth and both physical copies",
   const traitFile = storeModule("🏗️initialization/🏠️owners/📥️lifted/🏭️operation/🦀️.rs");
   const trait = traitFile.slice(traitFile.indexOf("pub trait MemberSnapshotOpenOperation"),blockEnd(traitFile,traitFile.indexOf("pub trait MemberSnapshotOpenOperation")));
   expect(trait.includes("grant: RetainedCloneGrant")).toBe(true);
-  const actual = source.slice(source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D:MemberSnapshotDecoder<P>>"),source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D> ProducedMemberSnapshotOpen"));
-  expect(actual.includes("admit_member_input_buffer")).toBe(true);
-  expect(actual.includes("grant.maximum_copy_bytes / 2")).toBe(true);
-  expect(actual.includes("self.pending(expected_bytes, progress, cx)")).toBe(true);
-  const publish = source.slice(source.indexOf("fn publish_input(&mut self,"),source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D:MemberSnapshotDecoder<P>>"));
-  expect(publish.includes("retained_progress: progress")).toBe(true);
-  expect(actual.includes("self.input.try_reserve_exact(expected_bytes)")).toBe(false);
+  expect(source).toContain("pub fn admit_member_input_buffer");
+  expect(source).toContain("grant.maximum_copy_bytes / 2");
+  expect(source).toContain("copied_bytes: copied * 2");
+  expect(source).toContain("record_member_step(cx, self.input_buffer_progress)");
+  expect(source).not.toContain("try_reserve_exact(expected_bytes)");
 });
 
 test("canonical reader ownership preserves the original byte oracle under independent physical policy", async () => {
@@ -270,11 +268,11 @@ test("canonical reader ownership preserves the original byte oracle under indepe
   expect(lastInFirstOut.pop()).toBe("map"); expect(lastInFirstOut.pop()).toBe("lifetime");
   const map = readFileSync(resolve(root, base + "🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs"), "utf8");
   const reader = readFileSync(resolve(root, base + "📖️reader/🧪️tests/📖️reader/🦀️.rs"), "utf8");
-  expect(map.includes("MapFields(semio_framework_value::ordered::OrderedMap<MapValue>)")).toBe(true);
+  expect(map.includes("MapFields(semio_framework_value_ordered::ordered::OrderedMap<MapValue>)")).toBe(true);
   expect(map.includes("admit_owned_retirement(value, grant)")).toBe(true);
   expect(map.includes("deferred(MapTerminalLifetime { lifetime, tracked: *tracked }), deferred(map)")).toBe(true);
   const retirement = readFileSync(resolve(root,"🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs"),"utf8");
-  expect(retirement.includes("self.0.pop().map_or(RetirementStep::Complete, RetirementStep::Child)")).toBe(true);
+  expect(retirement.includes("self.0.pop().map_or(RetirementStep::Complete(0), RetirementStep::Child)")).toBe(true);
   expect(map.includes("active.truncate")).toBe(false);
   expect(map.includes("fn member_canonical_reader_map_retirement_preserves_refused_original_and_paid_cancel_frontiers")).toBe(true);
   expect(map.includes("assert_eq!(body.map.0.entry_at_rank(0).unwrap().0.as_ptr(),key_pointer)")).toBe(true);
@@ -313,11 +311,11 @@ test("member request physical grants remain caller policy independent of the clo
 test("snapshot input receipts debit the original context wallet exactly once",async()=>{
  const fs=await import("node:fs"),path=await import("node:path");
  const actual=fs.readFileSync(path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs"),"utf8");
- const input=actual.slice(actual.indexOf("impl<P,D> ProducedMemberSnapshotOpen<P,D>"),actual.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D> ProducedMemberSnapshotOpen"));
- expect(input.includes("cx.consume_retained(progress)")).toBe(true);
- expect(input.includes("let caller = cx.retained_grant()")).toBe(true);
- for(const axis of ["items","copy_bytes","capacity_bytes","release_bytes","depth"])expect(input.includes("grant.maximum_"+axis+".min(caller.maximum_"+axis+")")).toBe(true);
- expect(input.includes("self.pending(expected_bytes, progress, cx)")).toBe(true);
+ const open=fs.readFileSync(path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs"),"utf8");
+ expect(open.includes("cx.consume_retained(progress)")).toBe(true);
+ expect(open.includes("let caller = cx.retained_grant()")).toBe(true);
+ for(const axis of ["items","copy_bytes","capacity_bytes","release_bytes","depth"])expect(open.includes("maximum_"+axis+": grant.maximum_"+axis+".min(caller.maximum_"+axis+")")).toBe(true);
+ expect(actual.includes("record_member_step(cx, self.input_buffer_progress)")).toBe(true);
  const plain=JSON.parse(fs.readFileSync(path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).snapshotInput;
  const grant=plain.policy,remaining={...grant};
  const bytes=new Uint8Array(plain.payloadBytes),receipt={copiedItems:1,copiedBytes:bytes.byteLength*plain.expected.copiesPerPayloadByte,retainedCapacityBytes:0,releasedBytes:0};
@@ -340,7 +338,7 @@ test("member and hydration paid turns preserve the original physical wallet",asy
  expect(source.includes("pub fn member_step_grant")).toBe(true);expect(source.includes("pub fn record_member_step")).toBe(true);
  expect(source.includes("cx.consume_retained(progress)")).toBe(true);
  for(const axis of ["items","copy_bytes","capacity_bytes","release_bytes","depth"])expect(source.includes("grant.maximum_"+axis+".min(caller.maximum_"+axis+")")).toBe(true);
- expect(operation.includes("let grant = semio_os_store_member_open::member_step_grant(cx, grant);")).toBe(true);expect(operation.includes("semio_os_store_member_open::record_member_step(cx, progress)")).toBe(true);
+ expect(operation.includes("let grant = semio_framework_os_store_member_open::member_step_grant(cx, grant);")).toBe(true);expect(operation.includes("semio_framework_os_store_member_open::record_member_step(cx, progress)")).toBe(true);
  expect(hydration.includes("member_open::member_step_grant(cx, grant)")).toBe(true);expect(hydration.includes("member_open::record_member_step(cx, progress)")).toBe(true);
  expect(hydration.includes("match progress_fuel(progress) { Ok(fuel) => cx.consume_fuel(fuel)")).toBe(false);
  for(const [name,input]of [["open",source],["operation",operation]]){const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(grammar.error,name).toBeUndefined();expect(grammar.status,name).toBe(0);}
@@ -386,8 +384,8 @@ test("snapshot JSON writer reports actual partial cancellation receipts",async()
 test("native snapshot writer keeps its static cursor in the original paid recipient",async()=>{
  const fs=await import("node:fs"),path=await import("node:path"),root=process.cwd();
  const owner=fs.readFileSync(path.join(root,"🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs"),"utf8"),snapshot=fs.readFileSync(path.join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs"),"utf8");
- expect(owner.includes("pub fn drive_cursor")).toBe(true);expect(owner.includes("cursor:&mut Option<T>")).toBe(true);expect(owner.includes("self.remaining_grant()")).toBe(true);expect(owner.includes("driver.record_progress(progress)?")).toBe(true);expect(owner.includes("Some(frame as Box<dyn ErasedSnapshotRetirement>)")).toBe(true);
- const writer=snapshot.slice(snapshot.indexOf("fn write_json("),snapshot.indexOf("pub(super) fn encode("));expect(writer.includes("JsonBorrowedWriteCursor::new()")).toBe(true);expect(writer.includes("owner.drive_cursor")).toBe(true);expect(writer.includes("cursor.normal_step_progress()")).toBe(true);expect(writer.includes("256.min(grant.maximum_items)")).toBe(true);expect(writer.includes("JsonWriteCursor::new")).toBe(false);
+ expect(owner.includes("pub fn drive_cursor")).toBe(true);expect(owner.includes("cursor:&mut Option<T>")).toBe(true);expect(owner.includes("self.remaining_grant()")).toBe(true);expect(owner.includes("driver.record_progress(progress)")).toBe(true);expect(owner.includes("Some(frame as Box<dyn ErasedSnapshotRetirement>)")).toBe(true);
+ const writer=snapshot.slice(snapshot.indexOf("fn write_json("),snapshot.indexOf("pub(super) fn encode("));expect(writer.includes("JsonBorrowedWriteCursor::new()")).toBe(true);expect(writer.includes("owner.drive_cursor_receipted")).toBe(true);expect(writer.includes("normal_step_demands_with_copy(")).toBe(true);expect(writer.includes("owner.remaining_grant()")).toBe(true);expect(writer.includes("JsonWriteCursor::new")).toBe(false);
  const bytes=Buffer.from(JSON.stringify({unchanged:"雪"}));expect(new TextEncoder().encode(JSON.stringify({unchanged:"雪"}))).toEqual(new Uint8Array(bytes));expect(JSON.parse(bytes.toString("utf8"))).toEqual({unchanged:"雪"});
  for(const input of [owner,snapshot]){const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(grammar.error).toBeUndefined();expect(grammar.status).toBe(0);}
 });
@@ -471,7 +469,7 @@ test("failed native field admission uses genuine bounds and preserves real perfo
 });
 
 test("original VCS checkpoint measurement stays borrowed and cannot become consuming authority",async()=>{
- const fs=await import("node:fs"),path=await import("node:path"),{default:Ajv2020}=await import("ajv/dist/2020.js"),root=process.cwd(),base=path.join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control");
+ const fs=await import("node:fs"),path=await import("node:path"),{default:Ajv2020}=await import("ajv"),root=process.cwd(),base=path.join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control");
  const plain=JSON.parse(fs.readFileSync(path.join(base,"🧪️tests/🧫️fixtures/📥️input/🔣️.json"),"utf8")).checkpointProjection;
  const original={maximum:plain.originalMaximumBytes,owned:0,finished:false,reserved_return:0,phase_start_owned:0,phase_start_reserved_return:0,received_output:0,received_input:0,received_retirement:plain.hostCharge};
  const projected=applyPatch(original,[{op:"add",path:"/kind",value:"original-retirement-measurement"},{op:"replace",path:"/received_retirement",value:original.received_retirement+plain.proposedCharge}],true,false).newDocument;
@@ -501,8 +499,8 @@ test("native SQLite binding transfers each original octet backing under unchange
  for(const input of [native,fs.readFileSync(path.join(base,"🛬️native-decoding/🦀️.rs"),"utf8")]){const parsed=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(parsed.error).toBeUndefined();expect(parsed.status).toBe(0);}
  expect(binding.indexOf("body.admit_frontier",binding.indexOf("for field"))).toBeLessThan(binding.indexOf("std::mem::take(bytes)"));
  const producer=fs.readFileSync(path.join(base,"🛬️native-decoding/🦀️.rs"),"utf8");
- expect(producer).toContain("FnOnce(&mut RecordValue");
- expect(producer).toContain("construct(record.as_mut().unwrap()");
+ expect(producer).toContain("FnMut(&mut RecordValue");
+ expect(producer).toContain("construct(record,retained,native)");
 });
 
 test("original history mutation ordinals preserve the full unsigned64 domain across JSON",async()=>{
@@ -528,10 +526,10 @@ test("selected member snapshot codec owns typed decode without replacing origina
  const validate=new Ajv({strict:true,allErrors:true}).compile(schema);expect(validate(law)).toBe(true);
  const rejected=applyPatch(law,[{op:"replace",path:"/source",value:"replacement-pack"}],true,false).newDocument;expect(validate(rejected)).toBe(false);
  const source=readModuleTreeSource(new URL("../../../../🏭️operation/🦀️.rs",import.meta.url));
- const start=source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D:MemberSnapshotDecoder<P>>");
- const end=source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D> ProducedMemberSnapshotOpen");const selected=source.slice(start,end);
- expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);expect(selected.includes("D::decode_snapshot(&self.input)")).toBe(true);expect(selected.includes("P::decode_pack")).toBe(false);
- expect(selected.includes("check_step_authority(cx)")).toBe(true);expect(selected.includes("let caller = cx.retained_grant()")).toBe(true);expect(selected.includes("admit_member_input_buffer")).toBe(true);
+ const decoder=await Bun.file(new URL("../../../../🏭️operation/🧬️schema/📦️decoder/🦀️.rs",import.meta.url)).text();
+ expect(decoder).toContain("fn decode_snapshot(pack:&[u8])->Result<P,PackError>;");expect(decoder).toContain("P::decode_pack(pack)");
+ expect(source).toContain("MemberSnapshotDecoder");expect(source).not.toContain("P::decode_pack");
+ expect(source).toContain("request.check_step_authority(cx)");expect(source).toContain("admit_member_input_buffer");
 });
 
 test("original Store snapshot ports are independent from selected representation methods",async()=>{

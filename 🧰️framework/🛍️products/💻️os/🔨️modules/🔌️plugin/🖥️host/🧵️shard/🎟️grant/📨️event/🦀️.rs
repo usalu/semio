@@ -70,7 +70,7 @@ impl OriginalShardEvent{
  fn close_mesh_in_effect(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<(bool,RetainedCloneProgress),ValueError>{
   let grant=effect.grant();let mesh=self.mesh.as_mut().unwrap();
   if let Some(close)=mesh.close.as_mut(){
-   if !close.terminal_is_empty(){let demand=close.selected_demand(grant.maximum_copy_bytes)?;if !mesh_fits(grant,demand){return Ok((false,Default::default()))}let mut child=effect.reborrow(RetainedCloneGrant{maximum_items:1,..grant},effect.maximum_work_units())?;return match close.step(grant.maximum_copy_bytes,&mut child){RetainedWorkPoll::Pending{..}=>Ok((false,Default::default())),RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|(false,step.progress())).map_err(OriginalRetirementFailure::into_value_error)}}
+   if !close.terminal_is_empty(){let demand=close.selected_demand(grant.maximum_copy_bytes)?;if !mesh_fits(grant,demand){return Ok((false,Default::default()))}let mut child=effect.nested(RetainedCloneGrant{maximum_items:1,..grant});return match close.step(grant.maximum_copy_bytes,&mut child){RetainedWorkPoll::Pending{..}=>Ok((false,Default::default())),RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|(false,step.progress())).map_err(OriginalRetirementFailure::into_value_error)}}
    if grant.maximum_items==0||grant.maximum_depth==0||!effect.performed(1)?{return Ok((false,Default::default()))}
    mesh.close.take();self.mesh=None;self.mesh_sequence=self.mesh_sequence.checked_add(1).ok_or_else(||mesh_refusal("original mesh transport sequence exhausted"))?;return Ok((true,RetainedCloneProgress{copied_items:1,..Default::default()}))
   }

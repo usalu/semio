@@ -7,6 +7,7 @@ use crate::standards::v1_7::subsets::base::modules::lexer::{dict_f64, dict_get, 
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use std::collections::{HashMap, HashSet};
 use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::text_string::decode_text_string;
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
 use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue};
 use crate::standards::v1_7::subsets::base::schema::content_mapping::{ResourceMap, rename_content};
@@ -110,6 +111,7 @@ impl<'s> Lifter<'s> {
         match value {
             PdfObject::Text(text) => Some(text),
             PdfObject::Name(name) => Some(name),
+            PdfObject::Str(bytes) => Some(decode_text_string(&bytes)),
             _ => None,
         }
     }

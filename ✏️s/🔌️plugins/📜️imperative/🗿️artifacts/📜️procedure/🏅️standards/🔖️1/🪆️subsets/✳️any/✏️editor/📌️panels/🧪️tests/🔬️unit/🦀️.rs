@@ -170,7 +170,7 @@ fn imperative_semantic_panels_match_the_json_oracle() {
         let tree = project(render(&document, labels).expect("inspector"));
         assert_eq!(tree["children"][0]["component"]["label"], row["inspection"]);
         assert_eq!(tree["children"][0]["children"][0]["component"]["label"], row["steps"]);
-        let node = crate::editor::procedure::modes::edit::windows::main::render(&document, &vectors["runOutput"].to_string(), labels).expect("table");
+        let node = crate::editor::procedure::modes::edit::windows::main::render(&document, &vectors["runOutput"].to_string(), labels, semio_plugin::Locale::En).expect("table");
         let semio_plugin::Component::Surface(props) = &node.component else { panic!("table surface") };
         let scene: semio_ui_scene::TableScene = semio_ui_scene::decode(props).expect("packed table");
         let columns: Vec<serde_json::Value> = serde_json::from_str::<Vec<serde_json::Value>>(&scene.columns_json).expect("columns oracle").into_iter().map(|column| column["label"].clone()).collect();
@@ -183,7 +183,7 @@ fn imperative_semantic_panels_match_the_json_oracle() {
         assert_eq!(serde_json::Value::Array(rows), vectors["rows"]);
         project(node);
     }
-    for node in [crate::editor::procedure::modes::edit::windows::script::render(&document).expect("editor text"), crate::viewer::procedure::modes::view::windows::script::render(&document).expect("viewer text")] {
+    for node in [crate::editor::procedure::modes::edit::windows::script::render(&document, semio_plugin::Locale::En).expect("editor text"), crate::viewer::procedure::modes::view::windows::script::render(&document, semio_plugin::Locale::En).expect("viewer text")] {
         let semio_plugin::Component::Surface(props) = &node.component else { panic!("text surface") };
         let scene: semio_ui_scene::TextEditorScene = semio_ui_scene::decode(props).expect("packed text");
         assert_eq!(scene.language.as_deref(), Some("imperative"));

@@ -27,6 +27,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -73,22 +74,6 @@ TITLE_DE = "Solare Einstrahlung"
 
 # Mid-screen anchor for facade / charts / sections.
 CONTENT_CENTER = UP * 0.25
-
-
-#region DIN citation
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
-
-    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
-    that never competes with the diagram. The formula panel sits on the
-    bottom edge, so this corner is clear in every beat.
-    """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-#endregion
 
 
 #region Shared visual motifs
@@ -199,7 +184,7 @@ class Beat1_SolarIrradiance(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Direct solar radiation", "Direkte Sonnenstrahlung"))
-        din = _din_ref(_references.cite(("vdi-2078", "solar")))
+        din = reference_chip(_references.cite(("vdi-2078", "solar")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -430,7 +415,7 @@ class Beat5_SolarCoolingLoad(Scene):
         example = solar_cooling_example()
 
         subtitle = section_heading(tr("Solar cooling load", "Solare Kühllast"))
-        din = _din_ref(_references.cite(("din-4108-2", "fc")))
+        din = reference_chip(_references.cite(("din-4108-2", "fc")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))

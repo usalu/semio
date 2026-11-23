@@ -4,10 +4,19 @@ import * as ui from "@semio-tech/ui-react/source";
 import type { TestSource, Tests1Vitest, Tests1Dependencies } from "../🧰️harness/🟦️.ts";
 
 export async function registerUiintroductionAppearance1Tests(vitest: Tests1Vitest, dependencies: Tests1Dependencies, testSource: TestSource): Promise<void> {
-  const { Footer, GLASS_OVERLAY_BOX_CLASS, React, UIIntroduction, WindowChrome, reactHostPort, splitIntroductionBodyParagraphs, windowSilhouettePath } = dependencies;
+  const { Footer, GLASS_OVERLAY_BOX_CLASS, React, UIIntroduction, WindowChrome, reactHostPort, splitIntroductionBodyParagraphs } = dependencies;
   type IntroductionStepDefinition = any;
   const { describe, expect, it, vi } = vitest;
   const { render, screen, fireEvent, waitFor } = await import("@testing-library/react");
+  const borderSegments = (d: string | null | undefined): readonly (readonly number[])[] => [...(d ?? "").matchAll(/M ([\d.]+) ([\d.]+) L ([\d.]+) ([\d.]+)/gu)].map((match) => match.slice(1).map(Number));
+  const expectFrameOutlineWithChipEdges = (d: string | null | undefined, chipEdges: readonly (readonly number[])[]): void => {
+    const segments = borderSegments(d);
+    for (const frameEdge of [[1, 1, 199, 1], [1, 99, 199, 99], [1, 1, 1, 99], [199, 1, 199, 99]]) expect(segments).toContainEqual(frameEdge);
+    for (const segment of segments) expect(segment[0] === segment[2] || segment[1] === segment[3]).toBe(true);
+    for (const segment of segments) for (const value of segment) expect(value >= 1 && value <= 199).toBe(true);
+    expect(segments).toHaveLength(4 + chipEdges.length);
+    for (const edge of chipEdges) expect(segments).toContainEqual(edge);
+  };
 
 describe("UIIntroduction appearance", () => {
 
@@ -24,7 +33,7 @@ describe("UIIntroduction appearance", () => {
       expect(onDismiss).toHaveBeenCalledWith(false);
     });
 
-    it("renders title, close, body, and footer chips as one borderless dialog-level glass silhouette", () => {
+    it("renders title, close, body, and footer chips as one borderless dialog-level glass frame", () => {
       const steps: IntroductionStepDefinition[] = [
         { id: "first", title: "First", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
         { id: "second", title: "Second", body: "Step two.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
@@ -44,7 +53,7 @@ describe("UIIntroduction appearance", () => {
       const controls = container.querySelector('[data-slot="window-chrome-controls"]') as HTMLElement;
       const body = container.querySelector('[data-slot="window-chrome-body"]') as HTMLElement;
       const footerLeft = container.querySelector('[data-slot="window-chrome-footer-left"]') as HTMLElement;
-      const footerCenterChip = container.querySelector('[data-slot="window-chrome-footer-center-chip"]') as HTMLElement;
+      const footerCenterChip = container.querySelector('[data-slot="window-chrome-footer-center"]') as HTMLElement;
       const footerRight = container.querySelector('[data-slot="window-chrome-footer-right"]') as HTMLElement;
       for (const cell of [chipCap, controls, footerLeft, footerCenterChip, footerRight]) {
         expect(cell).toBeTruthy();
@@ -52,21 +61,22 @@ describe("UIIntroduction appearance", () => {
         expect(cell.className).not.toContain("ui-surface");
         expect(cell.className).not.toContain("bg-transparent");
       }
-      expect(body.hasAttribute("data-window-silhouette-content")).toBe(true);
+      expect(body.hasAttribute("data-window-frame-content")).toBe(true);
       expect(body.className).not.toContain("ui-glass");
+      expect(body.getAttribute("data-level")).toBe("dialog");
+      for (const cell of [chipCap, controls, footerLeft, footerCenterChip, footerRight]) expect(cell.getAttribute("data-level")).toBe("menu");
 
       const backButtonGroup = container.querySelector('[id="ui.introduction.back"]')?.closest('[data-slot="button-group"]') as HTMLElement;
       const nextButtonGroup = container.querySelector('[id="ui.introduction.next"]')?.closest('[data-slot="button-group"]') as HTMLElement;
       const closeButton = container.querySelector('[data-slot="introduction-close"]') as HTMLElement;
       for (const flowingChip of [titleChip, stepChip, backButtonGroup, nextButtonGroup, closeButton]) {
         expect(flowingChip).toBeTruthy();
-        expect((flowingChip.parentElement?.hasAttribute("data-shared-border-cells") ? flowingChip.parentElement.parentElement : flowingChip.parentElement)?.hasAttribute("data-window-silhouette-chip")).toBe(true);
-        expect(flowingChip.getAttribute("data-level") ?? flowingChip.closest("[data-level]")?.getAttribute("data-level")).toBe("dialog");
+        expect((flowingChip.parentElement?.hasAttribute("data-shared-border-cells") ? flowingChip.parentElement.parentElement : flowingChip.parentElement)?.hasAttribute("data-window-frame-chip")).toBe(true);
+        expect(flowingChip.closest("[data-window-frame-chip]")?.getAttribute("data-level")).toBe("menu");
       }
 
-      const gap = container.querySelector('[data-slot="window-chrome-gap"]') as HTMLElement;
-      expect(gap.className).not.toContain("ui-glass");
-      expect(gap.className).not.toContain("ui-surface");
+      expect(body.outerHTML).not.toContain("clip-path");
+      for (const cell of [chipCap, controls, footerLeft, footerCenterChip, footerRight]) expect(cell.closest("[data-window-frame]")).toBe(stack.closest("[data-window-frame]") ?? stack);
     });
 
     it("stamps an introduced element and clears it on step change", async () => {
@@ -169,7 +179,7 @@ describe("UIIntroduction appearance", () => {
       expect(box?.querySelector("p")?.className).not.toMatch(/(?:^|\s)text-muted(?:\s|$)/);
     });
 
-    it("pulses the introduction info-box silhouette with the introduced border effect", () => {
+    it("pulses the introduction info-box frame with the introduced border effect", () => {
       const rect = {
         x: 0,
         y: 0,
@@ -209,13 +219,13 @@ describe("UIIntroduction appearance", () => {
             onDismiss={vi.fn()}
           />,
         );
-        const border = container.querySelector('[data-slot="introduction-info-box"] [data-slot="window-chrome-silhouette-border"]');
+        const border = container.querySelector('[data-slot="introduction-info-box"] [data-slot="window-chrome-frame-border"]');
         expect(border?.getAttribute("data-kind")).toBe("introduced");
         expect(border?.hasAttribute("data-pending")).toBe(false);
         const path = border?.querySelector("path");
         expect(path).toBeTruthy();
         expect(path?.getAttribute("stroke")).toBe("var(--introduced-border-color, var(--color-secondary))");
-        expect(path?.getAttribute("class") || "").toContain("window-silhouette-border-introduced");
+        expect(path?.getAttribute("class") || "").toContain("window-frame-border-introduced");
       } finally {
         rectSpy.mockRestore();
       }
@@ -259,7 +269,7 @@ describe("UIIntroduction appearance", () => {
           />,
         );
         const stack = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
-        const border = () => stack.querySelector('[data-slot="window-chrome-silhouette-border"]');
+        const border = () => stack.querySelector('[data-slot="window-chrome-frame-border"]');
         expect(border()?.getAttribute("data-kind")).toBe("introduced");
         fireEvent.pointerDown(stack.querySelector('[data-slot="window-chrome-body"]')!);
         await waitFor(() => {
@@ -276,21 +286,21 @@ describe("UIIntroduction appearance", () => {
       }
     });
 
-    it("introduction and dialog glass boxes emphasize their silhouette only through the compositor hover stroke", async () => {
+    it("introduction and dialog glass boxes emphasize their frame only through the compositor hover stroke", async () => {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
       const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
       expect(css).toContain('[data-slot="introduction-info-box"]');
       expect(css).toContain('[data-slot="dialog-content"]');
-      expect(css).toContain("data-window-silhouette-border");
-      expect(css).toContain("[data-window-silhouette]");
+      expect(css).toContain("data-window-frame-border");
+      expect(css).toContain("[data-window-frame]");
       expect(css).toContain('[data-shared-border-segment][data-shared-border-state="hover"]');
-      expect(css).not.toMatch(/\[data-window-silhouette\]:hover/);
+      expect(css).not.toMatch(/\[data-window-frame\]:hover/);
       expect(css).toContain("stroke: var(--border-emphasized-color)");
-      expect(css).toContain("window-silhouette-border-introduced");
+      expect(css).toContain("window-frame-border-introduced");
       expect(css).toContain("@keyframes introduced-border-pulse");
-      expect(css).not.toContain("@keyframes window-silhouette-border-introduced-pulse");
+      expect(css).not.toContain("@keyframes window-frame-border-introduced-pulse");
       expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]:focus-within/);
       expect(css).not.toMatch(/\[data-slot="dialog-content"\]:focus-within/);
       expect(GLASS_OVERLAY_BOX_CLASS).not.toMatch(/(?:^|\s)border(?:\s|$)/);
@@ -298,7 +308,7 @@ describe("UIIntroduction appearance", () => {
       expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-normal");
     });
 
-    it("wraps the introduction silhouette around the step chip and Next when Back is absent", async () => {
+    it("draws the introduction frame as one rectangle plus the inner edges of its chips when Back is absent", async () => {
       const steps: IntroductionStepDefinition[] = [{ id: "only", title: "Welcome", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }];
       const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
         if (!(el instanceof HTMLElement)) return;
@@ -318,44 +328,27 @@ describe("UIIntroduction appearance", () => {
       const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
       const stack = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
       expect(stack.querySelector('[data-slot="window-chrome-footer-left"]')).toBeNull();
-      expect(stack.querySelector('[data-slot="window-chrome-footer-center-chip"]')).toBeTruthy();
+      expect(stack.querySelector('[data-slot="window-chrome-footer-center"]')).toBeTruthy();
       expect(stack.querySelector('[data-slot="window-chrome-footer-right"]')).toBeTruthy();
       mockRect(stack, { left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100 });
       mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 0, right: 60, width: 60, height: 24, bottom: 24 });
-      mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, height: 24, bottom: 24, width: 200, right: 200 });
-      mockRect(stack.querySelector('[data-slot="window-chrome-footer-center-chip"]'), { left: 80, right: 120, width: 40, height: 24, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-footer-center"]'), { left: 80, right: 120, width: 40, height: 24, bottom: 100 });
       mockRect(stack.querySelector('[data-slot="window-chrome-footer-right"]'), { left: 140, right: 200, width: 60, height: 24, bottom: 100 });
-      stack.setAttribute("data-silhouette-remeasure", "intro-center-right");
+      stack.setAttribute("data-frame-remeasure", "intro-center-right");
       await waitFor(() => {
-        const path = stack.querySelector('[data-slot="window-chrome-silhouette-border"] path')?.getAttribute("d");
-        expect(path).toBe(
-          windowSilhouettePath({
-            width: 200,
-            height: 100,
-            top: {
-              depth: 24,
-              chips: [
-                { left: 0, right: 60 },
-                { left: 160, right: 200 },
-              ],
-            },
-            bottom: {
-              depth: 24,
-              chips: [
-                { left: 80, right: 120 },
-                { left: 140, right: 200 },
-              ],
-            },
-          }),
-        );
-        expect(path).toContain("V99 H140 V75 H120 V99 H80 V75");
-        expect(path).not.toMatch(/V99 V\d+/);
+        expect(stack.getAttribute("data-frame-state")).toBe("ready");
+        const path = stack.querySelector('[data-slot="window-chrome-frame-border"] path')?.getAttribute("d");
+        expectFrameOutlineWithChipEdges(path, [[1, 23, 59, 23], [161, 23, 199, 23], [81, 77, 119, 77], [141, 77, 199, 77], [59, 1, 59, 23], [161, 1, 161, 23], [81, 77, 81, 99], [119, 77, 119, 99], [141, 77, 141, 99]]);
       });
+      const center = stack.querySelector('[data-slot="window-chrome-footer-center"]') as HTMLElement;
+      const right = stack.querySelector('[data-slot="window-chrome-footer-right"]') as HTMLElement;
+      for (const chip of [center, right]) expect(chip.closest("[data-window-frame-chip]")).toBeTruthy();
+      expect(stack.querySelector('[data-slot="window-chrome-body"]')?.outerHTML).not.toContain("clip-path");
     });
 
-    it("skips the bottom-right silhouette notch when the introduction next chip is absent", async () => {
+    it("keeps the full bottom frame edge and draws no cutout notch when the Next chip is absent", async () => {
       const steps: IntroductionStepDefinition[] = [
         { id: "first", title: "First", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
         {
@@ -390,36 +383,15 @@ describe("UIIntroduction appearance", () => {
       const stack = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
       mockRect(stack, { left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100 });
       mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 0, right: 60, width: 60, height: 24, bottom: 24 });
-      mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, height: 24, bottom: 24, width: 200, right: 200 });
       mockRect(stack.querySelector('[data-slot="window-chrome-footer-left"]'), { left: 0, right: 50, width: 50, height: 24, bottom: 100 });
-      mockRect(stack.querySelector('[data-slot="window-chrome-footer-center-chip"]'), { left: 80, right: 120, width: 40, height: 24, bottom: 100 });
-      stack.setAttribute("data-silhouette-remeasure", "intro");
+      mockRect(stack.querySelector('[data-slot="window-chrome-footer-center"]'), { left: 80, right: 120, width: 40, height: 24, bottom: 100 });
+      stack.setAttribute("data-frame-remeasure", "intro");
       await waitFor(() => {
-        const path = stack.querySelector('[data-slot="window-chrome-silhouette-border"] path')?.getAttribute("d");
-        expect(path).toBe(
-          windowSilhouettePath({
-            width: 200,
-            height: 100,
-            top: {
-              depth: 24,
-              chips: [
-                { left: 0, right: 60 },
-                { left: 160, right: 200 },
-              ],
-            },
-            bottom: {
-              depth: 24,
-              chips: [
-                { left: 0, right: 50 },
-                { left: 80, right: 120 },
-              ],
-            },
-          }),
-        );
-        expect(path).toContain("V75 H120 V99 H80 V75 H50 V99");
-        expect(path).not.toMatch(/V99 V\d+/);
+        const path = stack.querySelector('[data-slot="window-chrome-frame-border"] path')?.getAttribute("d");
+        expectFrameOutlineWithChipEdges(path, [[1, 23, 59, 23], [161, 23, 199, 23], [1, 77, 49, 77], [81, 77, 119, 77], [49, 77, 49, 99], [59, 1, 59, 23], [81, 77, 81, 99], [119, 77, 119, 99], [161, 1, 161, 23]]);
+        expect(borderSegments(path)).toContainEqual([1, 99, 199, 99]);
       });
     });
 

@@ -20,7 +20,7 @@ export function PlayCard({
   className,
 }: {
   readonly pane: PlayPaneSpec;
-  /** 🎈️ Lifted while its app is revealed — never maps to window `active` (that paints the primary silhouette stroke). */
+  /** 🎈️ Lifted while its app is revealed — never maps to window `active` (that paints the primary frame stroke). */
   readonly lifted?: boolean;
   readonly onClick: () => void;
   readonly className?: string;

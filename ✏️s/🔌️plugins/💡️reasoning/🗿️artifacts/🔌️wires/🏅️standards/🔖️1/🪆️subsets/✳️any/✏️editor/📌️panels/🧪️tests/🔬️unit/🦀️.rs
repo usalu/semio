@@ -235,8 +235,8 @@ fn wires_semantic_panels_match_the_json_oracle() {
         assert_eq!(serde_json::Value::Array(lines), row["summary"]);
     }
     for node in [
-        crate::editor::wires::modes::edit::windows::canvas::render(&composed.board, &composed.identity_snapshot, &crate::editor::wires::modes::edit::windows::canvas::config::WiresCanvasWindowConfig::default()).expect("editor canvas"),
-        crate::viewer::wires::modes::view::windows::canvas::render(&composed).expect("viewer canvas"),
+        crate::editor::wires::modes::edit::windows::canvas::render(&composed.board, &composed.identity_snapshot, &crate::editor::wires::modes::edit::windows::canvas::config::WiresCanvasWindowConfig::default(), semio_plugin::Locale::En).expect("editor canvas"),
+        crate::viewer::wires::modes::view::windows::canvas::render(&composed, semio_plugin::Locale::En).expect("viewer canvas"),
     ] {
         let semio_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
         let scene: semio_plugin::Canvas2dScene = semio_ui_scene::decode(props).expect("packed canvas");

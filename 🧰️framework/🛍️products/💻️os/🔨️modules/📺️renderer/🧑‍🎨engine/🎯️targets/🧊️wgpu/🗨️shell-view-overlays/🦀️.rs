@@ -11,7 +11,7 @@ use semio_renderer_wgpu_shell_doc_open::OpeningState;
 use semio_renderer_wgpu_shell_dock::ShellDockState;
 use semio_renderer_wgpu_shell_docs::DocumentState;
 use semio_renderer_wgpu_shell_history::HistoryState;
-use semio_renderer_wgpu_shell_input::{ChromeDialogPaintOp, ChromeDialogSemantics, ContextMenuItem, ContextMenuState, OverlayState, ShellInputState, ShellPaletteKind, TIME_TRAVEL_BAND_STATUS_ID, note_chrome_control_description, note_chrome_control_disabled, note_chrome_control_name, with_chrome_control_names};
+use semio_renderer_wgpu_shell_input::{context_menu_item_at_path, ChromeDialogPaintOp, ChromeDialogSemantics, ContextMenuItem, ContextMenuState, OverlayState, ShellInputState, ShellPaletteKind, TIME_TRAVEL_BAND_STATUS_ID, note_chrome_control_description, note_chrome_control_disabled, note_chrome_control_name, with_chrome_control_names};
 use semio_renderer_wgpu_shell_plugins::PluginState;
 use semio_renderer_wgpu_shell_pointer::{UI_INTRODUCTION_BACK_CONTROL_ID, UI_INTRODUCTION_NEXT_CONTROL_ID, UI_INTRODUCTION_SKIP_CONTROL_ID, UI_INTRODUCTION_VEIL_CONTROL_ID};
 use semio_renderer_wgpu_shell_prefs::{BAND_LABEL_ACCEPTED, BAND_LABEL_PREPARATION_PROGRESS, BAND_LABEL_PROCESSED, BAND_LABEL_PROGRESS, BAND_LABEL_REPLAY_FAULTED, BAND_LABEL_TARGET, BAND_LABEL_WORST, BandTongue, CHROME_ICON_TINY, ChromeGroupItem, LOCAL_FILE_OPEN_ACTION, LOCAL_FILES_SCROLL_ID, LOCAL_FILES_STATUS_ID, LocalFolderText, PrefsState, TimeTravelVerb, band_label, history_reprojection_message, history_reprojection_running, local_folder_name, local_folder_path, local_files_title, local_folder_text, retained_chrome_group_item_width, time_travel_band_lines, time_travel_progress_key, time_travel_stage_key, time_travel_target_text};

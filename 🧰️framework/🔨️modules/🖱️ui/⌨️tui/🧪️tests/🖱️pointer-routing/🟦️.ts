@@ -19,7 +19,7 @@ const windows = fixture.windows as Window[];
 const rows = fixture.frame.rows.map((row) => [...row]);
 const firstRow = fixture.frame.first;
 
-const windowAt = (x: number, y: number): Window | undefined => windows.find((w) => x >= w.x && x <= w.right && y >= firstRow && y <= firstRow + 2);
+const windowAt = (x: number, y: number): Window | undefined => windows.find((w) => x >= w.x && x <= w.right && y >= firstRow && y <= firstRow + 1);
 
 const identities = (window: string): string[] => fixture.scene.layout.stacks.find((stack) => stack.windows.some((tab) => tab.id === window))!.windows.map((tab) => tab.id);
 
@@ -95,7 +95,7 @@ describe("🖱️ pointer routing table", () => {
 
   it("shows every declared chip, grip, close glyph and maximize glyph where the table says", () => {
     const text = rows[1];
-    const hairline = rows[2];
+    const edge = rows[0];
     for (const chip of chips) {
       expect(text[chip.x], `left wall of ${chip.window} chip ${chip.index}`).toBe("│");
       expect(text[chip.right], `right wall of ${chip.window} chip ${chip.index}`).toBe("│");
@@ -105,9 +105,9 @@ describe("🖱️ pointer routing table", () => {
       expect(text[chip.close], `close glyph of ${chip.window} chip ${chip.index}`).toBe("✕");
       expect(text[chip.close - 1], "a space precedes the close glyph").toBe(" ");
     }
-    for (const window of windows) {
-      const active = chips.find((c) => c.window === window.window && c.index === window.active)!;
-      expect(hairline[active.x + 1], "the seam stays closed under the active tab").toBe("─");
+    for (const chip of chips) {
+      expect(edge[chip.x], `the wall of ${chip.window} chip ${chip.index} meets the shared edge in a junction`).toBe("┬");
+      expect(edge[chip.x + 1], `the frame edge runs unbroken above ${chip.window} chip ${chip.index}`).toBe("─");
     }
   });
 

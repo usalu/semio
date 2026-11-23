@@ -77,6 +77,6 @@ async fn the_records_carry_the_layers_of_the_drawing_and_an_empty_window_a_promp
     let drawing = &inference.view_linework["v-section-a"];
     let painted = records(Some(drawing), &[], "select", &BimLabels::NATIVE_EN);
     assert_eq!(painted.len(), 1 + drawing.lines.regions.len() + drawing.lines.polylines.len() + drawing.lines.texts.len());
-    assert!(render(&snapshot, &inference, &through_the_house(), &[], "select", 1, &BimLabels::NATIVE_EN).is_ok());
+    assert!(render(&snapshot, &inference, &through_the_house(), &[], "select", 1, &BimLabels::NATIVE_EN, semio_plugin::Locale::En).is_ok());
     assert_eq!(records(None, &[], "select", &BimLabels::NATIVE_EN).len(), 2, "the meta record and the prompt");
 }

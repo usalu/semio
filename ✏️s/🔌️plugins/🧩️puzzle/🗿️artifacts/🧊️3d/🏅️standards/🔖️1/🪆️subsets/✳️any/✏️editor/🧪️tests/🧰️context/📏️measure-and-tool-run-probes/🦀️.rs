@@ -62,7 +62,7 @@ pub const FILL_RUN_TURNS: usize = 262_144;
 /// Answers the action's output (`{"toolRun": effect}` or `{"rejected": code}`).
 pub async fn tool_run_action(app: &mut Puzzle3dApp, action: &str, args: Value) -> Value {
     app.ensure_window(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
-    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID))), ..app.meta("local") };
+    let action_meta = app.window_meta(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let (raw, cx) = app.parts();
     let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, Some(semio_framework_pack_json::to_dsl_value(&args)), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
     semio_framework_pack_json::from_dsl_value(&result.output)

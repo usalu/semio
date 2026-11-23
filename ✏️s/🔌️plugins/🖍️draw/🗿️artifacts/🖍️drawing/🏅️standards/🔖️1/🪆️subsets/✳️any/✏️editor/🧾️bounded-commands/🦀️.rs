@@ -193,7 +193,7 @@ impl semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp
             }
             _ => emit = input.command.dispatch(&doc, &cfg, &mut session)?,
         }
-        cx.consume_fuel(session.identity_checkpoints);
+        cx.consume_fuel(session.identity_checkpoints.min(cx.fuel_remaining()));
         session.identity_cancel=None;
         self.completed = true;
         Ok(match transient {

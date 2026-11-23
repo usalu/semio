@@ -8,22 +8,41 @@ fn unbounded_grant() -> semio_framework_value::retained_clone::RetainedCloneGran
     semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX }
 }
 
+/// 🪙 Runs one retirement step inside a wallet whose stock is exactly the quoted grant.
+fn funded<R>(grant: semio_framework_value::retained_clone::RetainedCloneGrant, run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> R {
+    semio_framework_value::AuthoringWallet::new(grant, 1_048_576).run_invoked(grant, 1_048_576, run).expect("puzzle scene wallet funds the quoted grant").expect("puzzle scene work quote is admitted").output
+}
+
+/// ♻️ Closes one admitted owner by the byte demand it quotes, one funded effect per turn.
 fn drain(mut owner: Box<dyn ErasedSnapshotRetirement>) {
     while !owner.terminal_is_empty() {
-        let copy = owner.next_copy_byte_demand().unwrap();
+        let copy = owner.next_copy_byte_demand().expect("puzzle scene retirement quotes its next copy");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant {
             maximum_items: 32,
             maximum_copy_bytes: copy,
-            maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap(),
-            maximum_release_bytes: owner.next_release_byte_demand().unwrap(),
-            maximum_depth: owner.next_depth_demand().unwrap().max(1),
+            maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).expect("puzzle scene retirement quotes capacity"),
+            maximum_release_bytes: owner.next_release_byte_demand().expect("puzzle scene retirement quotes release"),
+            maximum_depth: owner.next_depth_demand().expect("puzzle scene retirement quotes depth").max(1),
         };
-        owner.close_step(grant).unwrap();
+        semio_framework_value::AuthoringWallet::new(grant, 1_048_576).run_settled(grant, 1_048_576, |effect| owner.close_step(copy, effect)).expect("puzzle scene retirement step settles").expect("puzzle scene retirement quote is admitted").0.result.expect("puzzle scene retirement step");
     }
 }
 
+/// ♻️ Admits one owned value and returns the cursor that must be drained.
 fn retire_value<T: semio_framework_value::retirement::RetireOwned>(value: T) -> Box<dyn ErasedSnapshotRetirement> {
-    semio_framework_value::retirement::admit_owned_retirement(value, unbounded_grant()).map_err(|(error, _)| error).unwrap().0
+    let mut slot = Some(value);
+    match funded(unbounded_grant(), |effect| semio_framework_value::retirement::admit_owned_retirement(&mut slot, effect)).result.expect("puzzle scene value retirement") {
+        Some((owner, _)) => owner,
+        None => panic!("puzzle scene value retirement stayed pending"),
+    }
+}
+
+/// ♻️ Moves a projection's partial owners onto the same retirement cursor.
+fn retire_projection(projection: &mut Projection) -> Box<dyn ErasedSnapshotRetirement> {
+    match funded(unbounded_grant(), |effect| projection.take_retirement(effect)).result.expect("puzzle scene projection retirement") {
+        Some((owner, _)) => owner,
+        None => panic!("puzzle scene projection retirement stayed pending"),
+    }
 }
 
 fn input(value: &serde_json::Value) -> DslValue {
@@ -53,7 +72,7 @@ fn puzzle_scene_projection_matches_language_neutral_cases_and_sqlite_oracle() {
         assert_eq!(accepted, case["accepted"].as_bool().unwrap(), "{}", case["id"]);
         let actual = projection.take_scene().map(|scene| { let result = output(&scene); drain(retire_value(scene)); result }).unwrap_or(serde_json::Value::Null);
         assert_eq!(actual, case["expected"], "{}", case["id"]);
-        drain(projection.take_retirement(unbounded_grant()).result.unwrap().0);
+        drain(retire_projection(&mut projection));
         drain(retire_value(value));
         results.push(serde_json::json!({"id":case["id"],"accepted":accepted,"actual":actual}));
     }
@@ -77,7 +96,7 @@ fn puzzle_scene_projection_retains_partial_owners_at_every_cancellation_boundary
         let mut complete = Projection::new();
         complete.project(&value, mode, &mut control).unwrap();
         drop(control);
-        drain(complete.take_retirement(unbounded_grant()).result.unwrap().0);
+        drain(retire_projection(&mut complete));
         for cancel_at in 1..=calls {
             let mut observed = 0;
             let mut progress = |_: NativeDecodeProgress| { observed += 1; observed < cancel_at };
@@ -85,13 +104,13 @@ fn puzzle_scene_projection_retains_partial_owners_at_every_cancellation_boundary
             let mut partial = Projection::new();
             assert_eq!(partial.project(&value, mode, &mut control).unwrap_err().kind, ValueRefusalKind::Canceled);
             assert!(partial.take_scene().is_none());
-            drain(partial.take_retirement(unbounded_grant()).result.unwrap().0);
+            drain(retire_projection(&mut partial));
         }
         let mut progress = |_: NativeDecodeProgress| true;
         let mut control = NativeDecodeControl::new(0, &mut progress);
         let mut refused = Projection::new();
         assert_eq!(refused.project(&value, mode, &mut control).unwrap_err().kind, ValueRefusalKind::OwnershipLimit);
-        drain(refused.take_retirement(unbounded_grant()).result.unwrap().0);
+        drain(retire_projection(&mut refused));
         drain(retire_value(value));
     }
 }

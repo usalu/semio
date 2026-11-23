@@ -21,15 +21,13 @@ def nodes_for(case):
     nodes = copy.deepcopy(CASES["nodes"] + case.get("extra", []))
     for node in nodes:
         node["enabled"] = node["id"] not in case.get("disabled", [])
-        if node["id"] in case.get("outlines", {}):
-            node["outline"] = copy.deepcopy(case["outlines"][node["id"]])
     return nodes
 
 
 def mask_hit_path(point, nodes):
     """🎭 Resolve half-open hit regions independently with Pillow masks and NumPy intersection."""
     import numpy as np
-    from PIL import Image, ImageChops, ImageDraw
+    from PIL import Image, ImageDraw
 
     width, height = CASES["viewport"]
     x, y = point
@@ -41,10 +39,6 @@ def mask_hit_path(point, nodes):
         image = Image.new("1", (width, height), 0)
         ImageDraw.Draw(image).rectangle((rectangle["x"], rectangle["y"], rectangle["x"] + rectangle["width"] - 1,
                                         rectangle["y"] + rectangle["height"] - 1), fill=1)
-        if "outline" in node:
-            polygon = Image.new("1", (width, height), 0)
-            ImageDraw.Draw(polygon).polygon([tuple(point) for point in node["outline"]], fill=1)
-            image = ImageChops.logical_and(image,polygon)
         masks[node["id"]] = np.asarray(image, dtype=bool)
     candidates = []
     for index, node in enumerate(nodes):
@@ -281,7 +275,7 @@ class CursorIntervalTest(unittest.TestCase):
                 self.runtime.propagate_cursor_intervals(paths, output)
 
 class CursorSceneHelperTest(unittest.TestCase):
-    def test_fused_cap_controls_keep_silhouette_owned_border_through_click_callback(self):
+    def test_fused_cap_controls_keep_frame_owned_border_through_click_callback(self):
         from types import SimpleNamespace
 
         helper = importlib.import_module(MODULE + ".🎬️scene.🐍️")

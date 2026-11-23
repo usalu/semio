@@ -425,9 +425,32 @@ code {
 
 .card .tab {
   position: absolute;
-  top: -16px;
-  right: 24px;
-  background: var(--page);
+  top: 0;
+  right: 0;
+  margin: 0;
+  padding: 2px 8px;
+  border: 0 solid var(--line);
+  border-width: 0 0 var(--stroke-hairline) var(--stroke-hairline);
+  border-radius: 0 9px 0 0;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  color: inherit;
+  font: inherit;
+  backdrop-filter: blur(8px);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .card .tab {
+    background: color-mix(in srgb, var(--foreground) 10%, var(--panel));
+    backdrop-filter: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .card .tab {
+    background: Canvas;
+    border-color: CanvasText;
+    backdrop-filter: none;
+  }
 }
 
 .card .note {

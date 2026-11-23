@@ -69,3 +69,11 @@ test("a list and a row that were shared once are never serialised again, however
  pool.rows(copy);
  copy.forEach((row,at)=>expect(row).toBe(layer[at]));
 });
+
+test("rows with long facts are keyed by their digest: equal long facts are one instance, facts that differ in one character are two",()=>{
+ const pool=createRowPoolV1<Row>(),names=Array.from({length:400},(_,at)=>"entry-"+at+".ts"),make=(last:string):Row=>JSON.parse(JSON.stringify({kind:"readdirNames",path:"/w/dir",fact:[...names,last]}));
+ expect(JSON.stringify(make("z")).length).toBeGreaterThan(256);
+ const first=make("z"),second=make("z"),other=make("y"),short:Row=JSON.parse(JSON.stringify({kind:"readdirNames",path:"/w/dir",fact:["a"]})),shortCopy:Row=JSON.parse(JSON.stringify(short));
+ expect(pool.share(first)).toBe(first);expect(pool.share(second)).toBe(first);expect(pool.share(other)).toBe(other);
+ expect(pool.share(short)).toBe(short);expect(pool.share(shortCopy)).toBe(short);expect(pool.size()).toBe(3);
+});

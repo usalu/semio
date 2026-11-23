@@ -266,8 +266,9 @@ fn render_body(body_key: &str, doc: &ArtifactView<'_, En1997Snapshot>, cfg: &Con
 //#endregion 🪄️LiveRender
 
 //#region 🫧️LiveEditor
+/// 🧭️ The selectable entities of the live scene: every drawn entity but the project site, which owns the document-level checks and is no row of the document.
 fn live_entities(document: &En1997Snapshot) -> Vec<semio_s_plugin_norm_structural_scene::EntityRef> {
-    viewport::scene_of(document, &semio_s_plugin_norm_app_surface::paint_report::<En1997Family>(document)).entities.into_iter().map(|entity| entity.entity).collect()
+    viewport::scene_of(document, &semio_s_plugin_norm_app_surface::paint_report::<En1997Family>(document)).entities.into_iter().map(|entity| entity.entity).filter(|entity| entity.id != semio_s_plugin_norm_structural_scene::projection::SITE_ENTITY).collect()
 }
 
 fn live_handles(document: &En1997Snapshot, selection: &[semio_s_plugin_norm_structural_scene::EntityRef]) -> Vec<semio_s_plugin_norm_structural_scene::Handle> {
@@ -507,12 +508,12 @@ pub fn create_en1997_app() -> semio_plugin::AppDefinition {
 }
 //#endregion ðï¸Manifest
 
-//#region ð§ªï¸UnitTests
+//#region 🧪️UnitTests
 
 #[cfg(test)]
 #[path = "🧪️tests/🗂️case-edits/🦀️.rs"]
 mod case_edit_tests;
-//#endregion ð§ªï¸UnitTests
+//#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts
 #[path = "📚️examples/🎬️demo-session/🦀️.rs"]
@@ -568,3 +569,79 @@ pub mod lanes {
     semio_s_plugin_norm_app_surface::norm_lane_stores!(presence_extension = "norm.en1997.live.presence", transient_extension = "norm.en1997.live.transient", owner = "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️lanes");
 }
 //#endregion 🪢️Mounts
+
+#[cfg(test)]
+mod debug_probe {
+    use super::*;
+    use semio_framework_value::ToValue;
+    use semio_s_plugin_norm_app_surface::NormLiveEditor;
+
+    #[test]
+    fn debug_probe_scene_nodes() {
+        let doc = En1997Snapshot::default();
+        let domain = semio_s_plugin_norm_app_surface::interaction_domain_id(crate::VARIANT);
+        let topology = semio_s_plugin_norm_app_surface::live_interaction_topology::<En1997PlayApp>(&doc, &domain).expect("topology");
+        let known: std::collections::HashSet<&str> = topology.domains[&domain].ordered.iter().map(|node| node.id.as_str()).collect();
+        let scene = <En1997PlayApp as NormLiveEditor>::live_scene(&doc, semio_s_plugin_norm_structural_scene::projection::ViewOptions::none());
+        let tree = doc.to_value();
+        let nodes = &topology.domains[&domain].ordered;
+        println!("[DEBUG] scene entities={} topology nodes={} project-site node={:?}", scene.entities.len(), nodes.len(), nodes.iter().filter(|n| n.id.contains("project-site")).map(|n| n.granularity.clone()).collect::<Vec<_>>());
+        println!("[DEBUG] kinds of the topology entity nodes: {:?}", nodes.iter().map(|n| n.granularity.clone()).collect::<std::collections::BTreeSet<_>>());
+        for (index, drawn) in scene.entities.iter().enumerate() {
+            let address = semio_s_plugin_norm_app_surface::viewport3d::picking::entity_address(drawn.entity.kind, &drawn.entity.id);
+            let row = semio_s_plugin_norm_app_surface::selected_rows(&tree, std::slice::from_ref(&drawn.entity.id)).is_some();
+            let node = address.as_ref().is_some_and(|address| known.contains(address.as_str()));
+            if index < 3 || !node || !row {
+                println!("[DEBUG] entity #{index} kind={:?} id={:?} path={:?} address={} node={node} row={row}", drawn.entity.kind, drawn.entity.id, drawn.entity.path, address.is_some());
+            }
+        }
+        let report = <En1997Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(&doc);
+        let first = report.checks.iter().position(|check| !check.subject.entity_id.is_empty() && scene.entities.iter().any(|drawn| semio_s_plugin_norm_structural_scene::projection_kit::base_id(&drawn.entity.id) == semio_s_plugin_norm_structural_scene::projection_kit::base_id(&check.subject.entity_id)));
+        println!("[DEBUG] first check on a drawn entity = {first:?} id={:?}", first.map(|index| report.checks[index].id.clone()));
+        let mut args = Some(semio_framework_value::DslValue::object(vec![("index".to_string(), semio_framework_value::DslValue::float(first.unwrap_or(0) as f64))]));
+        let command = <En1997PlayApp as semio_plugin::ArtifactEditor>::command_from_action("setSelectedCheckIndex", &mut args, &mut None);
+        println!("[DEBUG] command_from_action = {command:?}");
+        if let Ok(command) = &command {
+            println!("[DEBUG] focus effects = {:?}", <En1997PlayApp as semio_s_plugin_norm_app_surface::NormRetainedEditor>::check_focus_effects(command, &doc));
+        }
+        if let Some(index) = first {
+            let paint = semio_s_plugin_norm_app_surface::paint_report::<En1997Family>(&doc);
+            println!("[DEBUG] paint report checks={} live report checks={} same-id={}", paint.checks.len(), report.checks.len(), paint.checks.get(index).map(|c| c.id.as_str()) == Some(report.checks[index].id.as_str()));
+            println!("[DEBUG] effect = {:?}", semio_s_plugin_norm_app_surface::check_selection_effect(&domain, &paint, index).is_some());
+        }
+    }
+
+    #[test]
+    fn debug_probe_gauge_gamma() {
+        use semio_s_plugin_norm_app_surface::direct_manipulation::{DragEvent, DragState, HandleDragTool, key_intent, KeyIntent, Key, Modifiers};
+        let doc = En1997Snapshot::default();
+        let entity = semio_s_plugin_norm_structural_scene::EntityRef::new(semio_s_plugin_norm_structural_scene::EntityKind::Solid, "layer-sand", "layers[id=layer-sand]");
+        let handles = <En1997PlayApp as NormLiveEditor>::live_handles(&doc, std::slice::from_ref(&entity));
+        println!("[DEBUG] handles of layer-sand: {}", handles.len());
+        let Some(handle) = handles.iter().find(|h| h.id.ends_with("gauge-gamma")) else { println!("[DEBUG] no gauge-gamma"); return };
+        let rest = semio_s_plugin_norm_app_surface::accessibility::published_nodes::rest_parameter(handle);
+        println!("[DEBUG] rest={rest} limits={:?} writes={:?}", handle.limits, handle.writes);
+        let tool = HandleDragTool { handles: &handles, seq: 1 };
+        let enter = || match key_intent(&Key::Enter, Modifiers::NONE) { KeyIntent::Drag(event) => event, other => panic!("{other:?}") };
+        let hover = DragState::Hover { handle: handle.id.clone(), s: rest };
+        let (opened, effect) = tool.step(hover, enter());
+        println!("[DEBUG] opened={opened:?} effect={effect:?}");
+        println!("[DEBUG] apply={:?}", tool.step(opened, enter()).1);
+        let _ = DragEvent::Release;
+    }
+
+    #[test]
+    fn debug_probe_layers() {
+        use semio_plugin::ArtifactEditor as _;
+        let mut documents: Vec<(String, En1997Snapshot)> = <En1997PlayApp as semio_plugin::ArtifactEditor>::examples().iter().map(|example| (example.id().to_owned(), semio_s_artifact_norm_en1997_io::text::snapshot::decode_en1997_dsl(&example.document_json()).expect("example dsl"))).collect();
+        documents.push(("default".to_owned(), En1997Snapshot::default()));
+        for (id, document) in documents {
+            let report = <En1997Family as semio_s_plugin_norm_compliance::NormFamily>::evaluate(&document);
+            for (name, scene) in [("live", viewport::scene_of(&document, &report)), ("full", viewport::full_scene_of(&document, &report))] {
+                let layers: std::collections::BTreeSet<&str> = scene.layers.iter().map(|l| l.id.as_str()).collect();
+                let missing: std::collections::BTreeSet<(&str, &str)> = scene.entities.iter().filter(|e| !layers.contains(e.layer.as_str())).map(|e| (e.layer.as_str(), e.entity.id.as_str())).collect();
+                println!("[DEBUG] layers {id} {name}: entities={} layers={:?} missing={:?}", scene.entities.len(), layers, missing.iter().take(5).collect::<Vec<_>>());
+            }
+        }
+    }
+}

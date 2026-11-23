@@ -61,9 +61,16 @@ test("SQLite matches scene splice order and restores the exact scene on undo", (
       SELECT 2, key, value FROM edits, json_each(original) WHERE key >= stop
     ) ORDER BY region, key
   `);
+  const rowsFor = (value: Scene | Splice, table: Table): readonly unknown[] => {
+    switch (table) {
+      case "parts": return "parts" in value && Array.isArray(value.parts) ? value.parts : [];
+      case "fasteners": return "fasteners" in value && Array.isArray(value.fasteners) ? value.fasteners : [];
+      case "kindCompatibility": return "kindCompatibility" in value && Array.isArray(value.kindCompatibility) ? value.kindCompatibility : [];
+    }
+  };
   const apply = (scene: Scene, mutation: Splice): Scene => {
     const table = mutation.table as Table;
-    const rows = splice.all(mutation.start, mutation.deleteCount, JSON.stringify(scene[table]), JSON.stringify(mutation[table] ?? []));
+    const rows = splice.all(mutation.start, mutation.deleteCount, JSON.stringify(rowsFor(scene, table)), JSON.stringify(rowsFor(mutation, table)));
     return { ...scene, [table]: rows.map(({ value }) => JSON.parse(value)) };
   };
   const after = fixture.steps.reduce((scene, { forward }) => apply(scene, forward), fixture.before);

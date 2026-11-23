@@ -25,17 +25,40 @@ pub type OwnerMutationRoster = fn() -> (&'static str, &'static [protocol::Semant
 pub trait ArtifactOwnedDisposer<T>: Send {
     fn retirement_demands(&self, owner: &T, body: usize) -> Result<RetirementDemand, ValueError>;
     fn close_step(&mut self, owner: &mut T, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, Fault>;
-    /// 🧊️ [`Self::close_step`] outside any Job turn under one explicit authoring wallet whose stock is `grant`.
+    /// 🧊️ [`Self::close_step`] outside any Job turn under one fresh wallet; an owner that keeps state across turns closes through one [`ArtifactColdClose`] instead.
     fn close_step_cold(&mut self, owner: &mut T, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 64);
-        match wallet.run_invoked(grant, 64, |effect| self.close_step(owner, effect)).map_err(|error| Fault::from(error.into_message()))? {
-            Some(done) => done.output,
-            None => Ok(PluginLifecycleStep::Progress(Default::default())),
-        }
+        ArtifactColdClose::new().step(self, owner, grant)
     }
     fn terminal_is_empty(&self, owner: &T) -> bool;
     /// 📐️ Declares the original Box extent after every retained child is physically empty.
     fn terminal_frame_release_bytes(&self) -> Option<usize> { None }
+}
+
+/// 🧊️ One resident authoring wallet for every cold close turn of one owner: the owner's captured Work binding, issuer and scope stay the same from the first turn to the terminal one, and every turn sees exactly its quoted grant, so the body its ladder pages by is the body its caller quoted.
+#[derive(Default)]
+pub struct ArtifactColdClose {
+    wallet: Option<semio_framework_value::AuthoringWallet>,
+}
+
+impl ArtifactColdClose {
+    pub const COLD_STEP_WORK: u64 = 64;
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// 🧊️ Runs one [`ArtifactOwnedDisposer::close_step`] outside any Job turn under the resident wallet and exactly `grant`.
+    pub fn step<T, D: ArtifactOwnedDisposer<T> + ?Sized>(&mut self, disposer: &mut D, owner: &mut T, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+        let wallet = self.wallet.get_or_insert_with(semio_framework_value::AuthoringWallet::self_funded);
+        let done = wallet.run_invoked(grant, Self::COLD_STEP_WORK, |effect| match effect.reborrow(grant, Self::COLD_STEP_WORK) {
+            Ok(mut exact) => disposer.close_step(owner, &mut exact),
+            Err(error) => Err(Fault::from(error.into_message())),
+        });
+        match done.map_err(|error| Fault::from(error.into_message()))? {
+            Some(done) => done.output,
+            None => Ok(PluginLifecycleStep::Progress(Default::default())),
+        }
+    }
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import TOML from "@iarna/toml";
 import { parseTree, getNodeValue, type Node, type ParseError } from "jsonc-parser";
 import { JsonMemberPolicy } from "../../🧩️members/🟦️.ts";
@@ -41,7 +41,7 @@ test("the actual JSON primitive package owns its definitions and depends directl
   expect(native).toEqual(TOML.parse(source) as typeof native);
   expect(native.package.name).toBe("semio-framework-pack-json");
   expect(native.lib).toEqual({name: "semio_framework_pack_json", path: "../../🦀️.rs"});
-  expect(Object.keys(native.dependencies).sort()).toEqual(["semio-framework-pack-json-float","semio-framework-value","semio-framework-value-factory","semio-framework-value-native-owned","semio-framework-value-persistent"]);
+  expect(Object.keys(native.dependencies).sort()).toEqual(["semio-framework-pack-json-canonical","semio-framework-pack-json-float","semio-framework-value","semio-framework-value-factory","semio-framework-value-native-owned","semio-framework-value-native-receiving-original","semio-framework-value-ordered","semio-framework-value-persistent"]);
   expect(tree()).not.toContain("protocol::value");
   expect(tree()).not.toContain("$crate::json::");
 });

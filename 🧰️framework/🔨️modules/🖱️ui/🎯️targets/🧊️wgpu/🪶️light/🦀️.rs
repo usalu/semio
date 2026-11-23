@@ -1,4 +1,4 @@
-//! 🪶️ wgpu light tier: minimap geometry, tree window request rule, tree keyboard and selection rule, presence bar builders, card stack interlock bands, layout and shared-border paint.
+//! 🪶️ wgpu light tier: minimap geometry, tree window request rule, tree keyboard and selection rule, presence bar builders, card stack frames, chip seams and shared-border paint.
 
 #[path = "../🗺️minimap/🦀️.rs"]
 pub mod minimap;

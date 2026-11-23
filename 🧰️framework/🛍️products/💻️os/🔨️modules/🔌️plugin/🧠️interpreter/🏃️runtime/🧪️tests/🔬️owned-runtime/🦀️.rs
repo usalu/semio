@@ -8,7 +8,7 @@ fn owned_result_preserves_original_fixed_actor_receipt_without_allocation() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../⚛️reactor/🎟️context/🌉️call/📤️receipt/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let hex = fixture["failureHex"].as_str().unwrap();
     let bytes: Vec<u8> = hex.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
-    let expected = original_actor_context::OriginalActorFixedReceipt::read(&bytes).unwrap();
+    let expected = original_actor_context::OriginalActorFixedReceipt::read(&bytes).unwrap().0;
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| decode_owned_result::<serde_json::Value>(&bytes));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert!(matches!(result, Err(TurnFault::ActorCall(actual)) if actual == expected));

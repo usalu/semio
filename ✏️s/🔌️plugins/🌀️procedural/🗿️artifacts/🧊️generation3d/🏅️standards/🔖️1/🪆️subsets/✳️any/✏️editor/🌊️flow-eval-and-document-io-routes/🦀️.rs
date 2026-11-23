@@ -127,8 +127,34 @@ pub struct Generation3dDocumentIoWork {
     pub(super) phase: u8,
 }
 
+/// 🔬️ Which owned stage of one document work is live, for the continuation laws.
+#[cfg(feature = "testkit")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Generation3dDocumentIoStages {
+    pub phase: u8,
+    pub source_demand: Option<usize>,
+    pub projected: bool,
+    pub writer: bool,
+    pub text: bool,
+    pub envelope: bool,
+    pub candidate: bool,
+}
+
+#[cfg(feature = "testkit")]
 impl Generation3dDocumentIoWork {
-    pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    /// 🔬️ The stages the work owns right now.
+    pub fn stages(&self) -> Generation3dDocumentIoStages {
+        Generation3dDocumentIoStages { phase: self.phase, source_demand: self.source_demand, projected: self.projected.is_some(), writer: self.writer.is_some(), text: self.text.is_some(), envelope: self.envelope.is_some(), candidate: self.candidate.is_some() }
+    }
+
+    /// 🔬️ The paused encoder the work resumes from, lent to a law that seeds or inspects it.
+    pub fn encoding_mut(&mut self) -> &mut Option<semio_framework_value::native_encoding::NativeEncodeContinuation> {
+        &mut self.encoding
+    }
+}
+
+impl Generation3dDocumentIoWork {
+    pub fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, instance_owner, consumed: false, closing:false, source_identity:None, source_demand:None, expand_admission:false, projection:None, projected:None, writer:None, text:None, envelope:None, candidate:None, retirement:None, encoding:None, phase:0 }
     }
 

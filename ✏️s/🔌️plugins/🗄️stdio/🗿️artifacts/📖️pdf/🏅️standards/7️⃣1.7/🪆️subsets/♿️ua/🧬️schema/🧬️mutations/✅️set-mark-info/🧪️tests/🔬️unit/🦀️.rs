@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::ua::schema::mutations::remove_mark_info::RemoveMarkInfo;
 use crate::standards::v1_7::subsets::ua::schema::mutations::PdfUaMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ fn changes_the_owned_catalog_axis_and_plans_its_inverse() {
     let mutation = SetMarkInfo { marked: true, entry_index: None };
     let next = applied(&base, &PdfUaMutation::SetMarkInfo(mutation.clone()));
     assert_eq!(support::catalog_flag(&next, "MarkInfo", "Marked"), Some(true));
-    assert_eq!(<SetMarkInfo as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::RemoveMarkInfo(RemoveMarkInfo {})]);
+    assert_eq!(<SetMarkInfo as ColdMutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::RemoveMarkInfo(RemoveMarkInfo {})]);
 }
 
 #[semio_framework_async_macros::async_test]

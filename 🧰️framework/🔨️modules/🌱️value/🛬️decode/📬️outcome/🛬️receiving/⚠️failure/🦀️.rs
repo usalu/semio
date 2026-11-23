@@ -15,7 +15,7 @@ impl From<OriginalRetirementFailure> for NativeReceivingFailure{fn from(error:Or
 impl From<NativeReceivingEffectFailure<ValueError>> for NativeReceivingFailure{fn from(error:NativeReceivingEffectFailure<ValueError>)->Self{Self::ValueEffect(error)}}
 impl From<NativeReceivingEffectFailure<OriginalRetirementFailure>> for NativeReceivingFailure{fn from(error:NativeReceivingEffectFailure<OriginalRetirementFailure>)->Self{Self::RetirementEffect(error)}}
 impl From<NativeReceivingEffectFailure<OriginalReceivingPrimary>> for NativeReceivingFailure{fn from(error:NativeReceivingEffectFailure<OriginalReceivingPrimary>)->Self{Self::ReceivingEffect(error)}}
-impl NativeReceivingEffectError for NativeReceivingFailure{fn receiving_progress(&self)->RetainedCloneProgress{self.retained_progress()}}
+impl NativeReceivingEffectError for NativeReceivingFailure{fn receiving_progress(&self)->RetainedCloneProgress{self.retained_progress()}fn cause(&self)->Option<&ValueError>{match self{Self::Primary(error)=>error.cause(),Self::ValueEffect(error)=>error.cause(),Self::RetirementEffect(error)=>error.cause(),Self::ReceivingEffect(error)=>error.cause()}}}
 impl RetireOwned for NativeReceivingFailure{
  fn retirement_ready(&self)->bool{match self{Self::Primary(error)=>error.retirement_ready(),Self::ValueEffect(error)=>error.retirement_ready(),Self::RetirementEffect(error)=>error.retirement_ready(),Self::ReceivingEffect(error)=>error.retirement_ready()}}
  type RetirementCursor=<(Option<OriginalReceivingPrimary>,Option<NativeReceivingEffectFailure<ValueError>>,Option<NativeReceivingEffectFailure<OriginalRetirementFailure>>,Option<NativeReceivingEffectFailure<OriginalReceivingPrimary>>)as RetireOwned>::RetirementCursor;

@@ -1,0 +1,14 @@
+[
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=face-skin",
+   "areaM2"
+  ],
+  "value": 0.15,
+  "was": 0.0947,
+  "measuredAt": 50
+ }
+]

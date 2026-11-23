@@ -4,7 +4,7 @@ import { type VideoRenderJobRow } from "@semio-tech/framework";
 import { setAppearance, setLayout, setLocale, setTerminology } from "@semio-tech/framework/config/mutations";
 import { type ElementsSurfaceAppearance, UI_TERMINOLOGY_NATIVE, type UiChromeLayout, type UiLocale } from "@semio-tech/ui-react";
 import { appBreadcrumb, resolveAppBreadcrumb } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
-import { actionBindingToActionDescriptor } from "../../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import { actionBindingToActionDescriptor } from "../../../🗣️Interpreter/🎬️intent-descriptor/🟦️.ts";
 import { toolRunPanelTasksV1, type ToolRunPanelControlV1 } from "../../../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
 import { createFrameworkChatPanelTab, createFrameworkTaskManagerPanelTab, createFrameworkSettingsPanelTab } from "../../../📌️ChromePanels/🟦️.tsx";
 import { createFrameworkDisplayPanelTabs } from "../../../📌️ChromePanels/🖥️display-panel/🟦️.tsx";

@@ -193,9 +193,9 @@ impl OriginalEffectProducer for Turn{
 }
 fn measure<T,E>(bank:&mut EffectBank,g:RetainedCloneGrant,units:u64,run:&mut dyn FnMut(&mut RetainedAllocationEffect<'_>)->RetainedWorkPoll<T,E>)->(RetainedWorkPoll<T,E>,(usize,usize)){let(poll,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||bank.run(g,units,|effect|run(effect)).0);(poll,(heap.requested_bytes,heap.released_bytes))}
 fn demand_grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
-fn fresh()->EffectBank{EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:usize::MAX>>2,maximum_capacity_bytes:usize::MAX>>2,maximum_release_bytes:usize::MAX>>2,maximum_depth:1<<10},1<<50))}
+fn fresh()->EffectBank{let mut bank=EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:usize::MAX>>2,maximum_capacity_bytes:usize::MAX>>2,maximum_release_bytes:usize::MAX>>2,maximum_depth:1<<10},1<<50));let _=bank.run(RetainedCloneGrant::default(),0,|_|RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work:0}));let _=bank.take_admitted();bank}
 thread_local!{static BANK:RefCell<Option<EffectBank>>=const{RefCell::new(None)};}
-/// 🔥️ Builds the thread's finite Source stock outside any measured region.
+/// 🔥️ Builds the thread's finite Source stock and primes its original Work outside any measured region.
 pub fn warm(){BANK.with(|bank|{bank.borrow_mut().get_or_insert_with(fresh);});}
 /// 🧵️ Runs one poll-shaped call under a real original action and returns its recorded reply with the work it performed.
 pub fn drive(grant:RetainedCloneGrant,units:u64,call:impl FnMut(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{drive_external(grant,units,&std::cell::Cell::new(0),call)}

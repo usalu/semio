@@ -201,13 +201,6 @@ fn register_split_hit(ctx: &mut DockRenderContext<'_>, path: &[usize], index: us
     ctx.input.register_hit(HitTarget { rect, event: None, control_id: Some(format!("dock.split.{}.{index}", path_str(path))), kind: HitKind::DockSplit, drag_axis: Some(axis), drag_data: None });
 }
 
-/// 🪟️ The focus visual: a hairline stroke along the WHOLE stack silhouette (tabs + cutouts +
-/// body), `--active-base` when the stack holds the active window and `--border-normal-color`
-/// otherwise — React's `windowSilhouetteBorderPaint`'s `active`/`normal` kinds
-/// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:7494-7509`) over the same v1 geometry.
-///
-/// 🩸️ The call sat COMMENTED OUT here, so no window ever had an outline on wgpu and the only
-/// focus cue was the active tab's text tint.
 /// 📑️ Paints one tab stack and registers its pointer targets in REACT'S OWN ORDER: a tab's SELECT
 /// target first, then its action chips left to right (`focus`, `close`, `drag`) — the DOM order of
 /// `🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1034-1100`, where the `<button role="tab">` label precedes the
@@ -235,15 +228,14 @@ pub(super) fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, p
 
     let actions = dock_tab_actions(state.show_maximize(), maximized);
     let layout = layout_stack_cap(windows, ctx.window_labels, ctx.window_icon_ids, ctx.atlas, theme, bounds, actions.len());
-    let silhouette = stack_window_silhouette(bounds, theme, &layout);
+    let frame = stack_window_frame(bounds, theme, &layout);
 
     if body_fill {
-        let content_bounds = silhouette.content_bounds();
-        let body_bounds = dock_stack_body_rect(silhouette.safe_body_rect(), theme);
-        ctx.draw.begin_silhouette_clip(&silhouette.content_clip_rects());
-        ctx.draw.push_solid([content_bounds.x, content_bounds.y, content_bounds.w, content_bounds.h], theme.canvas_clear);
-        render_body(body_bounds, active);
-        ctx.draw.end_silhouette_clip();
+        let content = frame.content_clip_rect();
+        ctx.draw.push_scissor(content);
+        ctx.draw.push_solid([content.x, content.y, content.w, content.h], theme.canvas_clear);
+        render_body(content, active);
+        ctx.draw.pop_scissor();
     }
 
     for group in &layout.groups {

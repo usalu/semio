@@ -40,6 +40,49 @@
             "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🔷️.cs"
           ]
         },
+        "bootstrap": [
+          {
+            "id": "preflight",
+            "command": [
+              "preflight"
+            ],
+            "requires": []
+          },
+          {
+            "id": "dependencies",
+            "command": [
+              "dependencies",
+              "sync",
+              "--all"
+            ],
+            "requires": [
+              "preflight"
+            ]
+          },
+          {
+            "id": "tools",
+            "command": [
+              "tools",
+              "setup",
+              "all"
+            ],
+            "requires": [
+              "dependencies"
+            ]
+          }
+        ],
+        "fleet": {
+          "directory": ".cache/f",
+          "files": [
+            "cache-facts.json",
+            "machine.json"
+          ],
+          "identityDirectory": "identity",
+          "withheld": [
+            "admin.key",
+            "origin.key"
+          ]
+        },
         "phases": [
           "warm",
           "edit",

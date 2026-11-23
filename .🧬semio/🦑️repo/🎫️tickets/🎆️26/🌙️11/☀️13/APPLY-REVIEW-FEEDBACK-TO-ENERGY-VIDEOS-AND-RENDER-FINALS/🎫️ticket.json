@@ -3,9 +3,16 @@
   "emoji": "🎬",
   "status": "open",
   "description": "Apply the reviewer feedback (units notation, references, symbols per DIN 4108-6, roadmap placement, ventilation/cooling/heating scene corrections, UI introduction using real frames instead of ad hoc placeholders) to the architecture energy course videos and render them end to end as final videos.",
+  "summary": "Disputed heating items F22, F26, F27 and F29 re-checked frame by frame in the current finals; all hold, no source change needed in this pass. Audience finals of physics, ventilation and heating checked by eye. Evidence frames kept in verify/frames and indexed in VERIFICATION.md. F27 rests on interpretation (g-value panel simplified, main equation keeps the DIN factors). Not done: voice track silent (no speech key), English finals, shared-code refactorings listed in SUMMARY.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2790"
+  },
   "goal": "🎯updatedtutorials",
   "sessions": [
-    "934f2666-0534-404e-a554-ec57cf25b65c"
+    "934f2666-0534-404e-a554-ec57cf25b65c",
+    "12ffd770-ccdc-4fd1-95c5-0d7457eeb9ef",
+    "52b4c40c-56c0-4939-9638-da9c935199a4",
+    "8653549f-69e2-4de0-8e5d-d0dbc317e7e6"
   ],
   "interactions": [
     {
@@ -16,6 +23,319 @@
       "client": "claude-code",
       "checkpoint": "",
       "prompt": "Apply the reviewer feedback (units notation, references, symbols per DIN 4108-6, roadmap placement, ventilation/cooling/heating scene corrections, UI introduction using real frames instead of ad hoc placeholders) to the architecture energy course videos and render them end to end as final videos.",
+      "llm": "opus-4-7"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 12:46:56",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Reviewer feedback F00–F29 applied to the five energy videos (physics, ventilation, heating, cooling, energy balance); overview and introduction use real video frames; roadmap opens every video; references findable. All five German finals rendered at 1080p30 in presenter and audience versions and gathered in .🧬semio/🎓️teaching/⚡️cache/videos/final/de/\u003cspeaker|spectator\u003e/rendered/. Three render-and-audit rounds; held-frame defects fixed and confirmed by eye. Tests green module by module (full script.ts test not run to completion, it hangs). Not done: voice track is silent (no speech key), English finals not rendered. Details and follow-ups in SUMMARY.md in the ticket folder. Changed files: everything under 🎓️teaching/🏛️architecture/⚡️energy listed below plus the morph engine.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🥞️hierarchy💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests🗃️🌍️captions⚙️🔣️cases"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️📏️runningexample🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🤝️handoff🗃️🔀️transitions⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️📐️systemsizing🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🧪️tests🗃️🛡️guard⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🖱️interaction🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🔀️morph🗃️🎞️full💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🎬️clip⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️📏️runningexample💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🥞️hierarchy🗃️🧪️tests🗃️🧩️chapters💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️♨️systemlosses💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️👥️internalgains💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️⚖️heatingcomparison💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️🌤️summerstrategy💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🏭️primaryenergy🗃️🔊️speech💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests💻🐍️scenes"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests⚙️🔣️scenes"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🔊️speech💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🧪️practice💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️💧️transmissionhumidity💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️❓️need🗃️🏗️composition💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️📦️volume💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🧪️architecture💻🐍️transitions"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests⚙️🔣️staffageonly"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🧪️tests🗃️🛡️guard💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️☀️solargains💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🧪️architecture⚙️🔣️transitions"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests💻🐍️mediastaffage"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests⚙️🔣️integration"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🥞️hierarchy🗃️🧪️tests🗃️🧩️chapters💻🐍️process"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation⚙️🧬️schema"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🔁️recap💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️🧱️conduction💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️⚙️mechanical💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️❓️need💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🤝️handoff💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests💻🐍️staffageonly"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️📚️collection⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🥞️hierarchy🗃️🧪️tests🗃️🧩️chapters💻🐍️pointer"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️🧮️calculation💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🪟️natural💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🤝️handoff🗃️🔊️speech💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🧲️physics🗃️🎬️clip🗃️🧲️fundamentals💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🌐️browser💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️📏️runningexample⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🔀️morph📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests💻🐍️integration"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🌐️browser🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️📐️geometry🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️🌬️convection💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️☀️solarradiation💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️📐️geometry🗃️🧪️tests⚙️🔣️cases"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🥞️hierarchy🗃️🧪️tests🗃️🧩️chapters⚙️🔣️cases"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🪟️natural🗃️🔀️transitions⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests🗃️🌍️captions💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🌡️heatflow💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️📚️collection💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🏷️certificate💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🌐️browser💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️⚖️regulations💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️🧲️fundamentals💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️📦️volume🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🌐️browser💻🟨️render"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation🗃️🌐️browser🗃️🧪️tests🗃️🎥️camera💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🏭️primaryenergy💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🧲️physics🗃️🎬️clip🗃️🧲️fundamentals🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️👥️internalgains💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️📐️systemsizing💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️📐️systemsizing🗃️🧪️tests⚙️🔣️cases"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️⚡️demandpower💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️❓️need🗃️🔊️speech💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation⚙️🔣️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 12:47:39",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Re-run all energy test modules on the final sources and verify every reviewer feedback item (F00–F29) against the rendered finals with per-item evidence.",
+      "llm": "opus-4-7"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 15:32:32",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Reviewer feedback F00–F29 is applied and all five German energy finals (presenter and audience, 1080p30) are rendered into .🧬semio/🎓️teaching/⚡️cache/videos/final/de/\u003cspeaker|spectator\u003e/rendered. Every item was verified against the finals (VERIFICATION.md, verify/*.md); a fourth round fixed three ventilation leftovers (Kühltechnik roadmap chip, \"Lüftungsterm Q̇_V der Heizlast\", \"ungenutzt\" label) and the physics clock spacing, re-rendered both videos and confirmed the spots by eye. All 66 test modules exit 0 on the final sources (tests-final/RESULTS-FINAL.md). Not done: voice track is silent (no speech key), English finals are not rendered. Details in SUMMARY.md.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🤝️handoff💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🪟️natural💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️🧱️conduction💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🧲️physics🗃️🎬️clip🗃️🧲️fundamentals💻🐍️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 15:33:07",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Re-check the disputed heating items (F22, F26, F27, F29) frame by frame in the finals, check the audience finals by eye, fix what is still open and record frame-grounded evidence.",
+      "llm": "opus-4-7"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 15:34:19",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Disputed heating items F22, F26, F27 and F29 re-checked frame by frame in the current finals; all hold, no source change needed in this pass. Audience finals of physics, ventilation and heating checked by eye. Evidence frames kept in verify/frames and indexed in VERIFICATION.md. F27 rests on interpretation (g-value panel simplified, main equation keeps the DIN factors). Not done: voice track silent (no speech key), English finals, shared-code refactorings listed in SUMMARY.md."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 15:35:02",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Simplify the solar main equation in the heating video (F27): one reduction factor in the boxed equation, the DIN 4108-6 factors explained beneath it; re-render heating and verify.",
       "llm": "opus-4-7"
     }
   ]

@@ -80,7 +80,7 @@ impl OpeningState {
     /// 🩺️ React's `PluginRecoveryPanel`: the title, the crashed or quarantined copy and the two verbs, Restart (`reloadPlugin`) and Disable (`quarantinePlugin`), both naming `plugin_id`.
     pub fn build_plugin_recovery_ui(&self, plugin_id: &str, quarantined: bool, prefs: &PrefsState) -> UiNode {
         let is_de = prefs.locale_id == "de";
-        let verb = |id: &str, icon: IconName, key: &str, action: &str| {
+        let verb = |id: &str, icon: IconName, key: &'static str, action: &str| {
             UiNode::Button(UiButtonNode {
                 id: Some(format!("os.plugin-recovery.{id}")),
                 icon_id: icon,

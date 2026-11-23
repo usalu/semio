@@ -152,7 +152,7 @@ fn shooting_frame_json(shot: &ShootingShot) -> String {
 
 /// 👁️ Pure `ShootingSnapshot -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode>` read: default camera (a viewer has no persisted per-session
 /// camera), real scene lighting/asset placement/active-shot frame straight off the document.
-pub fn render(snapshot: &ShootingSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render(snapshot: &ShootingSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let camera = ShootingCamera::default();
     semio_plugin::scene_surface(
         SURFACE_ID,
@@ -162,6 +162,8 @@ pub fn render(snapshot: &ShootingSnapshot) -> semio_plugin::UiAssemblyResult<sem
             frame_json: active_shot(snapshot).map(shooting_frame_json),
             ..world3d_scene(camera_json(&camera), world_meshes_json(snapshot), world_instances_json(snapshot), world3d_selection_json("pick", &[], None), &WorldSunConfig::default())
         },
+        semio_plugin::surface_name(locale, "Scene", "Szene"),
+        None,
     )
 }
 //#endregion 🔖️Render

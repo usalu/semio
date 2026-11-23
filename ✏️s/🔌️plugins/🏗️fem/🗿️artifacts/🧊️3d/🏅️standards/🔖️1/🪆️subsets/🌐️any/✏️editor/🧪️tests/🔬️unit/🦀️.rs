@@ -134,15 +134,15 @@ async fn the_artifact_publication_lane_has_a_preparation_factory() {
 /// one-item envelope, measured on the boot document (the largest fixture this app ships).
 #[semio_framework_async_macros::async_test]
 async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
-    let boot = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot();
+    let boot = crate::context::Retiring::new(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot"));
     let factory = Fem3dArtifactPreparationFactory;
     for solid in &boot.solids {
         let mutation = Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid: solid.clone(), index: None });
         assert!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).is_ok(), "solid {} exceeds the artifact one-item envelope", solid.id);
     }
     for node in boot.nodes.iter() {
-        let mutation = Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: node.clone(), index: None });
-        assert!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id);
+        let mutation = Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: semio_s_fem_node::volumetric::FemNodeValue { id: node.id.get().clone(), x: node.x, y: node.y, z: node.z }, index: None });
+        assert!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id.as_str());
     }
     assert!(factory
         .preflight(&Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: semio_s_fem_node::volumetric::FemNodeValue { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 }, index: None }), store::os_store::store_schema::HistoryLane::Interaction)
@@ -153,8 +153,8 @@ async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
 /// on first paint instead of the pre-fix empty document.
 #[semio_framework_async_macros::async_test]
 async fn initial_snapshot_is_the_bundled_example_not_empty() {
-    let snapshot = <Fem3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
-    let expected = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_3d_io::examples::concrete_forest::PRIMARY_TEXT).expect("concrete-forest example parses");
+    let snapshot = crate::context::Retiring::new(<Fem3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"));
+    let expected = crate::context::Retiring::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_3d_io::examples::concrete_forest::PRIMARY_TEXT).expect("concrete-forest example parses"));
     assert_eq!(snapshot.nodes.len(), expected.nodes.len(), "expected the bundled concrete-forest example's nodes");
     assert_eq!(snapshot.elements.len(), expected.elements.len(), "expected the bundled concrete-forest example's elements");
 }
@@ -237,7 +237,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 /// and `setResultDisplay` when its `field`/`value`/`window_id` triple was appended, rows 19–34 were
 /// pinned at their introduction (ticket `26/09/16/FEM-3D-INTERACTIVE-FEATURE-COMPLETE`). Row order
 /// is the binary variant ordinal, so a reordering — which no round-trip law can catch — shows up
-/// here as a leading-byte mismatch. `addNodalLoad`'s `None` case is pinned separately below because
+/// here as a leading-byte mismatch. Rows `translateSelection` and `rotateSelection` were re-pinned when their `phase`/`reason` options joined the payload. `addNodalLoad`'s `None` case is pinned separately below because
 /// `every_command()` only carries its `Some` shape.
 #[semio_framework_async_macros::async_test]
 async fn every_command_keeps_its_current_bytes() {
@@ -273,8 +273,8 @@ async fn every_command_keeps_its_current_bytes() {
         "011b020870696e67506f6e670c726573756c74732d6c656674040005000000000000e03f0102030600070601",
         "011c010c726573756c74732d6c65667401000600",
         "011d011273636f70653a313a343a6e6f6465323a6e3101000600",
-        "011e011273636f70653a313a343a6e6f6465323a6e3104000c0106000105000000000000e03f020500000000000000000305000000000000d0bf",
-        "011f0005000c0001050000000000000000020500000000000000000305000000000000f03f04059a9999999999b93f",
+        "011e021273636f70653a313a343a6e6f6465323a6e310673747265616d05000c0106000105000000000000e03f020500000000000000000305000000000000d0bf040601",
+        "011f020561626f727404626c757207000c0001050000000000000000020500000000000000000305000000000000f03f04059a9999999999b93f050600060601",
         "0120011573636f70653a313a353a736f6c6964343a736f6c3104000c010600010500000000000000400205000000000000f03f0305000000000000f03f",
         "01210106726f74617465020006000101",
     ];
@@ -378,7 +378,7 @@ async fn mounted_peer_catch_up_preserves_independent_fields_and_deduplicates_eve
         for edit in envelope.vcs.edits.iter() {
             events.extend(store::os_spr::mutation_envelope_from_edit::<Fem3dSnapshot, Fem3dMutation>(edit, &protocol::ArtifactId(envelope.id.clone()), &protocol::SchemaId(envelope.schema.clone())).expect("original causal envelope"));
         }
-        events.extend(std::mem::take(&mut envelope.transitions));
+        events.extend(envelope.transitions.iter().cloned());
         envelope.retire_unadopted();
         events
     }
@@ -386,14 +386,14 @@ async fn mounted_peer_catch_up_preserves_independent_fields_and_deduplicates_eve
     let row = &fixture["peerCatchUp"];
     let mut first = fem3d_peer_app("fem3d-peer-a");
     let mut second = fem3d_peer_app("fem3d-peer-b");
-    for app in [&mut first, &mut second] {
-        dispatch(app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() })).await;
-    }
-    assert_eq!(first.document_identity(), second.document_identity());
+    dispatch(&mut first, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() })).await;
+    let genesis = first.document_pack().await.expect("export the shared genesis");
+    semio_plugin::artifact_app_laws::join_document(&mut second.0, &genesis, &mut semio_plugin::artifact_app_laws::fixture_identity(), second.1.cx()).await.expect("the second peer joins the shared document");
+    assert_eq!(first.0.document_identity(), second.0.document_identity());
     let target = row["id"].as_str().expect("target id");
     let base = first.snapshot().expect("genesis");
     assert_eq!(base, second.snapshot().expect("same genesis"));
-    let before = base.nodes.iter().find(|node| node.id == target).expect("fixture target");
+    let before = base.nodes.iter().find(|node| node.id.as_str() == target).expect("fixture target");
     assert_eq!(before.x, row["before"]["x"].as_f64().expect("x"));
     assert_eq!(before.y, row["before"]["y"].as_f64().expect("y"));
     dispatch(&mut first, Fem3dCommand::PatchNode(patch_node::PatchNode { id: target.into(), field: "x".into(), value: row["after"]["x"].as_f64().expect("authored x").to_string() })).await;
@@ -401,17 +401,19 @@ async fn mounted_peer_catch_up_preserves_independent_fields_and_deduplicates_eve
     assert_ne!(first.snapshot().expect("disconnected first"), second.snapshot().expect("disconnected second"));
     let from_first = protocol::encode_envelopes(&events(&first).await);
     let from_second = protocol::encode_envelopes(&events(&second).await);
-    first.ingest_operations(&from_second, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("reconnect first");
-    second.ingest_operations(&from_first, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("reconnect second");
+    first.0.ingest_operations(&from_second, &mut semio_plugin::artifact_app_laws::fixture_identity(), first.1.cx()).await.expect("reconnect first");
+    second.0.ingest_operations(&from_first, &mut semio_plugin::artifact_app_laws::fixture_identity(), second.1.cx()).await.expect("reconnect second");
     let combined = first.snapshot().expect("combined first");
     assert_eq!(combined, second.snapshot().expect("combined second"));
-    let node = combined.nodes.iter().find(|node| node.id == target).expect("combined target");
+    let node = combined.nodes.iter().find(|node| node.id.as_str() == target).expect("combined target");
     assert_eq!(node.x, row["after"]["x"].as_f64().expect("x"));
     assert_eq!(node.y, row["after"]["y"].as_f64().expect("y"));
     assert_eq!(node.z, before.z);
-    let duplicates = first.ingest_operations(&from_second, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("duplicate catch-up");
-    assert!(duplicates.iter().all(|report| !report.accepted));
+    let log_before = events(&first).await.len();
+    let duplicates = first.0.ingest_operations(&from_second, &mut semio_plugin::artifact_app_laws::fixture_identity(), first.1.cx()).await.expect("duplicate catch-up");
+    assert_eq!(duplicates.len(), 1);
     assert_eq!(first.snapshot().expect("unchanged duplicate"), combined);
+    assert_eq!(events(&first).await.len(), log_before);
     assert_eq!(events(&first).await.len(), events(&second).await.len());
 }
 
@@ -430,7 +432,7 @@ async fn undo_restores_document_after_add_node() {
 #[semio_framework_async_macros::async_test]
 async fn undo_restores_document_after_add_support() {
     let mut app = fem3d_app();
-    let node_id = app.snapshot().expect("snapshot").nodes.first().map(|node| node.id.clone()).expect("the bundled example has nodes");
+    let node_id = app.snapshot().expect("snapshot").nodes.iter().next().map(|node| node.id.get().clone()).expect("the bundled example has nodes");
     let before = app.snapshot().expect("snapshot").supports.len();
     assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddSupport(add_support::AddSupport { node_id, fixed: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::ALL.to_vec() }), |app| app.snapshot().expect("snapshot").supports.len(), before, before + 1, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
@@ -474,17 +476,18 @@ async fn export_media_results_out_returns_solved_json_for_every_case_3d() {
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a Structured payload") };
     assert_eq!(schema, "computation.fem3d");
     let value = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("results:out payload is valid JSON");
-    assert!(value.get("dead").is_some(), "expected the example fixture's dead case in the results map: {json}");
-    assert!(value["dead"].get("displacements").is_some(), "expected a displacements array: {json}");
+    let dead = semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("loadCase", "dead").expect("canonical load case target");
+    assert!(value.get(dead.as_str()).is_some(), "expected the example fixture's dead case in the results map: {json}");
+    assert!(value[dead.as_str()].get("displacements").is_some(), "expected a displacements array: {json}");
 }
 
 /// 📤️ `"results:out"` on a document with no load cases errors rather than panicking or returning an
 /// empty payload.
 #[semio_framework_async_macros::async_test]
 async fn export_media_results_out_errors_without_load_cases_3d() {
-    let snapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::empty_fem3d_snapshot();
+    let snapshot = crate::context::Retiring::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::empty_fem3d_snapshot());
     let history = semio_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let doc = ArtifactView::new(&*snapshot, &history);
     let err = Fem3dPlayApp::export_media("results:out", &doc).expect_err("no load cases should error");
     assert!(matches!(err, MediaError::Payload(..)));
 }
@@ -496,7 +499,7 @@ async fn import_media_geometry_in_adds_a_new_solid_3d() {
     dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Concrete".into(), e: 30e9, g: 12.5e9 })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let history = semio_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let doc = ArtifactView::with_operation(&snapshot, &history, semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "fem3d-law".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], retained: Default::default(), authoring_seed: "fem3d-law:local-operation".into() });
     let json = semio_framework_pack_json::json!({
         "outline": [[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]],
         "holes": [],
@@ -514,7 +517,7 @@ async fn import_media_geometry_in_adds_a_new_solid_3d() {
             assert_eq!(solid.base_z, 0.5);
             assert_eq!(solid.height, 3.0);
             assert_eq!(solid.layers, 2);
-            assert_eq!(solid.material_id, "m0");
+            assert_eq!(solid.material_id, snapshot.materials[0].id.as_str());
         }
         _ => panic!("expected CreateSolid"),
     }
@@ -627,20 +630,87 @@ use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_self_w
 /// 👥️ The mounted camera and declared interaction use the shared transport and retire on departure.
 #[semio_framework_async_macros::async_test]
 async fn mounted_camera_and_interaction_presence_reach_peers_without_document_edits() {
+    use semio_framework_value::DslValue;
+    use semio_plugin::PluginApp;
     use semio_framework_value::FromValue;
-    use semio_plugin::artifact_app_laws::assert_registered_presence_round_trip;
+    use semio_os_kernel::ActorId;
+    use semio_os_kernel::LOCAL_ACTOR_ID;
+    use semio_plugin::artifact_app_laws::capture_fixture_window_config;
+    use semio_plugin::artifact_app_laws::close_registered_fixture_app;
+    use semio_plugin::artifact_app_laws::dispatch_fixture_action;
+    use semio_plugin::artifact_app_laws::dispatch_original_fixture_command;
     use semio_plugin::artifact_app_laws::fixture_identity;
     use semio_plugin::artifact_app_laws::fixture_mounted_policy;
+    use semio_plugin::artifact_app_laws::meta;
+    use semio_plugin::artifact_app_laws::new_app_with_registry_boxed;
+    use semio_plugin::artifact_app_laws::publish_fixture_presence_roster;
+    use semio_plugin::artifact_app_laws::settle_registered_typed_operation;
+    use semio_plugin::artifact_app_laws::OriginalFixtureScope;
+    use semio_plugin::INTERACTION_SELECT_ACTION_ID;
+    use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target;
+    use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_NODE;
+    use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_INTERACTION_DOMAIN;
+    use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::config::Fem3dModelWindowConfigOwner;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🧫️fixtures/🔣️.json")).expect("portable shared presence fixture");
-    let expected = protocol::PresenceWindowView::from_value(semio_framework_value::DslValue::from(&fixture["admission"][1]["value"])).expect("admitted shared camera");
-    let boot = <Fem3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
-    let node = boot.nodes.first().expect("bundled structural node");
-    let selected = protocol::wire::encode_scoped_identity(&["node", &node.id]).expect("canonical node target");
-    let window_kind = semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL;
-    let view = semio_plugin::ViewModel { window_id: Some("model-presence".into()), window_instances: vec![semio_plugin::ViewWindowInstance { id: "model-presence".into(), window_kind_id: window_kind.into() }], ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
+    let expected = protocol::PresenceWindowView::from_value(DslValue::from(&fixture["admission"][1]["value"])).expect("admitted shared camera");
     let protocol::PresenceViewKind::Orbit { position, target, up, .. } = expected.kind else { panic!("portable orbit pose") };
-    let command = Fem3dCommand::SetCamera(set_camera::SetCamera { camera: semio_os_kernel::Viewport3dOrbit { position, target, up: Some(up), zoom: 1.0 } });
-    assert_registered_presence_round_trip::<EditorApp<Fem3dPlayApp>, _, _>(|| async { context::manifest() }, command, view, expected, ("fem3d", Some(("node", &selected))), fixture_mounted_policy(), &mut fixture_identity()).await;
+    let policy = fixture_mounted_policy();
+    let mut identity = fixture_identity();
+    let mut scope = OriginalFixtureScope::admit();
+    let mut source = new_app_with_registry_boxed::<EditorApp<Fem3dPlayApp>>(context::manifest, ActorId(LOCAL_ACTOR_ID.into()), policy, &mut identity).await;
+    let mut peer = new_app_with_registry_boxed::<EditorApp<Fem3dPlayApp>>(context::manifest, ActorId(LOCAL_ACTOR_ID.into()), policy, &mut identity).await;
+    let mut action = meta(LOCAL_ACTOR_ID);
+    source.bind_instance_id(action.instance_id).await;
+    peer.bind_instance_id(action.instance_id + 1).await;
+    let source_before = source.document_pack().await.expect("source document");
+    let peer_before = peer.document_pack().await.expect("peer document");
+    let selected = {
+        let snapshot = source.snapshot_ref();
+        let node = snapshot.nodes.iter().next().expect("bundled structural node");
+        fem3d_entity_target(FEM3D_GRANULARITY_NODE, node.id.as_str()).expect("canonical node target")
+    };
+    let view = ViewModel {
+        window_id: Some(expected.window_id.clone()),
+        window_instances: vec![semio_plugin::ViewWindowInstance { id: expected.window_id.clone(), window_kind_id: window_model::FEM3D_WINDOW_MODEL.into() }],
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
+    };
+    action.view_state = Some(view.clone().into());
+    let pose = semio_os_kernel::Viewport3dOrbit { position, target, up: Some(up), zoom: 1.0 };
+    let camera = Fem3dCommand::SetCamera(set_camera::SetCamera { camera: pose });
+    dispatch_original_fixture_command(&mut *source, &camera, &action, policy, &mut identity, scope.cx()).await.expect("dispatch model camera");
+    settle_registered_typed_operation(&mut *source, action.instance_id, policy, &mut identity, scope.cx()).await.expect("commit model camera");
+    let config = capture_fixture_window_config::<Fem3dModelWindowConfigOwner, _, _>(&mut *source, &view).await.expect("capture model camera").expect("window config");
+    assert_eq!(config.camera, pose);
+    let selection = serde_json::json!([{ "granularity": FEM3D_GRANULARITY_NODE, "id": selected }]).to_string();
+    let args = DslValue::object([
+        ("domainId".into(), DslValue::String(FEM3D_INTERACTION_DOMAIN.into())),
+        ("merge".into(), DslValue::String("replace".into())),
+        ("method".into(), DslValue::String("pick".into())),
+        ("targets".into(), DslValue::String(selection)),
+    ]);
+    let admitted = dispatch_fixture_action(&mut *source, INTERACTION_SELECT_ACTION_ID, Some(args), &action, &mut identity, scope.cx(), policy.maintenance).await.expect("select model node");
+    semio_plugin::artifact_app_laws::settle_framework_reserved_admission(&mut *source, admitted, scope.cx()).await.expect("settle model node selection");
+    let local = source.ephemeral_snapshot().await;
+    let interaction = protocol::decode_presence_interaction(&local.interaction, &mut 0).await.expect("source interaction is published");
+    assert!(interaction.domains.iter().any(|domain| domain.domain == FEM3D_INTERACTION_DOMAIN && domain.selected == [selected.clone()]));
+    assert_eq!(source.document_pack().await.expect("source document after publication"), source_before);
+    let remote = protocol::PresencePeer {
+        actor: "fem3d-source".into(), connected_at_ms: 1, label: None, presence_pack: None,
+        user_id: None, role: None, drag_ghost_json: None, interaction: Some(interaction.clone()),
+        color: Some(1), surface: None, views: vec![expected.clone()], ui: None, tool_run: None,
+        principal_kind: None, active_tool: None, history_edit: None, typing: Vec::new(),
+    };
+    let bytes = protocol::encode_presence_peer(&remote).await;
+    let received = protocol::decode_presence_peer(&bytes).await.expect("shared peer wire");
+    assert_eq!(received.views, [expected]);
+    assert!(publish_fixture_presence_roster(&mut *peer, 1, Some(9), &[received], 1_000, scope.cx(), policy.close).await.is_none());
+    assert!(peer.roster.peer_presence_root().iter().any(|(actor, presence)| actor == "fem3d-source" && presence.interaction.as_ref() == Some(&interaction)));
+    assert_eq!(peer.document_pack().await.expect("peer document after delivery"), peer_before);
+    assert!(publish_fixture_presence_roster(&mut *peer, 2, Some(9), &[], 2_000, scope.cx(), policy.close).await.is_none());
+    assert!(peer.roster.peer_presence_root().is_empty());
+    assert_eq!(peer.document_pack().await.expect("peer document after departure"), peer_before);
+    close_registered_fixture_app(&mut *source, policy, scope.cx()).expect("retire source");
+    close_registered_fixture_app(&mut *peer, policy, scope.cx()).expect("retire peer");
 }
 
 #[path = "../🪧️pane-smoke/🦀️.rs"]

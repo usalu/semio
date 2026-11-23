@@ -1,7 +1,7 @@
 /** 🧬️ The authored window data and granularity row pick tests. */
 import hover from "../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/tree-hover.json";
 import directHover from "../../../../../../../🔌️plugin/🧪️tests/🕹️interaction-selection-laws/👆️hover-targets.json";
-import { uiIntentToActionDescriptor } from "../../../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import { uiIntentToActionDescriptor } from "../../../🎬️intent-descriptor/🟦️.ts";
 import inspectorHover from "../../../../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🖱️channel-hover.json";
 import type { TreeWindowsTestKit } from "../🧰️tree-windows-test-kit/🟦️.tsx";
 import { TREE_ROW_REORDER_MIME } from "../../../🌲️tree-panel-boundary/🟦️.ts";

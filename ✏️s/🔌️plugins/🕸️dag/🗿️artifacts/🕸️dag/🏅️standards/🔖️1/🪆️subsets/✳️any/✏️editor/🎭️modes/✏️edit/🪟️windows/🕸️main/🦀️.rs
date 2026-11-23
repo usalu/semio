@@ -49,10 +49,10 @@ pub fn definition() -> WindowKindDefinition {
 /// `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
 /// (unlike `UiNode::Tree`) — `selection`/`hover` are left at `NodeGraphScene::base`'s defaults
 /// (empty/none), matching `space`'s workflow window's identical gap.
-pub fn render(scene: &DagScene, camera: &DagCamera, _labels: &DagPlayLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &DagScene, camera: &DagCamera, _labels: &DagPlayLabels, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges) = document_to_workflow(scene);
     let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };
-    scene_surface(DAG_PLAY_SURFACE_MAIN, semio_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
+    scene_surface(DAG_PLAY_SURFACE_MAIN, semio_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) }, semio_plugin::surface_name(locale, "Node graph", "Knotengraph"), None)
 }
 //#endregion 🔖️Render
 

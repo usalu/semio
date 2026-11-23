@@ -17,9 +17,9 @@ import {
   naturalFileFormatV1,
   naturalFileNameV1,
   naturalMediaDescriptorMatchesV1,
-  naturalFileMediaInputV1,
   openNaturalFileOwnerV1
 } from "../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { naturalFileMediaInputV1 } from "../../🧱️elements/🛠️ShellHelpers/🎞️media-import/🟦️.ts";
 import { OPEN_ARTIFACT_FILE_ACTION_ID, SAVE_ARTIFACT_FILE_ACTION_ID } from "@semio-tech/framework";
 import naturalFileLifecycleFixture from "@semio-tech/framework-plugin/testing/fixtures/natural-file-lifecycle.json";
 import Ajv from "ajv";

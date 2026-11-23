@@ -105,7 +105,7 @@ export function registerReactNeutralGeometryKeepTests(): void {
     const anchorStyle = panelAnchor.slice(panelAnchor.indexOf("export function anchorPositionStyle"), panelAnchor.indexOf("export function chromeHostedOpenPanelPositionStyle"));
     expect(anchorStyle).toContain(`${fixture.stableGeneral.react.extentProperty}:`);
     expect(fixture.stableGeneral.react.bondedEdge).toBe("bottom");
-    expect(anchorStyle).toContain('inset = "var(--panel-inset)"');
+    expect(anchorStyle).toContain('inset = "0px"');
     expect(anchorStyle).toContain("style[vertical] = inset;");
     expect(anchorStyle).not.toMatch(/\bheight\s*:/);
   });

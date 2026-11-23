@@ -43,6 +43,7 @@ fn emit_decision(decision: CurationDecision) -> Emit<SourcingMutation, SourcingC
 //#endregion 🔖️DropOnCurated
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "curation-set-count")]
 pub struct CurationSetCount {
     pub object_id: String,

@@ -27,6 +27,8 @@ async fn window_options_are_local_to_the_window_instance_not_shared_across_split
     let toggle_id = format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-visible");
     let base_view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let second_view = app.window_view(second_window);
+    let base_born = app.window_config_generation(&base_view).await.expect("base birth generation");
+    let second_born = app.window_config_generation(&second_view).await.expect("second birth generation");
     let document_before = projection_of(&app);
     let app_config_before = app.config_pack().await.expect("app config before exact window publications");
 
@@ -45,8 +47,8 @@ async fn window_options_are_local_to_the_window_instance_not_shared_across_split
     assert_eq!(projection_of(&app), document_before);
     let app_config_after = app.config_pack().await.expect("app config after exact window publications");
     assert_eq!((app_config_after.pack, app_config_after.spr), (app_config_before.pack, app_config_before.spr));
-    assert_eq!(app.window_config_generation(&base_view).await.expect("base generation"), Some(1));
-    assert_eq!(app.window_config_generation(&second_view).await.expect("second generation"), Some(1));
+    assert_eq!(app.window_config_generation(&base_view).await.expect("base generation"), base_born.map(|born| born + 1));
+    assert_eq!(app.window_config_generation(&second_view).await.expect("second generation"), second_born.map(|born| born + 1));
     let packs = app.window_config_packs().await.expect("exact window packs");
     assert_eq!(packs.len(), 2);
     for pack in packs {
@@ -107,13 +109,14 @@ async fn window_option_toggle_round_trips_on_its_own_instance_and_leaves_the_sib
     let toggle_id = format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-visible");
     let top = app.window_view(main::WINDOW_INSTANCE_TOP);
     let perspective = app.window_view(main::WINDOW_INSTANCE_PERSPECTIVE);
+    let perspective_born = app.window_config_generation(&perspective).await.expect("perspective birth generation");
     dispatch(&mut app, "setGridVisible", Some(&json!({ "pressed": true })), Some(main::WINDOW_INSTANCE_TOP)).await.expect("register the top pane's own config lane");
     let top_generation_before = app.window_config_generation(&top).await.expect("top generation");
 
     dispatch(&mut app, "setGridVisible", Some(&json!({ "pressed": false })), Some(main::WINDOW_INSTANCE_PERSPECTIVE)).await.expect("setGridVisible on the perspective pane");
 
     let perspective_generation = app.window_config_generation(&perspective).await.expect("perspective generation");
-    assert_eq!(perspective_generation, Some(1), "one rail toggle publishes exactly one generation on the instance it was dispatched from");
+    assert_eq!(perspective_generation, perspective_born.map(|born| born + 1), "one rail toggle publishes exactly one generation on the instance it was dispatched from");
     assert_eq!(app.window_config_generation(&top).await.expect("top generation"), top_generation_before, "the sibling instance's own config lane must not advance");
 
     let view = app.window_view(main::WINDOW_INSTANCE_PERSPECTIVE);

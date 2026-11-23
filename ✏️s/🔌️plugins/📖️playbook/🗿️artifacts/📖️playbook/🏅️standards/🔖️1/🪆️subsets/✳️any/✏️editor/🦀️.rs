@@ -506,11 +506,11 @@ impl ArtifactEditor for PlaybookPlayApp {
     fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let spec = || playbook_composed_spec(doc.snapshot, &doc.children).map_err(|fault| semio_plugin::PluginAssemblyError::new(fault.code.0, fault.message));
         match body_key {
-            PLAYBOOK_PLAY_BODY_BUILDER => Ok(semio_plugin::built_to_component_tree(builder_window::render(&spec()?, cfg.snapshot)?)),
-            PLAYBOOK_PLAY_BODY_CHANGES => Ok(semio_plugin::built_to_component_tree(changes_window::render(&spec()?)?)),
-            PLAYBOOK_PLAY_BODY_STEPS => Ok(semio_plugin::built_to_component_tree(steps_window::render(&spec()?)?)),
-            PLAYBOOK_PLAY_BODY_ACTIVITY => Ok(semio_plugin::built_to_component_tree(activity_window::render(&spec()?)?)),
-            PLAYBOOK_PLAY_BODY_SOURCE => Ok(semio_plugin::built_to_component_tree(source_window::render(&spec()?)?)),
+            PLAYBOOK_PLAY_BODY_BUILDER => Ok(semio_plugin::built_to_component_tree(builder_window::render(&spec()?, cfg.snapshot, crate::editor::playbook::terminology::playbook_play_labels(view_state))?)),
+            PLAYBOOK_PLAY_BODY_CHANGES => Ok(semio_plugin::built_to_component_tree(changes_window::render(&spec()?, crate::editor::playbook::terminology::playbook_play_labels(view_state))?)),
+            PLAYBOOK_PLAY_BODY_STEPS => Ok(semio_plugin::built_to_component_tree(steps_window::render(&spec()?, crate::editor::playbook::terminology::playbook_play_labels(view_state))?)),
+            PLAYBOOK_PLAY_BODY_ACTIVITY => Ok(semio_plugin::built_to_component_tree(activity_window::render(&spec()?, crate::editor::playbook::terminology::playbook_play_labels(view_state))?)),
+            PLAYBOOK_PLAY_BODY_SOURCE => Ok(semio_plugin::built_to_component_tree(source_window::render(&spec()?, crate::editor::playbook::terminology::playbook_play_labels(view_state))?)),
             PLAYBOOK_PLAY_BODY_FILES => Ok(semio_plugin::built_to_component_tree(files_window::render(&spec()?, crate::editor::playbook::terminology::playbook_play_labels(view_state))?)),
             _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }

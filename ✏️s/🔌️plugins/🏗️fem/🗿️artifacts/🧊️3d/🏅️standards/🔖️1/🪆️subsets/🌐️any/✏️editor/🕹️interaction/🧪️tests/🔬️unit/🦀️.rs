@@ -1,8 +1,9 @@
 use super::*;
+use super::retiring::Retiring;
 use semio_plugin::ViewModel;
 
-fn demo() -> Fem3dSnapshot {
-    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot")
+fn demo() -> Retiring<Fem3dSnapshot> {
+    Retiring::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot"))
 }
 
 #[test]
@@ -44,11 +45,13 @@ fn entity_points_frame_geometry_bearing_entities() {
 
 #[test]
 fn the_transform_utility_is_read_from_the_addressed_window() {
-    let mut view = ViewModel { window_id: Some("model-left".into()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
+    let mut view = Retiring::new(ViewModel { window_id: Some("model-left".into()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
     assert!(!fem3d_transform_armed(&view));
     view.active_utility_by_window_id.insert("model-left".into(), Some(FEM3D_UTILITY_TRANSFORM.into()));
     assert!(fem3d_transform_armed(&view));
     view.active_utility_id = Some("brush".into());
+    assert!(fem3d_transform_armed(&view), "a global utility never disarms an addressed window that owns its own");
+    view.active_utility_by_window_id.insert("model-left".into(), Some("brush".into()));
     assert!(!fem3d_transform_armed(&view));
 }
 

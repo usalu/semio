@@ -151,15 +151,6 @@ impl DrawList {
         self.layers.push(DrawLayer { scissor: parent, clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group(), ..DrawLayer::default() });
     }
 
-    /// ✂️ Clips subsequent draw content to an exact union of non-overlapping rectangles.
-    pub fn begin_silhouette_clip(&mut self, rects: &[semio_ui_theme::geometry::Rect]) {
-        if ClipRegion::source_pieces_overlap(rects) {
-            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
-            return;
-        }
-        let _ = self.begin_clip_region(ClipRegion::from_disjoint_rects(rects, self.screen_h));
-    }
-
     /// 🗜️ Clips paint to vertically disjoint scanline groups with ordered spans of logical pixels.
     pub fn begin_scanline_clip(&mut self, bands: &[[u32; 4]]) -> bool {
         if bands.iter().any(|&[x, y, w, h]| w == 0 || h == 0 || x.checked_add(w).is_none() || y.checked_add(h).is_none())
@@ -194,7 +185,8 @@ impl DrawList {
         true
     }
 
-    pub fn end_silhouette_clip(&mut self) {
+    /// 🔚 Restores the clip region that was active before the innermost [`Self::begin_scanline_clip`].
+    pub fn end_clip(&mut self) {
         if !self.claim_retained_output(1, size_of::<DrawLayer>()) {
             return;
         }

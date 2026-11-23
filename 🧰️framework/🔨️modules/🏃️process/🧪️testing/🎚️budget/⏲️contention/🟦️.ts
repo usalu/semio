@@ -2,6 +2,8 @@ import { availableParallelism, loadavg, platform as osPlatform } from "node:os";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import table from "./🔣️.json" with { type: "json" };
+import suitesSchema from "../../🗂️suites/🧬️schema/🔣️.json" with { type: "json" };
+import bunFilesSchema from "../../🟨️bun/📁️files/🧬️schema/🔣️.json" with { type: "json" };
 import {refuseProcessV1} from "../../../📖️texts/🟦️.ts";
 
 /** ⏲️ The closed policy of the load-aware test budget clock: tick, stretch bounds, progress words and the platforms that measure the scheduler themselves. */
@@ -11,7 +13,7 @@ export type ContentionPolicyV1 = Readonly<{
   stretch: Readonly<{ minimumBasisPoints: number; maximumBasisPoints: number }>;
   announce: Readonly<{ thresholdBasisPoints: number; stepBasisPoints: number; everyMilliseconds: number }>;
   probe: Readonly<{ platforms: readonly string[]; cpuMilliseconds: number; everyMilliseconds: number; smoothingBasisPoints: number }>;
-  messages: Readonly<Record<"stretched" | "expired", Readonly<{ en: string; de: string }>>>;
+  messages: Readonly<Record<"stretched" | "expired" | "clamped", Readonly<{ en: string; de: string }>>>;
 }>;
 
 /** 🐌 What the host answers: how many tasks compete per core (`ratio`, 1 or less is an idle host), the raw load and cores it came from, and who measured it. */
@@ -36,9 +38,31 @@ export function budgetStretchV1(ratio: number, policy: ContentionPolicyV1 = CONT
   return Number.isFinite(ratio) ? Math.min(high, Math.max(low, ratio)) : low;
 }
 
-/** 🧮️ A declared budget in milliseconds stretched by the contention `ratio` (the contention this process met at its first deadline when none is given, so every deadline of one run stretches by the same factor), clamped to the policy bounds; every runner, envelope and plan deadline derives from its declared budget through this one function. */
+/** 🛑️ The longest budget in milliseconds every schema a funded budget is written into admits: the lower of the suite schema's declared-budget maximum and the owned Bun selection schema's per-test timeout maximum, both read from their schemas so no literal exists here. */
+export const STRETCHED_BUDGET_CEILING_MILLISECONDS_V1: number = Math.min(
+  (suitesSchema as { definitions: { Suite: { properties: { budgetMs: { maximum: number } } } } }).definitions.Suite.properties.budgetMs.maximum,
+  (bunFilesSchema as { definitions: { Selection: { properties: { timeoutMilliseconds: { maximum: number } } } } }).definitions.Selection.properties.timeoutMilliseconds.maximum,
+);
+
+/** 📏️ A stretched budget: the milliseconds a run is funded with (never above the schema ceiling), what the stretch alone asked for, and whether the ceiling cut it. */
+export type StretchedBudgetV1 = Readonly<{ milliseconds: number; neededMilliseconds: number; clamped: boolean }>;
+
+/** 🧮️ A declared budget in milliseconds stretched by the contention `ratio` (the contention this process met at its first deadline when none is given, so every deadline of one run stretches by the same factor), clamped to the policy bounds and then to the schema ceiling, reporting whether the ceiling cut it; a clamped run is still admitted. */
+export function stretchedBudgetV1(milliseconds: number, ratio?: number, policy: ContentionPolicyV1 = CONTENTION_POLICY_V1): StretchedBudgetV1 {
+  const needed = Math.ceil(milliseconds * budgetStretchV1(ratio ?? (launchRatio ??= sharedHostContentionV1()().ratio), policy)), ceiling = STRETCHED_BUDGET_CEILING_MILLISECONDS_V1;
+  return Object.freeze({ milliseconds: Math.min(needed, ceiling), neededMilliseconds: needed, clamped: needed > ceiling });
+}
+
+/** 🧮️ The funded milliseconds of `stretchedBudgetV1`; every runner, envelope and plan deadline derives from its declared budget through this one function. */
 export function stretchedBudgetMillisecondsV1(milliseconds: number, ratio?: number, policy: ContentionPolicyV1 = CONTENTION_POLICY_V1): number {
-  return Math.ceil(milliseconds * budgetStretchV1(ratio ?? (launchRatio ??= sharedHostContentionV1()().ratio), policy));
+  return stretchedBudgetV1(milliseconds, ratio, policy).milliseconds;
+}
+
+/** 🗣️ Words a clamped budget in every language joined, or nothing when the ceiling did not cut it. */
+export function describeClampedBudgetV1(declaredMilliseconds: number, stretched: StretchedBudgetV1, policy: ContentionPolicyV1 = CONTENTION_POLICY_V1): string | undefined {
+  if (!stretched.clamped) return undefined;
+  const values = { budget: seconds(declaredMilliseconds), needed: seconds(stretched.neededMilliseconds), ceiling: seconds(stretched.milliseconds) };
+  return `[budget] ${fill(policy.messages.clamped.en, values)} | ${fill(policy.messages.clamped.de, values)}`;
 }
 
 /** ⚖️ The budget as work, not as wall time: every wall millisecond is worth `1/stretch` budget milliseconds, so a run that needs its budget on an idle host is never stopped on a busy one and a run that never ends is stopped after at most `stretch` times its budget. */

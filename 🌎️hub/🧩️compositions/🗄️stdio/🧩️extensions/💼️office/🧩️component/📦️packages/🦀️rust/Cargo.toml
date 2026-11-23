@@ -60,24 +60,24 @@ ports = { react = 6271, wgpu = 6371 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-xlsx"
-devContribution = "✏️s/🧑‍💻dev/🎭️variants/📕️stdio-xlsx/🧬️schema/🔣️.json"
 app = "s.stdio.xlsx@ecma-376/*#editor"
 aliases = ["stdio xlsx"]
 ports = { react = 6272, wgpu = 6372 }
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/📕️stdio-xlsx/🧬️schema/🔣️.json"
 
 [[package.metadata.semio.playground]]
 variant = "stdio-xlsx-strict"
-devContribution = "✏️s/🧑‍💻dev/🎭️variants/📕️stdio-xlsx/🧬️schema/🔣️.json"
 app = "s.stdio.xlsx@ecma-376/strict#editor"
 aliases = ["stdio xlsx strict"]
 ports = { react = 6273, wgpu = 6373 }
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/📕️stdio-xlsx/🧬️schema/🔣️.json"
 
 [[package.metadata.semio.playground]]
 variant = "stdio-xlsx-transitional"
-devContribution = "✏️s/🧑‍💻dev/🎭️variants/📕️stdio-xlsx/🧬️schema/🔣️.json"
 app = "s.stdio.xlsx@ecma-376/transitional#editor"
 aliases = ["stdio xlsx transitional"]
 ports = { react = 6275, wgpu = 6375 }
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/📕️stdio-xlsx/🧬️schema/🔣️.json"
 
 [[package.metadata.semio.playground]]
 variant = "stdio-idml"

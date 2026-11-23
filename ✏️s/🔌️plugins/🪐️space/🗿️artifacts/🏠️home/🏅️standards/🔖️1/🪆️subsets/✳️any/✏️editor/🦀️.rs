@@ -254,18 +254,30 @@ impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<HomeApp>> for
     fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.release_bytes) }
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.depth) }
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            use semio_framework_job::InteractiveJobCloseStep;
-            use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
-            self.closing = true;
-            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(InteractiveJobCloseStep::Blocked); }
+    fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_job::InteractiveJobCloseStep;
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        use semio_framework_value::{OriginalRetirementFailure, RetainedWorkOutcome, RetainedWorkPoll};
+        self.closing = true;
+        if self.completion.is_none() && self.retirement.is_none() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
+        let demand = self.close_demand()?;
+        semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+            let settled = |result: Result<RetainedCloneStep, OriginalRetirementFailure>, work: u128| RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work });
             if let Some(completion) = self.completion.take() {
-                match semio_framework_value::retirement::controlled::ControlledRetirement::new(completion) { Ok(owner) => self.retirement = Some(owner), Err((error, original)) => { self.completion = Some(original); return Err(error); } }
-                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+                return match effect.performed(1) {
+                    Ok(true) => match semio_framework_value::retirement::controlled::ControlledRetirement::new(completion) {
+                        Ok(owner) => { self.retirement = Some(owner); settled(Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), 1) }
+                        Err((error, original)) => { self.completion = Some(original); settled(Err(error.into()), 1) }
+                    },
+                    Ok(false) => { self.completion = Some(completion); settled(Ok(RetainedCloneStep::Progress(Default::default())), 0) }
+                    Err(error) => { self.completion = Some(completion); settled(Err(error.into()), 0) }
+                };
             }
-            let Some(owner) = self.retirement.as_mut() else { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() })};
-            Ok(match owner.step(grant) { Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress }, Ok(RetainedCloneStep::Complete(progress)) => { self.retirement = None; InteractiveJobCloseStep::Complete { progress } }, Err(error) => return Err(error) })
+            let Some(owner) = self.retirement.as_mut() else { return settled(Ok(RetainedCloneStep::Complete(Default::default())), 0) };
+            let body = effect.grant().maximum_copy_bytes;
+            let poll = owner.step(body, effect);
+            if owner.terminal_is_empty() { self.retirement = None; }
+            poll
         })
     }
 }
@@ -437,14 +449,14 @@ impl ArtifactEditor for HomeApp {
     }
 
     /// 🫧️ The transient lane carries the folded hub directory: one bounded page item per publication
-    /// ([`semio_plugin::bounded_transient_preparation_factory`] prices the encoded page, never the root), and
+    /// ([`semio_plugin::cold_transient_preparation_factory`] applies the page's cold diff to the captured root, never encoding it), and
     /// displaced or disposed roots retire in grants measured by the projection itself, never by encoding it.
     fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
         Some(semio_plugin::transient_store_disposer::<Self::Transient, Self::TransientMutation>(std::sync::Arc::new(HomeTransientRetirementFactory)))
     }
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(semio_plugin::cold_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {

@@ -35,7 +35,7 @@ impl RetainedValueCursor{
 impl RetainedRecordBodyCursor{
  /// 🗄️ Quotes the next symbol or value-stack backing separately from any metadata move.
  pub fn record_storage_admission_demands(&mut self)->Result<RetirementDemand,PackRefusal>{
-  Ok(match self.next_allocation_bytes()?{Some(bytes)=>RetirementDemand{copy_bytes:0,capacity_bytes:bytes,release_bytes:0,depth:1},None=>Default::default()})
+  Ok(match self.next_allocation_bytes()?{Some(bytes)=>{let source=self.source_step_demands()?;RetirementDemand{copy_bytes:source.copy_bytes,capacity_bytes:bytes,release_bytes:0,depth:source.depth}},None=>Default::default()})
  }
  /// 🎙️ Allocates exactly the quoted backing only after every independent currency is present.
  pub fn admit_record_storage(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,PackRefusal>{
@@ -46,8 +46,8 @@ impl RetainedRecordBodyCursor{
  /// 📹️ Quotes one logical transition or one exact physical backing release of the record-body close.
  pub fn record_storage_retirement_demands(&self,_maximum_body_bytes:usize)->Result<RetirementDemand,PackRefusal>{
   if self.terminal_is_empty(){return Ok(Default::default())}
-  let copy_bytes=if self.next_release_allocation_bytes()?.is_some()&&!self.symbols.terminal_is_empty(){self.symbols.retirement_demands()?.copy_bytes}else{0};
-  Ok(RetirementDemand{copy_bytes,capacity_bytes:0,release_bytes:self.next_release_allocation_bytes()?.unwrap_or(0),depth:1})
+  let source=self.source_close_demands()?;
+  Ok(RetirementDemand{copy_bytes:source.copy_bytes,capacity_bytes:0,release_bytes:self.next_release_allocation_bytes()?.unwrap_or(0),depth:source.depth})
  }
  /// ⏺️ Keeps every owner and phase unchanged on an unfunded grant; a funded turn is exactly one close transition.
  pub fn retire_record_storage(&mut self,maximum_body_bytes:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,PackRefusal>{

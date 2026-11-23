@@ -115,6 +115,7 @@ fn cancelled_display_transfer_retires_capture_without_creating_a_window() {
 
 #[test]
 fn refused_window_publication_does_not_block_a_ready_display_peer() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let contract: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window publication fixture");
     let cohort = &contract["publicationOutcomes"]["cohort"];

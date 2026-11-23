@@ -32,3 +32,19 @@ fn a_receiving_floor_raises_the_half_share_up_to_the_whole_turn_and_refuses_beyo
  }
  close(caller,decoder);
 }
+
+/// 🪙️ A quoted scope whose copy quote exceeds the whole turn never opens and is charged no more than an idle turn.
+#[test]
+fn a_quoted_receiving_scope_beyond_the_turn_is_refused_at_no_charge(){
+ let law:Value=serde_json::from_str(include_str!("🧫️fixtures/receiving-quote-refusal.json")).unwrap();let n=|key:&str|law[key].as_u64().unwrap();
+ let mut caller=caller();let mut decoder=caller.admitted_decoder();
+ let idle={let stock=caller.remaining_grant();measured(&mut caller,&mut decoder,|_|Ok(()));fee(stock,caller.remaining_grant())};
+ let quote=(RetainedCloneGrant{maximum_items:4,maximum_copy_bytes:n("quoteCopyBytes") as usize,maximum_depth:1,..Default::default()},1000);
+ for turn in 0..n("refusalTurns"){
+  let stock=caller.remaining_grant();let mut opened=false;
+  measured(&mut caller,&mut decoder,|cx|{let mut out=None;account(cx,|cx|cx.with_native_receiving_quoted(&mut out,quote,|_,_|{opened=true;Ok(())}))?;account(cx,|_|drop(out));Ok(())});
+  assert!(!opened,"the over-quoted scope opened on turn {turn}");
+  if turn>=n("settlingTurns"){let spent=fee(stock,caller.remaining_grant());assert!(spent.0<=idle.0&&spent.1<=idle.1,"refused turn {turn} charged {spent:?} against an idle {idle:?}");}
+ }
+ close(caller,decoder);
+}

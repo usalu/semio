@@ -215,7 +215,7 @@ async fn graph_effects_reject_an_unknown_node_kind() {
 
 #[semio_framework_async_macros::async_test]
 async fn from_json_rejects_wrong_schema() {
-    let json = r#"{"schema":"bogus","name":"x","camera":{"x":0,"y":0,"zoom":1},"content":{"childId":"x-content","target":{"artifactId":"x-content","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"graph"}}},"query":""}"#;
+    let json = r#"{"schema":"bogus","name":"x","manifestId":"nakagin","camera":{"x":0,"y":0,"zoom":1},"content":{"childId":"x-content","target":{"artifactId":"x-content","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"graph"}}},"query":""}"#;
     let err = JackSnapshot::from_json(json).expect_err("schema mismatch");
     assert!(err.to_string().contains("expected schema trinity.graph"));
 }

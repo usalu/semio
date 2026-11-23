@@ -6847,6 +6847,36 @@
               }
             },
             {
+              "kind": "poly",
+              "points": [
+                [
+                  0.127,
+                  -0.222
+                ],
+                [
+                  0.2479,
+                  -0.222
+                ],
+                [
+                  0.2479,
+                  -0.2196
+                ],
+                [
+                  0.127,
+                  -0.2196
+                ]
+              ],
+              "closed": true,
+              "id": "letter-sil",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 1.4,
+              "filled": true,
+              "tone": 0.15,
+              "region": "shoes",
+              "material": "leather-shoe"
+            },
+            {
               "id": "coat-shoulder-seam-l",
               "bone": "torso",
               "role": "detail",
@@ -10243,6 +10273,36 @@
                 "axisZ": -0.0233,
                 "mirror": true
               }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.222,
+                  0.8937
+                ],
+                [
+                  -0.2196,
+                  0.8937
+                ],
+                [
+                  -0.2196,
+                  0.5355
+                ],
+                [
+                  -0.222,
+                  0.5355
+                ]
+              ],
+              "closed": true,
+              "id": "letter-sil",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.42,
+              "region": "service-trousers",
+              "material": "service-trouser"
             },
             {
               "id": "shirt-cuff-l",
@@ -25725,7 +25785,7 @@
               "sunlitFraction": 0
             },
             "satchel": {
-              "exposedFraction": 0.85,
+              "exposedFraction": 0.5215,
               "sunlitFraction": 0
             },
             "letter-paper": {
@@ -25840,7 +25900,7 @@
               "sunlitFraction": 0
             },
             "satchel": {
-              "exposedFraction": 0.85,
+              "exposedFraction": 0.5215,
               "sunlitFraction": 0
             },
             "letter-paper": {
@@ -25952,7 +26012,7 @@
               "sunlitFraction": 0
             },
             "satchel": {
-              "exposedFraction": 0.85,
+              "exposedFraction": 0.5215,
               "sunlitFraction": 0
             },
             "letter-paper": {
@@ -26086,7 +26146,7 @@
               "sunlitFraction": 0
             },
             "satchel": {
-              "exposedFraction": 0.85,
+              "exposedFraction": 0.5215,
               "sunlitFraction": 0
             },
             "letter-paper": {
@@ -26221,7 +26281,7 @@
               "sunlitFraction": 0
             },
             "satchel": {
-              "exposedFraction": 0.85,
+              "exposedFraction": 0.5215,
               "sunlitFraction": 0
             },
             "letter-paper": {
@@ -26356,7 +26416,7 @@
               "sunlitFraction": 0
             },
             "satchel": {
-              "exposedFraction": 0.85,
+              "exposedFraction": 0.5215,
               "sunlitFraction": 0
             },
             "letter-paper": {
@@ -26491,7 +26551,7 @@
               "sunlitFraction": 0
             },
             "satchel": {
-              "exposedFraction": 0.85,
+              "exposedFraction": 0.5215,
               "sunlitFraction": 0
             },
             "letter-paper": {
@@ -26627,7 +26687,7 @@
               "sunlitFraction": 0
             },
             "satchel": {
-              "exposedFraction": 0.85,
+              "exposedFraction": 0.5215,
               "sunlitFraction": 0
             },
             "letter-paper": {
@@ -26762,7 +26822,7 @@
               "sunlitFraction": 0
             },
             "satchel": {
-              "exposedFraction": 0.85,
+              "exposedFraction": 0.5215,
               "sunlitFraction": 0
             },
             "letter-paper": {
@@ -30723,7 +30783,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "satchel-canvas",
-          "areaM2": 0.32,
+          "areaM2": 0.5216,
           "characteristicLengthM": 0.25,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.3,

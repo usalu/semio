@@ -1,5 +1,5 @@
 //! 🏦️ Synchronous authoring outside any Job turn spends one explicit finite stock and records every performed unit through one original receipt.
-use super::{OriginalEffectAuthority,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,OriginalWorkActionIdentity,OriginalWorkPerformedReceipt,OriginalSourceTurnIdentity,OriginalWork,OriginalWorkAuthority,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkRecipient,OriginalWorkSink,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,RetainedWorkPoll,ValueError,ValueRefusalKind};
+use super::{OriginalEffectAuthority,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,OriginalWorkActionIdentity,OriginalWorkPerformedReceipt,OriginalSourceTurnIdentity,OriginalWork,OriginalWorkAuthority,OriginalWorkState,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkRecipient,OriginalWorkSink,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,RetainedWorkPoll,ValueError,ValueRefusalKind};
 
 struct AuthoringDriver;
 struct AuthoringContext<'a>{remaining:&'a u128}
@@ -53,8 +53,8 @@ pub fn invoke_original<R>(effect:&mut RetainedAllocationEffect<'_>,narrow:Option
 /// 🧾️ One authored effect: the closure's output, the work its receipt recorded and the physical allocation marker it left.
 pub struct AuthoredEffect<R>{pub output:R,pub performed:u128,pub actual:Option<usize>}
 
-/// 🏦️ The explicit finite stock of a synchronous authoring path: no job turn grants it, so the caller names it and every effect debits it.
-pub struct AuthoringWallet{stock:RetainedCloneGrant,work:u128}
+/// 🏦️ The explicit finite stock of a synchronous authoring path: no job turn grants it, so the caller names it and every effect debits it. One wallet is one resident Work owner: every run shares its issuer and scope, so an owner that captured the Work binding of one run follows it into the next.
+pub struct AuthoringWallet{stock:RetainedCloneGrant,work:u128,authority:OriginalWorkAuthority<AuthoringDriver>,scope:Option<OriginalWorkState>}
 /// 🪢️ One open original Work action between its quote and its settlement; callers that need their own owner alive while the effect runs use `begin`, `effect` and `finish` instead of the closure form.
 pub struct OriginalEffectRun{action:Option<OriginalWorkActionIdentity>,receipt:Option<OriginalWorkPerformedReceipt>,actual:Option<usize>,grant:RetainedCloneGrant,maximum:u64}
 impl OriginalEffectRun{
@@ -90,7 +90,9 @@ pub fn run_original_effect<R>(work:&mut OriginalWork<'_>,grant:RetainedCloneGran
 }
 impl AuthoringWallet{
  /// 🆕️ Names the whole physical stock and computational work this authoring path may ever spend.
- pub const fn new(stock:RetainedCloneGrant,work:u128)->Self{Self{stock,work}}
+ pub fn new(stock:RetainedCloneGrant,work:u128)->Self{Self{stock,work,authority:OriginalWorkAuthority::new(AuthoringDriver),scope:None}}
+ /// ♾️ Names a stock no grant can exceed for a caller that funds each run by its own quoted grant.
+ pub fn self_funded()->Self{Self::new(RetainedCloneGrant{maximum_items:usize::MAX,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},u128::MAX/2)}
  /// 📏️ Reads the physical stock still unspent.
  pub fn remaining(&self)->RetainedCloneGrant{self.stock}
  /// ⛽️ Reads the work still unspent.
@@ -109,16 +111,17 @@ impl AuthoringWallet{
  fn run_with<R>(&mut self,grant:RetainedCloneGrant,maximum_work:u64,invoked:bool,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->Result<Option<AuthoredEffect<R>>,ValueError>{
   if grant.restricted_by(self.stock)!=grant{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"authoring grant exceeds its explicit stock"))}
   if u128::from(maximum_work)>self.work{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"authoring work exceeds its explicit stock"))}
-  let remaining=self.work+u128::from(invoked)*u128::from(ORIGINAL_INVOCATION_WORK);let mut authority=OriginalWorkAuthority::new(AuthoringDriver);let mut spent=0u128;
+  let remaining=self.work+u128::from(invoked)*u128::from(ORIGINAL_INVOCATION_WORK);let mut spent=0u128;let mut scope=self.scope.take().unwrap_or_else(OriginalWorkState::fresh);scope.begin_turn();
   let(effect_grant,effect_work)=if invoked{invocation_extent(grant,maximum_work)?}else{(grant,maximum_work)};
-  let settled=authority.with_loan(&mut AuthoringContext{remaining:&remaining},|loan|{
-   let mut loan=loan.reborrow();let mut work=OriginalWork::empty();work.recipient=Some(&mut loan);
-   let taken=run_original_effect(&mut work,effect_grant,effect_work,&mut spent,|effect|if invoked{invoke_original(effect,None,operation)}else{Ok(operation(effect))})?;
-   Ok::<_,ValueError>(taken)
+  let settled=self.authority.with_loan(&mut AuthoringContext{remaining:&remaining},|loan|{
+   let mut loan=loan.reborrow();let mut work=OriginalWork{state:scope.take(),recipient:None};work.recipient=Some(&mut loan);
+   let taken=run_original_effect(&mut work,effect_grant,effect_work,&mut spent,|effect|if invoked{invoke_original(effect,None,operation)}else{Ok(operation(effect))});
+   scope=work.state.take();taken
   });
   self.work=self.work.saturating_sub(spent);
+  let live=self.authority.has_live_actions();self.scope=Some(scope);
   let settled=settled??;
-  if authority.has_live_actions(){return Err(ValueError::invariant("authoring left a live work action"))}
+  if live{return Err(ValueError::invariant("authoring left a live work action"))}
   match settled{None=>Ok(None),Some(done)=>Ok(Some(AuthoredEffect{output:done.output?,performed:done.performed,actual:done.actual}))}
  }
  /// 🏁️ [`Self::run`] for a poll-returning step: a suspended poll cannot be awaited synchronously and is refused typed.

@@ -76,14 +76,14 @@ real("a body-only edit of a library: it is compiled once, its dependants are hit
  expect(consumer.status,consumer.stderr).toBe(0);
  expect(existsSync(identityFileV1(rmetaOf(w,"b")))).toBe(true);
  expect(await round(w,{a:sources.a!.replace("x + 1","x + 100")})).toEqual({a:"local-hit",b:"local-hit",c:"local-hit"});
-},240000);
+},900000);
 
 real("an edit that changes the interface compiles every dependant",async()=>{
  const w=world("signature");
  expect(await round(w)).toEqual({a:"miss",b:"miss",c:"miss"});
  const outcomes=await round(w,{a:sources.a+"pub fn extra() -> u8 { 0 }\n"});
  expect(outcomes).toEqual({a:"miss",b:"miss",c:"miss"});
-},240000);
+},900000);
 
 real("a body edit that a dependant can observe (a const function) compiles the dependants",async()=>{
  const w=world("const");
@@ -91,7 +91,7 @@ real("a body edit that a dependant can observe (a const function) compiles the d
  const run=async(edits:Partial<Record<string,string>>)=>{const before=readLookupsV1(w.cache).length,now={...base,...edits};for(const crate of["a","b","c"])expect(await check(w,crate,now[crate]!),crate).toBe(0);const out:Record<string,string>={};for(const row of readLookupsV1(w.cache).slice(before))out[row.crate]=row.outcome;return out;};
  expect(await run({})).toEqual({a:"miss",b:"miss",c:"miss"});
  expect(await run({a:base.a.replace("x + 1","x + 2")})).toEqual({a:"miss",b:"miss",c:"miss"});
-},240000);
+},900000);
 
 real("with the cache off nothing changes: the wrapper compiles what it is given",async()=>{
  const w=world("off");

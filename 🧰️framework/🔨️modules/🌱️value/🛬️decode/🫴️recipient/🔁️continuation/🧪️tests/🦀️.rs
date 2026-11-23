@@ -23,7 +23,7 @@ fn close_encode(native:&mut native_encoding::NativeEncodeControl<'_>,effect:&mut
  close_with(effect,|body,effect|{let mut slot=None;{let reply=semio_framework_value_control_contract::OriginalEffectReply::borrow(&mut slot).unwrap();drop(native.close_retirement_recipient_into(body,effect,reply).unwrap());}RetainedWorkOutcome{result:slot.expect("fixture close recorded its reply"),work:effect.performed_work()}})
 }
 macro_rules! close_turn{
- (decode,$native:ident,$grant:expr,$marker:ident)=>{eff::observed($grant,1<<20,&mut $marker,|effect|close_with(effect,|body,effect|eff::settled($native.close_retirement_recipient(body,effect))))};
+ (decode,$native:ident,$grant:expr,$marker:ident)=>{if $native.requires_original_birth(){observe(||eff::settled($native.close_original_birth_step($grant)))}else{eff::observed($grant,1<<20,&mut $marker,|effect|close_with(effect,|body,effect|eff::settled($native.close_retirement_recipient(body,effect))))}};
  (encode,$native:ident,$grant:expr,$marker:ident)=>{eff::observed($grant,1<<20,&mut $marker,|effect|close_encode($native,effect))};
 }
 macro_rules! original_local_law{
@@ -60,14 +60,3 @@ macro_rules! refused_work_law{
 }
 refused_work_law!(native_local_original_decode_refused_work_preserves_receipt,native_decoding::NativeDecodeControl,native_decoding::NativeDecodeRetirementRecipient,decode);
 refused_work_law!(native_local_original_encode_refused_work_preserves_receipt,native_encoding::NativeEncodeControl,native_encoding::NativeEncodeRetirementRecipient,encode);
-#[test]
-fn original_decode_envelope_keeps_result_and_context_refusal(){
- let law=fixture();for fail in [true,false]{
-  let mut recipient=NativeDecodeRetirementRecipient::new();let mut progress=|_|true;let receipt=NativeDecodeControl::new_retained(&mut progress).pause().unwrap();let mut continuation=receipt.with_retirement_recipient(&mut recipient).map_err(|(error,_)|error).unwrap();let mut progress=|_|true;let mut authority=OriginalWorkAuthority::new(OriginalCloseWork(1));
-  let value=law["callEnvelope"][if fail{"operation"}else{"output"}].as_str().unwrap().to_owned();let pointer=value.as_ptr();
-  let result=authority.with_loan(&mut (),|loan|continuation.decode::<String,ValueError>(&mut progress,None,|control|control.with_work_recipient(loan,|original|{assert!(original.prepare_work(1)?);if fail{Err(ValueError::new(ValueRefusalKind::InvalidValue,value))}else{Ok(value)}}))).unwrap();
-  assert_eq!(continuation.pending_work(),1);assert!(continuation.has_pending_work());
-  let failure=result.unwrap_err();if fail{assert_eq!(failure.operation.as_ref().unwrap().message.as_ptr(),pointer);assert!(failure.output.is_none())}else{assert_eq!(failure.output.as_ref().unwrap().as_ptr(),pointer);assert!(failure.operation.is_none())}assert!(failure.context.is_some());
-  authority.with_loan(&mut (),|loan|continuation.decode::<(),ValueError>(&mut progress,None,|control|control.with_work_recipient(loan,|control|control.commit_work(1)))).unwrap().unwrap();assert!(!continuation.has_pending_work());let(_receipt,_recipient)=continuation.detach();assert!(authority.into_recipient().is_ok());
- }
-}

@@ -8,9 +8,14 @@ test("scalar snapshot metadata agrees with the independent SQLite field roster",
   for(const field of fixture.fields)db.query("INSERT INTO field VALUES(?,?,?,?)").run(field.id,field.key,field.shape,field.optional?1:0);
   expect(db.query("SELECT id,key,shape,optional FROM field ORDER BY id").all().map(row=>{const value=row as {id:number;key:string;shape:string;optional:number};return {...value,optional:!!value.optional};})).toEqual(fixture.fields);
  }finally{db.close();}
- const source=await Bun.file(new URL("../../🦀️.rs",import.meta.url)).text();
- expect(source).toContain("fn spec_producer()");
- const rows=[...source.matchAll(/\((\d+),"([^"]+)",semio_framework_dsl_record::Shape::(\w+),(true|false)\)/g)].map(([,id,key,shape,optional])=>({id:Number(id),key,shape,optional:optional==="true"}));
- expect(rows).toEqual(fixture.fields);
+  const source=await Bun.file(new URL("../../🦀️.rs",import.meta.url)).text();
+  expect(source).toContain("fn spec_producer()");
+  const tableStart=source.indexOf("const FIELDS:");
+  const table=source.slice(tableStart,source.indexOf("];",tableStart));
+  const rule=source.match(/fn root_shape\(id: u16\)[\s\S]*?if id <= (\d+) \{[\s\S]*?Shape::(\w+) \} else \{[\s\S]*?Shape::(\w+) \}/);
+  expect(rule).not.toBeNull();
+  const limit=Number(rule?.[1]),textShape=rule?.[2]??"",valueShape=rule?.[3]??"";
+  const rows=[...table.matchAll(/\((\d+),"([^"]+)",(true|false)\)/g)].map(([,id,key,optional])=>{const numeric=Number(id);return {id:numeric,key,shape:numeric<=limit?textShape:valueShape,optional:optional==="true"};});
+  expect(rows).toEqual(fixture.fields);
  console.log(`scalar-schema-producer fields=${rows.length} independent-sqlite=${fixture.fields.length}`);
 });

@@ -88,9 +88,9 @@ pub fn definition() -> WindowKindDefinition {
 /// 🎬️ Encodes the inferred bitmap behind the semantic surface contract. A live fill payload wins over
 /// the finished SetSolve cache. A cached solve whose extent no longer matches the document's own
 /// output spec is DISCARDED rather than reshaped.
-pub fn render(document: &BitmapSnapshot, transient: &BitmapTransient, config: &BitmapOutputWindowConfig, tool_run: Option<&ToolRunView>, current_revision: Option<[u8; 32]>) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &BitmapSnapshot, transient: &BitmapTransient, config: &BitmapOutputWindowConfig, tool_run: Option<&ToolRunView>, current_revision: Option<[u8; 32]>, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
     let scene = Canvas2dScene::base(0.0, 0.0, config.zoom, render_layers_fingerprint(document, transient, config, tool_run, current_revision));
-    scene_surface(SURFACE_ID, ContractSurfaceKind::Canvas2d, &scene)
+    scene_surface(SURFACE_ID, ContractSurfaceKind::Canvas2d, &scene, semio_plugin::surface_name(locale, "Output", "Ausgabe"), None)
 }
 
 /// 🏃️ Non-terminal fill run whose tick payload still decodes.

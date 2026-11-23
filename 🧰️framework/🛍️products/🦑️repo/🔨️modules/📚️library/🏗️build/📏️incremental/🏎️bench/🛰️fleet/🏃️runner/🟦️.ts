@@ -226,7 +226,7 @@ async function host16g():Promise<FleetValuesV1>{
   const host=sample(free,pressure),evaluation=evaluateHostCapacityV1(capacity,host,[],waiters,now);
   memory.push(fleetMemoryLawsV1({cores:sizing.cores,floorMegabytes:hostFloorMegabytesV1(capacity,host),availableMegabytes:Math.floor(sizing.totalMegabytes*free),pressure,decisions:evaluation.decisions}));
  }
- const rules=budget.default as {partitions:Record<string,{capacityBytes:number;hostSharePercent?:number}>;elastic:Record<string,Parameters<typeof elastic.elasticCapacityV1>[0]>},born=Object.entries(rules.partitions).map(([id,row])=>{const rule=rules.elastic[id];return rule?elastic.elasticCapacityV1(rule,elastic.elasticMinimumV1(rule,rule.minimumBytes,sizing.freeDiskBytes),sizing.freeDiskBytes):elastic.hostShareCapacityV1(row.capacityBytes,row.hostSharePercent!,sizing.freeDiskBytes);});
+ const rules=budget.default as {partitions:Record<string,{capacityBytes:number;hostSharePercent?:number;needBytes?:Record<string,number>}>;elastic:Record<string,Parameters<typeof elastic.elasticCapacityV1>[0]>},born=Object.entries(rules.partitions).map(([id,row])=>{const rule=rules.elastic[id];return rule?elastic.elasticCapacityV1(rule,elastic.elasticMinimumV1(rule,rule.minimumBytes,sizing.freeDiskBytes),sizing.freeDiskBytes):elastic.hostShareCapacityV1(row.capacityBytes,row.hostSharePercent!,sizing.freeDiskBytes,elastic.partitionNeedBytesV1(budget.default as never,id,"darwin"));});
  return fleetHostV1({memory,disk:fleetDiskLawsV1({freeBytes:sizing.freeDiskBytes,born,sharePercent:sizing.diskSharePercent,mebibyte:sizing.mebibyte}),mebibyte:sizing.mebibyte});
 }
 

@@ -212,7 +212,7 @@ impl IconOwnedRetirement {
         if self.terminal(){return RetirementStep::Complete(0)}
         let demand=match self.demand(body){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};let grant=effect.grant();
         if effect.maximum_work_units()==0||grant.maximum_items==0||!retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
-        macro_rules! admit{($slot:expr)=>{{let mut child=match effect.reborrow(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant},effect.maximum_work_units()){Ok(child)=>child,Err(error)=>return RetirementStep::Failure(error.into(),0)};let turn=admit_retirement_cursor($slot,&mut child);return match turn.result{Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress,turn.work),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)}}}}
+        macro_rules! admit{($slot:expr)=>{{let mut child=effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});let turn=admit_retirement_cursor($slot,&mut child);return match turn.result{Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress,turn.work),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)}}}}
         if self.metadata.is_some(){admit!(&mut self.metadata)}
         if self.image.is_some(){admit!(&mut self.image)}
         let source=self.source.as_mut().expect("icon cache source retained until release");

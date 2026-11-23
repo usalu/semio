@@ -1,5 +1,22 @@
 //! 🧷️ Retained value and record-body cursor laws that read cursor internals.
 use super::*;
+use semio_framework_value::RetainedCloneGrant;
+use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
+fn body_grant() -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 256 } }
+fn body_lend<R>(run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> R {
+    let all = RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
+    let mut bank = EffectBank::new(Wallet::new(all, u64::MAX));
+    let mut out = None;
+    let (poll, _) = bank.run(body_grant(), 1 << 32, |effect| {
+        let mut run=Some(run);semio_framework_value::retained_clone::with_original_invocation(None,effect,&mut |effect|out=Some(run.take().expect("fixture effect ran once")(effect))).unwrap();
+        semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome::<(), semio_framework_value::ValueError> { result: Ok(()), work: effect.performed_work() })
+    });
+    assert!(matches!(poll, semio_framework_value::RetainedWorkPoll::Complete(_)));
+    assert_ne!(bank.take_admitted(), Some(false));
+    out.expect("fixture effect ran its action")
+}
+fn body_reserve(cursor: &mut RetainedRecordBodyCursor, maximum_bytes: usize) -> Result<RetainedRecordBodyAllocationStep, RetainedRecordBodyAllocationError> { body_lend(|effect| cursor.reserve_allocation(maximum_bytes, effect)) }
+fn body_close(cursor: &mut RetainedRecordBodyCursor, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_pack_format_retained::RetainedPackCloseStep, PackRefusal> { body_lend(|effect| cursor.close_step(maximum_items, maximum_bytes, effect)) }
 fn retained_value_cursor(limits: PackLimits) -> RetainedValueCursor {
     let mut cursor = RetainedValueCursor::try_new(limits, 1 << 20).expect("cursor");
     let requested = cursor.next_allocation_bytes().expect("allocation demand").expect("frame allocation");
@@ -34,7 +51,7 @@ fn retained_varint(mut value: u64) -> Vec<u8> {
 fn drive_retained_record_pending(cursor: &mut RetainedRecordBodyCursor, allocated: &mut usize, tokens: &mut Vec<RetainedRecordBodyToken>) {
     for _ in 0..100_000 {
         while let Some(exact) = cursor.next_allocation_bytes().expect("record-body allocation demand") {
-            let step = cursor.reserve_allocation(exact).expect("record-body allocation");
+            let step = body_reserve(cursor, exact).expect("record-body allocation");
             assert!(step.progressed);
             *allocated += step.allocated_bytes;
         }
@@ -60,7 +77,7 @@ fn finish_retained_record(cursor: &mut RetainedRecordBodyCursor, allocated: &mut
     cursor.seal(cursor.offset).expect("record-body seal");
     for _ in 0..100_000 {
         while let Some(exact) = cursor.next_allocation_bytes().expect("record-body final allocation demand") {
-            let step = cursor.reserve_allocation(exact).expect("record-body final allocation");
+            let step = body_reserve(cursor, exact).expect("record-body final allocation");
             assert!(step.progressed);
             *allocated += step.allocated_bytes;
         }
@@ -79,7 +96,7 @@ fn close_retained_record(cursor: &mut RetainedRecordBodyCursor) -> usize {
     let mut released = 0;
     for _ in 0..100_000 {
         let maximum_bytes = cursor.next_release_allocation_bytes().expect("record-body release demand").unwrap_or(0);
-        match cursor.close_step(1, maximum_bytes).expect("record-body close") {
+        match body_close(cursor, 1, maximum_bytes).expect("record-body close") {
             semio_framework_pack_format_retained::RetainedPackCloseStep::Pending { released_bytes, .. } => released += released_bytes,
             semio_framework_pack_format_retained::RetainedPackCloseStep::Complete => return released,
         }
@@ -190,12 +207,12 @@ fn retained_record_body_zero_grants_preserve_unopened_cancellation() {
     };
     let before = state(&cursor);
     assert_eq!(
-        cursor.close_step(0, 0).expect("unopened zero close"),
+        body_close(&mut cursor, 0, 0).expect("unopened zero close"),
         semio_framework_pack_format_retained::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }
     );
     assert_eq!(state(&cursor), before);
     assert_eq!(
-        cursor.close_step(1, 0).expect("pending byte close"),
+        body_close(&mut cursor, 1, 0).expect("pending byte close"),
         semio_framework_pack_format_retained::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 }
     );
     for _ in 0..64 {
@@ -204,23 +221,23 @@ fn retained_record_body_zero_grants_preserve_unopened_cancellation() {
         }
         let before = state(&cursor);
         assert_eq!(
-            cursor.close_step(0, 0).expect("intermediate zero close"),
+            body_close(&mut cursor, 0, 0).expect("intermediate zero close"),
             semio_framework_pack_format_retained::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }
         );
         assert_eq!(state(&cursor), before);
         assert!(matches!(
-            cursor.close_step(1, 0).expect("unopened logical close"),
+            body_close(&mut cursor, 1, 0).expect("unopened logical close"),
             semio_framework_pack_format_retained::RetainedPackCloseStep::Pending { released_bytes: 0, .. }
         ));
     }
     assert_eq!(cursor.close_phase, RetainedRecordBodyClosePhase::ValuePhysical);
     let before = state(&cursor);
     assert_eq!(
-        cursor.close_step(0, 0).expect("physical-phase zero close"),
+        body_close(&mut cursor, 0, 0).expect("physical-phase zero close"),
         semio_framework_pack_format_retained::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }
     );
     assert_eq!(state(&cursor), before);
-    assert_eq!(cursor.close_step(0, 1).expect("bytes-only metadata close"), semio_framework_pack_format_retained::RetainedPackCloseStep::Complete);
+    assert_eq!(body_close(&mut cursor, 0, 1).expect("bytes-only metadata close"), semio_framework_pack_format_retained::RetainedPackCloseStep::Complete);
     assert!(cursor.terminal_is_empty());
 }
 
@@ -232,7 +249,7 @@ fn retained_record_body_indexes_multibyte_symbols_and_retires_all_logical_owners
     cursor.admit_byte(0, 3).expect("pending symbol count");
     let exact = cursor.next_allocation_bytes().expect("span demand").expect("span allocation");
     let before = (cursor.offset, cursor.pending, cursor.allocated_bytes());
-    assert_eq!(cursor.reserve_allocation(exact - 1).expect("subexact span refusal"), RetainedRecordBodyAllocationStep::default());
+    assert_eq!(body_reserve(&mut cursor, exact - 1).expect("subexact span refusal"), RetainedRecordBodyAllocationStep::default());
     assert_eq!((cursor.offset, cursor.pending, cursor.allocated_bytes()), before);
     let mut allocated = 0;
     let mut tokens = Vec::new();
@@ -252,7 +269,7 @@ fn retained_record_body_indexes_multibyte_symbols_and_retires_all_logical_owners
     assert_eq!(total_allocation, allocated);
     let mut released_before_physical = 0;
     while cursor.close_phase != RetainedRecordBodyClosePhase::ValuePhysical {
-        match cursor.close_step(1, usize::MAX).expect("logical record-body close") {
+        match body_close(&mut cursor, 1, usize::MAX).expect("logical record-body close") {
             semio_framework_pack_format_retained::RetainedPackCloseStep::Pending { released_bytes, .. } => released_before_physical += released_bytes,
             semio_framework_pack_format_retained::RetainedPackCloseStep::Complete => panic!("record body closed before physical phase"),
         }
@@ -261,9 +278,9 @@ fn retained_record_body_indexes_multibyte_symbols_and_retires_all_logical_owners
     assert_eq!((cursor.symbols.len(), cursor.symbols.scalar_len()), (0, 0));
     let exact = cursor.next_release_allocation_bytes().expect("value release query").expect("value release demand");
     assert_eq!(exact, value_allocation);
-    assert_eq!(cursor.close_step(0, exact - 1).expect("subexact value release"), semio_framework_pack_format_retained::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(body_close(&mut cursor, 0, exact - 1).expect("subexact value release"), semio_framework_pack_format_retained::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
     assert_eq!(cursor.next_release_allocation_bytes().expect("preserved value release demand"), Some(exact));
-    let mut released = match cursor.close_step(0, exact).expect("exact value release") {
+    let mut released = match body_close(&mut cursor, 0, exact).expect("exact value release") {
         semio_framework_pack_format_retained::RetainedPackCloseStep::Pending { released_items: 0, released_bytes } => released_bytes,
         step => panic!("unexpected value release {step:?}"),
     };
@@ -285,7 +302,7 @@ fn retained_record_body_crosses_a_symbol_leaf_and_preserves_maximum_plus_one_pen
     cursor.admit_byte(cursor.offset, *count_bytes.last().expect("count byte")).expect("final count byte");
     let mut first_leaf_capacity = None;
     while let Some(exact) = cursor.next_allocation_bytes().expect("multi-leaf allocation demand") {
-        let step = cursor.reserve_allocation(exact).expect("multi-leaf allocation");
+        let step = body_reserve(&mut cursor, exact).expect("multi-leaf allocation");
         assert!(step.progressed);
         allocated += step.allocated_bytes;
         if cursor.symbols.symbol_capacity() != 0 {
@@ -310,7 +327,7 @@ fn retained_record_body_crosses_a_symbol_leaf_and_preserves_maximum_plus_one_pen
     let first = excessive.next_allocation_bytes().expect_err("maximum plus one symbol count");
     assert_eq!(excessive.pending, pending);
     assert_eq!(excessive.grant().expect_err("sticky symbol count fault"), first);
-    assert_eq!(excessive.close_step(0, usize::MAX).expect("bytes-only cancellation refusal"), semio_framework_pack_format_retained::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(body_close(&mut excessive, 0, usize::MAX).expect("bytes-only cancellation refusal"), semio_framework_pack_format_retained::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
     assert_eq!(excessive.pending, pending);
     assert_eq!(close_retained_record(&mut excessive), 0);
     assert!(excessive.terminal_is_empty());

@@ -13,7 +13,7 @@
 //! `MTLDepthStencilState` (`world3d_translucent_ds`); `🍎️backend.rs` applies the bias around the
 //! translucent mesh draws specifically via `setDepthBias:slopeScale:clamp:` and resets it before the
 //! line draws. Every other pipeline/state pairing below is a direct port of
-//! `🎯️targets/🧊️wgpu/🦀️draw.rs`'s `UiPipelines::new` (`content_stencil_state`/`mask_stencil_state`,
+//! `🎯️targets/🧊️wgpu/🦀️draw.rs`'s `UiPipelines::new` (`content_stencil_state`,
 //! the two UI pipelines, `vector_pipeline`, `world_pipeline{,_translucent}`, `world_line_pipeline`,
 //! `blur_downsample_pipeline`, `scene_blit_pipeline`, `glass_pipeline`).
 
@@ -233,7 +233,6 @@ const ALPHA_BLEND: Option<(MTLBlendFactor, MTLBlendFactor)> = Some((MTLBlendFact
 /// once in `MetalBackend::new` against the swapchain's pixel format and the offscreen scene target's
 /// pixel format (the two color targets in play — see `🌫️scene_target.rs`).
 pub struct Pipelines {
-    pub ui_mask: Owned<MTLRenderPipelineState>,
     pub ui_content: Owned<MTLRenderPipelineState>,
     pub vector: Owned<MTLRenderPipelineState>,
     pub glass: Owned<MTLRenderPipelineState>,
@@ -243,11 +242,8 @@ pub struct Pipelines {
     pub world3d_mesh_translucent: Owned<MTLRenderPipelineState>,
     pub world3d_line: Owned<MTLRenderPipelineState>,
 
-    /// 🩹️ `Always`/`Replace`/`Replace`, write mask `0xff` — stamps the silhouette mask. Mirrors
-    /// `mask_stencil_state()`.
-    pub mask_depth_stencil: Owned<MTLDepthStencilState>,
-    /// 🔒 `Equal`/`Keep`, read mask `0xff` write mask `0x00` — clips UI/vector content against a
-    /// previously written mask. Mirrors `content_stencil_state()`; shared by `ui_content` and
+    /// 🔒 `Equal`/`Keep`, read mask `0xff` write mask `0x00` — tests UI/vector content against the
+    /// stencil buffer. Mirrors `content_stencil_state()`; shared by `ui_content` and
     /// `vector`.
     pub content_depth_stencil: Owned<MTLDepthStencilState>,
     /// 🗻️ Opaque world mesh: depth write on, `Less`.
@@ -281,16 +277,6 @@ impl Pipelines {
         let ui_vs = function(&ui_library, &NSString::from_str("ui_vertex_main"));
         let ui_fs = function(&ui_library, &NSString::from_str("ui_fragment_main"));
         let ui_layout = ui_vertex_descriptor();
-
-        let mask_descriptor = MTLRenderPipelineDescriptor::new();
-        mask_descriptor.setLabel(Some(&*NSString::from_str("silhouette_mask_pipeline")));
-        mask_descriptor.setVertexFunction(Some(&ui_vs));
-        mask_descriptor.setFragmentFunction(Some(&ui_fs));
-        mask_descriptor.setVertexDescriptor(Some(&ui_layout));
-        configure_color_attachment(&mask_descriptor, scene_format, None, MTLColorWriteMask::None);
-        mask_descriptor.setDepthAttachmentPixelFormat(DEPTH_STENCIL_FORMAT);
-        mask_descriptor.setStencilAttachmentPixelFormat(DEPTH_STENCIL_FORMAT);
-        let ui_mask = device.newRenderPipelineStateWithDescriptor_error(&mask_descriptor).expect("metal backend: silhouette_mask_pipeline failed to link");
 
         let content_descriptor = MTLRenderPipelineDescriptor::new();
         content_descriptor.setLabel(Some(&*NSString::from_str("ui_pipeline")));
@@ -380,20 +366,6 @@ impl Pipelines {
 
         //#region DepthStencilStates
 
-        let mask_face = MTLStencilDescriptor::new();
-        mask_face.setStencilCompareFunction(MTLCompareFunction::Always);
-        mask_face.setStencilFailureOperation(MTLStencilOperation::Replace);
-        mask_face.setDepthFailureOperation(MTLStencilOperation::Replace);
-        mask_face.setDepthStencilPassOperation(MTLStencilOperation::Replace);
-        mask_face.setReadMask(0xff);
-        mask_face.setWriteMask(0xff);
-        let mask_ds_descriptor = MTLDepthStencilDescriptor::new();
-        mask_ds_descriptor.setDepthCompareFunction(MTLCompareFunction::Always);
-        mask_ds_descriptor.setDepthWriteEnabled(false);
-        mask_ds_descriptor.setFrontFaceStencil(Some(&mask_face));
-        mask_ds_descriptor.setBackFaceStencil(Some(&mask_face));
-        let mask_depth_stencil = device.newDepthStencilStateWithDescriptor(&mask_ds_descriptor).expect("metal backend: mask depth-stencil state failed");
-
         let content_face = MTLStencilDescriptor::new();
         content_face.setStencilCompareFunction(MTLCompareFunction::Equal);
         content_face.setStencilFailureOperation(MTLStencilOperation::Keep);
@@ -461,7 +433,6 @@ impl Pipelines {
         //#endregion Samplers
 
         Self {
-            ui_mask,
             ui_content,
             vector,
             glass,
@@ -470,7 +441,6 @@ impl Pipelines {
             world3d_mesh_opaque,
             world3d_mesh_translucent,
             world3d_line,
-            mask_depth_stencil,
             content_depth_stencil,
             world3d_opaque_depth_stencil,
             world3d_translucent_depth_stencil,

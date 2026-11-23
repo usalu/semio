@@ -160,18 +160,15 @@ export function registerLayerTests(): void {
           <CourseCard id="dialog" card="dialog" icon={<CardIcon icon="info" />} title="Submit?" />
         </div>,
       );
-      const body = document.createElement("div");
-      body.dataset.slot = "window-chrome-body-surface";
-      document.querySelector('#course-main [data-slot="window-chrome-chip-cap"]')!.parentElement!.after(body);
       const surfaces = [...document.querySelectorAll<HTMLElement>(COURSE_PET_SURFACES)];
       expect(surfaces.map((part) => [part.dataset.slot ?? part.tagName, part.closest<HTMLElement>("[data-card]")?.dataset.card])).toEqual([
-        ["window-chrome-chip-cap", "task"],
-        ["window-chrome-body-surface", "task"],
+        ["course-card-stack", "task"],
         ["FOOTER", undefined],
       ]);
-      expect(surfaces[0]!.textContent?.trim()).toBe("Climates");
-      expect([surfaces[0]!.dataset.dock, surfaces[0]!.hasAttribute("data-window-silhouette-chip")]).toEqual(["top", true]);
-      expect(surfaces[0]!.querySelector("button")).toBeNull();
+      const chip = surfaces[0]!.querySelector<HTMLElement>("[data-window-frame-chip]");
+      expect(chip?.textContent?.trim()).toBe("Climates");
+      expect(chip?.dataset.dock).toBe("top");
+      expect(surfaces[0]!.hasAttribute("data-window-frame")).toBe(true);
       const clear = [...document.querySelectorAll<HTMLElement>(COURSE_PET_KEEPOUTS)];
       expect(clear.filter((element) => element.tagName === "HEADER")).toEqual([document.querySelector(".course-app > header")]);
       expect(clear.filter((element) => element.dataset.courseItem !== undefined).map((element) => element.dataset.courseItem)).toEqual(["desert"]);

@@ -20,15 +20,15 @@ export function checkPaintSyncAndScene({ requireAll, paint, paintNodeBoundary, f
     "phase: u16",
     "item: usize",
     "path: [usize; RETAINED_TREE_DEPTH]",
-    "byte: usize",
+    "pub(super) byte: usize",
     "line: usize",
     "pen_x: f32",
     "pub(crate) fn paint_node_step",
-    "draw.begin_retained_output(strikes, strikes * size_of::<crate::wgpu::draw::UiInstance>())",
+    "draw.begin_retained_output(strikes, strikes * size_of::<semio_ui_draw_contract::UiInstance>())",
     "draw.finish_retained_output()",
     "value[cursor.byte..].chars().next()",
     "cursor.byte = next_byte",
-    "atlas.ensure_glyph(ch, size)",
+    "atlas.ensure_glyph_for(face, ch, size)",
     "cursor.line.checked_add(1)",
     "match &node.spec.0",
     "UiNode::Select(select)",
@@ -117,18 +117,18 @@ export function checkAtlasAndPreparedPages({ requireAll, atlasBoundary, failures
     "PREPARED_ATLAS_PROCESS_PERMITS.compare_exchange(current, next",
     "slots: Option<Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>>",
     "let Some(permit) = PreparedAtlasPermit::try_reserve(pages, byte_len, backing_bytes)",
-    "Box::new([const { None }; PREPARED_ATLAS_PAGE_CAPACITY])",
-    "Box::new([0; PREPARED_ATLAS_PAGE_BYTES])",
-    "pub fn close_step(&mut self) -> bool",
-    "slots[index] = None",
-    "permit.release_step()",
-    "pub fn close_abandoned_step() -> bool",
+    "Box::<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>::new_uninit()",
+    "Box::<[u8; PREPARED_ATLAS_PAGE_BYTES]>::new_uninit()",
+    "pub fn close_original_step(&mut self, grant: RetainedCloneGrant) -> Result<CloseStep,ValueError>",
+    "drop(slots[index].take())",
+    "permit.close_original_step(grant)",
+    "pub fn close_abandoned_step(grant: RetainedCloneGrant) -> Result<CloseStep,ValueError>",
     "impl Drop for PreparedAtlasPages",
     "PreparedAtlasAbandonment",
   ], "P5a atlas authority lacks nonblocking exact item/page/payload/backing permits or retained abandonment close");
   const atlasCredit = atlasBoundary.indexOf("let Some(permit) = PreparedAtlasPermit::try_reserve(pages, byte_len, backing_bytes)");
-  const atlasSlots = atlasBoundary.indexOf("Box::new([const { None }; PREPARED_ATLAS_PAGE_CAPACITY])");
-  const atlasPage = atlasBoundary.indexOf("Box::new([0; PREPARED_ATLAS_PAGE_BYTES])");
+  const atlasSlots = atlasBoundary.indexOf("Box::<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>::new_uninit()");
+  const atlasPage = atlasBoundary.indexOf("Box::<[u8; PREPARED_ATLAS_PAGE_BYTES]>::new_uninit()");
   if (atlasCredit < 0 || atlasSlots < atlasCredit || atlasPage < atlasCredit) failures.push("P5a atlas backing allocates before process credit transfer");
   for (const forbidden of ["PREPARED_ATLAS_PROCESS_LEDGER", "Mutex<usize>", ".lock()", "Vec<PreparedAtlasPage>", "Vec::with_capacity(byte_len)", "Vec::with_capacity(source.len())", ".truncate(", ".fill(None)", "while ", "loop {"])
     if (atlasBoundary.includes(forbidden)) failures.push(`P5a atlas authority retains whole-backing work ${forbidden}`);
@@ -141,12 +141,12 @@ export function checkAtlasAndPreparedPages({ requireAll, atlasBoundary, failures
   ], "P5a atlas MAX + 1, allocation refusal, contention, abandonment, or interrupted-close law is missing");
   requireAll(atlasGpuBoundary, ["struct PreparedAtlasUploadCursor", "GlyphAtlasPages", "IconAtlasPages", "upload_glyph_atlas_page", "upload_icon_atlas_page", "cursor.page.checked_add(1)"], "P5a GPU atlas upload is not one retained page per grant");
   if ((atlasGpuBoundary.match(/cursor\.page\.checked_add\(1\)/g)?.length ?? 0) !== 2) failures.push("P5a glyph and icon atlas consumers must each advance exactly one page per grant");
-  requireAll(atlasDrawBoundary, ["upload_glyph_atlas_page", "upload_icon_atlas_page", "origin: wgpu::Origin3d", "rows_per_image: Some(rows)"], "P5a atlas page upload boundary is incomplete");
+  requireAll(atlasDrawBoundary, ["upload_glyph_atlas_page", "upload_icon_atlas_page", "origin: gpu_device::Origin3d", "rows_per_image: Some(rows)"], "P5a atlas page upload boundary is incomplete");
   for (const forbidden of ["Vec::with_capacity(self.icons.pixels.len())", "Vec::with_capacity(self.atlas.pixels.len())", "keys().next().cloned()"])
     if (glue.includes(forbidden) || shell.includes(forbidden)) failures.push(`P5a mounted child authority retains uncredited whole owner ${forbidden}`);
   requireAll(engineBoundary, [
     "ENGINE_CANVAS_FRAME_PACKET_CAPACITY: usize = 256",
-    "packets: Box<[Option<EngineCanvasPacket>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>",
+    "slots: Box<[Option<StagedEngineScene>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>",
     "take_packet_step",
     "Result<Option<EngineCanvasPacket>, EngineCanvasPacket>",
     "terminal_is_empty",
@@ -155,8 +155,9 @@ export function checkAtlasAndPreparedPages({ requireAll, atlasBoundary, failures
     if (engineBoundary.includes(forbidden)) failures.push(`P5a EngineCanvas boundary retains dynamic or bulk packet staging ${forbidden}`);
   requireAll(worldBoundary, [
     "WORLD3D_FRAME_RESOURCE_CAPACITY: usize = 256",
-    "uploads: Box<[Option<PreparedRenderUpload>; WORLD3D_FRAME_RESOURCE_CAPACITY]>",
-    "evictions: Box<[Option<PreparedRenderEviction>; WORLD3D_FRAME_RESOURCE_CAPACITY]>",
+    "WorldSlots<T> = semio_framework_async_slots::OriginalFixedSlotPages<T,WORLD3D_RESOURCE_PAGE,{WORLD3D_FRAME_RESOURCE_CAPACITY/WORLD3D_RESOURCE_PAGE}>",
+    "uploads: WorldSlots<PreparedRenderUpload>",
+    "evictions: WorldSlots<PreparedRenderEviction>",
     "pub fn append_step",
     "Result<bool, World3dBuildRejected>",
     "checked_add(input.uploads.len())",
@@ -165,8 +166,8 @@ export function checkAtlasAndPreparedPages({ requireAll, atlasBoundary, failures
   for (const forbidden of ["uploads: Vec<", "evictions: Vec<", "mesh_requests: HashSet", "raster_requests: HashSet", "append_to(", ".append(", ".clear()"])
     if (worldBoundary.includes(forbidden)) failures.push(`P5a World3D boundary retains dynamic or bulk resource staging ${forbidden}`);
   requireAll(transaction, [
-    "pub(crate) fn close_step(&mut self) -> bool",
-    "pub(crate) fn terminal_is_empty(&self) -> bool",
+    "pub fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>)",
+    "pub fn terminal_is_empty(&self) -> bool",
   ], "P5a retained close and terminal witness are incomplete");
 }
 
@@ -182,15 +183,16 @@ export function checkFrameJobAndHostStorm({ requireAll, frameJob, failures, host
   readonly uiRuntimeGlue: string;
 }) {
   requireAll(frameJob, [
-    "WorkerJobSession::try_admit_owned(&mut self.original_job,&mut self.original_params,cx)",
-    "FrameTransaction::new",
+    "self.original_admission.advance(&mut self.original_job, &mut self.original_params, &mut self.session, cx)",
+    "semio_renderer_wgpu_frame_transaction::FrameTransaction::new(",
     "session.try_step_on_original_caller(cx)",
     "session.take_terminal()",
     "session.take_outcome(ticket)",
     "owner.take_retained_step_receipt()",
     "owner.acknowledge_outcome(",
     "session.has_original_cancel_alias_witness(cx.original_cancel_token())",
-    "session.return_original_cancel_alias_step(cx.original_cancel_token(),grant)",
+    "session.return_original_cancel_alias_step(witness, effect)",
+    "match owner.resume(){Ok(())=>self.ticket=None,Err(owner)=>self.original_outcome=Some(owner)}",
     "session.close_step(cx)",
     "transaction.close_step(cx)",
     "generation_is_fresh(presentation_generation,job.presentation_generation)",
@@ -201,9 +203,9 @@ export function checkFrameJobAndHostStorm({ requireAll, frameJob, failures, host
   requireAll(host, [
     "fn advance_frame_generation",
     "generation.checked_add(1)",
-    "observe_presentation_input_generation(build_generation.0)",
-    "AppPresentStep::Complete { generation, cursor, fullscreen, cursor_wake }",
-    "if generation.0 != self.frame_generation",
+    "observe_presentation_input_generation(generation.0)",
+    "AppPresentStep::Complete{generation,cursor,theme_dark,fullscreen,cursor_wake,",
+    "if generation.0!=self.frame_generation",
     "self.snapshot_sink.publish",
   ], "P5a host does not fail closed on exhaustion/stale publication or atomically publish the accepted frame");
   requireAll(hostSource, ["mounted_pointer_storm_callback_p99_stays_below_two_milliseconds", "mounted_resize_storm_callback_p99_stays_below_two_milliseconds", "mounted_frame_generation_exhaustion_is_permanent_and_non_wrapping"], "P5a mounted input/resize/latency/exhaustion laws are missing");

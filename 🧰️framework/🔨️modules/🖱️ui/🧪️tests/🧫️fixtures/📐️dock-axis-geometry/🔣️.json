@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "separatorToken": "--spacing-single",
-  "canvasInsetToken": "--spacing-single",
+  "separatorPixels": 0,
+  "canvasInsetPixels": 0,
   "viewport": {
     "width": 800,
     "height": 500
@@ -41,25 +41,25 @@
     ]
   },
   "oracleSample": {
-    "tokenPixels": 3.2,
+    "separatorPixels": 0,
     "stacks": {
       "left": {
-        "x": 3.2,
-        "y": 3.2,
-        "width": 276.64,
-        "height": 493.6
+        "x": 0,
+        "y": 0,
+        "width": 280,
+        "height": 500
       },
       "right-top": {
-        "x": 283.04,
-        "y": 3.2,
-        "width": 513.76,
-        "height": 343.28
+        "x": 280,
+        "y": 0,
+        "width": 520,
+        "height": 350
       },
       "right-bottom": {
-        "x": 283.04,
-        "y": 349.68,
-        "width": 513.76,
-        "height": 147.12
+        "x": 280,
+        "y": 350,
+        "width": 520,
+        "height": 150
       }
     }
   },
@@ -78,8 +78,8 @@
     ],
     "expectedSeparatorDeltaPixels": 120
   },
-  "windowBodyInlineInsetToken": "--spacing-single",
-  "windowBodyBlockInset": "silhouette-clearance",
+  "windowBodyInlineInsetPixels": 0,
+  "windowBodyBlockInset": "frame-clearance",
   "panelChrome": {
     "leadingIconPixels": 16,
     "dragHandlePixels": 12

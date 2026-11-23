@@ -1,0 +1,95 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/trust/v1",
+ "title": "Shared worktree trust: what the replica daemon states about whether its manifest currently reflects the tree, and the tier a reader may give it",
+ "definitions": {
+  "Count": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+  "Trust": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["lostKind", "lostMs", "scope", "verifiedMs"],
+   "properties": {
+    "scope": {"enum": ["shared-source"], "description": "Every shared path except `.git/`, `.cache/`, the ticket tree `.🧬semio/🦑️repo/🎫️tickets/` and AppleDouble `._*` files."},
+    "verifiedMs": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/Count"}], "description": "Start of the oldest of the file sweep, the directory sweep (or the start of a complete tree walk) that found the manifest equal to the tree for the scope; every change before it is in the manifest."},
+    "lostMs": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/Count"}], "description": "When the last event happened that can make the manifest wrong for the scope."},
+    "lostKind": {"anyOf": [{"type": "null"}, {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$"}]}
+   }
+  },
+  "Tier": {"enum": ["unusable", "verify", "trusted"]},
+  "Policy": {
+   "const": {"version": 1, "healthMaximumAgeMilliseconds": 30000, "verifiedMaximumAgeMilliseconds": 600000, "driftGraceMilliseconds": 30000}
+  },
+  "Health": {
+   "type": "object",
+   "required": ["pid", "store", "wallMs"],
+   "properties": {
+    "wallMs": {"$ref": "#/definitions/Count"},
+    "pid": {"type": "integer", "minimum": 1},
+    "store": {"type": "string"},
+    "trust": {"$ref": "#/definitions/Trust"}
+   }
+  },
+  "FailureVector": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["class", "key", "name"],
+   "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "key": {"type": "string", "minLength": 1},
+    "class": {"enum": ["manifest", "neutral"]}
+   }
+  },
+  "TierVector": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["alive", "expected", "health", "name", "now"],
+   "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "now": {"$ref": "#/definitions/Count"},
+    "alive": {"type": "boolean"},
+    "health": {"type": "object"},
+    "expected": {"$ref": "#/definitions/Tier"}
+   }
+  },
+  "TrackerStep": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["at", "do"],
+   "properties": {
+    "at": {"$ref": "#/definitions/Count"},
+    "do": {"enum": ["failure", "lost", "verified", "expect"]},
+    "key": {"type": "string"},
+    "part": {"enum": ["file", "directory", "walk"]},
+    "startedMs": {"$ref": "#/definitions/Count"},
+    "kind": {"type": "string"},
+    "trust": {"$ref": "#/definitions/Trust"},
+    "tier": {"$ref": "#/definitions/Tier"}
+   }
+  },
+  "TrackerVector": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["name", "steps"],
+   "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "steps": {"type": "array", "items": {"$ref": "#/definitions/TrackerStep"}}
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["failures", "scopes", "trackers", "tiers", "version"],
+   "properties": {
+    "version": {"const": 1},
+    "scopes": {"type": "array", "items": {"type": "object", "required": ["path", "inScope"], "additionalProperties": false, "properties": {"path": {"type": "string"}, "inScope": {"type": "boolean"}}}},
+    "failures": {"type": "array", "items": {"$ref": "#/definitions/FailureVector"}},
+    "tiers": {"type": "array", "items": {"$ref": "#/definitions/TierVector"}},
+    "trackers": {"type": "array", "items": {"$ref": "#/definitions/TrackerVector"}}
+   }
+  }
+ },
+ "anyOf": [
+  {"$ref": "#/definitions/Trust"},
+  {"$ref": "#/definitions/Fixture"}
+ ]
+}

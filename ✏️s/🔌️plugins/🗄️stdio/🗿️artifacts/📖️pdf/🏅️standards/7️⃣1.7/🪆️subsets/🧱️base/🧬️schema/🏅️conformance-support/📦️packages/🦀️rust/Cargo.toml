@@ -16,8 +16,6 @@ owned = [
   "standards::v1_4::subsets::a::io::derived_composition",
   "standards::v1_4::subsets::a::io::derived_construction",
   "standards::v1_4::subsets::a::io::mutation_bridge",
-  "standards::v1_4::subsets::a::schema::mutations::clear_page_text::tests",
-  "standards::v1_4::subsets::a::schema::mutations::set_page_text::tests",
   "standards::v1_4::subsets::base::io::export::serializers::artifacts::binary",
   "standards::v1_4::subsets::base::io::export::serializers::artifacts::binary::v_raw",
   "standards::v1_4::subsets::base::io::export::serializers::artifacts::binary::v_raw::any",
@@ -37,8 +35,6 @@ owned = [
   "standards::v1_4::subsets::x::io::derived_composition",
   "standards::v1_4::subsets::x::io::derived_construction",
   "standards::v1_4::subsets::x::io::mutation_bridge",
-  "standards::v1_4::subsets::x::schema::mutations::collapse_page_size::tests",
-  "standards::v1_4::subsets::x::schema::mutations::set_page_size::tests",
   "standards::v1_7::subsets::base::modules::colour",
   "standards::v1_7::subsets::base::modules::writer",
   "standards::v1_7::subsets::base::modules::writer::dct_object",
@@ -91,11 +87,10 @@ semio-s-artifact-stdio-pdf-mutations = { path = "../../../../../../../4️⃣1.4
 semio-s-artifact-stdio-pdf-mutations-2 = { path = "../../../../../../../4️⃣1.4/🪆️subsets/🖨️x/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-snapshot = { path = "../../../../../../../4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../📸️snapshot/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-pdf-tests = { path = "../../../../../../../4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 
 [features]
-testkit = ["semio-s-artifact-stdio-pdf-snapshot/testkit", "semio-s-artifact-stdio-pdf-model/testkit", "semio-s-artifact-stdio-pdf-diff/testkit", "semio-s-artifact-stdio-pdf-tests/testkit", "semio-s-artifact-stdio-pdf-mut-base/testkit", "semio-s-artifact-stdio-pdf-mutations/testkit", "semio-s-artifact-stdio-pdf-mutations-2/testkit", "semio-s-artifact-stdio-pdf-snapshot-2/testkit", "semio-s-artifact-stdio-pdf-inferences/testkit", "semio-s-artifact-stdio-pdf-graph-projection/testkit", "semio-s-artifact-stdio-pdf-mut-base-2/testkit"]
+testkit = ["semio-s-artifact-stdio-pdf-snapshot/testkit", "semio-s-artifact-stdio-pdf-model/testkit", "semio-s-artifact-stdio-pdf-diff/testkit", "semio-s-artifact-stdio-pdf-mut-base/testkit", "semio-s-artifact-stdio-pdf-mutations/testkit", "semio-s-artifact-stdio-pdf-mutations-2/testkit", "semio-s-artifact-stdio-pdf-snapshot-2/testkit", "semio-s-artifact-stdio-pdf-inferences/testkit", "semio-s-artifact-stdio-pdf-graph-projection/testkit", "semio-s-artifact-stdio-pdf-mut-base-2/testkit"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
@@ -117,4 +112,3 @@ semio-s-artifact-stdio-pdf-mutations-2 = { path = "../../../../../../../4️⃣1
 semio-s-artifact-stdio-pdf-snapshot = { path = "../../../../../../../4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-stdio-pdf-test-oracle = { path = "../../../../../../../../🔮️oracles/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-pdf-tests = { path = "../../../../../../../4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }

@@ -97,6 +97,58 @@ fn variant_wire_name(ident: &str, rename: &Option<String>, rename_all: &Option<S
     }
     ident.to_string()
 }
+
+/// 🏷️ DSL statement keyword: an authored `#[dsl(key)]`, otherwise the same kebab form the record derive emits.
+fn statement_keyword(ident: &str, attrs: &[syn::Attribute]) -> String {
+    for attr in attrs {
+        if !attr.path().is_ident("dsl") {
+            continue;
+        }
+        let mut key = None;
+        let _ = attr.parse_nested_meta(|meta| {
+            if meta.path.is_ident("key") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                key = Some(value.value());
+            } else if meta.input.peek(syn::Token![=]) {
+                let _: syn::Expr = meta.value()?.parse()?;
+            }
+            Ok(())
+        });
+        if let Some(key) = key {
+            return key;
+        }
+    }
+    to_kebab(ident)
+}
+
+fn to_kebab(name: &str) -> String {
+    let chars: Vec<char> = name.chars().collect();
+    let mut out = String::with_capacity(name.len() + 4);
+    for (i, &c) in chars.iter().enumerate() {
+        if c == '_' || c == '-' {
+            if !out.is_empty() && !out.ends_with('-') {
+                out.push('-');
+            }
+            continue;
+        }
+        if c.is_uppercase() {
+            let prev = if i == 0 { None } else { chars.get(i - 1).copied() };
+            let next = chars.get(i + 1).copied();
+            let boundary = match prev {
+                Some(p) if p.is_lowercase() || p.is_ascii_digit() => true,
+                Some(p) if p.is_uppercase() => next.is_some_and(|n| n.is_lowercase()),
+                _ => false,
+            };
+            if boundary && !out.is_empty() && !out.ends_with('-') {
+                out.push('-');
+            }
+            out.extend(c.to_lowercase());
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
 //#endregion 🔖️Case
 
 //#region 🔖️Attrs
@@ -136,6 +188,7 @@ impl ContainerAttrs {
 struct VariantAttrs {
     rename: Option<String>,
     rename_all: Option<String>,
+    content: Option<String>,
 }
 
 #[derive(Default, Clone)]
@@ -167,6 +220,11 @@ impl FieldAttrs {
     /// `effective_serialize_with` above.
     fn effective_deserialize_with(&self) -> Option<String> {
         self.deserialize_with.clone().or_else(|| self.with.as_ref().map(|path| format!("{path}::from_value")))
+    }
+
+    /// 🧱️ The intrinsic octet codec is a plain `u8` sequence on every native original wire, so native receiving needs no custom port for it.
+    pub(crate) fn native_octets(&self) -> bool {
+        self.deserialize_with.is_none() && self.with.as_deref().is_some_and(|path| path.ends_with("value::bytes") || path.ends_with("value::bytes::optional"))
     }
 }
 
@@ -254,6 +312,7 @@ fn parse_variant_attrs(attrs: &[syn::Attribute]) -> syn::Result<VariantAttrs> {
         match key.as_str() {
             "rename" => out.rename = value,
             "rename_all" => out.rename_all = value,
+            "content" => out.content = value,
             other => return Err(syn::Error::new_spanned(&attrs[0], format!("#[value(...)] does not support variant attribute `{other}`"))),
         }
     }

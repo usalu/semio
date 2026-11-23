@@ -351,7 +351,7 @@ mod tests {
 
     #[test]
     fn generates_exact_triangle_contours_for_shared_scenarios() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../🎮️commands/📉️contours/🧪️tests/🔣️.json")).unwrap();
         let bounds = serde_json::from_value(fixture["bounds"].clone()).unwrap();
         for scenario in fixture["scenarios"].as_array().unwrap() {
             let interval = scenario["intervalMetres"].as_f64().unwrap_or_else(|| fixture["intervalMetres"].as_f64().unwrap());

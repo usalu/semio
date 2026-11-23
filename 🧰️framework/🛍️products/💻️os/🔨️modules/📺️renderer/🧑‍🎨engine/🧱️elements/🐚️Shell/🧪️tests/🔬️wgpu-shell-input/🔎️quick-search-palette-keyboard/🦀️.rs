@@ -1,9 +1,9 @@
 /// 🔎️ Quick search palette keyboard: the palette chord, overlay fields not counting as typing and escape closing the palette.
 
 //#region 🔎️QuickSearchPaletteKeyboard
-/// ⌨️ `mod+p`, as the browser delivers it.
+/// ⌨️ `mod+p`, as the browser delivers it: the platform accelerator is `meta` on macOS and `ctrl` elsewhere.
 fn palette_chord() -> (semio_ui_wgpu_input::KeyAction, PointerModifiers) {
-    (semio_ui_wgpu_input::KeyAction::Char("p".into()), PointerModifiers { shift: false, ctrl: true, alt: false, meta: false, repeat: false })
+    (semio_ui_wgpu_input::KeyAction::Char("p".into()), { let meta = semio_renderer_wgpu_host_base::host_platform_uses_meta(); PointerModifiers { shift: false, ctrl: !meta, alt: false, meta, repeat: false } })
 }
 
 /// ⚖️ LAW: the shell's own overlay query fields are CHROME, not content.

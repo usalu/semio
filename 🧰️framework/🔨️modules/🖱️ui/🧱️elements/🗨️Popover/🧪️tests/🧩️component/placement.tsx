@@ -31,7 +31,7 @@ describe("floating placement", () => {
         ? { left: 100, right: 140, top: 100, bottom: 120, width: 40, height: 20 }
         : { width: 80, height: 50 }) as DOMRect;
     });
-    const menu = (offset?: number) => <div data-window-silhouette><Popover open><PopoverTrigger>Open</PopoverTrigger><PopoverContent side="bottom" sideOffset={offset}>Body</PopoverContent></Popover></div>;
+    const menu = (offset?: number) => <div data-window-frame><Popover open><PopoverTrigger>Open</PopoverTrigger><PopoverContent side="bottom" sideOffset={offset}>Body</PopoverContent></Popover></div>;
     const { getByRole, rerender } = render(menu());
     const content = getByRole("dialog");
     expect(content.style.top).toBe("120px");
@@ -43,7 +43,7 @@ describe("floating placement", () => {
     expect(result).toMatchObject({ side: "top", top: 130 });
   });
 
-  it("docks flush against a trigger outside a silhouette by default", () => {
+  it("docks flush against a trigger outside a frame by default", () => {
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
       return (this.getAttribute("data-slot") === "popover-trigger"
         ? { left: 100, right: 140, top: 100, bottom: 120, width: 40, height: 20 }

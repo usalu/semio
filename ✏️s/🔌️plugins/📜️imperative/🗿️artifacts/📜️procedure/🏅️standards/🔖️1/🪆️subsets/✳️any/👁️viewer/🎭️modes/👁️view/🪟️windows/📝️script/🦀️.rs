@@ -25,9 +25,9 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `ProcedureSnapshot -> UiNode` read: the compiled text of the document's own working
 /// `Path`, always `read_only: true` (a viewer never emits a `replace-text` command).
-pub fn render(scene: &ProcedureScene) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &ProcedureScene, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let path = &scene.path;
-    TextWindowKit::render(&TextView { text: imperative_engine::compile_to_text(&path), language: Some("imperative".into()) })
+    TextWindowKit::render(&TextView { text: imperative_engine::compile_to_text(&path), language: Some("imperative".into()) }, locale)
 }
 //#endregion 🔖️Render
 

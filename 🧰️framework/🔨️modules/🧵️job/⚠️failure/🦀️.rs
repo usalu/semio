@@ -84,6 +84,13 @@ impl OriginalTurnFailure{
  pub fn primary_receiving(&self)->Option<&OriginalReceivingPrimary>{match &self.primary{OriginalTurnPrimary::Receiving(original)=>Some(original),_=>None}}
  /// ♻️ Borrows every original retirement cause, including its retained nested child.
  pub fn primary_retirement(&self)->Option<&OriginalRetirementFailure>{match &self.primary{OriginalTurnPrimary::Retirement(original)=>Some(original),_=>None}}
+ /// 🔎️ Names the semantic cause as `code: message` (Fault params appended) for a boundary that can only carry the tag.
+ pub fn diagnostic(&self)->String{
+  let code=match &self.primary{OriginalTurnPrimary::Fault(fault)=>fault.code.0.clone(),OriginalTurnPrimary::Value(error)=>format!("{:?}",error.kind),OriginalTurnPrimary::Domain(original)=>original.code().to_owned(),_=>"original-turn".to_owned()};
+  let mut text=format!("{code}: {}",self.primary.message());
+  if let OriginalTurnPrimary::Fault(fault)=&self.primary{if let Some(params)=fault.params.as_deref(){for(name,value)in &params.0{text.push_str(&format!(" {name}={value}"))}}}
+  text
+ }
 }
 impl From<ValueError> for OriginalTurnFailure{
  fn from(primary:ValueError)->Self{Self{effects:primary.retained_progress(),primary:primary.into(),receipt_refusal:None,context_refusal:None,work_refusal:None}}

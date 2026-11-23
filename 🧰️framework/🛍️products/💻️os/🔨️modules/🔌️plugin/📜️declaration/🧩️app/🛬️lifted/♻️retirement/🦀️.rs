@@ -3,17 +3,18 @@ use crate::ArtifactApp;
 use crate::tool_contract::ArtifactToolCompletion;
 use crate::tool_contract::ArtifactToolCompletionValue;
 use semio_framework_value::{ValueError,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::RetainedCloneProgress};
-use std::{mem::ManuallyDrop,sync::{Arc,Mutex,MutexGuard,TryLockResult}};
-struct Cell<A:ArtifactApp>{genesis_sealed:std::sync::atomic::AtomicBool,genesis_source:Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>,value:Mutex<Option<ArtifactToolCompletionValue<A>>>,authoring:Mutex<Option<crate::tool_contract::OriginalAuthoringEffect>>}
+use std::{mem::ManuallyDrop,sync::{Arc,LockResult,TryLockResult}};
+use semio_framework_value::{Slot,SlotGuard};
+struct Cell<A:ArtifactApp>{genesis_sealed:std::sync::atomic::AtomicBool,genesis_source:Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>,value:Slot<Option<ArtifactToolCompletionValue<A>>>,authoring:Slot<Option<crate::tool_contract::OriginalAuthoringEffect>>}
 #[path="🌱️birth/🦀️.rs"]
 mod birth;
 pub use birth::OriginalCompletionBirth;
 pub struct CompletionCell<A:ArtifactApp>{inner:ManuallyDrop<Arc<Cell<A>>>,returned:bool}
 impl<A:ArtifactApp> CompletionCell<A>{
-    pub fn new()->Self{Self{inner:ManuallyDrop::new(Arc::new(Cell{genesis_sealed:false.into(),genesis_source:None,value:Mutex::new(None),authoring:Mutex::new(None)})),returned:false}}
-    pub fn try_lock(&self)->TryLockResult<MutexGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.value.try_lock()}
-    pub fn lock(&self)->std::sync::LockResult<MutexGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.value.lock()}
-    pub fn try_lock_authoring(&self)->TryLockResult<MutexGuard<'_,Option<crate::tool_contract::OriginalAuthoringEffect>>>{self.inner.authoring.try_lock()}
+    pub fn new()->Self{Self{inner:ManuallyDrop::new(Arc::new(Cell{genesis_sealed:false.into(),genesis_source:None,value:Slot::new(None),authoring:Slot::new(None)})),returned:false}}
+    pub fn try_lock(&self)->TryLockResult<SlotGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.value.try_lock()}
+    pub fn lock(&self)->LockResult<SlotGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.value.lock()}
+    pub fn try_lock_authoring(&self)->TryLockResult<SlotGuard<'_,Option<crate::tool_contract::OriginalAuthoringEffect>>>{self.inner.authoring.try_lock()}
     pub(crate) fn genesis_source(&self)->Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>{self.inner.genesis_source}
     pub(crate) fn genesis_sealed(&self)->bool{self.inner.genesis_sealed.load(std::sync::atomic::Ordering::Relaxed)}
     pub(crate) fn seal_genesis(&self){self.inner.genesis_sealed.store(true,std::sync::atomic::Ordering::Relaxed);}
@@ -41,7 +42,7 @@ impl<A:ArtifactApp> CompletionRetirement<A>{
     fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();
         if self.terminal_is_empty(){return RetirementStep::Complete(0);}if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}
         if self.source.is_some(){let bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<Cell<A>>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}
-            let work=match semio_framework_value::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};let original=self.source.take().and_then(|cell|cell.return_alias());let released=if let Some(original)=original{*self.original=original.value.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);drop(original.authoring.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner));bytes}else{0};return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()},work);
+            let work=match semio_framework_value::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};let original=self.source.take().and_then(|cell|cell.return_alias());let released=if let Some(original)=original{*self.original=original.value.into_inner();drop(original.authoring.into_inner());bytes}else{0};return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()},work);
         }
         if self.child.is_some(){return self.child_step(body,effect);}
         if self.original.is_some(){let turn=A::admit_completion_retirement(&mut self.original,effect);return match turn.result{Ok(Some((child,progress)))=>{*self.child=Some(child);RetirementStep::Progress(progress,turn.work)},Ok(None)=>RetirementStep::Progress(Default::default(),turn.work),Err(error)=>RetirementStep::Failure(error.into(),turn.work)};}

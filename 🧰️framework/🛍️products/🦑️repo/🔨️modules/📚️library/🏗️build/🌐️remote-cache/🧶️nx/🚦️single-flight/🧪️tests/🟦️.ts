@@ -103,7 +103,7 @@ test("an unreachable cache server never hangs a miss",async()=>{
  const flight=await front(origin,{timing:{claimTimeoutMilliseconds:300,upstreamTimeoutMilliseconds:500,awaitSliceMilliseconds:200,waitBudgetMilliseconds:1000,claimTtlMilliseconds:1000,heartbeatMilliseconds:300}}),begin=Date.now();
  const answer=await get(flight,key("down"));expect(answer.status).toBe(404);await answer.text();
  expect(Date.now()-begin).toBeLessThan(2500);
- expect((await put(flight,key("down"),"x")).status).toBe(502);
+ expect((await put(flight,key("down"),"x")).status).toBe(200);
 });
 
 test("a cache that refuses claims (read-only token, old server) is a plain cache and says so once",async()=>{
@@ -188,7 +188,7 @@ test("a hanging cache costs one request timeout in total and every later task go
  for(let task=1;task<=8;task++)expect((await get(flight,key("down-"+task))).status).toBe(404);
  expect(performance.now()-later,"eight more tasks pay nothing").toBeLessThan(250);
  expect(cacheRequests,"only the first request reached the hanging server").toBe(1);
- expect((await put(flight,key("down-put"),"x")).status,"an upload does not wait either").toBe(502);
+ expect((await put(flight,key("down-put"),"x")).status,"an upload does not wait either").toBe(200);
  await sleep(700);mode="ok";
  const recovered=await get(flight,key("up-0"));
  expect(recovered.status).toBe(404);expect(health).toBeGreaterThanOrEqual(1);expect(cacheRequests,"after the health check answered, requests reach the server again").toBeGreaterThan(1);
@@ -196,4 +196,13 @@ test("a hanging cache costs one request timeout in total and every later task go
  mode="hang";
  const burst=performance.now(),answers=await Promise.all(Array.from({length:8},(_,task)=>get(fresh,key("burst-"+task))));
  expect(answers.every(answer=>answer.status===404)).toBe(true);expect(performance.now()-burst,"eight simultaneous tasks pay one timeout together").toBeLessThan(900);
+});
+
+test("a busy or full cache server never fails a build: reads are misses and uploads are accepted and counted as dropped",async()=>{
+ const upstream=Bun.serve({port:0,fetch:request=>new URL(request.url).pathname==="/healthz"?new Response('{"status":"ok"}'):new Response("Busy",{status:request.method==="PUT"?507:503})});
+ stops.push(async()=>{await upstream.stop(true);});
+ const flight=await front(`http://127.0.0.1:${upstream.port}`);
+ const read=await get(flight,key("busy-get"));expect(read.status).toBe(404);await read.text();
+ const write=await put(flight,key("busy-put"),"x");expect(write.status).toBe(200);await write.text();
+ expect(flight.counters().dropped).toBeGreaterThanOrEqual(2);
 });

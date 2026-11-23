@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::ua::schema::mutations::set_struct_tree_root::SetStructTreeRoot;
 use crate::standards::v1_7::subsets::ua::schema::mutations::PdfUaMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ fn changes_the_owned_catalog_axis_and_plans_its_inverse() {
     let next = applied(&base, &PdfUaMutation::RemoveStructTreeRoot(mutation.clone()));
     assert!(support::catalog_entry(&next, "StructTreeRoot").is_none());
     assert_eq!(next.objects.len(), 1, "the root leaves with its catalog entry");
-    assert_eq!(<RemoveStructTreeRoot as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot { placements: Vec::new(), entry_index: None })]);
+    assert_eq!(<RemoveStructTreeRoot as ColdMutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot { placements: vec![testkit::placed(2, 1)], entry_index: Some(1) })]);
 }
 
 #[semio_framework_async_macros::async_test]

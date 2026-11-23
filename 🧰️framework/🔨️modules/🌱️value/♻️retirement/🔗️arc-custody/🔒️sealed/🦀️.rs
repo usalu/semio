@@ -241,7 +241,7 @@ impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl<T:Send+Sync+'static> Cursor<T>{
- fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();if self.terminal_is_empty(){return RetirementStep::Complete(0)}self.step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
+ fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();if self.terminal_is_empty(){return RetirementStep::Complete(0)}self.step(&mut effect.nested(grant))}
 }
 
 impl<T:Send+Sync+'static> Drop for Cursor<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"sealed cursor retains its original payload and issuer");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.pending);}}}}
@@ -251,7 +251,18 @@ impl<T:Send+Sync+'static> Drop for Cursor<T>{fn drop(&mut self){assert!(std::thr
 mod effect;
 /// 🎟️ Funds exactly the complete admission quote of one value, including its inline placement copy.
 #[cfg(test)]
-fn admission_grant<T:Send+Sync+'static>()->RetainedCloneGrant{let d=SealedShared::<T>::admission_demand().unwrap();RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+fn admission_grant<T:Send+Sync+'static>()->RetainedCloneGrant{let d=SealedShared::<T>::source_admission_demand().unwrap();RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+/// 🧪️ Fixture admission drives one actual source admission turn and returns the input when it is refused.
+#[cfg(test)]
+trait AdmitFixture<T:Send+Sync+'static>{fn admit(value:T,issuer:SharedIssuer<T>,grant:RetainedCloneGrant,marker:&mut Option<()>)->RetainedWorkOutcome<(SealedShared<T>,RetainedCloneProgress),(ValueError,T)>;}
+#[cfg(test)]
+impl<T:Send+Sync+'static> AdmitFixture<T> for SealedShared<T>{fn admit(value:T,issuer:SharedIssuer<T>,grant:RetainedCloneGrant,_:&mut Option<()>)->RetainedWorkOutcome<(SealedShared<T>,RetainedCloneProgress),(ValueError,T)>{
+ let mut input=Some(value);let mut output=None;let turn=effect::run(grant,|effect|SealedShared::admit_from(&mut input,issuer,&mut output,effect));
+ let result=match(turn.result,output.take()){(Ok(step),Some(sealed))=>Ok((sealed,step.progress())),(Ok(_),None)=>{let depth=Self::source_admission_demand().map_or(0,|demand|demand.depth);let kind=if grant.maximum_items==0{ValueRefusalKind::WorkLimit}else if grant.maximum_depth<depth{ValueRefusalKind::DepthLimit}else{ValueRefusalKind::OwnershipLimit};Err((ValueError::literal(kind,"sealed admission is not funded"),input.take().expect("refused admission keeps its value")))},(Err(error),_)=>Err((error,input.take().expect("refused admission keeps its value")))};
+ RetainedWorkOutcome{result,work:turn.work}
+}}
+#[cfg(test)]
+use semio_framework_value_retirement::OriginalRetirementPoll;
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

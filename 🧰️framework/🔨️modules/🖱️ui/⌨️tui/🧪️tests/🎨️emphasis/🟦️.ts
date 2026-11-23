@@ -24,35 +24,27 @@ test("destination preview fixtures cover placements, overflow and source lifecyc
   expect(drag.cases.some(fixture => !fixture.sourcePeer && !fixture.sameStack)).toBe(true);
   expect(drag.cases.some(fixture => fixture.sameStack && fixture.placement === "reorder")).toBe(true);
   expect(drag.cases.some(fixture => fixture.compact)).toBe(true);
-  expect(drag.cases.some(fixture => "cap" in fixture && fixture.cap)).toBe(true);
   expect(drag.handle.unicode).toHaveLength(1);
   expect(drag.handle.ascii).toHaveLength(1);
 });
 
-test("window contour fixtures distinguish body and tab color ownership", () => {
+test("window contour fixtures keep every chip inside one rectangular box and distinguish frame and chip color ownership", () => {
   for (const fixture of contour.cases) {
     expect(fixture.active).toBeLessThan(fixture.tabs.length);
     expect(fixture.bodyRole).toBe(fixture.emphasized ? "emphasized" : fixture.focused ? "active" : "normal");
     const [width, height] = fixture.size;
-    const [x, y, bodyWidth, bodyHeight] = fixture.body;
-    expect(x + bodyWidth).toBeLessThanOrEqual(width);
-    expect(y + bodyHeight).toBeLessThanOrEqual(height);
+    expect("body" in fixture).toBe(false);
     if (fixture.mode === "flat") continue;
-    const shown = fixture.rendered ?? fixture.tabs;
-    for (const tab of shown) {
-      expect(tab.x + tab.width).toBeLessThanOrEqual(width);
-      if (fixture.mode === "full") {
-        expect(tab.corner.startsWith("top") ? y : y + bodyHeight).toBe(tab.corner.startsWith("top") ? 2 : height - 2);
-      }
-    }
+    expect(height).toBeGreaterThanOrEqual(3);
+    for (const tab of fixture.rendered ?? fixture.tabs) expect(tab.x + tab.width).toBeLessThanOrEqual(width);
   }
 });
 
-test("only selected tab outlines receive active color", () => {
+test("only selected tab outlines receive active color and hover has priority over it", () => {
   for (const fixture of chrome.cases) {
     expect(fixture.active).toBeLessThan(chrome.labels.length);
     if (fixture.hover !== null) expect(fixture.hover).toBeLessThan(chrome.labels.length);
-    expect(fixture.roles).toEqual(chrome.labels.map((_, index) => index === fixture.active ? "active" : index === fixture.hover ? "emphasized" : "normal"));
+    expect(fixture.roles).toEqual(chrome.labels.map((_, index) => index === fixture.hover ? "emphasized" : index === fixture.active ? "active" : "normal"));
   }
 });
 

@@ -56,7 +56,7 @@ Kapitel 5 Beat 4 compares these against a GModG limit of 66 kWh/(m²·a) — 55 
 a **schematic** reference-building value of 120 (GModG § 15 Abs. 1, Anlage 1). The real reference
 value is building-specific; the beat labels it as an example on screen.
 
-Standards cited per beat via the `_din_ref()` chip, always built from the registry `🏗️authoring/📚️references` with edition and keyword locator (verified 2026-11-13):
+Standards cited per beat via the `reference_chip()` chip, always built from the registry `🏗️authoring/📚️references` with edition and keyword locator (verified 2026-11-13):
 GModG (formerly GEG, in force since 29 July 2026; official text on gesetze-im-internet.de): § 15 and Anlage 1 (reference building), § 20 (still names DIN V 18599:2018-09), § 22 and Anlage 4 (primary energy factors), §§ 79–87 and Anlage 10 (Energieausweis); the 65-%-rule of §§ 71–73 is repealed.
 DIN V 4108-6:2003-06 (zurückgezogen, kept for the symbol notation `Q_h`, `Q_l`, `Q_g`; its status chip is shown once in `🔁️recap/Beat1_Bilanzgrenze`): keyword locators symbols, transmission and ventilation losses, internal and solar gains, utilisation factor, climate data, heating-period method (`Q_l = 0,024 · (H_T + H_V) · G_{t,20/15}`). Clause numbers are not cited because the withdrawn text could not be checked.
 DIN/TS 18599:2025-10 (Teile 1, 2, 5, 10; replaces DIN V 18599:2018-09); DIN V 4701-10:2003-08 (zurückgezogen, successor DIN/TS 18599-5:2025-10); DIN EN 12831-1:2017-09 Abschn. 6 with DIN/TS 12831-1:2020-04; VDI 2078:2015-06; DIN 4108-2:2026-05 (replaces DIN 4108-2:2013-02, which GModG § 14 still names); VDI 4645:2023-04; VDI 4650 Blatt 1:2024-02; VOB/C DIN 18380:2019-09.

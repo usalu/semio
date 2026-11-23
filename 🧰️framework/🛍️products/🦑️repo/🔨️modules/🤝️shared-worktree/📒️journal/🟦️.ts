@@ -240,13 +240,23 @@ export async function ensureStoreDirectoryV1(storeRoot:string,directory:string):
  await make(directory);
 }
 
+/** 🧹️ Replaces a file of the own origin through tmp + fsync + rename. A target that keeps refusing to be replaced (`EPERM`/`EACCES`: a read-only file on Windows, a stale file node of the Windows NFS client that refused `attest.json` for hours) is first moved into `tmp` and the rename is tried once more, so one stuck file cannot silence the origin; readers already treat a missing file as not yet written. See https://learn.microsoft.com/windows/win32/api/winbase/nf-winbase-movefileexw */
 async function replaceFile(tmp:string,originId:string,target:string,text:string):Promise<void>{
  await ensureStoreDirectoryV1(dirname(dirname(tmp)),tmp);
  const temporary=stage(tmp,originId);
  try{
   const handle=await open(temporary,"w");
   try{await handle.writeFile(text);await handle.sync();}finally{await handle.close();}
-  await renameWithRetry(temporary,target);
+  try{await renameWithRetry(temporary,target);}
+  catch(error){
+   const code=(error as {code?:string}).code;
+   if(code!=="EPERM"&&code!=="EACCES")throw error;
+   const displaced=`${stage(tmp,originId)}-displaced`;
+   await rename(target,displaced);
+   await rename(temporary,target);
+   await chmod(displaced,0o666).catch(()=>{});
+   await unlink(displaced).catch(()=>{});
+  }
  }catch(error){await unlink(temporary).catch(()=>{});throw error;}
 }
 

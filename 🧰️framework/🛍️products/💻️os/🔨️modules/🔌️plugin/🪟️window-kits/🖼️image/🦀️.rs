@@ -49,7 +49,6 @@ pub const IMAGE_WINDOW_CONTENT_NODE_KEY: &str = "framework.window.image.content"
 pub const IMAGE_WINDOW_UNAVAILABLE_NODE_KEY: &str = "framework.window.image.unavailable";
 
 impl WindowKit for ImageWindowKit {
-    type ViewModel = ImageView;
     const KIND_ID: &'static str = "framework.window.image";
 
     fn window_kind() -> WindowKindDefinition {
@@ -59,14 +58,14 @@ impl WindowKit for ImageWindowKit {
     fn editable_window_kind() -> WindowKindDefinition {
         window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", vec![ActionDefinition::bounded_catalog("set-pixel-region", LocalizedLabel::native("Set Pixel Region", "Pixelbereich setzen"), ActionKind::Mutation)])
     }
-
-    fn render(view: &ImageView) -> UiAssemblyResult<BuiltNode> {
-        let source = format!("data:{};base64,{}", view.mime, view.base64);
-        image_with_source(Self::KIND_ID, &source, image_alt_text(view)?)
-    }
 }
 
 impl ImageWindowKit {
+    pub fn render(view: &ImageView) -> UiAssemblyResult<BuiltNode> {
+        let source = format!("data:{};base64,{}", view.mime, view.base64);
+        image_with_source(Self::KIND_ID, &source, image_alt_text(view)?)
+    }
+
     fn render_content(view: &ImageView) -> UiAssemblyResult<BuiltNode> {
         let source = format!("data:{};base64,{}", view.mime, view.base64);
         image_with_source(IMAGE_WINDOW_CONTENT_NODE_KEY, &source, image_alt_text(view)?)

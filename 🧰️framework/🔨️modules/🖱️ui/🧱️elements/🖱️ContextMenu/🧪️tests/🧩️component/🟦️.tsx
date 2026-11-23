@@ -4,7 +4,7 @@ import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ContextMenuController } from "../../🟦️.tsx";
 import { contextMenuPathKey } from "../../🧭️navigation/🟦️.tsx";
-import { contextMenuSubmenuPlacement } from "../../🔗️fusion/🟦️.tsx";
+import { contextMenuSubmenuPlacement } from "../../🪜️submenu/🟦️.tsx";
 import { copyDomTextSelection, readDomTextSelection } from "../../📝️text-selection/🟦️.ts";
 import { type ContextMenuItem } from "../../🎨️item-render/🟦️.tsx";
 import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
@@ -42,25 +42,25 @@ describe("🖱️ context menu submenu reachability", () => {
     expect(placement.left).toBe(100);
   });
 
-  it("fuses an open submenu into the same context menu chrome without a nested title chip", () => {
+  it("opens a submenu as its own chipless frame beside the menu frame, with no nested title chip", () => {
     const { getByRole } = renderMenu();
     fireEvent.click(getByRole("menuitem", { name: /Transfer/u }));
     const panel = document.querySelector('[data-slot="context-menu-submenu"]');
     expect(panel).not.toBeNull();
     const chrome = document.querySelector('[data-slot="context-menu-content"]');
-    expect(chrome?.contains(panel as Node)).toBe(true);
+    expect(chrome?.contains(panel as Node)).toBe(false);
+    expect(panel?.hasAttribute("data-window-frame")).toBe(true);
+    expect(panel?.querySelector("[data-window-frame-chip]")).toBeNull();
     expect(document.querySelectorAll('[data-slot="context-menu-title-chip"]')).toHaveLength(1);
     expect(panel?.getAttribute("data-context-menu-submenu-of")).toBe(contextMenuPathKey([1]));
-    const transfer = getByRole("menuitem", { name: /Transfer/u });
-    expect(Math.abs((panel as Element).getBoundingClientRect().top - transfer.getBoundingClientRect().top)).toBeLessThan(2);
   });
 
   it("gives a submenu its own menu role, so a pointer inside it is not an outside dismiss", () => {
     const { getByRole } = renderMenu();
     fireEvent.click(getByRole("menuitem", { name: /Transfer/u }));
     const panel = document.querySelector('[data-slot="context-menu-submenu"]');
-    expect(panel?.getAttribute("role")).toBe("menu");
-    expect(document.getElementById("exportDocument")?.closest('[role="menu"]')).toBe(panel);
+    expect(document.getElementById("exportDocument")?.closest('[role="menu"]')).toBe(panel?.querySelector('[role="menu"]'));
+    expect(panel?.querySelector('[role="menu"]')?.getAttribute("role")).toBe("menu");
   });
 
   it("moves real DOM focus onto the active row, not only the painted mark", () => {

@@ -132,9 +132,9 @@ fn cursored_frame<'a>(scene: &'a RemodelingSnapshot, cursor: &RemodelingFrameCur
     Some((stream, frame_index))
 }
 
-pub fn render(scene: &RemodelingSnapshot, config: &RemodelingFramesWindowConfig) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render(scene: &RemodelingSnapshot, config: &RemodelingFramesWindowConfig, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let scene_2d = Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: frames_layers_json(scene, &config.frame_cursor), snapshot: None, tool_run_trace: None, lanes: Vec::new() };
-    semio_plugin::scene_surface(REMODELING_PLAY_SURFACE_FRAMES, ContractSurfaceKind::Canvas2d, &scene_2d)
+    semio_plugin::scene_surface(REMODELING_PLAY_SURFACE_FRAMES, ContractSurfaceKind::Canvas2d, &scene_2d, semio_plugin::surface_name(locale, "Frames", "Bilder"), None)
 }
 //#endregion 🔖️Scene
 

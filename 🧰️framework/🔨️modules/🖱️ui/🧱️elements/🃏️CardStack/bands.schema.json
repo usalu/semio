@@ -1,40 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["cases", "snaps", "gaps"],
+  "required": ["snaps", "gaps"],
+  "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
     "snaps": { "type": "array", "items": { "type": "object", "required": ["height", "pixel", "expected"], "additionalProperties": false, "properties": { "height": { "type": "number", "minimum": 0 }, "pixel": { "type": "number", "exclusiveMinimum": 0 }, "expected": { "type": "number" } } } },
-    "gaps": { "type": "array", "items": { "type": "object", "required": ["gap", "sliver"], "additionalProperties": false, "properties": { "gap": { "type": "number" }, "sliver": { "type": "boolean" } } } },
-    "cases": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["name", "cards", "expected"],
-        "additionalProperties": false,
-        "properties": {
-          "name": { "type": "string" },
-          "inset": { "type": "number", "minimum": 0 },
-          "cards": { "type": "array", "items": { "$ref": "#/$defs/card" } },
-          "expected": { "type": "array", "items": { "$ref": "#/$defs/band" } }
-        }
-      }
-    }
-  },
-  "additionalProperties": false,
-  "$defs": {
-    "span": { "type": "object", "required": ["left", "right"], "additionalProperties": false, "properties": { "left": { "type": "number" }, "right": { "type": "number" } } },
-    "card": {
-      "type": "object",
-      "required": ["cap", "footer", "capChips", "footerChips"],
-      "additionalProperties": false,
-      "properties": { "cap": { "type": "number", "minimum": 0 }, "footer": { "type": "number", "minimum": 0 }, "capChips": { "type": "array", "items": { "$ref": "#/$defs/span" } }, "footerChips": { "type": "array", "items": { "$ref": "#/$defs/span" } } }
-    },
-    "band": {
-      "type": "object",
-      "required": ["mode", "lift", "cap", "footer"],
-      "additionalProperties": false,
-      "properties": { "mode": { "enum": ["none", "shared", "stacked"] }, "lift": { "type": "number" }, "cap": { "type": "number" }, "footer": { "type": "number" } }
-    }
+    "gaps": { "type": "array", "items": { "type": "object", "required": ["gap", "sliver"], "additionalProperties": false, "properties": { "gap": { "type": "number" }, "sliver": { "type": "boolean" } } } }
   }
 }

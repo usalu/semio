@@ -1,3 +1,4 @@
+import {createBoundedCacheV1} from "../../../🧊️bounded/🟨️.mjs";
 import {ROSTER_RULES_V1} from "../../🧭️roster/🟨️.mjs";
 import {assertNotReadParentV1} from "../../../👁️observation/🚧️read-parent/🟨️.mjs";
 import {wasmCompileOutputIndexV1,wasmCompileOutputV1} from "./🕸️wasm-outputs/🟦️.ts";
@@ -10,7 +11,8 @@ import { createHash } from "node:crypto";
 import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/🟨️.mjs";
 import { dirname, isAbsolute, join, relative, resolve, posix } from "node:path";
 import { loadCatalogBuildProvidersV1, catalogBuildContributionForManifestV1 } from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
-import { importObservedModuleV1, observedSourceAnalysisPairV1, observedRequireResolve, observedTypeScriptHost, observedFs, recordRegistryOwnerV1, memoizedObservedComputationV1, observedFieldV1, registerFieldExtractorV1, withObservationRoundV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { importObservedModuleV1, memoizedObservedAsyncComputationV1, observedSourceAnalysisPairV1, observedRequireResolve, observedTypeScriptHost, observedFs, recordRegistryOwnerV1, memoizedObservedComputationV1, observedFieldV1, registerFieldExtractorV1, withObservationRoundV1, observeGlobalFactV1, observeDetachedSyncV1, observationScopeV1, registerGlobalFactV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { generatorContractReadHoldsV1, trackGeneratorContractsV1 } from "../📜️contract-reads/🟨️.mjs";
 import { pathToFileURL } from "node:url";
 import * as loadedProjectInputs from "../../../../🏗️build/📥️inputs/🟨️.mjs";
 import ownerAdmissionSchema from "../../../🧬️schema/🚪️admission.json" with { type: "json" };
@@ -37,6 +39,41 @@ export function wire(registry) {
   ({ playgroundSessionTargets, playgroundPreparationTargets, collectPlaygroundCatalog, playgroundSiteTargetsForAdmissionV1 } = registry.playgroundTargets);
   ({ targetWithDefaults } = registry.targetPolicy);
   ({ projectWithDefaults } = registry.projectAssembly);
+}
+
+/** 📜️ The taxonomy file the generator contracts are read from, below the workspace root. */
+const TAXONOMY_PATH_V1="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
+/** 🏷️ The name under which what an owner admission read of the generator contracts travels as `global` rows. */
+export const ADMISSION_GENERATOR_CONTRACTS_FACT_V1="owner-admission-generator-contracts";
+const admissionContractsV1=createBoundedCacheV1({name:"inference:admission-contracts",maxEntries:8,maxBytes:8});
+
+/** 📜️ The generator contracts of the workspace taxonomy as they are now, read unobserved and kept while the taxonomy file keeps its size and modification time. */
+function currentGeneratorContractsV1(workspaceRoot){
+ const path=join(workspaceRoot,TAXONOMY_PATH_V1);
+ if(!existsSync(path))return {};
+ const status=observedFs.statSync(path),stamp=status.size+":"+status.mtimeMs,held=admissionContractsV1.get(workspaceRoot);
+ if(held?.stamp===stamp)return held.contracts;
+ const contracts=observeDetachedSyncV1(()=>readTaxonomyProjectionV1(path)).value.generatorContracts;
+ admissionContractsV1.set(workspaceRoot,{stamp,contracts});
+ return contracts;
+}
+
+/** ✅️ Whether one recorded read of the generator contracts has the same answer in the taxonomy as it is now. */
+function admissionGeneratorContractReadHoldsV1(workspaceRoot,segments,fact){return generatorContractReadHoldsV1(currentGeneratorContractsV1(workspaceRoot),segments,fact);}
+registerGlobalFactV1(ADMISSION_GENERATOR_CONTRACTS_FACT_V1,admissionGeneratorContractReadHoldsV1);
+
+/** 🔭️ The generator contracts one owner admission consults: every read of them (a property, a listing of keys, a probe) is recorded as a `global` row of the owner, instead of the whole taxonomy projection as one row, so an edit of a contract the owner never read keeps its remembered admission valid while a peer edits the taxonomy.
+ * @see ../📜️contract-reads/🟨️.mjs
+ * @see ./🧪️tests/📜️contract-rows/🟦️.ts */
+function ownerGeneratorContractsV1(workspaceRoot){
+ const told=new Map();
+ return trackGeneratorContractsV1(currentGeneratorContractsV1(workspaceRoot),(segments,fact)=>{
+  const scope=observationScopeV1(),key=segments.join("\u0001");
+  let scopes=told.get(key);
+  if(scopes===undefined)told.set(key,scopes=new WeakSet());
+  if(scope!==undefined){if(scopes.has(scope))return;scopes.add(scope);}
+  observeGlobalFactV1(ADMISSION_GENERATOR_CONTRACTS_FACT_V1,workspaceRoot,segments,fact);
+ }).view;
 }
 
 /** 🦀️ Lists every workspace Cargo manifest through taxonomy-respecting discovery. */
@@ -131,6 +168,23 @@ export async function catalogBuildContributionsV1(workspaceRoot,providers) {
   });
   for(const owner of catalogContributions){for(const input of owner.inputs)readFileSync(join(workspaceRoot,input));const project=JSON.parse(readFileSync(join(workspaceRoot,owner.projectRoot,PROJECT_BASENAME),"utf8"));if(project.name!==owner.project||!project.targets?.[owner.generateTarget])throw Error("Catalog build producer is absent from its owner's project");}
   return catalogContributions;
+}
+
+const catalogMemosV1=new WeakMap(),catalogStatsV1={computed:0,reused:0};
+
+/** 📊️ How often the shared catalog was computed and how often an owner reused it (the counters of this process). */
+export const catalogSharedStatsV1=()=>({...catalogStatsV1});
+
+/** 📚️ The catalog contributions of `providers` and the native manifest candidates they accept, computed once per owner registry and answered from the memo to every other owner and to every later revision of one owner (its targets or inputs grew) while every row of the computation still holds: the 3000 manifests are looked at once, not once per owner and per revision, which was the largest part of the discovery of an owner that consumes the catalog (28 s of the stage `declaration` in the host log).
+ * @see ./🧪️tests/📚️shared-catalog/🟦️.ts */
+export async function sharedCatalogV1(workspaceRoot,registry,providers,context){
+ let cache=catalogMemosV1.get(registry);if(cache===undefined){cache=new Map();catalogMemosV1.set(registry,cache);}
+ const key=JSON.stringify([workspaceRoot,providers.map(({ownerRoot,sourcePath})=>[ownerRoot,sourcePath])]),checkpoint=force=>yieldInferenceV1(context,"build:catalog-manifests",0,force===true);let computed=false;
+ try{
+  const contributions=await memoizedObservedAsyncComputationV1(cache,"contributions\0"+key,()=>{computed=true;return catalogBuildContributionsV1(workspaceRoot,providers.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})));},checkpoint);
+  const files=contributions.length?await memoizedObservedAsyncComputationV1(cache,"candidates\0"+key,()=>{computed=true;return catalogNativeManifestCandidatesV1(workspaceRoot,registry,path=>catalogBuildContributionForManifestV1(contributions,path),context);},checkpoint):[];
+  return {contributions,files};
+ }finally{catalogStatsV1[computed?"computed":"reused"]++;}
 }
 
 /** 🧭️ Reads the explicit catalog options declared on this workspace plugin. */
@@ -286,18 +340,19 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
  await libraryBootstrap;const {workspaceRoot}=context,nativeCache=context.nativeCache??new Map(),nativeClosures=context.nativeClosures??new Map();
  if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkResourceLeaseControl(context.phaseControl);checkScriptInvocation(context.invocation);}
  const stage=async phase=>{context.onOwnerDiscoveryPhase?.(phase);await yieldInferenceV1(context,"build:selected-"+phase,0);};
- await stage("declaration");
+ const dbgT0=performance.now(),dbgMarks=[],dbg=name=>dbgMarks.push(name+"="+Math.round(performance.now()-dbgT0));
+ await stage("declaration");dbg("stage");
  askOwnerRegistryV1(workspaceRoot,registry,["row",owner.name]);
  const path=join(workspaceRoot,owner.manifest),source=readPhysicalSource(path);
- const declaration=owner.manifest.endsWith("Cargo.toml")?readToml(path):JSON.parse(source.toString("utf8"));
- const authoredTargets=owner.manifest.endsWith("Cargo.toml")?{}:declaration.targets??{},scripts=createScriptInputCache(context),nativeDeclarations=await cargoTargets(owner.root,workspaceRoot,undefined,scripts),json=owner.manifest.endsWith("Cargo.toml")?{name:declaration.package?.name,root:owner.root,targets:nativeDeclarations}:{...declaration,root:owner.root};
+ const declaration=owner.manifest.endsWith("Cargo.toml")?readToml(path):JSON.parse(source.toString("utf8"));dbg("manifest");
+ const authoredTargets=owner.manifest.endsWith("Cargo.toml")?{}:declaration.targets??{},scripts=createScriptInputCache(context),nativeDeclarations=await cargoTargets(owner.root,workspaceRoot,undefined,scripts),dbgCargo=dbg("cargo-targets"),json=owner.manifest.endsWith("Cargo.toml")?{name:declaration.package?.name,root:owner.root,targets:nativeDeclarations}:{...declaration,root:owner.root};
  if(json.name!==owner.name)throw Error("Admitted canonical build owner differs: "+owner.manifest);
- json.targets={...nativeDeclarations,...json.targets,...componentBuildTargets(owner.root,workspaceRoot)};
+ json.targets={...nativeDeclarations,...json.targets,...componentBuildTargets(owner.root,workspaceRoot)};dbg("component-targets");
  askOwnerRegistryV1(workspaceRoot,registry,["providers",owner.root,targets.length>0,[...inputNames]]);
- const contractsPath=join(workspaceRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"),contracts=existsSync(contractsPath)?readTaxonomyProjectionV1(contractsPath).generatorContracts:{},providers=registry.catalogProviders.filter(provider=>targets.length&&provider.consumerRoots.some(root=>owned(owner.root,root))||inputNames.includes("{workspaceRoot}/"+provider.sourcePath)),catalogContributions=providers.length?await catalogBuildContributionsV1(workspaceRoot,providers.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath}))):[];
+ const contracts=ownerGeneratorContractsV1(workspaceRoot),providers=registry.catalogProviders.filter(provider=>targets.length&&provider.consumerRoots.some(root=>owned(owner.root,root))||inputNames.includes("{workspaceRoot}/"+provider.sourcePath)),dbgP=dbg("providers"),shared=providers.length?await sharedCatalogV1(workspaceRoot,registry,providers,context):{contributions:[],files:[]},dbgS=dbg("shared-catalog"),catalogContributions=shared.contributions;
  scripts.generatedOutput=(path,context)=>readBuildProducedCompileOutputV1(path,workspaceRoot,contracts,registry,context);
- const catalogFiles=catalogContributions.length?await catalogNativeManifestCandidatesV1(workspaceRoot,registry,path=>catalogBuildContributionForManifestV1(catalogContributions,path),context):[];
- await stage("catalog-targets");
+ const catalogFiles=shared.files;
+ await stage("catalog-targets");dbg("end");if(performance.now()-dbgT0>500)process.stderr.write("[DEBUG] [owner-declaration] "+owner.name+" "+dbgMarks.join(" ")+"\n");
  if(catalogContributions.length&&targets.length){
   if(json.name==="@semio-tech/plugin-registry")json.targets={...json.targets,...playgroundSessionTargets(catalogFiles,workspaceRoot,catalogContributions)};
   if(json.name==="@semio-tech/framework-os-dev")json.targets={...json.targets,...await playgroundPreparationTargets(catalogFiles,workspaceRoot,owner.root,contracts,catalogContributions,context)};

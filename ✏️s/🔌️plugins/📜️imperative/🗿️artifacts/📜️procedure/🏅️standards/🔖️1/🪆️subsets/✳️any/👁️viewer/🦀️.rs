@@ -94,7 +94,7 @@ impl ArtifactViewer for ImperativeViewer {
         let scene = crate::procedure_scene(doc).map_err(|error| semio_plugin::PluginAssemblyError::new("imperative.child-content", format!("{error:?}")))?;
         (match body_key {
             main::BODY_KEY => main::render(&scene, view_state),
-            script::BODY_KEY => script::render(&scene),
+            script::BODY_KEY => script::render(&scene, view_state.locale),
             _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("imperative.ui.capacity", "diagnostic admission failed")),
         })
         .map(semio_plugin::built_to_component_tree)

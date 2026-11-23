@@ -86,113 +86,7 @@ pub struct MediaView {
 pub struct MediaWindowKit;
 
 impl MediaWindowKit {
-    fn value_text(value: &str, field: &'static str) -> UiAssemblyResult<UiValue> {
-        Ok(UiValue::Text(UiText::try_from_str(value).ok_or_else(|| ui_assembly_error(field))?))
-    }
-
-    fn put(map: &mut UiMapBuilder, key: &str, value: UiValue) -> UiAssemblyResult<()> {
-        map.try_insert(key.into(), value).map_err(|_| ui_assembly_error("media-window.props"))
-    }
-
-    fn labels(locale: Locale) -> UiAssemblyResult<UiValue> {
-        let labels: [(&str, &str); 22] = match locale {
-            Locale::De => [
-                ("play", "Wiedergabe"),
-                ("pause", "Pause"),
-                ("seek", "Position"),
-                ("position", "Position"),
-                ("duration", "Dauer"),
-                ("selectionStart", "Auswahlbeginn"),
-                ("selectionEnd", "Auswahlende"),
-                ("loading", "Medium wird geladen…"),
-                ("progress", "Ladefortschritt"),
-                ("cancel", "Abbrechen"),
-                ("cancelled", "Abgebrochen"),
-                ("cutSelection", "Auswahl ausschneiden"),
-                ("hourOne", "Stunde"),
-                ("hourOther", "Stunden"),
-                ("minuteOne", "Minute"),
-                ("minuteOther", "Minuten"),
-                ("secondOne", "Sekunde"),
-                ("secondOther", "Sekunden"),
-                ("unsupported", "Dieses Medium kann auf diesem Gerät nicht wiedergegeben werden."),
-                ("unknownDuration", "Dauer unbekannt"),
-                ("audio", "Audio"),
-                ("video", "Video"),
-            ],
-            Locale::En => [
-                ("play", "Play"),
-                ("pause", "Pause"),
-                ("seek", "Seek"),
-                ("position", "Position"),
-                ("duration", "Duration"),
-                ("selectionStart", "Selection start"),
-                ("selectionEnd", "Selection end"),
-                ("loading", "Loading media…"),
-                ("progress", "Loading progress"),
-                ("cancel", "Cancel"),
-                ("cancelled", "Cancelled"),
-                ("cutSelection", "Cut selection"),
-                ("hourOne", "hour"),
-                ("hourOther", "hours"),
-                ("minuteOne", "minute"),
-                ("minuteOther", "minutes"),
-                ("secondOne", "second"),
-                ("secondOther", "seconds"),
-                ("unsupported", "This media cannot be played on this device."),
-                ("unknownDuration", "Unknown duration"),
-                ("audio", "Audio"),
-                ("video", "Video"),
-            ],
-        };
-        let mut map = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("media-window.labels"))?;
-        for (key, value) in labels {
-            Self::put(&mut map, key, Self::value_text(value, "media-window.label")?)?;
-        }
-        Ok(UiValue::Map(map.finish()))
-    }
-
-    fn trim(trim: &MediaTrim) -> UiAssemblyResult<UiValue> {
-        let mut map = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("media-window.trim"))?;
-        let unit = match trim.unit {
-            MediaTrimUnit::Frame => "frame",
-            MediaTrimUnit::Sample => "sample",
-        };
-        Self::put(&mut map, "actionId", Self::value_text(&trim.action_id, "media-window.trim-action")?)?;
-        Self::put(&mut map, "revision", Self::value_text(&trim.revision, "media-window.trim-revision")?)?;
-        Self::put(&mut map, "unit", Self::value_text(unit, "media-window.trim-unit")?)?;
-        Self::put(&mut map, "unitsPerSecondNumerator", UiValue::Number(trim.units_per_second_numerator as f64))?;
-        Self::put(&mut map, "unitsPerSecondDenominator", UiValue::Number(trim.units_per_second_denominator as f64))?;
-        Self::put(&mut map, "totalUnits", UiValue::Number(trim.total_units as f64))?;
-        Ok(UiValue::Map(map.finish()))
-    }
-
-    fn resource(resource: &MediaResource) -> UiAssemblyResult<UiValue> {
-        let mut map = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("media-window.resource"))?;
-        Self::put(&mut map, "kind", Self::value_text("artifact-media-export", "media-window.resource-kind")?)?;
-        Self::put(&mut map, "controllerId", Self::value_text(&resource.controller_id, "media-window.resource-controller")?)?;
-        Self::put(&mut map, "appInstanceId", UiValue::Number(f64::from(resource.app_instance_id)))?;
-        Self::put(&mut map, "parentDocumentId", Self::value_text(&resource.parent_document_id, "media-window.resource-parent-document")?)?;
-        Self::put(&mut map, "outputPort", Self::value_text(&resource.output_port, "media-window.resource-port")?)?;
-        Self::put(&mut map, "revision", Self::value_text(&resource.revision, "media-window.resource-revision")?)?;
-        Self::put(&mut map, "generation", Self::value_text(&resource.generation, "media-window.resource-generation")?)?;
-        Ok(UiValue::Map(map.finish()))
-    }
-}
-
-impl WindowKit for MediaWindowKit {
-    type ViewModel = MediaView;
-    const KIND_ID: &'static str = "framework.window.media";
-
-    fn window_kind() -> WindowKindDefinition {
-        window_kind_definition(Self::KIND_ID, "Media", "Medien", SurfaceKind::Canvas2d, "play", Vec::new())
-    }
-
-    fn editable_window_kind() -> WindowKindDefinition {
-        Self::window_kind()
-    }
-
-    fn render(view: &MediaView) -> UiAssemblyResult<BuiltNode> {
+    pub fn render(view: &MediaView) -> UiAssemblyResult<BuiltNode> {
         const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
         let parsed_revision = view.revision.parse::<u64>().ok().filter(|revision| revision.to_string() == view.revision).ok_or_else(|| ui_assembly_error("media-window.revision"))?;
         let _ = parsed_revision;
@@ -289,5 +183,110 @@ impl WindowKit for MediaWindowKit {
             Component::Extension(ExtensionProps { extension: UiText::try_from_str(MEDIA_TRANSPORT_EXTENSION_ID).ok_or_else(|| ui_assembly_error("media-window.extension"))?, props: UiValue::Map(props.finish()) }),
         )
         .map_err(|_| ui_assembly_error("media-window.build"))
+    }
+
+    fn value_text(value: &str, field: &'static str) -> UiAssemblyResult<UiValue> {
+        Ok(UiValue::Text(UiText::try_from_str(value).ok_or_else(|| ui_assembly_error(field))?))
+    }
+
+    fn put(map: &mut UiMapBuilder, key: &str, value: UiValue) -> UiAssemblyResult<()> {
+        map.try_insert(key.into(), value).map_err(|_| ui_assembly_error("media-window.props"))
+    }
+
+    fn labels(locale: Locale) -> UiAssemblyResult<UiValue> {
+        let labels: [(&str, &str); 22] = match locale {
+            Locale::De => [
+                ("play", "Wiedergabe"),
+                ("pause", "Pause"),
+                ("seek", "Position"),
+                ("position", "Position"),
+                ("duration", "Dauer"),
+                ("selectionStart", "Auswahlbeginn"),
+                ("selectionEnd", "Auswahlende"),
+                ("loading", "Medium wird geladen…"),
+                ("progress", "Ladefortschritt"),
+                ("cancel", "Abbrechen"),
+                ("cancelled", "Abgebrochen"),
+                ("cutSelection", "Auswahl ausschneiden"),
+                ("hourOne", "Stunde"),
+                ("hourOther", "Stunden"),
+                ("minuteOne", "Minute"),
+                ("minuteOther", "Minuten"),
+                ("secondOne", "Sekunde"),
+                ("secondOther", "Sekunden"),
+                ("unsupported", "Dieses Medium kann auf diesem Gerät nicht wiedergegeben werden."),
+                ("unknownDuration", "Dauer unbekannt"),
+                ("audio", "Audio"),
+                ("video", "Video"),
+            ],
+            Locale::En => [
+                ("play", "Play"),
+                ("pause", "Pause"),
+                ("seek", "Seek"),
+                ("position", "Position"),
+                ("duration", "Duration"),
+                ("selectionStart", "Selection start"),
+                ("selectionEnd", "Selection end"),
+                ("loading", "Loading media…"),
+                ("progress", "Loading progress"),
+                ("cancel", "Cancel"),
+                ("cancelled", "Cancelled"),
+                ("cutSelection", "Cut selection"),
+                ("hourOne", "hour"),
+                ("hourOther", "hours"),
+                ("minuteOne", "minute"),
+                ("minuteOther", "minutes"),
+                ("secondOne", "second"),
+                ("secondOther", "seconds"),
+                ("unsupported", "This media cannot be played on this device."),
+                ("unknownDuration", "Unknown duration"),
+                ("audio", "Audio"),
+                ("video", "Video"),
+            ],
+        };
+        let mut map = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("media-window.labels"))?;
+        for (key, value) in labels {
+            Self::put(&mut map, key, Self::value_text(value, "media-window.label")?)?;
+        }
+        Ok(UiValue::Map(map.finish()))
+    }
+
+    fn trim(trim: &MediaTrim) -> UiAssemblyResult<UiValue> {
+        let mut map = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("media-window.trim"))?;
+        let unit = match trim.unit {
+            MediaTrimUnit::Frame => "frame",
+            MediaTrimUnit::Sample => "sample",
+        };
+        Self::put(&mut map, "actionId", Self::value_text(&trim.action_id, "media-window.trim-action")?)?;
+        Self::put(&mut map, "revision", Self::value_text(&trim.revision, "media-window.trim-revision")?)?;
+        Self::put(&mut map, "unit", Self::value_text(unit, "media-window.trim-unit")?)?;
+        Self::put(&mut map, "unitsPerSecondNumerator", UiValue::Number(trim.units_per_second_numerator as f64))?;
+        Self::put(&mut map, "unitsPerSecondDenominator", UiValue::Number(trim.units_per_second_denominator as f64))?;
+        Self::put(&mut map, "totalUnits", UiValue::Number(trim.total_units as f64))?;
+        Ok(UiValue::Map(map.finish()))
+    }
+
+    fn resource(resource: &MediaResource) -> UiAssemblyResult<UiValue> {
+        let mut map = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("media-window.resource"))?;
+        Self::put(&mut map, "kind", Self::value_text("artifact-media-export", "media-window.resource-kind")?)?;
+        Self::put(&mut map, "controllerId", Self::value_text(&resource.controller_id, "media-window.resource-controller")?)?;
+        Self::put(&mut map, "appInstanceId", UiValue::Number(f64::from(resource.app_instance_id)))?;
+        Self::put(&mut map, "parentDocumentId", Self::value_text(&resource.parent_document_id, "media-window.resource-parent-document")?)?;
+        Self::put(&mut map, "outputPort", Self::value_text(&resource.output_port, "media-window.resource-port")?)?;
+        Self::put(&mut map, "revision", Self::value_text(&resource.revision, "media-window.resource-revision")?)?;
+        Self::put(&mut map, "generation", Self::value_text(&resource.generation, "media-window.resource-generation")?)?;
+        Ok(UiValue::Map(map.finish()))
+    }
+}
+
+impl WindowKit for MediaWindowKit {
+    const KIND_ID: &'static str = "framework.window.media";
+
+    fn window_kind() -> WindowKindDefinition {
+        window_kind_definition(Self::KIND_ID, "Media", "Medien", SurfaceKind::Canvas2d, "play", Vec::new())
+    }
+
+    fn editable_window_kind() -> WindowKindDefinition {
+        Self::window_kind()
     }
 }

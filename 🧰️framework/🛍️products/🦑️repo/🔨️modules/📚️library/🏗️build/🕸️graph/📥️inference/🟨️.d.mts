@@ -22,6 +22,7 @@ export function createMetadata(...args:readonly unknown[]):unknown;
 declare const plugin:BuildInferencePluginV1;
 export default plugin;
 export const libraryBootstrap:Promise<unknown>;
+export { ownerFactsFarmV1 } from "./🔎️owner-discovery/🏭️farm/🟨️.mjs";
 export const cacheInternals:BuildInferenceInternalsV1;
 export function discoverBuildProjectsV1(files:readonly string[],options:Readonly<Record<string,unknown>>,context:BuildInferenceContextV1):Promise<GeneratedNodesV1>;
 export function discoverBuildDependenciesV1(options:Readonly<Record<string,unknown>>,context:BuildDependencyContextV1):Promise<readonly BuildInferenceEdgeV1[]>;

@@ -287,7 +287,7 @@ mod tests {
         use crate::editor::gis3d::{Gis3dCommand, Gis3dPlayApp, commands::import_elevation::file::ImportElevationGridFile, unit_tests::context};
         use semio_plugin::ArtifactEditor as _;
 
-        let fixture: Value = serde_json::from_str(include_str!("🧪️tests/🌫️fill-missing/🔣️.json")).unwrap();
+        let fixture: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../🎮️commands/📐️edit-elevation/🧪️tests/🌫️fill-missing/🔣️.json")).unwrap();
         let args = |value: &Value| semio_framework_pack_json::from_json_str::<DslValue>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let command = |value: &Value| Gis3dPlayApp::command_from_action("editElevation", &mut Some(args(value)), &mut None);
         let check = |source: &ElevationSource, expected: &Value| {

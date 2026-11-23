@@ -1,0 +1,196 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:native-image-operation-lifetime",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumPendingOperations": 32,
+        "maximumUnresolvedCleanupOwners": 32,
+        "cleanupBodyFailures": "already-canonical-data",
+        "maximumCleanupOwnersPerBorrower": 1,
+        "maximumBorrowerOwners": 32
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "accepted",
+        "completed",
+        "topOpen",
+        "nestedLive",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "accepted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "completed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "topOpen": {
+          "type": "boolean"
+        },
+        "nestedLive": {
+          "type": "boolean"
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "accepts",
+            "waits",
+            "mustDrain"
+          ],
+          "properties": {
+            "accepts": {
+              "type": "boolean"
+            },
+            "waits": {
+              "type": "boolean"
+            },
+            "mustDrain": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "Admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pending",
+        "topOpen",
+        "nestedLive"
+      ],
+      "properties": {
+        "pending": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "topOpen": {
+          "type": "boolean"
+        },
+        "nestedLive": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CarriedPreparationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "carried",
+        "failed",
+        "useOriginal",
+        "deferCleanup"
+      ],
+      "properties": {
+        "carried": {
+          "type": "boolean"
+        },
+        "failed": {
+          "type": "boolean"
+        },
+        "useOriginal": {
+          "type": "boolean"
+        },
+        "deferCleanup": {
+          "type": "boolean"
+        }
+      }
+    },
+    "OpenLifetime": {
+      "definitions": {
+        "Protocol": {
+          "const": {
+            "maximumOwners": 32,
+            "maximumClosers": 1
+          }
+        },
+        "Case": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "closeFails",
+            "undefinedFailure",
+            "cancel",
+            "expected"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "closeFails": {
+              "type": "boolean"
+            },
+            "undefinedFailure": {
+              "type": "boolean"
+            },
+            "cancel": {
+              "type": "boolean"
+            },
+            "expected": {
+              "enum": [
+                "success",
+                "close-error",
+                "close-undefined",
+                "cancel"
+              ]
+            }
+          }
+        },
+        "RefinementCase": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "allowed"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "zero-alias",
+                "finite-sibling",
+                "extra-signal",
+                "copied",
+                "retired"
+              ]
+            },
+            "allowed": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "$ref": "#/definitions/OpenLifetime/definitions/Case"
+    },
+    "BorrowerOperationIdentity": {
+      "const": {
+        "version": 1,
+        "purpose": "actual-borrower-operation-identity",
+        "outermostSameOwner": true,
+        "privateIssueOnly": true,
+        "registration": false,
+        "writerAuthority": false,
+        "expires": "actual-frame-drained"
+      }
+    }
+  }
+}

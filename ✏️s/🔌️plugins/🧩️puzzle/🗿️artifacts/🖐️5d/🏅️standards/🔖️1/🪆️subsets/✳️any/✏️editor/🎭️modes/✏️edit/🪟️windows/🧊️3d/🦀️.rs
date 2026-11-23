@@ -416,7 +416,7 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Optio
     scene.target_volumes_json = Some(world_target_volumes_json(&envelope.document));
     scene.domain_id = Some(PUZZLE5D_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(PUZZLE5D_GRANULARITY_PART.into());
-    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::World3d, &scene, labels.window_3d.as_str(), None)
 }
 //#endregion 🔖️Render
 

@@ -8,6 +8,7 @@ to its plate. Run: `repo tools exec python -- atlas_cedar.py`.
 """
 import math
 import os
+import sys
 
 from conifer_lib import (CATALOG, G, RHO, T, TICKET, Capsule, Marks, Revolve, Rig, SCALES, bbox_union, cantilever_slopes, dump, fit_ring, gap_report,
                          marks_shape, outline_polyline, r3, r4, representation, section, shape_of, simplify, slice_intervals, slope_at, union_width, v_at,
@@ -51,6 +52,11 @@ TUFTS = {  # tufts on the upper face: (angle deg, fraction of radius, tuft radiu
     "n1": [(80, 0.52, 0.36, 0.5), (260, 0.42, 0.3, 0.4)], "w2": [(180, 0.5, 0.36, 0.5), (40, 0.42, 0.3, 0.42)], "e2": [(350, 0.5, 0.37, 0.5), (150, 0.4, 0.3, 0.4)],
     "s2": [(280, 0.45, 0.38, 0.5)], "n2": [(100, 0.45, 0.38, 0.5)], "w3": [(190, 0.4, 0.4, 0.5)], "e3": [(10, 0.4, 0.4, 0.5)], "top": [(90, 0.3, 0.45, 0.55)],
 }
+
+
+# Share of the surface of the six buttress roots that is neither inside the root flare nor in the ground: the product's outer-area measure of the
+# 1:50 thermal list gives 23.41 m2 for bark-lower, the lateral areas of flare and lower stem give 21.92 m2, the roots alone 6.75 m2.
+ROOT_EXPOSED = 0.22
 
 
 def r_stem(y):
@@ -195,7 +201,7 @@ def build():
     crown_plan = math.pi * dims["widthM"] / 2 * dims["depthM"] / 2
     regions = [
         {"id": "bark-lower", "title": T("Lower stem and root flare, dark plated bark", "Unterer Stamm und Wurzelanlauf, dunkle Plattenborke"), "kind": "bark", "model": "passive", "material": "cedar-bark",
-         "areaM2": round(sum(s.lateral_area() for s in fine50 if s.region == "bark-lower"), 2), "characteristicLengthM": round(2 * r_stem(1.3), 2), "geometry": "cylinder", "skyViewFactor": 0.35,
+         "areaM2": round(sum(s.lateral_area() * (ROOT_EXPOSED if s.id.startswith("root-") and s.id != "root-flare" else 1.0) for s in fine50 if s.region == "bark-lower"), 2), "characteristicLengthM": round(2 * r_stem(1.3), 2), "geometry": "cylinder", "skyViewFactor": 0.35,
          "layers": [], "heatCapacityJM2K": 75000, "source": "authored-estimate", "reference": "wood-handbook-2021"},
         {"id": "bark-upper", "title": T("Upper stem and leader", "Oberer Stamm und Gipfeltrieb"), "kind": "bark", "model": "passive", "material": "cedar-bark-upper",
          "areaM2": round(sum(s.lateral_area() for s in fine50 if s.region == "bark-upper"), 2), "characteristicLengthM": round(2 * r_stem(12), 2), "geometry": "cylinder", "skyViewFactor": 0.3,
@@ -505,8 +511,8 @@ MATERIALS = [
 THERMAL_ASSUMPTIONS = [
     T("Needle regions use the needle exchange area; the leaf area index is that area over the crown ground projection. The maximum stomatal conductance (1.8 mm/s sunlit, 1.2 mm/s lower) is an authored estimate for a drought-adapted Mediterranean mountain conifer guided by Jones (2014), the lowest of the conifers; photosynthesis type C3. The reference environment is a hot, dry summer day (28 degC, 35 % relative humidity, 850 W/m2).",
       "Nadelregionen verwenden die Austauschfläche der Nadeln; der Blattflächenindex ist diese Fläche bezogen auf die Kronenprojektion am Boden. Die maximale Spaltöffnungsleitfähigkeit (1,8 mm/s besonnt, 1,2 mm/s unten) ist eine Autorenschätzung für einen trockenheitsangepassten mediterranen Gebirgsnadelbaum, angelehnt an Jones (2014), die niedrigste der Nadelbäume; Photosynthesetyp C3. Die Bezugsumgebung ist ein heißer, trockener Sommertag (28 °C, 35 % relative Feuchte, 850 W/m2)."),
-    T("Bark is passive, with the areal heat capacity of green wood over an effective depth of 1.5 to 3 cm (authored estimate after the Wood Handbook); the bark areas are the lateral areas of the 1:50 stem, flare, root and limb solids. The plates face the sky (horizontal plates).",
-      "Die Rinde ist passiv, mit der flächenbezogenen Wärmekapazität von frischem Holz über eine wirksame Tiefe von 1,5 bis 3 cm (Autorenschätzung nach dem Wood Handbook); die Rindenflächen sind die Mantelflächen der 1:50-Körper von Stamm, Anlauf, Wurzeln und Starkästen. Die Platten blicken zum Himmel (waagerechte Platten)."),
+    T("Bark is passive, with the areal heat capacity of green wood over an effective depth of 1.5 to 3 cm (authored estimate after the Wood Handbook); the bark areas are the lateral areas of the 1:50 stem, flare and limb solids plus the exposed share (22 %) of the buttress roots. The plates face the sky (horizontal plates).",
+      "Die Rinde ist passiv, mit der flächenbezogenen Wärmekapazität von frischem Holz über eine wirksame Tiefe von 1,5 bis 3 cm (Autorenschätzung nach dem Wood Handbook); die Rindenflächen sind die Mantelflächen der 1:50-Körper von Stamm, Anlauf und Starkästen zuzüglich des freiliegenden Anteils (22 %) der Wurzelanläufe. Die Platten blicken zum Himmel (waagerechte Platten)."),
     T("Transpiration emitters release the latent flux of their needle region as vapour from one anchor at the centre of every plate (seven upper, four lower plates); the direction is the vertical of the plate bone.",
       "Transpirationsemitter geben den latenten Strom ihrer Nadelregion als Dampf aus einem Anker in der Mitte jeder Platte ab (sieben obere, vier untere Platten); die Richtung ist die Senkrechte des Plattenknochens."),
 ]
@@ -567,6 +573,11 @@ def volume_decisions(scale, nbody):
 
 if __name__ == "__main__":
     doc, info = build()
+    if "--candidate" in sys.argv:
+        path = os.path.join(TICKET, "🗑️generated", "PW-07", id, "🔣️.json")
+        dump(path, doc)
+        print(path)
+        sys.exit(0)
     path = os.path.join(CATALOG, id, "🔣️.json")
     dump(path, doc)
     a = doc["asset"]

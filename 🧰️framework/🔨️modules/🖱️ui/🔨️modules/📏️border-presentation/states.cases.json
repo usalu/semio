@@ -1,6 +1,6 @@
 [
   {
-    "name": "hover emphasises enclosing silhouettes and the innermost control",
+    "name": "hover emphasises enclosing outlines and the innermost control",
     "boxes": [
       { "id": "band", "parent": null, "interactive": false, "hoverWithin": true, "disabled": false, "marks": [] },
       { "id": "card", "parent": "band", "interactive": false, "hoverWithin": true, "disabled": false, "marks": [] },
@@ -13,7 +13,7 @@
     "expected": { "band": "hover", "card": "hover", "group": "normal", "control": "hover", "sibling": "normal" }
   },
   {
-    "name": "keyboard focus stays local and a disabled silhouette stays normal",
+    "name": "keyboard focus stays local and a disabled outline stays normal",
     "boxes": [
       { "id": "card", "parent": null, "interactive": false, "hoverWithin": true, "disabled": true, "marks": [] },
       { "id": "control", "parent": "card", "interactive": true, "disabled": false, "marks": [] },

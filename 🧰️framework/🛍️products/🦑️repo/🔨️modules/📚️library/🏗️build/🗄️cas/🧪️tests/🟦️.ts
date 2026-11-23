@@ -18,6 +18,9 @@ import {putCasObjectSyncV1} from "../🗃️store/🔁️sync/🟦️.ts";
 import {casLedgerShardV1,foldCasShardV1,openCasShardViewV1} from "../📒️ledger/🟦️.ts";
 import {isRepoErrorV1,renderRepoErrorV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import {casRootV1,createCasStoreV1} from "../🗃️store/🟦️.ts";
+import {CasCapRefusalV1} from "../🚦️guard/🟦️.ts";
+import {CAS_LEASE_HEADER_V1,readCasTransientsV1} from "../📌️pins/🟦️.ts";
+import {httpRemoteExecutionContentV1} from "../../🌐️remote-execution/🗄️content/🟦️.ts";
 import {casPinClosuresV1} from "../📂️areas/🟦️.ts";
 import {releaseCasPinsV1} from "../📌️pins/🟦️.ts";
 import {casUsageV1} from "../🗃️store/📏️usage/🟦️.ts";
@@ -234,7 +237,8 @@ test("the command reports and collects the host store and the workspace and memo
  const old=new Date(Date.now()-30*86_400_000);utimesSync(join(home,".cache","semio","repo","wt1","journal","graph-memo","old.plan"),old,old);
  expect((await casAreasOfWorkspaceV1(workspace,home)).map(area=>area.id)).toEqual(["build-input-closures","graph-memo"]);
  const context={workspace,home,partition:()=>undefined,environment:{SEMIO_CAS_ROOT:root},write:(line:string)=>{lines.push(line);}},ports={signal:new AbortController().signal,progress:async(stage:string)=>{stages.push(stage);}};
- expect(await runCasCommandV1(["status","--lang=de"],context,ports)).toBe(0);expect(lines.at(-1)).toContain("Objekte");
+ expect(await runCasCommandV1(["status","--lang=de"],context,ports)).toBe(0);expect(lines.join("\n")).toContain("Objekte");expect(lines.join("\n")).toContain("Wirksame Grenze");
+ expect(await runCasCommandV1(["status","--json"],context,ports)).toBe(0);expect(JSON.parse(lines.at(-1)!)).toMatchObject({version:1,incrementBytes:CAS_POLICY_V1.incrementBytes,transientLeaseMs:CAS_POLICY_V1.transientLeaseMs,effectiveCapBytes:CAS_POLICY_V1.capBytes,transient:{leased:0,expired:0}});
  for(const [language,planned,adopted] of [["en","would remove 1","could share"],["de","Einträge zur Entfernung: 1","könnten"]] as const){
   expect(await runCasCommandV1(["gc","--dry-run","--lang="+language],context,ports)).toBe(0);
   expect(lines.at(-1)).toContain(planned);
@@ -701,4 +705,70 @@ print(json.dumps(out))`;
  rows.forEach(([total,freeBytes,store],index)=>expect(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:total,freeBytes},store??undefined),JSON.stringify([total,freeBytes,store])).toBe(independent[index]));
  expect(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:926*GiB,freeBytes:33*GiB},36.3*GiB)).toBeLessThan(32*GiB);
  expect(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:926*GiB,freeBytes:5*GiB},36.3*GiB)).toBeLessThanOrEqual(Math.ceil(36.3*GiB));
+});
+
+test("a collection above the high watermark frees only one increment below it when it runs continuously, and down to the low watermark when run by hand; the independent Python oracle agrees",()=>{
+ const grid=enforcement.increments,run=spawnSync(testPythonV1()??"python3",["-I",fileURLToPath(new URL("./🐍️enforcement.py",import.meta.url))],{input:JSON.stringify({increments:grid}),encoding:"utf8"});
+ expect(run.status,run.stderr).toBe(0);const python=JSON.parse(run.stdout) as number[];
+ grid.rows.forEach((row,index)=>{
+  const planner=createCasPlannerV1({policy:{capBytes:grid.cap,highWatermark:grid.high,lowWatermark:grid.low,incrementBytes:grid.increment},incremental:row.incremental,areas:[{id:"store",capBytes:null,maxAgeMs:null}],externalBytes:0,nowMs:1e9});
+  for(let entry=0;entry<row.total/10;entry++)planner.add("store",entry,10,false);
+  expect(planner.finish().totals.needBytes,row.name).toBe(row.need);expect(python[index],row.name).toBe(row.need);
+ });
+});
+
+test("the service tick collects continuously in small steps: a store a little above its high watermark loses one increment, and one below it is left alone",async()=>{
+ resetCasGuardsV1();
+ const root=scratch("continuous"),clock={value:2_000_000_000},{put}=fill(root,0,MIB,clock),policy:CasPolicyV1={...small,incrementBytes:2*MIB,minAgeMs:0},home=scratch("continuous-home");
+ for(let index=0;index<19;index++)await put(index);
+ await casEnforceTickV1({root,policy,home,partition:()=>undefined});
+ expect((await casUsageV1(root)).bytes).toBe(16*MIB);
+ resetCasGuardsV1();await casEnforceTickV1({root,policy,home,partition:()=>undefined});
+ expect((await casUsageV1(root)).bytes).toBe(16*MIB);
+ const manual=await collectCasV1({root,policy,now:()=>clock.value});expect(manual.status).toBe("idle");
+});
+
+test("input blobs are leased: protected while the lease runs, the first and always collected after it ended unless something read them later, and never pinned",async()=>{
+ const root=scratch("transient"),clock={value:2_000_000_000},{store,put}=fill(root,0,MIB,clock),hashes:string[]=[];
+ for(let index=0;index<6;index++)hashes.push(await put(index));
+ const big:CasPolicyV1={...CAS_POLICY_V1,minAgeMs:0,transientLeaseMs:60_000};
+ await store.lease(hashes.slice(0,3),60_000);
+ const leased=await readCasTransientsV1(root);expect([...leased.keys()].sort()).toEqual(hashes.slice(0,3).sort());
+ const during=await collectCasV1({root,policy:big,now:()=>clock.value});expect(during.evicted).toBe(0);expect((await store.has(hashes)).every(Boolean)).toBe(true);
+ const after=clock.value+120_000;
+ const second=createCasStoreV1({root,now:()=>after,policy:{...CAS_POLICY_V1,touchGranularityMs:0},guard:quietGuard(root)});await second.touch(hashes[1]!);
+ const done=await collectCasV1({root,policy:big,now:()=>after});
+ expect(done.byReason.age).toBe(2);expect(done.evicted).toBe(2);
+ expect(await store.has(hashes)).toEqual([false,true,false,true,true,true]);
+ expect((await readCasPinsOf(root)).size).toBe(0);
+});
+
+const readCasPinsOf=async(root:string):Promise<Map<string,string>>=>(await import("../📌️pins/🟦️.ts")).readCasPinsV1(root,Date.now());
+
+test("a store of a cache server refuses a write that stays over its cap after one bounded collection, lets it go on when the collection relieved it, and an ordinary store never refuses",async()=>{
+ resetCasGuardsV1();
+ const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:100*MIB,minAgeMs:0,admissionBudgetMs:40};let collects=0,mode:"relieve"|"keep"|"hang"="relieve";let used=150*MIB;
+ const root=scratch("refuse-cap"),over=()=>{mkdirSync(join(root,"v1"),{recursive:true});writeFileSync(casUsageHintPathV1(root),JSON.stringify({version:1,bytes:used,atMs:Date.now()}));};
+ const ports=(refuseOverCap:boolean)=>({root,policy,refuseOverCap,partition:()=>({partition:"/v",totalBytes:100000*MIB,freeBytes:50000*MIB}),usage:async()=>used,
+  collect:async()=>{collects++;if(mode==="hang")await new Promise(done=>setTimeout(done,500));if(mode==="relieve")used=60*MIB;over();return stub;}});
+ over();
+ const refusing=createCasGuardV1(ports(true));
+ await refusing.admit(MIB);expect(collects).toBe(1);
+ resetCasGuardsV1();used=150*MIB;over();mode="keep";collects=0;
+ const keeping=createCasGuardV1(ports(true));const refused=await refusal(keeping.admit(MIB));
+ expect(refused).toBeInstanceOf(CasCapRefusalV1);expect(String(refused.message)).toContain("Der Cache-Speicher");expect(collects).toBe(1);
+ resetCasGuardsV1();used=150*MIB;over();mode="hang";collects=0;
+ const began=Date.now(),hanging=createCasGuardV1(ports(true)),timed=await refusal(hanging.admit(MIB));
+ expect(timed).toBeInstanceOf(CasCapRefusalV1);expect(Date.now()-began).toBeLessThan(400);
+ await hanging.settle();
+ resetCasGuardsV1();used=150*MIB;over();mode="keep";
+ const ordinary=createCasGuardV1(ports(false));await expect(ordinary.admit(MIB)).resolves.toBeDefined();
+});
+
+test("the content client marks the blobs of an action as inputs and plain output uploads carry no mark",async()=>{
+ const seen:string[]=[],content=httpRemoteExecutionContentV1({endpoint:"http://cache.test",retries:0,fetch:(async(url:string|URL|Request,init?:RequestInit)=>{seen.push(`${init?.method} ${new URL(String(url)).pathname} ${new Headers(init?.headers).get(CAS_LEASE_HEADER_V1)??"-"}`);return new Response(null,{status:200});}) as typeof fetch});
+ const hash="a".repeat(64);
+ await content.has("main",hash,undefined,"input");await content.has("main",hash);
+ await content.write("main",{hash,size:1},new Uint8Array([1]),undefined,"input");await content.write("main",{hash,size:1},new Uint8Array([1]));
+ expect(seen).toEqual([`HEAD /main/cas/${hash} input`,`HEAD /main/cas/${hash} -`,`PUT /main/cas/${hash} input`,`PUT /main/cas/${hash} -`]);
 });

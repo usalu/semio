@@ -370,10 +370,10 @@ fn a_playground_example_locks_the_shell_to_it_and_native_renderers_pass_it_as_an
 fn a_catalog_example_is_chosen_by_its_slug_or_its_bare_id() {
     let root = materialise("bare-example");
     std::fs::create_dir_all(root.join("catalog")).unwrap();
-    std::fs::write(root.join("catalog").join("🚀️playgrounds.json"), r#"[{"variant":"p","pluginId":"x","cratePath":"x","aliases":[],"ports":{"react":3100,"wgpu":3200},"examples":["🎬️first","🎬️second"]}]"#).unwrap();
+    std::fs::write(root.join("catalog").join("🚀️playgrounds.json"), r#"[{"variant":"p","pluginId":"x","cratePath":"x","aliases":[],"ports":{"react":3100,"wgpu":3200},"examples":["first","second"]}]"#).unwrap();
     let registry = crate::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
-    for chosen in ["second", "🎬️second"] { assert_eq!(env_of(&resolve(&registry, "playground:p", &request(&[("example", chosen)], &[], &[])).processes[0], "PLAYGROUND_LOCKED_EXAMPLE_ID"), Some("🎬️second")); }
-    assert!(registry.resolve_with("playground:p", &request(&[("example", "third")], &[], &[]), RunPolicy::default()).unwrap_err().contains("choose 🎬️first, 🎬️second"));
+    assert_eq!(env_of(&resolve(&registry, "playground:p", &request(&[("example", "second")], &[], &[])).processes[0], "PLAYGROUND_LOCKED_EXAMPLE_ID"), Some("second"));
+    assert!(registry.resolve_with("playground:p", &request(&[("example", "third")], &[], &[]), RunPolicy::default()).unwrap_err().contains("choose first, second"));
 }
 
 #[test]

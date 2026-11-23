@@ -38,3 +38,4 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-fem-receiving = { path = "../../../../../../../../../../../../../../🧩️receiving/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }

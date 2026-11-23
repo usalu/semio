@@ -80,10 +80,10 @@ pub fn definition() -> WindowKindDefinition {
 /// default the host fits to the world while it has never been panned; default render mode
 /// (`TiledMapScene::base`'s own defaults already match the editor map's "combined"/"colored"/
 /// "automatic"), every layer visible, nothing selected/hovered.
-pub fn render(document: &GisMapSnapshot, window: Option<&config::GisMapViewerWindowConfig>) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &GisMapSnapshot, window: Option<&config::GisMapViewerWindowConfig>, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let camera_json = window.map_or_else(|| GIS_MAP_VIEW_DEFAULT_CAMERA_JSON.to_string(), |window| window.camera.scene_camera_json());
     let scene = TiledMapScene::base(gis_map_scene_descriptor_json(document), camera_json);
-    scene_surface(SURFACE_ID, ContractSurfaceKind::TiledMap, &scene)
+    scene_surface(SURFACE_ID, ContractSurfaceKind::TiledMap, &scene, semio_plugin::surface_name(locale, "Map", "Karte"), None)
 }
 //#endregion 🔖️Render
 

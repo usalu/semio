@@ -38,9 +38,9 @@ const GEOMETRY_LAYOUT: GeometryNode = {
   ],
 };
 
-// #region 🧪️SilhouetteVisualFixture
-const SilhouetteVisualFixture = () => (
-  <div data-testid="silhouette-visual-content" data-window-content-layout="edgeless" aria-label="Continuous content / Fortlaufender Inhalt" className="relative h-full min-h-0 overflow-hidden bg-transparent">
+// #region 🧪️FrameVisualFixture
+const FrameVisualFixture = () => (
+  <div data-testid="frame-visual-content" data-window-content-layout="edgeless" aria-label="Continuous content / Fortlaufender Inhalt" className="relative h-full min-h-0 overflow-hidden bg-transparent">
     <div
       aria-hidden
       className="pointer-events-none absolute inset-x-0 bottom-0"
@@ -53,12 +53,12 @@ const SilhouetteVisualFixture = () => (
       }}
     />
     <div aria-hidden className="pointer-events-none absolute bottom-0 w-2 bg-[#ff4d6d]" style={{ insetInlineStart: 23, top: -48 }} />
-    <div data-testid="silhouette-visual-label" className="absolute text-sm font-semibold text-white" style={{ insetInlineStart: 72, top: 16 }}>
+    <div data-testid="frame-visual-label" className="absolute text-sm font-semibold text-white" style={{ insetInlineStart: 72, top: 16 }}>
       0123456789 · Text · Szene · Scene
     </div>
   </div>
 );
-// #endregion 🧪️SilhouetteVisualFixture
+// #endregion 🧪️FrameVisualFixture
 
 const meta = {
   title: "🖱️ui⚛️react/Mode",
@@ -207,7 +207,7 @@ export const ContentThroughGlass: Story = {
     const [activeWindowId, setActiveWindowId] = reactHostPort.useState<string | null>("flow");
     return (
       <div
-        data-testid="silhouette-visual-floor"
+        data-testid="frame-visual-floor"
         className="h-[26.25rem] w-full p-single"
         style={{
           backgroundColor: "#641f45",
@@ -217,7 +217,7 @@ export const ContentThroughGlass: Story = {
       >
         <Mode
           windows={[
-            { id: "flow", title: uiDataLabel("Flow / Fluss"), iconId: "flow", children: <SilhouetteVisualFixture /> },
+            { id: "flow", title: uiDataLabel("Flow / Fluss"), iconId: "flow", children: <FrameVisualFixture /> },
             { id: "reference", title: uiDataLabel("Reference / Referenz"), iconId: "app-window", children: <Pane label="Reference / Referenz" /> },
           ]}
           layout={{

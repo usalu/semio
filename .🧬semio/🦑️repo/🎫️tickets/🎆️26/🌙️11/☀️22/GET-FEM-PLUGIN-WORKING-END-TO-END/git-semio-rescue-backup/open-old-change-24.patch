@@ -1,0 +1,347 @@
+diff --git "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmp83xyk1ph\\b.lf" "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmp83xyk1ph\\o.lf"
+index 4ef5fdc..46c6ef4 100644
+--- "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmp83xyk1ph\\b.lf"
++++ "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmp83xyk1ph\\o.lf"
+@@ -40,4 +40,5 @@ FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
+ _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+ P_PRIMARY = _manim_module.P_PRIMARY
++reference_chip = _manim_module.reference_chip
+ section_material = _manim_module.section_material
+ section_assembly = _manim_module.section_assembly
+@@ -65,6 +66,6 @@ swap_caption = _manim_module.swap_caption
+ hold_for = _manim_module.hold_for
+ subtitle_text = _manim_module.subtitle_text
+-set_vo_language = _manim_module.set_vo_language
+ tr = _manim_module.tr
++_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
+ load_vo_timing = _manim_module.load_vo_timing
+ house_section = _manim_module.house_section
+@@ -86,5 +87,4 @@ ripples = _manim_module.ripples
+ 
+ # 🗣️ Timing follows German captions (reading floor in hold_for).
+-set_vo_language("de")
+ _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
+ if _VO_TIMING.is_file():
+@@ -96,20 +96,4 @@ TITLE_DE = "Wie viel Luft?"
+ 
+ #region Beat helpers
+-def _din_ref(text: str):
+-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+-
+-    Same size, colour, opacity and corner as ``_din_ref`` in
+-    ``1_introduction/scene_1.py`` and ``2_conduction/scene_2.py`` so every module
+-    footnotes its norm identically. Module 3 is the ventilation-loss chain of
+-    DIN EN 12831-1 (Φ_V = V · n · c_Luft · Δθ); the systems beat cites DIN 1946-6.
+-    Beats whose diagram already prints the standard in full get no corner chip.
+-    """
+-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+-    ref.set_opacity(0.72)
+-    ref.to_corner(UR, buff=0.30)
+-    return ref
+-#endregion
+-
+-
+ #region Shared visual motifs
+ #region Moving air
+@@ -342,5 +326,5 @@ def _n_scale(x: float, y_lo: float, y_hi: float, *, lo: float = 0.1, hi: float =
+     ticks.add(Line([x - 0.17, y_of(0), 0], [x, y_of(0), 0], color=P_WHITE, stroke_width=2.0))
+     labels.add(math_label("0", np.array([x - 0.26, y_of(0) - 0.07, 0]), size=LABEL_FONT_SIZE, edge="right"))
+-    title = math_label(r"n\;[\mathrm{h^{-1}}]", np.array([x + 0.1, y_hi + 0.22, 0]), size=LABEL_FONT_SIZE,
++    title = math_label(r"n\;\text{in}\;\mathrm{h^{-1}}", np.array([x + 0.1, y_hi + 0.22, 0]), size=LABEL_FONT_SIZE,
+                        color=P_PRIMARY, edge="right")
+     return {"y_of": y_of, "x": x, "group": VGroup(axis, stub, brk, ticks, labels, title)}
+@@ -460,21 +444,21 @@ class Beat1_Innenvolumen(Scene):
+          "Wir zeichnen das Haus im Schnitt: 10 m breit, 6 m bis zur Traufe, 8,5 m bis zum First."),
+         ("gross",
+-         "With outer dimensions the section is 72.5 square metres; times 8 metres depth gives the gross volume V e of 580 cubic metres.",
+-         "Mit Außenmaßen hat der Schnitt 72,5 m², mal 8 m Tiefe: das Bruttovolumen V-e mit 580 m³."),
++         r"With outer dimensions the section is $72.5\,\mathrm{m^2}$; times $8\,\mathrm{m}$ depth gives the gross volume $V_{\mathrm{e}}$ of $580\,\mathrm{m^3}$.",
++         r"Mit Außenmaßen hat der Schnitt $72{,}5\,\mathrm{m^2}$, mal $8\,\mathrm{m}$ Tiefe: das Bruttovolumen $V_{\mathrm{e}}$ mit $580\,\mathrm{m^3}$."),
+         ("focus",
+-         "Outdoor air fades away — only the air inside is exchanged. But walls, slabs and roof are not air.",
+-         "Die Außenluft verblasst — getauscht wird nur die Luft innen. Wände, Decken und Dach sind aber keine Luft."),
++         "Only the air inside the house is exchanged. Walls, slabs and roof are not air, so they are marked and taken out.",
++         "Getauscht wird nur die Luft innen im Haus. Wände, Decken und Dach sind keine Luft, darum werden sie markiert und herausgenommen."),
+         ("subtract",
+-         "Subtracting the construction leaves about 60 square metres of section and 7.3 metres inner depth.",
+-         "Ohne die Konstruktion bleiben rund 60 m² Schnittfläche und 7,3 m Innentiefe."),
++         r"Subtracting the construction leaves about $60\,\mathrm{m^2}$ of section and $7.3\,\mathrm{m}$ inner depth.",
++         r"Ohne die Konstruktion bleiben rund $60\,\mathrm{m^2}$ Schnittfläche und $7{,}3\,\mathrm{m}$ Innentiefe."),
+         ("fill",
+-         "The two air spaces filled up are the net volume V — about 440 cubic metres.",
+-         "Die beiden Lufträume ergeben das Nettovolumen V — rund 440 m³."),
++         r"The two air spaces filled up are the net volume $V$ — about $440\,\mathrm{m^3}$.",
++         r"Die beiden Lufträume ergeben das Nettovolumen $V$ — rund $440\,\mathrm{m^3}$."),
+         ("ratio",
+-         "So V is about 0.76 times V e — the flat rate of DIN V 18599-1 and the GEG.",
+-         "V ist also rund 0,76 mal V-e — so setzen es DIN V 18599-1 und GEG pauschal an."),
++         r"So $V$ is about $0.76$ times $V_{\mathrm{e}}$ — the flat rate of DIN/TS 18599-1 and the GModG.",
++         r"$V$ ist also rund $0{,}76$ mal $V_{\mathrm{e}}$ — so setzen es DIN/TS 18599-1 und GModG pauschal an."),
+         ("label",
+-         "V is the net volume — the starting point of every ventilation heat flow, in winter and in summer.",
+-         "V ist das Nettovolumen — Ausgangspunkt jedes Lüftungswärmestroms, im Winter wie im Sommer."),
++         r"$V$ is the net volume — the starting point of every ventilation heat flow, in winter and in summer.",
++         r"$V$ ist das Nettovolumen — Ausgangspunkt jedes Lüftungswärmestroms, im Winter wie im Sommer."),
+     ]
+ 
+@@ -486,5 +470,5 @@ class Beat1_Innenvolumen(Scene):
+ 
+         subtitle = section_heading(tr("Gross volume and net volume", "Bruttovolumen und Nettovolumen"))
+-        din = _din_ref("DIN V 18599-1 · DIN EN 12831-1")
++        din = reference_chip(_references.cite("din-ts-18599-1", "din-en-12831-1"))
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+         caption = caption_bar(subtitle_text(N, "intro"))
+@@ -542,5 +526,5 @@ class Beat1_Innenvolumen(Scene):
+         back_mob = always_redraw(back)
+         ve_read = math_readout(
+-            lambda: rf"V_{{\mathrm{{e}}}} = {label_number(H['A_e'], 1)} \cdot {label_number(depth.get_value(), 1)} = "
++            lambda: rf"V_{{\mathrm{{e}}}} = {label_number(H['A_e'], 1)}\,\mathrm{{m^{{2}}}} \cdot {label_number(depth.get_value(), 1)}\,\mathrm{{m}} = "
+                     rf"{label_number(H['A_e'] * depth.get_value())}\,\mathrm{{m^{{3}}}}",
+             np.array([x0, 1.28, 0]), size=BODY_FONT_SIZE, color=P_WHITE)
+@@ -568,5 +552,5 @@ class Beat1_Innenvolumen(Scene):
+         removed = ValueTracker(0.0)
+         a_net_read = math_readout(
+-            lambda: rf"A = {label_number(H['A_e'], 1)} - {label_number(removed.get_value(), 1)} = "
++            lambda: rf"A = {label_number(H['A_e'], 1)}\,\mathrm{{m^{{2}}}} - {label_number(removed.get_value(), 1)}\,\mathrm{{m^{{2}}}} = "
+                     rf"{label_number(H['A_e'] - removed.get_value(), 1)}\,\mathrm{{m^{{2}}}}",
+             np.array([x0, 0.62, 0]), size=BODY_FONT_SIZE, color=P_ORANGE)
+@@ -579,5 +563,5 @@ class Beat1_Innenvolumen(Scene):
+         inner_d = ValueTracker(H["depth"])
+         di_read = math_readout(
+-            lambda: rf"d_{{\mathrm{{i}}}} = {label_number(H['depth'])} - 2 \cdot {label_number(H['wall'], 2)} = "
++            lambda: rf"d_{{\mathrm{{i}}}} = {label_number(H['depth'])}\,\mathrm{{m}} - 2 \cdot {label_number(H['wall'], 2)}\,\mathrm{{m}} = "
+                     rf"{label_number(inner_d.get_value(), 2)}\,\mathrm{{m}}",
+             np.array([x0, 0.05, 0]), size=BODY_FONT_SIZE, color=P_WHITE)
+@@ -615,5 +599,5 @@ class Beat1_Innenvolumen(Scene):
+         room_edges = VGroup(*[prism(r, fill=0.0, stroke=1.6) for r in rooms])
+         v_read = math_readout(
+-            lambda: rf"V = {label_number(net_area(), 1)} \cdot {label_number(H['d_i'], 2)} = {label_number(net_area() * H['d_i'])}\,\mathrm{{m^{{3}}}}",
++            lambda: rf"V = {label_number(net_area(), 1)}\,\mathrm{{m^{{2}}}} \cdot {label_number(H['d_i'], 2)}\,\mathrm{{m}} = {label_number(net_area() * H['d_i'])}\,\mathrm{{m^{{3}}}}",
+             np.array([x0, -0.52, 0]), size=BODY_FONT_SIZE, color=P_ORANGE)
+         self.add(room_fill, v_read)
+@@ -654,5 +638,5 @@ class Beat1_Innenvolumen(Scene):
+             ("f", label_number(ratio, 2), P_YELLOW), (None, r"\cdot", None),
+             ("ve", r"V_{\mathrm{e}}", P_WHITE), (None, r"=", None),
+-            ("num", rf"{label_number(ratio, 2)} \cdot {label_number(H['V_e'])} \approx {label_number(V_NET)}\,\mathrm{{m^{{3}}}}", P_WHITE),
++            ("num", rf"{label_number(ratio, 2)} \cdot {label_number(H['V_e'])}\,\mathrm{{m^{{3}}}} \approx {label_number(V_NET)}\,\mathrm{{m^{{3}}}}", P_WHITE),
+         ])
+         self.play(stage.transition("ventilation.volume.gross-net.formula-v", source=v_sym, target=items["v"]), stage.transition("ventilation.volume.gross-net.formula-ve", source=lbl_e, target=items["ve"]), *warm_air(0.8), run_time=0.8)
+@@ -697,30 +681,30 @@ class Beat2_Luftwechselrate(Scene):
+     NARRATION = [
+         ("volume",
+-         "Start again from the air volume V inside the house: 440 cubic metres.",
+-         "Wieder vom Luftvolumen V im Haus ausgehen: 440 m³."),
++         r"Start again from the air volume $V$ inside the house: $440\,\mathrm{m^3}$.",
++         r"Wieder vom Luftvolumen $V$ im Haus ausgehen: $440\,\mathrm{m^3}$."),
+         ("rate",
+-         "The air change rate n tells how often that volume is exchanged per hour.",
+-         "Die Luftwechselrate n sagt, wie oft dieses Volumen pro Stunde ausgetauscht wird."),
++         r"The air change rate $n$ tells how often that volume is exchanged per hour.",
++         r"Die Luftwechselrate $n$ sagt, wie oft dieses Volumen pro Stunde ausgetauscht wird."),
+         ("hour",
+-         "At n equals 0.5 per hour, 220 cubic metres of fresh air flow in during one hour.",
+-         "Bei n = 0,5 pro Stunde strömen in einer Stunde 220 m³ frische Luft herein."),
++         r"At $n = 0.5\,\mathrm{h^{-1}}$, $220\,\mathrm{m^3}$ of fresh air flow in during one hour.",
++         r"Bei $n = 0{,}5\,\mathrm{h^{-1}}$ strömen in einer Stunde $220\,\mathrm{m^3}$ frische Luft herein."),
+         ("one_change",
+          "One air change means the entire volume is replaced — here after two hours.",
+          "Ein Luftwechsel heißt: das ganze Volumen ist ersetzt — hier nach zwei Stunden."),
+         ("product",
+-         "Volume times air change rate — V times n — sets the ventilation airflow, in both seasons.",
+-         "Volumen mal Luftwechselrate — V mal n — bestimmt den Lüftungsvolumenstrom, in beiden Jahreszeiten."),
++         r"Volume times air change rate — $V \cdot n$ — sets the ventilation airflow $\dot{V}$, in both seasons.",
++         r"Volumen mal Luftwechselrate — $V \cdot n$ — bestimmt den Lüftungsvolumenstrom $\dot{V}$, in beiden Jahreszeiten."),
+         ("home",
+-         "Our 0.5 per hour is the minimum air change for dwellings in DIN EN 12831.",
+-         "Unsere 0,5 pro Stunde sind der Mindestluftwechsel für Wohnungen nach DIN EN 12831."),
++         r"Our $0.5\,\mathrm{h^{-1}}$ is the minimum air change for dwellings in DIN EN 12831-1.",
++         r"Unsere $0{,}5\,\mathrm{h^{-1}}$ sind der Mindestluftwechsel für Wohnungen nach DIN EN 12831-1."),
+         ("low",
+-         "An unheated storeroom without use needs almost no air change; a passive house with ventilation unit about 0.3.",
+-         "Ein unbeheizter Lagerraum ohne Nutzung braucht kaum Luftwechsel, ein Passivhaus mit Lüftungsanlage etwa 0,3."),
++         r"An unheated storeroom without use needs almost no air change; a passive house with ventilation unit about $0.3\,\mathrm{h^{-1}}$.",
++         r"Ein unbeheizter Lagerraum ohne Nutzung braucht kaum Luftwechsel, ein Passivhaus mit Lüftungsanlage etwa $0{,}3\,\mathrm{h^{-1}}$."),
+         ("mid",
+-         "An office needs about 2, a classroom about 4 air changes per hour.",
+-         "Ein Büro braucht etwa 2, ein Klassenzimmer etwa 4 Luftwechsel pro Stunde."),
++         r"An office needs about $2\,\mathrm{h^{-1}}$, a classroom about $4\,\mathrm{h^{-1}}$.",
++         r"Ein Büro braucht etwa $2\,\mathrm{h^{-1}}$, ein Klassenzimmer etwa $4\,\mathrm{h^{-1}}$."),
+         ("high",
+-         "A commercial kitchen about 15, an operating room about 20 per DIN 1946-4 — its air is renewed every three minutes.",
+-         "Eine Gewerbeküche etwa 15, ein Operationssaal nach DIN 1946-4 etwa 20 — dort ist die Luft alle 3 Minuten neu."),
++         r"A commercial kitchen about $15\,\mathrm{h^{-1}}$, an operating room about $20\,\mathrm{h^{-1}}$ per DIN 1946-4 — its air is renewed every $3\,\mathrm{min}$.",
++         r"Eine Gewerbeküche etwa $15\,\mathrm{h^{-1}}$, ein Operationssaal nach DIN 1946-4 etwa $20\,\mathrm{h^{-1}}$ — dort ist die Luft alle $3\,\mathrm{min}$ neu."),
+     ]
+ 
+@@ -732,5 +716,5 @@ class Beat2_Luftwechselrate(Scene):
+ 
+         subtitle = section_heading(tr("Air change rate n", "Luftwechselrate n"))
+-        din = _din_ref("DIN EN 12831-1 · DIN 1946-4")
++        din = reference_chip(_references.cite("din-en-12831-1", "din-1946-4"))
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+         caption = caption_bar(subtitle_text(N, "volume"))
+@@ -797,14 +781,15 @@ class Beat2_Luftwechselrate(Scene):
+         run_hour(1.0)
+         flow_read = math_label(rf"\dot{{V}} = \frac{{{label_number(V_NET * N_RATE)}\,\mathrm{{m^{{3}}}}}}{{1\,\mathrm{{h}}}} = "
+-                               rf"{label_number(V_NET * N_RATE)}\,\mathrm{{m^{{3}}/h}}", np.array([x0, -0.35, 0]),
++                               rf"{label_number(V_NET * N_RATE)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", np.array([x0, -0.35, 0]),
+                                size=BODY_FONT_SIZE, color=P_TEAL, edge="left")
+         snap = math_label(rf"V_{{\mathrm{{frisch}}}} = V \cdot n \cdot t = {label_number(V_NET * N_RATE)}\,\mathrm{{m^{{3}}}}",
+                           np.array([x0, 1.05, 0]), size=BODY_FONT_SIZE, color=P_BLUE, edge="left")
+         self.play(morphs.transition("ventilation.volume.air-change.flow-reading", source=snap, target=flow_read), *exchange(0.9), run_time=0.9)
++        self.remove(snap)
+         hold_for(self, N, "hour", during=exchange)
+ 
+         caption = swap_caption(self, caption, subtitle_text(N, "one_change"))
+         run_hour(2.0)
+-        full = math_label(rf"t = \frac{{1}}{{n}} = {label_number(1 / N_RATE)}\,\mathrm{{h}}", np.array([-1.0, -0.65, 0]),
++        full = math_label(rf"t = \frac{{1}}{{n}} = \frac{{1}}{{{label_number(N_RATE, 1)}\,\mathrm{{h^{{-1}}}}}} = {label_number(1 / N_RATE)}\,\mathrm{{h}}", np.array([-1.0, -0.65, 0]),
+                           size=BODY_FONT_SIZE, color=P_CYAN)
+         self.play(FadeIn(full, shift=UP * 0.1), Indicate(fresh, color=P_CYAN, scale_factor=1.0), *exchange(0.8),
+@@ -815,5 +800,5 @@ class Beat2_Luftwechselrate(Scene):
+         row, box, items = math_panel([
+             ("v", "V", P_ORANGE), (None, r"\cdot", None), ("n", "n", P_CYAN), (None, "=", None),
+-            ("vd", r"\dot{V}", P_TEAL), (None, r"\;[\mathrm{m^{3}/h}]", None),
++            ("vd", r"\dot{V}", P_TEAL), (None, r"\;\text{in}\;\frac{\mathrm{m^{3}}}{\mathrm{h}}", None),
+         ])
+         self.play(morphs.transition("ventilation.volume.air-change.formula-v", source=v_lbl, target=items["v"]), morphs.transition("ventilation.volume.air-change.formula-n", source=n_lbl, target=items["n"]),
+@@ -872,5 +857,8 @@ class Beat2_Luftwechselrate(Scene):
+             glyph.clear_updaters()
+             val.clear_updaters()
+-            self.play(morphs.transition(f"ventilation.volume.air-change.use-{idx}-dot", source=glyph, target=dots[idx]), morphs.transition(f"ventilation.volume.air-change.use-{idx}-label", source=VGroup(top, val), target=labels[idx]),
++            name_val = VGroup(top, val)
++            self.remove(top, val)
++            self.add(name_val)
++            self.play(morphs.transition(f"ventilation.volume.air-change.use-{idx}-dot", source=glyph, target=dots[idx]), morphs.transition(f"ventilation.volume.air-change.use-{idx}-label", source=name_val, target=labels[idx]),
+                       Create(leaders[idx]), run_time=1.0)
+ 
+@@ -883,5 +871,5 @@ class Beat2_Luftwechselrate(Scene):
+                 show_use(_use_glyph(kind, color), tr(_USE_EN[name], name), value, color, i + 1)
+             if key == "high":
+-                renew = math_label(rf"\frac{{60\,\mathrm{{min}}}}{{{label_number(20.0)}}} = {label_number(60 / 20.0)}\,\mathrm{{min}}",
++                renew = math_label(rf"\frac{{60\,\frac{{\mathrm{{min}}}}{{\mathrm{{h}}}}}}{{{label_number(20.0)}\,\mathrm{{h^{{-1}}}}}} = {label_number(60 / 20.0)}\,\mathrm{{min}}",
+                                    stage + DOWN * 0.1, size=BODY_FONT_SIZE, color=P_RED)
+                 self.wait(1.0)
+@@ -901,21 +889,21 @@ class Beat3_Volumenstrom(Scene):
+     NARRATION = [
+         ("area",
+-         "Volume times air change rate: 440 cubic metres high, 0.5 per hour wide — the area is the volume flow, 220 cubic metres per hour.",
+-         "Volumen mal Luftwechselrate: 440 m³ hoch, 0,5 pro Stunde breit — die Fläche ist der Volumenstrom, 220 m³ pro Stunde."),
++         r"Volume times air change rate: $440\,\mathrm{m^3}$ high, $0.5\,\mathrm{h^{-1}}$ wide — the area is the volume flow $\dot{V}$, $220\,\mathrm{m^3/h}$.",
++         r"Volumen mal Luftwechselrate: $440\,\mathrm{m^3}$ hoch, $0{,}5\,\mathrm{h^{-1}}$ breit — die Fläche ist der Volumenstrom $\dot{V}$, $220\,\mathrm{m^3/h}$."),
+         ("hour",
+-         "Those 220 cubic metres flow through the house within one hour — 3600 seconds.",
+-         "Diese 220 m³ strömen in einer Stunde durch das Haus — das sind 3600 Sekunden."),
++         r"Those $220\,\mathrm{m^3}$ flow through the house within one hour — $3600\,\mathrm{s}$.",
++         r"Diese $220\,\mathrm{m^3}$ strömen in einer Stunde durch das Haus — das sind $3600\,\mathrm{s}$."),
+         ("second",
+-         "Divided by 3600, 0.061 cubic metres remain per second — about 61 litres.",
+-         "Geteilt durch 3600 bleiben pro Sekunde 0,061 m³ — rund 61 Liter."),
++         r"Divided by $3600\,\mathrm{s/h}$, $0.061\,\mathrm{m^3/s}$ remain — about $61\,\mathrm{l/s}$.",
++         r"Geteilt durch $3600\,\mathrm{s/h}$ bleiben $0{,}061\,\mathrm{m^3/s}$ — rund $61\,\mathrm{l/s}$."),
+         ("spell",
+-         "One airflow, two spellings: Heating writes V times n in cubic metres per hour, Cooling writes q v R in cubic metres per second.",
+-         "Ein Luftstrom, zwei Schreibweisen: Die Heizung schreibt V mal n in m³/h, die Kühlung q-v-R in m³/s."),
++         r"One airflow, two spellings: Heating writes $V \cdot n$ in $\mathrm{m^3/h}$, Cooling writes $q_{v,\mathrm{R}}$ in $\mathrm{m^3/s}$.",
++         r"Ein Luftstrom, zwei Schreibweisen: Die Heizung schreibt $V \cdot n$ in $\mathrm{m^3/h}$, die Kühltechnik $q_{v,\mathrm{R}}$ in $\mathrm{m^3/s}$."),
+         ("people",
+-         "Cross-check by hygiene: four people need about 30 cubic metres per hour each — 120 in total.",
+-         "Gegenprobe Hygiene: Vier Personen brauchen je etwa 30 m³/h, zusammen 120 m³/h."),
++         r"Cross-check by hygiene: four people need about $30\,\mathrm{m^3/h}$ each — $120\,\mathrm{m^3/h}$ in total.",
++         r"Gegenprobe Hygiene: Vier Personen brauchen je etwa $30\,\mathrm{m^3/h}$, zusammen $120\,\mathrm{m^3/h}$."),
+         ("cover",
+-         "That is below 220 — the minimum air change n of 0.5 covers the hygiene demand, in winter and in summer.",
+-         "Das liegt unter 220 m³/h — der Mindestluftwechsel n = 0,5 deckt den Hygienebedarf ab, im Winter wie im Sommer."),
++         r"That is below $220\,\mathrm{m^3/h}$ — the minimum air change $n = 0.5\,\mathrm{h^{-1}}$ covers the hygiene demand, in winter and in summer.",
++         r"Das liegt unter $220\,\mathrm{m^3/h}$ — der Mindestluftwechsel $n = 0{,}5\,\mathrm{h^{-1}}$ deckt den Hygienebedarf ab, im Winter wie im Sommer."),
+     ]
+ 
+@@ -926,5 +914,5 @@ class Beat3_Volumenstrom(Scene):
+ 
+         subtitle = section_heading(tr("Volume flow: one airflow, two notations", "Volumenstrom: ein Luftstrom, zwei Schreibweisen"))
+-        din = _din_ref("DIN EN 12831-1 · DIN EN 16798-1")
++        din = reference_chip(_references.cite("din-en-12831-1", "din-en-16798-1"))
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+         caption = caption_bar(subtitle_text(N, "area"))
+@@ -940,6 +928,6 @@ class Beat3_Volumenstrom(Scene):
+             math_label(label_number(0.5, 1), np.array([ox + 0.5 * ux, oy - 0.3, 0]), size=LABEL_FONT_SIZE),
+             math_label("1", np.array([ox + ux, oy - 0.3, 0]), size=LABEL_FONT_SIZE),
+-            math_label(r"n\;[\mathrm{h^{-1}}]", np.array([x_end + 0.2, oy - 0.07, 0]), size=LABEL_FONT_SIZE, edge="left"),
+-            math_label(r"V\;[\mathrm{m^{3}}]", np.array([ox, y_end + 0.3, 0]), size=LABEL_FONT_SIZE),
++            math_label(r"n\;\text{in}\;\mathrm{h^{-1}}", np.array([x_end + 0.2, oy - 0.07, 0]), size=LABEL_FONT_SIZE, edge="left"),
++            math_label(r"V\;\text{in}\;\mathrm{m^{3}}", np.array([ox, y_end + 0.3, 0]), size=LABEL_FONT_SIZE),
+         )
+ 
+@@ -959,5 +947,5 @@ class Beat3_Volumenstrom(Scene):
+         n_read = math_readout(lambda: rf"n = {label_number(n_tr.get_value(), 1)}\,\mathrm{{h^{{-1}}}}",
+                               [ox + 0.5 * ux, oy - 0.68, 0], size=BODY_FONT_SIZE, color=P_CYAN, edge="center")
+-        a_read = math_readout(lambda: rf"\dot{{V}} = {label_number(v_tr.get_value() * n_tr.get_value())}\,\mathrm{{m^{{3}}/h}}",
++        a_read = math_readout(lambda: rf"\dot{{V}} = {label_number(v_tr.get_value() * n_tr.get_value())}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
+                               [ox + 0.5 * ux + 0.4, oy + 440 * uy / 2, 0], size=BODY_FONT_SIZE, color=P_TEAL)
+         self.play(FadeIn(axes), run_time=0.8)
+@@ -968,5 +956,5 @@ class Beat3_Volumenstrom(Scene):
+             ("v", "V", P_ORANGE), (None, r"\cdot", None), ("n", "n", P_CYAN), (None, "=", None),
+             ("vd", r"\dot{V}", P_TEAL), (None, "=", None),
+-            ("num", rf"{label_number(V_NET)} \cdot {label_number(N_RATE, 1)} = {label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_WHITE),
++            ("num", rf"{label_number(V_NET)}\,\mathrm{{m^{{3}}}} \cdot {label_number(N_RATE, 1)}\,\mathrm{{h^{{-1}}}} = {label_number(V_DOT)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", P_WHITE),
+         ])
+         self.play(stage.transition("ventilation.volume.flow.formula-v", source=v_read, target=items["v"]), stage.transition("ventilation.volume.flow.formula-n", source=n_read, target=items["n"]),
+@@ -1002,6 +990,6 @@ class Beat3_Volumenstrom(Scene):
+         self.play(t_tr.animate.set_value(1.0), run_time=3.0)
+         per_s = math_label(
+-            rf"\frac{{{label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}}}{{3600\,\mathrm{{s/h}}}} = {label_number(V_DOT_S, 3)}\,\mathrm{{m^{{3}}/s}}"
+-            rf" \approx {label_number(V_DOT_S * 1000)}\,\mathrm{{l/s}}",
++            rf"\frac{{{label_number(V_DOT)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}}}{{3600\,\frac{{\mathrm{{s}}}}{{\mathrm{{h}}}}}} = {label_number(V_DOT_S, 3)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{s}}}}"
++            rf" \approx {label_number(V_DOT_S * 1000)}\,\frac{{\mathrm{{l}}}}{{\mathrm{{s}}}}",
+             np.array([x0 + width / 2, -1.0, 0]), size=BODY_FONT_SIZE, color=P_TEAL)
+         self.play(stage.transition("ventilation.volume.flow.per-second", source=a_read, target=per_s), run_time=1.0)
+@@ -1023,6 +1011,6 @@ class Beat3_Volumenstrom(Scene):
+             return VGroup(frame, lines).move_to([cx, 0.35, 0])
+ 
+-        card_h = card(tr("Heating · Winter", "Heizung · Winter"), r"V \cdot n", rf"{label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_ORANGE, -3.4)
+-        card_k = card(tr("Cooling · Summer", "Kühlung · Sommer"), r"q_{v,\mathrm{R}}", rf"{label_number(V_DOT_S, 3)}\,\mathrm{{m^{{3}}/s}}", P_CYAN, 3.4)
++        card_h = card(tr("Heating · Winter", "Heizung · Winter"), r"V \cdot n", rf"{label_number(V_DOT)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", P_ORANGE, -3.4)
++        card_k = card(tr("Cooling · Summer", "Kühltechnik · Sommer"), r"q_{v,\mathrm{R}}", rf"{label_number(V_DOT_S, 3)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{s}}}}", P_CYAN, 3.4)
+         to_s = Arrow([-1.05, 0.65, 0], [1.05, 0.65, 0], buff=0, color=P_WHITE, stroke_width=2.4, tip_length=0.16)
+         to_h = Arrow([1.05, 0.0, 0], [-1.05, 0.0, 0], buff=0, color=P_WHITE, stroke_width=2.4, tip_length=0.16)
+@@ -1035,6 +1023,6 @@ class Beat3_Volumenstrom(Scene):
+         row2, box2, items2 = math_panel([
+             ("vd", r"\dot{V}", P_TEAL), (None, "=", None), ("vn", r"V \cdot n", P_ORANGE), (None, "=", None),
+-            ("h", rf"{label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_ORANGE), (None, "=", None),
+-            ("s", rf"{label_number(V_DOT_S, 3)}\,\mathrm{{m^{{3}}/s}}", P_CYAN), (None, "=", None),
++            ("h", rf"{label_number(V_DOT)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", P_ORANGE), (None, "=", None),
++            ("s", rf"{label_number(V_DOT_S, 3)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{s}}}}", P_CYAN), (None, "=", None),
+             ("q", r"q_{v,\mathrm{R}}", P_CYAN),
+         ])
+@@ -1054,8 +1042,8 @@ class Beat3_Volumenstrom(Scene):
+         bar_n = Rectangle(width=V_DOT * unit, height=row_h, color=P_TEAL, stroke_width=1.6, fill_color=P_TEAL,
+                           fill_opacity=0.5).move_to([bx + V_DOT * unit / 2, 1.2, 0])
+-        lbl_n = math_label(rf"V \cdot n = {label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}", np.array([bx, 1.75, 0]),
++        lbl_n = math_label(rf"V \cdot n = {label_number(V_DOT)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", np.array([bx, 1.75, 0]),
+                            size=BODY_FONT_SIZE, color=P_TEAL, edge="left")
+         count = ValueTracker(0.0)
+-        lbl_p = math_readout(lambda: rf"{PERSONS} \cdot {label_number(PER_PERSON)} = {label_number(count.get_value())}\,\mathrm{{m^{{3}}/h}}",
++        lbl_p = math_readout(lambda: rf"{PERSONS} \cdot {label_number(PER_PERSON)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}} = {label_number(count.get_value())}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
+                              [bx, 0.55, 0], size=BODY_FONT_SIZE, color=P_BLUE)
+         value_h, value_k = card_h[1][2], card_k[1][2]
+@@ -1080,10 +1068,10 @@ class Beat3_Volumenstrom(Scene):
+         x_a, x_b = bx + PERSONS * PER_PERSON * unit, bx + V_DOT * unit
+         reserve = dim_arrow([x_a, -0.35, 0], [x_b, -0.35, 0], color=P_YELLOW)
+-        reserve_lbl = math_label(tr(rf"\mathrm{{reserve}}\;{label_number(V_DOT - PERSONS * PER_PERSON)}\,\mathrm{{m^{{3}}/h}}", rf"\mathrm{{Reserve}}\;{label_number(V_DOT - PERSONS * PER_PERSON)}\,\mathrm{{m^{{3}}/h}}"),
++        reserve_lbl = math_label(tr(rf"\mathrm{{reserve}}\;{label_number(V_DOT - PERSONS * PER_PERSON)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", rf"\mathrm{{Reserve}}\;{label_number(V_DOT - PERSONS * PER_PERSON)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}"),
+                                  np.array([(x_a + x_b) / 2, -0.72, 0]), size=LABEL_FONT_SIZE, color=P_YELLOW)
+         row3, box3, items3 = math_panel([
+-            ("p", rf"{PERSONS} \cdot {label_number(PER_PERSON)}\,\mathrm{{m^{{3}}/h}} = {label_number(PERSONS * PER_PERSON)}\,\mathrm{{m^{{3}}/h}}", P_BLUE),
++            ("p", rf"{PERSONS} \cdot {label_number(PER_PERSON)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}} = {label_number(PERSONS * PER_PERSON)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", P_BLUE),
+             (None, "<", None),
+-            ("n", rf"V \cdot n = {label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_TEAL),
++            ("n", rf"V \cdot n = {label_number(V_DOT)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", P_TEAL),
+         ])
+         self.play(stage.transition("ventilation.volume.flow.cover-people", source=lbl_p, target=items3["p"]), stage.transition("ventilation.volume.flow.cover-total", source=lbl_n, target=items3["n"]),
+@@ -1092,5 +1080,5 @@ class Beat3_Volumenstrom(Scene):
+                   _dim(VGroup(room_lbl, *persons), 0.25), run_time=0.8)
+         chips = VGroup(_handover_chip(tr(r"\to\;\text{Heating:}\;V \cdot n", r"\to\;\text{Heizung:}\;V \cdot n"), P_ORANGE, LABEL_FONT_SIZE),
+-                       _handover_chip(tr(r"\to\;\text{Cooling:}\;q_{v,\mathrm{R}}", r"\to\;\text{Kühlung:}\;q_{v,\mathrm{R}}"), P_CYAN, LABEL_FONT_SIZE)).arrange(RIGHT, buff=0.5)
++                       _handover_chip(tr(r"\to\;\text{Cooling:}\;q_{v,\mathrm{R}}", r"\to\;\text{Kühltechnik:}\;q_{v,\mathrm{R}}"), P_CYAN, LABEL_FONT_SIZE)).arrange(RIGHT, buff=0.5)
+         chips.move_to([0.0, -1.25, 0])
+         self.play(FadeIn(chips, shift=UP * 0.1), run_time=0.6)

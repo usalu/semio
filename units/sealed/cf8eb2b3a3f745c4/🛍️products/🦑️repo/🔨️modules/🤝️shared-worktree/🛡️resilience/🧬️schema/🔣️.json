@@ -1,0 +1,1083 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/resilience/v1",
+ "title": "Shared worktree resilience: sealed code snapshots, the self-check report, the health file and the language-agnostic fixture",
+ "definitions": {
+  "CodeSnapshotPublicationPolicy": {
+   "description": "When an eligible publication is refused, wait before trying again and keep the same locally authenticated release identity.",
+   "const": {"retryMaximumMilliseconds": 30000}
+  },
+  "Sha256": {
+   "type": "string",
+   "pattern": "^[0-9a-f]{64}$"
+  },
+  "OriginId": {
+   "type": "string",
+   "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+  },
+  "Count": {
+   "type": "integer",
+   "minimum": 0,
+   "maximum": 9007199254740991
+  },
+  "RelativePath": {
+   "type": "string",
+   "minLength": 1,
+   "maxLength": 240,
+   "pattern": "^[^/\\\\][^\\\\]*$"
+  },
+  "SealedFile": {
+   "description": "One file of a sealed code snapshot. `executable` is the owner/group/other execute bit of the file on the machine that sealed it (always false where the sealing platform has no such bit); the provisioning overlay and the kit restore it, because a copy of the bytes alone never carries it.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "bytes",
+    "executable",
+    "path",
+    "sha256"
+   ],
+   "properties": {
+    "path": {
+     "$ref": "#/definitions/RelativePath"
+    },
+    "bytes": {
+     "$ref": "#/definitions/Count"
+    },
+    "sha256": {
+     "$ref": "#/definitions/Sha256"
+    },
+    "executable": {
+     "type": "boolean"
+    }
+   }
+  },
+  "SealedCode": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "createdMs",
+    "digest",
+    "files",
+    "moduleRoot",
+    "version"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "digest": {
+     "$ref": "#/definitions/Sha256"
+    },
+    "createdMs": {
+     "$ref": "#/definitions/Count"
+    },
+    "moduleRoot": {
+     "$ref": "#/definitions/RelativePath"
+    },
+    "files": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/SealedFile"
+     }
+    }
+   }
+  },
+  "SelfCheck": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "digest",
+    "error",
+    "modules",
+    "ok",
+    "schemas",
+    "texts",
+    "version"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "ok": {
+     "type": "boolean"
+    },
+    "digest": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/definitions/Sha256"
+      }
+     ]
+    },
+    "modules": {
+     "$ref": "#/definitions/Count"
+    },
+    "schemas": {
+     "$ref": "#/definitions/Count"
+    },
+    "texts": {
+     "$ref": "#/definitions/Count"
+    },
+    "error": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "maxLength": 2048
+      }
+     ]
+    }
+   }
+  },
+  "Failure": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "count",
+    "kind",
+    "lastMs"
+   ],
+   "properties": {
+    "kind": {
+     "type": "string",
+     "pattern": "^[a-z][a-z0-9-]{0,39}$"
+    },
+    "count": {
+     "$ref": "#/definitions/Count"
+    },
+    "lastMs": {
+     "$ref": "#/definitions/Count"
+    }
+   }
+  },
+  "TargetSharingKinds": {
+   "description": "Supplementary lifetime counts for native runtime error codes on terminal target mutations. The codes do not identify the underlying cause.",
+   "const": {
+    "EBUSY": "blocked-target-sharing-ebusy",
+    "EPERM": "blocked-target-sharing-eperm",
+    "EACCES": "blocked-target-sharing-eacces"
+   }
+  },
+  "TargetSharingOperationKinds": {
+   "description": "Supplementary lifetime counts for the unlink and rename operations that reported a native target sharing failure.",
+   "const": {
+    "unlink": "blocked-target-sharing-unlink",
+    "rename": "blocked-target-sharing-rename"
+   }
+  },
+  "RenameEpermTargetKinds": {
+   "description": "Last target metadata already sampled by a staged put that later received EPERM from rename. These counts carry no path or access verdict.",
+   "const": {
+    "unseen": "blocked-rename-eperm-target-unseen",
+    "no-owner-write": "blocked-rename-eperm-target-no-write",
+    "owner-write": "blocked-rename-eperm-target-write",
+    "other": "blocked-rename-eperm-target-other"
+   }
+  },
+  "Pending": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "code",
+    "ok",
+    "reason"
+   ],
+   "properties": {
+    "code": {
+     "$ref": "#/definitions/Sha256"
+    },
+    "ok": {
+     "const": false
+    },
+    "reason": {
+     "type": "string",
+     "maxLength": 512
+    }
+   }
+  },
+  "Health": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "code",
+    "failures",
+    "pending",
+    "pid",
+    "store",
+    "storeSinceMs",
+    "trust",
+    "version",
+    "wallMs"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "wallMs": {
+     "$ref": "#/definitions/Count"
+    },
+    "pid": {
+     "$ref": "#/definitions/Count"
+    },
+    "code": {
+     "$ref": "#/definitions/Sha256"
+    },
+    "store": {
+     "enum": [
+      "ok",
+      "stalled",
+      "unreachable"
+     ]
+    },
+    "storeSinceMs": {
+     "$ref": "#/definitions/Count"
+    },
+    "pending": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/definitions/Pending"
+      }
+     ]
+    },
+    "failures": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "$ref": "#/definitions/Failure"
+     }
+    },
+    "trust": {
+     "$ref": "#/definitions/Trust"
+    },
+    "sidecars": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "$ref": "#/definitions/Sidecar"
+     }
+    }
+   }
+  },
+  "Trust": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "lostKind",
+    "lostMs",
+    "scope",
+    "verifiedMs"
+   ],
+   "properties": {
+    "scope": {
+     "enum": [
+      "shared-source"
+     ]
+    },
+    "verifiedMs": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/definitions/Count"
+      }
+     ]
+    },
+    "lostMs": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/definitions/Count"
+      }
+     ]
+    },
+    "lostKind": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "pattern": "^[a-z][a-z0-9-]{0,39}$"
+      }
+     ]
+    }
+   }
+  },
+  "Sidecar": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "lastExit",
+    "name",
+    "nextStartMs",
+    "pid",
+    "restarts",
+    "sinceMs",
+    "state"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "pattern": "^[a-z][a-z0-9-]{0,39}$"
+    },
+    "state": {
+     "enum": [
+      "off",
+      "waiting",
+      "running",
+      "backoff",
+      "stopped"
+     ]
+    },
+    "pid": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/definitions/Count"
+      }
+     ]
+    },
+    "restarts": {
+     "$ref": "#/definitions/Count"
+    },
+    "sinceMs": {
+     "$ref": "#/definitions/Count"
+    },
+    "lastExit": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "maxLength": 512
+      }
+     ]
+    },
+    "nextStartMs": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/definitions/Count"
+      }
+     ]
+    }
+   }
+  },
+  "JitterCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "digest",
+    "expected",
+    "originId",
+    "span"
+   ],
+   "properties": {
+    "originId": {
+     "$ref": "#/definitions/OriginId"
+    },
+    "digest": {
+     "$ref": "#/definitions/Sha256"
+    },
+    "span": {
+     "$ref": "#/definitions/Count"
+    },
+    "expected": {
+     "$ref": "#/definitions/Count"
+    }
+   }
+  },
+  "SourceFile": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "path",
+    "text"
+   ],
+   "properties": {
+    "path": {
+     "$ref": "#/definitions/RelativePath"
+    },
+    "text": {
+     "type": "string"
+    }
+   }
+  },
+  "ClosureCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "entries",
+    "expected",
+    "files",
+    "name"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1
+    },
+    "files": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/SourceFile"
+     }
+    },
+    "entries": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/RelativePath"
+     }
+    },
+    "expected": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/RelativePath"
+     }
+    }
+   }
+  },
+  "TextsCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "catalogue",
+    "error",
+    "name"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1
+    },
+    "catalogue": {
+     "type": "object"
+    },
+    "error": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "minLength": 1
+      }
+     ]
+    }
+   }
+  },
+  "PruneCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "created",
+    "keep",
+    "kept",
+    "name"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1
+    },
+    "keep": {
+     "$ref": "#/definitions/Count"
+    },
+    "created": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/definitions/Count"
+     }
+    },
+    "kept": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "RotateCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "keepBytes",
+    "maxBytes",
+    "name",
+    "rotated",
+    "tail",
+    "text"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1
+    },
+    "text": {
+     "type": "string"
+    },
+    "maxBytes": {
+     "$ref": "#/definitions/Count"
+    },
+    "keepBytes": {
+     "$ref": "#/definitions/Count"
+    },
+    "rotated": {
+     "type": "boolean"
+    },
+    "tail": {
+     "type": "string"
+    }
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "closure",
+    "jitter",
+    "prune",
+    "rotate",
+    "store",
+    "texts",
+    "version",
+    "blocked",
+    "intakeProgress",
+    "materialisationProgress"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "jitter": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/JitterCase"
+     }
+    },
+    "closure": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/ClosureCase"
+     }
+    },
+    "texts": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/TextsCase"
+     }
+    },
+    "prune": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/PruneCase"
+     }
+    },
+    "rotate": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/RotateCase"
+     }
+    },
+    "store": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/StoreCodeCase"
+     }
+    },
+    "blocked": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/BlockedCase"
+     }
+    },
+    "intakeProgress": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/ApplyProgressCase"
+     }
+    },
+    "materialisationProgress": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/MaterialisationProgressCase"
+     }
+    }
+   }
+  },
+  "RefusedPaths": {
+   "description": "The record of the paths this machine refuses to carry (path policy: too long, illegal characters, unsafe links, case collisions, guard entries), kept in `.cache/f/refused-paths.json`: `total` counts the refusals of paths that were not among the `recent` ones, `recent` holds the 200 newest distinct paths, newest last, each with the reason and the wall time it was last refused.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "recent",
+    "total",
+    "version"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "total": {
+     "$ref": "#/definitions/Count"
+    },
+    "recent": {
+     "type": "array",
+     "maxItems": 200,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "path",
+       "reason",
+       "wallMs"
+      ],
+      "properties": {
+       "path": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+       },
+       "reason": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+       },
+       "wallMs": {
+        "$ref": "#/definitions/Count"
+       }
+      }
+     }
+    }
+   }
+  },
+  "History": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "refused",
+    "runs",
+    "version"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "runs": {
+     "type": "array",
+     "maxItems": 64,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "digest",
+       "firstMs"
+      ],
+      "properties": {
+       "digest": {
+        "$ref": "#/definitions/Sha256"
+       },
+       "firstMs": {
+        "$ref": "#/definitions/Count"
+       }
+      }
+     }
+    },
+    "refused": {
+     "type": "array",
+     "maxItems": 64,
+     "items": {
+      "$ref": "#/definitions/Sha256"
+     }
+    }
+   }
+  },
+  "Beat": {
+   "description": "beat.json: written every second by the watchdog thread of the daemon, from a thread that a blocked event loop cannot stop: the process, its supervisor, the phase, the code and the lag of the event loop in milliseconds.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "base",
+    "lagMs",
+    "parent",
+    "phase",
+    "pid",
+    "source",
+    "startedMs",
+    "version",
+    "wallMs"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "pid": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "parent": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "startedMs": {
+     "$ref": "#/definitions/Count"
+    },
+    "wallMs": {
+     "$ref": "#/definitions/Count"
+    },
+    "phase": {
+     "enum": [
+      "boot",
+      "open",
+      "run"
+     ]
+    },
+    "base": {
+     "type": "string",
+     "minLength": 1
+    },
+    "source": {
+     "enum": [
+      "worktree",
+      "snapshot",
+      "store"
+     ]
+    },
+    "lagMs": {
+     "$ref": "#/definitions/Count"
+    },
+    "activity": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 32
+    },
+    "longestMs": {
+     "description": "The longest time in milliseconds that the event loop did not answer the watchdog since this process started (resolution: the beat interval).",
+     "$ref": "#/definitions/Count"
+    },
+    "longestActivity": {
+     "description": "What the main thread declared it was doing when that longest block was seen.",
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 32
+    }
+   }
+  },
+  "BlockedRestart": {
+   "description": "loop-blocked-restart.json: written by the boot stage just before it ends a daemon whose event loop stayed blocked or whose last owned watchdog beat expired in the run phase, even when later reads return no beat or one from another process: how often this happened on the machine, the process, the lag, what the main thread declared it was doing, and the file with a stack sample of the process taken before it ended (null where the platform has no sampler).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "activity",
+    "count",
+    "lagMs",
+    "phase",
+    "pid",
+    "reason",
+    "sample",
+    "version",
+    "wallMs"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "count": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "pid": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "wallMs": {
+     "$ref": "#/definitions/Count"
+    },
+    "lagMs": {
+     "$ref": "#/definitions/Count"
+    },
+    "phase": {
+     "enum": [
+      "boot",
+      "open",
+      "run"
+     ]
+    },
+    "reason": {
+     "enum": [
+      "blocked",
+      "silent"
+     ]
+    },
+    "activity": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      }
+     ]
+    },
+    "sample": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      }
+     ]
+    },
+    "longestMs": {
+     "description": "The longest block of the event loop that the watchdog measured in the ended process.",
+     "$ref": "#/definitions/Count"
+    },
+    "longestActivity": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 32
+      }
+     ]
+    }
+   }
+  },
+  "Fallback": {
+   "description": "The guard of a machine that runs a fallback code: handed to the daemon in SEMIO_FLEET_CODE_FALLBACK and shown in the attestation.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "guard",
+    "reason",
+    "source"
+   ],
+   "properties": {
+    "guard": {
+     "const": "code-fallback"
+    },
+    "source": {
+     "enum": [
+      "snapshot",
+      "store"
+     ]
+    },
+    "reason": {
+     "type": "string",
+     "maxLength": 512
+    }
+   }
+  },
+  "BootStage": {
+   "description": "stage.json: the signature of the copy of the boot stage outside the module.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "bytes",
+    "sha256",
+    "version",
+    "wallMs"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "sha256": {
+     "$ref": "#/definitions/Sha256"
+    },
+    "bytes": {
+     "$ref": "#/definitions/Count"
+    },
+    "wallMs": {
+     "$ref": "#/definitions/Count"
+    }
+   }
+  },
+  "StoreCodeCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "expected",
+    "files",
+    "name"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1
+    },
+    "files": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "executable",
+       "path",
+       "text"
+      ],
+      "properties": {
+       "path": {
+        "$ref": "#/definitions/RelativePath"
+       },
+       "text": {
+        "type": "string"
+       },
+       "executable": {
+        "type": "boolean"
+       }
+      }
+     }
+    },
+    "expected": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/SealedFile"
+     }
+    }
+   }
+  },
+  "BlockedReasons": {
+   "const": [
+    "sharing-violation",
+    "ebusy",
+    "eperm",
+    "eacces",
+    "symlink-in-the-way",
+    "parent-is-a-file",
+    "directory-in-the-way",
+    "objects-missing",
+    "objects-missing-timeout",
+    "pack-incomplete",
+    "pack-unpublished",
+    "other"
+   ]
+  },
+  "IncomingWorktreeSharingKind": {
+   "const": "blocked-incoming-worktree-sharing"
+  },
+  "BlockedCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "limit",
+    "events",
+    "totals",
+    "results"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "limit": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 8
+    },
+    "events": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "integer",
+        "minimum": 0
+       },
+       {
+        "enum": [
+         null,
+         "EBUSY",
+         "EPERM",
+         "EACCES"
+        ]
+       },
+       {
+        "enum": [
+         null,
+         "unlink",
+         "rename"
+        ]
+       }
+      ],
+      "minItems": 5,
+      "maxItems": 5
+     }
+    },
+    "totals": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Failure"
+     }
+    },
+    "results": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Failure"
+     }
+    }
+   }
+  },
+  "MaterialisationProgressCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["name", "deadlineMs", "completionMs", "stallMs", "status"],
+   "properties": {
+    "name": {"type": "string"},
+    "deadlineMs": {"type": "integer", "minimum": 1},
+    "completionMs": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+    "stallMs": {"type": ["integer", "null"], "minimum": 1},
+    "status": {"enum": ["done", "stalled"]}
+   }
+  },
+  "ApplyProgressCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "bytes",
+    "observations"
+   ],
+   "properties": {
+    "bytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 4194304
+    },
+    "observations": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 4
+    }
+   }
+  }
+ }
+}

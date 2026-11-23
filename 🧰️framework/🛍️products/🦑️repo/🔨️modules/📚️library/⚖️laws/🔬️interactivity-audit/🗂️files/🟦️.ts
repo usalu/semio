@@ -89,6 +89,8 @@ export const INTERACTIVITY_AUDIT_SHELL_FILE = "🧰️framework/🛍️products/
 /** 🔎️ The shell find items the `contracts` crate owns: the audit reads them after the Shell text, because the Shell re-exports them from there. */
 export const INTERACTIVITY_AUDIT_FIND_ITEMS_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🤝️contracts/📥️lifted/🔖️identity-and-types/🦀️.rs";
 export const INTERACTIVITY_AUDIT_OS_SERVICES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️.rs";
+/** 🧭️ The line that opens the text of one source file inside a joined module tree, so a boundary is cut from the file that declares it instead of from a position in the join. */
+export const INTERACTIVITY_AUDIT_FILE_MARKER = "\n//#file ";
 export const INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs";
 export const INTERACTIVITY_AUDIT_WORLD3D_FILES = ["🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🗃️model/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧩️components/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧲️cursors/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🌉️bridge/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🦀️.rs"];
 

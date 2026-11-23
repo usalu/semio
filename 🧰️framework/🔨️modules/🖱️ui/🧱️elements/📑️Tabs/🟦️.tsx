@@ -11,6 +11,7 @@ import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { interactiveTabActiveClass, interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
+import { glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 📑️Contracts
@@ -53,6 +54,7 @@ interface TabsContextValue {
   associationId: (kind: "trigger" | "content", value: string) => string;
   triggerIds: ReadonlyMap<string, string>;
   contentIds: ReadonlyMap<string, string>;
+  measureList: (node: HTMLElement | null) => void;
   registerId: (kind: "trigger" | "content", value: string, id: string) => () => void;
 }
 // #endregion 📑️Contracts
@@ -74,7 +76,9 @@ function idToken(domain: string, value: string): string {
   return `${domain}-${value.length.toString(16)}-${encoded}`;
 }
 
-/** 📑️ Owns controlled or uncontrolled selection and tab associations. */
+const TABS_CLEARANCE = "--tabs-list-clearance";
+
+/** 📑️ Owns controlled or uncontrolled selection and tab associations. The root is one rectangle: the tab list is a glass chip overlaid on its start edge (top for horizontal, start side for vertical) and the panel spans the whole frame, keeping the list's extent as clearance. */
 function Tabs({ className, value, defaultValue, onValueChange, orientation = "horizontal", dir = "ltr", activationMode = "automatic", id, ref, children, ...props }: TabsProps) {
   const instanceId = React.useId();
   const baseId = `tabs-${idToken("root", id ?? "")}-${idToken("instance", instanceId)}`;
@@ -82,6 +86,24 @@ function Tabs({ className, value, defaultValue, onValueChange, orientation = "ho
   const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue);
   const currentValue = controlled ? value : uncontrolledValue;
   const [focusValue, setFocusValue] = React.useState(currentValue);
+  const frameRef = useSharedBorderFrameRef<HTMLDivElement>(ref);
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const setRootRef = React.useCallback((node: HTMLDivElement | null) => { rootRef.current = node; frameRef(node); }, [frameRef]);
+  const listObserver = React.useRef<ResizeObserver | null>(null);
+  const measureList = React.useCallback((node: HTMLElement | null) => {
+    listObserver.current?.disconnect();
+    listObserver.current = null;
+    const root = rootRef.current;
+    if (!root) return;
+    if (!node) { root.style.removeProperty(TABS_CLEARANCE); return; }
+    const sync = () => {
+      const rect = node.getBoundingClientRect();
+      const extent = orientation === "horizontal" ? rect.height : rect.width;
+      root.style.setProperty(TABS_CLEARANCE, `${extent}px`);
+    };
+    sync();
+    if (typeof ResizeObserver !== "undefined") { listObserver.current = new ResizeObserver(sync); listObserver.current.observe(node); }
+  }, [orientation]);
   const [triggerIds, setTriggerIds] = React.useState<ReadonlyMap<string, string>>(() => new Map());
   const [contentIds, setContentIds] = React.useState<ReadonlyMap<string, string>>(() => new Map());
 
@@ -115,13 +137,13 @@ function Tabs({ className, value, defaultValue, onValueChange, orientation = "ho
       });
   }, []);
   const context = React.useMemo<TabsContextValue>(
-    () => ({ value: currentValue, orientation, dir, activationMode, focusValue, activate, setFocusValue, associationId, triggerIds, contentIds, registerId }),
-    [activate, activationMode, associationId, contentIds, currentValue, dir, focusValue, orientation, registerId, triggerIds],
+    () => ({ value: currentValue, orientation, dir, activationMode, focusValue, activate, setFocusValue, associationId, triggerIds, contentIds, measureList, registerId }),
+    [activate, activationMode, associationId, contentIds, measureList, currentValue, dir, focusValue, orientation, registerId, triggerIds],
   );
 
   return (
     <TabsContext.Provider value={context}>
-      <div {...props} ref={ref} id={id} dir={dir} data-slot="tabs" data-orientation={orientation} className={cn("flex flex-col gap-0", className)}>
+      <div {...props} ref={setRootRef} id={id} dir={dir} data-slot="tabs" data-orientation={orientation} data-shared-border-frame="" data-shared-border-edges="top right bottom left" className={cn("relative flex flex-col gap-0", className)}>
         {children}
       </div>
     </TabsContext.Provider>
@@ -141,10 +163,11 @@ function TabsList({ className, ref, children, ...props }: TabsListProps) {
   const setRef = React.useCallback(
     (node: HTMLDivElement | null) => {
       localRef.current = node;
+      context.measureList(node);
       if (typeof ref === "function") ref(node);
       else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
     },
-    [ref],
+    [context.measureList, ref],
   );
   return (
     <div
@@ -155,7 +178,8 @@ function TabsList({ className, ref, children, ...props }: TabsListProps) {
       data-slot="tabs-list"
       data-shared-border-group=""
       data-orientation={context.orientation}
-      className={cn("text-muted-foreground inline-flex h-large w-fit items-stretch justify-center p-0 bg-transparent", className)}
+      data-tabs-chip=""
+      className={cn("text-muted-foreground absolute z-[2] inline-flex items-stretch justify-center p-0", context.orientation === "horizontal" ? "start-0 top-0 h-large w-fit max-w-full" : "start-0 top-0 flex-col", glassClass, className)}
     >
       {children}
     </div>
@@ -203,8 +227,8 @@ function TabsTrigger({ className, value, disabled = false, id, ref, onClick, onF
       aria-controls={contentId}
       tabIndex={disabled ? -1 : context.focusValue === value ? 0 : -1}
       data-slot="tabs-trigger"
-      data-shared-border-frame=""
-      data-shared-border-edges={selected ? "top right bottom left" : ""}
+      data-shared-border-frame={selected ? "" : undefined}
+      data-shared-border-edges={selected ? (context.orientation === "horizontal" ? "right bottom left" : context.dir === "rtl" ? "top bottom left" : "top right bottom") : undefined}
       data-shared-border-state={selected ? "active" : undefined}
       data-tabs-value={value}
       data-state={selected ? "active" : "inactive"}
@@ -238,14 +262,14 @@ function TabsTrigger({ className, value, disabled = false, id, ref, onClick, onF
 }
 
 /** 📄️ Renders only the active panel so inactive descendants cannot run production effects. */
-function TabsContent({ className, value, id, ref, ...props }: TabsContentProps) {
+function TabsContent({ className, value, id, ref, style, ...props }: TabsContentProps) {
   const context = useTabsContext();
   const selected = context.value === value;
   const contentId = id ?? context.associationId("content", value);
   const triggerId = context.triggerIds.get(value) ?? context.associationId("trigger", value);
   React.useEffect(() => context.registerId("content", value, contentId), [contentId, context.registerId, value]);
   if (!selected) return null;
-  return <div {...props} {...sharedBorderlessBoxProps} ref={ref} id={contentId} role="tabpanel" aria-labelledby={triggerId} tabIndex={0} data-slot="tabs-content" data-state="active" className={cn("flex-1", className)} />;
+  return <div {...props} {...sharedBorderlessBoxProps} ref={ref} id={contentId} role="tabpanel" aria-labelledby={triggerId} tabIndex={0} data-slot="tabs-content" data-state="active" className={cn("flex-1", className)} style={{ ...(context.orientation === "horizontal" ? { paddingBlockStart: `var(${TABS_CLEARANCE}, 0px)` } : { paddingInlineStart: `var(${TABS_CLEARANCE}, 0px)` }), ...style }} />;
 }
 
 export { Tabs, TabsContent, TabsList, TabsTrigger };

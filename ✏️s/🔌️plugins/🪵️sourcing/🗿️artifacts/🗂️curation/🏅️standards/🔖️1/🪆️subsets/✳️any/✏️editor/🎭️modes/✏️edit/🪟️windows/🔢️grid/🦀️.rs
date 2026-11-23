@@ -77,7 +77,7 @@ fn push_kind_copies(instances: &mut Vec<semio_framework_value::DslValue>, kind: 
     }
 }
 
-pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, window: &GridWindowConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, window: &GridWindowConfig, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let rows = curated_grid_rows(document, cfg);
     let display = window.instance_display.as_str();
     let mut meshes = Vec::new();
@@ -110,7 +110,7 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, window:
         meshes_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(meshes)),
         instances_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(instances)),
         selection_json: world3d_selection_json("rectangle", &[], None),
-    })
+    }, locale)
 }
 //#endregion 🔖️Render
 

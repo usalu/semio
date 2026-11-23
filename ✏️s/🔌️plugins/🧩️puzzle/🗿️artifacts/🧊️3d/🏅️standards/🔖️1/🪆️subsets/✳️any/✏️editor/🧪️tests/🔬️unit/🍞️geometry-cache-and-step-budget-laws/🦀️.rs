@@ -182,6 +182,7 @@ fn measured_cold_runs(tool_id: &'static str, command: &Puzzle3dCommand, snapshot
         let (mut work, context) = measured_tool_work(&mut original, tool_id, run);
         let turns = measured_step_loop(&mut original, work.as_mut(), command, snapshot, config, &context, semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS, tool_id);
         original.finish();
+        assert!(context.forfeit_unissued(), "a fixture context binds no Store issuer");
         if best.is_empty() {
             best = turns;
             continue;

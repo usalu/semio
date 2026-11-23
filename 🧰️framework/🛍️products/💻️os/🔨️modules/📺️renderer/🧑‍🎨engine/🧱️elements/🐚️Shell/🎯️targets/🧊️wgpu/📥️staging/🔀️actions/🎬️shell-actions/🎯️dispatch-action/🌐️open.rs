@@ -68,7 +68,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         { return Err("Open File's editor package changed".into()); }
         let (folder, admit) = match imported.kept_folder.clone() {
             Some(folder) => (folder, false),
-            None => (local_document_folder_uri(self.directory.identity_env.as_ref().and_then(|env| env.data_dir.as_deref()), &imported.document_id).await?, true),
+            None => (local_document_folder_uri(self.directory.identity_env.as_ref().and_then(|env| env.data_dir.as_deref()).and_then(std::path::Path::to_str), &imported.document_id).await?, true),
         };
         self.publish_browser_document(imported, folder, admit).await
     }

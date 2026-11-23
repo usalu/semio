@@ -6,13 +6,13 @@ import type{ScriptInvocation}from"../../../🧭️routing/📥️invocation/🟦
 import{resolveTypescriptCompilerV1}from"../../../📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import{runtimeTypeEnvironmentV1}from"../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import{PROCESS_TEXTS_V1,refuseProcessV1}from"../../../📖️texts/🟦️.ts";
-import{stretchedBudgetMillisecondsV1}from"../../🎚️budget/⏲️contention/🟦️.ts";
+import{describeClampedBudgetV1,stretchedBudgetV1}from"../../🎚️budget/⏲️contention/🟦️.ts";
 import{requireArtifactOutsideManagedParentV1,safeTemporaryDirectoryV1,testSandboxEnvironmentV1}from"../../🏖️sandbox/🟦️.ts";
 import{runOwnedBunFilesV1}from"../../🟨️bun/📁️files/🟦️.ts";
 import{pinnedRustToolchainV1,pinnedTestToolsV1}from"../../🧰️toolchain/📌️pinned/🟦️.ts";
 import{textV1}from"../../../🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import{toolLanguageV1}from"../../../🧰️tools/📖️registry/🟦️.ts";
-import{discoverProcessTestFilesV1,expandProcessTestSuiteV1,processTestProtocolV1,processTestScratchParentV1,processTestSuiteRunsOnV1,type ProcessTestScratchV1,type ProcessTestTableV1}from"../🟦️.ts";
+import{discoverProcessTestFilesV1,expandProcessTestSuiteV1,processTestSuiteToolsV1,processTestProtocolV1,processTestScratchParentV1,processTestSuiteRunsOnV1,type ProcessTestScratchV1,type ProcessTestTableV1}from"../🟦️.ts";
 import{announceTestWorkersV1,readTestWorkerPolicyV1,testWorkersV1,type TestWorkerPolicyV1}from"../../👷️workers/🟦️.ts";
 import{createTestFileMemoryV1,readTestFileBudgetsV1,testFileRatioBasisPointsV1,type TestFileBudgetsV1,type TestFileProcessRowsV1}from"../../👷️workers/📏️file-budgets/🟦️.ts";
 import{learnedTestWorkerRatioV1,withTestWorkerLearningV1,type TestWorkerLearningV1}from"../../👷️workers/📐️learning/🟦️.ts";
@@ -44,15 +44,16 @@ export async function withProcessTestOutputV1(checkout:string,route:string,work:
 export async function runProcessTestSuiteV1(run:ProcessTestSuiteRunV1):Promise<void>{
  const{invocation,root,checkout,table,owner,output,environment}=run,suite=table.suites.find(row=>row.id===run.suite);
  if(!suite)throw refuseProcessV1("invalid","script.suite-unknown",{suite:run.suite,known:table.suites.map(row=>row.id).join(", ")});
- const stretched=stretchedBudgetMillisecondsV1(suite.budgetMs),budget=()=>scriptInvocationBudget(invocation,stretched);
+ const funded=stretchedBudgetV1(suite.budgetMs),stretched=funded.milliseconds,clamp=describeClampedBudgetV1(suite.budgetMs,funded),budget=()=>scriptInvocationBudget(invocation,stretched);
  if(!processTestSuiteRunsOnV1(suite)){
   (run.report??(line=>{process.stdout.write(line+"\n");}))(textV1(PROCESS_TEXTS_V1.catalog,"script.suite-platform-skipped",toolLanguageV1(environment),{suite:suite.id,platforms:suite.platforms!.join(", "),host:process.platform,count:suite.function?1:expandProcessTestSuiteV1(suite,discoverProcessTestFilesV1(root),table).length}));
   return;
  }
- const tools=pinnedTestToolsV1(suite.tools??[],undefined,environment);
- if(suite.function){await runOwnedCommand(process.execPath,["-e","const suite=await import(process.argv[1]);await suite[process.argv[2]](process.argv[3]);",resolve(root,suite.function.module),suite.function.export,output],checkout,owner+":"+suite.id,budget(),{signal:invocation.control.signal});return;}
+ if(clamp!==undefined)(run.report??(line=>{process.stdout.write(line+"\n");}))(clamp);
+ if(suite.function){pinnedTestToolsV1(suite.tools??[],undefined,environment);await runOwnedCommand(process.execPath,["-e","const suite=await import(process.argv[1]);await suite[process.argv[2]](process.argv[3]);",resolve(root,suite.function.module),suite.function.export,output],checkout,owner+":"+suite.id,budget(),{signal:invocation.control.signal});return;}
  const files=expandProcessTestSuiteV1(suite,discoverProcessTestFilesV1(root),table),sources=files.map(file=>resolve(root,file)),missing=sources.filter(source=>!existsSync(source));
  if(missing.length)throw refuseProcessV1("missing","script.suite-sources-missing",{missing:missing.join(", ")});
+ const tools=pinnedTestToolsV1(processTestSuiteToolsV1(suite,root,files),undefined,environment);
  if(suite.typecheck!=="none")await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(root),"--noEmit","--strict",...(suite.typecheck==="strict-indexed"?["--noUncheckedIndexedAccess"]:[]),"--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types",runtimeTypeEnvironmentV1(),...(suite.typecheckFiles??files).map(file=>resolve(root,file))],checkout,owner+":"+suite.id+":types",budget(),{signal:invocation.control.signal});
  const launched=suite.fileLaunchers??{},failed:string[]=[];
  for(const file of files.filter(row=>launched[row]!==undefined)){

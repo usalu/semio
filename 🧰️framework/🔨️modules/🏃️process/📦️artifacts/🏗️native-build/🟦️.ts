@@ -414,6 +414,7 @@ export class BoundedDiagnosticsV1 {
   lines = 0;
   suppressed = 0;
   private logged = 0;
+  private logFailed = false;
   private readonly newest: string[] = [];
   private firstErrorLine = 0;
   private readonly firstError: string[] = [];
@@ -425,7 +426,7 @@ export class BoundedDiagnosticsV1 {
   constructor(log: number | null, forward: (line: string) => void, liveLines = 200, newestLines = 200, logLimitBytes = 128 * 1024 * 1024) { this.log = log; this.forward = forward; this.liveLines = liveLines; this.newestLines = newestLines; this.logLimitBytes = logLimitBytes; }
   line(text: string): void {
     this.lines++;
-    if (this.log !== null && this.logged < this.logLimitBytes) this.logged += writeSync(this.log, `${text}\n`);
+    if (this.log !== null && !this.logFailed && this.logged < this.logLimitBytes) try { this.logged += writeSync(this.log, `${text}\n`); } catch { this.logFailed = true; }
     if (this.lines <= this.liveLines) { this.forward(text); return; }
     this.suppressed++;
     if (!this.firstErrorLine && /^error(?:\[[A-Z][A-Z0-9]*\])?:/u.test(text.replace(/\x1b\[[0-9;]*m/gu, ""))) {
@@ -438,7 +439,7 @@ export class BoundedDiagnosticsV1 {
   }
   finish(failed: boolean, logPath: string | null): string[] {
     const rows: string[] = [];
-    if (this.suppressed > 0) rows.push(...nativeBuildDiagnosticLinesV1(logPath ? "diagnosticsHiddenLogged" : "diagnosticsHidden", { count: this.suppressed, path: logPath ?? "" }));
+    if (this.suppressed > 0) rows.push(...nativeBuildDiagnosticLinesV1(logPath && !this.logFailed ? "diagnosticsHiddenLogged" : "diagnosticsHidden", { count: this.suppressed, path: logPath ?? "" }));
     if (failed) {
       const beforeNewest = Math.max(0, this.lines - this.newest.length - this.firstErrorLine + 1);
       rows.push(...this.firstError.slice(0, beforeNewest), ...this.newest);

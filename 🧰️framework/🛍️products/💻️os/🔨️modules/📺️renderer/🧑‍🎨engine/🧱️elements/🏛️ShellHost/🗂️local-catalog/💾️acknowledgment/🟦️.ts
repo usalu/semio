@@ -11,7 +11,9 @@ export function localCatalogMutationReflectedV1(catalog: LocalCatalog, mutation:
     && document.surface?.pluginId === mutation.surface?.pluginId && document.surface?.appId === mutation.surface?.appId;
 }
 
-/** 💾️ A submitted operation is acknowledged only by accepted content in a fresh readback. */
+/** 💾️ A submitted operation is acknowledged only by accepted content in a fresh readback.
+ * `read`, when present, is that readback: a persisted status is still not proof until `read` returns bytes `accepts` keeps.
+ * An own-folder write does not echo `documentArchiveReplaced`, so the caller reads the folder itself. */
 export function awaitVerifiedReadbackV1<T>(port: Readonly<{
   accepts: (value: T) => boolean;
   signal: AbortSignal;
@@ -20,6 +22,7 @@ export function awaitVerifiedReadbackV1<T>(port: Readonly<{
   subscribe: (listener: VerifiedReadbackListenerV1<T>) => () => void;
   submit: () => void;
   probe: () => void;
+  read?: () => Promise<T | null>;
 }>): Promise<T | null> {
   if (port.signal.aborted || !port.current()) return Promise.resolve(null);
   return new Promise((resolve) => {
@@ -42,7 +45,16 @@ export function awaitVerifiedReadbackV1<T>(port: Readonly<{
     port.signal.addEventListener("abort", abort, { once: true });
     try {
       unsubscribe = port.subscribe({
-        status: (persisted) => { if (submitted && persisted && !settled) probe(); },
+        status: (persisted) => {
+          if (!(submitted && persisted && !settled)) return;
+          const read = port.read;
+          if (read === undefined) return probe();
+          void read().then((value) => {
+            if (settled || !port.current()) return;
+            if (value !== null && port.accepts(value)) return finish(value);
+            probe();
+          }).catch(() => { if (!settled) probe(); });
+        },
         archive: (catalog) => {
           if (!port.current()) return finish(null);
           if (submitted && !settled && port.accepts(catalog)) finish(catalog);

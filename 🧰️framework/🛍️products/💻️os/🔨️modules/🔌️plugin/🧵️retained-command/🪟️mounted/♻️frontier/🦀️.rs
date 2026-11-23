@@ -153,11 +153,11 @@ fn blank_mounted_operation<A:ArtifactApp>(binding:job::OriginalSourceBinding,chi
 pub fn test_retained_structural_refusal<A:ArtifactApp>(){
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../🚨️structural-refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let structural=corpus["structuralRefusalKinds"].as_array().unwrap().iter().map(|kind|kind.as_str().unwrap()).collect::<Vec<_>>();
- assert_eq!(structural,["UnsupportedOwner"]);
+ assert_eq!(structural,["UnsupportedOwner","InvariantViolated"]);
  for row in corpus["cases"].as_array().unwrap(){
   let mut mounted=test_blank_mounted_operation::<A>();mounted.verb="setSnapshotValue".into();
   if let Some(refusal)=row["refusal"].as_object(){
-   let kind=match refusal["kind"].as_str().unwrap(){"OwnershipLimit"=>PublicationRefusalKind::OwnershipLimit,"UnsupportedOwner"=>PublicationRefusalKind::UnsupportedOwner,other=>panic!("corpus kind {other} has no fixture mapping")};
+   let kind=match refusal["kind"].as_str().unwrap(){"OwnershipLimit"=>PublicationRefusalKind::OwnershipLimit,"UnsupportedOwner"=>PublicationRefusalKind::UnsupportedOwner,"InvariantViolated"=>PublicationRefusalKind::InvariantViolated,other=>panic!("corpus kind {other} has no fixture mapping")};
    mounted.retained_close_fault_refusal=Some(ValueError::new(kind,refusal["message"].as_str().unwrap().to_string()));
   }
   if let Some(fault)=row["closeFault"].as_object(){

@@ -10,7 +10,7 @@ async fn definition_declares_a_text_window() {
 #[semio_framework_async_macros::async_test]
 async fn render_compiles_the_demo_program_into_read_only_text() {
     let scene = crate::examples::demo::scene();
-    let node = render(&scene).expect("viewer script");
+    let node = render(&scene, semio_plugin::Locale::En).expect("viewer script");
     let semio_plugin::Component::Surface(props) = &node.component else { panic!("text surface") };
     let scene: semio_plugin::TextEditorScene = semio_ui_scene::decode(props).expect("packed text");
     assert!(scene.buffer.contains("log.print") || scene.buffer.contains("state.set"), "compiled text should mention a default step kind: {}", scene.buffer);

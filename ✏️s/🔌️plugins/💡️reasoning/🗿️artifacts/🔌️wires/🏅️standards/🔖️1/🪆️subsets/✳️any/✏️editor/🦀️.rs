@@ -691,7 +691,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
             WIRES_PLAY_BODY_COMPOSITE => {
                 let window = edit::windows::canvas::config::current(cfg).cloned().unwrap_or_default();
                 let composed = wires_render_composed(doc)?;
-                edit::windows::canvas::render(&composed.board, &composed.identity_snapshot, &window)
+                edit::windows::canvas::render(&composed.board, &composed.identity_snapshot, &window, view_state.locale)
             }
             WIRES_PLAY_BODY_ARTIFACT => document_panel::render(&wires_render_composed(doc)?, labels, &semio_plugin::TreeWindows::for_body(view_state, WIRES_PLAY_BODY_ARTIFACT)),
             WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_snapshot, labels, &semio_plugin::TreeWindows::for_body(view_state, WIRES_PLAY_BODY_CATALOGUE)),
@@ -728,7 +728,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
                     }
                 }
             }
-            return edit::windows::canvas::render(&board, &fixture, &window).map(semio_plugin::built_to_component_tree);
+            return edit::windows::canvas::render(&board, &fixture, &window, view_state.locale).map(semio_plugin::built_to_component_tree);
         }
         Self::render(body_key, doc, cfg, view_state)
 

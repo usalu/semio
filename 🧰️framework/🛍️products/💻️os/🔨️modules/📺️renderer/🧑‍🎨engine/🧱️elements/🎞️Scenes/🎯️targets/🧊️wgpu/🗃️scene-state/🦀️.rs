@@ -32,7 +32,7 @@ pub use canvas_gestures_input_kit_and_chrome::{
 #[path = "✍️editor-ink-gumball-and-canvas-layer-wire/🦀️.rs"]
 mod editor_ink_gumball_and_canvas_layer_wire;
 pub use editor_ink_gumball_and_canvas_layer_wire::{
-    draw_ink_rect_outline, pivot_screen, request_cancel, text_editor_ui, total, CanvasFillJson,
+    draw_ink_rect_outline, pivot_screen, request_cancel, text_editor_ui, total, CanvasClipPathJson, CanvasFillJson,
     CanvasGradientStopJson, CanvasImageFieldJson, CanvasLayer, CanvasStrokeJson, CanvasTextFieldJson,
     GumballConfig, GumballGesture, GumballHandle,
     GumballMotion, GumballSlot, GumballView, InkBoundsF, ModelToLayer, TextEditorRenameDraft,

@@ -5,6 +5,7 @@ import{resolve}from"node:path";
 import Ajv from"ajv";
 import {Database} from "bun:sqlite";
 import{ADMISSION_POLICY_V1,admissionReserveBytesV1,startAdmissionBrokerV1,unitObservationsV1,compilerWrapperEnvironmentV1}from"../../🟦️.ts";
+import{fleetRemoteEnvironmentV1}from"../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
 import disconnect from"./🔣️.json"with{type:"json"};
 
@@ -84,6 +85,16 @@ test("the compiler chain of a build names the cache wrapper only when the enviro
  expect(compilerWrapperEnvironmentV1("/t/scheduler","/gen",{SEMIO_UNIT_CACHE_ROOT:"/m/u",SEMIO_UNIT_CACHE_WRAPPER:"/w/rustc-wrapper",SEMIO_UNIT_CACHE:"off"})).toEqual({});
  const chain=compilerWrapperEnvironmentV1("/t/scheduler","/gen",{SEMIO_UNIT_CACHE_ROOT:"/m/u",SEMIO_UNIT_CACHE_WRAPPER:"/w/rustc-wrapper",RUSTC:"rustc-x",SEMIO_UNIT_CACHE_SLOTS:"3",SEMIO_UNIT_CACHE_TOOLCHAIN:"tc"});
  expect(chain.RUSTC_WRAPPER).toBe("/w/rustc-wrapper");expect("RUSTC" in chain,"the compiler stays the real one").toBe(false);expect(JSON.parse(chain.SEMIO_UNIT_CACHE_INNER)).toEqual(["/t/scheduler","rustc-x"]);expect(chain.SEMIO_UNIT_CACHE_LANE_ROOT).toBe("/gen");expect(chain.SEMIO_UNIT_CACHE_SLOTS).toBe("3");expect(chain.SEMIO_UNIT_CACHE_BUILD_SCRIPTS).toBe("on");expect(chain.SEMIO_UNIT_CACHE_BROKER_REPLAY).toBe("on");expect(chain.SEMIO_UNIT_CACHE_TOOLCHAIN).toBe("tc");
+});
+
+
+test("the compiler chain of the native-build driver carries the fleet tier exactly as every other launcher resolves it, and none when the remote is off",()=>{
+ const base={SEMIO_UNIT_CACHE_ROOT:"/m/u",SEMIO_UNIT_CACHE_WRAPPER:"/w/rustc-wrapper",SEMIO_REMOTE_CACHE_ENDPOINT:"http://fleet.test:6094",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_INSTANCE:"main"};
+ const chain=compilerWrapperEnvironmentV1("/t/scheduler","/gen",base),fleet=fleetRemoteEnvironmentV1(base);
+ expect(chain.SEMIO_REMOTE_CACHE_ENDPOINT).toBe("http://fleet.test:6094");expect(chain.SEMIO_UNIT_CACHE_LANE).toBe("g");
+ for(const[name,value]of Object.entries(fleet))expect(chain[name],name).toBe(value);
+ const off=compilerWrapperEnvironmentV1("/t/scheduler","/gen",{...base,SEMIO_UNIT_CACHE_REMOTE:"off"});
+ expect(Object.keys(off).filter(name=>name.startsWith("SEMIO_REMOTE_CACHE_")),"remote off leaves no fleet variable").toEqual([]);expect(off.RUSTC_WRAPPER).toBe("/w/rustc-wrapper");
 });
 
 

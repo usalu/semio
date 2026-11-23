@@ -8,16 +8,27 @@ import {casHostAreasV1} from "../📂️areas/🟦️.ts";
 import {collectCasV1,readCasUsageHintV1,type CasAreaSourceV1,type CasCollectionV1,type CasUsageHintV1} from "../🧹️collector/🟦️.ts";
 import {casPartitionNeedBytesV1,casPartitionPolicyForV1,casPartitionUsedFractionV1,decideCasEnforcementV1,measureCasPartitionV1,type CasEnforcementDecisionV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
 import {CAS_POLICY_V1,requireCasPolicyV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
+import {stampCasTransientsV1} from "../📌️pins/🟦️.ts";
 import {casUsageV1} from "../🗃️store/📏️usage/🟦️.ts";
+import {casTextV1} from "../🧬️schema/🟦️.ts";
 
 /** 🔌️ What a guard touches, replaceable by tests: the clock, the partition measurement (`undefined` is "not measurable"), the collection and the scan of the store. */
 export type CasGuardPortsV1=Readonly<{
- now?():number;home?:string;
+ now?():number;home?:string;refuseOverCap?:boolean;
  report?(facts:Readonly<{partition:string;usedFraction:number}>):void;
  partition?(root:string):CasPartitionV1|undefined;
  collect?(request:Readonly<{root:string;policy:CasPolicyV1;partition:CasPartitionV1|undefined;signal?:AbortSignal}>):Promise<CasCollectionV1>;
  usage?(root:string):Promise<number>;
 }>;
+/** 🧯️ A write refused because the store stays over its cap after the bounded synchronous collection; the caller carries on without the cache. */
+export class CasCapRefusalV1 extends Error{
+ readonly usedBytes:number;readonly capBytes:number;
+ constructor(usedBytes:number,capBytes:number){
+  const gib=(bytes:number):number=>Math.round(bytes/1073741824*100)/100,values={usedGib:gib(usedBytes),capGib:gib(capBytes)};
+  super(casTextV1("capRefused","en",values)+" / "+casTextV1("capRefused","de",values));
+  this.name="CasCapRefusalV1";this.usedBytes=usedBytes;this.capBytes=capBytes;
+ }
+}
 /** 🚦️ The admission of one store root: judges a write or an adoption before it adds to the partition, counts what this process added, and runs the collection that keeps the cap and the partition watermarks. */
 export type CasGuardV1=Readonly<{
  settle():Promise<void>;
@@ -54,6 +65,13 @@ async function automaticScopeV1(root:string,policy:CasPolicyV1,partition:CasPart
  return digest.digest("hex");
 }
 
+/** ⏱️ A timer that can be stopped without keeping the process alive. */
+const delay=(milliseconds:number):{done:Promise<undefined>;stop():void}=>{
+ let timer:ReturnType<typeof setTimeout>|undefined;
+ const done=new Promise<undefined>(accept=>{timer=setTimeout(()=>accept(undefined),milliseconds);timer.unref?.();});
+ return{done,stop:()=>clearTimeout(timer)};
+};
+
 /** ⏳️ Lets a writer stop waiting when its own signal fires while the shared collection it waited for goes on: a collection of a large store takes longer than one write may wait, and a scan cancelled by every timed-out write would never finish. */
 const within=<T>(task:Promise<T>,signal?:AbortSignal):Promise<T>=>signal===undefined?task:new Promise<T>((accept,reject)=>{
  if(signal.aborted){reject(signal.reason);return;}
@@ -73,7 +91,7 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
  const collect=async(request:Parameters<NonNullable<CasGuardPortsV1["collect"]>>[0],automatic:boolean,completedAutomatic:(hint:CasUsageHintV1)=>void)=>{
   if(options.collect!==undefined)return options.collect(request);
   const {areas,known}=await hostAreasV1(home);
-  return collectCasV1({root,policy:request.policy,areas,partition:request.partition,signal:request.signal,now,
+  return collectCasV1({root,policy:request.policy,incremental:automatic,areas,partition:request.partition,signal:request.signal,now,
    ...automatic&&known&&request.policy.minAgeMs>0?{automaticScope:()=>automaticScopeV1(root,request.policy,request.partition,areas),completedAutomatic}:{}});
  };
  const run=(quote:ReturnType<typeof decide>,signal?:AbortSignal,automatic=true):FlightV1=>{
@@ -138,7 +156,7 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
   if(!hint?.automaticScope||!fresh(hint.atMs,at))return false;
   switch(quote.decision.reason){
    case "cap-exceeded":return hint.bytes>quote.effective.capBytes;
-   case "cap-high":return true;
+   case "cap-high":return (bytes()??0)-hint.bytes<quote.effective.incrementBytes/2;
    case "partition-high":return casPartitionNeedBytesV1(quote.partition,quote.effective)>0;
    case "partition-critical":return state.critical?.atMs===hint.atMs&&state.critical.automaticScope===hint.automaticScope;
    default:return false;
@@ -170,6 +188,13 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
     if(quote.decision.action==="collect-now"&&!(quote.decision.reason==="partition-critical"?triedCritical:triedCap))
      ({quote,covered}=await verifyCompletion(quote,incomingBytes,signal));
     const {decision,partition}=quote;
+    if(options.refuseOverCap===true&&decision.reason==="cap-exceeded"){
+     if(triedCap||usableCompletion(quote,state.hint))throw new CasCapRefusalV1((bytes()??0)+incomingBytes,quote.effective.capBytes);
+     triedCap=true;
+     const task=run(quote).task,budget=delay(quote.effective.admissionBudgetMs);
+     try{await within(Promise.race([task,budget.done]),signal);}finally{budget.stop();}
+     continue;
+    }
     if(decision.action==="collect-now"){
      const critical=decision.reason==="partition-critical";
      if((critical?triedCritical:triedCap)||covered)
@@ -223,7 +248,10 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
 export async function casEnforceTickV1(options:Readonly<{root:string;policy?:CasPolicyV1;signal?:AbortSignal}&CasGuardPortsV1>):Promise<void>{
  const guard=createCasGuardV1(options);
  await guard.remeasure(options.signal);await guard.admit(0,options.signal);await guard.settle();
+ const policy=requireCasPolicyV1(options.policy??CAS_POLICY_V1),at=(options.now??Date.now)(),last=sweptAt.get(options.root);
+ if((last===undefined||at<last||at-last>=policy.transientLeaseMs)&&await stampCasTransientsV1(options.root)!==""){sweptAt.set(options.root,at);await guard.enforce(options.signal);await guard.settle();}
 }
+const sweptAt=new Map<string,number>();
 
 /** 🧪️ Forgets the shared state of every root; for tests that open many roots in one process. */
-export const resetCasGuardsV1=():void=>{states.clear();};
+export const resetCasGuardsV1=():void=>{states.clear();sweptAt.clear();};

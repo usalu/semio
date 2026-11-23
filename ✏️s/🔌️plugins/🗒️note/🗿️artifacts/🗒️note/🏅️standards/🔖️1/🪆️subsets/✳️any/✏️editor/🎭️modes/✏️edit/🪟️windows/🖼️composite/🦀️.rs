@@ -96,8 +96,8 @@ pub fn engagement(document: &NoteSnapshot, camera: &NoteCamera, engagement_input
 /// `view_mode` picks which one. Camera is session-only runtime state, never part of `NoteSnapshot` —
 /// merged into the wire payload here so the ink-canvas host still gets a `camera` key to render/pan/zoom
 /// against.
-pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, surface_id: &str, view_mode: &str) -> UiAssemblyResult<BuiltNode> {
-    semio_plugin::scene_surface(surface_id, semio_ui_contract::SurfaceKind::InkCanvas, &canvas_scene(document, camera, active_utility, view_mode))
+pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, surface_id: &str, view_mode: &str, name: &str) -> UiAssemblyResult<BuiltNode> {
+    semio_plugin::scene_surface(surface_id, semio_ui_contract::SurfaceKind::InkCanvas, &canvas_scene(document, camera, active_utility, view_mode), name, None)
 }
 
 fn canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, view_mode: &str) -> InkCanvasScene {
@@ -107,16 +107,16 @@ fn canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &s
     scene
 }
 
-pub fn render_with_interaction(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, interaction: &InteractionView<'_>) -> UiAssemblyResult<BuiltNode> {
+pub fn render_with_interaction(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, interaction: &InteractionView<'_>, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let mut scene = canvas_scene(document, camera, active_utility, "composite");
     let selection: Vec<String> = interaction.selection(NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::schema::block_id_from_tree_row_id(id)).collect();
     scene.selection_json = serde_json::to_string(&selection).expect("note interaction selection is JSON-safe");
     scene.hovered_id = interaction.hover(NOTE_INTERACTION_BLOCKS, "pointer").ids.first().and_then(|id| crate::schema::block_id_from_tree_row_id(id));
-    semio_plugin::scene_surface(NOTE_PLAY_SURFACE_COMPOSITE, semio_ui_contract::SurfaceKind::InkCanvas, &scene)
+    semio_plugin::scene_surface(NOTE_PLAY_SURFACE_COMPOSITE, semio_ui_contract::SurfaceKind::InkCanvas, &scene, semio_plugin::surface_name(locale, "Note canvas", "Notizfläche"), None)
 }
 
-pub fn render(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
-    render_canvas_scene(document, camera, active_utility, NOTE_PLAY_SURFACE_COMPOSITE, "composite")
+pub fn render(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
+    render_canvas_scene(document, camera, active_utility, NOTE_PLAY_SURFACE_COMPOSITE, "composite", semio_plugin::surface_name(locale, "Note canvas", "Notizfläche"))
 }
 //#endregion 🔖️Render
 

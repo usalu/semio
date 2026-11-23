@@ -250,7 +250,7 @@ fn scalar_tree_exposes_graph_targets_in_a_scrollable_split() {
     let evaluation = PreviewEvaluation::from_json(&text);
     let rows = semio_s_artifact_procedural_3d_preview_eval::preview_value_rows(&evaluation);
     let scene = semio_plugin::built_text_node(semio_ui_locale::Label::data("scene")).unwrap();
-    let node = semio_s_procedural_core_semantic_ui::scene_with_channel_values(scene, &TreeWindows::unhosted(), "procedural3d-view", "test-values", &semio_s_procedural_core_semantic_ui::ChannelValueLabels::new(false, "Input", "Output"), &rows, &[]).unwrap();
+    let node = semio_s_procedural_core_semantic_ui::scene_with_channel_values(scene, &TreeWindows::unhosted(), "procedural3d-view", "test-values", &semio_s_procedural_core_semantic_ui::ChannelValueLabels::new(semio_plugin::Locale::En, "Input", "Output"), &rows, &[]).unwrap();
     let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
     let projection: serde_json::Value = serde_json::from_str(&projection).unwrap();
     let wrappers = projection["children"].as_array().unwrap();
@@ -283,7 +283,7 @@ fn channel_preview_expands_a_late_value_under_the_same_graph_target() {
     ]);
     let windows = TreeWindows::for_body(&view, body);
     let scene = semio_plugin::built_text_node(semio_ui_locale::Label::data("scene")).unwrap();
-    let labels = semio_s_procedural_core_semantic_ui::ChannelValueLabels::new(true, "Eingang", "Ausgang");
+    let labels = semio_s_procedural_core_semantic_ui::ChannelValueLabels::new(semio_plugin::Locale::De, "Eingang", "Ausgang");
     let node = semio_s_procedural_core_semantic_ui::scene_with_channel_values(scene, &windows, "procedural3d-view", "test-values", &labels, &rows, &[]).unwrap();
     let text = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
     let projection: serde_json::Value = serde_json::from_str(&text).unwrap();

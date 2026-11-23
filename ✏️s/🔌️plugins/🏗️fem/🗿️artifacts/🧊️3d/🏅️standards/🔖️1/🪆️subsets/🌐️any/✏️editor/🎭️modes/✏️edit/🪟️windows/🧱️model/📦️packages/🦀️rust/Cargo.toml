@@ -24,6 +24,8 @@ semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-os-kernel = { workspace = true }
+semio-os-store-codec-registry = { workspace = true }
+semio-os-store-operation-wire = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-plugin = { workspace = true }
 semio-framework-value = { workspace = true }

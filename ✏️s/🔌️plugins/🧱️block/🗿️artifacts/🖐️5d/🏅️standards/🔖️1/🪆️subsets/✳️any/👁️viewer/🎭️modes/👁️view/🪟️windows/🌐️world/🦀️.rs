@@ -37,13 +37,13 @@ pub fn definition() -> WindowKindDefinition {
 /// render as real meshes (`world3d_meshes_json_from_urls`); a part kind with no representation mesh
 /// url yet falls back to the same placeholder box the editor's own world window implicitly assumes
 /// when describing "mesh: —" (documented simplification, not a regression).
-pub fn render(document: &Block5dSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Block5dSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let camera_json = world3d_camera_projection_json([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], None, 1.0, &WorldProjectionConfig::default());
     let urls: Vec<String> = document.representations.iter().filter_map(|representation| representation.mesh_url.clone()).collect();
     let meshes_json = if urls.is_empty() { world3d_meshes_json_from_kinds(&[BLOCK5D_VIEW_FALLBACK_MESH_KIND.to_string()]) } else { world3d_meshes_json_from_urls(&urls) };
     let instances_json = "[]".to_string();
     let selection_json = world3d_selection_json("rectangle", &[], None);
-    MeshWindowKit::render(&MeshView { camera_json, meshes_json, instances_json, selection_json })
+    MeshWindowKit::render(&MeshView { camera_json, meshes_json, instances_json, selection_json }, locale)
 }
 //#endregion 🔖️Render
 

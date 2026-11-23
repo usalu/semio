@@ -7,7 +7,7 @@ use std::fmt;
 /// 🔗️ An indirect-object reference `N G R` — also the `objects` collection's diff KEY (the
 /// `(id,gen)` pair per the recipe's "numeric id" key kind; `Hash` is needed by the diff module's
 /// key-transport absorb maps).
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct ObjRef {
@@ -17,7 +17,7 @@ pub struct ObjRef {
 
 /// 🧩 One `key`/`value` pair of a PDF dictionary. A `Vec` (not a map) so parse order survives
 /// losslessly -- PDF dictionaries have no canonical key order and real files vary widely.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PdfDictEntry {
@@ -32,7 +32,7 @@ impl PdfDictEntry {
 }
 
 /// 🎛️ Logical predictor parameters attached to a Flate/LZW stream filter (§7.4.4.4).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PdfPredictor {
@@ -43,7 +43,7 @@ pub struct PdfPredictor {
 }
 
 /// 📠️ CCITTFaxDecode parameters (§7.4.6, Table 11).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PdfCcittParameters {
@@ -79,7 +79,7 @@ impl PdfCcittParameters {
 /// stand — `data` is still the encoded image; a conforming reader hands such a stream to its image
 /// decoder, and this codec hands it back byte for byte. `Crypt` names an identity/explicit crypt
 /// filter (§7.6.5) and is likewise transparent.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfStreamFilter {
     Flate { predictor: Option<PdfPredictor> },
@@ -117,7 +117,7 @@ impl PdfStreamFilter {
 }
 
 /// 🔢️ Exact logical PDF real number represented as decimal coefficient and scale.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PdfDecimal {
@@ -193,19 +193,28 @@ impl fmt::Display for PdfDecimal {
 /// streams. Stream `data` is the logical byte sequence after applying every filter that has a
 /// logical decoder (@see [`PdfStreamFilter`]); `/Filter`, `/F`, `/DecodeParms`, and `/DP` are
 /// removed during native deserialization and regenerated from `filters` on write.
-#[derive(semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::RetainedClone, Clone, Debug, PartialEq)]
 #[derive(Default)]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields, receive_recursive)]
 pub enum PdfObject {
     #[default]
     Null,
+    #[value(content = "value")]
     Bool(bool),
+    #[value(content = "value")]
     Int(i64),
     Real(PdfDecimal),
+    #[value(content = "value")]
     Str(Vec<u8>),
+    #[value(content = "value")]
     Text(String),
+    #[value(content = "value")]
     Date(PdfDate),
+    #[value(content = "value")]
     Name(String),
+    #[value(content = "value")]
     Array(Vec<PdfObject>),
+    #[value(content = "value")]
     Dict(Vec<PdfDictEntry>),
     Ref(ObjRef),
     Stream {
@@ -290,7 +299,7 @@ impl PdfObject {
 }
 
 /// 🗄️ One `N G obj ... endobj` indirect object, keyed by its `id`.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PdfIndirectObject {

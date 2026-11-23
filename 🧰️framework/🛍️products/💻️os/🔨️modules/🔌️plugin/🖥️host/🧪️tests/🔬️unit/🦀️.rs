@@ -3,17 +3,14 @@ use std::sync::Arc;
 use std::collections::BTreeMap;
 use semio_framework::kernel::Budget;
 use semio_plugin_host_guest_runtime::{GuestRuntimes, PackageRef, WasmtimeRuntime};
-use semio_plugin_host_routers::{IoEntryKey, IoEntryRoute, IoRouter, io_entries_conflict, resolve_io_route, route_reenters_calling_plugin};
-use semio_plugin_guest_contract::{JobStep, PluginHostError, TurnFault};
+use semio_plugin_host_routers::{PluginRegistration, IoEntryKey, IoEntryRoute, IoRouter, io_entries_conflict, resolve_io_route, route_reenters_calling_plugin};
+use semio_plugin_guest_contract::{PluginHostError, TurnFault};
 use semio_framework_actor::{PackageHash, PackageId, ActorId as RuntimeActorId};
-use semio_plugin_host_post_turn_relay::PluginInstanceHandle;
 use semio_plugin_host_engine::SharedEngineConfig;
 #[cfg(any(test, feature = "testkit"))]
 use semio_plugin_host_guest_runtime::MockGuestRuntime;
 #[cfg(any(test, feature = "testkit"))]
 use semio_plugin_host_engine::minimal_component_without_actor_world;
-#[cfg(any(test, feature = "testkit"))]
-use semio_plugin_host_post_turn_relay::{test_relay_original_input,test_relay_wake_authority};
 use semio_plugin_host_guest_runtime::GuestRuntime as _;
 
 //#region 🔖️IoRouterW1d
@@ -163,160 +160,51 @@ async fn wasmtime_runtime_keeps_wrong_abi_components_isolated_by_package() {
     }
 }
 
-/// 🎬️ `PluginInstanceHandle`'s `run_job_on_worker` (`start-job`, then one `step-job` per pool turn)
-/// against `MockGuestRuntime` — the FIRST real coverage of the post-turn job-dispatch mechanism
-/// itself (design-runtime.md §2), independent of whether any real `.wasm` exports `world actor`
-/// yet. `step_job`'s FIRST scripted outcome is `Running`, forcing the persistent relay to
-/// resubmit before the scripted `Done` — proves this is not a single batch call.
-#[semio_framework_async_macros::async_test]
-async fn plugin_instance_handle_drives_io_run_job_on_worker_through_a_running_step() {
-    let mock = Arc::new(MockGuestRuntime::new().await);
-    let actor = RuntimeActorId(100);
-    let compiled = mock.compile(&PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([1u8; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
-    mock.script_job_step(actor, JobStep::Running { progress: None }).await;
-    let io_payload = semio_framework::io_schema::IoPayload::Text("87a-bytes".to_string());
-    mock.script_job_step(actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&io_payload).into_bytes() }).await;
-    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), compiled.clone(),instance,test_relay_wake_authority()).await;
-
-    let payload_bytes = semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Text("raw-bytes".to_string())).into_bytes();
-    let result = handle.io_run("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", payload_bytes).await.expect("job-backed io_run must drive start-job + step-job to Done");
-    let decoded: semio_framework::io_schema::IoPayload = semio_framework_pack_json::from_json_str(std::str::from_utf8(&result).expect("decode io_run result utf8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("decode io_run result");
-    assert_eq!(decoded, io_payload);
+/// 🪪️ Registers one mock-backed package with the process origin registry and returns the router's immutable identity of it. The mock backs registration and routing laws only: Host startup requires the real owned backend, so dispatch laws run against built components.
+async fn mock_registration(mock: &Arc<MockGuestRuntime>, actor: RuntimeActorId, package: &str, hash: u8) -> PluginRegistration {
+    use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller};
+    use semio_plugin_host_post_turn_relay::origin_registry;
+    let compiled = mock.compile(&PackageRef { package: PackageId(package.to_string()), hash: PackageHash([hash; 32]) }, &[]).await.expect("mock compile");
+    let runtime = Arc::new(GuestRuntimes::Mock(mock.clone()));
+    let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 100_000, maximum_copy_bytes: 4_000_000, maximum_capacity_bytes: 16_000_000, maximum_release_bytes: 16_000_000, maximum_depth: 64 };
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(98), Generation(1), stock, || Some(1000), 100_000_000, 1_000_000);
+    let identity = origin_registry::next_identity();
+    let mut origin = None;
+    for _ in 0..4096 {
+        if caller.turn(stock, |cx| origin_registry::register_step(identity, &runtime, &compiled, &mut origin, cx)).unwrap() {
+            break;
+        }
+    }
+    caller.retire(stock);
+    PluginRegistration { actor, origin: origin.expect("fixture registry admits the original compiled parent") }
 }
 
-/// 🔍️ `PluginInstanceHandle::io_sniff` decodes the single confidence-rank byte `semio.io-sniff`
-/// returns — mirrors the deleted `WasmPluginRuntime::io_sniff`'s exact return contract.
+/// 🌉️ Two mock-backed plugins (`stdio` owns `binary->gif87a`, `gif` owns `gif87a->gif89a`) register through the production `register_plugin` path into one shared router.
 #[semio_framework_async_macros::async_test]
-async fn plugin_instance_handle_io_sniff_decodes_the_confidence_byte() {
-    let mock = Arc::new(MockGuestRuntime::new().await);
-    let actor = RuntimeActorId(101);
-    let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([2u8; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
-    mock.script_job_step(actor, JobStep::Done { output: vec![3u8] }).await;
-    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), compiled.clone(),instance,test_relay_wake_authority()).await;
-
-    let payload_bytes = semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Binary(vec![0xFF])).into_bytes();
-    let rank = handle.io_sniff("framework.io.binary@raw/*", "s.stdio.gif@87a/*", &payload_bytes).await.expect("job-backed io_sniff must decode a Done result");
-    assert_eq!(rank, 3);
-}
-
-/// 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): `PluginInstanceHandle::migrate`
-/// drives `semio.migrate` through a `Running` slice before `Done`, exactly like the `io_run`
-/// test above — proves this is a real `start-job`/`step-job` loop, not a single call.
-#[semio_framework_async_macros::async_test]
-async fn plugin_instance_handle_migrate_drives_the_semio_migrate_job_to_completion() {
-    let mock = Arc::new(MockGuestRuntime::new().await);
-    let actor = RuntimeActorId(102);
-    let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([9u8; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
-    mock.script_job_step(actor, JobStep::Running { progress: None }).await;
-    mock.script_job_step(actor, JobStep::Done { output: vec![1, 2, 3, 0xAB] }).await;
-    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), compiled.clone(),instance,test_relay_wake_authority()).await;
-
-    let result = handle.migrate("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", vec![1, 2, 3]).await.expect("job-backed migrate must drive start-job + step-job to Done");
-    assert_eq!(result, vec![1, 2, 3, 0xAB]);
-}
-
-/// 🧬️ `PluginInstanceHandle::mutation_plan` passes DSL wire-pack bytes straight through, both
-/// directions — no re-encoding at this layer (that's `ArtifactMutationRouter::plan`'s job).
-#[semio_framework_async_macros::async_test]
-async fn plugin_instance_handle_mutation_plan_passes_wire_bytes_through_to_done() {
-    let mock = Arc::new(MockGuestRuntime::new().await);
-    let actor = RuntimeActorId(103);
-    let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([10u8; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1)).await.expect("mock instantiate");
-    mock.script_job_step(actor, JobStep::Done { output: b"planned".to_vec() }).await;
-    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), compiled.clone(),instance,test_relay_wake_authority()).await;
-
-    let result = handle.mutation_plan(b"request-wire-bytes").await.expect("job-backed mutation_plan must drive start-job + step-job to Done");
-    assert_eq!(result, b"planned");
-}
-
-/// 🌉️ End-to-end through the REAL `IoRouter`, not just `PluginInstanceHandle` directly: registers
-/// two mock-backed plugins (`stdio` owns `binary->gif87a`, `gif` owns `gif87a->gif89a`) using the
-/// SAME `register_plugin`/`run_io` production code path a live `🏃️run` boot would use, then
-/// drives a real 2-hop `run_io` call where each hop is answered by a DIFFERENT `PluginInstanceHandle`
-/// backed by a DIFFERENT `MockGuestRuntime` instance (proving hop-to-hop chaining actually crosses
-/// plugin boundaries, not just calls the same handle twice). This is the direct replacement for
-/// the deleted `io_router_routes_a_real_cross_plugin_compose_between_two_loaded_wasm_plugins` —
-/// same shape (register two plugins into one shared router, route a call that can only be
-/// answered by crossing into the OTHER plugin's instance), narrowed to the NEW `io_entries`
-/// mechanism (`run_io`, which has a real `jobs.wit` job kind) rather than the OLD `IoKey`-keyed
-/// `compose` (which does not — see `IoRouter::compose`'s own doc comment on why that dispatch is
-/// not yet wired).
-#[semio_framework_async_macros::async_test]
-async fn io_router_run_io_crosses_two_real_plugin_instance_handles() {
+async fn io_router_registers_two_plugin_registrations() {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     let router = IoRouter::new();
-    let budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
-
-    let stdio_mock = Arc::new(MockGuestRuntime::new().await);
-    let stdio_actor = RuntimeActorId(200);
-    let stdio_compiled = stdio_mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([3u8; 32]) }, &[]).await.expect("stdio mock compile");
-    let stdio_instance = stdio_mock.instantiate(&stdio_compiled, stdio_actor, &[], &budget).await.expect("stdio mock instantiate");
-    let midpoint = semio_framework::io_schema::IoPayload::Text("midpoint".to_string());
-    stdio_mock.script_job_step(stdio_actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&midpoint).into_bytes() }).await;
-    let stdio_handle = Arc::new(PluginInstanceHandle::new(stdio_actor, Arc::new(GuestRuntimes::Mock(stdio_mock)), stdio_compiled.clone(),stdio_instance,test_relay_wake_authority()).await);
-
-    let gif_mock = Arc::new(MockGuestRuntime::new().await);
-    let gif_actor = RuntimeActorId(201);
-    let gif_compiled = gif_mock.compile(&PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([4u8; 32]) }, &[]).await.expect("gif mock compile");
-    let gif_instance = gif_mock.instantiate(&gif_compiled, gif_actor, &[], &budget).await.expect("gif mock instantiate");
-    let final_payload = semio_framework::io_schema::IoPayload::Text("final".to_string());
-    gif_mock.script_job_step(gif_actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&final_payload).into_bytes() }).await;
-    let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, Arc::new(GuestRuntimes::Mock(gif_mock)), gif_compiled.clone(),gif_instance,test_relay_wake_authority()).await);
-
+    let stdio_registration = mock_registration(&Arc::new(MockGuestRuntime::new().await), RuntimeActorId(200), "stdio", 3).await;
+    let gif_registration = mock_registration(&Arc::new(MockGuestRuntime::new().await), RuntimeActorId(201), "gif", 4).await;
     let binary_raw = io_dialect("framework.io.binary", "raw", "*").await;
     let gif_87a = io_dialect("s.stdio.gif", "87a", "*").await;
     let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
     router
-        .register_plugin("stdio", stdio_handle, &[], &[semio_framework::io_schema::IoEntryDescriptor { from: binary_raw.clone(), into: gif_87a.clone(), fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: false }])
+        .register_plugin("stdio", stdio_registration, &[], &[semio_framework::io_schema::IoEntryDescriptor { from: binary_raw, into: gif_87a.clone(), fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: false }])
         .await
         .expect("register stdio");
-    router.register_plugin("gif", gif_handle, &[], &[semio_framework::io_schema::IoEntryDescriptor { from: gif_87a, into: gif_89a.clone(), fidelity: semio_framework::io_schema::IoFidelity::Canonical, sniffs: false }]).await.expect("register gif");
+    router.register_plugin("gif", gif_registration, &[], &[semio_framework::io_schema::IoEntryDescriptor { from: gif_87a, into: gif_89a, fidelity: semio_framework::io_schema::IoFidelity::Canonical, sniffs: false }]).await.expect("register gif");
 
     let (plugins, _keys) = router.stats().await.expect("router stats");
-    assert_eq!(plugins, 2, "both plugin instance handles must be registered with the shared router");
-
-    let start_payload = semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Text("start".to_string())).into_bytes();
-    let result_bytes = router.run_io("norm", &binary_raw.to_coordinate(), &gif_89a.to_coordinate(), start_payload).await.expect("2-hop run_io crossing stdio then gif must succeed");
-    let decoded: semio_framework::io_schema::IoPayload = semio_framework_pack_json::from_json_str(std::str::from_utf8(&result_bytes).expect("decode final run_io result utf8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("decode final run_io result");
-    assert_eq!(decoded, final_payload, "the SECOND hop's (gif's) scripted result must be what comes out — proves the chain really crossed both instance handles in order");
+    assert_eq!(plugins, 2, "both plugin registrations must be registered with the shared router");
 }
 
-/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): `IoRouter::compose` resolution
-/// (unchanged pure algorithm) now feeds a REAL dispatch through `PluginInstanceHandle::compose`
-/// — replaces the retired `io_router_compose_resolves_ownership_but_dispatch_is_not_yet_wired`,
-/// which pinned down the OLD hand-written host refusal this packet deleted. `MockGuestRuntime`'s
-/// `start_job`/`step_job` don't inspect `kind` at all (only whatever is scripted), so scripting a
-/// `Done` here proves the host-side plumbing — resolve ownership, find the handle,
-/// `start-job`/`step-job` to completion — is fully real end to end; the real guest kind
-/// `"semio.compose"` itself is `compose-await`'s to register.
-///
-/// 🧭️ Key orientation matches what `register_plugin` actually derives from a `(writes, reads)`
-/// pair: the Export route is keyed on the READ dialect with the WRITE dialect as its format
-/// (see the `candidate_routes` loop above). Asserting the inverse orientation here would fail
-/// on route resolution before ever reaching dispatch.
-#[semio_framework_async_macros::async_test]
-async fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_to_completion() {
-    let router = IoRouter::new();
-    let mock = Arc::new(MockGuestRuntime::new().await);
-    let actor = RuntimeActorId(202);
-    let budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
-    let compiled = mock.compile(&PackageRef { package: PackageId("cad".to_string()), hash: PackageHash([5u8; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &budget).await.expect("mock instantiate");
-    mock.script_job_step(actor, JobStep::Running { progress: None }).await;
-    mock.script_job_step(actor, JobStep::Done { output: b"composed".to_vec() }).await;
-    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), compiled.clone(),instance,test_relay_wake_authority()).await);
+fn refusing_driver() -> Result<semio_plugin_host_wake::GuestRelayWakeDriver, semio_framework_value::ValueError> {
+    Err(semio_framework_value::ValueError::invariant("self-routed compose never reaches its driver"))
+}
 
-    let dialects = vec![(
-        semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() },
-        vec![semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }],
-    )];
-    router.register_plugin("cad", handle, &dialects, &[]).await.expect("register cad");
-
+fn compose_key() -> Vec<u8> {
     let key = semio_os_kernel::io::IoKey {
         artifact_kind: "s.stdio.step".to_string(),
         standard: "ap214".to_string(),
@@ -326,40 +214,25 @@ async fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_t
         format_standard: "1".to_string(),
         format_subset: "*".to_string(),
     };
-    let key_bytes = semio_framework_pack_json::to_json_string(&key).into_bytes();
-    let result = router.compose("stdio", &key_bytes, b"sources").await.expect("compose must resolve ownership AND drive the job to completion, not hard-error");
-    assert_eq!(result, b"composed", "the SCRIPTED job outcome must be what comes out, proving real start-job/step-job dispatch reached the resolved owner's handle");
+    semio_framework_pack_json::to_json_string(&key).into_bytes()
 }
 
-/// 🧬️ `IoRouter::compose` still refuses to route back into the calling plugin itself — that
-/// guard runs BEFORE dispatch, so it must fire even though dispatch is now real.
+fn compose_dialects() -> Vec<(semio_framework_artifact_reference::ArtifactDialect, Vec<semio_framework_artifact_reference::ArtifactDialect>)> {
+    vec![(
+        semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() },
+        vec![semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }],
+    )]
+}
+
+/// 🧬️ `IoRouter::compose` refuses to route back into the calling plugin itself, before any dispatch.
 #[semio_framework_async_macros::async_test]
 async fn io_router_compose_still_refuses_to_route_back_into_the_calling_plugin() {
     let router = IoRouter::new();
     let mock = Arc::new(MockGuestRuntime::new().await);
-    let actor = RuntimeActorId(203);
-    let budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
-    let compiled = mock.compile(&PackageRef { package: PackageId("cad".to_string()), hash: PackageHash([6u8; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &budget).await.expect("mock instantiate");
-    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), compiled.clone(),instance,test_relay_wake_authority()).await);
+    let registration = mock_registration(&mock, RuntimeActorId(203), "cad", 6).await;
+    router.register_plugin("cad", registration, &compose_dialects(), &[]).await.expect("register cad");
 
-    let dialects = vec![(
-        semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() },
-        vec![semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }],
-    )];
-    router.register_plugin("cad", handle, &dialects, &[]).await.expect("register cad");
-
-    let key = semio_os_kernel::io::IoKey {
-        artifact_kind: "s.stdio.step".to_string(),
-        standard: "ap214".to_string(),
-        subset: "*".to_string(),
-        direction: semio_os_kernel::io::IoDirection::Export,
-        format_kind: "s.cad".to_string(),
-        format_standard: "1".to_string(),
-        format_subset: "*".to_string(),
-    };
-    let key_bytes = semio_framework_pack_json::to_json_string(&key).into_bytes();
-    let error = router.compose("cad", &key_bytes, b"sources").await.expect_err("a plugin routing to its own key must be refused, not dispatched");
+    let error = router.compose("cad", &compose_key(), b"sources", &refusing_driver).await.expect_err("a plugin routing to its own key must be refused, not dispatched");
     assert!(error.to_string().contains("routing to itself"), "unexpected message: {error}");
 }
 //#endregion 🔖️IoRouterPostTurnRelay

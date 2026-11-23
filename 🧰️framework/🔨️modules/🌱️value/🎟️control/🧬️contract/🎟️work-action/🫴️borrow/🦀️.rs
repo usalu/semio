@@ -6,6 +6,8 @@ pub struct OriginalWorkBindingIdentity{scope:crate::OriginalWorkScopeIdentity,is
 impl OriginalWorkBindingIdentity{
  /// 🧬️ Observes only the sealed effect receipt, without constructing a Work issuer or credit.
  pub fn from_effect(effect:&RetainedAllocationEffect<'_>)->Self{let action=effect.work_identity().action_identity();Self{scope:action.scope,issuer:action.issuer,source:effect.work_source_turn()}}
+ /// 🔁️ Names the same Work scope and issuer, possibly under another Source dispatch.
+ pub fn same_work(&self,other:&Self)->bool{self.scope==other.scope&&self.issuer==other.issuer}
  /// 🌐️ Borrows the actual optional Source dispatch without exposing its work authority.
  pub fn source_turn(&self)->Option<crate::OriginalSourceTurnIdentity>{self.source}
  /// 🪪️ Validates the same actual loan before issuing a separate physical action.

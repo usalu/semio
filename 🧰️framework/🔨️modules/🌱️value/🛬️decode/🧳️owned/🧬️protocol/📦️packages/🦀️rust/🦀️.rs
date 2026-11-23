@@ -35,7 +35,7 @@ impl<E:semio_framework_value_native_decoding::native_decoding::NativeReceivingEf
   use semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectPoll;
   if self.ceiling.is_some_and(|old|maximum_work_units!=old)||self.ceiling.unwrap_or(maximum_work_units)<work||self.grant.is_some_and(|old|old!=grant){return if self.pending(){crate::RetainedWorkPoll::Pending{work:0}}else{crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}}let _=*self.ceiling.get_or_insert(maximum_work_units);let grant=*self.grant.get_or_insert(grant);let selected=*self.demand.get_or_insert(demand);let units=*self.work.get_or_insert(work);match control.receive_original_effect(selected,units,&mut self.effect,authority,|control,effect,authority,action|{let selected=grant.restricted_by(effect.grant());let units=units.min(effect.maximum_work_units());let mut child=effect.reborrow(selected,units)?;invoke(control,&mut child,authority,action)}){   Ok(NativeReceivingEffectPoll::Pending{work})=>crate::RetainedWorkPoll::Pending{work},
    Ok(NativeReceivingEffectPoll::Complete(turn))=>{self.demand=None;self.grant=None;self.work=None;self.ceiling=None;self.tag=0;match turn.result{Ok(step)=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(step),work:turn.work}),Err(failure)=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(E::into_native_failure(failure)),work:turn.work})}},
-   Err(error)=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0}),
+   Err(error)=>{if self.effect.has_no_retained_custody(){self.demand=None;self.grant=None;self.work=None;self.ceiling=None;self.request=None;self.tag=0}crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})}
   }
  }
  /// 🪪️ Freezes and authenticates the actual resident local request before the original Source quote.
@@ -293,11 +293,11 @@ if !retained_clone_grant_admits(g,d){return $crate::native_close_denied($reply)}
 
 if let Some(query)=$s.query.as_mut(){
 if !query.close_started(){if $recover{return Err(invalid())}let turn=query.begin_close_paid($effect);return Ok($reply.complete(turn.result.map_err(Into::into)))}
-if !query.terminal_is_empty(){let mut nested=$effect.reborrow(child_grant(g,0),$effect.maximum_work_units())?;return if $recover{query.recover_close_into($body,&mut nested,$reply.progress())}else{query.close_into($body,&mut nested,$reply.progress())}}
+if !query.terminal_is_empty(){let mut nested=$effect.nested(child_grant(g,0));return if $recover{query.recover_close_into($body,&mut nested,$reply.progress())}else{query.close_into($body,&mut nested,$reply.progress())}}
 if $recover||$effect.remaining_work_units()?==0{return if $recover{Err(invalid())}else{$crate::native_close_denied($reply)}}
 if !$effect.performed(1)?{return Ok($reply.complete(Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"optional query header exceeded its work authority").into())))}
 *$s.query=None;return Ok($reply.complete(Ok(RetainedCloneStep::Progress(receipt(d)))))}
-if !$s.child.terminal_is_empty(){let mut nested=$effect.reborrow(g,$effect.maximum_work_units())?;if !$s.child.is_closing(){return if $recover{$s.child.recover_begin_close_into(&mut nested,$reply)}else{$s.child.begin_close_into(&mut nested,$reply)}}return if $recover{$s.child.recover_close_into($body,&mut nested,$reply)}else{$s.child.close_into($body,&mut nested,$reply)}}
+if !$s.child.terminal_is_empty(){let mut nested=$effect.nested(g);if !$s.child.is_closing(){return if $recover{$s.child.recover_begin_close_into(&mut nested,$reply)}else{$s.child.begin_close_into(&mut nested,$reply)}}return if $recover{$s.child.recover_close_into($body,&mut nested,$reply)}else{$s.child.close_into($body,&mut nested,$reply)}}
 if !$s.retirement.is_empty(){return if $recover{$s.retirement.recover_step_into($body,$effect,$reply)}else{$s.retirement.step_into($body,$effect,$reply)}}
 if $recover{return Err(invalid())}
 if $s.query_output.is_some(){return $crate::native_close_begun($s.retirement.begin_granted(&mut $s.query_output,$effect),$reply)}
@@ -307,7 +307,7 @@ RetainedCloneBinding::close_into(&mut $s.binding,$body,$effect,$reply)
 #[doc(hidden)]
 #[macro_export]
 macro_rules! option_original_close_route{($s:ident,$original:ident,$body:ident,$effect:ident,$reply:ident,$recover:expr)=>{{
-if let Some(query)=$s.query.as_mut(){if !query.terminal_is_empty()&&query.requires_original_control(){let g=$effect.grant();if g.maximum_items==0||g.maximum_depth==0{return $crate::native_close_denied($reply)}let mut nested=$effect.reborrow(child_grant(g,0),$effect.maximum_work_units())?;return if $recover{query.recover_close_original_into($original,$body,&mut nested,$reply)}else{query.close_original_into($original,$body,&mut nested,$reply)}}}
+if let Some(query)=$s.query.as_mut(){if !query.terminal_is_empty()&&query.requires_original_control(){let g=$effect.grant();if g.maximum_items==0||g.maximum_depth==0{return $crate::native_close_denied($reply)}let mut nested=$effect.nested(child_grant(g,0));return if $recover{query.recover_close_original_into($original,$body,&mut nested,$reply)}else{query.close_original_into($original,$body,&mut nested,$reply)}}}
 if !$s.child.terminal_is_empty()&&$s.child.requires_original_control(){return if $recover{$s.child.recover_close_original_into($original,$body,$effect,$reply)}else{$s.child.close_original_into($original,$body,$effect,$reply)}}
 if !$s.retirement.is_empty()&&$s.retirement.requires_original_control(){return if $recover{$s.retirement.recover_step_original_into($original,$body,$effect,$reply)}else{$s.retirement.step_original_into($original,$body,$effect,$reply)}}
 if $recover{$s.recover_close_step($body,$effect,$reply)}else{$s.close_step($body,$effect,$reply)}

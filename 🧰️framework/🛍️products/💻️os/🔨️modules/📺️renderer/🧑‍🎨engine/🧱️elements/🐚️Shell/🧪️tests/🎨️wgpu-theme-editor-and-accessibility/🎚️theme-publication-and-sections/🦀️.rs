@@ -2,6 +2,7 @@
 
 #[test]
 fn theme_host_mutations_republish_the_mounted_retained_leaf_without_guest_refresh() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = theme_publication_fixture();
     let surface = fixture["surfaceId"].as_str().expect("surface id");
     assert!(!fixture["requiresGuestRefresh"].as_bool().expect("guest refresh contract"));
@@ -38,6 +39,14 @@ fn theme_host_mutations_republish_the_mounted_retained_leaf_without_guest_refres
     set_active_theme_id("semio");
     shell.prefs.clear_theme_draft();
     assert!(missing.is_empty(), "Theme mutations missing retained publication: {missing:?}");
+    let surfaces: Vec<String> = shell.docs.panel_documents.keys().cloned().collect();
+    for id in surfaces {
+        let document = shell.docs.panel_documents.remove(&id);
+        shell.docs.retire_one_surface_document(document).expect("the retained Theme owner retires to terminal");
+    }
+    assert!(shell.docs.closing_documents.terminal_is_empty());
+    drop(shell);
+    while !ui_contract::close_ui_value_page_one() {}
 }
 
 #[test]

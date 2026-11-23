@@ -10,3 +10,4 @@ include!("📦️document-archive-and-replacement-publication/🦀️.rs");
 include!("🏁️replacement-close-cancellation-and-nested-window/🦀️.rs");
 include!("🗂️recursive-archive-rejection-and-stale-authority/🦀️.rs");
 include!("📨️envelope-decode-ladder/🦀️.rs");
+include!("📏️mounted-app-size/🦀️.rs");

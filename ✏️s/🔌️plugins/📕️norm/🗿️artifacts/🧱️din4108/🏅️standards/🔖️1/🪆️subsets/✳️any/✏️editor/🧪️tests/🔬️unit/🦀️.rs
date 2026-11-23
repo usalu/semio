@@ -148,7 +148,7 @@ fn a_picked_entity_selects_its_governing_check_in_every_window() {
 }
 //#endregion 🛰️LiveWiring
 
-semio_plugin::history_edit_acceptance_law!("norm", crate::Din4108PlayApp, || semio_plugin::App { definition: crate::create_din4108_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("norm", crate::Din4108PlayApp, || semio_plugin::App { definition: crate::create_din4108_app(), examples: Vec::new() }, "../../..");
 
 //#region ♿️ScreenReader
 /// ♿️ Every check row, scene entity, handle and diagram of the default document has an accessible node (label, role, value or position) in English and German.

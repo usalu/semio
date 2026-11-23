@@ -1,9 +1,10 @@
 //! 🧪️ Actual original Draw custody, native heap receipts and shared refusal witnesses reach the same preparation frontier.
-use super::*;
-use semio_framework_io_ports::{ChildAdmissionRead,EmbeddedChildAdmitterV1,OriginalChildVectorPreparation,erase_child_admission_source};
-use semio_framework_value::retained_clone::RetainedCloneSource;
+use semio_framework_io_ports::{ChildAdmissionRead, ChildAdmissionSource, EmbeddedChildAdmitterV1, OriginalChildVectorPreparation, erase_child_admission_source, vector::{EmbeddedChildVectorSourceV1, VectorGraphAdvance, VectorGraphSourceV1}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource}};
 use semio_framework_value_testing_allocator::observe_retirement_allocations;
-use crate::validation::DRAWING_ADMITTER;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::validation::DRAWING_ADMITTER;
+use semio_s_artifact_draw_drawing_model::vector_source::DRAWING_VECTOR_SOURCE;
 fn generous()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:16*1024*1024,maximum_capacity_bytes:16*1024*1024,maximum_release_bytes:16*1024*1024,maximum_depth:256}}
 fn g(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn observed<T>(grant:RetainedCloneGrant,operation:impl FnOnce()->(T,RetainedCloneProgress))->T{let((result,p),heap)=observe_retirement_allocations(operation);assert!(p.fits(grant));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));result}

@@ -759,7 +759,7 @@ fn canvas_repaints_image_samples_after_replacement() {
         let raster = semio_framework_pixels::decode_png(&png).unwrap();
         assert_eq!((raster.width, raster.height), (width, height));
         assert_eq!(raster.pixels, expected);
-        render_window(snapshot).expect("image scene admission");
+        render_window(snapshot, Locale::En).expect("image scene admission");
     };
     let opaque_rgba = |state| bytes(state).chunks_exact(3).flat_map(|rgb| [rgb[0], rgb[1], rgb[2], 255]).collect();
     verify(&snapshot, opaque_rgba("before"));
@@ -834,7 +834,7 @@ fn canvas_paints_base14_glyph_outlines_at_the_pdf_baseline() {
     for axis in 0..6 {
         assert_eq!(layer["transform"][axis].as_f64(), expected["transform"][axis].as_f64());
     }
-    render_window(&snapshot).expect("Base 14 outline scene admission");
+    render_window(&snapshot, Locale::En).expect("Base 14 outline scene admission");
 }
 
 #[test]
@@ -1634,7 +1634,8 @@ fn thumbnails_scale_each_page_and_reorder_through_move_page() {
     }
     let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     for locale in [Locale::En, Locale::De] {
-        assert!(render_thumbnail_strip(&snapshot, "s.stdio.pdf@1.7/*#editor", OBJECT_DOMAIN, locale).is_ok());
+        let strip = render_thumbnail_strip(&snapshot, "s.stdio.pdf@1.7/*#editor", OBJECT_DOMAIN, locale).expect("thumbnail strip");
+        semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(strip), |_| ());
     }
 }
 
@@ -1678,4 +1679,102 @@ fn view_actions_are_page_actions_that_carry_their_arguments() {
     assert_eq!(serde_json::from_str::<Value>(&page.payload).unwrap()["page"], 2);
     assert_eq!(view_action_definitions().len(), VIEW_ACTION_IDS.len());
     assert!(matches!(view_intent("go-to-page", "", 2), Some(ViewIntent::GoToPage(2))));
+}
+
+fn typed_move(value: &str, locale: &str) -> Result<PdfPageEdit, Fault> {
+    use semio_framework_value::DslValue;
+    edit_from_action("move", Some(&args(vec![("page", DslValue::float(0.0)), ("object", DslValue::String("p0:o0".into())), ("field", DslValue::String("x".into())), ("value", DslValue::String(value.into())), ("y", DslValue::float(2.0)), ("locale", DslValue::String(locale.into()))])))
+}
+
+#[test]
+fn german_decimal_commas_are_typed_and_shown_in_the_session_notation() {
+    let x = |edit: Result<PdfPageEdit, Fault>| serde_json::from_str::<Value>(&edit.expect("edit").payload).unwrap()["x"].as_f64().unwrap();
+    assert_eq!(x(typed_move("1,5", "de")), 1.5);
+    assert_eq!(x(typed_move("1.5", "en")), 1.5);
+    assert_eq!(x(typed_move("-0,25", "de")), -0.25);
+    for (value, locale) in [("1,5", "en"), ("1.5", "de"), ("1,5,5", "de"), ("1.5.5", "en"), ("zwei", "de"), ("NaN", "en")] {
+        let fault = typed_move(value, locale).expect_err(value);
+        assert!(matches!(fault.code.as_str(), "stdio.pdf.number-invalid" | "stdio.pdf.argument-not-finite"), "{value} {locale}: {}", fault.code.as_str());
+    }
+    assert_eq!(format_pdf_number(1.5, Some(Locale::De)), "1,5");
+    assert_eq!(format_pdf_number(1.5, Some(Locale::En)), "1.5");
+    assert_eq!(format_pdf_number(1.5, None), "1.5");
+    assert_eq!(format_pdf_number(612.0, Some(Locale::De)), "612");
+    assert_eq!(parse_pdf_number("0,5", Some(Locale::De)), Some(0.5));
+    assert_eq!(parse_pdf_number("0,5", None), None);
+    assert_eq!(canonical_quad("0 0 612,5 792", Some(Locale::De)).unwrap(), "0 0 612.5 792");
+    assert!(canonical_quad("0 0 612,5 792", Some(Locale::En)).is_err());
+    let oracle: f64 = serde_json::from_str("612.5").unwrap();
+    assert_eq!(parse_pdf_number("612,5", Some(Locale::De)), Some(oracle));
+}
+
+#[test]
+fn a_german_session_shows_inspector_numbers_with_a_comma_in_a_text_field() {
+    let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
+    let mut snapshot = sample();
+    snapshot.pages[0].media_box = [0.0, 0.0, 612.5, 792.0];
+    snapshot.pages[0].crop_box = Some([1.5, 2.5, 600.25, 780.0]);
+    snapshot.pages[0].bleed_box = Some([0.5, 0.5, 611.5, 791.5]);
+    snapshot.pages[0].trim_box = Some([3.5, 3.5, 609.0, 788.5]);
+    snapshot.pages[0].art_box = Some([10.5, 10.5, 600.5, 780.5]);
+    let shown = |locale| {
+        let node = render_inspector(&snapshot, Some("p0:paper"), "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(1), locale).expect("inspector");
+        semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |tree| {
+            fn text(node: &semio_ui_contract::BuiltNode, out: &mut String) {
+                out.push_str(&format!("{:?} {:?}\n", node.component, node.accessibility));
+                node.children.iter().for_each(|child| text(child, out));
+            }
+            let mut out = String::new();
+            text(tree, &mut out);
+            out
+        })
+    };
+    let (german, english) = (shown(Locale::De), shown(Locale::En));
+    assert!(german.contains("0 0 612,5 792") && german.contains("Medienrahmen"), "{german}");
+    assert!(english.contains("0 0 612.5 792") && english.contains("Media box"), "{english}");
+    for (de, en) in [("1,5 2,5 600,25 780", "1.5 2.5 600.25 780"), ("0,5 0,5 611,5 791,5", "0.5 0.5 611.5 791.5"), ("3,5 3,5 609 788,5", "3.5 3.5 609 788.5"), ("10,5 10,5 600,5 780,5", "10.5 10.5 600.5 780.5")] {
+        assert!(german.contains(de) && !german.contains(en), "{de}");
+        assert!(english.contains(en) && !english.contains(de), "{en}");
+    }
+    assert!(!german.contains("blurDecimalQuad"), "{german}");
+    assert_eq!(canonical_quad("1,5 2,5 600,25 780", Some(Locale::De)).unwrap(), "1.5 2.5 600.25 780");
+}
+
+#[test]
+fn fault_notices_cover_every_raised_code_in_both_languages() {
+    let notices = pdf_fault_notices();
+    assert_eq!(notices.len(), PdfFault::ALL.len());
+    for kind in PdfFault::ALL {
+        let (_, label) = notices.iter().find(|(code, _)| *code == kind.code()).unwrap_or_else(|| panic!("no notice for {}", kind.code()));
+        let (en, de) = (label.resolve(semio_ui_locale::Terminology::Native, Locale::En), label.resolve(semio_ui_locale::Terminology::Native, Locale::De));
+        assert!(!en.trim().is_empty() && !de.trim().is_empty() && en != de, "{}", kind.code());
+        assert_eq!(en.matches('{').count(), de.matches('{').count(), "{} placeholders", kind.code());
+    }
+    assert_eq!(cancelled("pages"), PdfFault::PagesCancelled);
+    assert_eq!(refuse(PdfFault::ArgumentMissing, "x").code.as_str(), "stdio.pdf.argument-missing");
+}
+
+#[test]
+fn layouts_leave_titles_to_the_localized_window_labels_and_the_canvas_has_a_name() {
+    fn titles(node: &semio_plugin::WindowLayoutNode, found: &mut Vec<Option<String>>) {
+        match node {
+            semio_plugin::WindowLayoutNode::Window { title, .. } => found.push(title.clone()),
+            semio_plugin::WindowLayoutNode::Stack { children, .. } | semio_plugin::WindowLayoutNode::Split { children, .. } => children.iter().for_each(|child| titles(child, found)),
+        }
+    }
+    let mut found = Vec::new();
+    titles(&document_layout(WINDOW_KIND_ID).root, &mut found);
+    assert_eq!(found.len(), 5);
+    assert!(found.iter().all(Option::is_none), "{found:?}");
+    for locale in Locale::ALL {
+        let labels = pdf_editor_labels(locale);
+        assert_eq!(labels.locale(), locale);
+        assert!(!labels.canvas_name.as_str().is_empty() && !labels.canvas_description.as_str().is_empty());
+        assert!(labels.unknown_body.fill(&[("body", "zz")]).to_string().contains("zz"));
+    }
+    assert_eq!(pdf_editor_labels(Locale::En).canvas_name.as_str(), "Page canvas");
+    assert_eq!(pdf_editor_labels(Locale::De).canvas_name.as_str(), "Seitenfläche");
+    assert_eq!(pdf_editor_labels(Locale::De).untitled.as_str(), "Ohne Titel");
+    let surface = render_window(&sample(), Locale::De).expect("canvas");
+    assert_eq!(surface.accessibility.label.as_ref().map(|label| label.0.as_str()), Some("Seitenfläche"));
 }

@@ -3,7 +3,7 @@ import {isAbsolute,relative,resolve,sep} from "node:path";
 import policy from "./🔣️.json" with {type:"json"};
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {expandProcessTestSuiteV1,readProcessTestTableV1,type ProcessTestSuiteV1,type ProcessTestTableV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts";
+import {expandProcessTestSuiteV1,processTestSuiteToolsV1,readProcessTestTableV1,type ProcessTestSuiteV1,type ProcessTestTableV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts";
 import {refuseTestFileV1,testFileTextV1,type TestFileLanguageV1} from "./📖️texts/🟦️.ts";
 
 /** 📐️ The closed policy of `repo test-file`: the suite tables it routes through, what it strips from and scrubs out of the environment, and its limits.
@@ -84,7 +84,7 @@ export function testFileWantsPythonV1(text:string,rules:TestFilePolicyV1=toolPol
 
 /** 🧭️ Routes each file to the suite that owns it in the table whose root holds it, exactly as the suite runner's own routing does (explicit file first, else the deepest tree, name-filtered suites besides); a declared helper (child program) is refused as no test; a file no suite owns runs the plain route. A suite declared for other hosts is routed and reported as not running here. */
 export function routeTestFilesV1(root:string,files:readonly string[],tables:ReadonlyMap<string,ProcessTestTableV1>,rules:TestFilePolicyV1=toolPolicy,platform:string=process.platform,read:(file:string)=>string=file=>readFileSync(resolve(root,file),"utf8")):readonly TestFileRouteV1[]{
- const routes:TestFileRouteV1[]=[];
+ const routes:TestFileRouteV1[]=[],source=(path:string):string|null=>{try{return read(relative(root,path).split(sep).join("/"));}catch{return null;}};
  for(const file of files){
   const owner=rules.tables.find(row=>file.startsWith(row.root+"/")),table=owner===undefined?undefined:tables.get(owner.id),module=owner===undefined?"":file.slice(owner.root.length+1);
   if(owner!==undefined&&table?.helpers.includes(module))throw refuseTestFileV1("invalid","file.helper",{file,table:owner.id});
@@ -93,7 +93,7 @@ export function routeTestFilesV1(root:string,files:readonly string[],tables:Read
    routes.push(Object.freeze({file,mode:"plain",table:null,suite:rules.plain.id,owner:rules.plain.owner,typecheck:"none",budgetMs:rules.plain.budgetMs,python:testFileWantsPythonV1(read(file),rules),launcher:null,runsOnHost:true}));
    continue;
   }
-  for(const suite of suites)routes.push(Object.freeze({file,mode:"suite",table:owner.id,suite:suite.id,owner:owner.owner,typecheck:suite.typecheck,budgetMs:suite.budgetMs,python:suite.tools?.includes("python")??false,launcher:suite.fileLaunchers?.[module]??null,runsOnHost:suite.platforms===undefined||(suite.platforms as readonly string[]).includes(platform)}));
+  for(const suite of suites)routes.push(Object.freeze({file,mode:"suite",table:owner.id,suite:suite.id,owner:owner.owner,typecheck:suite.typecheck,budgetMs:suite.budgetMs,python:processTestSuiteToolsV1(suite,resolve(root,owner.root),[module],source).includes("python"),launcher:suite.fileLaunchers?.[module]??null,runsOnHost:suite.platforms===undefined||(suite.platforms as readonly string[]).includes(platform)}));
  }
  return Object.freeze(routes);
 }

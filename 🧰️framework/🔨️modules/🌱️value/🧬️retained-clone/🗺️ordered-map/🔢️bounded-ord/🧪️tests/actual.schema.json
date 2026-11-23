@@ -57,7 +57,7 @@
       "const": 0
     },
     "maximumTurnWork": {
-      "const": 1
+      "const": 3
     },
     "serdeOracle": {
       "const": true

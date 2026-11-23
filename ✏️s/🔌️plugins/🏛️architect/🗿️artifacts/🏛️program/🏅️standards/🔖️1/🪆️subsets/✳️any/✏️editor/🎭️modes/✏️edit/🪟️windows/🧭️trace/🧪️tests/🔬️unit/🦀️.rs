@@ -72,7 +72,7 @@ async fn authored_audit_record_projects_to_a_real_event_feed_scene() {
     audit.header.name = source["title"].as_str().expect("title").into();
     audit.details = TextField::plain(source["detail"].as_str().expect("detail"));
     program.audit_events = vec![audit];
-    let json = project_render(render(&program, &TreeWindows::unhosted()));
+    let json = project_render(render(&program, &TreeWindows::unhosted(), semio_plugin::Locale::En));
     assert!(json.contains("event-feed"), "missing event-feed surface: {json}");
     assert!(!json.contains("text-editor"), "trace must not fall back to a generic text surface: {json}");
     let scene: EventFeedScene = semio_plugin::artifact_app_laws::decode_fixture_scene(&json).expect("packed event-feed scene");
@@ -85,7 +85,7 @@ async fn authored_audit_record_projects_to_a_real_event_feed_scene() {
 
 #[semio_framework_async_macros::async_test]
 async fn empty_audit_trail_is_an_empty_authored_feed() {
-    let scene_json = project_render(render(&empty_plugin(), &TreeWindows::unhosted()));
+    let scene_json = project_render(render(&empty_plugin(), &TreeWindows::unhosted(), semio_plugin::Locale::En));
     let scene: EventFeedScene = semio_plugin::artifact_app_laws::decode_fixture_scene(&scene_json).expect("packed event-feed scene");
     let entries: Vec<serde_json::Value> = serde_json::from_str(&scene.entries_json).expect("event entries");
     assert!(entries.is_empty());

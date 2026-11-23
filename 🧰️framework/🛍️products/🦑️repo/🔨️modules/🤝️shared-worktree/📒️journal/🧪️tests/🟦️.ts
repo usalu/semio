@@ -10,7 +10,7 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {storeBlobV1 as storeReadOnlyBlobV1,largeBlobBytesV1 as readOnlyThresholdV1} from "../🟦️.ts";
 import {expiredHorizonV1,expiredTombstoneV1,repairBlobV1,tombstoneLifetimeMillisecondsV1} from "../🟦️.ts";
-import {appendEventsV1,blobPathV1,reclaimStagingV1,readEventSpansV1,streamMembersV1,foldEventsV1,formatHlcV1,listOriginsV1,mergeClockV1,parseHlcV1,readEventsV1,readHeadV1,readNewestSnapshotV1,requireEventV1,requireOriginIdV1,storePathsV1,tickClockV1,winsV1,writeBlobV1,writeSnapshotV1,type FleetEventV1,type FleetManifestEntryV1} from "../🟦️.ts";
+import {appendEventsV1,blobPathV1,reclaimStagingV1,readEventSpansV1,streamMembersV1,foldEventsV1,formatHlcV1,listOriginsV1,mergeClockV1,parseHlcV1,readEventsV1,readHeadV1,readNewestSnapshotV1,replaceOriginFileV1,requireEventV1,requireOriginIdV1,storePathsV1,tickClockV1,winsV1,writeBlobV1,writeSnapshotV1,type FleetEventV1,type FleetManifestEntryV1} from "../🟦️.ts";
 
 type Clock={ms:number;counter:number};
 const cases=fixture as unknown as {
@@ -429,4 +429,13 @@ test("a read-only file above the clone threshold is published: the clone is made
   expect(stored.sha256).toBe(hash.digest("hex"));
   expect(existsSync(blobPathV1(store,stored.sha256))).toBe(true);
  }finally{chmodSync(join(root,"big.pack"),0o644);rmSync(root,{recursive:true,force:true});}
+});
+
+test("an origin file that refuses to be replaced in place (read-only on Windows, a stale NFS node) is moved aside, replaced and leaves nothing behind in tmp",async()=>{
+ const store=temporary(),directory=join(storePathsV1(store).origins,"g1-m05");
+ await replaceOriginFileV1(store,"g1-m05","attest.json",JSON.stringify({wallMs:1}));
+ chmodSync(join(directory,"attest.json"),0o444);
+ await replaceOriginFileV1(store,"g1-m05","attest.json",JSON.stringify({wallMs:2}));
+ expect(JSON.parse(readFileSync(join(directory,"attest.json"),"utf8"))).toEqual({wallMs:2});
+ expect(readdirSync(storePathsV1(store).tmp)).toEqual([]);
 });

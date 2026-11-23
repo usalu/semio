@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::vt::schema::mutations::set_dpart_metadata::SetDpartMetadata;
 use crate::standards::v1_7::subsets::vt::schema::mutations::PdfVtMutation;
 #[allow(unused_imports)]
@@ -19,7 +19,7 @@ fn changes_the_owned_conformance_axis_and_plans_its_inverse() {
     let mutation = RemoveDpartMetadata {};
     let next = applied(&base, &PdfVtMutation::RemoveDpartMetadata(mutation.clone()));
     assert!(support::dpart_job(&next).is_none());
-    assert_eq!(<RemoveDpartMetadata as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job: "run 4711".to_string(), entry_index: None })]);
+    assert_eq!(<RemoveDpartMetadata as ColdMutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job: "run 4711".to_string(), entry_index: Some(1) })]);
 }
 
 #[semio_framework_async_macros::async_test]

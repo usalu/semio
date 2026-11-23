@@ -61,6 +61,13 @@ class RunningExample(unittest.TestCase):
         self.assertAlmostEqual(E.WINDOW_A_M2, 1.92)
         self.assertAlmostEqual(E.F_SOLAR_WINTER, 0.6 * 0.8 * 0.7 * 0.9)
 
+    def test_annual_heating_demand_is_the_losses_minus_the_utilised_gains(self):
+        self.assertEqual(E.ETA_UTILISATION, 0.90)
+        self.assertEqual(E.Q_LOSS_SHOWN_KWH_PER_A, 16000.0)
+        self.assertEqual(E.Q_USE_KWH_PER_A, 4500.0)
+        self.assertEqual(E.Q_H_KWH_PER_A, 11500.0)
+        self.assertEqual(E.Q_H_KWH_PER_A, E.Q_LOSS_SHOWN_KWH_PER_A - E.ETA_UTILISATION * (E.Q_SOL_KWH_PER_A + E.Q_INT_KWH_PER_A))
+
     def test_every_envelope_part_is_named_in_both_languages(self):
         self.assertEqual(set(E.ENVELOPE_EN), {name for name, *_ in E.ENVELOPE})
 

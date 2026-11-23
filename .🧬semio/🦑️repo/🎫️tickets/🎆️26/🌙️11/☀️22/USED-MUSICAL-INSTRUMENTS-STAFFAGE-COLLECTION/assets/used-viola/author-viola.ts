@@ -377,6 +377,7 @@ function spiral(): P[] {
   return pts;
 }
 
+/** 🎻️ The front view of the viola; the tapering lofts (fingerboard, neck) are drawn as slices along the neck, each the hull of its two end sections, so that they keep their true height when the viola is tilted into the playing position. */
 function violaFront(s: number, out: any[]) {
   const fine = s === 50, coarse = s === 200;
   const { top, back } = capsAt(s);
@@ -392,10 +393,12 @@ function violaFront(s: number, out: any[]) {
     out.push(solidPoly("chinrest", "viola", "body", 2.6, 0.16, vw([[0.02, 0.08], [0.104, 0.082], [0.106, 0.098], [0.095, 0.1042], [0.03, 0.1042], [0.02, 0.098]]), sweepU(vlx(0.036), vlx(0.124)), { region: "fittings" }));
     out.push(solidPoly("bridge", "viola", "body", 2.55, 0.7, vw(bridgeFront()), sweepU(vlx(VIOLA.bridgeX - 0.002), vlx(VIOLA.bridgeX + 0.002)), { region: "viola-body" }));
   }
-  const fb = fbSections(fine ? [0.312, 0.4, 0.5, 0.607] : [0.312, 0.607]);
-  out.push(solidPoly("fingerboard", "viola", "body", 2.5, 0.1, vw(loftFront(fb)), sweepU(vlx(0.312), vlx(0.607)), { region: "fittings" }));
+  const slices = (id: string, z: number, tone: number, region: string, sections: Section[], end?: number) =>
+    sections.slice(0, -1).forEach((section, i) => out.push(solidPoly(`${id}-${i + 1}`, "viola", "body", z, tone, vw(loftFront([section, sections[i + 1]!])), sweepU(vlx(section.x), vlx(i === sections.length - 2 ? (end ?? sections[i + 1]!.x) : sections[i + 1]!.x)), { region })));
+  const fbCount = fine ? 6 : 3;
+  slices("fingerboard", 2.5, 0.1, "fittings", fbSections(Array.from({ length: fbCount + 1 }, (_, i) => q(0.312 + (0.295 * i) / fbCount))));
   const neck = neckSections(fine);
-  out.push(solidPoly("viola-neck", "viola", "body", 2.2, 0.4, vw(loftFront(coarse ? [...neck, ...pegboxSections()] : neck)), sweepU(vlx(0.452), vlx(coarse ? 0.717 : 0.602)), { region: "viola-body" }));
+  slices("viola-neck", 2.2, 0.4, "viola-body", coarse ? [...neck.slice(0, -1), ...pegboxSections()] : neck, coarse ? 0.717 : undefined);
   if (!coarse) {
     out.push(solidPoly("viola-pegbox", "viola", "body", 2.25, 0.4, vw(loftFront(pegboxSections())), sweepU(vlx(0.6), vlx(0.684)), { region: "viola-body" }));
     out.push({ ...shapeBase("viola-scroll", "viola", "body", 2.3, true, 0.38, { region: "viola-body" }), kind: "ellipse", cx: q(vly(SCROLL.c[1])), cy: 0, rx: SCROLL.r[1], ry: SCROLL.r[2], solid: sweepU(vlx(SCROLL.c[0] - SCROLL.r[0]), vlx(SCROLL.c[0] + SCROLL.r[0])) });

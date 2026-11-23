@@ -30,6 +30,13 @@ pub fn text_layer_window_definition() -> WindowKindDefinition {
     }
 }
 
+pub fn pick_label(locale: Locale, en: &'static str, de: &'static str) -> &'static str {
+    match locale {
+        Locale::De => de,
+        Locale::En => en,
+    }
+}
+
 pub fn pick(locale: Locale, en: &str, de: &str) -> String {
     match locale {
         Locale::De => de.to_string(),
@@ -44,7 +51,7 @@ pub fn text_layer_lines(snapshot: &PdfSnapshot, locale: Locale) -> Vec<(String, 
 
 fn text_layer_rows(snapshot: &PdfSnapshot, locale: Locale) -> Vec<(String, String, Option<String>)> {
     let mut lines = Vec::new();
-    let title = snapshot.info.title.clone().filter(|title| !title.is_empty()).unwrap_or_else(|| pick(locale, "untitled", "ohne Titel"));
+    let title = snapshot.info.title.clone().filter(|title| !title.is_empty()).unwrap_or_else(|| pdf_editor_labels(locale).untitled.as_str().to_string());
     lines.push(("title".to_string(), format!("{}: {title}", pick(locale, "Title", "Titel")), None));
     let language = snapshot.language.clone().filter(|language| !language.is_empty()).unwrap_or_else(|| pick(locale, "not declared", "nicht angegeben"));
     lines.push(("language".to_string(), format!("{}: {language}", pick(locale, "Language", "Sprache")), None));

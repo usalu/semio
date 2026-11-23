@@ -10,6 +10,11 @@ extern crate semio_os_kernel as store;
 #[path = "../🌉️args-bridge/🦀️.rs"]
 pub mod args_bridge_tests;
 #[path = "."]
+pub mod child_editor {
+    #[path = "../../🪆️child/🧪️tests/🦀️.rs"]
+    pub mod tests;
+}
+#[path = "."]
 pub mod clipboard_job {
     #[path = "."]
     pub mod metadata {

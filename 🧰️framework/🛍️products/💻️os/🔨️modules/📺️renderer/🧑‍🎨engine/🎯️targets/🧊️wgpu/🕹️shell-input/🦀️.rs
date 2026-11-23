@@ -12,7 +12,7 @@ use semio_renderer_wgpu_shell_prefs::{PrefsState, dsl_value_as_json, settings_se
 use semio_renderer_wgpu_shell_surfaces::{SettleState, SurfaceState};
 use semio_renderer_wgpu_shell_windows::{PanelAnchor, WindowState};
 use semio_framework::IconName;
-use semio_renderer_wgpu_dock::{DockDragKind, DockDragPayload, WindowSilhouette};
+use semio_renderer_wgpu_dock::{DockDragKind, DockDragPayload, WindowFrame};
 use semio_renderer_wgpu_shell_vocab::shell_chrome_string;
 use semio_ui_locale::Label;
 use semio_framework_value::{DslValue, FromValue};

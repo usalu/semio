@@ -187,7 +187,7 @@ def thermal(doc):
     t["respiration"]["patterns"] = [
         {"id": "rest-child", "title": T("Child at rest, standing", "Kind in Ruhe, stehend"), "rateBpm": 20, "tidalVolumeL": 0.21, "inhaleFraction": 0.38, "pauseAfterInhaleFraction": 0.04, "exhaleFraction": 0.45, "pauseAfterExhaleFraction": 0.13, "route": "nose", "source": "authored-estimate", "reference": "rowland-2005"},
         {"id": "walking-child", "title": T("Child walking with a backpack", "Kind beim Gehen mit Rucksack"), "rateBpm": 26, "tidalVolumeL": 0.48, "inhaleFraction": 0.42, "pauseAfterInhaleFraction": 0.02, "exhaleFraction": 0.48, "pauseAfterExhaleFraction": 0.08, "route": "nose", "source": "authored-estimate", "reference": "rowland-2005"},
-        {"id": "hitch-effort", "title": T("Short effort of hitching the backpack", "Kurze Anstrengung beim Hochziehen des Rucksacks"), "rateBpm": 24, "tidalVolumeL": 0.35, "inhaleFraction": 0.45, "pauseAfterInhaleFraction": 0.06, "exhaleFraction": 0.42, "pauseAfterExhaleFraction": 0.07, "route": "nose-and-mouth", "source": "authored-estimate", "reference": "rowland-2005"},
+        {"id": "hitch-effort", "title": T("Short effort of hitching the backpack", "Kurze Anstrengung beim Hochziehen des Rucksacks"), "rateBpm": 24, "tidalVolumeL": 0.35, "inhaleFraction": 0.41, "pauseAfterInhaleFraction": 0.06, "exhaleFraction": 0.46, "pauseAfterExhaleFraction": 0.07, "route": "nose-and-mouth", "source": "authored-estimate", "reference": "rowland-2005"},
     ]
     t["respiration"]["motion"] = [{"bone": "torso", "angleDeg": 0.7, "dy": 0.0022}]
     for e in t["emitters"]:

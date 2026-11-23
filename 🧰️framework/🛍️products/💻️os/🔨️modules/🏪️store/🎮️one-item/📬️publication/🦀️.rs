@@ -306,10 +306,13 @@ impl ArtifactStoreOneItemLiveAuthority {
         ArtifactStoreOneItemSealer::admit(self, edit, post_snapshot, mutation_retirement, snapshot_retirement, grant)
     }
 
+    /// 🌐️ A hand-authored preparation computes its own post root and derives no foreign steps, so it declares their absence here; sealer-driven preparations declare their own through [`ArtifactStoreOneItemPrepared::record_foreign_step_presence`].
     fn seal_prepared<P, Mutation>(self: &Arc<Self>, edit: Box<Edit<Mutation>>, post_snapshot: Arc<P>, edit_digest: [u8; 32]) -> ArtifactStoreOneItemPrepared<P, Mutation> {
         let edit_id = edit.id.clone();
         let identities = [self.actor.as_str().into(), edit_id.as_str().into(), edit_id.into()];
-        self.seal_prepared_owned(edit, post_snapshot, edit_digest, identities)
+        let mut prepared = self.seal_prepared_owned(edit, post_snapshot, edit_digest, identities);
+        prepared.record_foreign_step_presence(false);
+        prepared
     }
 
     pub fn seal_prepared_owned<P, Mutation>(self: &Arc<Self>, edit: Box<Edit<Mutation>>, post_snapshot: Arc<P>, edit_digest: [u8; 32], identities: [semio_framework_value::paged::PagedUtf8<{usize::MAX}>; 3]) -> ArtifactStoreOneItemPrepared<P, Mutation> {
@@ -585,6 +588,7 @@ impl<P: Send + Sync, Mutation: Send + 'static> ArtifactStoreBatchItemAuthority<P
 pub struct ArtifactStoreWireRetirement { pub schema: Option<String>, pub bytes: Option<Vec<u8>> }
 
 impl ErasedSnapshotRetirement for ArtifactStoreWireRetirement {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_demand(&self, _body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {release_bytes:self.schema.as_ref().map(|value|value.capacity()).or_else(||self.bytes.as_ref().map(|value|value.capacity())).unwrap_or(0),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_capacity_byte_demand(&self, _body: usize) -> Result<usize, ValueError> { Ok(0) }

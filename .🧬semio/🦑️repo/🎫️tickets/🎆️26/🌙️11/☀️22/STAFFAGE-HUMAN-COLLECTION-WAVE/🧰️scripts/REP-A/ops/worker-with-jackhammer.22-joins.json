@@ -1,0 +1,101 @@
+[
+ {
+  "op": "solid-set",
+  "scale": "200",
+  "list": "structure",
+  "id": "foot-bones-l",
+  "set": {
+   "transform": {
+    "translation": [
+     -0.00246,
+     0.00575,
+     0.00653
+    ]
+   }
+  }
+ },
+ {
+  "op": "solid-set",
+  "scale": "100",
+  "list": "structure",
+  "id": "patella-l",
+  "set": {
+   "transform": {
+    "translation": [
+     -0.01075,
+     0.04059,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0.70711,
+     0.70711
+    ]
+   }
+  }
+ },
+ {
+  "op": "solid-set",
+  "scale": "100",
+  "list": "structure",
+  "id": "patella-r",
+  "set": {
+   "transform": {
+    "translation": [
+     -0.01004,
+     0.04269,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0.70711,
+     0.70711
+    ]
+   }
+  }
+ },
+ {
+  "op": "solid-set",
+  "scale": "50",
+  "list": "structure",
+  "id": "patella-l",
+  "set": {
+   "transform": {
+    "translation": [
+     -0.01064,
+     0.04133,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0.70711,
+     0.70711
+    ]
+   }
+  }
+ },
+ {
+  "op": "solid-set",
+  "scale": "50",
+  "list": "structure",
+  "id": "patella-r",
+  "set": {
+   "transform": {
+    "translation": [
+     -0.00999,
+     0.04343,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0.70711,
+     0.70711
+    ]
+   }
+  }
+ }
+]

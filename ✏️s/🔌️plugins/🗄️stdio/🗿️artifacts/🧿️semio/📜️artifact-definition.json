@@ -711,7 +711,7 @@
     {
       "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-animation-extension-semio.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec-extension:23:s.stdio.semio.animation:semio|codec:s.stdio.semio.animation",
+      "descriptor": "runtime-capability:codec:codec-extension:21:stdio.semio.animation:semio|codec:stdio.semio.animation",
       "claims": [
         {
           "namespace": "codec",
@@ -719,14 +719,14 @@
         },
         {
           "namespace": "codec-extension",
-          "value": "23:s.stdio.semio.animation:semio"
+          "value": "21:stdio.semio.animation:semio"
         }
       ]
     },
     {
       "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-document-extension-semio.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec-extension:22:s.stdio.semio.document:semio|codec:s.stdio.semio.document",
+      "descriptor": "runtime-capability:codec:codec-extension:20:stdio.semio.document:semio|codec:stdio.semio.document",
       "claims": [
         {
           "namespace": "codec",
@@ -734,14 +734,14 @@
         },
         {
           "namespace": "codec-extension",
-          "value": "22:s.stdio.semio.document:semio"
+          "value": "20:stdio.semio.document:semio"
         }
       ]
     },
     {
       "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-graph-extension-semio.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec-extension:19:s.stdio.semio.graph:semio|codec:s.stdio.semio.graph",
+      "descriptor": "runtime-capability:codec:codec-extension:17:stdio.semio.graph:semio|codec:stdio.semio.graph",
       "claims": [
         {
           "namespace": "codec",
@@ -749,14 +749,14 @@
         },
         {
           "namespace": "codec-extension",
-          "value": "19:s.stdio.semio.graph:semio"
+          "value": "17:stdio.semio.graph:semio"
         }
       ]
     },
     {
       "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-image-extension-semio.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec-extension:19:s.stdio.semio.image:semio|codec:s.stdio.semio.image",
+      "descriptor": "runtime-capability:codec:codec-extension:17:stdio.semio.image:semio|codec:stdio.semio.image",
       "claims": [
         {
           "namespace": "codec",
@@ -764,14 +764,14 @@
         },
         {
           "namespace": "codec-extension",
-          "value": "19:s.stdio.semio.image:semio"
+          "value": "17:stdio.semio.image:semio"
         }
       ]
     },
     {
       "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-presentation-extension-semio.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec-extension:26:s.stdio.semio.presentation:semio|codec:s.stdio.semio.presentation",
+      "descriptor": "runtime-capability:codec:codec-extension:24:stdio.semio.presentation:semio|codec:stdio.semio.presentation",
       "claims": [
         {
           "namespace": "codec",
@@ -779,14 +779,14 @@
         },
         {
           "namespace": "codec-extension",
-          "value": "26:s.stdio.semio.presentation:semio"
+          "value": "24:stdio.semio.presentation:semio"
         }
       ]
     },
     {
       "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-table-extension-semio.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec-extension:19:s.stdio.semio.table:semio|codec:s.stdio.semio.table",
+      "descriptor": "runtime-capability:codec:codec-extension:17:stdio.semio.table:semio|codec:stdio.semio.table",
       "claims": [
         {
           "namespace": "codec",
@@ -794,14 +794,14 @@
         },
         {
           "namespace": "codec-extension",
-          "value": "19:s.stdio.semio.table:semio"
+          "value": "17:stdio.semio.table:semio"
         }
       ]
     },
     {
       "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-text-extension-semio.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec-extension:18:s.stdio.semio.text:semio|codec:s.stdio.semio.text",
+      "descriptor": "runtime-capability:codec:codec-extension:16:stdio.semio.text:semio|codec:stdio.semio.text",
       "claims": [
         {
           "namespace": "codec",
@@ -809,7 +809,7 @@
         },
         {
           "namespace": "codec-extension",
-          "value": "18:s.stdio.semio.text:semio"
+          "value": "16:stdio.semio.text:semio"
         }
       ]
     },

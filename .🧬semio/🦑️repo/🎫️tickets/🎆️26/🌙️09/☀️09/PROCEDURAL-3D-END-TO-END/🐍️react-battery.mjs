@@ -294,8 +294,10 @@ const PROBES = [
       /** 🔀️ The probe's OWN wait predicate is the verdict: `mid-chain`/`post-viewer` wait for the
        * viewer role to be pressed, `post-editor` for the editor one, `generate` for generate mode.
        * Deciding on `windows.length > 0` instead scored a switch that never happened as a pass
-       * (`📓️window-coverage-audit-2026-09-14.md` §3). */
-      const expected = { boot: (r) => r.roles?.editor === "true", "mid-chain": (r) => r.roles?.viewer === "true", "post-editor": (r) => r.roles?.editor === "true", "post-viewer": (r) => r.roles?.viewer === "true", generate: (r) => r.modes?.generate === "true" };
+       * (`📓️window-coverage-audit-2026-09-14.md` §3). `mid-chain-immediate` is snapped 150 ms after the
+       * chord, while the operation still runs: the switch may not have landed yet, but the role group
+       * must never be torn — exactly ONE of editor/viewer is pressed — and the windows stay mounted. */
+      const expected = { boot: (r) => r.roles?.editor === "true", "mid-chain": (r) => r.roles?.viewer === "true", "post-editor": (r) => r.roles?.editor === "true", "post-viewer": (r) => r.roles?.viewer === "true", "mid-chain-immediate": (r) => (r.roles?.editor === "true") !== (r.roles?.viewer === "true"), generate: (r) => r.modes?.generate === "true" };
       const steps = rows.map((r) => ({ step: r.label, ok: (r.windows ?? []).length > 0 && (expected[r.label] ? expected[r.label](r) : true), detail: { windows: r.windows, roles: r.roles, modes: r.modes, decidedOn: expected[r.label] ? "role/mode pressed state" : "windows mounted" } }));
       steps.push({ step: "no `no actor for instance`", ok: (s.noActor ?? 0) === 0, detail: { noActor: s.noActor, sample: s.noActorSample } });
       const pageErrors = Array.isArray(s.pageErrors) ? s.pageErrors.length : Number(s.pageErrors ?? 0);
@@ -415,7 +417,9 @@ const PROBES = [
     env: { SEMIO_PROBE_OUT: outUp("graph-keyboard") },
     /** ⌨️ Each traversal chord must reach its OWN verb, not merely "something was invoked": the four
      * arrows and `Enter` are the whole keyboard route through the graph, and a chord that resolves to
-     * a neighbour's action is exactly the defect. `baseline` presses nothing and cannot be decided. */
+     * a neighbour's action is exactly the defect. Escape, Delete and Control+z must reach the
+     * framework's `clearSelection`, the app's `deleteSelection` and `undo` (`⌨️keyboard-reachability.json`,
+     * the interaction domain's `escape`); `baseline` presses nothing, so NOTHING may have been invoked. */
     verdict: (dir) => {
       const rows = readJson(join(dir, "results.json")) ?? [];
       const console_ = readText(join(dir, "console.txt"));
@@ -424,10 +428,11 @@ const PROBES = [
         "arrow-right-downstream": "selectDownstreamNode", "arrow-left-upstream": "selectUpstreamNode",
         "arrow-up-previous": "selectPreviousNode", "enter-activate": "activateSelection",
         "arrow-right-after-activate": "selectDownstreamNode", "arrow-down-reenter": "selectNextNode",
+        "escape-clear": "clearSelection", "delete-selection": "deleteSelection", undo: "undo",
       };
       const steps = rows.map((r) => ({
         step: r.label,
-        ok: want[r.label] === undefined ? undefined : (r.invoked ?? []).includes(want[r.label]),
+        ok: r.label === "baseline" ? (r.invoked ?? []).length === 0 : (r.invoked ?? []).includes(want[r.label]),
         detail: { key: r.key, want: want[r.label] ?? null, invoked: r.invoked, activeRole: r.activeRole, activeLabel: r.activeLabel, outlineSelected: r.outlineSelected, inspection: r.inspection },
       }));
       /** 🔍️ A chord that DISPATCHES is not a chord that WORKS. The Inspection panel is fed by the

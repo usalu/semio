@@ -396,7 +396,7 @@ impl DockState {
     }
 
     /// 📐️ The raw stack FRAMES this layout solves for `bounds` — the pure axis arithmetic, before any
-    /// theme, tab cap or silhouette touches it. `stack_body_rects` is this minus each stack's cap;
+    /// theme, tab cap or chip touches it. `stack_body_rects` is this and nothing else, the content plane filling the frame;
     /// separating them is what lets one language-neutral fixture state a layout's geometry without
     /// also pinning a theme metric (`🧫️fixtures/🪟️app-mode-layouts/🔣️.json`).
     pub fn stack_frame_rects(&self, bounds: Rect) -> Vec<(DockPath, Rect, String)> {
@@ -425,27 +425,27 @@ impl DockState {
     }
 
     pub fn stack_body_rects(&self, bounds: Rect, theme: &Theme, window_labels: &HashMap<String, String>, atlas: &mut FontAtlas) -> Vec<(DockPath, Rect, String)> {
-        self.stack_body_rects_with_silhouettes(bounds, theme, window_labels, atlas).0
+        self.stack_body_rects_with_frames(bounds, theme, window_labels, atlas).0
     }
 
-    /// 🪟️ Same as {@link Self::stack_body_rects} plus the active window's dock-stack silhouette.
-    pub fn stack_body_rects_with_silhouettes(&self, bounds: Rect, theme: &Theme, window_labels: &HashMap<String, String>, atlas: &mut FontAtlas) -> (Vec<(DockPath, Rect, String)>, HashMap<String, WindowSilhouette>) {
+    /// 🪟️ Same as {@link Self::stack_body_rects} plus the active window's dock-stack frame.
+    pub fn stack_body_rects_with_frames(&self, bounds: Rect, theme: &Theme, window_labels: &HashMap<String, String>, atlas: &mut FontAtlas) -> (Vec<(DockPath, Rect, String)>, HashMap<String, WindowFrame>) {
         let mut out = Vec::new();
-        let mut silhouettes = HashMap::new();
+        let mut frames = HashMap::new();
         if let Some(path) = &self.maximized_stack {
             if let Some(node) = node_at(&self.root, path) {
                 let rect = bounds;
                 if let DockNode::Stack { windows, active } = node {
                     let layout = layout_stack_cap(windows, window_labels, &HashMap::new(), atlas, theme, rect, self.tab_action_count());
-                    let silhouette = stack_window_silhouette(rect, theme, &layout);
-                    out.push((path.clone(), dock_stack_body_rect(silhouette.safe_body_rect(), theme), active.clone()));
-                    silhouettes.insert(active.clone(), silhouette);
+                    let frame = stack_window_frame(rect, theme, &layout);
+                    out.push((path.clone(), frame.content_clip_rect(), active.clone()));
+                    frames.insert(active.clone(), frame);
                 }
             }
-            return (out, silhouettes);
+            return (out, frames);
         }
-        collect_stack_bodies(&self.root, bounds, &empty_path(), theme, window_labels, atlas, self, self.tab_action_count(), &mut out, &mut silhouettes);
-        (out, silhouettes)
+        collect_stack_bodies(&self.root, bounds, &empty_path(), theme, window_labels, atlas, self, self.tab_action_count(), &mut out, &mut frames);
+        (out, frames)
     }
 
     pub fn stack_tab_bar_rects(&self, bounds: Rect, theme: &Theme) -> Vec<(DockPath, Rect)> {

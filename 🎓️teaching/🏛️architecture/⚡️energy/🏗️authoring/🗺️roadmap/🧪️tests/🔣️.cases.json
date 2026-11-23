@@ -16,7 +16,7 @@
       "family": "🌬️ventilation",
       "steps": ["bedarf", "menge", "waerme", "natuerlich", "mechanisch", "uebergabe"],
       "bracket_last": 4,
-      "handovers": ["Heizung", "Kühlung"],
+      "handovers": ["Heizung", "Kühltechnik"],
       "receives": {}
     },
     {

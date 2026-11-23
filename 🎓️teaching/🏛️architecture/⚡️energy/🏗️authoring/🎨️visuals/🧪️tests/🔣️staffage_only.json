@@ -18,6 +18,7 @@
     "allowed": {
       "⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py::_brick_block": "section-material study: two adjoining masonry wall regions with four mortar courses; temperature trackers recolour the control volumes before the microscopic heat-transfer lens, not a freestanding brick object",
       "⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py::_window_wall": "structure: wall opening of the building section",
+      "⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py::unit_block": "formula card: a framed headline and unit-substituted equation, no physical object",
       "⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py::_lattice": "diagram: bonded and free particles of the physics lens",
       "⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py::person_bars": "chart: bar chart of person heat outputs",
       "⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py::_beam": "diagram: a straight light ray of the physics lens, not a structural beam",

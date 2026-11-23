@@ -4,10 +4,10 @@ use super::*;
 #[test]
 fn concurrent_section_fields_preserve_both_authors_intent() {
     let base = Fem3dSnapshotValue { sections: vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection { id: "target".into(), name: "Original".into(), area: 0.01, iy: 1e-6, iz: 1e-6, j: 1e-6 }], ..Default::default() };
-    let persistent = Fem3dSnapshot::from_reference(base.clone()).expect("persistent base");
+    let persistent = Retiring::new(Fem3dSnapshot::from_reference(base.clone()).expect("persistent base"));
     let lower = |field: &str, value: &str| {
         let history = semio_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&persistent, &history);
+        let doc = ArtifactView::new(&*persistent, &history);
         let config = NoConfig::default();
         handle(&PatchSection { id: "target".into(), field: field.into(), value: value.into() }, &doc, &ConfigView { snapshot: &config, window: None }).expect("field intent").artifact_mutations.remove(0)
     };
@@ -26,6 +26,7 @@ fn concurrent_section_fields_preserve_both_authors_intent() {
     }
 }
 use crate::context::dispatch;
+use crate::context::Retiring;
 use crate::context::fem3d_demo_app;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 #[cfg(test)] use semio_plugin::component::ArtifactView;

@@ -37,7 +37,7 @@
     "key": {
       "type": "string",
       "x-semio-ui": {
-        "role": "target",
+        "role": "value",
         "label": {
           "en": "Input",
           "de": "Eingabe"

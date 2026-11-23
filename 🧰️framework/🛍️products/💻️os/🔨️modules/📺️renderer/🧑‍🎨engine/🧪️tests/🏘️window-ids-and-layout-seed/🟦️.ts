@@ -65,7 +65,7 @@ describe("per-window element ids", () => {
     const body = document.getElementById(paneId)?.querySelector('[data-slot="pane-body"]') as HTMLElement | null;
     const switchRoot = document.querySelector("[data-world-projection-kind-switch]") as HTMLElement | null;
     expect(body?.className).toContain("p-tiny");
-    expect(body?.hasAttribute("data-window-silhouette-content")).toBe(true);
+    expect(body?.hasAttribute("data-window-frame-content")).toBe(true);
     expect(switchRoot?.getAttribute("data-level")).toBeNull();
     expect(switchRoot?.className.includes("rounded-md")).toBe(false);
     cleanup();

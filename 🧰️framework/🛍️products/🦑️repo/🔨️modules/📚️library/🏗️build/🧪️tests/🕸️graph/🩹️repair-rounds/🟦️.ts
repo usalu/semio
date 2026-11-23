@@ -29,7 +29,7 @@ const extract=(name:string):string=>{
 
 type Row={kind:"file"|"digest";path:string;fact:{version?:number;sha256?:string;size?:number;mtimeMs?:number;ctimeMs?:number;ino?:number}};
 
-const world=(owners:number,scenario:{discoveryFailure?:(owner:string,call:number,tree:Map<string,number>)=>Error|undefined;membershipFailures?:(call:number,tree:Map<string,number>)=>string[]|undefined;onDiscover?:(call:number,tree:Map<string,number>)=>void;digestAt?:(call:number)=>string;admissionAt?:(call:number)=>string[];sharedInferenceRead?:boolean;settleRounds?:number;passReuse?:()=>unknown; pinned?:{rows:Row[];fail?:boolean;before?:()=>void}}={})=>{
+const world=(owners:number,scenario:{discoveryFailure?:(owner:string,call:number,tree:Map<string,number>)=>Error|undefined;membershipFailures?:(call:number,tree:Map<string,number>)=>string[]|undefined;onDiscover?:(call:number,tree:Map<string,number>)=>void;digestAt?:(call:number)=>string;admissionAt?:(call:number)=>string[];sharedInferenceRead?:boolean;settleRounds?:number;passReuse?:()=>unknown; farm?:{ready:()=>boolean;size:number;discover:(request:Record<string,unknown>,signal?:AbortSignal)=>Promise<unknown>}; pinned?:{rows:Row[];fail?:boolean;before?:()=>void}}={})=>{
  const tree=new Map<string,number>(),names=Array.from({length:owners},(_,index)=>"owner-"+index);
  for(const name of names)for(const file of["manifest","src"])tree.set(name+"/"+file,1);
  tree.set("tooling/shared.ts",1);tree.set("elsewhere/unrelated.ts",1);
@@ -42,11 +42,13 @@ const world=(owners:number,scenario:{discoveryFailure?:(owner:string,call:number
   staleSourceFactsErrorV1:(rows:readonly Row[])=>Object.assign(new Error("stale "+rows.map(row=>row.path).join(",")),{code:"BUILD_AUTHORITY_CHANGED"}),
   requirePinnedImplementationFactsV1:originalObservation.requirePinnedImplementationFactsV1,
   retainObservedRowsV1:(rows:readonly Row[])=>{for(const row of rows)for(const each of stack)each.set(row.path,row);},
+  shareObservationRowsV1:<Item>(rows:Item[])=>rows,
  };
  const registry={version:1,owners:names.map(name=>({name}))},admitted=()=>({owners:names,files:[],targets:{},catalogProviders:[],inputs:{}});
  const producer={
   readBuildOwnerRegistrySourceV1:()=>JSON.stringify(registry),libraryBootstrap:Promise.resolve(),prepareSourceAnalysesV1:()=>{},
   ownerBoundaryFailureV1:()=>undefined,
+  ownerFactsFarmV1:()=>scenario.farm,
   discoverBuildOwnerAdmissionFactsV1:async(owner:{name:string})=>{observed[owner.name]=(observed[owner.name]??0)+1;const failure=scenario.discoveryFailure?.(owner.name,observed[owner.name]!,tree);if(failure)throw failure;observation.observedFs.readFileSync(owner.name+"/manifest");observation.observedFs.readFileSync("tooling/shared.ts");return{project:{name:owner.name,targets:{}},files:[],dependencies:[]};},
  };
  const bindings={distinctObservationRowsV1,decodeAuthorityObservationsV1,encodeAuthorityObservationsV1,sourceAuthoritySchema:authoritySchema,sliceReportSchema,
@@ -363,4 +365,26 @@ test("a worker below the threshold, or without one, never recycles",async()=>{
  expect(below.workers).toBe(1);expect(below.states).toEqual([]);expect(below.state.counts.discovered).toBe(1+limits.definitions.Limits.const.repairRounds);
  const lines:string[]=[],state=world(4,{passReuse:()=>createPassReuseV1({environment:{},heapBytes:()=>1e15,say:line=>{lines.push(line);}}),onDiscover:(_call,tree)=>{tree.set("owner-1/src",(tree.get("owner-1/src")??0)+1);}});
  expect(await state.run()).toBeDefined();expect(state.counts.discovered).toBe(1+limits.definitions.Limits.const.repairRounds);
+});
+
+const farmed=(failing:boolean)=>{
+ const requests:Record<string,unknown>[]=[],farm={size:3,ready:()=>true,discover:async(request:Record<string,unknown>)=>{requests.push(request);if(failing)throw Object.assign(Error("child refused"),{childCode:"OWNER_FARM_FORMAT"});return{facts:{project:{name:request.owner,targets:{}},files:[],dependencies:[]},rows:[{kind:"file",path:request.owner+"/manifest",fact:{version:1}}]};}};
+ return{farm,requests};
+};
+
+test("a ready discovery farm answers the owner facts and the parent discovers no owner itself",async()=>{
+ const {farm,requests}=farmed(false),state=world(4,{farm});
+ await state.run();
+ expect(requests.map(request=>request.owner)).toEqual(state.names);
+ expect(requests.every(request=>request.format==="same"&&request.registryDigest==="registry"&&typeof request.epoch==="string")).toBe(true);
+ expect(new Set(requests.map(request=>request.epoch)).size).toBe(1);
+ expect(state.observed).toEqual({});
+});
+
+test("a farm that refuses an owner leaves it to the parent, which discovers it as without a farm, and says so",async()=>{
+ const {farm,requests}=farmed(true),state=world(4,{farm});
+ await state.run();
+ expect(requests).toHaveLength(4);
+ expect(observedOnce(state)).toBe(true);
+ expect(state.lines.filter(line=>line.startsWith("[graph-owner-farm]"))).toHaveLength(3);
 });

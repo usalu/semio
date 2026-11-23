@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-pdf-mutation-round-trip-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-stdio-pdf: mutation round-trip tests of the 1.4 a and x subsets"
+
+[package.metadata.semio]
+role = "library"
+
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_4::subsets::a::schema::mutations::clear_page_text::tests",
+  "standards::v1_4::subsets::a::schema::mutations::set_page_text::tests",
+  "standards::v1_4::subsets::x::schema::mutations::collapse_page_size::tests",
+  "standards::v1_4::subsets::x::schema::mutations::set_page_size::tests",
+]
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-s-artifact-stdio-pdf-conformance-support = { path = "../../../../../../../7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🏅️conformance-support/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+
+[features]
+testkit = ["semio-s-artifact-stdio-pdf-conformance-support/testkit"]
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-artifact-stdio-pdf-conformance-support = { path = "../../../../../../../7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🏅️conformance-support/📦️packages/🦀️rust", features = ["testkit"] }

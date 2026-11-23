@@ -38,7 +38,6 @@ impl DocumentStream {
         let next_number = lowered.objects.iter().map(|object| object.id.num).max().unwrap_or(0).max(page_refs.iter().map(|r| r.num).max().unwrap_or(0)) + 1;
         let mut headless = snapshot.clone();
         headless.pages.clear();
-        headless.objects.clear();
         headless.trailer.clear();
         Ok((Self { writer, lowered, pages_ref, page_refs, written_pages: 0, next_number, snapshot: headless, options: options.lower, root_resources, annotation_refs: Vec::new() }, out))
     }

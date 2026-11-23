@@ -47,7 +47,17 @@
         "widget": "select",
         "role": "value",
         "group": "value",
-        "order": 20
+        "order": 20,
+        "options": {
+          "undrainedStrength": {
+            "en": "Undrained shear strength c_u",
+            "de": "Undränierte Scherfestigkeit c_u"
+          },
+          "frictionAngle": {
+            "en": "Friction angle φ′",
+            "de": "Reibungswinkel φ′"
+          }
+        }
       }
     }
   }

@@ -1,16 +1,18 @@
-//! 🧪️ Genuine one-fuel callers compare typed construction with the defining native cold fold.
+//! 🧪️ Genuine bounded callers (`TURN_FUEL` work units per call, at most `MAXIMUM_CALLS` calls) compare typed construction with the defining native cold fold.
 use semio_os_flow::neural::ColdRetire as _;
 use semio_framework_value::FromValue as _;
 use super::*;
-use super::super::retained_scratch_testing::ScratchCaller;
+use super::super::retained_scratch_testing::{MAXIMUM_CALLS,ScratchCaller};
 use semio_framework_value::RetainedCloneGrant;
 use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
 fn policy()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap()}
+/// 🔢️ Reads every JSON number as the decimal the native fold writes, so `1` and `1.0` name one corpus value.
+fn decimal(value:&serde_json::Value)->serde_json::Value{match value{serde_json::Value::Number(number)=>number.as_f64().and_then(serde_json::Number::from_f64).map_or(value.clone(),serde_json::Value::Number),serde_json::Value::Array(items)=>serde_json::Value::Array(items.iter().map(decimal).collect()),serde_json::Value::Object(members)=>serde_json::Value::Object(members.iter().map(|(key,member)|(key.clone(),decimal(member))).collect()),_=>value.clone()}}
 fn close(work:&mut TypedLiteralWork,caller:&mut ScratchCaller){
  work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let body=same.retained_grant().maximum_copy_bytes;let d=work.next_close_demands(body)?;semio_framework_job::close_original_effect_step(same,d,|effect|work.close_step(body,effect))?;Ok(())}));}panic!("typed literal did not reach physical terminal")
 }
 #[test]
-fn original_typed_literals_match_all_eleven_native_kinds_with_one_fuel_and_prefix_close(){
+fn original_typed_literals_match_all_eleven_native_kinds_within_the_bounded_work_loan_and_prefix_close(){
  let corpus:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let policy=policy();
  for case in corpus["cases"].as_array().unwrap(){for items in [1,512]{for cut in [None,Some(0),Some(1),Some(2),Some(7)]{
   let wire=case["input"].to_string();let(input,seed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_pack_json::from_json_str::<WidgetInputValue>(&wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
@@ -19,9 +21,9 @@ fn original_typed_literals_match_all_eleven_native_kinds_with_one_fuel_and_prefi
   let matched=if cut.is_none(){
    let expected=input.neural_value();let expected_wire=semio_framework_pack_json::to_json_string(&expected);
    caller.turn(|cx|work.take_into(&mut output,cx));let actual=output.as_ref().unwrap();let actual_wire=semio_framework_pack_json::to_json_string(actual);let native_equal=actual==&expected;
-   let corpus_equal=serde_json::from_str::<serde_json::Value>(&actual_wire).unwrap()==case["expected"];expected.retire_cold();native_equal&&actual_wire==expected_wire&&corpus_equal
+   let corpus_equal=decimal(&serde_json::from_str::<serde_json::Value>(&actual_wire).unwrap())==decimal(&case["expected"]);expected.retire_cold();native_equal&&actual_wire==expected_wire&&corpus_equal
   }else{true};
-  close(&mut work,&mut caller);if let Some(value)=output.take(){caller.close(value)}caller.close(input);let calls=caller.finish();assert!(matched,"{}",case["name"]);assert!(calls<=200);
+  close(&mut work,&mut caller);if let Some(value)=output.take(){caller.close(value)}caller.close(input);let calls=caller.finish();assert!(matched,"{}",case["name"]);assert!(calls<=MAXIMUM_CALLS);
  }}}
 }
 #[test]

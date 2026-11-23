@@ -376,7 +376,7 @@ fn generation3d_view_render_body(
     hover_groups: &mut Option<preview_eval::PreviewHoverGroups>,
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let node = match body_key {
-        preview::BODY_KEY => preview::render(document, config, eval_json, session, run, marks, labels, &semio_plugin::TreeWindows::for_body(view_state, body_key), view_state.locale == semio_ui_locale::Locale::De, hover_groups),
+        preview::BODY_KEY => preview::render(document, config, eval_json, session, run, marks, labels, &semio_plugin::TreeWindows::for_body(view_state, body_key), view_state.locale, hover_groups),
         _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     }?;
     Ok(semio_plugin::built_to_component_tree(node))

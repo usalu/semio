@@ -332,7 +332,7 @@ impl<L:RetirementCursor,R:RetirementCursor> RetirementFieldsPair<L,R>{
   let grant=effect.grant();let work=match self.next_computational_work(body){Ok(work)=>work,Err(error)=>return RetirementStep::Failure(error.into(),0)};if effect.maximum_work_units()<work{return RetirementStep::BudgetExhausted}
   if !self.right_started&&self.left.terminal_is_empty(){let turn=crate::start_retained_close(&mut self.right_started,effect);return match turn.result{Ok(progress)=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error.into(),turn.work)}}
   let demand=match self.next_demand(body){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
-  let grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let mut child=match effect.reborrow(grant,effect.maximum_work_units()){Ok(child)=>child,Err(error)=>return RetirementStep::Failure(error.into(),0)};
+  let grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let mut child=effect.nested(grant);
   if self.right_started{invoke(&mut self.right,&mut child)}else{invoke(&mut self.left,&mut child)}
  }
 }
@@ -616,7 +616,7 @@ impl<T:RetireOwned> Optional<T>{
   if self.original.is_none(){return RetirementStep::Complete(0)}let grant=effect.grant();let demand=match self.next_demand(body){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};
   if effect.maximum_work_units()==0||!crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
   if self.original.as_ref().is_some_and(Option::is_none){let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetirementStep::Failure(error.into(),work)};self.original.take();return RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},work)}
-  let mut child=match effect.reborrow(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant},effect.maximum_work_units()){Ok(child)=>child,Err(error)=>return RetirementStep::Failure(error.into(),0)};
+  let mut child=effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});
   let turn=admit_retirement_cursor(self.original.as_mut().expect("original optional slot retained"),&mut child);match turn.result{Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress,turn.work),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)}
  }
 }
@@ -740,7 +740,7 @@ impl<T:RetireOwned> RetirementCursor for Deferred<T>{
 impl<T:RetireOwned> Deferred<T>{
  fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{
   if self.original.is_none(){return RetirementStep::Complete(0)}let grant=effect.grant();if grant.maximum_depth<2{return RetirementStep::BudgetExhausted}
-  let mut child=match effect.reborrow(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant},effect.maximum_work_units()){Ok(child)=>child,Err(error)=>return RetirementStep::Failure(error.into(),0)};
+  let mut child=effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});
   let turn=admit_retirement_cursor(&mut self.original,&mut child);match turn.result{Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress,turn.work),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)}
  }
 }
@@ -763,8 +763,8 @@ pub fn erased_cursor_turn(poll:crate::OriginalRetirementPoll)->RetirementStep{ma
 pub struct ErasedCursor(Box<dyn ErasedSnapshotRetirement>);
 impl RetirementCursor for ErasedCursor {
     fn requires_original_control(&self)->bool{self.0.requires_original_control()}
-    fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{let grant=effect.grant();erased_cursor_turn(crate::close_owner_controlled(self.0.as_mut(),body,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"),control))}
-    fn close_original_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();erased_cursor_turn(crate::close_owner_original(self.0.as_mut(),original,body,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect")))}
+    fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{let grant=effect.grant();erased_cursor_turn(crate::close_owner_controlled(self.0.as_mut(),body,&mut effect.nested(grant),control))}
+    fn close_original_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();erased_cursor_turn(crate::close_owner_original(self.0.as_mut(),original,body,&mut effect.nested(grant)))}
     fn next_computational_work(&self,body:usize)->Result<u64,crate::ValueError>{self.0.next_computational_work(body)}
     fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.0.next_demand(body)}
 
@@ -778,7 +778,7 @@ impl RetirementCursor for ErasedCursor {
     fn terminal_release_bytes(&self)->Option<usize> {self.0.terminal_is_empty().then_some(size_of::<Self>()+size_of_val(self.0.as_ref()))}
 }
 impl ErasedCursor {
- fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();erased_cursor_turn(crate::close_owner(self.0.as_mut(),body,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect")))}
+ fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();erased_cursor_turn(crate::close_owner(self.0.as_mut(),body,&mut effect.nested(grant)))}
 }
 
 

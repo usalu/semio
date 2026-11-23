@@ -263,7 +263,7 @@ fn drawing_gesture_maintenance_retires_a_cancelled_owner_promptly() {
 #[test]
 fn drawing_empty_instance_owner_records_its_paid_close_transition() {
     use semio_plugin::ArtifactInstanceOperationOwner as _;
-    let rows: Vec<serde_json::Value> = serde_json::from_str(fixture_text!("🧫️fixtures/🚪️empty-close/🔣️.json")).unwrap();
+    let rows: Vec<serde_json::Value> = serde_json::from_str(fixture_text!("../../../🔬️gesture-operation-owner/🧫️fixtures/🚪️empty-close/🔣️.json")).unwrap();
     let mut caller = original_caller();
     let mut owner = DrawingInstanceOperationOwner::new();
     for row in rows {

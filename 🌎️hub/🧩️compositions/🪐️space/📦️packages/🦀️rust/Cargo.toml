@@ -27,6 +27,9 @@ semio-os = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-hub-space-commands-media = { workspace = true }
@@ -44,7 +47,5 @@ semio-os-kernel = { workspace = true, features = ["protocol-laws"] }
 serde_json = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 pack = { workspace = true }
-semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework = { workspace = true }
 semio-s-artifact-draw-drawing-examples = { workspace = true }
 semio-s-artifact-draw-drawing-model = { workspace = true }

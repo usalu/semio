@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:shared-worktree-replica-merge:v1",
+  "title": "Shared Worktree Apply Merge",
+  "description": "🔀️ The three-way line merge the replica applies when an inbound event meets an unpublished local edit of the same path: `base` is the content the replica last applied at the path, `ours` the local bytes, `theirs` the inbound content. `merged` is the clean merge, or null when the sides conflict (they change overlapping or touching lines differently) or cannot be merged (binary content). Every vector agrees with `git merge-file -p ours base theirs`.",
+  "$ref": "#/definitions/Fixture",
+  "definitions": {
+    "Vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "base", "ours", "theirs", "merged"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "base": { "type": "string" },
+        "ours": { "type": "string" },
+        "theirs": { "type": "string" },
+        "merged": { "anyOf": [{ "type": "null" }, { "type": "string" }] }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "vectors"],
+      "properties": {
+        "version": { "const": 1 },
+        "vectors": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Vector" } }
+      }
+    }
+  }
+}

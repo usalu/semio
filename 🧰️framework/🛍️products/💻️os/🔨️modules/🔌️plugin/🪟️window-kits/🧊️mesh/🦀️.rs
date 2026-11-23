@@ -13,10 +13,10 @@ use semio_ui_contract::BuiltNode;
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
 use semio_ui_contract::*;
-use semio_ui_locale::LocalizedLabel;
+use semio_ui_locale::{Locale, LocalizedLabel};
 use crate::WindowKit;
 use semio_plugin_interaction::UiAssemblyResult;
-use semio_plugin_window_transient::scene_surface;
+use semio_plugin_window_transient::{scene_surface, surface_name};
 use semio_plugin_window_transient::window_kind_definition;
 
 
@@ -34,7 +34,6 @@ pub struct MeshView {
 pub struct MeshWindowKit;
 
 impl WindowKit for MeshWindowKit {
-    type ViewModel = MeshView;
     const KIND_ID: &'static str = "framework.window.mesh";
 
     fn window_kind() -> WindowKindDefinition {
@@ -44,10 +43,12 @@ impl WindowKit for MeshWindowKit {
     fn editable_window_kind() -> WindowKindDefinition {
         window_kind_definition(Self::KIND_ID, "Mesh", "Netz", SurfaceKind::World3d, "box", vec![ActionDefinition::bounded_catalog("set-vertex", LocalizedLabel::native("Set Vertex", "Vertex setzen"), ActionKind::Mutation)])
     }
+}
 
-    fn render(view: &MeshView) -> UiAssemblyResult<BuiltNode> {
+impl MeshWindowKit {
+    pub fn render(view: &MeshView, locale: Locale) -> UiAssemblyResult<BuiltNode> {
         let sun_config = crate::world3d_sun::WorldSunConfig::default();
         let scene = crate::world3d_sun::world3d_scene(view.camera_json.clone(), view.meshes_json.clone(), view.instances_json.clone(), view.selection_json.clone(), &sun_config);
-        scene_surface(Self::KIND_ID, SurfaceKind::World3d, &scene)
+        scene_surface(Self::KIND_ID, SurfaceKind::World3d, &scene, surface_name(locale, "3D view", "3D-Ansicht"), None)
     }
 }

@@ -399,7 +399,7 @@ impl ArtifactEditor for Generation2dPlayApp {
         if body_key == generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW {
             let labels = generation2d_labels(view_state);
             let window_config = generate_preview::config::current(cfg);
-            let node = generate_preview::render(&window_config, transient.snapshot.generation_preview_text.as_deref(), labels)?;
+            let node = generate_preview::render(&window_config, transient.snapshot.generation_preview_text.as_deref(), labels, view_state.locale)?;
             return Ok(semio_plugin::built_to_component_tree(node));
         }
         let marks = GraphInteractionMarks::from_interaction(interaction);

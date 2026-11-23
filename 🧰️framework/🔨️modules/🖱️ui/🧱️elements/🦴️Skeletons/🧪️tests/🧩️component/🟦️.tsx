@@ -7,7 +7,7 @@ import { CanvasSkeleton, PanelTreeSkeleton, elementSkeleton } from "../../🟦�
 
 // #region 🦴️CanvasSkeleton
 describe("CanvasSkeleton", () => {
-  it("renders two even window-chrome silhouettes instead of a single rectangle", () => {
+  it("renders two even window frames, each one rectangle with its chip inside", () => {
     const { container } = render(
       <LevelProvider level="base">
         <div className="h-64 w-full">
@@ -16,8 +16,14 @@ describe("CanvasSkeleton", () => {
       </LevelProvider>,
     );
     expect(container.querySelectorAll('[data-slot="canvas-skeleton-stack"]')).toHaveLength(2);
-    expect(container.querySelectorAll('[data-window-silhouette-border][data-kind="loading"]')).toHaveLength(2);
-    expect(container.querySelectorAll('[data-window-silhouette-chip]')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-window-frame-border][data-kind="loading"]')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-window-frame-chip]')).toHaveLength(2);
+    for (const stack of container.querySelectorAll('[data-slot="canvas-skeleton-stack"]')) {
+      expect(stack.hasAttribute("data-window-frame")).toBe(true);
+      expect(stack.querySelector("[data-window-frame-content]")).not.toBeNull();
+      expect(stack.querySelector("[data-window-frame-chip]")?.closest("[data-window-frame]")).toBe(stack);
+      expect(stack.querySelector('[data-slot$="gap"]')).toBeNull();
+    }
     expect(container.querySelector('[data-slot="canvas-skeleton-stack"][data-active="true"]')).toBeTruthy();
     const row = container.querySelector('[data-slot="canvas-skeleton-stack"]')!.closest<HTMLElement>(".flex-row")!;
     expect(row.className).not.toMatch(/\bgap-/);

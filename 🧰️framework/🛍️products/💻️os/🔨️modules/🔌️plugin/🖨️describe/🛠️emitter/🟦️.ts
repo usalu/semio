@@ -30,11 +30,12 @@ declare const emitterBrand:unique symbol;
 export type DescriptorEmitterV1=Readonly<{readonly[emitterBrand]:true}>;
 type Scope={live:boolean;reader:RepositoryArtifactReaderV1;workspace:string;invocation:ScriptInvocation;intent:DescriptorEmitterIntentV1;cargoHome:string};
 const emitters=new WeakMap<DescriptorEmitterV1,Scope>();
-/** 🔧️ Publishes the actual captured executable and actual completed compiler observation before producer cleanup. */
-export function buildDescriptorEmitterV1(workspace:string,invocation:ScriptInvocation,control:CompilerAdmissionControl):Promise<void>{
+/** 🔧️ Publishes the actual captured executable and actual completed compiler observation before producer cleanup; the registry fetch and compilation run first, and only the final publication runs inside `publishing`, so a caller that serializes publications never holds its singleton while it waits for the registry fetch lease.
+ * @see ./🥾️prerequisite/🟦️.ts */
+export function buildDescriptorEmitterV1(workspace:string,invocation:ScriptInvocation,control:CompilerAdmissionControl,publishing:(body:()=>Promise<void>)=>Promise<void>=body=>body()):Promise<void>{
  requireIssuedResourceControlInvocationV1(control,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),intent=readDescriptorEmitterIntentV1({version:1,mode:authority.original.buildMode,platform:process.platform}),name=descriptorEmitterBinaryNameV1(intent);if(workspace!==authority.repositoryRoot)throw Error("Actual emitter workspace required");
  return buildRepositoryCargoArtifacts(join(workspace,DESCRIPTOR_EMITTER_MANIFEST_V1),[...descriptorEmitterCargoArgumentsV1(intent.mode)],workspace,{producer:"descriptor-emitter",invocation,network:repositoryCargoNetworkV1(invocation,workspace),control,retainCompilationBytes:compilerInventory.properties.maximumRetainedCompilationBytes.const,retainConsumedSources:true,consume:capture=>withCapturedCargoArtifactsTaskV1(capture,async native=>withCapturedCargoCompilationTaskV1(capture,async compilation=>{
-  const binary=native.files.get(name);if(!binary||[...native.files.keys()].some(file=>file!==name&&!/\.(?:pdb|dwp)$/u.test(file)))throw Error("One self-contained captured descriptor executable required");await withRepositoryCacheStoreV1(workspace,"products",invocation,native.control,(store,storePhase)=>withArtifactScratchV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode:intent.mode,owner:"browser/tools/descriptor-emitter"}},scratch=>withArtifactDestinationTaskV1(scratch,invocation,async sink=>{await native.recheck();await compilation.recheck();const files=new Map([[name,binary]]);for(const[logical,file]of compilation.files)files.set(schema.definitions.Protocol.const.compilation+"/"+logical,file.path);const request=descriptorEmitterRequestV1(store.root,intent);await withRepositoryArtifactDestinationV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:request.path},destination=>stageRepositoryArtifacts(destination,request.owner,files));await compilation.recheck();})));
+  const binary=native.files.get(name);if(!binary||[...native.files.keys()].some(file=>file!==name&&!/\.(?:pdb|dwp)$/u.test(file)))throw Error("One self-contained captured descriptor executable required");await publishing(()=>withRepositoryCacheStoreV1(workspace,"products",invocation,native.control,(store,storePhase)=>withArtifactScratchV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode:intent.mode,owner:"browser/tools/descriptor-emitter"}},scratch=>withArtifactDestinationTaskV1(scratch,invocation,async sink=>{await native.recheck();await compilation.recheck();const files=new Map([[name,binary]]);for(const[logical,file]of compilation.files)files.set(schema.definitions.Protocol.const.compilation+"/"+logical,file.path);const request=descriptorEmitterRequestV1(store.root,intent);await withRepositoryArtifactDestinationV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:request.path},destination=>stageRepositoryArtifacts(destination,request.owner,files));await compilation.recheck();}))));
  }))});
 }
 /** 🕳️ Tells whether any file of the selected emitter publication is absent, so a cold or partial products partition is rebuilt rather than read. */
@@ -51,7 +52,7 @@ export async function descriptorEmitterAbsentV1(directory:string,intent:Descript
 }
 
 /** 🥾️ Makes the published emitter current before a component build: a fresh one is kept, a missing, stale or unusable one is rebuilt and republished by the same `buildDescriptorEmitterV1` the `:build` target runs.
- * Inspection takes its reader inside its own scope and releases it before the publisher takes the writer, and one exclusive lease serializes concurrent republications.
+ * Inspection takes its reader inside its own scope and releases it before the publisher takes the writer; the build, including its registry fetch, runs without any lease of ours, and one exclusive tool singleton serializes only the final publication, because a tool singleton must never wait for the registry fetch lease of another build.
  * @see ./🥾️prerequisite/🟦️.ts */
 export function ensureFreshDescriptorEmitterV1(workspace:string,invocation:ScriptInvocation,control:CompilerAdmissionControl,report:(line:string)=>void=console.log):Promise<"fresh"|"built">{
  requireIssuedResourceControlInvocationV1(control,invocation);
@@ -72,7 +73,7 @@ export function ensureFreshDescriptorEmitterV1(workspace:string,invocation:Scrip
      return {kind:"unreadable",reason:error instanceof Error?error.message:String(error)};
     }
    },
-   publish:()=>buildDescriptorEmitterV1(workspace,invocation,phase()),
+   publish:publishing=>buildDescriptorEmitterV1(workspace,invocation,phase(),publishing),
    serialize:async body=>{
     const lease=await acquireResourceLease({directory,resource:descriptorEmitterPrerequisiteResourceV1(intent),mode:"exclusive",signal:actual.signal,control:actual});
     try{return await body();}finally{lease.release();}

@@ -93,7 +93,7 @@
     },
     "dimensions": {
       "heightM": 1.764,
-      "widthM": 0.984,
+      "widthM": 0.962,
       "depthM": 0.45,
       "massKg": 72
     },
@@ -911,30 +911,30 @@
           "de": "Erstkontakt links"
         },
         "description": {
-          "en": "Left foot lands flat under a forward-leaning trunk; the other leg is behind and still extended.",
-          "de": "Der linke Fuß setzt flach unter dem vorgeneigten Rumpf auf; das andere Bein ist hinten und noch gestreckt."
+          "en": "The left foot lands flat ahead of the centre of mass and with zero ground speed; the other leg trails with a flexed knee.",
+          "de": "Der Fuß links setzt flach vor dem Schwerpunkt und ohne Geschwindigkeit gegenüber dem Boden auf; das andere Bein folgt mit gebeugtem Knie."
         },
         "bones": {
           "thigh-l": {
-            "angleDeg": 29.06
+            "angleDeg": 29.3019
           },
           "shank-l": {
-            "angleDeg": -34.18
+            "angleDeg": -38.2063
           },
           "foot-l": {
-            "angleDeg": 5.12
+            "angleDeg": 8.9044
           },
           "thigh-r": {
-            "angleDeg": 1.35
+            "angleDeg": 2.184
           },
           "shank-r": {
-            "angleDeg": -74.44
+            "angleDeg": -73.115
           },
           "foot-r": {
-            "angleDeg": 13.54
+            "angleDeg": 2.4115
           },
           "torso": {
-            "angleDeg": -5.4
+            "angleDeg": -6.9004
           },
           "chest": {
             "angleDeg": -3.6
@@ -964,7 +964,7 @@
             "angleDeg": 0
           },
           "toe-r": {
-            "angleDeg": 0
+            "angleDeg": 9
           },
           "neck": {
             "angleDeg": 6
@@ -1046,8 +1046,154 @@
         },
         "loads": [],
         "root": {
-          "y": 0.904
+          "y": 0.8995694833213054
         }
+      },
+      {
+        "id": "weight-acceptance-l",
+        "title": {
+          "en": "Weight acceptance, left",
+          "de": "Lastübernahme links"
+        },
+        "description": {
+          "en": "The ground force rises above the body weight; the sole stays flat.",
+          "de": "Die Bodenkraft steigt über das Körpergewicht; die Sohle bleibt flach."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 30.6198
+          },
+          "shank-l": {
+            "angleDeg": -51.1545
+          },
+          "foot-l": {
+            "angleDeg": 20.5347
+          },
+          "thigh-r": {
+            "angleDeg": 11.075
+          },
+          "shank-r": {
+            "angleDeg": -89.7347
+          },
+          "foot-r": {
+            "angleDeg": 4.5127
+          },
+          "torso": {
+            "angleDeg": -4.6079
+          },
+          "chest": {
+            "angleDeg": -3.6
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": -16.25
+          },
+          "forearm-l": {
+            "angleDeg": 85
+          },
+          "hand-l": {
+            "angleDeg": 5
+          },
+          "upper-arm-r": {
+            "angleDeg": -0.8937
+          },
+          "forearm-r": {
+            "angleDeg": 85
+          },
+          "hand-r": {
+            "angleDeg": 5
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "neck": {
+            "angleDeg": 6
+          },
+          "clavicle-l": {
+            "abductionDeg": 5.0663
+          },
+          "clavicle-r": {
+            "abductionDeg": -0.4763
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l"
+        ],
+        "thermal": {
+          "activityMet": 8,
+          "breathing": "run",
+          "regions": {
+            "head-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "headband": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "torso-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.2
+            },
+            "arm-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "arm-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "leg-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leg-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "ankle-socks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shoes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.24,
+                "tempC": 22
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.35
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8721000444805621
+        },
+        "key": true
       },
       {
         "id": "loading-l",
@@ -1056,30 +1202,30 @@
           "de": "Belastung links"
         },
         "description": {
-          "en": "Knee flexes while the body weight is absorbed; the other knee swings forward.",
-          "de": "Das Knie beugt sich, während das Körpergewicht abgefangen wird; das andere Knie schwingt nach vorn."
+          "en": "The knee flexes while the fall of the body is braked; the other knee swings forward.",
+          "de": "Das Knie beugt sich, während das Sinken des Körpers gebremst wird; das andere Knie schwingt nach vorn."
         },
         "bones": {
           "thigh-l": {
-            "angleDeg": 28.9
+            "angleDeg": 29.0698
           },
           "shank-l": {
-            "angleDeg": -55.35
+            "angleDeg": -58.7345
           },
           "foot-l": {
-            "angleDeg": 26.45
+            "angleDeg": 29.6647
           },
           "thigh-r": {
-            "angleDeg": 20.93
+            "angleDeg": 21.2734
           },
           "shank-r": {
-            "angleDeg": -104.65
+            "angleDeg": -104.1044
           },
           "foot-r": {
-            "angleDeg": 11.11
+            "angleDeg": 6.5277
           },
           "torso": {
-            "angleDeg": -5.4
+            "angleDeg": -3.4361
           },
           "chest": {
             "angleDeg": -3.6
@@ -1191,41 +1337,41 @@
         },
         "loads": [],
         "root": {
-          "y": 0.8609
+          "y": 0.8487614695033054
         },
         "key": true
       },
       {
-        "id": "midstance-l",
+        "id": "absorption-l",
         "title": {
-          "en": "Midstance, left",
-          "de": "Mittlere Standphase links"
+          "en": "Absorption, left",
+          "de": "Abfedern links"
         },
         "description": {
-          "en": "Lowest hip position with the full body weight over a flexed leg.",
-          "de": "Tiefste Hüftlage mit dem ganzen Körpergewicht über einem gebeugten Bein."
+          "en": "Largest ground force of about twice the body weight; the heel is about to leave the ground.",
+          "de": "Größte Bodenkraft von etwa dem doppelten Körpergewicht; die Ferse löst sich gleich vom Boden."
         },
         "bones": {
           "thigh-l": {
-            "angleDeg": 20.53
+            "angleDeg": 25.3622
           },
           "shank-l": {
-            "angleDeg": -56.47947
+            "angleDeg": -61.8569
           },
           "foot-l": {
-            "angleDeg": 35.95
+            "angleDeg": 36.4947
           },
           "thigh-r": {
-            "angleDeg": 45.99
+            "angleDeg": 33.6644
           },
           "shank-r": {
-            "angleDeg": -120.42
+            "angleDeg": -114.7929
           },
           "foot-r": {
-            "angleDeg": 8.59
+            "angleDeg": 8.522
           },
           "torso": {
-            "angleDeg": -5.4
+            "angleDeg": -2.8736
           },
           "chest": {
             "angleDeg": -3.6
@@ -1234,7 +1380,7 @@
             "angleDeg": 3
           },
           "upper-arm-l": {
-            "angleDeg": -9.5
+            "angleDeg": -13.625
           },
           "forearm-l": {
             "angleDeg": 85
@@ -1243,7 +1389,7 @@
             "angleDeg": 5
           },
           "upper-arm-r": {
-            "angleDeg": -31.1
+            "angleDeg": -20.5438
           },
           "forearm-r": {
             "angleDeg": 85
@@ -1252,7 +1398,7 @@
             "angleDeg": 5
           },
           "toe-l": {
-            "angleDeg": 4.92
+            "angleDeg": 0
           },
           "toe-r": {
             "angleDeg": 0
@@ -1261,10 +1407,10 @@
             "angleDeg": 6
           },
           "clavicle-l": {
-            "abductionDeg": 2.85
+            "abductionDeg": 4.0875
           },
           "clavicle-r": {
-            "abductionDeg": -6.0
+            "abductionDeg": -4.7831
           }
         },
         "ground": "auto",
@@ -1337,8 +1483,298 @@
         },
         "loads": [],
         "root": {
-          "y": 0.8393
+          "y": 0.8336798209760389
+        },
+        "key": true
+      },
+      {
+        "id": "midstance-l",
+        "title": {
+          "en": "Midstance, left",
+          "de": "Mittlere Standphase links"
+        },
+        "description": {
+          "en": "The centre of mass passes the planted foot near its lowest height above a flexed leg.",
+          "de": "Der Schwerpunkt geht nahe seiner tiefsten Lage über den aufgesetzten Fuß; das Standbein ist gebeugt."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 21.8984
+          },
+          "shank-l": {
+            "angleDeg": -64.1774
+          },
+          "foot-l": {
+            "angleDeg": 37.279
+          },
+          "thigh-r": {
+            "angleDeg": 45.99
+          },
+          "shank-r": {
+            "angleDeg": -120.42
+          },
+          "foot-r": {
+            "angleDeg": 8.59
+          },
+          "torso": {
+            "angleDeg": -2.9741
+          },
+          "chest": {
+            "angleDeg": -3.6
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": -9.5
+          },
+          "forearm-l": {
+            "angleDeg": 85
+          },
+          "hand-l": {
+            "angleDeg": 5
+          },
+          "upper-arm-r": {
+            "angleDeg": -31.1
+          },
+          "forearm-r": {
+            "angleDeg": 85
+          },
+          "hand-r": {
+            "angleDeg": 5
+          },
+          "toe-l": {
+            "angleDeg": 5
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "neck": {
+            "angleDeg": 6
+          },
+          "clavicle-l": {
+            "abductionDeg": 2.85
+          },
+          "clavicle-r": {
+            "abductionDeg": -6
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-l"
+        ],
+        "thermal": {
+          "activityMet": 8,
+          "breathing": "run",
+          "regions": {
+            "head-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "headband": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "torso-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.2
+            },
+            "arm-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "arm-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "leg-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leg-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "ankle-socks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shoes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.26,
+                "tempC": 22
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.35
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8280433458666577
         }
+      },
+      {
+        "id": "drive-l",
+        "title": {
+          "en": "Drive, left",
+          "de": "Streckung links"
+        },
+        "description": {
+          "en": "Hip and knee start to extend and the heel lifts; the body rises again.",
+          "de": "Hüfte und Knie beginnen sich zu strecken und die Ferse hebt sich; der Körper steigt wieder."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 17.5212
+          },
+          "shank-l": {
+            "angleDeg": -63.8246
+          },
+          "foot-l": {
+            "angleDeg": 34.3034
+          },
+          "thigh-r": {
+            "angleDeg": 56.6994
+          },
+          "shank-r": {
+            "angleDeg": -118.8869
+          },
+          "foot-r": {
+            "angleDeg": 7.4438
+          },
+          "torso": {
+            "angleDeg": -3.7191
+          },
+          "chest": {
+            "angleDeg": -3.6
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": -5.4937
+          },
+          "forearm-l": {
+            "angleDeg": 85
+          },
+          "hand-l": {
+            "angleDeg": 5
+          },
+          "upper-arm-r": {
+            "angleDeg": -40.2062
+          },
+          "forearm-r": {
+            "angleDeg": 85
+          },
+          "hand-r": {
+            "angleDeg": 5
+          },
+          "toe-l": {
+            "angleDeg": 12
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "neck": {
+            "angleDeg": 6
+          },
+          "clavicle-l": {
+            "abductionDeg": 1.6481
+          },
+          "clavicle-r": {
+            "abductionDeg": -6
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-l"
+        ],
+        "thermal": {
+          "activityMet": 8,
+          "breathing": "run",
+          "regions": {
+            "head-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "headband": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "torso-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.2
+            },
+            "arm-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "arm-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "leg-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leg-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "ankle-socks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shoes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 22
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.35
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8329382365090559
+        },
+        "key": true
       },
       {
         "id": "propulsion-l",
@@ -1347,18 +1783,18 @@
           "de": "Abdruckphase links"
         },
         "description": {
-          "en": "Heel rises, the leg extends and pushes the body forward and up.",
-          "de": "Die Ferse hebt sich, das Bein streckt sich und schiebt den Körper nach vorn und oben."
+          "en": "The heel rises, the leg extends and pushes the body forward and up over the ball of the foot.",
+          "de": "Die Ferse hebt sich, das Bein streckt sich und schiebt den Körper über den Fußballen nach vorn und oben."
         },
         "bones": {
           "thigh-l": {
-            "angleDeg": 9.62
+            "angleDeg": 12.4124
           },
           "shank-l": {
-            "angleDeg": -57.18
+            "angleDeg": -61.1009
           },
           "foot-l": {
-            "angleDeg": 24.11
+            "angleDeg": 27.6885
           },
           "thigh-r": {
             "angleDeg": 63.87
@@ -1370,7 +1806,7 @@
             "angleDeg": 6.46
           },
           "torso": {
-            "angleDeg": -5.4
+            "angleDeg": -4.3984
           },
           "chest": {
             "angleDeg": -3.6
@@ -1397,7 +1833,7 @@
             "angleDeg": 5
           },
           "toe-l": {
-            "angleDeg": 23.63
+            "angleDeg": 21
           },
           "toe-r": {
             "angleDeg": 0
@@ -1409,7 +1845,7 @@
             "abductionDeg": 0.06
           },
           "clavicle-r": {
-            "abductionDeg": -6.0
+            "abductionDeg": -6
           }
         },
         "ground": "auto",
@@ -1481,7 +1917,152 @@
         },
         "loads": [],
         "root": {
-          "y": 0.8609
+          "y": 0.8463836030390004
+        },
+        "key": true
+      },
+      {
+        "id": "push-off-l",
+        "title": {
+          "en": "Push-off, left",
+          "de": "Abstoß links"
+        },
+        "description": {
+          "en": "The ankle extends over the toes while the ground force falls towards the body weight.",
+          "de": "Das Sprunggelenk streckt sich über die Zehen, während die Bodenkraft zum Körpergewicht hin abfällt."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 6.0965
+          },
+          "shank-l": {
+            "angleDeg": -55.0762
+          },
+          "foot-l": {
+            "angleDeg": 17.9797
+          },
+          "thigh-r": {
+            "angleDeg": 64.3456
+          },
+          "shank-r": {
+            "angleDeg": -100.0231
+          },
+          "foot-r": {
+            "angleDeg": 5.7244
+          },
+          "torso": {
+            "angleDeg": -4.7512
+          },
+          "chest": {
+            "angleDeg": -3.6
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": 8.95
+          },
+          "forearm-l": {
+            "angleDeg": 85
+          },
+          "hand-l": {
+            "angleDeg": 5
+          },
+          "upper-arm-r": {
+            "angleDeg": -46.6812
+          },
+          "forearm-r": {
+            "angleDeg": 85
+          },
+          "hand-r": {
+            "angleDeg": 5
+          },
+          "toe-l": {
+            "angleDeg": 31
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "neck": {
+            "angleDeg": 6
+          },
+          "clavicle-l": {
+            "abductionDeg": -2.685
+          },
+          "clavicle-r": {
+            "abductionDeg": -6
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-l"
+        ],
+        "thermal": {
+          "activityMet": 8,
+          "breathing": "run",
+          "regions": {
+            "head-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "headband": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "torso-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.2
+            },
+            "arm-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "arm-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "leg-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leg-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "ankle-socks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shoes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.09,
+                "tempC": 22
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.35
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8673386107502614
         },
         "key": true
       },
@@ -1492,18 +2073,18 @@
           "de": "Abdruck links"
         },
         "description": {
-          "en": "Last instant of ground contact before flight.",
+          "en": "Last instant of ground contact before the flight.",
           "de": "Letzter Moment des Bodenkontakts vor der Flugphase."
         },
         "bones": {
           "thigh-l": {
-            "angleDeg": -10.79
+            "angleDeg": -2.1039
           },
           "shank-l": {
-            "angleDeg": -31.29
+            "angleDeg": -44.883
           },
           "foot-l": {
-            "angleDeg": 16.09
+            "angleDeg": 6.9869
           },
           "thigh-r": {
             "angleDeg": 60.62
@@ -1515,7 +2096,7 @@
             "angleDeg": 5.24
           },
           "torso": {
-            "angleDeg": -5.4
+            "angleDeg": -5.4329
           },
           "chest": {
             "angleDeg": -3.6
@@ -1542,7 +2123,7 @@
             "angleDeg": 5
           },
           "toe-l": {
-            "angleDeg": 26.17
+            "angleDeg": 40
           },
           "toe-r": {
             "angleDeg": 0
@@ -1554,7 +2135,7 @@
             "abductionDeg": -5.16
           },
           "clavicle-r": {
-            "abductionDeg": -6.0
+            "abductionDeg": -6
           }
         },
         "ground": "auto",
@@ -1626,41 +2207,41 @@
         },
         "loads": [],
         "root": {
-          "y": 0.904
+          "y": 0.8904095840887971
         },
         "key": true
       },
       {
-        "id": "flight-l",
+        "id": "flight-rise-l",
         "title": {
-          "en": "Flight after left toe-off",
-          "de": "Flugphase nach Abdruck links"
+          "en": "Rising flight after left toe-off",
+          "de": "Steigflug nach Abdruck links"
         },
         "description": {
-          "en": "Both feet are off the ground: the body flies ballistically for about 0.12 s.",
-          "de": "Beide Füße sind in der Luft: der Körper fliegt etwa 0,12 s ballistisch."
+          "en": "Both feet are off the ground and the centre of mass still rises on its parabola.",
+          "de": "Beide Füße sind in der Luft und der Schwerpunkt steigt noch auf seiner Parabel."
         },
         "bones": {
           "thigh-l": {
-            "angleDeg": -13.25
+            "angleDeg": -12.6382
           },
           "shank-l": {
-            "angleDeg": -40.67
+            "angleDeg": -29.7572
           },
           "foot-l": {
-            "angleDeg": 15.37
+            "angleDeg": -5.6046
           },
           "thigh-r": {
-            "angleDeg": 44.89
+            "angleDeg": 49.5352
           },
           "shank-r": {
-            "angleDeg": -52.57
+            "angleDeg": -60.928
           },
           "foot-r": {
-            "angleDeg": 5.12
+            "angleDeg": 1.8654
           },
           "torso": {
-            "angleDeg": -5.4
+            "angleDeg": -8.441
           },
           "chest": {
             "angleDeg": -3.6
@@ -1669,7 +2250,7 @@
             "angleDeg": 3
           },
           "upper-arm-l": {
-            "angleDeg": 19.3
+            "angleDeg": 20.1125
           },
           "forearm-l": {
             "angleDeg": 85
@@ -1678,7 +2259,7 @@
             "angleDeg": 5
           },
           "upper-arm-r": {
-            "angleDeg": -30.2
+            "angleDeg": -37.5187
           },
           "forearm-r": {
             "angleDeg": 85
@@ -1687,7 +2268,7 @@
             "angleDeg": 5
           },
           "toe-l": {
-            "angleDeg": 0
+            "angleDeg": 34
           },
           "toe-r": {
             "angleDeg": 0
@@ -1696,10 +2277,10 @@
             "angleDeg": 6
           },
           "clavicle-l": {
-            "abductionDeg": -5.79
+            "abductionDeg": -6
           },
           "clavicle-r": {
-            "abductionDeg": -6.0
+            "abductionDeg": -6
           }
         },
         "ground": "auto",
@@ -1765,8 +2346,286 @@
         },
         "loads": [],
         "root": {
-          "y": 0.9256
+          "y": 0.9131863139182443
+        },
+        "key": true
+      },
+      {
+        "id": "flight-l",
+        "title": {
+          "en": "Flight after left toe-off",
+          "de": "Flugphase nach Abdruck links"
+        },
+        "description": {
+          "en": "Both feet are off the ground: the body flies ballistically for an eighth of a second.",
+          "de": "Beide Füße sind in der Luft: der Körper fliegt eine Achtelsekunde ballistisch."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -11.9254
+          },
+          "shank-l": {
+            "angleDeg": -38.5657
+          },
+          "foot-l": {
+            "angleDeg": -2.3046
+          },
+          "thigh-r": {
+            "angleDeg": 37.5456
+          },
+          "shank-r": {
+            "angleDeg": -39.1223
+          },
+          "foot-r": {
+            "angleDeg": -0.817
+          },
+          "torso": {
+            "angleDeg": -9.5682
+          },
+          "chest": {
+            "angleDeg": -3.6
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": 19.3
+          },
+          "forearm-l": {
+            "angleDeg": 85
+          },
+          "hand-l": {
+            "angleDeg": 5
+          },
+          "upper-arm-r": {
+            "angleDeg": -30.2
+          },
+          "forearm-r": {
+            "angleDeg": 85
+          },
+          "hand-r": {
+            "angleDeg": 5
+          },
+          "toe-l": {
+            "angleDeg": 28
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "neck": {
+            "angleDeg": 6
+          },
+          "clavicle-l": {
+            "abductionDeg": -5.79
+          },
+          "clavicle-r": {
+            "abductionDeg": -6
+          }
+        },
+        "ground": "auto",
+        "contacts": [],
+        "thermal": {
+          "activityMet": 8,
+          "breathing": "run",
+          "regions": {
+            "head-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "headband": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "torso-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.2
+            },
+            "arm-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "arm-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "leg-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leg-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "ankle-socks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shoes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "plume": 0.35
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.9233325286318774
         }
+      },
+      {
+        "id": "flight-fall-l",
+        "title": {
+          "en": "Falling flight after left toe-off",
+          "de": "Sinkflug nach Abdruck links"
+        },
+        "description": {
+          "en": "The leading foot is drawn back until it has no speed over the ground; the centre of mass falls towards the landing.",
+          "de": "Der vordere Fuß wird zurückgezogen, bis er gegenüber dem Boden ruht; der Schwerpunkt sinkt dem Aufsetzen entgegen."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -6.2482
+          },
+          "shank-l": {
+            "angleDeg": -54.5385
+          },
+          "foot-l": {
+            "angleDeg": 0.1603
+          },
+          "thigh-r": {
+            "angleDeg": 25.3191
+          },
+          "shank-r": {
+            "angleDeg": -20.4628
+          },
+          "foot-r": {
+            "angleDeg": -4.8563
+          },
+          "torso": {
+            "angleDeg": -10.3031
+          },
+          "chest": {
+            "angleDeg": -3.6
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": 14.275
+          },
+          "forearm-l": {
+            "angleDeg": 85
+          },
+          "hand-l": {
+            "angleDeg": 5
+          },
+          "upper-arm-r": {
+            "angleDeg": -22.625
+          },
+          "forearm-r": {
+            "angleDeg": 85
+          },
+          "hand-r": {
+            "angleDeg": 5
+          },
+          "toe-l": {
+            "angleDeg": 18
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "neck": {
+            "angleDeg": 6
+          },
+          "clavicle-l": {
+            "abductionDeg": -4.2825
+          },
+          "clavicle-r": {
+            "abductionDeg": -5.5069
+          }
+        },
+        "ground": "auto",
+        "contacts": [],
+        "thermal": {
+          "activityMet": 8,
+          "breathing": "run",
+          "regions": {
+            "head-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "headband": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "torso-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.2
+            },
+            "arm-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "arm-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "leg-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leg-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "ankle-socks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shoes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "plume": 0.35
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.9219467929224028
+        },
+        "key": true
       },
       {
         "id": "initial-contact-r",
@@ -1775,30 +2634,30 @@
           "de": "Erstkontakt rechts"
         },
         "description": {
-          "en": "Right foot lands flat under a forward-leaning trunk; the other leg is behind and still extended.",
-          "de": "Der rechte Fuß setzt flach unter dem vorgeneigten Rumpf auf; das andere Bein ist hinten und noch gestreckt."
+          "en": "The right foot lands flat ahead of the centre of mass and with zero ground speed; the other leg trails with a flexed knee.",
+          "de": "Der Fuß rechts setzt flach vor dem Schwerpunkt und ohne Geschwindigkeit gegenüber dem Boden auf; das andere Bein folgt mit gebeugtem Knie."
         },
         "bones": {
           "thigh-l": {
-            "angleDeg": 1.35
+            "angleDeg": 2.184
           },
           "shank-l": {
-            "angleDeg": -74.44
+            "angleDeg": -73.115
           },
           "foot-l": {
-            "angleDeg": 13.54
+            "angleDeg": 2.4115
           },
           "thigh-r": {
-            "angleDeg": 29.06
+            "angleDeg": 29.3019
           },
           "shank-r": {
-            "angleDeg": -34.18
+            "angleDeg": -38.2063
           },
           "foot-r": {
-            "angleDeg": 5.12
+            "angleDeg": 8.9044
           },
           "torso": {
-            "angleDeg": -5.4
+            "angleDeg": -6.9004
           },
           "chest": {
             "angleDeg": -3.6
@@ -1825,7 +2684,7 @@
             "angleDeg": 5
           },
           "toe-l": {
-            "angleDeg": 0
+            "angleDeg": 9
           },
           "toe-r": {
             "angleDeg": 0
@@ -1910,7 +2769,153 @@
         },
         "loads": [],
         "root": {
-          "y": 0.904
+          "y": 0.8995694833213054
+        },
+        "key": true
+      },
+      {
+        "id": "weight-acceptance-r",
+        "title": {
+          "en": "Weight acceptance, right",
+          "de": "Lastübernahme rechts"
+        },
+        "description": {
+          "en": "The ground force rises above the body weight; the sole stays flat.",
+          "de": "Die Bodenkraft steigt über das Körpergewicht; die Sohle bleibt flach."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 11.075
+          },
+          "shank-l": {
+            "angleDeg": -89.7347
+          },
+          "foot-l": {
+            "angleDeg": 4.5127
+          },
+          "thigh-r": {
+            "angleDeg": 30.6198
+          },
+          "shank-r": {
+            "angleDeg": -51.1545
+          },
+          "foot-r": {
+            "angleDeg": 20.5347
+          },
+          "torso": {
+            "angleDeg": -4.6079
+          },
+          "chest": {
+            "angleDeg": -3.6
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": -0.8937
+          },
+          "forearm-l": {
+            "angleDeg": 85
+          },
+          "hand-l": {
+            "angleDeg": 5
+          },
+          "upper-arm-r": {
+            "angleDeg": -16.25
+          },
+          "forearm-r": {
+            "angleDeg": 85
+          },
+          "hand-r": {
+            "angleDeg": 5
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "neck": {
+            "angleDeg": 6
+          },
+          "clavicle-l": {
+            "abductionDeg": 0.4763
+          },
+          "clavicle-r": {
+            "abductionDeg": -5.0663
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 8,
+          "breathing": "run",
+          "regions": {
+            "head-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "headband": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "torso-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.2
+            },
+            "arm-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "arm-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "leg-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leg-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "ankle-socks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shoes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.24,
+                "tempC": 22
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.35
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8721000444805621
         },
         "key": true
       },
@@ -1921,30 +2926,30 @@
           "de": "Belastung rechts"
         },
         "description": {
-          "en": "Knee flexes while the body weight is absorbed; the other knee swings forward.",
-          "de": "Das Knie beugt sich, während das Körpergewicht abgefangen wird; das andere Knie schwingt nach vorn."
+          "en": "The knee flexes while the fall of the body is braked; the other knee swings forward.",
+          "de": "Das Knie beugt sich, während das Sinken des Körpers gebremst wird; das andere Knie schwingt nach vorn."
         },
         "bones": {
           "thigh-l": {
-            "angleDeg": 20.93
+            "angleDeg": 21.2734
           },
           "shank-l": {
-            "angleDeg": -104.65
+            "angleDeg": -104.1044
           },
           "foot-l": {
-            "angleDeg": 11.11
+            "angleDeg": 6.5277
           },
           "thigh-r": {
-            "angleDeg": 28.9
+            "angleDeg": 29.0698
           },
           "shank-r": {
-            "angleDeg": -55.35
+            "angleDeg": -58.7345
           },
           "foot-r": {
-            "angleDeg": 26.45
+            "angleDeg": 29.6647
           },
           "torso": {
-            "angleDeg": -5.4
+            "angleDeg": -3.4361
           },
           "chest": {
             "angleDeg": -3.6
@@ -2056,41 +3061,41 @@
         },
         "loads": [],
         "root": {
-          "y": 0.8609
+          "y": 0.8487614695033054
         },
         "key": true
       },
       {
-        "id": "midstance-r",
+        "id": "absorption-r",
         "title": {
-          "en": "Midstance, right",
-          "de": "Mittlere Standphase rechts"
+          "en": "Absorption, right",
+          "de": "Abfedern rechts"
         },
         "description": {
-          "en": "Lowest hip position with the full body weight over a flexed leg.",
-          "de": "Tiefste Hüftlage mit dem ganzen Körpergewicht über einem gebeugten Bein."
+          "en": "Largest ground force of about twice the body weight; the heel is about to leave the ground.",
+          "de": "Größte Bodenkraft von etwa dem doppelten Körpergewicht; die Ferse löst sich gleich vom Boden."
         },
         "bones": {
           "thigh-l": {
-            "angleDeg": 45.99
+            "angleDeg": 33.6644
           },
           "shank-l": {
-            "angleDeg": -120.42
+            "angleDeg": -114.7929
           },
           "foot-l": {
-            "angleDeg": 8.59
+            "angleDeg": 8.522
           },
           "thigh-r": {
-            "angleDeg": 20.53
+            "angleDeg": 25.3622
           },
           "shank-r": {
-            "angleDeg": -56.47947
+            "angleDeg": -61.8569
           },
           "foot-r": {
-            "angleDeg": 35.95
+            "angleDeg": 36.4947
           },
           "torso": {
-            "angleDeg": -5.4
+            "angleDeg": -2.8736
           },
           "chest": {
             "angleDeg": -3.6
@@ -2099,7 +3104,7 @@
             "angleDeg": 3
           },
           "upper-arm-l": {
-            "angleDeg": -31.1
+            "angleDeg": -20.5438
           },
           "forearm-l": {
             "angleDeg": 85
@@ -2108,7 +3113,7 @@
             "angleDeg": 5
           },
           "upper-arm-r": {
-            "angleDeg": -9.5
+            "angleDeg": -13.625
           },
           "forearm-r": {
             "angleDeg": 85
@@ -2120,16 +3125,16 @@
             "angleDeg": 0
           },
           "toe-r": {
-            "angleDeg": 4.92
+            "angleDeg": 0
           },
           "neck": {
             "angleDeg": 6
           },
           "clavicle-l": {
-            "abductionDeg": 6.0
+            "abductionDeg": 4.7831
           },
           "clavicle-r": {
-            "abductionDeg": -2.85
+            "abductionDeg": -4.0875
           }
         },
         "ground": "auto",
@@ -2202,7 +3207,297 @@
         },
         "loads": [],
         "root": {
-          "y": 0.8393
+          "y": 0.8336798209760389
+        },
+        "key": true
+      },
+      {
+        "id": "midstance-r",
+        "title": {
+          "en": "Midstance, right",
+          "de": "Mittlere Standphase rechts"
+        },
+        "description": {
+          "en": "The centre of mass passes the planted foot near its lowest height above a flexed leg.",
+          "de": "Der Schwerpunkt geht nahe seiner tiefsten Lage über den aufgesetzten Fuß; das Standbein ist gebeugt."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 45.99
+          },
+          "shank-l": {
+            "angleDeg": -120.42
+          },
+          "foot-l": {
+            "angleDeg": 8.59
+          },
+          "thigh-r": {
+            "angleDeg": 21.8984
+          },
+          "shank-r": {
+            "angleDeg": -64.1774
+          },
+          "foot-r": {
+            "angleDeg": 37.279
+          },
+          "torso": {
+            "angleDeg": -2.9741
+          },
+          "chest": {
+            "angleDeg": -3.6
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": -31.1
+          },
+          "forearm-l": {
+            "angleDeg": 85
+          },
+          "hand-l": {
+            "angleDeg": 5
+          },
+          "upper-arm-r": {
+            "angleDeg": -9.5
+          },
+          "forearm-r": {
+            "angleDeg": 85
+          },
+          "hand-r": {
+            "angleDeg": 5
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 5
+          },
+          "neck": {
+            "angleDeg": 6
+          },
+          "clavicle-l": {
+            "abductionDeg": 6
+          },
+          "clavicle-r": {
+            "abductionDeg": -2.85
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 8,
+          "breathing": "run",
+          "regions": {
+            "head-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "headband": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "torso-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.2
+            },
+            "arm-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "arm-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "leg-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leg-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "ankle-socks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shoes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.26,
+                "tempC": 22
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.35
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8280433458666577
+        },
+        "key": true
+      },
+      {
+        "id": "drive-r",
+        "title": {
+          "en": "Drive, right",
+          "de": "Streckung rechts"
+        },
+        "description": {
+          "en": "Hip and knee start to extend and the heel lifts; the body rises again.",
+          "de": "Hüfte und Knie beginnen sich zu strecken und die Ferse hebt sich; der Körper steigt wieder."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 56.6994
+          },
+          "shank-l": {
+            "angleDeg": -118.8869
+          },
+          "foot-l": {
+            "angleDeg": 7.4438
+          },
+          "thigh-r": {
+            "angleDeg": 17.5212
+          },
+          "shank-r": {
+            "angleDeg": -63.8246
+          },
+          "foot-r": {
+            "angleDeg": 34.3034
+          },
+          "torso": {
+            "angleDeg": -3.7191
+          },
+          "chest": {
+            "angleDeg": -3.6
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": -40.2062
+          },
+          "forearm-l": {
+            "angleDeg": 85
+          },
+          "hand-l": {
+            "angleDeg": 5
+          },
+          "upper-arm-r": {
+            "angleDeg": -5.4937
+          },
+          "forearm-r": {
+            "angleDeg": 85
+          },
+          "hand-r": {
+            "angleDeg": 5
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 12
+          },
+          "neck": {
+            "angleDeg": 6
+          },
+          "clavicle-l": {
+            "abductionDeg": 6
+          },
+          "clavicle-r": {
+            "abductionDeg": -1.6481
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 8,
+          "breathing": "run",
+          "regions": {
+            "head-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "headband": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "torso-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.2
+            },
+            "arm-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "arm-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "leg-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leg-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "ankle-socks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shoes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 22
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.35
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8329382365090559
         },
         "key": true
       },
@@ -2213,8 +3508,8 @@
           "de": "Abdruckphase rechts"
         },
         "description": {
-          "en": "Heel rises, the leg extends and pushes the body forward and up.",
-          "de": "Die Ferse hebt sich, das Bein streckt sich und schiebt den Körper nach vorn und oben."
+          "en": "The heel rises, the leg extends and pushes the body forward and up over the ball of the foot.",
+          "de": "Die Ferse hebt sich, das Bein streckt sich und schiebt den Körper über den Fußballen nach vorn und oben."
         },
         "bones": {
           "thigh-l": {
@@ -2227,16 +3522,16 @@
             "angleDeg": 6.46
           },
           "thigh-r": {
-            "angleDeg": 9.62
+            "angleDeg": 12.4124
           },
           "shank-r": {
-            "angleDeg": -57.18
+            "angleDeg": -61.1009
           },
           "foot-r": {
-            "angleDeg": 24.11
+            "angleDeg": 27.6885
           },
           "torso": {
-            "angleDeg": -5.4
+            "angleDeg": -4.3984
           },
           "chest": {
             "angleDeg": -3.6
@@ -2266,13 +3561,13 @@
             "angleDeg": 0
           },
           "toe-r": {
-            "angleDeg": 23.63
+            "angleDeg": 21
           },
           "neck": {
             "angleDeg": 6
           },
           "clavicle-l": {
-            "abductionDeg": 6.0
+            "abductionDeg": 6
           },
           "clavicle-r": {
             "abductionDeg": -0.06
@@ -2347,7 +3642,152 @@
         },
         "loads": [],
         "root": {
-          "y": 0.8609
+          "y": 0.8463836030390004
+        },
+        "key": true
+      },
+      {
+        "id": "push-off-r",
+        "title": {
+          "en": "Push-off, right",
+          "de": "Abstoß rechts"
+        },
+        "description": {
+          "en": "The ankle extends over the toes while the ground force falls towards the body weight.",
+          "de": "Das Sprunggelenk streckt sich über die Zehen, während die Bodenkraft zum Körpergewicht hin abfällt."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 64.3456
+          },
+          "shank-l": {
+            "angleDeg": -100.0231
+          },
+          "foot-l": {
+            "angleDeg": 5.7244
+          },
+          "thigh-r": {
+            "angleDeg": 6.0965
+          },
+          "shank-r": {
+            "angleDeg": -55.0762
+          },
+          "foot-r": {
+            "angleDeg": 17.9797
+          },
+          "torso": {
+            "angleDeg": -4.7512
+          },
+          "chest": {
+            "angleDeg": -3.6
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": -46.6812
+          },
+          "forearm-l": {
+            "angleDeg": 85
+          },
+          "hand-l": {
+            "angleDeg": 5
+          },
+          "upper-arm-r": {
+            "angleDeg": 8.95
+          },
+          "forearm-r": {
+            "angleDeg": 85
+          },
+          "hand-r": {
+            "angleDeg": 5
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 31
+          },
+          "neck": {
+            "angleDeg": 6
+          },
+          "clavicle-l": {
+            "abductionDeg": 6
+          },
+          "clavicle-r": {
+            "abductionDeg": 2.685
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 8,
+          "breathing": "run",
+          "regions": {
+            "head-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "headband": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "torso-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.2
+            },
+            "arm-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "arm-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "leg-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leg-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "ankle-socks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shoes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.09,
+                "tempC": 22
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.35
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8673386107502614
         },
         "key": true
       },
@@ -2358,7 +3798,7 @@
           "de": "Abdruck rechts"
         },
         "description": {
-          "en": "Last instant of ground contact before flight.",
+          "en": "Last instant of ground contact before the flight.",
           "de": "Letzter Moment des Bodenkontakts vor der Flugphase."
         },
         "bones": {
@@ -2372,16 +3812,16 @@
             "angleDeg": 5.24
           },
           "thigh-r": {
-            "angleDeg": -10.79
+            "angleDeg": -2.1039
           },
           "shank-r": {
-            "angleDeg": -31.29
+            "angleDeg": -44.883
           },
           "foot-r": {
-            "angleDeg": 16.09
+            "angleDeg": 6.9869
           },
           "torso": {
-            "angleDeg": -5.4
+            "angleDeg": -5.4329
           },
           "chest": {
             "angleDeg": -3.6
@@ -2411,13 +3851,13 @@
             "angleDeg": 0
           },
           "toe-r": {
-            "angleDeg": 26.17
+            "angleDeg": 40
           },
           "neck": {
             "angleDeg": 6
           },
           "clavicle-l": {
-            "abductionDeg": 6.0
+            "abductionDeg": 6
           },
           "clavicle-r": {
             "abductionDeg": 5.16
@@ -2492,7 +3932,146 @@
         },
         "loads": [],
         "root": {
-          "y": 0.904
+          "y": 0.8904095840887971
+        },
+        "key": true
+      },
+      {
+        "id": "flight-rise-r",
+        "title": {
+          "en": "Rising flight after right toe-off",
+          "de": "Steigflug nach Abdruck rechts"
+        },
+        "description": {
+          "en": "Both feet are off the ground and the centre of mass still rises on its parabola.",
+          "de": "Beide Füße sind in der Luft und der Schwerpunkt steigt noch auf seiner Parabel."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 49.5352
+          },
+          "shank-l": {
+            "angleDeg": -60.928
+          },
+          "foot-l": {
+            "angleDeg": 1.8654
+          },
+          "thigh-r": {
+            "angleDeg": -12.6382
+          },
+          "shank-r": {
+            "angleDeg": -29.7572
+          },
+          "foot-r": {
+            "angleDeg": -5.6046
+          },
+          "torso": {
+            "angleDeg": -8.441
+          },
+          "chest": {
+            "angleDeg": -3.6
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": -37.5187
+          },
+          "forearm-l": {
+            "angleDeg": 85
+          },
+          "hand-l": {
+            "angleDeg": 5
+          },
+          "upper-arm-r": {
+            "angleDeg": 20.1125
+          },
+          "forearm-r": {
+            "angleDeg": 85
+          },
+          "hand-r": {
+            "angleDeg": 5
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 34
+          },
+          "neck": {
+            "angleDeg": 6
+          },
+          "clavicle-l": {
+            "abductionDeg": 6
+          },
+          "clavicle-r": {
+            "abductionDeg": 6
+          }
+        },
+        "ground": "auto",
+        "contacts": [],
+        "thermal": {
+          "activityMet": 8,
+          "breathing": "run",
+          "regions": {
+            "head-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "headband": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "torso-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.2
+            },
+            "arm-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "arm-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "leg-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leg-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "ankle-socks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shoes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "plume": 0.35
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.9131863139182443
         },
         "key": true
       },
@@ -2503,30 +4082,30 @@
           "de": "Flugphase nach Abdruck rechts"
         },
         "description": {
-          "en": "Both feet are off the ground: the body flies ballistically for about 0.12 s.",
-          "de": "Beide Füße sind in der Luft: der Körper fliegt etwa 0,12 s ballistisch."
+          "en": "Both feet are off the ground: the body flies ballistically for an eighth of a second.",
+          "de": "Beide Füße sind in der Luft: der Körper fliegt eine Achtelsekunde ballistisch."
         },
         "bones": {
           "thigh-l": {
-            "angleDeg": 44.89
+            "angleDeg": 37.5456
           },
           "shank-l": {
-            "angleDeg": -52.57
+            "angleDeg": -39.1223
           },
           "foot-l": {
-            "angleDeg": 5.12
+            "angleDeg": -0.817
           },
           "thigh-r": {
-            "angleDeg": -13.25
+            "angleDeg": -11.9254
           },
           "shank-r": {
-            "angleDeg": -40.67
+            "angleDeg": -38.5657
           },
           "foot-r": {
-            "angleDeg": 15.37
+            "angleDeg": -2.3046
           },
           "torso": {
-            "angleDeg": -5.4
+            "angleDeg": -9.5682
           },
           "chest": {
             "angleDeg": -3.6
@@ -2556,13 +4135,13 @@
             "angleDeg": 0
           },
           "toe-r": {
-            "angleDeg": 0
+            "angleDeg": 28
           },
           "neck": {
             "angleDeg": 6
           },
           "clavicle-l": {
-            "abductionDeg": 6.0
+            "abductionDeg": 6
           },
           "clavicle-r": {
             "abductionDeg": 5.79
@@ -2631,7 +4210,146 @@
         },
         "loads": [],
         "root": {
-          "y": 0.9256
+          "y": 0.9233325286318774
+        },
+        "key": true
+      },
+      {
+        "id": "flight-fall-r",
+        "title": {
+          "en": "Falling flight after right toe-off",
+          "de": "Sinkflug nach Abdruck rechts"
+        },
+        "description": {
+          "en": "The leading foot is drawn back until it has no speed over the ground; the centre of mass falls towards the landing.",
+          "de": "Der vordere Fuß wird zurückgezogen, bis er gegenüber dem Boden ruht; der Schwerpunkt sinkt dem Aufsetzen entgegen."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 25.3191
+          },
+          "shank-l": {
+            "angleDeg": -20.4628
+          },
+          "foot-l": {
+            "angleDeg": -4.8563
+          },
+          "thigh-r": {
+            "angleDeg": -6.2482
+          },
+          "shank-r": {
+            "angleDeg": -54.5385
+          },
+          "foot-r": {
+            "angleDeg": 0.1603
+          },
+          "torso": {
+            "angleDeg": -10.3031
+          },
+          "chest": {
+            "angleDeg": -3.6
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": -22.625
+          },
+          "forearm-l": {
+            "angleDeg": 85
+          },
+          "hand-l": {
+            "angleDeg": 5
+          },
+          "upper-arm-r": {
+            "angleDeg": 14.275
+          },
+          "forearm-r": {
+            "angleDeg": 85
+          },
+          "hand-r": {
+            "angleDeg": 5
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 18
+          },
+          "neck": {
+            "angleDeg": 6
+          },
+          "clavicle-l": {
+            "abductionDeg": 5.5069
+          },
+          "clavicle-r": {
+            "abductionDeg": 4.2825
+          }
+        },
+        "ground": "auto",
+        "contacts": [],
+        "thermal": {
+          "activityMet": 8,
+          "breathing": "run",
+          "regions": {
+            "head-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "headband": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "torso-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.2
+            },
+            "arm-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "arm-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.25
+            },
+            "leg-clothing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leg-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0.3
+            },
+            "ankle-socks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shoes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "plume": 0.35
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.9219467929224028
         },
         "key": true
       },
@@ -3045,14 +4763,14 @@
           "de": "Laufzyklus"
         },
         "description": {
-          "en": "Jogging at about 2.34 m/s with a step rate of 2.8 Hz: each foot is on the ground for a third of the cycle and the body flies for two phases of about 0.12 s per cycle; feet are planted while in contact.",
-          "de": "Joggen mit etwa 2,34 m/s bei 2,8 Schritten pro Sekunde: jeder Fuß hat ein Drittel des Zyklus Bodenkontakt, und der Körper fliegt in zwei Phasen von etwa 0,12 s pro Zyklus; die Füße gleiten im Kontakt nicht."
+          "en": "Jogging at about 2.34 m/s with a step rate of 2.7 Hz: each foot is on the ground for a third of the cycle and the body flies for two phases of 0.125 s per cycle. The centre of mass follows a ground force of up to about twice the body weight in stance and a parabola in flight; a foot meets and leaves the ground without speed over it and is planted while in contact.",
+          "de": "Joggen mit etwa 2,34 m/s bei 2,7 Schritten pro Sekunde: jeder Fuß hat ein Drittel des Zyklus Bodenkontakt, und der Körper fliegt in zwei Phasen von 0,125 s pro Zyklus. Der Schwerpunkt folgt in der Standphase einer Bodenkraft bis etwa zum doppelten Körpergewicht und im Flug einer Parabel; ein Fuß trifft und verlässt den Boden ohne Geschwindigkeit ihm gegenüber und gleitet im Kontakt nicht."
         },
-        "durationS": 0.72,
+        "durationS": 0.75,
         "fps": 30,
         "loop": true,
         "rootMotion": "plant",
-        "advanceM": 1.68312797,
+        "advanceM": 1.75484512,
         "keys": [
           {
             "t": 0,
@@ -3060,58 +4778,118 @@
             "ease": "smooth"
           },
           {
-            "t": 0.06,
+            "t": 0.03125,
+            "pose": "weight-acceptance-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.0625,
             "pose": "loading-l",
             "ease": "smooth"
           },
           {
-            "t": 0.12,
+            "t": 0.09375,
+            "pose": "absorption-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.125,
             "pose": "midstance-l",
             "ease": "smooth"
           },
           {
-            "t": 0.18,
+            "t": 0.15625,
+            "pose": "drive-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.1875,
             "pose": "propulsion-l",
             "ease": "smooth"
           },
           {
-            "t": 0.24,
+            "t": 0.21875,
+            "pose": "push-off-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.25,
             "pose": "toe-off-l",
             "ease": "smooth"
           },
           {
-            "t": 0.3,
+            "t": 0.28125,
+            "pose": "flight-rise-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.3125,
             "pose": "flight-l",
             "ease": "smooth"
           },
           {
-            "t": 0.36,
+            "t": 0.34375,
+            "pose": "flight-fall-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.375,
             "pose": "initial-contact-r",
             "ease": "smooth"
           },
           {
-            "t": 0.42,
+            "t": 0.40625,
+            "pose": "weight-acceptance-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.4375,
             "pose": "loading-r",
             "ease": "smooth"
           },
           {
-            "t": 0.48,
+            "t": 0.46875,
+            "pose": "absorption-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.5,
             "pose": "midstance-r",
             "ease": "smooth"
           },
           {
-            "t": 0.54,
+            "t": 0.53125,
+            "pose": "drive-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.5625,
             "pose": "propulsion-r",
             "ease": "smooth"
           },
           {
-            "t": 0.6,
+            "t": 0.59375,
+            "pose": "push-off-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.625,
             "pose": "toe-off-r",
             "ease": "smooth"
           },
           {
-            "t": 0.66,
+            "t": 0.65625,
+            "pose": "flight-rise-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.6875,
             "pose": "flight-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.71875,
+            "pose": "flight-fall-r",
             "ease": "smooth"
           }
         ],
@@ -3119,29 +4897,29 @@
           {
             "anchor": "heel-l",
             "fromS": 0,
-            "toS": 0.08399999999999999
+            "toS": 0.0625
           },
           {
             "anchor": "contact-l",
             "fromS": 0,
-            "toS": 0.24
+            "toS": 0.25
           },
           {
             "anchor": "heel-r",
-            "fromS": 0.36,
-            "toS": 0.44399999999999995
+            "fromS": 0.375,
+            "toS": 0.4375
           },
           {
             "anchor": "contact-r",
-            "fromS": 0.36,
-            "toS": 0.6
+            "fromS": 0.375,
+            "toS": 0.625
           }
         ],
         "phases": [
           {
             "id": "stance-l",
             "fromS": 0,
-            "toS": 0.24,
+            "toS": 0.25,
             "title": {
               "en": "Left stance",
               "de": "Linke Standphase"
@@ -3149,8 +4927,8 @@
           },
           {
             "id": "flight-1",
-            "fromS": 0.24,
-            "toS": 0.36,
+            "fromS": 0.25,
+            "toS": 0.375,
             "title": {
               "en": "Flight",
               "de": "Flugphase"
@@ -3159,8 +4937,8 @@
           },
           {
             "id": "stance-r",
-            "fromS": 0.36,
-            "toS": 0.6,
+            "fromS": 0.375,
+            "toS": 0.625,
             "title": {
               "en": "Right stance",
               "de": "Rechte Standphase"
@@ -3168,8 +4946,8 @@
           },
           {
             "id": "flight-2",
-            "fromS": 0.6,
-            "toS": 0.72,
+            "fromS": 0.625,
+            "toS": 0.75,
             "title": {
               "en": "Flight",
               "de": "Flugphase"
@@ -3196,7 +4974,7 @@
             }
           },
           {
-            "t": 0.24,
+            "t": 0.25,
             "kind": "contact-off",
             "title": {
               "en": "Left toe-off, flight starts",
@@ -3205,7 +4983,7 @@
             "target": "contact-l"
           },
           {
-            "t": 0.36,
+            "t": 0.375,
             "kind": "contact-on",
             "title": {
               "en": "Right initial contact",
@@ -3214,7 +4992,7 @@
             "target": "heel-r"
           },
           {
-            "t": 0.6,
+            "t": 0.625,
             "kind": "contact-off",
             "title": {
               "en": "Right toe-off, flight starts",
@@ -3890,8 +5668,8 @@
               "en": "Running, mouth breathing",
               "de": "Laufen, Mundatmung"
             },
-            "rateBpm": 41.67,
-            "tidalVolumeL": 1.4,
+            "rateBpm": 40,
+            "tidalVolumeL": 1.46,
             "inhaleFraction": 0.46,
             "pauseAfterInhaleFraction": 0,
             "exhaleFraction": 0.54,
@@ -4404,8 +6182,8 @@
           "de": "Stoffwechsel 8 met bei 2,6 m/s (Compendium: Laufen 5 mph 8,3 met, Joggen 7 met), 2 bis 4 met beim Dehnen; Hautbenetzung 0,3 beim Laufen. Hautdurchblutung 6,3 bis 90 L/(m2 h), Sollwerte 36,8/34,1 Grad Celsius nach dem Zwei-Knoten-Modell von Gagge."
         },
         {
-          "en": "Running breathes through the mouth at 41.7 breaths per minute with 1.4 L tidal volume (about 58 L/min, consistent with 2 L/min oxygen uptake at 8 met), phase-locked 4:1 to the step rate of 2.8 Hz (one breath per two strides). Exhaled air 34 degrees Celsius, 95 % humidity. All respiration numbers are authored estimates guided by the cited sources.",
-          "de": "Beim Laufen wird durch den Mund geatmet: 41,7 Atemzüge pro Minute mit 1,4 L Atemzugvolumen (etwa 58 L/min, passend zu 2 L/min Sauerstoffaufnahme bei 8 met), 4:1 an die Schrittfrequenz von 2,8 Hz gekoppelt (ein Atemzug je zwei Doppelschritte). Ausatemluft 34 Grad Celsius, 95 % Feuchte. Alle Atemwerte sind Autorenschätzungen nach den genannten Quellen."
+          "en": "Running breathes through the mouth at 40 breaths per minute with 1.46 L tidal volume (about 58 L/min, consistent with 2 L/min oxygen uptake at 8 met), phase-locked 4:1 to the step rate of 2.7 Hz (one breath per two strides). Exhaled air 34 degrees Celsius, 95 % humidity. All respiration numbers are authored estimates guided by the cited sources.",
+          "de": "Beim Laufen wird durch den Mund geatmet: 40 Atemzüge pro Minute mit 1,46 L Atemzugvolumen (etwa 58 L/min, passend zu 2 L/min Sauerstoffaufnahme bei 8 met), 4:1 an die Schrittfrequenz von 2,7 Hz gekoppelt (ein Atemzug je zwei Doppelschritte). Ausatemluft 34 Grad Celsius, 95 % Feuchte. Alle Atemwerte sind Autorenschätzungen nach den genannten Quellen."
         },
         {
           "en": "Contact conduction through the shoe sole uses 26 % of the shoe area per planted foot at ground 22 degrees Celsius; flight phases have no contact.",

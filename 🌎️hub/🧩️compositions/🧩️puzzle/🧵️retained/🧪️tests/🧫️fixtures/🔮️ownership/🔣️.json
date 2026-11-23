@@ -22,9 +22,9 @@
       "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
       "leaf": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧵️retained-wiring/🦀️.rs",
       "positive": [
-        "ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint)",
-        "ArtifactRetainedCommandJob::from_wire(payload, input)",
-        "checkpoint.declared_bytes() > semio_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES"
+        "ArtifactRetainedCommandJob::from_wire_with_checkpoint(*payload,input,checkpoint)",
+        "ArtifactRetainedCommandJob::from_wire(*payload,input)",
+        "bytes>super::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES"
       ],
       "negative": [
         "if checkpoint.is_some() || input.declared_bytes()"
@@ -38,9 +38,9 @@
       "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
       "leaf": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧵️retained-wiring/🦀️.rs",
       "positive": [
-        "ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint)",
-        "ArtifactRetainedCommandJob::from_wire(payload, input)",
-        "checkpoint.declared_bytes() > semio_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES"
+        "ArtifactRetainedCommandJob::from_wire_with_checkpoint(*payload,input,checkpoint)",
+        "ArtifactRetainedCommandJob::from_wire(*payload,input)",
+        "bytes>super::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES"
       ],
       "negative": [
         "if checkpoint.is_some() || input.declared_bytes()"

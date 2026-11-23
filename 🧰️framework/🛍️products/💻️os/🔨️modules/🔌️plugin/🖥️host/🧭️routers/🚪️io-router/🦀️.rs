@@ -314,7 +314,7 @@ impl IoRouter {
             sources: Vec<u8>,
         }
         let input = semio_framework_pack_json::to_json_string(&ComposeInput { key: key_bytes.to_vec(), sources: sources_bytes.to_vec() }).into_bytes();
-        call_plugin(&registration, JOB_KIND_COMPOSE, &input, drivers().map_err(PluginHostError::NativeIo)?).await
+        call_plugin(&registration, JOB_KIND_COMPOSE, &input, drivers().map_err(|error|PluginHostError::NativeIo(error))?).await
     }
 
     /// 📚️ Every dialect ANY loaded plugin can move `artifact_kind` through in `direction`
@@ -390,7 +390,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut current = payload;
         for (from_coordinate, into_coordinate, runtime) in hops {
             let input = io_job_input(&from_coordinate, &into_coordinate, &current)?;
-            current = call_plugin(&runtime, JOB_KIND_IO_RUN, &input, drivers().map_err(PluginHostError::NativeIo)?).await?;
+            current = call_plugin(&runtime, JOB_KIND_IO_RUN, &input, drivers().map_err(|error|PluginHostError::NativeIo(error))?).await?;
         }
         Ok(current)
     }
@@ -426,7 +426,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let carrier_coord = carrier.to_coordinate();
             let into_coord = into.to_coordinate();
             let input = io_job_input(&carrier_coord, &into_coord, &payload_bytes)?;
-            let sniffed = call_plugin(&runtime, JOB_KIND_IO_SNIFF, &input, drivers().map_err(PluginHostError::NativeIo)?).await?;
+            let sniffed = call_plugin(&runtime, JOB_KIND_IO_SNIFF, &input, drivers().map_err(|error|PluginHostError::NativeIo(error))?).await?;
             let rank = sniffed.first().copied().ok_or_else(|| PluginHostError::Plugin("semio.io-sniff job returned an empty result".to_string()))?;
             let confidence = rank_to_io_confidence(rank);
             if confidence != semio_framework::io_schema::Confidence::None {

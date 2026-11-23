@@ -8,10 +8,14 @@
     "native-transpile": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
   },
   "cases": [
+    { "id": "native-v3", "version": 3, "tools": { "maps": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" }, "accepted": true },
     { "id": "native-v2", "version": 2, "accepted": true },
     { "id": "native-v1", "version": 1, "tools": { "jco": "1.39.0" }, "accepted": true },
     { "id": "jco-v1", "version": 1, "tools": { "jco": "1.39.0" }, "removeTool": "native-transpile", "accepted": true },
-    { "id": "unknown-version", "version": 3, "accepted": false },
+    { "id": "unknown-version", "version": 4, "accepted": false },
+    { "id": "maps-missing-in-v3", "version": 3, "accepted": false },
+    { "id": "invalid-maps-digest", "version": 3, "tools": { "maps": "malformed" }, "accepted": false },
+    { "id": "extra-tool-in-v3", "version": 3, "tools": { "maps": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "jco": "1.39.0" }, "accepted": false },
     { "id": "wrong-stage", "version": 2, "stage": "optimize", "accepted": false },
     { "id": "extra-input", "version": 2, "inputs": { "unchecked": "aaaa" }, "accepted": false },
     { "id": "different-raw-component", "version": 2, "inputs": { "component": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }, "accepted": false },

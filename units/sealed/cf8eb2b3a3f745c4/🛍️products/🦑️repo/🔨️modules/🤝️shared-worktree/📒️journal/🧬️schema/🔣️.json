@@ -1,0 +1,304 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/journal/v1",
+ "title": "Shared worktree journal: one append-only event line, the per-origin head, the read cursor and the full-manifest snapshot",
+ "definitions": {
+  "Hlc": {
+   "type": "string",
+   "pattern": "^[0-9]{13}-[0-9]{6}-[a-z0-9][a-z0-9-]{0,39}$"
+  },
+  "OriginId": {
+   "type": "string",
+   "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+  },
+  "Sha256": {
+   "type": "string",
+   "pattern": "^[0-9a-f]{64}$"
+  },
+  "Path": {
+   "type": "string",
+   "maxLength": 1024,
+   "pattern": "^[^/\\\\\\u0000]+(?:/[^/\\\\\\u0000]+)*$"
+  },
+  "Count": {
+   "type": "integer",
+   "minimum": 0,
+   "maximum": 9007199254740991
+  },
+  "Base": {
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "$ref": "#/definitions/Sha256"
+    }
+   ]
+  },
+  "PutEvent": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "base",
+    "bytes",
+    "executable",
+    "hlc",
+    "operation",
+    "path",
+    "sha256",
+    "version"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "hlc": {
+     "$ref": "#/definitions/Hlc"
+    },
+    "operation": {
+     "const": "put"
+    },
+    "path": {
+     "$ref": "#/definitions/Path"
+    },
+    "sha256": {
+     "$ref": "#/definitions/Sha256"
+    },
+    "bytes": {
+     "$ref": "#/definitions/Count"
+    },
+    "executable": {
+     "type": "boolean"
+    },
+    "base": {
+     "$ref": "#/definitions/Base"
+    }
+   }
+  },
+  "DeleteEvent": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "base",
+    "hlc",
+    "operation",
+    "path",
+    "version"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "hlc": {
+     "$ref": "#/definitions/Hlc"
+    },
+    "operation": {
+     "const": "delete"
+    },
+    "path": {
+     "$ref": "#/definitions/Path"
+    },
+    "base": {
+     "$ref": "#/definitions/Base"
+    }
+   }
+  },
+  "LinkEvent": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "base",
+    "hlc",
+    "operation",
+    "path",
+    "target",
+    "version"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "hlc": {
+     "$ref": "#/definitions/Hlc"
+    },
+    "operation": {
+     "const": "link"
+    },
+    "path": {
+     "$ref": "#/definitions/Path"
+    },
+    "target": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "base": {
+     "$ref": "#/definitions/Base"
+    }
+   }
+  },
+  "Event": {
+   "oneOf": [
+    {
+     "$ref": "#/definitions/PutEvent"
+    },
+    {
+     "$ref": "#/definitions/DeleteEvent"
+    },
+    {
+     "$ref": "#/definitions/LinkEvent"
+    }
+   ]
+  },
+  "Head": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "bytes",
+    "events",
+    "hlc",
+    "segment",
+    "version"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "segment": {
+     "$ref": "#/definitions/Count"
+    },
+    "bytes": {
+     "$ref": "#/definitions/Count"
+    },
+    "events": {
+     "$ref": "#/definitions/Count"
+    },
+    "hlc": {
+     "$ref": "#/definitions/Hlc"
+    }
+   }
+  },
+  "Cursor": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "bytes",
+    "segment"
+   ],
+   "properties": {
+    "segment": {
+     "$ref": "#/definitions/Count"
+    },
+    "bytes": {
+     "$ref": "#/definitions/Count"
+    }
+   }
+  },
+  "ManifestEntry": {
+   "oneOf": [
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "bytes",
+      "executable",
+      "hlc",
+      "operation",
+      "sha256"
+     ],
+     "properties": {
+      "hlc": {
+       "$ref": "#/definitions/Hlc"
+      },
+      "operation": {
+       "const": "put"
+      },
+      "sha256": {
+       "$ref": "#/definitions/Sha256"
+      },
+      "bytes": {
+       "$ref": "#/definitions/Count"
+      },
+      "executable": {
+       "type": "boolean"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "hlc",
+      "operation"
+     ],
+     "properties": {
+      "hlc": {
+       "$ref": "#/definitions/Hlc"
+      },
+      "operation": {
+       "const": "delete"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "hlc",
+      "operation",
+      "target"
+     ],
+     "properties": {
+      "hlc": {
+       "$ref": "#/definitions/Hlc"
+      },
+      "operation": {
+       "const": "link"
+      },
+      "target": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 4096
+      }
+     }
+    }
+   ]
+  },
+  "Snapshot": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "cursors",
+    "hlc",
+    "manifest",
+    "version"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "hlc": {
+     "$ref": "#/definitions/Hlc"
+    },
+    "manifest": {
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/definitions/Path"
+     },
+     "additionalProperties": {
+      "$ref": "#/definitions/ManifestEntry"
+     }
+    },
+    "cursors": {
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/definitions/OriginId"
+     },
+     "additionalProperties": {
+      "$ref": "#/definitions/Cursor"
+     }
+    }
+   }
+  }
+ }
+}

@@ -24637,7 +24637,7 @@
      "kind": "skin",
      "model": "body",
      "material": "skin",
-     "areaM2": 0.0947,
+     "areaM2": 0.15,
      "characteristicLengthM": 0.2,
      "geometry": "sphere",
      "skyViewFactor": 0.5,
@@ -128322,13 +128322,13 @@
       "role": "body",
       "tone": 0.78,
       "radii": [
-       0.05,
+       0.063,
        0.044,
        0.036
       ],
       "transform": {
        "translation": [
-        0.064,
+        0.051,
         0,
         0.016
        ]
@@ -133464,13 +133464,13 @@
       "role": "body",
       "tone": 0.78,
       "radii": [
-       0.056,
+       0.066,
        0.046,
        0.0375
       ],
       "transform": {
        "translation": [
-        0.064,
+        0.054,
         0,
         0.01
        ]

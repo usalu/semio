@@ -20,8 +20,8 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 🧊️ The document's own `CARTESIAN_POINT` entities as point markers on the shared mesh scene, framed on their bounds, never a placeholder.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &StepSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    semio_s_artifact_stdio_contract::mesh_scene("STEP", &[], &[], &document.scene_points())
+pub fn render(document: &StepSnapshot, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    semio_s_artifact_stdio_contract::mesh_scene("STEP", &[], &[], &document.scene_points(), locale)
 }
 //#endregion 🔖️Render
 

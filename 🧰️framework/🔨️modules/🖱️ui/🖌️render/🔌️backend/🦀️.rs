@@ -267,9 +267,8 @@ pub struct ReadbackImage {
 ///   `render` returns `RenderReport::SkippedZeroSize` rather than touching the OS surface. Resizing
 ///   back to a nonzero size afterward must restore a fully working surface — no sticky failure state.
 /// - **Batches replay verbatim.** A backend walks [`crate::scene::RenderPacket::batches`] in order and
-///   issues each [`crate::scene::DrawBatch`]'s draw call over its `instance_range`
-///   (and `mask_range`, when present, painted first under
-///   [`crate::scene::StencilPolicy::WriteMask`]) exactly as given. It makes no ordering, batching or
+///   issues each [`crate::scene::DrawBatch`]'s draw call over its `instance_range` under the batch's
+///   rectangular scissor (`viewport_scissor`) exactly as given. It makes no ordering, batching or
 ///   clipping decisions of its own — `Scene::finish` already made every one of those decisions, which
 ///   is precisely what lets four independent backends agree pixel-for-pixel.
 pub trait GraphicsBackend {

@@ -8,11 +8,11 @@ import Ajv from "ajv/dist/2020.js";
 import cases from "./compositor.cases.json";
 import schema from "./compositor.schema.json";
 import { BorderCompositor, isSharedBorderCell, retainSharedBorderRoot, sizeSharedBorderOverlay, useSharedBorderFrameRef, useSharedWindowBorder } from "./shared-border.ts";
-import { WindowChromeSilhouetteBorder, measureWindowSilhouetteMetrics } from "./🟦️.tsx";
-import { boxDrawnSides, type BorderSide, type SilhouetteBox } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
-import { createWindowSilhouetteGeometry } from "../🔲️WindowSilhouette/🟦️.tsx";
+import { WindowChromeFrameBorder, measureWindowFrameMetrics } from "./🟦️.tsx";
+import { boxDrawnSides, type BorderSide, type OutlineBox } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
+import { createWindowFrameGeometry } from "../🔲️WindowFrame/🟦️.tsx";
 
-const geometry = createWindowSilhouetteGeometry({ width: 100, height: 100, top: { depth: 0, chips: [] }, bottom: { depth: 0, chips: [] } });
+const geometry = createWindowFrameGeometry({ width: 100, height: 100, top: { depth: 0, chips: [] }, bottom: { depth: 0, chips: [] } });
 
 describe("overlay origin", () => {
   const overlay = (left: number, top: number) => {
@@ -40,7 +40,7 @@ describe("overlay origin", () => {
   });
 });
 
-describe("silhouette overlay sizing", () => {
+describe("frame overlay sizing", () => {
   test("sizes its overlay when it appears or its size changes, not on every render of the window", async () => {
     const host = document.createElement("div");
     document.body.append(host);
@@ -48,7 +48,7 @@ describe("silhouette overlay sizing", () => {
     host.append(stack);
     const reads = vi.spyOn(host, "getBoundingClientRect");
     const root = createRoot(host);
-    const draw = (kind: "normal" | "active") => React.createElement(WindowChromeSilhouetteBorder, { stack, geometry, borderKind: kind });
+    const draw = (kind: "normal" | "active") => React.createElement(WindowChromeFrameBorder, { stack, geometry, borderKind: kind });
     await React.act(async () => root.render(draw("normal")));
     expect(reads).toHaveBeenCalled();
     reads.mockClear();
@@ -60,7 +60,7 @@ describe("silhouette overlay sizing", () => {
   });
 });
 
-describe("panning the silhouette layer", () => {
+describe("panning the frame layer", () => {
   const rect = (left: number, top: number, width: number, height: number) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) }) as DOMRect;
 
   test("repaints window outlines and frame overlays every pan frame without a React render and with one geometry read per element", async () => {
@@ -81,7 +81,7 @@ describe("panning the silhouette layer", () => {
     const renders = vi.fn();
     const root = createRoot(scope.querySelector("#mount")!);
     try {
-      await React.act(async () => root.render(React.createElement(React.Profiler, { id: "silhouette", onRender: renders }, React.createElement(WindowChromeSilhouetteBorder, { stack, geometry, borderKind: "normal" }))));
+      await React.act(async () => root.render(React.createElement(React.Profiler, { id: "frame", onRender: renders }, React.createElement(WindowChromeFrameBorder, { stack, geometry, borderKind: "normal" }))));
       await flush();
       await flush();
       const main = () => scope.querySelector("[data-shared-border-main]")?.getAttribute("d");
@@ -396,8 +396,8 @@ describe("root border compositor", () => {
         compositor.schedule();
         expect(overlay.querySelector("path")!.getAttribute("data-shared-border-state")).toBe(effect.state);
         if (effect.state === "celebrated") {
-          expect(overlay.querySelector("mask .window-silhouette-border-celebrated-mask")).not.toBeNull();
-          expect(overlay.querySelector("foreignObject .window-silhouette-border-celebrated-fill")).not.toBeNull();
+          expect(overlay.querySelector("mask .window-frame-border-celebrated-mask")).not.toBeNull();
+          expect(overlay.querySelector("foreignObject .window-frame-border-celebrated-fill")).not.toBeNull();
         }
         visible.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
         expect(overlay.querySelector("path")!.getAttribute("data-shared-border-state")).toBe("hover");
@@ -429,7 +429,7 @@ describe("root border compositor", () => {
       compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
     }
   });
-  test("a hover, focus or state change measures again before painting, so a stated silhouette is never drawn from stale geometry", async () => {
+  test("a hover, focus or state change measures again before painting, so a stated frame is never drawn from stale geometry", async () => {
     const dom = new JSDOM('<div class="semio-scope"><div id="clip" style="overflow:hidden"><div class="a" data-shared-border-frame data-shared-border-interactive></div><div class="b" data-shared-border-frame></div></div></div>');
     const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
     Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
@@ -489,7 +489,7 @@ describe("root border compositor", () => {
     parent.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100 }) as DOMRect;
     child.getBoundingClientRect = () => ({ left: 0, top: 30, width: 100, height: 40 }) as DOMRect;
     Object.defineProperties(child, { offsetWidth: { value: 50 }, offsetHeight: { value: 20 } });
-    const childGeometry = createWindowSilhouetteGeometry({ width: 50, height: 20, top: { depth: 0, chips: [] }, bottom: { depth: 0, chips: [] } });
+    const childGeometry = createWindowFrameGeometry({ width: 50, height: 20, top: { depth: 0, chips: [] }, bottom: { depth: 0, chips: [] } });
     const updates = new Map<string, readonly { d: string; state: string }[]>();
     const compositor = new BorderCompositor(root);
     try {
@@ -519,7 +519,7 @@ describe("root border compositor", () => {
     child.getBoundingClientRect = () => rect(f.parentHeight - f.childHeight, f.childWidth, f.childHeight);
     Object.defineProperties(parent, { offsetWidth: { value: Math.round(f.parentWidth) }, offsetHeight: { value: Math.round(f.parentHeight) } });
     Object.defineProperties(child, { offsetWidth: { value: Math.round(f.childWidth) }, offsetHeight: { value: Math.round(f.childHeight) } });
-    const shape = (width: number, height: number) => createWindowSilhouetteGeometry({ width, height, top: { depth: 0, chips: [] }, bottom: { depth: 0, chips: [] } });
+    const shape = (width: number, height: number) => createWindowFrameGeometry({ width, height, top: { depth: 0, chips: [] }, bottom: { depth: 0, chips: [] } });
     const updates = new Map<string, readonly { d: string; state: string }[]>();
     const compositor = new BorderCompositor(root);
     try {
@@ -537,16 +537,29 @@ describe("root border compositor", () => {
       compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
     }
   });
-  test("clips measured fusion wings to the visible scrolling viewport", () => {
-    const dom = new JSDOM('<div data-window-silhouette><div data-slot="context-menu-fusion-body"><div data-slot="context-menu-fusion-primary"></div><div data-slot="context-menu-submenu"></div></div></div>');
-    const stack = dom.window.document.querySelector<HTMLElement>("[data-window-silhouette]")!;
-    const rect = (left: number, top: number, right: number, bottom: number) => ({ left, top, right, bottom, width: right - left, height: bottom - top }) as DOMRect;
-    stack.getBoundingClientRect = () => rect(0, 0, 100, 100);
-    stack.querySelector<HTMLElement>('[data-slot="context-menu-fusion-body"]')!.getBoundingClientRect = () => rect(0, 20, 100, 100);
-    stack.querySelector<HTMLElement>('[data-slot="context-menu-fusion-primary"]')!.getBoundingClientRect = () => rect(0, 20, 60, 100);
-    stack.querySelector<HTMLElement>('[data-slot="context-menu-submenu"]')!.getBoundingClientRect = () => rect(60, 40, 160, 150);
-    expect(measureWindowSilhouetteMetrics(stack)?.contextMenuFusion?.wings).toEqual([{ left: 60, top: 40, right: 100, bottom: 100 }]);
-    dom.window.close();
+  test("paints the inner edges of every chip region in the normal state and no edge on the frame outline twice", () => {
+    const dom = new JSDOM('<div class="semio-scope"><div id="stack" data-window-frame></div></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const stack = root.querySelector<HTMLElement>("#stack")!;
+    stack.getBoundingClientRect = () => ({ left: 0, top: 0, right: 100, bottom: 100, width: 100, height: 100 }) as DOMRect;
+    const compositor = new BorderCompositor(root);
+    let painted: readonly { d: string; state: string }[] = [];
+    try {
+      const chipped = createWindowFrameGeometry({ width: 100, height: 100, top: { depth: 20, chips: [{ left: 0, right: 40 }, { left: 70, right: 100 }] }, bottom: { depth: 12, chips: [{ left: 30, right: 70 }] } });
+      compositor.windows.set("w", { element: stack, geometry: chipped, state: "normal", update: value => { painted = value; } });
+      compositor.schedule();
+      const points = painted.flatMap(segment => [...segment.d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map(match => `${match[1]},${match[2]}`));
+      for (const corner of ["1,1", "99,1", "99,99", "1,99", "39,19", "71,19", "71,1", "31,89", "69,89", "39,1", "31,99"]) expect(points, corner).toContain(corner);
+      expect(painted.every(segment => segment.state === "normal")).toBe(true);
+      const plain = createWindowFrameGeometry({ width: 100, height: 100, top: { depth: 0, chips: [] }, bottom: { depth: 0, chips: [] } });
+      compositor.windows.set("w", { element: stack, geometry: plain, state: "normal", update: value => { painted = value; } });
+      compositor.schedule();
+      expect(painted).toEqual([{ d: plain.borderPath, state: "normal" }]);
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
   });
   test("deduplicates reversed-order sibling seams and restores detached frames", () => {
     const dom = new JSDOM('<div class="semio-scope"><div id="left" data-shared-border-interactive></div><div id="right"></div><nav data-shared-border-frame data-shared-border-edges="bottom"></nav></div>');
@@ -583,7 +596,7 @@ describe("root border compositor", () => {
       const child = dom.window.document.createElement("div");
       left.append(child);
       child.getBoundingClientRect = () => rect(0, 30, 50, 40);
-      const childGeometry = createWindowSilhouetteGeometry({ width: 50, height: 40, top: { depth: 0, chips: [] }, bottom: { depth: 0, chips: [] } });
+      const childGeometry = createWindowFrameGeometry({ width: 50, height: 40, top: { depth: 0, chips: [] }, bottom: { depth: 0, chips: [] } });
       compositor.windows.set("child", { element: child, geometry: childGeometry, state: "hover", update: value => updates.set("child", value) });
       compositor.schedule();
       const leftPieces = updates.get("a")!.map(segment => segment.d.match(/-?\d+(?:\.\d+)?/g)!.map(Number)).filter(values => values[0] === 1 && values[2] === 1);
@@ -762,7 +775,7 @@ describe("root border compositor", () => {
     });
 
     test("mode dock tabs are borderless boxes: a hovered tab closes itself and its chip stays normal", () => {
-      const h = harness('<div class="semio-scope"><div id="stack"><div id="chip" data-window-silhouette-chip><div role="tablist"><div id="tab" role="tab" data-slot="mode-dock-tab" tabindex="0"></div><div id="other" role="tab" data-slot="mode-dock-tab" tabindex="0"></div></div></div></div></div>', { stack: rect(0, 0, 100, 40), chip: rect(0, 0, 60, 20), tab: rect(0, 0, 30, 20), other: rect(30, 0, 30, 20) });
+      const h = harness('<div class="semio-scope"><div id="stack"><div id="chip" data-window-frame-chip><div role="tablist"><div id="tab" role="tab" data-slot="mode-dock-tab" tabindex="0"></div><div id="other" role="tab" data-slot="mode-dock-tab" tabindex="0"></div></div></div></div></div>', { stack: rect(0, 0, 100, 40), chip: rect(0, 0, 60, 20), tab: rect(0, 0, 30, 20), other: rect(30, 0, 30, 20) });
       try {
         h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: () => {} });
         h.compositor.schedule();
@@ -772,8 +785,8 @@ describe("root border compositor", () => {
       } finally { h.done(); }
     });
 
-    test("a chip hover emphasises its own edges and the full enclosing card silhouette", () => {
-      const h = harness('<div class="semio-scope"><section id="card" data-overview-card><div id="stack" data-shared-border-hover="silhouette"><div id="chip" data-window-silhouette-chip><button id="control"></button></div></div></section></div>', { card: rect(0, 0, 100, 100), stack: rect(0, 0, 100, 100), chip: rect(0, 0, 40, 20), control: rect(0, 0, 40, 20) });
+    test("a chip hover emphasises its own edges and the full enclosing card frame", () => {
+      const h = harness('<div class="semio-scope"><section id="card" data-overview-card><div id="stack" data-shared-border-hover="frame"><div id="chip" data-window-frame-chip><button id="control"></button></div></div></section></div>', { card: rect(0, 0, 100, 100), stack: rect(0, 0, 100, 100), chip: rect(0, 0, 40, 20), control: rect(0, 0, 40, 20) });
       const updates = new Map<string, readonly { d: string; state: string }[]>();
       try {
         h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: value => updates.set("w", value) });
@@ -801,10 +814,10 @@ describe("root border compositor", () => {
     });
 
     test("a utility-bar chip flush with a clipping ancestor still paints its stated outline", () => {
-      const h = harness('<div class="semio-scope"><div id="clip" style="overflow:hidden"><div id="stack" data-window-silhouette><div id="chip" data-window-silhouette-chip><button id="unfold"></button></div></div></div></div>', { clip: rect(0, 0, 40, 20), stack: rect(0, 0, 40, 20), chip: rect(0, 0, 40, 20), unfold: rect(0, 0, 40, 20) });
+      const h = harness('<div class="semio-scope"><div id="clip" style="overflow:hidden"><div id="stack" data-window-frame><div id="chip" data-window-frame-chip><button id="unfold"></button></div></div></div></div>', { clip: rect(0, 0, 40, 20), stack: rect(0, 0, 40, 20), chip: rect(0, 0, 40, 20), unfold: rect(0, 0, 40, 20) });
       const updates = new Map<string, readonly { d: string; state: string }[]>();
       try {
-        h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry: { ...geometry, outline: [...geometry.outline, { x: 0, y: 0 }] }, state: "normal", update: value => updates.set("w", value) });
+        h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: value => updates.set("w", value) });
         h.compositor.schedule();
         h.hover("unfold");
         const hovered = updates.get("w")!.filter(segment => segment.state === "hover").map(segment => segment.d);
@@ -813,8 +826,8 @@ describe("root border compositor", () => {
     });
 
     test("a narrow window chip keeps its side beside a nearby nonincident window edge", () => {
-      const h = harness('<div class="semio-scope"><div id="stack" data-window-silhouette><div id="chip" data-window-silhouette-chip><button id="unfold"></button></div></div></div>', { stack: rect(0, 0, 100, 100), chip: rect(10, 30, 30, 24), unfold: rect(10, 30, 30, 24) });
-      const geometry = createWindowSilhouetteGeometry({ width: 100, height: 100, top: { depth: 20, chips: [{ left: 12.5, right: 40 }] }, bottom: { depth: 0, chips: [] } });
+      const h = harness('<div class="semio-scope"><div id="stack" data-window-frame><div id="chip" data-window-frame-chip><button id="unfold"></button></div></div></div>', { stack: rect(0, 0, 100, 100), chip: rect(10, 30, 30, 24), unfold: rect(10, 30, 30, 24) });
+      const geometry = createWindowFrameGeometry({ width: 100, height: 100, top: { depth: 20, chips: [{ left: 12.5, right: 40 }] }, bottom: { depth: 0, chips: [] } });
       let segments: readonly { d: string; state: string }[] = [];
       try {
         h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: value => { segments = value; } });
@@ -827,7 +840,7 @@ describe("root border compositor", () => {
     });
 
     test("a chip as large as its whole window paints a stated outline in the window's own segments", () => {
-      const h = harness('<div class="semio-scope"><div id="stack" data-window-silhouette><div id="chip" data-window-silhouette-chip><button id="unfold"></button></div></div></div>', { stack: rect(0, 0, 100, 100), chip: rect(0, 0, 100, 100), unfold: rect(0, 0, 100, 100) });
+      const h = harness('<div class="semio-scope"><div id="stack" data-window-frame><div id="chip" data-window-frame-chip><button id="unfold"></button></div></div></div>', { stack: rect(0, 0, 100, 100), chip: rect(0, 0, 100, 100), unfold: rect(0, 0, 100, 100) });
       const updates = new Map<string, readonly { d: string; state: string }[]>();
       try {
         h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: value => updates.set("w", value) });
@@ -837,15 +850,15 @@ describe("root border compositor", () => {
       } finally { h.done(); }
     });
 
-    test("a chip of a window whose silhouette is a plain bar still paints its stated outline", () => {
-      const h = harness('<div class="semio-scope"><div id="stack" data-window-silhouette><div id="chip" data-window-silhouette-chip><button id="unfold"></button></div></div></div>', { stack: rect(0, 0, 100, 100), chip: rect(0, 0, 40, 20), unfold: rect(0, 0, 40, 20) });
+    test("a chip of a window without chip regions still paints its stated outline", () => {
+      const h = harness('<div class="semio-scope"><div id="stack" data-window-frame><div id="chip" data-window-frame-chip><button id="unfold"></button></div></div></div>', { stack: rect(0, 0, 100, 100), chip: rect(0, 0, 40, 20), unfold: rect(0, 0, 40, 20) });
       const updates = new Map<string, readonly { d: string; state: string }[]>();
       try {
-        h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry: { ...geometry, outline: [...geometry.outline, { x: 0, y: 0 }] }, state: "normal", update: value => updates.set("w", value) });
+        h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: value => updates.set("w", value) });
         h.compositor.schedule();
         h.hover("unfold");
         expect(updates.get("w")!.filter(segment => segment.state === "hover").length).toBeGreaterThan(0);
-        expect(updates.get("w")![0]!.state).toBe("normal");
+        expect(updates.get("w")!.some(segment => segment.state === "normal")).toBe(true);
       } finally { h.done(); }
     });
   });
@@ -967,7 +980,7 @@ describe("root border compositor", () => {
       for (const window of fixture.windows) {
         const element = root.querySelector<HTMLElement>(`#${window.id}`)!;
         element.getBoundingClientRect = () => ({ left: window.left, top: window.top, right: window.left + window.width, bottom: window.top + window.height, width: window.width, height: window.height }) as DOMRect;
-        compositor.windows.set(window.id, { element, geometry: createWindowSilhouetteGeometry({ width: window.width, height: window.height, top: window.topEdge, bottom: window.bottomEdge }), state: "normal", update: segments => painted.set(window.id, { left: window.left, top: window.top, segments }) });
+        compositor.windows.set(window.id, { element, geometry: createWindowFrameGeometry({ width: window.width, height: window.height, top: window.topEdge, bottom: window.bottomEdge }), state: "normal", update: segments => painted.set(window.id, { left: window.left, top: window.top, segments }) });
       }
       try {
         compositor.schedule();
@@ -1005,8 +1018,8 @@ describe("root border compositor", () => {
     const nav = dom.window.document.querySelector<HTMLElement>("nav")!, footer = dom.window.document.querySelector<HTMLElement>("footer")!;
     nav.getBoundingClientRect = () => rect(0, 0, 400, 28);
     footer.getBoundingClientRect = () => rect(0, 72, 400, 100);
-    const parentBox = (id: string, edges: BorderSide[], box: DOMRect): SilhouetteBox => ({ id, parent: null, owner: id, rect: box, edges, state: "normal" });
-    const drawn = (parent: SilhouetteBox, box: DOMRect) => boxDrawnSides({ id: "c", parent: parent.id, owner: "c", rect: box, edges: ["top", "right", "bottom", "left"], state: "normal" }, parent);
+    const parentBox = (id: string, edges: BorderSide[], box: DOMRect): OutlineBox => ({ id, parent: null, owner: id, rect: box, edges, state: "normal" });
+    const drawn = (parent: OutlineBox, box: DOMRect) => boxDrawnSides({ id: "c", parent: parent.id, owner: "c", rect: box, edges: ["top", "right", "bottom", "left"], state: "normal" }, parent);
     const bar = parentBox("nav", ["bottom"], rect(0, 0, 400, 28)), band = parentBox("footer", ["top"], rect(0, 72, 400, 100));
     expect(drawn(bar, rect(10, 0, 90, 28))).toEqual(["right", "bottom", "left"]);
     expect(drawn(bar, rect(10, 3, 90, 25))).toEqual(["top", "right", "bottom", "left"]);
@@ -1042,7 +1055,7 @@ describe("root border compositor", () => {
   });
 });
 
-describe("state silhouettes of product shapes under mocked layout", () => {
+describe("state outlines of product shapes under mocked layout", () => {
   const rect = (left: number, top: number, width: number, height: number) => ({ left, top, right: left + width, bottom: top + height, width, height, x: left, y: top, toJSON: () => ({}) }) as DOMRect;
   const harness = (html: string, rects: Record<string, DOMRect>) => {
     const dom = new JSDOM(html);
@@ -1060,9 +1073,9 @@ describe("state silhouettes of product shapes under mocked layout", () => {
 
   describe("mode dock tabs with several interactive controls", () => {
     const dock = (state: "active" | "normal") => {
-      const html = `<div class="semio-scope"><div id="stack" data-window-silhouette><div id="chip" data-window-silhouette-chip data-dock="top"><div id="tabs" role="tablist" style="overflow-x:auto;overflow-y:hidden"><div id="tab" data-slot="mode-dock-tab" ${state === "active" ? 'data-active="true"' : ""}><button id="select" role="tab"></button><button id="focusing" data-slot="mode-dock-tab-focus"></button><button id="close" data-slot="mode-dock-tab-close"></button></div></div></div></div></div>`;
+      const html = `<div class="semio-scope"><div id="stack" data-window-frame><div id="chip" data-window-frame-chip data-dock="top"><div id="tabs" role="tablist" style="overflow-x:auto;overflow-y:hidden"><div id="tab" data-slot="mode-dock-tab" ${state === "active" ? 'data-active="true"' : ""}><button id="select" role="tab"></button><button id="focusing" data-slot="mode-dock-tab-focus"></button><button id="close" data-slot="mode-dock-tab-close"></button></div></div></div></div></div>`;
       const h = harness(html, { stack: rect(0, 0, 100, 100), chip: rect(0, 0, 60, 30), tabs: rect(0, 0, 60, 30), tab: rect(0, 0, 60, 30), select: rect(0, 0, 30, 30), focusing: rect(30, 0, 15, 30), close: rect(45, 0, 15, 30) });
-      const windowGeometry = createWindowSilhouetteGeometry({ width: 100, height: 100, top: { depth: 30, chips: [{ left: 0, right: 60 }] }, bottom: { depth: 0, chips: [] } });
+      const windowGeometry = createWindowFrameGeometry({ width: 100, height: 100, top: { depth: 30, chips: [{ left: 0, right: 60 }] }, bottom: { depth: 0, chips: [] } });
       const updates: { d: string; state: string }[][] = [];
       h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry: windowGeometry, state: state === "active" ? "active" : "normal", update: value => { updates.push([...value]); } });
       h.compositor.schedule();
@@ -1070,24 +1083,24 @@ describe("state silhouettes of product shapes under mocked layout", () => {
       return { h, updates, all };
     };
 
-    test("hovering any control of the tab states the tab box alone, and its closed bottom lies on the window body line", () => {
+    test("hovering any control of the tab states the tab box alone, and its closed bottom lies on the chip inner edge", () => {
       const { h, updates, all } = dock("active");
       try {
         h.hover("close");
         const hovered = all("hover");
         expect(hovered.length).toBeGreaterThan(0);
-        expect(h.painted("hover")).toEqual(expect.arrayContaining(["M 1 1 L 60 1", "M 1 31 L 60 31", "M 60 1 L 60 31", "M 1 1 L 1 31"]));
+        expect(h.painted("hover")).toEqual(expect.arrayContaining(["M 1 1 L 59 1", "M 1 29 L 59 29", "M 59 1 L 59 29", "M 1 1 L 1 29"]));
         const ys = new Set(lines(hovered).map(point => point.y));
-        expect([...ys].sort((a, b) => a - b)).toEqual([1, 31]);
+        expect([...ys].sort((a, b) => a - b)).toEqual([1, 29]);
         const normalOrActive = (updates.at(-1) ?? []).filter(segment => segment.state !== "hover");
         const horizontalAtCap = lines(normalOrActive).map(point => point.y).filter(y => y > 25 && y < 35);
-        expect(new Set(horizontalAtCap)).toEqual(new Set([31]));
+        expect(new Set(horizontalAtCap)).toEqual(new Set([29]));
         const verticalRight = lines(hovered).filter(point => point.x > 50);
-        expect(new Set(verticalRight.map(point => point.x))).toEqual(new Set([60]));
+        expect(new Set(verticalRight.map(point => point.x))).toEqual(new Set([59]));
       } finally { h.done(); }
     });
 
-    test("the closed tab bottom and the window body top are one line without staircase jogs, whatever the tab edge offset within two pixels", () => {
+    test("the closed tab bottom and the chip inner edge are one line without staircase jogs, whatever the tab edge offset within two pixels", () => {
       for (const bottom of [30, 29, 31]) {
         const { h, updates } = dock("active");
         try {
@@ -1108,8 +1121,8 @@ describe("state silhouettes of product shapes under mocked layout", () => {
         h.root.querySelector<HTMLElement>("#select")!.focus();
         h.hover("select");
         const hovered = (updates.at(-1) ?? []).filter(segment => segment.state === "hover");
-        expect(Math.max(...lines(hovered).map(point => point.x))).toBeLessThanOrEqual(60);
-        expect(Math.max(...lines(hovered).map(point => point.y))).toBeLessThanOrEqual(31);
+        expect(Math.max(...lines(hovered).map(point => point.x))).toBeLessThanOrEqual(59);
+        expect(Math.max(...lines(hovered).map(point => point.y))).toBeLessThanOrEqual(29);
         expect((updates.at(-1) ?? []).some(segment => segment.state === "normal")).toBe(true);
       } finally { h.done(); }
     });

@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::diff;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfPage, PdfSnapshot};
-use protocol::MutationKind;
+use protocol::{ColdMutationKind, MutationKind};
 use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
@@ -19,8 +19,8 @@ fn semantic_identity_is_owned_by_this_leaf() {
 fn a_missing_page_is_refused_and_has_no_inverse() {
     let base = PdfSnapshot::default();
     let mutation = ReplacePage { index: 0, page: PdfPage::new(10.0, 20.0) };
-    assert_eq!(<ReplacePage as MutationKind<PdfSnapshot, PdfMutation>>::diff(&mutation, &base).messages().len(), 1);
-    assert!(<ReplacePage as MutationKind<PdfSnapshot, PdfMutation>>::inverse(&mutation, &base).expect("an unaddressable page has nothing to undo").is_empty());
+    assert_eq!(<ReplacePage as ColdMutationKind<PdfSnapshot, PdfMutation>>::diff(&mutation, &base).messages().len(), 1);
+    assert!(<ReplacePage as ColdMutationKind<PdfSnapshot, PdfMutation>>::inverse(&mutation, &base).expect("an unaddressable page has nothing to undo").is_empty());
 }
 
 #[test]
@@ -28,7 +28,7 @@ fn the_diff_carries_only_the_fields_the_pages_differ_in() {
     let base = PdfSnapshot { pages: vec![PdfPage::new(10.0, 20.0)], ..PdfSnapshot::default() };
     let mut page = base.pages[0].clone();
     page.rotate = 90;
-    let outcome = <ReplacePage as MutationKind<PdfSnapshot, PdfMutation>>::diff(&ReplacePage { index: 0, page }, &base);
+    let outcome = <ReplacePage as ColdMutationKind<PdfSnapshot, PdfMutation>>::diff(&ReplacePage { index: 0, page }, &base);
     let pages = outcome.diff().pages.as_ref().expect("the page moved");
     assert_eq!((pages.modified.len(), pages.added.len(), pages.removed.len()), (1, 0, 0));
     assert_eq!(pages.modified[0].diff.rotate, Some(90));

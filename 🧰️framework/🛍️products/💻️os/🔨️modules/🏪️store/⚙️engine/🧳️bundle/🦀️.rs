@@ -114,14 +114,14 @@ where
         return Ok(ArtifactStoreOneItemAdvance::Complete);
     }
     if publication.phase == ArtifactStoreOneItemPublicationPhase::Closing {
-        {return Ok(ArtifactStoreOneItemAdvance::Blocked)};
+        {return Ok(blocked_here())};
     }
     if publication.phase == ArtifactStoreOneItemPublicationPhase::AwaitingAck {
         return Ok(ArtifactStoreOneItemAdvance::AwaitingAck(publication.receipt.expect("awaiting-ACK publication retains its receipt")));
     }
     if publication.cancel_requested {
         publication.begin_close();
-        {return Ok(ArtifactStoreOneItemAdvance::Blocked)};
+        {return Ok(blocked_here())};
     }
     if store.cursor.generation != publication.expected_generation || store.cursor.content_revision != publication.expected_revision {
         publication.fault = Some(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batched publication became stale before commit"));
@@ -130,14 +130,14 @@ where
         return Err(VcsError::ValidationFailed("batched publication became stale before commit".into()));
     }
     if !grant.permits_one() {
-        {return Ok(ArtifactStoreOneItemAdvance::Blocked)};
+        {return Ok(blocked_here())};
     }
     let item_grant = ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant };
     match publication.phase {
         ArtifactStoreOneItemPublicationPhase::Preparing => {
             if !publication.source_census_finished {
                 let copy=size_of::<ArtifactStoreOneItemFootprint>()+size_of::<usize>();
-                if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{{return Ok(ArtifactStoreOneItemAdvance::Blocked)};}
+                if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{{return Ok(blocked_here())};}
                 match publication.source.as_mut().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its retained census source".into()))?.census_one(publication.lane).map_err(VcsError::ValidationFailed)? {
                     Some(footprint) => { publication.footprint = footprint; publication.source_census_finished = true; },
                     None => { publication.source_census_completed = publication.source_census_completed.saturating_add(1); },
@@ -145,7 +145,7 @@ where
                 return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
             }
             if publication.item_closing {
-                if let Some(stage)=publication.stage.as_mut(){if stage.retiring.is_some(){let Some(poll)=receiving.with_effect(item_grant.retained_grant(),STEP_WORK,|_,effect|artifact_retirement_box_close_step(&mut stage.retiring,effect.grant().maximum_copy_bytes,effect)).map_err(|error|VcsError::ValidationFailed(error.into_message()))? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};let step=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|error|VcsError::ValidationFailed(error.into_value_error().into_message()))?,semio_framework_value::RetainedWorkPoll::Pending{..}=>return Ok(ArtifactStoreOneItemAdvance::Blocked)};return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress()));}}
+                if let Some(stage)=publication.stage.as_mut(){if stage.retiring.is_some(){let Some(poll)=receiving.with_effect(item_grant.retained_grant(),STEP_WORK,|_,effect|artifact_retirement_box_close_step(&mut stage.retiring,effect.grant().maximum_copy_bytes,effect)).map_err(|error|VcsError::ValidationFailed(error.into_message()))? else{return Ok(blocked_here())};let step=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|error|VcsError::ValidationFailed(error.into_value_error().into_message()))?,semio_framework_value::RetainedWorkPoll::Pending{..}=>return Ok(blocked_here())};return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress()));}}
                 if publication.preparation.is_none(){return Err(VcsError::ValidationFailed("staged batch item lost its original preparation before closure".into()));}
                 let step=match spend_item_close_grant(&mut publication.preparation,item_grant,receiving){Ok(step)=>step,Err(failure)=>{*publication.receiving_fault=Some(failure);publication.begin_close();return Ok(ArtifactStoreOneItemAdvance::PreparationRefused)}};
                 if matches!(step,RetainedCloneStep::Complete(_)){publication.item_closing=false;}
@@ -159,16 +159,16 @@ where
                     if publication.stage.is_none() {
                         return Err(VcsError::ValidationFailed("batched publication staged no edit before its cursor turn".into()));
                     }
-                    let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{{return Ok(ArtifactStoreOneItemAdvance::Blocked)};}
+                    let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{{return Ok(blocked_here())};}
                     publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
                     return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
                 }
                 let refused = |error: ValueError| VcsError::ValidationFailed(error.into_message());
                 let demand = publication.source.as_ref().expect("validated batched publication item source").next_begin_demand(publication.lane).map_err(refused)?;
-                if demand.admit(item_grant.retained_grant()).is_err() { return Ok(ArtifactStoreOneItemAdvance::Blocked); }
+                if demand.admit(item_grant.retained_grant()).is_err() { return Ok(blocked_here()); }
                 let original_issuer_copy=size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>()+size_of::<Arc<dyn SnapshotRetirementFactory<P>>>()+size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()+size_of::<SnapshotRead<P>>() + size_of::<Arc<P>>();
                 let copy=publication.source.as_ref().expect("validated original preparation copy source").next_begin_copy_byte_demand(publication.lane).map_err(refused)?.checked_add(original_issuer_copy).ok_or_else(||VcsError::ValidationFailed("batched preparation original header extent overflow".into()))?;
-                if item_grant.maximum_copy_bytes<copy{{return Ok(ArtifactStoreOneItemAdvance::Blocked)};}
+                if item_grant.maximum_copy_bytes<copy{{return Ok(blocked_here())};}
                 let mutation_retirement=store.owners.mutation_retirement_factory.as_ref().ok_or_else(||VcsError::ValidationFailed("batched preparation lost its installed mutation issuer".into()))?;
                 let snapshot_retirement=store.owners.snapshot_retirement_factory.as_ref().ok_or_else(||VcsError::ValidationFailed("batched preparation lost its installed snapshot issuer".into()))?;
                 let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its live authority".into()))?);
@@ -209,9 +209,48 @@ where
                     Ok(items) if items > grant.maximum_items => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "preparation item requirement exceeds the original turn ceiling").into()),
                     Ok(items) => {
                         let preparation_grant = ArtifactStoreOneItemGrant { maximum_items: items, ..grant };
-                        let turn = owner.advance_with_turn_ceiling(body, preparation_grant, turn_ceiling, receiving);
-                        publication.turn_work = owner.last_turn_work();
-                        turn.and_then(|step| validate_original_preparation_step(step, preparation_grant, owner.prepared().is_some()).map_err(Into::into))
+                        let mut combined = RetainedCloneProgress::default();
+                        let mut last_span = 0usize;
+                        let mut produced = None;
+                        let mut work = 0u64;
+                        let call_effects_before = receiving.actual_work();
+                        let mut failure = None;
+                        for _ in 0..4096 {
+                            if produced.is_some() && (combined.copied_bytes.saturating_add(last_span.max(64)) > grant.maximum_copy_bytes || combined.retained_capacity_bytes.saturating_add(last_span) > grant.maximum_capacity_bytes) { break; }
+                            let cursor_before = owner.checkpoint().cursor;
+                            let advanced = match owner.advance_with_turn_ceiling(body, preparation_grant, turn_ceiling, receiving) {
+                                Err(error) => { failure = Some(error); break; }
+                                Ok(step) => step,
+                            };
+                            work = work.saturating_add(owner.last_turn_work());
+                            let ready = match validate_original_preparation_step(advanced, preparation_grant, owner.prepared().is_some()) {
+                                Err(error) => { failure = Some(error.into()); break; }
+                                Ok(step) => step,
+                            };
+                            let prepared = matches!(ready, ArtifactStoreOneItemPreparationStep::Prepared(_, _));
+                            match ready {
+                                ArtifactStoreOneItemPreparationStep::Blocked => break,
+                                ArtifactStoreOneItemPreparationStep::Progress(checkpoint, ownership) | ArtifactStoreOneItemPreparationStep::Prepared(checkpoint, ownership) => {
+                                    if ownership == RetainedCloneProgress::default() && owner.checkpoint().cursor == cursor_before { break; }
+                                    let mut aggregate = RetainedCloneProgress { copied_items: usize::from(combined.copied_items.saturating_add(ownership.copied_items) > 0), copied_bytes: combined.copied_bytes.saturating_add(ownership.copied_bytes), retained_capacity_bytes: combined.retained_capacity_bytes.saturating_add(ownership.retained_capacity_bytes), released_bytes: combined.released_bytes.saturating_add(ownership.released_bytes) };
+                                    if !aggregate.fits(grant.retained_grant()) {
+                                        aggregate.copied_items = 1;
+                                        aggregate.copied_bytes = aggregate.copied_bytes.min(grant.maximum_copy_bytes);
+                                        aggregate.retained_capacity_bytes = aggregate.retained_capacity_bytes.min(grant.maximum_capacity_bytes);
+                                        aggregate.released_bytes = aggregate.released_bytes.min(grant.maximum_release_bytes);
+                                    }
+                                    combined = aggregate;
+                                    last_span = ownership.copied_bytes.max(ownership.retained_capacity_bytes).max(64);
+                                    produced = Some(if prepared { ArtifactStoreOneItemPreparationStep::Prepared(checkpoint, combined) } else { ArtifactStoreOneItemPreparationStep::Progress(checkpoint, combined) });
+                                    if prepared || owner.prepared().is_some() { break; }
+                                }
+                            }
+                        }
+                        publication.turn_work = work.max(u64::try_from(receiving.actual_work().saturating_sub(call_effects_before)).unwrap_or(u64::MAX));
+                        match failure {
+                            Some(error) => Err(error),
+                            None => Ok(produced.unwrap_or(ArtifactStoreOneItemPreparationStep::Blocked)),
+                        }
                     }
                     Err(error) => Err(error.into()),
                 };
@@ -238,16 +277,16 @@ where
                 let capacity = existing.inverse.len().checked_add(stage.edit.as_ref().expect("live staged edit owner").inverse.len()).ok_or_else(|| VcsError::ValidationFailed("batched inverse capacity overflow".into()))?;
                 if let Some(bytes) = existing.inverse.next_capacity_allocation_bytes(capacity).map_err(|error| VcsError::ValidationFailed(error.reason.into()))? {
                     let depth=existing.inverse.next_reserve_depth_demand().map_err(|error|VcsError::ValidationFailed(error.reason.into()))?;
-                    if bytes>grant.maximum_capacity_bytes||grant.maximum_depth<depth{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
-                    let Some(done)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|existing.inverse.reserve_capacity_one(capacity,effect)).map_err(|error|VcsError::ValidationFailed(error.into_message()))? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};
-                    let step=match done.result{Ok(semio_framework_value_native_owned::list::PagedListReservationOutcome::Ready(step))=>step,Ok(semio_framework_value_native_owned::list::PagedListReservationOutcome::Denied)=>return Ok(ArtifactStoreOneItemAdvance::Blocked),Err(semio_framework_value_native_owned::list::PagedListReservationFailure::Allocation{error,..})=>return Err(VcsError::ValidationFailed(error.reason.into())),Err(semio_framework_value_native_owned::list::PagedListReservationFailure::Work(error))=>return Err(VcsError::ValidationFailed(error.into_message()))};
+                    if bytes>grant.maximum_capacity_bytes||grant.maximum_depth<depth{return Ok(blocked_here());}
+                    let Some(done)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|existing.inverse.reserve_capacity_one(capacity,effect)).map_err(|error|VcsError::ValidationFailed(error.into_message()))? else{return Ok(blocked_here())};
+                    let step=match done.result{Ok(semio_framework_value_native_owned::list::PagedListReservationOutcome::Ready(step))=>step,Ok(semio_framework_value_native_owned::list::PagedListReservationOutcome::Denied)=>return Ok(blocked_here()),Err(semio_framework_value_native_owned::list::PagedListReservationFailure::Allocation{error,..})=>return Err(VcsError::ValidationFailed(error.reason.into())),Err(semio_framework_value_native_owned::list::PagedListReservationFailure::Work(error))=>return Err(VcsError::ValidationFailed(error.into_message()))};
                     if !step.progressed || step.allocated_bytes > grant.maximum_capacity_bytes {
                         return Err(VcsError::ValidationFailed("batched inverse backing failed its exact allocation admission".into()));
                     }
                     return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,retained_capacity_bytes:step.allocated_bytes,..Default::default()}));
                 }
             }
-            let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
+            let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(blocked_here());}
             publication.phase = ArtifactStoreOneItemPublicationPhase::PreflightingCommit;
             Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))
         }
@@ -256,10 +295,10 @@ where
             let authority = publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched commit preflight lost its live authority".into()))?;
             let refusal=|error:ValueError|VcsError::ValidationFailed(error.into_message());
             if let Some(owner)=stage.digest_owner.as_mut(){
-                if owner.ready(){let Some((edit,digest,ownership))=owner.take_edit(grant.retained_grant()).map_err(refusal)?else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};stage.edit=Some(edit);stage.digest=digest;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));}
-                if owner.terminal_is_empty(){let released=size_of_val(owner.as_ref());if grant.maximum_release_bytes<released||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.digest_owner=None;stage.digest_complete=true;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}));}
+                if owner.ready(){let Some((edit,digest,ownership))=owner.take_edit(grant.retained_grant()).map_err(refusal)?else{return Ok(blocked_here());};stage.edit=Some(edit);stage.digest=digest;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));}
+                if owner.terminal_is_empty(){let released=size_of_val(owner.as_ref());if grant.maximum_release_bytes<released||grant.maximum_depth==0{return Ok(blocked_here());}stage.digest_owner=None;stage.digest_complete=true;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}));}
                 let work=owner.next_digest_work_demand().map_err(refusal)?;
-                let Some(step)=receiving.with_effect(grant.retained_grant(),work,|_,effect|owner.advance_digest(effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};let ownership=semio_framework_value::retained_clone::admit_retained_clone_progress(grant.retained_grant(),step.progress(),"original batch digest normal step").map_err(refusal)?;return Ok(if ownership==Default::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership)});
+                let Some(step)=receiving.with_effect(grant.retained_grant(),work,|_,effect|owner.advance_digest(effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(blocked_here())};let ownership=semio_framework_value::retained_clone::admit_retained_clone_progress(grant.retained_grant(),step.progress(),"original batch digest normal step").map_err(refusal)?;return Ok(if ownership==Default::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership)});
             }
 
             let meta = stage.edit.as_ref().expect("live staged edit owner").mutation_meta.first().ok_or_else(|| VcsError::ValidationFailed("batched edit lacks its exact authority metadata".into()))?;
@@ -292,12 +331,12 @@ where
             }
             if !stage.digest_complete{
                 let admitted=match store.owners.one_item_preparation_factory.as_ref(){Some(factory)=>factory.begin_batch_digest(&mut stage.edit,grant.retained_grant()),None=>store.log.operation_wire.as_ref().ok_or_else(||VcsError::ValidationFailed("batch original canonical digest authority is absent".into()))?.begin_batch_digest(&mut stage.edit,grant.retained_grant())};
-                let Some((owner,ownership))=admitted.map_err(refusal)?else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};stage.digest_owner=Some(owner);return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));
+                let Some((owner,ownership))=admitted.map_err(refusal)?else{return Ok(blocked_here());};stage.digest_owner=Some(owner);return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));
             }
 
-            if stage.diagnostics.row_count()==0 { if !stage.diagnostics.terminal_is_empty(){stage.diagnostics.begin_close();let Some(step)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|stage.diagnostics.close_step(effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress())});} }
-            else if !stage.diagnostics.joined(){let Some(step)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|stage.diagnostics.advance_join(effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress())});}
-            let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
+            if stage.diagnostics.row_count()==0 { if !stage.diagnostics.terminal_is_empty(){stage.diagnostics.begin_close();let Some(step)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|stage.diagnostics.close_step(effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(blocked_here())};return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress())});} }
+            else if !stage.diagnostics.joined(){let Some(step)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|stage.diagnostics.advance_join(effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(blocked_here())};return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress())});}
+            let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(blocked_here());}
             store.owners.displaced_retirements.reserve(12)?;
             if store.owners.snapshot_retirement_factory.is_none() || store.owners.mutation_retirement_factory.is_none() {
                 return Err(VcsError::ValidationFailed("batched commit lacks exact snapshot or mutation retirement authority".into()));
@@ -312,11 +351,11 @@ where
             let staged=publication.stage.as_mut().ok_or_else(||VcsError::ValidationFailed("diagnostic publication lost its original batch stage".into()))?;
             if staged.diagnostics.row_count()!=0 {
                 let identity=batch_amend_target_ref(store, publication.transaction.as_ref()).unwrap_or_else(||staged.edit.as_ref().expect("staged original diagnostic edit").id.as_str());
-                if !staged.diagnostics.prepared(){let Some(step)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|staged.diagnostics.advance(identity,effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress())});}
+                if !staged.diagnostics.prepared(){let Some(step)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|staged.diagnostics.advance(identity,effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(blocked_here())};return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress())});}
                 let bytes=staged.diagnostics.measured_bytes(identity).map_err(refusal)?;
                 if !store.log.envelope.edit_messages.admits_measured(identity,bytes){return Err(VcsError::ValidationFailed("prepared diagnostic entry exceeds its fixed ledger authority".into()));}
                 if store.log.envelope.edit_messages.get_by_id(identity).is_some()&&staged.diagnostics.displaced.is_none(){let receipt=staged.diagnostics.admit_displaced(grant.retained_grant()).map_err(refusal)?;return Ok(if receipt==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),receipt)});}
-                let copy=ArtifactStoreDiagnosticStage::transfer_copy_demand();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
+                let copy=ArtifactStoreDiagnosticStage::transfer_copy_demand();if grant.maximum_copy_bytes<copy{return Ok(blocked_here());}
             }
             if let Some(edit_id) = batch_amend_target(store, publication.transaction.as_ref()) {
                 let stage = publication.take_stage().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
@@ -371,7 +410,7 @@ where
 
             let lane_diagnostic_copy=publication.stage.as_ref().filter(|stage|stage.diagnostics.row_count()!=0).map_or(0,|_|ArtifactStoreDiagnosticStage::transfer_copy_demand());
             let lane_grant=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(lane_diagnostic_copy),..grant.retained_grant()};
-            if let Some(owner)=publication.lane_insert.as_ref(){if !owner.commit_ready(&store.log.envelope.lanes,lane_grant).map_err(VcsError::InverseRefused)?{return Ok(ArtifactStoreOneItemAdvance::Blocked)}}
+            if let Some(owner)=publication.lane_insert.as_ref(){if !owner.commit_ready(&store.log.envelope.lanes,lane_grant).map_err(VcsError::InverseRefused)?{return Ok(blocked_here())}}
             let mut lane_progress=RetainedCloneProgress::default();
             let reservation = reserve_edit_history_slot(store)?;
             let stage = publication.take_stage().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
@@ -1035,3 +1074,11 @@ where
 { store.owners.retire_replay_result(result) }
 //#endregion 🪞️BundleHelpers
 
+
+/// 🩺️ Answers `Blocked` and names, once per process, the call site that did; compiled out of tests.
+#[track_caller]
+fn blocked_here() -> ArtifactStoreOneItemAdvance {
+    #[cfg(not(test))]
+    { static SEEN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false); if !SEEN.swap(true, std::sync::atomic::Ordering::Relaxed) { eprintln!("[DEBUG] batch blocked at {}", std::panic::Location::caller()); } }
+    ArtifactStoreOneItemAdvance::Blocked
+}

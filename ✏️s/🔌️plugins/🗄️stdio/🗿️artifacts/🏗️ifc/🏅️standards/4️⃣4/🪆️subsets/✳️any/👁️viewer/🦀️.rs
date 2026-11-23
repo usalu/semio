@@ -103,14 +103,14 @@ impl ArtifactViewer for Ifc4AnyViewer {
             return crate::standards::v4::subsets::any::io::inspector::render(doc,_interaction,view_state,"s.stdio.ifc@4/*#viewer",false,cx).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
         }
         if body_key == main::BODY_KEY {
-            return crate::standards::v4::subsets::any::io::geometry::render_selected_in_context(doc.snapshot, cx, _interaction).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+            return crate::standards::v4::subsets::any::io::geometry::render_selected_in_context(doc.snapshot, cx, _interaction, view_state.locale).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
         }
         Self::render(body_key, doc, cfg, view_state).map(Some).map_err(Into::into)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(doc.snapshot, view_state.locale).map(semio_plugin::built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

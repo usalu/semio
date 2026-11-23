@@ -2,7 +2,7 @@ import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../../🔨️m
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {statSync,statfsSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
-import {effectiveCapacityV1,elasticBloatedV1,elasticCapacityV1,elasticGrowthV1,elasticMinimumV1,hostShareCapacityV1,hostSharePercentV1,pinnedCapacityV1,writeElasticGrowthV1,type ElasticPartitionIdV1,type ElasticRuleV1} from "./📐️elastic/🟦️.ts";
+import {effectiveCapacityV1,elasticBelowFloorDueV1,elasticBloatedV1,elasticCapacityV1,elasticGrowthV1,elasticMinimumV1,hostFreeForSizingV1,hostShareCapacityV1,hostSharePercentV1,partitionNeedBytesV1,pinnedCapacityV1,readImageReceiptBytesV1,requireImageFitsHostV1,writeElasticGrowthV1,type ElasticPartitionIdV1,type ElasticRuleV1} from "./📐️elastic/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {requireMaterializedPathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {nativeImageUsableBytesV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📏️capacity/🟦️.ts";
@@ -13,13 +13,13 @@ import policy from "./🔣️policy.json" with {type:"json"};
 /** 📦️ Identifies the complete closed set of managed generated-storage owners. */
 export type RepositoryCachePartitionIdV1="rust"|"tools"|"graph"|"dependencies"|"products"|"diagnostics"|"nx"|"leases";
 /** 🗜️ Declares physical funding, the payload bytes left after filesystem overhead, and independent logical publication observation limits. */
-export interface RepositoryCachePartitionV1 {readonly directory:string;readonly capacityBytes:number;readonly filesystemBytes:number;readonly maximumArtifactBytes:number;readonly maximumLogicalBytes:number;readonly usableBytes:number;readonly hostSharePercent?:number}
+export interface RepositoryCachePartitionV1 {readonly directory:string;readonly capacityBytes:number;readonly filesystemBytes:number;readonly maximumArtifactBytes:number;readonly maximumLogicalBytes:number;readonly usableBytes:number;readonly hostSharePercent?:number;readonly needBytes?:Readonly<Record<string,number>>}
 /** 📏️ Accounts all fixed backing envelopes plus their finite bootstrap-control allowance. */
 export interface RepositoryCacheBudgetV1 {readonly version:1;readonly maximumBytes:number;readonly maximumControlBytes:number;readonly partitionBytes:number;readonly headroomBytes:number;readonly partitions:Readonly<Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>>}
 /** 📋️ Validates the entire partition ledger before any physical provisioning or cache write. */
 export function readRepositoryCacheBudgetV1(value:unknown):RepositoryCacheBudgetV1{
  if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed repository cache partition declaration required");
- const declaration=value as {version:1;maximumBytes:number;maximumControlBytes:number;partitions:Record<RepositoryCachePartitionIdV1,{directory:string;capacityBytes:number;maximumArtifactBytes?:number;maximumLogicalBytes:number;hostSharePercent?:number}>},partitions={} as Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>,overhead=schema.$defs.filesystemOverhead.const,paths:string[]=[];let partitionBytes=0;
+ const declaration=value as {version:1;maximumBytes:number;maximumControlBytes:number;partitions:Record<RepositoryCachePartitionIdV1,{directory:string;capacityBytes:number;maximumArtifactBytes?:number;maximumLogicalBytes:number;hostSharePercent?:number;needBytes?:Record<string,number>}>},partitions={} as Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>,overhead=schema.$defs.filesystemOverhead.const,paths:string[]=[];let partitionBytes=0;
  for(const[id,partition]of Object.entries(declaration.partitions)){
   const directory=partition.directory,path=directory.toLowerCase();
   if(directory.startsWith("/")||/[\\:\u0000-\u001f]/u.test(directory)||directory.split("/").some(part=>!part||part==="."||part==="..")||partition.capacityBytes%1048576!==0)throw Error("Aligned physical cache partition and relative directory required");
@@ -32,11 +32,19 @@ export function readRepositoryCacheBudgetV1(value:unknown):RepositoryCacheBudget
 }
 /** 🚦️ Declares the one bounded queued whole-image maintenance wait that ordinary commands use instead of refusing concurrent invocations; callers start it before taking their own shared pin on that partition because later readers queue behind it. */
 export function repositoryCacheOrdinaryMaintenanceV1():Readonly<{version:1;mode:"queued";maximumWaitMilliseconds:number}>{const row=schema.$defs.ordinaryMaintenance.const;return Object.freeze({version:1 as const,mode:"queued" as const,maximumWaitMilliseconds:row.maximumWaitMilliseconds});}
-export {effectiveCapacityV1,elasticBloatedV1,elasticCapacityV1,elasticGrowthV1,elasticMinimumV1,hostShareCapacityV1,hostSharePercentV1,pinHostFreeBytesForSizingV1,pinnedCapacityV1,writeElasticGrowthV1,type ElasticPartitionIdV1,type ElasticRuleV1} from "./📐️elastic/🟦️.ts";
-/** 🌱️ Whether an elastic image should be recreated now: its rule is automatic, the mounted image has less free space than the pressure floor and the elastic size the host allows exceeds its capacity. Bloat is never a reason: it is reclaimed in place. */
+export {effectiveCapacityV1,elasticBelowFloorDueV1,elasticBloatedV1,elasticCapacityV1,elasticGrowthV1,elasticMinimumV1,hostShareCapacityV1,hostSharePercentV1,ImageBelowFloorErrorV1,ImageDoesNotFitHostErrorV1,partitionNeedBytesV1,pinHostFreeBytesForSizingV1,pinnedCapacityV1,requireImageAtFloorV1,requireImageFitsHostV1,writeElasticGrowthV1,type ElasticPartitionIdV1,type ElasticRuleV1} from "./📐️elastic/🟦️.ts";
+/** 🧾️ The bytes the image of a partition must at least have to be of use on this host (see `partitionNeedBytesV1`). */
+export function repositoryPartitionNeedBytesV1(partition:RepositoryCachePartitionIdV1):number{return partitionNeedBytesV1(policy as never,partition);}
+/** 🛑️ Refuses, before anything is created, a partition whose image is not born yet when the honest free bytes of the host volume cannot hold its declared need (an elastic image its floor, a fixed one its need with the ledger share); a born image is never refused here, so the commands that free space still open it. */
+export function requireRepositoryPartitionFitsHostV1(workspace:string,partition:RepositoryCachePartitionIdV1):void{
+ const required=repositoryPartitionNeedBytesV1(partition);if(!required)return;
+ const directory=machinePathV1(requireMaterializedPathV1(resolve(workspace)),policy.partitions[partition].directory);
+ requireImageFitsHostV1(partition,readImageReceiptBytesV1(directory),required,hostFreeForSizingV1(directory)?.availableBytes);
+}
+/** 🌱️ Whether an elastic image should be recreated now: its rule is automatic and either the mounted image is smaller than the rule's floor (a compile cannot work in it) and the host can give the floor, or the mounted image has less free space than the pressure floor and the elastic size the host allows exceeds its capacity. Bloat is never a reason: it is reclaimed in place. */
 export function repositoryPartitionRegrowDueV1(workspace:string,partition:ElasticPartitionIdV1):boolean{
  const rule=policy.elastic?.[partition];if(!rule?.automatic)return false;
- try{const declared=policy.partitions[partition],directory=machinePathV1(requireMaterializedPathV1(resolve(workspace)),declared.directory),mount=join(directory,"m"),image=statfsSync(mount);if(statSync(mount).dev===statSync(directory).dev)return false;const hostNow=statfsSync(dirname(directory));if(image.bavail*image.bsize>=rule.pressureFreeBytes)return false;const host=hostNow;const capacity=effectiveCapacityV1(directory,rule.minimumBytes,rule);return elasticGrowthV1(rule,capacity,host.bavail*host.bsize,statSync(join(directory,"fixed.dmg")).blocks*512)>capacity;}catch{return false;}
+ try{const declared=policy.partitions[partition],directory=machinePathV1(requireMaterializedPathV1(resolve(workspace)),declared.directory),mount=join(directory,"m"),image=statfsSync(mount);if(statSync(mount).dev===statSync(directory).dev)return false;const host=statfsSync(dirname(directory)),receipt=readImageReceiptBytesV1(directory);if(elasticBelowFloorDueV1(receipt,rule.floorBytes,host.bavail*host.bsize,statSync(join(directory,"fixed.dmg")).blocks*512))return true;if(image.bavail*image.bsize>=rule.pressureFreeBytes)return false;const capacity=effectiveCapacityV1(directory,rule.minimumBytes,rule);return elasticGrowthV1(rule,capacity,host.bavail*host.bsize,statSync(join(directory,"fixed.dmg")).blocks*512)>capacity;}catch{return false;}
 }
 /** ♻️ The bloat rule of a partition: its elastic rule when it has one, else the policy's common `reclaim` rule. */
 export function repositoryPartitionReclaimRuleV1(partition:RepositoryCachePartitionIdV1):Readonly<{reclaimFloorBytes:number;reclaimRatioPercent:number;reclaimTightHostFreeBytes:number}>{
@@ -67,7 +75,7 @@ export function repositoryPartitionGrowthRecordV1(workspace:string,partition:Ela
 export function repositoryCacheBudgetV1(workspace:string):RepositoryCacheBudgetV1&{readonly controlDirectory:string}{
  const root=requireMaterializedPathV1(resolve(workspace));let maximumBytes=policy.maximumBytes;const partitions:Record<string,unknown>={...policy.partitions};
  for(const[id,declared]of Object.entries(policy.partitions) as [keyof typeof policy.partitions,{directory:string;capacityBytes:number;maximumLogicalBytes:number}][]){
-  const rule=(policy.elastic as Record<string,ElasticRuleV1>|undefined)?.[id],capacity=rule?effectiveCapacityV1(machinePathV1(root,declared.directory),rule.minimumBytes,rule):pinnedCapacityV1(machinePathV1(root,declared.directory),declared.capacityBytes,(declared as {hostSharePercent?:number}).hostSharePercent);
+  const rule=(policy.elastic as Record<string,ElasticRuleV1>|undefined)?.[id],capacity=rule?effectiveCapacityV1(machinePathV1(root,declared.directory),rule.minimumBytes,rule):pinnedCapacityV1(machinePathV1(root,declared.directory),declared.capacityBytes,(declared as {hostSharePercent?:number}).hostSharePercent,partitionNeedBytesV1(policy as never,id));
   if(capacity!==declared.capacityBytes){
    const logical=Math.min(declared.maximumLogicalBytes+capacity-declared.capacityBytes,capacity-1048576),artifact=(declared as {maximumArtifactBytes?:number}).maximumArtifactBytes,candidate={...declared,capacityBytes:capacity,maximumLogicalBytes:logical,...artifact===undefined?{}:{maximumArtifactBytes:Math.min(artifact,capacity-1048576)}};
    try{readRepositoryCacheBudgetV1({...policy,maximumBytes:policy.maximumBytes+capacity-declared.capacityBytes,partitions:{...policy.partitions,[id]:candidate}});maximumBytes+=capacity-declared.capacityBytes;partitions[id]=candidate;}catch{}

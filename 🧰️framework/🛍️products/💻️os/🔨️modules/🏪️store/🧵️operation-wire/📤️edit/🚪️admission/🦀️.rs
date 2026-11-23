@@ -15,6 +15,7 @@ impl<M:RetireOwned+Send+Sync+'static> ArtifactStoreBatchMessage<M> for NativeMes
  fn begin_close(&mut self){self.original.begin_close()}
 }
 impl<M:RetireOwned+Send+Sync+'static> ErasedSnapshotRetirement for NativeMessage<M>{
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.original.close_demands(body)}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.original.close_demands(4096)?.copy_bytes)}
  fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.original.close_demands(body)?.capacity_bytes)}

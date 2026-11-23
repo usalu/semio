@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { TestSource, Tests2Vitest, Tests2Dependencies } from "../🧰️harness/🟦️.ts";
 
 export async function registerControlChrome1Tests(vitest: Tests2Vitest, dependencies: Tests2Dependencies, testSource: TestSource): Promise<void> {
-  const { borderNormalBottomClass, borderNormalClass, borderNormalTopClass, Button, ButtonGroup, ButtonGroupItem, CheckIcon, Command, CommandItem, CommandList, COMPACT_UI_DRIVER, DEFAULT_UI_DRIVER, FindInViewIcon, Footer, humanizeControlId, humanizeControlSegment, isInternalChromeControlId, LevelProvider, Mode, modeDockTabClassName, Navbar, navbarFillItem, Pane, PaneHost, Panel, PanelChromeTabBar, panelKindFromPanelToggleControlId, PanelRightIcon, panelTabButtonDividerClass, renderToStaticMarkup, resolveControlLabelId, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, RibbonItem, RibbonZone, Search, SearchIcon, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, shellChromeBorderClass, singleTreeLeaf, Toggle, ToggleGroup, uiDataLabel, UiDriverProvider, uiI18n, Window } = dependencies;
+  const { borderNormalBottomClass, borderNormalClass, borderNormalTopClass, Button, ButtonGroup, ButtonGroupItem, CheckIcon, Command, CommandItem, CommandList, COMPACT_UI_DRIVER, DEFAULT_UI_DRIVER, FindInViewIcon, Footer, humanizeControlId, humanizeControlSegment, isInternalChromeControlId, LevelProvider, Mode, modeDockTabClassName, Navbar, navbarFillItem, Pane, PaneHost, Panel, PanelChromeTabBar, panelKindFromPanelToggleControlId, PanelRightIcon, panelTabButtonDividerClass, renderToStaticMarkup, resolveControlLabelId, resolveTranslationLabel, resolveWindowFrameBorderKind, RibbonItem, RibbonZone, Search, SearchIcon, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, shellChromeBorderClass, singleTreeLeaf, Toggle, ToggleGroup, uiDataLabel, UiDriverProvider, uiI18n, Window } = dependencies;
   const { describe, expect, it } = vitest;
 
 describe("control chrome", () => {
@@ -85,8 +85,8 @@ describe("control chrome", () => {
         expect(chromeBarButton.className).toBe(foldedPanelButton.className);
         expect(chromeBarContainer.querySelector('[data-slot="window-chrome-chip-cap"]')).toBeTruthy();
         expect(foldedPanelContainer.querySelector('[data-slot="window-chrome-chip-cap"]')).toBeTruthy();
-        expect(chromeBarContainer.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
-        expect(foldedPanelContainer.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+        expect(chromeBarContainer.querySelector('[data-slot="window-chrome-frame-border"]')).toBeTruthy();
+        expect(foldedPanelContainer.querySelector('[data-slot="window-chrome-frame-border"]')).toBeTruthy();
       });
   
       it("button and toggle groups share chrome control group glass styling", () => {
@@ -333,7 +333,7 @@ describe("control chrome", () => {
         expect(ribbonMarkup).not.toContain("border-emphasized");
         const panelMarkup = renderToStaticMarkup(<Panel anchor="top-left" visible tabs={[singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } })]} />);
         expect(panelMarkup).toContain('data-slot="panel"');
-        expect(panelMarkup).toContain('data-slot="window-chrome-silhouette-border"');
+        expect(panelMarkup).toContain('data-slot="window-chrome-frame-border"');
         expect(panelMarkup).toContain('data-slot="window-chrome-cap"');
         expect(panelMarkup).not.toContain("border-emphasized");
         expect(panelMarkup).not.toContain("border-b-current");
@@ -347,7 +347,7 @@ describe("control chrome", () => {
           </PaneHost>,
         );
         expect(paneMarkup).toContain('data-slot="pane"');
-        expect(paneMarkup).toContain('data-slot="window-chrome-silhouette-border"');
+        expect(paneMarkup).toContain('data-slot="window-chrome-frame-border"');
         expect(paneMarkup).toContain('data-slot="window-chrome-cap"');
         expect(paneMarkup).not.toContain("border-emphasized");
         const measuresMarkup = renderToStaticMarkup(
@@ -355,8 +355,8 @@ describe("control chrome", () => {
             <div>Body</div>
           </Window>,
         );
-        expect(measuresMarkup).toContain('data-slot="window-chrome-silhouette-border"');
-        expect(measuresMarkup).toContain('data-slot="window-chrome-gap"');
+        expect(measuresMarkup).toContain('data-slot="window-chrome-frame-border"');
+        expect(measuresMarkup).not.toContain("clip-path");
         expect(measuresMarkup).not.toContain("border-emphasized");
       });
   
@@ -372,8 +372,8 @@ describe("control chrome", () => {
         expect(css).not.toMatch(/\[data-slot="navbar"\]:focus-within::after/);
         expect(css).not.toMatch(/\[data-slot="footer"\]:focus-within::before/);
         expect(css).toContain("background-color: var(--border-emphasized-color)");
-        expect(css).not.toMatch(/\[data-window-silhouette\]:hover > \[data-window-silhouette-border\]\[data-kind="normal"\]:not\(\[data-pending\]\) path/);
-        expect(css).not.toMatch(/\[data-window-silhouette\]:hover \[data-window-silhouette-border\]\[data-kind="normal"\]:not\(\[data-pending\]\) path/);
+        expect(css).not.toMatch(/\[data-window-frame\]:hover > \[data-window-frame-border\]\[data-kind="normal"\]:not\(\[data-pending\]\) path/);
+        expect(css).not.toMatch(/\[data-window-frame\]:hover \[data-window-frame-border\]\[data-kind="normal"\]:not\(\[data-pending\]\) path/);
         expect(css).not.toContain('data-slot="chrome-frame"');
         expect(css).toContain("@utility bg-hover-interactive-fill");
         expect(css).toContain("--hover-ink: var(--color-emphasized)");
@@ -399,16 +399,16 @@ describe("control chrome", () => {
         expect(modeDockTabClassName).toContain("hover:not-data-[handle-hovered=true]:text-emphasized");
       });
   
-      it("panel and pane silhouettes stay normal until the surface receives focus", async () => {
+      it("panel and pane frames stay normal until the surface receives focus", async () => {
         const { fireEvent, render, waitFor } = await import("@testing-library/react");
         const tabs = [singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } })];
         const { container: panelContainer } = render(<Panel anchor="top-left" visible onVisibleChange={() => undefined} tabs={tabs} activeTabPath={["tab-a"]} />);
         const panelStack = panelContainer.querySelector('[data-slot="panel"] [data-slot="window-chrome-stack"]') as HTMLElement;
-        expect(panelStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+        expect(panelStack.querySelector('[data-slot="window-chrome-frame-border"]')?.getAttribute("data-kind")).toBe("normal");
         fireEvent.pointerDown(panelStack.querySelector('[data-slot="panel-tab-button"]')!);
         await waitFor(() => {
           expect(panelStack.getAttribute("data-active")).toBe("true");
-          expect(panelStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+          expect(panelStack.querySelector('[data-slot="window-chrome-frame-border"]')?.getAttribute("data-kind")).toBe("active");
         });
 
         const { container: paneContainer } = render(
@@ -419,11 +419,11 @@ describe("control chrome", () => {
           </PaneHost>,
         );
         const paneStack = paneContainer.querySelector('[data-slot="pane"] [data-slot="window-chrome-stack"]') as HTMLElement;
-        expect(paneStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+        expect(paneStack.querySelector('[data-slot="window-chrome-frame-border"]')?.getAttribute("data-kind")).toBe("normal");
         fireEvent.pointerDown(paneStack.querySelector('[data-slot="pane-body"]')!);
         await waitFor(() => {
           expect(paneStack.getAttribute("data-active")).toBe("true");
-          expect(paneStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+          expect(paneStack.querySelector('[data-slot="window-chrome-frame-border"]')?.getAttribute("data-kind")).toBe("active");
         });
       });
   
@@ -442,26 +442,28 @@ describe("control chrome", () => {
         const stack = container.querySelector('[data-slot="mode-dock-stack"]') as HTMLElement;
         const scroll = container.querySelector("#framework\\.window\\.main") as HTMLElement;
         scroll.setAttribute("data-introduced", "true");
-        expect(resolveWindowSilhouetteBorderKind(stack.querySelector('[data-slot="window"]'))).toBe("introduced");
-        stack.setAttribute("data-silhouette-remeasure", "introduced");
+        expect(resolveWindowFrameBorderKind(stack.querySelector('[data-slot="window"]'))).toBe("introduced");
+        stack.setAttribute("data-frame-remeasure", "introduced");
         await waitFor(() => {
-          expect(stack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("introduced");
+          expect(stack.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("introduced");
         });
         fireEvent.pointerDown(stack.querySelector('[data-slot="mode-dock-stack-body"]')!);
         await waitFor(() => {
           expect(scroll.getAttribute("data-introduced")).toBeNull();
           expect(stack.getAttribute("data-active")).toBe("true");
-          expect(stack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+          expect(stack.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("active");
         });
       });
   
-      it("panel window-variant tabs use mode-dock pill chrome, normal toggle dividers, and a U-gap", () => {
+      it("panel window-variant tabs use mode-dock pill chrome, normal toggle dividers, and no gap", () => {
         const tabs = [singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } })];
         const markup = renderToStaticMarkup(<Panel anchor="top-left" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
         expect(markup).toContain("bg-active-base");
         expect(markup).toContain("border-0");
-        expect(markup).toContain("data-window-silhouette");
-        expect(markup).toContain('data-slot="window-chrome-gap"');
+        expect(markup).toContain("data-window-frame");
+        expect(markup).toContain("data-window-frame-chip");
+        expect(markup).toContain("data-window-frame-content");
+        expect(markup).not.toContain("clip-path");
         expect(markup).toContain(panelTabButtonDividerClass);
         expect(markup).toContain("ui-glass");
         expect(markup).not.toContain("ui-glass-chrome");

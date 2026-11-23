@@ -81,9 +81,9 @@ fn puzzle3d_view_meshes_json(document: &Puzzle3dSnapshot) -> String {
 /// 👁️ Pure `Puzzle3dSnapshot -> UiNode` read: default camera (a viewer has no persisted per-session
 /// camera — `Config = NoConfig`), no selection/gumball/engagement overlay, real objects read straight
 /// off the document through the framework `MeshWindowKit`.
-pub fn render(document: &Puzzle3dSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::plugin_app_close_prelude::BuiltNode> {
+pub fn render(document: &Puzzle3dSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::plugin_app_close_prelude::BuiltNode> {
     let view = MeshView { camera_json: world3d_default_camera(), meshes_json: puzzle3d_view_meshes_json(document), instances_json: puzzle3d_view_instances_json(document), selection_json: world3d_selection_json("pick", &[], None) };
-    MeshWindowKit::render(&view)
+    MeshWindowKit::render(&view, locale)
 }
 //#endregion 🔖️Render
 

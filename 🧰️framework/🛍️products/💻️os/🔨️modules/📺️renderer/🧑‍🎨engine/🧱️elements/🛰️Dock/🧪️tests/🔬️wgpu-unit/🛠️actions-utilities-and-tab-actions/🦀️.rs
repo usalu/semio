@@ -174,10 +174,10 @@ fn a_tabs_select_target_is_published_before_its_destructive_chips() {
 
 /// 🈳️ ⚖️ LAW: a stack holding NO tabs still answers a DROP body — React's `WindowChrome` keeps
 /// rendering for an empty stack, which is how a dragged window is dropped back into an emptied dock —
-/// but it owns no window and no silhouette, because React's `activeDescriptor` is `undefined` there
+/// but it owns no window and no frame, because React's `activeDescriptor` is `undefined` there
 /// and its `stackBody` renders nothing (`🎨️Canvas/🟦️.tsx:1176`/`:1212`).
 ///
-/// 🩸️ The silhouette was keyed by the stack's `active` tab unconditionally, so closing the last window
+/// 🩸️ The frame was keyed by the stack's `active` tab unconditionally, so closing the last window
 /// minted a `""`-keyed window: the engine-surface census reported `windows=["", "tool.fill", …]`, the
 /// chrome census published a `window:` surface, and the body registered a full-bounds
 /// `HitKind::ScrollRegion` with an EMPTY control id over the whole canvas
@@ -189,9 +189,9 @@ fn an_emptied_stack_keeps_its_drop_body_and_owns_no_window() {
     let labels = HashMap::from([("a".to_string(), "A".to_string())]);
     let mut dock = dock_with(stack_tabs(&["a"], "a"), "a");
     assert!(dock.close_window("a"), "🪟️ the last window closes");
-    let (bodies, silhouettes) = dock.stack_body_rects_with_silhouettes(Rect::new(0.0, 0.0, 600.0, 400.0), &theme, &labels, &mut atlas);
+    let (bodies, frames) = dock.stack_body_rects_with_frames(Rect::new(0.0, 0.0, 600.0, 400.0), &theme, &labels, &mut atlas);
     assert_eq!(bodies.len(), 1, "🈳️ the emptied root stack is still a drop body");
     assert_eq!(bodies[0].2, "", "🈳️ …and names no window");
-    assert!(silhouettes.is_empty(), "🈳️ an empty stack owns no silhouette — React draws no window there");
+    assert!(frames.is_empty(), "🈳️ an empty stack owns no frame — React draws no window there");
     assert!(dock.collect_window_ids().is_empty(), "🈳️ and the dock holds no window id at all");
 }

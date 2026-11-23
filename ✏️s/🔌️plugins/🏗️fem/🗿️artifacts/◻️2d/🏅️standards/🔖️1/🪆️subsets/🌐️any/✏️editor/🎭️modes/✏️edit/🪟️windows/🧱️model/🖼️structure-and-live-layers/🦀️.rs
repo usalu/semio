@@ -315,7 +315,7 @@ pub fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<Strin
 //#endregion 🔖️SharedDrawHelpers
 
 //#region 🔖️Render
-pub fn render(doc: &Fem2dSnapshot, camera: &Viewport2d) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(doc: &Fem2dSnapshot, camera: &Viewport2d, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
         let [(x0, y0), (x1, y1), (x2, y2)] = *tri;
@@ -327,7 +327,7 @@ pub fn render(doc: &Fem2dSnapshot, camera: &Viewport2d) -> semio_plugin::UiAssem
         }));
     }
     let layers_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(layers));
-    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Structure view", "Tragwerksansicht"))
 }
 
 /// 👁️ Renders the document's own structure (nodes, members, supports, loads — a projection of the
@@ -341,10 +341,11 @@ pub fn render_with_progress(
     interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     window_instance_id: Option<&str>,
     active_utility: &str,
+    locale: semio_plugin::Locale,
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let layers = fem2d_structure_layers_with(doc, "#38bdf8", "#94a3b8", "#f97316", interaction);
     let gumball_meta = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::fem2d_gumball_meta_layer(doc, &interaction.selected_ids, active_utility, window_instance_id);
     let layers_json = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_finish_canvas_layers_json(layers, window_instance_id, active_utility, gumball_meta);
-    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: progress.map(Fem2dMountedVisualLease::snapshot), tool_run_trace: None, lanes: Vec::new() })
+    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: progress.map(Fem2dMountedVisualLease::snapshot), tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Structure view", "Tragwerksansicht"))
 }
 //#endregion 🔖️Render

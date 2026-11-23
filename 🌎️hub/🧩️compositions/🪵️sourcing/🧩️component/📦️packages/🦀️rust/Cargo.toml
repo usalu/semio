@@ -20,6 +20,7 @@ consumes = ["sourcing.module"]
 
 [[package.metadata.semio.playground]]
 variant = "sourcing"
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/🪵️sourcing/🧬️schema/🔣️.json"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.sourcing.curation@1/*#editor"
 aliases = ["curation"]

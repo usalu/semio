@@ -116,14 +116,13 @@ export interface StagedPets {
 //#endregion 🎾️Play
 
 //#region 🗺️Stage
-/** 🪵️ What pets stand on in the quiz: what one sees of every card of the screen — its title tab, which stands up on
- * the left, and the edge of its body beside the tab, one tab height lower (the glass behind the body, which the window
- * chrome lays out once it has measured its silhouette) — and the footer line of the client, which is the floor. The box
- * of a card as a whole starts with the row of the tab, most of which is empty: a pet on that edge would hover. The
- * cards of the pages behind the overview are inert and the cards of a dialog lie outside `main`, so neither carries a
- * pet. A card the overview conceals while the pointer hovers another (`data-concealed` on its host) is unseen too:
- * the survey drops its edge, its sides and anything a pet was playing with on it, and whatever stood there falls. */
-export const COURSE_PET_SURFACES = '#course-main [data-card] [data-slot="window-chrome-chip-cap"], #course-main [data-card] [data-slot="window-chrome-body-surface"], .course-app > footer';
+/** 🪵️ What pets stand on in the quiz: the top edge of every card of the screen — one rectangle whose title chip is a
+ * glass overlay inside it, so the edge is the card's own, one straight line — and the footer line of the client, which is
+ * the floor. The cards of the pages behind the overview are inert and the cards of a dialog lie outside `main`, so
+ * neither carries a pet. A card the overview conceals while the pointer hovers another (`data-concealed` on its host) is
+ * unseen too: the survey drops its edge, its sides and anything a pet was playing with on it, and whatever stood there
+ * falls. */
+export const COURSE_PET_SURFACES = '#course-main [data-card] [data-window-frame], .course-app > footer';
 
 /** 🚧️ What pets keep clear of in the quiz besides what the layer avoids anyway: the items a learner drags, the zones
  * they are dropped on, and the navigation bar as a whole — its mark and its title are neither controls nor text

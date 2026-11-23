@@ -189,7 +189,8 @@ impl AudioOutputPort for AudioQueueOutput {
             return;
         }
         unsafe { AudioQueueDispose(self.queue, 1) };
-        self.closed_stats = lock(self.context()).stats;
+        let stats = lock(self.context()).stats;
+        self.closed_stats = stats;
         self.queue = std::ptr::null_mut();
         drop(unsafe { Box::from_raw(self.context as *mut Context) });
     }

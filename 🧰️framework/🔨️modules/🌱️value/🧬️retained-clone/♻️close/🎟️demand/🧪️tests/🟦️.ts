@@ -27,15 +27,13 @@ test("one original complete close quote visits each child once",()=>{
 /** 🪄️ Requires actual derived ownership stages rather than post-effect numeric admission. */
 test("derived clone preflights every physical axis and quotes each selected child once",()=>{
  const source=readFileSync(new URL("../../../../✨️derive/🧬️retained-clone/🦀️.rs",import.meta.url),"utf8");
- expect(source).toContain("fn close_started(&self) -> bool { self.closing }");
- expect(source).toContain("fn close_demands(&self,maximum_body_bytes:usize)");
- expect(source).toContain("nested_retained_clone_close_demands::<#ty>");
- expect(source).toContain("nested_retained_clone_demands::<#ty>");
- expect(source).toContain("let demand=#value_crate::retained_clone::RetainedCloneCursor::advance_demands(self,source,body)?;");
- expect(source.match(/retained_clone_grant_admits\(grant,demand\)/g)?.length).toBe(2);
- expect(source).toContain("let nested=#value_crate::retained_clone::nested_retained_clone_grant(grant)?;");
+ expect(source).toContain("fn close_started(&self)->bool{self.closing}");
+ expect(source).toContain("fn close_demands(&self,body:usize)");
+ expect(source).toContain("clone_cursor_close_demand::<#ty>");
+ expect(source).toContain("RetainedCloneCursor::advance_demands(self,source,body,maximum)?");
+ expect(source).toContain("RetainedCloneCursor::advance_work_demand(self,source,body,maximum)?");
+ expect(source.match(/retained_clone_grant_admits\(effect\.grant\(\),demand\)/g)?.length).toBe(2);
  expect(source).toContain("retained_capacity_bytes:demand.capacity_bytes");
- expect(source).toContain("released_bytes:demand.release_bytes");
  expect(source).not.toContain("#(#depth_children)*");
  const root=readFileSync(new URL("../../../../🧪️tests/🥣️companion/🌱️retained-clone/🦀️.rs",import.meta.url),"utf8");
  expect(root).toContain('mod close_demand_tests;');

@@ -34,5 +34,3 @@ impl DrawingOriginalEquality{
  pub fn terminal_is_empty(&self)->bool{self.left.is_none()&&self.right.is_none()}
 }
 impl Drop for DrawingOriginalEquality{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Drawing original equality retains native field sources");}}
-
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

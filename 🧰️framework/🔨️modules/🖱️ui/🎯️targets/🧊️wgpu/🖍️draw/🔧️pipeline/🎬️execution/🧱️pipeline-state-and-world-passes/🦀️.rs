@@ -39,7 +39,6 @@ pub struct FrameBuffers {
     pub world_lines: GrowBuffer,
     pub world_points: GrowBuffer,
     pub ui_instances: GrowBuffer,
-    pub mask_instances: GrowBuffer,
     pub vector_vertices: GrowBuffer,
     pub glass_instances: GrowBuffer,
 }
@@ -164,73 +163,8 @@ pub(super) fn set_pass_scissor(pass: &mut gpu_device::RenderPass<'_>, scissor: O
     }
 }
 
-#[cfg(test)]
-fn layer_scissors(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, width: f32, height: f32) -> Vec<Option<ScissorRect>> {
-    if let Some(clip) = clip {
-        return clip.effective_scissors(scissor, width, height).into_iter().map(Some).collect();
-    }
-    let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
-    match scissor.map(|value| value.intersect(&viewport)) {
-        Some(value) if value.w > 0 && value.h > 0 => vec![Some(value)],
-        Some(_) => Vec::new(),
-        None => vec![None],
-    }
-}
-
 pub(super) fn stencil_attachment<'a>(view: &'a gpu_device::TextureView, depth_load: gpu_device::LoadOp<f32>, stencil_load: gpu_device::LoadOp<u32>) -> gpu_device::RenderPassDepthStencilAttachment<'a> {
     gpu_device::RenderPassDepthStencilAttachment { view, depth_ops: Some(gpu_device::Operations { load: depth_load, store: gpu_device::StoreOp::Store }), stencil_ops: Some(gpu_device::Operations { load: stencil_load, store: gpu_device::StoreOp::Store }) }
-}
-
-#[cfg(test)]
-fn union_scissors(scissors: &[ScissorRect]) -> Option<ScissorRect> {
-    let first = *scissors.first()?;
-    let (mut x0, mut y0, mut x1, mut y1) = (first.x, first.y, first.x + first.w, first.y + first.h);
-    for scissor in &scissors[1..] {
-        x0 = x0.min(scissor.x);
-        y0 = y0.min(scissor.y);
-        x1 = x1.max(scissor.x + scissor.w);
-        y1 = y1.max(scissor.y + scissor.h);
-    }
-    Some(ScissorRect { x: x0, y: y0, w: x1 - x0, h: y1 - y0 })
-}
-
-#[cfg(test)]
-fn merge_scissor_bounds(a: Option<ScissorRect>, b: Option<ScissorRect>) -> Option<ScissorRect> {
-    match (a, b) {
-        (Some(a), Some(b)) => union_scissors(&[a, b]),
-        (Some(value), None) | (None, Some(value)) => Some(value),
-        (None, None) => None,
-    }
-}
-
-#[cfg(test)]
-pub(super) fn mask_instances(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, previous_bounds: Option<ScissorRect>, width: f32, height: f32) -> (Vec<UiInstance>, Option<ScissorRect>) {
-    let white = Rgba::new(1.0, 1.0, 1.0, 1.0);
-    let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
-    let pieces: Vec<ScissorRect> = layer_scissors(scissor, clip, width, height).into_iter().map(|piece| piece.unwrap_or(viewport)).collect();
-    let current_bounds = union_scissors(&pieces);
-    let Some(reset_bounds) = merge_scissor_bounds(previous_bounds, current_bounds) else {
-        return (Vec::new(), None);
-    };
-    let mut instances = vec![UiInstance::solid([reset_bounds.x as f32, reset_bounds.y as f32, reset_bounds.w as f32, reset_bounds.h as f32], white)];
-    instances.extend(pieces.into_iter().map(|piece| UiInstance::solid([piece.x as f32, piece.y as f32, piece.w as f32, piece.h as f32], white)));
-    (instances, current_bounds)
-}
-
-#[cfg(test)]
-pub(super) fn build_batch_masks(batches: &[LayerBatch], width: f32, height: f32) -> (Vec<UiInstance>, Vec<(u32, u32)>) {
-    let mut instances = Vec::new();
-    let mut ranges = Vec::with_capacity(batches.len());
-    let mut previous_bounds = None;
-    for batch in batches {
-        let start = instances.len() as u32;
-        let (batch_instances, current_bounds) = mask_instances(batch.scissor, batch.clip.as_ref(), previous_bounds, width, height);
-        let count = batch_instances.len() as u32;
-        instances.extend(batch_instances);
-        ranges.push((start, count));
-        previous_bounds = current_bounds;
-    }
-    (instances, ranges)
 }
 
 impl UiPipelines {

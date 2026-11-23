@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::h::schema::mutations::insert_launch_action::InsertLaunchAction;
 use crate::standards::v1_7::subsets::h::schema::mutations::PdfHMutation;
 #[allow(unused_imports)]
@@ -18,7 +18,7 @@ fn removes_the_matching_launch_target() {
     let mutation = RemoveLaunchAction { target: "render.bat".to_string() };
     let next = applied(&base, &PdfHMutation::RemoveLaunchAction(mutation.clone()));
     assert!(support::action_with(&next, "Launch", "F", "render.bat").is_none());
-    assert_eq!(<RemoveLaunchAction as MutationKind<PdfSnapshot, PdfHMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
+    assert_eq!(<RemoveLaunchAction as ColdMutationKind<PdfSnapshot, PdfHMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -91,6 +91,7 @@ impl<T: semio_framework_value::retirement::RetireOwned> Iterator for SourceItera
 impl<T: semio_framework_value::retirement::RetireOwned> ExactSizeIterator for SourceIterator<T> {}
 
 impl<T: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement for SourceIterator<T> {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.demands(0).map(|demand| demand.copy_bytes) }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.demands(copy).map(|demand| demand.capacity_bytes) }
@@ -166,6 +167,7 @@ impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> PagedSource
     }
 }
 impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> ErasedSnapshotRetirement for PagedSourceIterator<T,N>{
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.demands(0).map(|demand|demand.copy_bytes)}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.demands(copy).map(|demand|demand.capacity_bytes)}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.demands(0).map(|demand|demand.release_bytes)}

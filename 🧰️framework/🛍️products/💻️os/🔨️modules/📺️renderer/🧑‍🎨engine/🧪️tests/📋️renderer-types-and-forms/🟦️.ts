@@ -480,9 +480,6 @@ describe("declarative forms parity", () => {
   });
 
   it("applies separate presence fixtures without replacing the retained document", () => {
-    
-    
-    
     const store = new UiDocumentStore("document");
     store.loadSnapshot(buildContractSnapshot({ key: "item:根,1", component: { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null } }));
     const before = store.getState();
@@ -492,7 +489,7 @@ describe("declarative forms parity", () => {
       const own: UiPresenceOverlayEntry = JSON.parse(JSON.stringify(row.update.own));
       mounted.rerender(createElement(UiPresenceOverlayContext.Provider, { value: { byKey: new Map([[row.update.nodeKey, own]]) } }, interpretUiNode(store, context)));
       const html = mounted.container.innerHTML;
-      expect(html.includes('data-shared-border-state="hover"')).toBe(row.expected.hovered);
+      expect(html.includes('data-shared-border-state="hover"')).toBe(row.expected.hovered || row.expected.previewed);
       expect(html.includes('data-shared-border-state="active"')).toBe(row.expected.selected && !row.expected.hovered);
       expect(html.includes("ring-primary") || html.includes("outline-primary")).toBe(false);
       expect(own.previewed ?? false).toBe(row.expected.previewed);

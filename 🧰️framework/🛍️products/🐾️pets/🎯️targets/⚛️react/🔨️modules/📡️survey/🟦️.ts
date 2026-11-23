@@ -258,9 +258,9 @@ function linesOf(element: Element): Edges[] | null {
  *
  * Surfaces are the top edges of the elements matching `surfaces` that are neither inert, hidden nor concealed, cross the stage,
  * are not clipped away by a scrolling ancestor and stay at least {@link SURFACE_WIDTH} wide, in document order, each
- * under the id of its element ({@link surfaceId}); the last surface is the {@link FLOOR}. A host that wants pets to
- * follow a silhouette — a card with a title tab standing up on its body — names every part: each part carries pets on
- * its own top edge, and an edge is free only where no other part stands on it.
+ * under the id of its element ({@link surfaceId}); the last surface is the {@link FLOOR}. A host whose element is made of
+ * stacked parts names every part: each part carries pets on its own top edge, and an edge is free only where no other
+ * part stands on it.
  *
  * Keep-outs, each cut down to what its scrolling and clipping ancestors let one see (what is scrolled out of a pane
  * blocks nothing):

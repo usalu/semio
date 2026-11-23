@@ -1,0 +1,15 @@
+{
+  "single_line": ["DIN V 4108-6:2003-06 · Solare Wärmegewinne", "DIN EN ISO 6946:2018-03", "2nd law of thermodynamics"],
+  "flowing": {
+    "text": "DIN V 4108-6:2003-06 · Heizperiodenbilanz\nDIN/TS 18599-2:2025-10 · Nutzenergiebedarf für Heizen und Kühlen von Gebäuden\nGMODG · Gebäudeenergiegesetz Abschnitt 4",
+    "title_right": 0.0,
+    "title_height": 0.5,
+    "min_lines": 2
+  },
+  "over_wide": "Maas (1995), Diss. Univ. Kassel · Kap. 8.2, S. 74 – Kippfenster und Fensterlüftung bei Windstille und starkem Wind im Winter und im Sommer",
+  "lower": 0.6,
+  "margin": 0.30,
+  "line_gap": 0.06,
+  "opacity": 0.72,
+  "default_room": 9.0
+}

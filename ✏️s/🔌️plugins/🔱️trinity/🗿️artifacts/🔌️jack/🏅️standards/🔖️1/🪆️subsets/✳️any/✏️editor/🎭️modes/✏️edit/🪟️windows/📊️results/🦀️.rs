@@ -34,7 +34,7 @@ fn result_to_table(parsed: &QueryResult) -> (String, String) {
     (semio_framework_pack_json::to_json_string(&columns), semio_framework_pack_json::to_json_string(&rows))
 }
 
-pub fn render(surface_id: &str, _controller_id: &str, result: Option<&QueryResult>, error: Option<&str>) -> UiAssemblyResult<BuiltNode> {
+pub fn render(surface_id: &str, _controller_id: &str, result: Option<&QueryResult>, error: Option<&str>, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     if let Some(error) = error {
         return semio_plugin::built_text_node(semio_ui_locale::Label::data(error)).map_err(|_| semio_plugin::PluginAssemblyError::new("trinity.query.error-label", "the query error exceeds its UI label bound"));
     }
@@ -43,9 +43,9 @@ pub fn render(surface_id: &str, _controller_id: &str, result: Option<&QueryResul
     if result.kind == QueryResultKind::Graph {
         if let Some(fixture) = &result.graph_snapshot {
             let (nodes, edges, viewport) = crate::editor::jack::content_to_workflow(&fixture.camera,fixture.as_ref());
-            return scene_surface(surface_id, SurfaceKind::NodeGraph, &NodeGraphScene::base(nodes, edges, viewport));
+            return scene_surface(surface_id, SurfaceKind::NodeGraph, &NodeGraphScene::base(nodes, edges, viewport), semio_plugin::surface_name(locale, "Result graph", "Ergebnisgraph"), None);
         }
     }
     let (columns_json, rows_json) = result_to_table(result);
-    scene_surface(surface_id, SurfaceKind::Table, &TableScene::base(columns_json, rows_json))
+    scene_surface(surface_id, SurfaceKind::Table, &TableScene::base(columns_json, rows_json), semio_plugin::surface_name(locale, "Result table", "Ergebnistabelle"), None)
 }

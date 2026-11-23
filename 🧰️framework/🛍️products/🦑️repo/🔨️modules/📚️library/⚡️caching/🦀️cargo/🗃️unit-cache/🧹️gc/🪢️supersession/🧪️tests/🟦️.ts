@@ -127,7 +127,7 @@ test("publishing a unit records its declaration: workspace sources with digests,
  const root=directory("publish"),work=directory("work");
  write(work,{"crate/src/lib.rs":"fn a(){}","crate/src/util.rs":"fn b(){}",".cache/gen/out.rs":"generated"});const lib=join(work,"libc.rlib"),dep=join(work,"c.d");writeFileSync(lib,"compiled");
  writeFileSync(dep,`${lib}: crate/src/lib.rs crate/src/util.rs ${join(work,".cache/gen/out.rs")} ${join(directory("registry"),"serde.rs")}\n`);
- const entry=publishUnitV1(root,{key:"ab"+"0".repeat(62),crate:"c",cwd:work,outDir:work,laneRoot:undefined,outputs:[lib,dep],stdout:"",stderr:"",stampDirectory:undefined,retention:{workspace:work,externs:[sha("blob:dep"),"builtin","unit:x:y"],toolchain:"rustc 1.0"}});
- expect(entry?.retention).toEqual(declareV1({kind:"rust-unit",toolchain:"rustc 1.0",sources:[{path:"crate/src/lib.rs",sha256:sha("fn a(){}")},{path:"crate/src/util.rs",sha256:sha("fn b(){}")}],externs:[sha("blob:dep")]}));
+ const entry=publishUnitV1(root,{key:"ab"+"0".repeat(62),crate:"c",cwd:work,outDir:work,laneRoot:undefined,outputs:[lib,dep],stdout:"",stderr:"",stampDirectory:undefined,retention:{workspace:work,externs:[sha("blob:dep"),"builtin","unit:x:y"],units:[sha("unit:dep"),"not-a-key","ab"+"0".repeat(62)],toolchain:"rustc 1.0"}});
+ expect(entry?.retention).toEqual(declareV1({kind:"rust-unit",toolchain:"rustc 1.0",sources:[{path:"crate/src/lib.rs",sha256:sha("fn a(){}")},{path:"crate/src/util.rs",sha256:sha("fn b(){}")}],externs:[sha("blob:dep")],self:"ab"+"0".repeat(62),units:[sha("unit:dep")]}));
  expect(JSON.parse(readFileSync(join(root,layout.entries,"ab","ab"+"0".repeat(62),readdirSync(join(root,layout.entries,"ab","ab"+"0".repeat(62)))[0]!),"utf8")).retention.kind).toBe("rust-unit");
 });

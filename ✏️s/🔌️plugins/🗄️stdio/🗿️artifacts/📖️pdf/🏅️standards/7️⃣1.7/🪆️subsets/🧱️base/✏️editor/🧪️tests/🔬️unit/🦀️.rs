@@ -1002,13 +1002,19 @@ fn large_original_image_pdf(law: &serde_json::Value) -> (Vec<u8>, Vec<u8>) {
 
 /// 🏞️ Opens one PDF through the production paged natural-file decoder under a 16 MiB capacity grant and retires it on the bounded close path.
 fn paged_pdf_snapshot(input: &[u8]) -> (PdfSnapshot, semio_plugin::artifact_app_laws::OriginalWorkFixture) {
+    let contract = semio_plugin::ToolExecutionContract::resumable(input.len(), 16_384, 1, 32 << 20, 7_500, 1, 1);
+    let (snapshot, scope, _) = paged_pdf_snapshot_under(input, contract, 4_000_000);
+    (snapshot, scope)
+}
+
+/// 🔁️ Drives the production paged decoder under one execution contract, failing when it needs more than `turn_limit` continuations, and returns how many it used.
+fn paged_pdf_snapshot_under(input: &[u8], contract: semio_plugin::ToolExecutionContract, turn_limit: usize) -> (PdfSnapshot, semio_plugin::artifact_app_laws::OriginalWorkFixture, usize) {
     use crate::standards::v1_7::subsets::base::io::import::admit_pdf_paged_natural_decode;
     use semio_framework_value::{paged::PagedBytes, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, RetirementPollExit};
     use semio_plugin::artifact_app_laws::OriginalWorkFixture;
     use semio_plugin::{NaturalFileDecodeOwner, NaturalFileDecodeStep, NaturalFilePagedSource, ToolExecutionContract};
     use std::mem::size_of_val;
 
-    let contract = ToolExecutionContract::resumable(input.len(), 16_384, 1, 32 << 20, 7_500, 1, 1);
     let stock = OriginalWorkFixture::stock();
     let granted = RetainedCloneGrant { maximum_capacity_bytes: 16 << 20, ..stock };
     let mut scope = OriginalWorkFixture::new();
@@ -1018,14 +1024,14 @@ fn paged_pdf_snapshot(input: &[u8]) -> (PdfSnapshot, semio_plugin::artifact_app_
     let Some(NaturalFileDecodeOwner::Controlled(decoder)) = claimed else { panic!("the large PDF must use the controlled decoder") };
     let mut decoder = Some(decoder);
     let mut complete = None;
-    for _ in 0..4_000_000 {
+    for turn in 1..=turn_limit {
         let owner = decoder.as_mut().unwrap();
         if let NaturalFileDecodeStep::Complete { snapshot, progress } = scope.turn(granted, |cx| Ok(owner.advance(cx).unwrap())).unwrap() {
-            complete = Some((snapshot, progress));
+            complete = Some((snapshot, progress, turn));
             break;
         }
     }
-    let (snapshot, progress) = complete.expect("the paged PDF decoder published");
+    let (snapshot, progress, turns) = complete.unwrap_or_else(|| panic!("the paged PDF decoder did not publish within {turn_limit} continuations"));
     assert_eq!(progress.consumed_input_bytes, input.len());
     let owner = decoder.as_mut().unwrap();
     owner.begin_close();
@@ -1049,7 +1055,25 @@ fn paged_pdf_snapshot(input: &[u8]) -> (PdfSnapshot, semio_plugin::artifact_app_
         })?;
         Ok(())
     }).unwrap();
-    (snapshot, scope)
+    (snapshot, scope, turns)
+}
+
+/// 📚️ A 963-byte file fits in one 4096-unit browser step, so a decoder that stops unpaid `More` replies finishes in at most 128 host turns.
+#[test]
+fn paged_natural_decode_of_the_browser_contract_terminates_with_every_page() {
+    use semio_plugin::artifact_app_laws::OriginalWorkFixture;
+    use semio_plugin::app::NATURAL_SOURCE_TOOL_CONTRACT;
+
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    let (opened, mut scope, turns) = paged_pdf_snapshot_under(input, NATURAL_SOURCE_TOOL_CONTRACT, 1_000);
+    eprintln!("[DEBUG] browser contract continuations {turns}");
+    assert!(turns <= 128, "browser contract used {turns} continuations");
+    let projected: serde_json::Value = serde_json::from_str(&semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::project_pdf_1_7(input).expect("lopdf reads the fixture").to_string()).unwrap();
+    assert_eq!(opened.pages.len(), 2);
+    assert_eq!(opened.pages.len() as u64, projected["pageCount"].as_u64().unwrap());
+    assert_eq!(opened, <Pdf17Editor as ArtifactEditor>::decode_natural_file(input).unwrap());
+    scope.retire_owned(opened, OriginalWorkFixture::stock());
+    scope.finish();
 }
 
 #[test]
@@ -1138,4 +1162,35 @@ async fn registered_pdf_page_and_authoring_actions_undo_and_redo_step_by_step() 
         assert_eq!(app.snapshot().unwrap(), states[index], "redo to state {index}");
     }
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
+}
+
+/// 🧯️ The browser's first edits of a blank PDF 1.7 document settle through the registered typed operation path.
+#[semio_framework_async_macros::async_test]
+async fn blank_document_first_edits_settle_through_the_registered_typed_operation() {
+    use semio_plugin::{artifact_app_laws as laws, EditorApp};
+    let meta = laws::meta("local");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(
+        async { semio_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } },
+        semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), policy, &mut identity
+    ).await);
+    let text = |value: &str| semio_framework_value::DslValue::String(value.into());
+    let number = |value: f64| semio_framework_value::DslValue::float(value);
+    let edits = [
+        ("set-info-field", semio_framework_value::DslValue::object([("object".into(), text("title")), ("field".into(), text("text")), ("value".into(), text("Quarterly report"))])),
+        ("insert-text", semio_framework_value::DslValue::object([("page".into(), number(0.0)), ("x".into(), number(72.0)), ("y".into(), number(700.0)), ("height".into(), number(12.0)), ("text".into(), text("Hello"))])),
+    ];
+    for (action, args) in edits {
+        semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
+            &mut app, action, Some(args.clone()), &meta, &mut identity, scope.cx(), policy.close
+        ).await).unwrap_or_else(|fault| panic!("{action} dispatch refused: {fault:?}"));
+        semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
+            &mut app, meta.instance_id, policy, &mut identity, scope.cx()
+        ).await).unwrap_or_else(|fault| panic!("{action} settlement refused: {fault:?}"));
+    }
+    let snapshot = app.snapshot().expect("the blank PDF is ready");
+    assert_eq!(snapshot.info.title.as_deref(), Some("Quarterly report"));
+    assert!(crate::editor::page::objects(&snapshot).iter().any(|object| object.text == "Hello"));
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("blank editor closes");
 }

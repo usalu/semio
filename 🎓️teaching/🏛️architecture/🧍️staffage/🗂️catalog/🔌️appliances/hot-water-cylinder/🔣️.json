@@ -4748,6 +4748,17 @@
             "origin": [0.0, 0.165, -0.285]
           },
           {
+            "id": "dial-stem",
+            "kind": "revolve",
+            "bone": "zone-2",
+            "material": "powder-steel",
+            "role": "detail",
+            "tone": 0.95,
+            "profile": [[0, 0], [0, 0.006], [0.05, 0.006], [0.05, 0]],
+            "axis": [0, 0, -1],
+            "origin": [0.0, 0.165, -0.237]
+          },
+          {
             "id": "dial",
             "kind": "revolve",
             "bone": "zone-2",
@@ -7257,6 +7268,18 @@
             "part": "joint"
           },
           {
+            "id": "dial-case-member",
+            "of": "dial-bezel",
+            "member": "zone-2",
+            "part": "member"
+          },
+          {
+            "id": "dial-stem-member",
+            "of": "dial-stem",
+            "member": "zone-2",
+            "part": "member"
+          },
+          {
             "id": "cover-collar",
             "kind": "revolve",
             "bone": "cap",
@@ -7420,6 +7443,12 @@
             "part": "member"
           },
           {
+            "id": "member-coil-legs",
+            "of": "coil-legs",
+            "member": "connections",
+            "part": "member"
+          },
+          {
             "id": "member-sensor-pocket",
             "of": "sensor-pocket",
             "member": "connections",
@@ -7446,6 +7475,10 @@
           {
             "en": "The right tappings feed the charging coil where it is built, in the lower two thirds: return at 0.26 m, flow at 0.76 m, nine turns of 28 mm tube on a 340 mm helix, one lofted solid with a circular section normal to the helix at 12 stations a turn, and two radial legs to the tappings. A magnesium anode of 26 mm hangs from the top head, the cold inlet ends at a baffle disc, and the left middle tapping carries a closed immersion pocket 150 mm into the water. Jacket quarters, vessel courses with their dished heads and the cover are turned parts (revolves) with the 3 mm wall and the 60 mm foam; the pipes pass through the foam.",
             "de": "Die rechten Stutzen speisen die Ladewendel dort, wo sie gebaut wird, in den unteren zwei Dritteln: Rücklauf auf 0,26 m, Vorlauf auf 0,76 m, neun Windungen aus 28-mm-Rohr auf einer Wendel von 340 mm, ein gelofteter Körper mit Kreisquerschnitt, an 12 Stationen je Windung senkrecht zur Wendel gedreht, und zwei radiale Schenkel zu den Stutzen. Eine Magnesiumanode von 26 mm hängt am oberen Boden, der Kaltwasserzulauf endet an einer Prallscheibe, und der linke mittlere Stutzen trägt eine geschlossene Tauchhülse, die 150 mm ins Wasser reicht. Mantelviertel, Behälterschüsse mit ihren Klöpperböden und die Abdeckung sind Drehteile mit 3 mm Wand und 60 mm Schaum; die Rohre durchstoßen den Schaum."
+          },
+          {
+            "en": "The dial thermometer sits on a 12 mm stem that crosses the insulation to the tank; stem and case are members that carry the needle pivot. The two coil legs through the tank wall are members.",
+            "de": "Das Zeigerthermometer sitzt auf einem 12-mm-Schaft, der die Dämmung bis zum Speicher quert; Schaft und Gehäuse sind Glieder, die das Zeigerlager tragen. Die zwei Schenkel der Heizwendel durch die Speicherwand sind Glieder."
           }
         ]
       },
@@ -9332,7 +9365,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [-1, 0, 0],
             "origin": [-0.235, 1.1977, 0.0],
             "member": "connections",
@@ -9351,7 +9384,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [-1, 0, 0],
             "origin": [-0.235, 0.7852, 0.0],
             "member": "connections",
@@ -9370,7 +9403,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [-1, 0, 0],
             "origin": [-0.235, 0.1893, 0.0],
             "member": "connections",
@@ -9389,7 +9422,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [1, 0, 0],
             "origin": [0.235, 0.76, 0.0],
             "member": "connections",
@@ -9408,7 +9441,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [1, 0, 0],
             "origin": [0.235, 0.26, 0.0],
             "member": "connections",
@@ -9427,7 +9460,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0142, 0.0165], [0.0121, 0.02014], [0.0079, 0.02014], [0.0058, 0.0165], [0.0079, 0.01286], [0.0121, 0.01286], [0.0142, 0.0165]],
+            "profile": [[0.0025, 0], [0.0025, 0.02014], [0.0175, 0.02014], [0.0175, 0]],
             "axis": [0, 1, 0],
             "origin": [0.2039, 1.24155, 0.0],
             "member": "connections",
@@ -9436,6 +9469,12 @@
           {
             "id": "member-charging-coil",
             "of": "charging-coil",
+            "member": "connections",
+            "part": "member"
+          },
+          {
+            "id": "member-coil-legs",
+            "of": "coil-legs",
             "member": "connections",
             "part": "member"
           },
@@ -9466,6 +9505,10 @@
           {
             "en": "The right tappings feed the charging coil where it is built, in the lower two thirds: return at 0.26 m, flow at 0.76 m, nine turns of 28 mm tube on a 340 mm helix, one lofted solid with a circular section normal to the helix at 8 stations a turn, and two radial legs to the tappings. A magnesium anode of 26 mm hangs from the top head, the cold inlet ends at a baffle disc, and the left middle tapping carries a closed immersion pocket 150 mm into the water. Jacket quarters, vessel courses with their dished heads and the cover are turned parts (revolves) with the 3 mm wall and the 60 mm foam; the pipes pass through the foam.",
             "de": "Die rechten Stutzen speisen die Ladewendel dort, wo sie gebaut wird, in den unteren zwei Dritteln: Rücklauf auf 0,26 m, Vorlauf auf 0,76 m, neun Windungen aus 28-mm-Rohr auf einer Wendel von 340 mm, ein gelofteter Körper mit Kreisquerschnitt, an 8 Stationen je Windung senkrecht zur Wendel gedreht, und zwei radiale Schenkel zu den Stutzen. Eine Magnesiumanode von 26 mm hängt am oberen Boden, der Kaltwasserzulauf endet an einer Prallscheibe, und der linke mittlere Stutzen trägt eine geschlossene Tauchhülse, die 150 mm ins Wasser reicht. Mantelviertel, Behälterschüsse mit ihren Klöpperböden und die Abdeckung sind Drehteile mit 3 mm Wand und 60 mm Schaum; die Rohre durchstoßen den Schaum."
+          },
+          {
+            "en": "Each stub weld is a 15 mm weld collar of the bead diameter around the stub at the shell; the 8.4 mm fillet bead is left to 1:50. The two coil legs through the tank wall are members.",
+            "de": "Jede Stutzennaht ist ein 15-mm-Schweißkragen im Durchmesser der Naht um den Stutzen am Mantel; die 8,4-mm-Kehlnaht bleibt dem Maßstab 1:50. Die zwei Schenkel der Heizwendel durch die Speicherwand sind Glieder."
           }
         ]
       },
@@ -11160,7 +11203,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [-1, 0, 0],
             "origin": [-0.235, 1.1977, 0.0],
             "member": "connections",
@@ -11179,7 +11222,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [-1, 0, 0],
             "origin": [-0.235, 0.7852, 0.0],
             "member": "connections",
@@ -11198,7 +11241,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [-1, 0, 0],
             "origin": [-0.235, 0.1893, 0.0],
             "member": "connections",
@@ -11217,7 +11260,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [1, 0, 0],
             "origin": [0.235, 0.76, 0.0],
             "member": "connections",
@@ -11236,7 +11279,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [1, 0, 0],
             "origin": [0.235, 0.26, 0.0],
             "member": "connections",
@@ -11255,7 +11298,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0142, 0.0165], [0.0121, 0.02014], [0.0079, 0.02014], [0.0058, 0.0165], [0.0079, 0.01286], [0.0121, 0.01286], [0.0142, 0.0165]],
+            "profile": [[0.0025, 0], [0.0025, 0.02014], [0.0175, 0.02014], [0.0175, 0]],
             "axis": [0, 1, 0],
             "origin": [0.2039, 1.24155, 0.0],
             "member": "connections",
@@ -11264,6 +11307,12 @@
           {
             "id": "member-charging-coil",
             "of": "charging-coil",
+            "member": "connections",
+            "part": "member"
+          },
+          {
+            "id": "member-coil-legs",
+            "of": "coil-legs",
             "member": "connections",
             "part": "member"
           },
@@ -11294,6 +11343,10 @@
           {
             "en": "The right tappings feed the charging coil where it is built, in the lower two thirds: return at 0.26 m, flow at 0.76 m, nine turns of 28 mm tube on a 340 mm helix, one lofted solid with a circular section normal to the helix at 6 stations a turn, and two radial legs to the tappings. A magnesium anode of 26 mm hangs from the top head, and the left middle tapping carries a closed immersion pocket 150 mm into the water. Jacket quarters, vessel courses with their dished heads and the cover are turned parts (revolves) with the 3 mm wall and the 60 mm foam; the pipes pass through the foam.",
             "de": "Die rechten Stutzen speisen die Ladewendel dort, wo sie gebaut wird, in den unteren zwei Dritteln: Rücklauf auf 0,26 m, Vorlauf auf 0,76 m, neun Windungen aus 28-mm-Rohr auf einer Wendel von 340 mm, ein gelofteter Körper mit Kreisquerschnitt, an 6 Stationen je Windung senkrecht zur Wendel gedreht, und zwei radiale Schenkel zu den Stutzen. Eine Magnesiumanode von 26 mm hängt am oberen Boden, und der linke mittlere Stutzen trägt eine geschlossene Tauchhülse, die 150 mm ins Wasser reicht. Mantelviertel, Behälterschüsse mit ihren Klöpperböden und die Abdeckung sind Drehteile mit 3 mm Wand und 60 mm Schaum; die Rohre durchstoßen den Schaum."
+          },
+          {
+            "en": "Each stub weld is a 15 mm weld collar of the bead diameter around the stub at the shell; the 8.4 mm fillet bead is left to 1:50. The two coil legs through the tank wall are members.",
+            "de": "Jede Stutzennaht ist ein 15-mm-Schweißkragen im Durchmesser der Naht um den Stutzen am Mantel; die 8,4-mm-Kehlnaht bleibt dem Maßstab 1:50. Die zwei Schenkel der Heizwendel durch die Speicherwand sind Glieder."
           }
         ]
       },
@@ -12274,7 +12327,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [-1, 0, 0],
             "origin": [-0.235, 1.1977, 0.0],
             "member": "connections",
@@ -12293,7 +12346,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [-1, 0, 0],
             "origin": [-0.235, 0.7852, 0.0],
             "member": "connections",
@@ -12312,7 +12365,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [-1, 0, 0],
             "origin": [-0.235, 0.1893, 0.0],
             "member": "connections",
@@ -12331,7 +12384,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [1, 0, 0],
             "origin": [0.235, 0.76, 0.0],
             "member": "connections",
@@ -12350,7 +12403,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0132, 0.0135], [0.0111, 0.01714], [0.0069, 0.01714], [0.0048, 0.0135], [0.0069, 0.00986], [0.0111, 0.00986], [0.0132, 0.0135]],
+            "profile": [[0.0015, 0], [0.0015, 0.01714], [0.0165, 0.01714], [0.0165, 0]],
             "axis": [1, 0, 0],
             "origin": [0.235, 0.26, 0.0],
             "member": "connections",
@@ -12369,7 +12422,7 @@
             "material": "enamelled-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.0142, 0.0165], [0.0121, 0.02014], [0.0079, 0.02014], [0.0058, 0.0165], [0.0079, 0.01286], [0.0121, 0.01286], [0.0142, 0.0165]],
+            "profile": [[0.0025, 0], [0.0025, 0.02014], [0.0175, 0.02014], [0.0175, 0]],
             "axis": [0, 1, 0],
             "origin": [0.2039, 1.24155, 0.0],
             "member": "connections",
@@ -12378,6 +12431,12 @@
           {
             "id": "member-charging-coil",
             "of": "charging-coil",
+            "member": "connections",
+            "part": "member"
+          },
+          {
+            "id": "member-coil-legs",
+            "of": "coil-legs",
             "member": "connections",
             "part": "member"
           },
@@ -12408,6 +12467,10 @@
           {
             "en": "The right tappings feed the charging coil where it is built, in the lower two thirds: return at 0.26 m, flow at 0.76 m, the nine turns generalised to one 28 mm sleeve of 340 mm, and two radial legs to the tappings. A magnesium anode of 26 mm hangs from the top head, and the left middle tapping carries a closed immersion pocket 150 mm into the water. Jacket quarters, vessel courses with their dished heads and the cover are turned parts (revolves) with the 3 mm wall and the 60 mm foam; the pipes pass through the foam.",
             "de": "Die rechten Stutzen speisen die Ladewendel dort, wo sie gebaut wird, in den unteren zwei Dritteln: Rücklauf auf 0,26 m, Vorlauf auf 0,76 m, die neun Windungen zu einer 28 mm starken Hülse von 340 mm verallgemeinert, und zwei radiale Schenkel zu den Stutzen. Eine Magnesiumanode von 26 mm hängt am oberen Boden, und der linke mittlere Stutzen trägt eine geschlossene Tauchhülse, die 150 mm ins Wasser reicht. Mantelviertel, Behälterschüsse mit ihren Klöpperböden und die Abdeckung sind Drehteile mit 3 mm Wand und 60 mm Schaum; die Rohre durchstoßen den Schaum."
+          },
+          {
+            "en": "Each stub weld is a 15 mm weld collar of the bead diameter around the stub at the shell; the 8.4 mm fillet bead is left to 1:50. The two coil legs through the tank wall are members.",
+            "de": "Jede Stutzennaht ist ein 15-mm-Schweißkragen im Durchmesser der Naht um den Stutzen am Mantel; die 8,4-mm-Kehlnaht bleibt dem Maßstab 1:50. Die zwei Schenkel der Heizwendel durch die Speicherwand sind Glieder."
           }
         ]
       }

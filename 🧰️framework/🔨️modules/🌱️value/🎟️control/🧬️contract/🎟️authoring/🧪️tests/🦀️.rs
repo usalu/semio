@@ -1,5 +1,6 @@
 //! 🧪️ The authoring wallet debits exactly what its receipts record, refuses what its explicit stock cannot fund and never lends a free effect.
 use super::*;
+use crate::OriginalWorkBindingIdentity;
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:8,maximum_copy_bytes:1024,maximum_capacity_bytes:1024,maximum_release_bytes:1024,maximum_depth:4}}
 #[test]
 fn performed_work_is_debited_exactly_once(){
@@ -63,5 +64,35 @@ fn an_overshooting_child_still_pays_the_reply_handoff(){
   assert!(!authority.has_live_actions());
   let expected=u128::from(spend)+u128::from(ORIGINAL_INVOCATION_WORK);
   if spend<=2{assert_eq!(settled.unwrap().unwrap().unwrap().performed,expected)}else{assert!(settled.unwrap().is_err());assert_eq!(spent,expected)}
+ }
+}
+
+#[test]
+fn one_wallet_is_one_resident_work_binding_across_runs(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("case.json")).unwrap();
+ let grant=|row:&serde_json::Value|{let field=|key:&str|row[key].as_u64().unwrap()as usize;RetainedCloneGrant{maximum_items:field("items"),maximum_copy_bytes:field("copyBytes"),maximum_capacity_bytes:field("capacityBytes"),maximum_release_bytes:field("releaseBytes"),maximum_depth:field("depth")}};
+ let(stock,fuel)=(grant(&law["stock"]),law["fuel"].as_u64().unwrap()as u128);let runs=law["runsPerWallet"].as_u64().unwrap();
+ let mut bindings=Vec::new();
+ for _ in 0..law["wallets"].as_u64().unwrap(){
+  let mut wallet=AuthoringWallet::new(stock,fuel);
+  for case in law["cases"].as_array().unwrap().iter().cycle().take(runs as usize){
+   let binding=wallet.run_invoked(grant(&case["grant"]),case["work"].as_u64().unwrap(),|effect|OriginalWorkBindingIdentity::from_effect(effect)).unwrap().expect("admitted").output;
+   bindings.push(binding);
+  }
+ }
+ let distinct=|rows:&[OriginalWorkBindingIdentity]|rows.iter().enumerate().filter(|(index,row)|rows[..*index].iter().all(|earlier|earlier!=*row)).count();
+ assert_eq!(distinct(&bindings[..runs as usize]),law["expectedBindingsPerWallet"].as_u64().unwrap()as usize);
+ assert_eq!(distinct(&bindings),law["expectedBindingsAcrossWallets"].as_u64().unwrap()as usize);
+}
+
+#[test]
+fn an_exact_reborrow_of_an_invoked_effect_sees_exactly_its_callers_extent(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("case.json")).unwrap();
+ let grant=|row:&serde_json::Value|{let field=|key:&str|row[key].as_u64().unwrap()as usize;RetainedCloneGrant{maximum_items:field("items"),maximum_copy_bytes:field("copyBytes"),maximum_capacity_bytes:field("capacityBytes"),maximum_release_bytes:field("releaseBytes"),maximum_depth:field("depth")}};
+ for case in law["cases"].as_array().unwrap(){
+  let mut wallet=AuthoringWallet::new(grant(&law["stock"]),law["fuel"].as_u64().unwrap()as u128);let(wanted,work)=(grant(&case["grant"]),case["work"].as_u64().unwrap());
+  let(outer,exact)=wallet.run_invoked(wanted,work,|effect|{let outer=effect.grant();let exact=effect.reborrow(wanted,work).map(|inner|(inner.grant(),inner.maximum_work_units()));(outer,exact)}).unwrap().expect("admitted").output;
+  assert_eq!(exact.unwrap(),(wanted,work),"{}",case["name"]);
+  assert!(outer.maximum_copy_bytes>wanted.maximum_copy_bytes,"{}",case["name"]);
  }
 }

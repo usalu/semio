@@ -54,6 +54,10 @@ impl ArtifactViewer for Pdf17VtViewer {
     const DIALECT: Dialect = PDF17VT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;
 
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_plugin::__kernel::semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
+        semio_plugin::__kernel::semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.pdf.child-projection"), error.to_string()))
+    }
+
     fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
         semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
     }
@@ -84,10 +88,10 @@ impl ArtifactViewer for Pdf17VtViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot, view_state.locale).map(built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(main::pdf_viewer_labels(view_state.locale).unknown_body.fill(&[("body", body_key)])),
         }
     }
 }

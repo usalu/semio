@@ -20,12 +20,12 @@ fn rows(table: &BuiltNode) -> Vec<serde_json::Value> {
 
 #[semio_framework_async_macros::async_test]
 async fn render_lists_one_row_per_zone() {
-    let empty = render(&EnergyModelSnapshot::empty().unwrap()).expect("the empty table window assembles");
+    let empty = render(&EnergyModelSnapshot::empty().unwrap(), semio_plugin::Locale::En).expect("the empty table window assembles");
     assert_eq!(empty.key.as_str(), WINDOW_KIND_ID);
     assert!(rows(&empty).is_empty());
     let mut document = EnergyModelSnapshot::empty().unwrap();
     document.model.zones = vec![zone(1, "Ground floor"), zone(2, "Attic")];
-    let rows = rows(&render(&document).expect("the table window assembles"));
+    let rows = rows(&render(&document, semio_plugin::Locale::En).expect("the table window assembles"));
     assert_eq!(rows.len(), 2);
     assert_eq!((rows[0]["0"].as_str(), rows[0]["1"].as_str()), (Some("1"), Some("Ground floor")));
     assert_eq!((rows[1]["0"].as_str(), rows[1]["1"].as_str()), (Some("2"), Some("Attic")));

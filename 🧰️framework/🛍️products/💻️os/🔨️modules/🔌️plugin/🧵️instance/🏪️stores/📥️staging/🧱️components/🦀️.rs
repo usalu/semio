@@ -265,6 +265,7 @@ pub struct LocalInteraction<A: ArtifactApp> {
     pub local_interaction_retired_bytes: u128,
     pub config_snapshot_read_returns: SnapshotReadReturnPump,
     pub interaction_snapshot_read_returns: SnapshotReadReturnPump,
+    pub draft_snapshot_read_returns: SnapshotReadReturnPump,
     /// 🐁️ The EPHEMERAL-local half — see `InteractionHoverState`'s own doc comment. Never persisted,
     /// never undoable, mirrored into the ephemeral-shared `PresenceInteraction` broadcast
     /// (`interaction_state`) exactly like `presence_store`'s own local half.
@@ -310,6 +311,7 @@ impl<A: ArtifactApp> LocalInteraction<A> {
             local_interaction_retired_bytes: 0,
             config_snapshot_read_returns: SnapshotReadReturnPump::new(),
             interaction_snapshot_read_returns: SnapshotReadReturnPump::new(),
+            draft_snapshot_read_returns: SnapshotReadReturnPump::new(),
             interaction_hover: InteractionHoverState::new(),
             interaction_hover_owners: BTreeMap::new(),
             interaction_leftover_selection: None,

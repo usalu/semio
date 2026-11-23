@@ -51,9 +51,9 @@ pub struct Marks {
 }
 
 /// 👁️ Pure `ModelSnapshot × ModelInference × window configuration × marks -> World3d surface`.
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimViewerWorldWindowConfig, marks: &Marks) -> UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimViewerWorldWindowConfig, marks: &Marks, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let view = WorldView { orbit: config.framed.then_some(&config.orbit), projection: &config.projection, hidden_storeys: &config.hidden_storeys, selected: &marks.selected, hovered: &marks.hovered };
-    scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::World3d, &scene(snapshot, &inference.element_solids, &view))
+    scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::World3d, &scene(snapshot, &inference.element_solids, &view), semio_plugin::surface_name(locale, "Model view", "Modellansicht"), None)
 }
 //#endregion 🔖️Render
 

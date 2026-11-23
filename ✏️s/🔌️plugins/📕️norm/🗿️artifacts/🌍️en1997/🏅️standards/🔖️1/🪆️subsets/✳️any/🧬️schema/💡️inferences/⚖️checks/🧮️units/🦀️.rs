@@ -28,7 +28,7 @@ fn group<T>(mut rows: Group, items: &[T], tag: &'static str, id: impl Fn(&T) -> 
 impl UnitSource for En1997Units {
     type Document = En1997Snapshot;
 
-    const OWNERS: semio_s_plugin_norm_compliance::Owners = semio_s_plugin_norm_compliance::Owners::new(&["layers", "footings", "piles", "retainingWalls", "slopes", "upliftCases", "embeddedWalls", "anchors", "pileGroups", "labTests", "layerWaters", "characteristicBases", "investigations", "cases"], &["en1997.6.6.pairs.na", "en1997.gk.category", "en1997.design.", "en1997.footing.na", "en1997.pile.na", "en1997.wall.na", "en1997.slope.na", "en1997.upl.na", "en1997.governing.", "en1997.integrity."]);
+    const OWNERS: semio_s_plugin_norm_compliance::Owners = semio_s_plugin_norm_compliance::Owners::new(&["layers", "footings", "piles", "retainingWalls", "slopes", "upliftCases", "embeddedWalls", "anchors", "pileGroups", "labTests", "layerWaters", "characteristicBases", "investigations", "cases"], &["en1997.6.6.pairs.na", "en1997.gk.category", "en1997.design.", "en1997.footing.na", "en1997.gi-01.points", "en1997.gi-01.spacing", "en1997.pile.na", "en1997.wall.na", "en1997.slope.na", "en1997.upl.na", "en1997.governing.", "en1997.integrity."]);
 
     fn units(d: &En1997Snapshot) -> Vec<CheckUnit<En1997Snapshot>> {
         let mut rows = Rows::except(d, &ROW_COLLECTIONS).global(|d| check_project_scoped(d, Scope::Part("integrity"), &mut |_| true).checks);

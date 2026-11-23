@@ -20,6 +20,9 @@ pub struct ShellChromeChildCursor {
     pub group_phase: u8,
     pub shared_border_plan: HashMap<String, Vec<ChromeBorderPaint>>,
     pub shared_border_rects: HashMap<String, Rect>,
+    pub shared_border_frames: Vec<ChromeBorderFrame>,
+    pub shared_border_sweep: usize,
+    pub shared_border_planned: bool,
     pub document: UiDocumentFrameCursor,
     pub window: Option<UiText>,
     pub rect: Option<Rect>,
@@ -181,11 +184,11 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     }
 
     /// 🪟️ Solves this frame's dock layout into `dock_window_plan` and the three drop/pick registries
-    /// (`dock_drop_bodies`, `dock_drop_tab_bars`, `window_content_rects`/`window_silhouettes`), which
+    /// (`dock_drop_bodies`, `dock_drop_tab_bars`, `window_content_rects`/`window_frames`), which
     /// had no production writer at all before this call site existed. A spawned studio surface is the
     /// one non-dock case and stays a single full-bounds pane.
     ///
-    /// 🈳️ A stack holding no tabs answers `stack_body_rects_with_silhouettes` with an EMPTY window id.
+    /// 🈳️ A stack holding no tabs answers `stack_body_rects_with_frames` with an EMPTY window id.
     /// It stays a DROP body — React's `WindowChrome` still renders for an empty stack — but it is no
     /// window: React's `activeDescriptor` is `undefined` there and its body renders nothing
     /// (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1212`). Carried into the plan it became a real window with an
@@ -223,18 +226,18 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             self.dock.dock_drop_bodies = Vec::new();
             self.dock.dock_drop_tab_bars = Vec::new();
             self.dock.window_content_rects = HashMap::from([("spawned".to_string(), rect)]);
-            self.dock.window_silhouettes = HashMap::new();
+            self.dock.window_frames = HashMap::new();
             return;
         }
         let (labels, _icon_ids) = self.dock.dock_chrome_maps(&self.prefs, &self.docs, &self.windows);
         for (window_id, label) in &labels {
             note_dock_control_name(window_id, semio_renderer_wgpu_dock::DockControlName::Body(label), self.prefs.locale_id == "de");
         }
-        let (bodies, silhouettes) = self.dock.dock_view.stack_body_rects_with_silhouettes(rect, theme, &labels, atlas);
+        let (bodies, frames) = self.dock.dock_view.stack_body_rects_with_frames(rect, theme, &labels, atlas);
         self.dock.dock_drop_tab_bars = self.dock.dock_view.stack_corner_tab_bar_rects(rect, theme, atlas, &labels);
         self.dock.dock_window_plan = bodies.iter().filter(|(_, _, window_id)| !window_id.is_empty()).map(|(_, body, window_id)| (window_id.clone(), *body)).collect();
         self.dock.window_content_rects = bodies.iter().filter(|(_, _, window_id)| !window_id.is_empty()).map(|(_, body, window_id)| (window_id.clone(), *body)).collect();
-        self.dock.window_silhouettes = silhouettes;
+        self.dock.window_frames = frames;
         self.dock.dock_drop_bodies = bodies;
         let plan = self.dock.dock_window_plan.iter().map(|(id, body)| format!("{id}@{}x{}+{},{}", body.w.round(), body.h.round(), body.x.round(), body.y.round())).collect::<Vec<_>>().join(" ");
         if self.dock.dock_plan_trace.as_deref() != Some(plan.as_str()) {
@@ -754,8 +757,9 @@ pub fn chrome_hosted_panel_overhang(theme: &Theme) -> f32 {
 }
 
 /// 🧭️ The band an anchored panel may occupy: React's mode body, with the anchored vertical edge
-/// pulled `chrome_hosted_panel_overhang` INTO the navbar (a top anchor) or the footer (a bottom
-/// anchor) and its height grown by exactly that overhang — React's `maxHeight:
+/// pulled `chrome_hosted_panel_overhang` INTO the navbar (a top anchor) and its height grown by exactly
+/// that overhang; a bottom anchor ends at the body's bottom edge (React `bottom: 0`, its cap on the bottom
+/// chip row inside the canvas rectangle) with the same height — React's `maxHeight:
 /// calc(100% + (var(--size-large) + var(--size-medium)) / 2)`. Measured on React's own DOM
 /// (`🗑️generated/w14d-cap-occlusion.json`, 1600×1000): mode body `y=29`, open Catalogue panel
 /// `y=3 h=168`, its `panel-body-stack` from `y=26`.
@@ -778,7 +782,10 @@ pub fn panel_band(anchor: PanelAnchor, body: Rect, theme: &Theme) -> Rect {
     let root_row = theme.control_height;
     match anchor.vertical() {
         "top" => Rect::new(body.x, body.y - overhang - inset + root_row, body.w, (body.h + overhang + inset * 2.0 - root_row).max(0.0)),
-        "bottom" => Rect::new(body.x, body.y - inset, body.w, (body.h + overhang + inset * 2.0 - root_row).max(0.0)),
+        "bottom" => {
+            let height = (body.h + overhang + inset * 2.0 - root_row).max(0.0);
+            Rect::new(body.x, body.y + body.h + inset - height, body.w, height)
+        }
         _ => body,
     }
 }

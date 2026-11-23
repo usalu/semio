@@ -48,7 +48,7 @@ describe("🔲️ State lines belong to the border compositor", () => {
     }
   });
 
-  it("keeps every tab a frame whose edges close only while selected", () => {
+  it("registers only the selected tab as a frame and draws only its inner edges", () => {
     const { getAllByRole } = render(
       <Tabs defaultValue="b">
         <TabsList>
@@ -58,11 +58,12 @@ describe("🔲️ State lines belong to the border compositor", () => {
       </Tabs>,
     );
     const [unselected, selected] = getAllByRole("tab");
-    expect(unselected!.getAttribute("data-shared-border-frame")).toBe("");
-    expect(unselected!.getAttribute("data-shared-border-edges")).toBe("");
+    expect(unselected!.hasAttribute("data-shared-border-frame")).toBe(false);
+    expect(unselected!.hasAttribute("data-shared-border-edges")).toBe(false);
     expect(unselected!.getAttribute("data-shared-border-state")).toBeNull();
     expect(selected!.getAttribute("aria-selected")).toBe("true");
-    expect(selected!.getAttribute("data-shared-border-edges")).toBe("top right bottom left");
+    expect(selected!.getAttribute("data-shared-border-frame")).toBe("");
+    expect(selected!.getAttribute("data-shared-border-edges")).toBe("right bottom left");
     expect(selected!.getAttribute("data-shared-border-state")).toBe("active");
     expect(selected!.className).not.toContain("focus-visible:border-active-base");
   });

@@ -4,10 +4,6 @@
  */
 
 // #region 🔌️Adapters
-import { ACTOR_BYTE_PAGE_BYTES } from "@semio-tech/framework/actor/page";
-import { SHARD_COMMAND_MAXIMUM_PAGES } from "@semio-tech/framework/actor/shard-client/wire";
-import { encodeAppCommand } from "@semio-tech/framework/app-channel";
-import { encodePackValue } from "@semio-tech/framework/packs";
 import { deriveSavedStateV1, saveFailureTextV1 } from "../💾️saved-state/🟦️.ts";
 import { localizedLabelTextV1 } from "../../🏛️ShellHost/📣️replay-refusal/🟦️.ts";
 import {
@@ -103,18 +99,6 @@ export function naturalFileFormatV1(app: AppDefinition): NaturalFileFormatV1 | n
     return null;
   if (!app.io.exportFormats.includes(saveFormat.formatKind) || !app.io.importFormats.includes(saveFormat.formatKind)) return null;
   return saveFormat;
-}
-
-/** 📐️ Reserves the natural-file descriptor and sequence before the picker reads any payload. */
-export function naturalFileMediaInputV1(formatKind: string) {
-  const port = NATURAL_FILE_PORT_ID;
-  const descriptor = { portId: port, kindId: formatKind, wire: { kind: "binary", format_kind: formatKind } };
-  const commandBytes = SHARD_COMMAND_MAXIMUM_PAGES * ACTOR_BYTE_PAGE_BYTES;
-  const emptyCommand = encodeAppCommand({
-    MediaIn: { seq: Number.MAX_SAFE_INTEGER, port, descriptor: Array.from(encodePackValue(descriptor)), data: [] },
-  });
-  const lengthBytes = Math.ceil(Math.log2(commandBytes + 1) / 7);
-  return { port, descriptor, maximumBytes: Math.max(0, commandBytes - emptyCommand.length + 1 - lengthBytes) };
 }
 
 /** 📄️ Checks the native producer's typed descriptor before bytes are offered as a natural file. */

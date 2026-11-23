@@ -20,8 +20,8 @@ use pack::snapshot::ArtifactDsl;
 const CANVAS_WIDTH: f64 = 800.0;
 const CANVAS_HEIGHT: f64 = 600.0;
 
-fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("demo document parses")
+fn demo() -> semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring {
+    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("the bundled demo fixture parses"))
 }
 
 fn addressed(kind: &str) -> ViewModel {
@@ -46,6 +46,11 @@ fn press(doc: &Fem2dSnapshot, kind: &str, x: f64, y: f64, button: u32, shift: bo
     handle_window(&CanvasPointerDown { x, y, width: CANVAS_WIDTH, height: CANVAS_HEIGHT, button, shift, ctrl, meta, alt: false }, &view, &cfg, &addressed(kind)).expect("pointer down")
 }
 
+fn canonical(node: &str) -> String {
+    let id = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id("node", node).expect("node target");
+    format!("[{{\"granularity\":\"node\",\"id\":\"{id}\"}}]")
+}
+
 fn replay(emit: &Emit<Fem2dMutation, NoConfigMutation>) -> (&str, &semio_framework_value::DslValue) {
     let Some(Effect::ReplayShellCommand { action_id, args }) = emit.effects.first() else { panic!("a pointer command requests exactly one shell replay") };
     (action_id.as_str(), args.as_ref().expect("replay args"))
@@ -63,7 +68,7 @@ async fn canvas_pointer_down_on_a_node_requests_interaction_select() {
     assert_eq!(args.get("merge").and_then(semio_framework_value::DslValue::as_str), Some("replace"));
     assert_eq!(args.get("method").and_then(semio_framework_value::DslValue::as_str), Some("pick"));
     let targets = args.get("targets").and_then(semio_framework_value::DslValue::as_str).expect("targets");
-    assert!(targets.contains("\"id\":\"n1\"") && targets.contains("\"granularity\":\"node\""), "{targets}");
+    assert_eq!(targets, canonical("n1"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -100,14 +105,14 @@ async fn the_results_window_picks_with_its_own_camera() {
     let doc = demo();
     let (x, y) = node_pixel(&doc, "p8");
     let emit = press(&doc, results_window::WINDOW_KIND_ID, x, y, 0, false, false, false);
-    assert!(replay(&emit).1.get("targets").and_then(semio_framework_value::DslValue::as_str).is_some_and(|raw| raw.contains("\"id\":\"p8\"")));
+    assert!(replay(&emit).1.get("targets").and_then(semio_framework_value::DslValue::as_str).is_some_and(|raw| raw == canonical("p8")));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_unaddressed_pointer_event_faults() {
     let doc = demo();
     let history = HistoryView::empty();
-    let view = ArtifactView::new(&doc, &history);
+    let view = ArtifactView::new(&*doc, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     let payload = CanvasPointerDown { x: 0.0, y: 0.0, width: CANVAS_WIDTH, height: CANVAS_HEIGHT, button: 0, shift: false, ctrl: false, meta: false, alt: false };
@@ -119,7 +124,7 @@ async fn an_unaddressed_pointer_event_faults() {
 async fn canvas_pointer_move_requests_hover_and_pointer_up_refreshes_the_window() {
     let doc = demo();
     let history = HistoryView::empty();
-    let view = ArtifactView::new(&doc, &history);
+    let view = ArtifactView::new(&*doc, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     let (x, y) = node_pixel(&doc, "n2");
@@ -127,7 +132,7 @@ async fn canvas_pointer_move_requests_hover_and_pointer_up_refreshes_the_window(
     let (action_id, args) = replay(&emit);
     assert_eq!(action_id, semio_framework::INTERACTION_HOVER_ACTION_ID);
     assert_eq!(args.get("channel").and_then(semio_framework_value::DslValue::as_str), Some(FEM2D_POINTER_CHANNEL));
-    assert!(args.get("targets").and_then(semio_framework_value::DslValue::as_str).is_some_and(|raw| raw.contains("\"id\":\"n2\"")));
+    assert!(args.get("targets").and_then(semio_framework_value::DslValue::as_str).is_some_and(|raw| raw == canonical("n2")));
 
     let released = canvas_pointer_up::handle_window(
         &canvas_pointer_up::CanvasPointerUp { x, y, width: CANVAS_WIDTH, height: CANVAS_HEIGHT, shift: false, ctrl: false, meta: false, alt: false, cancelled: false },

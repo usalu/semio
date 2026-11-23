@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::h::schema::mutations::insert_signature_field::InsertSignatureField;
 use crate::standards::v1_7::subsets::h::schema::mutations::PdfHMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ fn removes_and_can_restore_the_named_signature_field() {
     let next = applied(&base, &PdfHMutation::RemoveSignatureField(mutation.clone()));
     assert!(support::signature_field_named(&next, &mutation.name).is_none());
     assert_eq!(next, catalog, "the last field takes the whole form with it");
-    assert_eq!(<RemoveSignatureField as MutationKind<PdfSnapshot, PdfHMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
+    assert_eq!(<RemoveSignatureField as ColdMutationKind<PdfSnapshot, PdfHMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]

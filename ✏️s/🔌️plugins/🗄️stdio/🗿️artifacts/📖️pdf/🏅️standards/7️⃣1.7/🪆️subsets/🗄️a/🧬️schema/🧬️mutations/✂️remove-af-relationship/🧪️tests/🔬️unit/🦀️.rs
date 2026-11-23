@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::a::schema::mutations::PdfAMutation;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::a::schema::mutations::set_af_relationship::SetAfRelationship;
@@ -21,7 +21,7 @@ fn removes_and_can_restore_the_relationship() {
     let next = applied(&base, &PdfAMutation::RemoveAfRelationship(mutation.clone()));
     let next_id = support::file_spec_named(&next, &mutation.file_name).unwrap();
     assert!(support::object(&next, next_id).and_then(|value| support::dict_name(value, "AFRelationship")).is_none());
-    assert_eq!(<RemoveAfRelationship as MutationKind<PdfSnapshot, PdfAMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
+    assert_eq!(<RemoveAfRelationship as ColdMutationKind<PdfSnapshot, PdfAMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -6,9 +6,9 @@ use semio_framework_value_persistent::list::{PagedListReservationFailure,PagedLi
 
 #[derive(Default)]
 pub struct PagedUtf8AppendCursor {
-    source: Option<(usize, usize)>,
-    destination: Option<(usize, usize)>,
-    position: usize,
+    #[doc(hidden)] pub source: Option<(usize, usize)>,
+    #[doc(hidden)] pub destination: Option<(usize, usize)>,
+    #[doc(hidden)] pub position: usize,
     end: usize,
     pending: Option<String>,
     bytes: Option<Vec<u8>>,

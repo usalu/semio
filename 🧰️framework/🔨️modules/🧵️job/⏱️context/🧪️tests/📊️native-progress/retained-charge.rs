@@ -224,3 +224,27 @@ fn retained_charge_preserves_cached_then_sampled_deadline() {
         assert_eq!(cx.fuel_remaining(), 1);
     }
 }
+
+/// 🌱️ The external work recipient posts only the business view; resident birth work excluded from it never reaches the issuer's next-epoch fuel check. The fixture is left unclosed on purpose: closure and its heap witness belong to the other tests of this binary.
+#[test]
+fn work_recipient_posts_the_business_view_without_resident_birth_work() {
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(929), Generation(1), stock(), clock, u64::MAX, 100_000);
+    let (mut physical, mut work, mut reserved, mut reserved_work) = (RetainedCloneProgress::default(), 5, RetainedCloneProgress::default(), 7);
+    let (business, remaining);
+    {
+        let mut cx = caller.lend_context();
+        cx.bind_original_physical_recipient(&mut physical).unwrap();
+        cx.bind_original_work_recipient(&mut work).unwrap();
+        cx.bind_original_reserved_recipient(&mut reserved, &mut reserved_work).unwrap();
+        cx.consume_fuel(3);
+        let (work_before, kept) = (cx.original_work_units_spent(), cx.retained_progress());
+        cx.consume_fuel(2);
+        cx.exclude_original_birth(work_before, kept);
+        business = cx.original_work_units_spent();
+        remaining = cx.original_source_fuel_remaining();
+    }
+    assert_eq!(business, 3);
+    assert_eq!(work, 5 + business);
+    caller.settle_lent_fuel(remaining);
+    std::mem::forget(caller);
+}

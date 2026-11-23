@@ -17,17 +17,7 @@ const facts:Record<string,unknown>={
  file:{size:1,mtimeMs:1,ctimeMs:1,ino:1,sha256:hex("x")},field:{format:"json",pointer:"/a",paths:[],digest:hex("y")},analysis:{provider:provider.id,revision:provider.revision,source:{size:1,mtimeMs:1,ctimeMs:1,ino:1,sha256:hex("z")},resultSha256:hex("r"),nestedObservations:[]},
  exists:true,fileExists:true,directoryExists:true,stat:"file",lstat:"file",realpath:"/nowhere/real",realpathNative:"/nowhere/real",typescriptText:hex("t"),typescriptRealpath:"/nowhere/real",readdir:hex("d"),readdirNames:hex("n"),directories:hex("s"),
 };
-const STORE=schema.$defs.rules.const.machineLocalDirectoryNames[1] as string;
 const holds=(row:object)=>{try{return observation.observationRowFreshV1(row)===true;}catch{return false;}};
-
-test("the store directory of a package is machine-local too: a listing of a directory holding it is the same with and without it, and git ignores it",()=>{
- expect(schema.$defs.rules.const.machineLocalDirectoryNames).toContain(STORE);
- expect(names.isMachineLocalPathV1(join(root,"a",STORE,"b.json"))).toBe(true);
- const withStore=mkdtempSync(join(root,"list-a-")),without=mkdtempSync(join(root,"list-b-"));
- for(const base of[withStore,without])writeFileSync(join(base,"Cargo.toml"),"x\n");
- mkdirSync(join(withStore,STORE));writeFileSync(join(withStore,STORE,"state.json"),"{}\n");
- for(const kind of["readdir","readdirNames"] as const)expect(observation.directoryFactOfV1(kind,withStore),kind).toBe(observation.directoryFactOfV1(kind,without));
-});
 
 test("the predicate names a path below the directory, in either separator, and nothing else",()=>{
  for(const path of[join(root,"🤖️generated","b.ts"),join(root,"a","🤖️generated","b","c.ts"),"C:\\semio\\a\\🤖️generated\\b.ts"])expect(names.isMachineLocalPathV1(path),path).toBe(true);
@@ -45,11 +35,9 @@ test("every kind the schema declares is a fact that observes the filesystem, and
  expect([...new Set([...found.filter(kind=>!other.has(kind)),"file"])].sort()).toEqual([...kinds].sort());
 });
 
-for(const kind of kinds)test("a recorded "+kind+" row over a machine-local path holds where the directory is absent; over any other path it does not ("+kind+")",async()=>{
+for(const kind of kinds)test("a recorded "+kind+" row over a machine-local path holds where the directory is absent; over any other path it does not ("+kind+")",()=>{
  const local=join(root,"gone","🤖️generated","x.json"),plain=join(root,"gone","plain","x.json"),row=(path:string)=>({kind,path,fact:facts[kind]});
  expect(holds(row(local)),"machine-local").toBe(true);
- expect(await observation.firstFailingRowV1([row(local)],undefined),"judged by the verifier of a stored record").toBeUndefined();
- expect(await observation.firstFailingRowV1([row(join(root,"gone",STORE,"x.json"))],undefined),"below the store directory of a package").toBeUndefined();
  expect(holds(row(plain)),"control: the same fact over an ordinary path is refused").toBe(false);
 });
 

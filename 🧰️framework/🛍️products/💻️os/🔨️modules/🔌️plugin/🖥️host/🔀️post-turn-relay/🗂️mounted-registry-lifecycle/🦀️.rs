@@ -184,7 +184,7 @@ impl GuestRelayMountedRegistry {
                 }
                 Ok(GuestRelayMountedClose::Pending) => GuestRelayMountedReap::Progress,
                 Ok(GuestRelayMountedClose::Blocked { wake_registered }) => GuestRelayMountedReap::Blocked { wake_registered },
-                Err(failure)=>{session.terminal=Some(GuestRelayMountedTerminal::HostFault(PluginHostError::OriginalTurn(failure)));GuestRelayMountedReap::Blocked{wake_registered:session.wake.registered}},
+                Err(failure)=>{session.terminal=Some(GuestRelayMountedTerminal::HostFault(PluginHostError::OriginalTurn(Box::new(failure))));GuestRelayMountedReap::Blocked{wake_registered:session.wake.registered}},
             };
         }
         GuestRelayMountedReap::Idle

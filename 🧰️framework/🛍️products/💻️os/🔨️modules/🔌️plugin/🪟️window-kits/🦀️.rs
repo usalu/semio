@@ -455,11 +455,9 @@ pub use context_menu::{delete_selection, node_graph_delete_selection_spec, nothi
 /// their typed scene payload through `semio_ui_scene`; ordinary widgets use the
 /// contract builder DSL directly, so no renderer-owned `UiNode` crosses this SDK boundary.
 pub trait WindowKit {
-    type ViewModel;
     const KIND_ID: &'static str;
     fn window_kind() -> WindowKindDefinition;
     fn editable_window_kind() -> WindowKindDefinition;
-    fn render(view: &Self::ViewModel) -> UiAssemblyResult<BuiltNode>;
 }
 
 

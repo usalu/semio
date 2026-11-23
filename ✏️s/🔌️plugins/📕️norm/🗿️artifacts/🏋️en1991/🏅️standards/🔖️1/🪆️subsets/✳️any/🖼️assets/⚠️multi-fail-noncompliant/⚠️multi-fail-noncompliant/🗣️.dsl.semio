@@ -13,7 +13,7 @@ wind-faces [id:TEXT zone:TEXT z:QTY c-pe10:NUM c-pe1:NUM c-pi:NUM c-s:NUM c-d:NU
   facade-d D 8m 0.8 1 0.2 1 1 10m2 100Pa
 }
 accidental-cases [id:TEXT impact:LIST explosion:LIST] {
-  impact-1 [ {vehicle-mass=15000kg vehicle-speed=13.9m/s assumed-force=50000N} ] [ ]
+  impact-1 [ { vehicle-mass=15000kg vehicle-speed=13.9m/s assumed-force=50000N } ] [ ]
 }
 bridge-lanes [id:TEXT width:QTY offset:QTY lm1-lane:UINT] {
 }
@@ -36,6 +36,7 @@ internal-explosions [id:TEXT volume:NUM vent-area:QTY vent-pressure:QTY assumed-
 thermal-sections [id:TEXT deck-type:UINT surfacing:UINT length:QTY depth:QTY alpha-micro:NUM assumed-range:NUM] {
 }
 cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
+  case-e11-04 "Imposed-load reduction of the office floors" "Nutzlastabminderung der Bürogeschosse" E11.04 [ {id=area value=30} {id=storeys value=4} ] [ {id=category value=A} ]
 }
 helicopter-landings [id:TEXT mass:NUM x:QTY y:QTY height:QTY assumed-force:QTY] {
 }
@@ -61,7 +62,7 @@ bulk-solids [id:TEXT internal-friction:NUM] {
 }
 rotating-machines [id:TEXT mass:NUM eccentricity:QTY frequency:NUM] {
 }
-fatigue-models [id:TEXT model:TEXT lane:UINT assumed-axle-load:NUM assumed-udl:NUM] {
+fatigue-models [id:TEXT model:TEXT lane:UINT assumed-axle-load:QTY assumed-udl:QTY] {
 }
 support-collisions [id:TEXT location:TEXT assumed-force-x:QTY assumed-force-y:QTY height:QTY position-x:QTY] {
 }

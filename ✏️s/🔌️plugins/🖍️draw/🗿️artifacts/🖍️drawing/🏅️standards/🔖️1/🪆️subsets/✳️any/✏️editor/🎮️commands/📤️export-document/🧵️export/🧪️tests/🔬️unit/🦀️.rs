@@ -331,7 +331,7 @@ fn export_retires_the_original_segmented_transport() {
                 assert!(testkit::state(&work).pending_page.is_some());
             }
             work.begin_close();
-            for _ in 0..1_000 {
+            for _ in 0..100_000 {
                 if work.terminal_is_empty() { break; }
                 let selected = grant(work.close_demands(4096).unwrap());
                 caller.turn(selected, |cx| cx.with_original_retirement(|cx| {

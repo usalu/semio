@@ -80,14 +80,14 @@ impl ArtifactViewer for Ifc4x3AnyViewer {
             return semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::inspector::render(doc, interaction, view_state, IFC4X3_VIEWER_CONTROLLER, false, cx).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
         }
         if body_key == MeshWindowKit::KIND_ID {
-            return semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::geometry::render_selected_in_context(doc.snapshot, cx, interaction).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+            return semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::geometry::render_selected_in_context(doc.snapshot, cx, interaction, view_state.locale).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into);
         }
         Self::render(body_key, doc, cfg, view_state).map(Some).map_err(Into::into)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            body if body == MeshWindowKit::KIND_ID => semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::geometry::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            body if body == MeshWindowKit::KIND_ID => semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::geometry::render(doc.snapshot, view_state.locale).map(semio_plugin::built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

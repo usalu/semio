@@ -21,7 +21,7 @@ async fn definition_declares_no_mutating_actions() {
 #[semio_framework_async_macros::async_test]
 async fn render_carries_the_documents_own_text_and_language_read_only() {
     let document = crate::writer_snapshot_with_text(crate::WRITER_DOCUMENT_SCHEMA, "viewer", "jack", "writer://viewer", "let x = 1;");
-    let node = render(&document).expect("viewer surface");
+    let node = render(&document, semio_plugin::Locale::En).expect("viewer surface");
     let scene = semio_plugin::artifact_app_laws::built_surface_scene::<semio_plugin::TextEditorScene>(&node).expect("text-editor scene");
     assert_eq!(scene.buffer, "let x = 1;");
     assert_eq!(scene.language.as_deref(), Some("jack"));

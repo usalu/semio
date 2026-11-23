@@ -1,0 +1,37 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "semio:build:graph:owner-discovery-farm:v1",
+ "title": "Owner discovery farm",
+ "description": "Child processes that discover the admission facts of owners in parallel, because the discovery of one owner is single-threaded JavaScript that takes 4 to 65 s cold and the admission closure observed hundreds of them one after the other. The children are the walk children of the closure farm (one JSON line per request and answer, a child that dies, stalls or ends on memory is replaced, a failure only makes the parent discover the owner itself) running `./👷️deriver`; they are booked as `walk-farm` workers of the one memory plan of the process tree, so they never exceed the share the project farm leaves. A child holds a whole owner (hundreds of thousands of observed rows), so it is booked at childBytes and recycled at recycleBytes. The parent never waits for a child: an owner is discovered by the parent itself unless a child is ready.",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "maximumChildren": 6,
+    "childBytes": 1342177280,
+    "recycleBytes": 1610612736,
+    "batch": 1,
+    "requestTimeoutMilliseconds": 1800000,
+    "startTimeoutMilliseconds": 180000,
+    "failuresToStop": 3,
+    "idleMilliseconds": 120000,
+    "environment": "SEMIO_GRAPH_OWNER_FARM",
+    "disabledValue": "off"
+   }
+  },
+  "Request": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["owner", "targets", "inputs", "selection", "registryDigest", "format", "epoch"],
+   "properties": {
+    "owner": {"type": "string", "minLength": 1},
+    "targets": {"type": "array", "items": {"type": "string"}},
+    "inputs": {"type": "array", "items": {"type": "string"}},
+    "selection": {},
+    "registryDigest": {"type": "string"},
+    "format": {"type": "string", "description": "The admission format of the parent: a child whose own format differs refuses, so no child discovers with another implementation than the parent holds."},
+    "epoch": {"type": "string", "description": "The caches of one attempt (the native manifests and closures) live for one epoch: a child drops them when the epoch changes, as the parent creates them again for every attempt."}
+   }
+  }
+ }
+}

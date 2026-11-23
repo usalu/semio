@@ -128,8 +128,8 @@ def scale500():
     timber(sc, 0.076)
     sc.rod("trunk", "trunk", [0, 0, 0], [2.92, 0, 0], 0.11, region="wood", material=WOOD, tone=0.28)
     leaders(sc, 0.06)
-    canopy(sc, [(0.0, 2.93, 0.0, 0.5, 0.17, 1.35, 0.4)])
-    racemes(sc, [(0.14, 0.17, 0.045)], [(0.0, 0.0, 1.0)])
+    canopy(sc, [(0.0, 2.93, 0.0, 0.53, 0.17, 1.35, 0.4)])
+    racemes(sc, [(0.14, 0.2, 0.045)], [(0.0, 0.0, 1.0)])
     return sc
 
 

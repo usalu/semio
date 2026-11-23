@@ -502,7 +502,13 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
     scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.document, pane, objects), CAD_FIT_PADDING, None));
     scene.domain_id = Some(CAD_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(CAD_WORLD_PICK_GRANULARITY.into());
-    scene_surface(surface_id, semio_plugin::plugin_app_close_prelude::SurfaceKind::World3d, &scene)
+    let name = match pane {
+        CadPaneId::Shape => semio_plugin::surface_name(locale, "Shape view", "Formansicht"),
+        CadPaneId::Building => semio_plugin::surface_name(locale, "Building view", "Gebäudeansicht"),
+        CadPaneId::Energy => semio_plugin::surface_name(locale, "Energy view", "Energieansicht"),
+        CadPaneId::StructureClassic => semio_plugin::surface_name(locale, "Structure view", "Tragwerkansicht"),
+    };
+    scene_surface(surface_id, semio_plugin::plugin_app_close_prelude::SurfaceKind::World3d, &scene, name, None)
 }
 //#endregion 🔖️WorldScene
 

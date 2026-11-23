@@ -202,8 +202,8 @@ fn present_band(shell: &mut ShellState) -> InputState<ActionDescriptor> {
     input
 }
 
-fn focused_chrome(mut shell: &ShellState, input: &InputState<ActionDescriptor>) -> Vec<String> {
-    PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().filter(|node| node.focused).map(|node| node.key).collect()
+fn focused_chrome(shell: &mut ShellState, input: &InputState<ActionDescriptor>) -> Vec<String> {
+    PanelsViewCtx::of(shell).chrome_accessibility_nodes(input.hits()).into_iter().filter(|node| node.focused).map(|node| node.key).collect()
 }
 
 /// ⚖️ LAW: a replay or a review moves keyboard focus onto the band's live status node — the node the ARIA mirror then
@@ -220,12 +220,12 @@ fn a_replay_and_a_review_focus_the_band_the_prompt_takes_focus_and_typing_elsewh
     assert_eq!(shell.history.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Editor), "no history body on screen yet: still waiting");
     shell.history.time_travel_focus = Some((TimeTravelFocus::Editor, 0.0));
     let input = present_band(&mut shell);
-    assert_eq!((shell.history.time_travel_focus, focused_chrome(&shell, &input)), (None, Vec::<String>::new()), "past the settle time the move is given up");
+    assert_eq!((shell.history.time_travel_focus, focused_chrome(&mut shell, &input)), (None, Vec::<String>::new()), "past the settle time the move is given up");
 
     let mut replaying = session("a running replay");
     SessionCtx::of(&mut shell).observe_history_time_travel(Some(&replaying));
     let input = present_band(&mut shell);
-    assert_eq!(focused_chrome(&shell, &input), [TIME_TRAVEL_BAND_STATUS_ID]);
+    assert_eq!(focused_chrome(&mut shell, &input), [TIME_TRAVEL_BAND_STATUS_ID]);
     let band = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == TIME_TRAVEL_BAND_STATUS_ID).expect("the band's live node");
     assert!(band.focusable && !band.tabbable && band.focused, "focused programmatically, never a Tab stop");
     shell.input.accessibility_focused_control_id = Some("ui.timeTravel.exit".into());
@@ -235,7 +235,7 @@ fn a_replay_and_a_review_focus_the_band_the_prompt_takes_focus_and_typing_elsewh
 
     SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("an error downstream")));
     let input = present_band(&mut shell);
-    assert_eq!(focused_chrome(&shell, &input), [TIME_TRAVEL_BAND_STATUS_ID], "the review lands on the band that names what blocks");
+    assert_eq!(focused_chrome(&mut shell, &input), [TIME_TRAVEL_BAND_STATUS_ID], "the review lands on the band that names what blocks");
 
     SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("the finalize prompt can go back")));
     assert_eq!(shell.history.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Dialog));

@@ -1,0 +1,674 @@
+file	first	first_pass	first_fail	first_s	final	final_pass	final_fail	final_s	first_error
+NB/⚙️configuration/🎟️admission/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+NB/⚙️configuration/📥️capture/🧪️tests/🟦️.test.ts	failed	84	1	2	failed	84	1	3	error: cannot update the lock file /fixture/Cargo.lock because --locked was passed to prevent this
+NB/🎟️admission/🔖️scheduler/🧪️tests/🟦️.ts	passed	7	0	1	passed	7	0	1	PASS
+NB/🎟️admission/🧪️tests/♻️replay/🟦️.ts	passed	5	0	2	passed	5	0	2	PASS
+NB/🎟️admission/🧪️tests/🔓️tokens/🟦️.ts	passed	4	0	10	passed	4	0	10	
+NB/🎟️admission/🧪️tests/🔭️probe/🟦️.ts	passed	3	0	0	passed	3	0	0	PASS
+NB/🎟️admission/🧪️tests/🟦️.ts	failed	13	3	12	failed	13	3	9	error: repo cargo --store=shared --configuration=release -- build --bins --examples --message-format
+NB/🎟️admission/🧪️tests/🧵️frontend-threads/🟦️.ts	failed	2	1	3	failed	2	1	5	error: error: process didn't exit successfully: `repo '/Users/ueli/Documents/semio/🧰️framework/🛍️pro
+NB/🎯️recipe/🧪️tests/🚀️spawn/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/🎯️recipe/🧪️tests/🟦️.ts	passed	5	0	17	passed	5	0	17	PASS
+NB/🎰️jobserver/🧪️tests/🟦️.ts	failed	7	3	15	failed	7	3	7	error: repo cargo --store=shared --configuration=release -- build --bins --examples --message-format
+NB/💾️storage/⏱️verification/🧪️tests/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+NB/💾️storage/🌐️platform/⏳️wait/🧪️tests/🟦️.ts	passed	5	0	10	passed	5	0	10	PASS
+NB/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/♻️retirement/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+NB/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/📥️inspection/🟦️.ts	failed	0	2	1	failed	0	2	2	error: same-device-inactive: ReferenceError: admitNativeImageRelocationV1 is not defined
+NB/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+NB/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🆓️unknown/🟦️.ts	failed	5	1	2	failed	5	1	3	
+NB/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🔒️sites/🟦️.ts	passed	1	0	0	passed	1	0	0	PASS
+NB/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+NB/💾️storage/🌐️platform/📋️contract/🧪️tests/📥️persistent/🟦️.ts	failed	0	1	1	failed	0	1	2	error: expect(received).toContain(expected)
+NB/💾️storage/🌐️platform/📋️contract/🧪️tests/📸️bootstrap/🟦️.ts	passed	3	0	5	passed	3	0	5	PASS
+NB/💾️storage/🌐️platform/📋️contract/🧪️tests/🟦️.ts	passed	6	0	1	passed	6	0	1	PASS
+NB/💾️storage/🌐️platform/🥾️boot/🧪️tests/🚚️relocation/🟦️.ts	passed	2	0	1	passed	2	0	1	
+NB/💾️storage/🌐️platform/🥾️boot/🧪️tests/🟦️.ts	passed	4	0	0	passed	4	0	0	PASS
+NB/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🕰️clock/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+NB/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🕰️clock/🪟️native/🧪️tests/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+NB/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🧪️tests/💥️crash/🟦️.ts	passed	6	0	10	passed	6	0	10	PASS
+NB/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🧪️tests/🔗️wiring/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+NB/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🧪️tests/🟦️.ts	passed	17	0	1	passed	17	0	1	PASS
+NB/💾️storage/🌐️platform/🥾️boot/🩹️recovery/🧪️tests/🩺️heal/🟦️.ts	passed	5	0	13	passed	5	0	13	PASS
+NB/💾️storage/🌐️platform/🧪️tests/🟦️.ts	passed	2	0	3	passed	2	0	3	PASS
+NB/💾️storage/🌐️platform/🧪️tests/🧭️dispatch/🟦️.ts	failed	3	2	1	failed	3	2	1	error: 🍎️image
+NB/💾️storage/🌐️platform/🧾️failure/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/💾️storage/🌱️birth/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	
+NB/💾️storage/🌱️birth/🧾️claim/🧪️tests/🟦️.ts	passed	1	0	0	passed	1	0	0	PASS
+NB/💾️storage/🍎️image/♻️reclaim/🧪️tests/⏱️bounded/🟦️.ts	passed	4	0	0	passed	4	0	0	PASS
+NB/💾️storage/🍎️image/♻️reclaim/🧪️tests/🛑️sigterm/🟦️.ts	passed	4	0	15	passed	4	0	15	PASS
+NB/💾️storage/🍎️image/♻️reclaim/🧪️tests/🟦️.ts	passed	16	0	22	passed	16	0	22	
+NB/💾️storage/🍎️image/🏚️stranded/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+NB/💾️storage/🍎️image/👤️owners/🧪️tests/🟦️.ts	passed	5	0	11	passed	5	0	11	PASS
+NB/💾️storage/🍎️image/📏️capacity/🧪️tests/🟦️.ts	passed	3	0	14	passed	3	0	14	PASS
+NB/💾️storage/🍎️image/📡️roster/🧪️tests/🟦️.ts	passed	19	0	9	passed	19	0	9	PASS
+NB/💾️storage/🍎️image/📥️information/🧪️tests/🟦️.ts	passed	13	0	13	passed	13	0	13	PASS
+NB/💾️storage/🍎️image/🛟️reserve/🧪️tests/🟦️.ts	passed	10	0	2	passed	10	0	2	
+NB/💾️storage/🍎️image/🤫️silence/🧪️tests/🟦️.ts	passed	2	0	24	passed	2	0	24	
+NB/💾️storage/🍎️image/🪶️sparse/🧪️tests/🟦️.ts	passed	7	0	29	passed	7	0	29	PASS
+NB/💾️storage/👁️existing/🧪️tests/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+NB/💾️storage/💰️funding/🔁️replacement/🧪️tests/issuer.test.ts	passed	5	0	1	passed	5	0	1	
+NB/💾️storage/💰️funding/🔁️replacement/🧪️tests/🟦️.ts	passed	10	0	0	passed	10	0	0	PASS
+NB/💾️storage/📁️directory/⚓️envelope/🧪️tests/🟦️.ts	passed	13	0	2	passed	13	0	2	PASS
+NB/💾️storage/📁️directory/📏️usage/🧪️tests/🟦️.ts	passed	14	0	2	passed	14	0	2	PASS
+NB/💾️storage/📁️directory/🔀️exchange/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+NB/💾️storage/📁️directory/🧪️tests/📏️meter/🟦️.ts	passed	8	0	1	passed	8	0	1	PASS
+NB/💾️storage/📁️directory/🧪️tests/🟦️.ts	passed	32	0	2	passed	32	0	2	PASS
+NB/💾️storage/📁️directory/🧪️tests/🪞️fold/🟦️.ts	passed	3	0	4	passed	3	0	4	PASS
+NB/💾️storage/📁️directory/🪟️host/📐️allocation/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/💾️storage/📁️directory/🪟️host/🧪️tests/🟦️.ts	passed	11	0	1	passed	11	0	1	PASS
+NB/💾️storage/📁️directory/🪟️journal/🧪️tests/🟦️.ts	passed	11	0	6	passed	11	0	6	PASS
+NB/💾️storage/📏️measurement/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/💾️storage/📜️journal/🔖️revision/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+NB/💾️storage/📜️journal/🧷️descendant/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+NB/💾️storage/📤️publication/🌐️platform/🧮️read-plan/🧪️tests/🔒️journal/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/💾️storage/📤️publication/🌐️platform/🧮️read-plan/🧪️tests/🟦️.ts	passed	9	0	2	passed	9	0	2	PASS
+NB/💾️storage/📤️publication/🌐️platform/🧮️read-plan/🧪️tests/🪣️chunks/🟦️.ts	passed	10	0	1	passed	10	0	1	PASS
+NB/💾️storage/📤️publication/🎛️owner/🌅️initial/🧪️tests/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+NB/💾️storage/📤️publication/📚️witness/🧪️tests/name-diagnostic.test.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/💾️storage/📤️publication/📚️witness/🧪️tests/🔤️ordering/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+NB/💾️storage/📤️publication/📚️witness/🧪️tests/🟦️.ts	failed	11	33	5	failed	11	33	5	error: Exact Source observer instrumentation required
+NB/💾️storage/📤️publication/📸️observation/🧪️tests/🟦️.ts	passed	9	0	4	passed	9	0	4	PASS
+NB/💾️storage/📤️publication/🧱️fixed/🧪️tests/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+NB/💾️storage/📥️borrower/🧪️tests/🟦️.ts	failed	1	9	1	failed	1	9	2	RepoError: invalid process.testing.capabilities-differ {"owner":"native-borrower-terminal"}
+NB/💾️storage/🔌️backends/🍎️mounted-image/✍️sealing/🧪️tests/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+NB/💾️storage/🔌️backends/🧪️tests/⚖️laws/🟦️.ts	failed	4	3	1	failed	4	3	1	error: expect(received).toEqual(expected)
+NB/💾️storage/🔌️backends/🧪️tests/🧭️selection/🟦️.ts	passed	4	0	1	passed	4	0	1	
+NB/💾️storage/🔒️mapping/🧪️tests/🟦️.ts	failed	0	4	0	failed	0	4	2	RepoError: invalid process.testing.capabilities-differ {"owner":"native-mapping-admission"}
+NB/💾️storage/🧪️tests/🎟️gate/🟦️.ts	passed	1	0	0	passed	1	0	0	PASS
+NB/💾️storage/🧪️tests/📉️rebudget/🟦️.ts	passed	4	0	2	passed	4	0	2	PASS
+NB/💾️storage/🧪️tests/🟦️.ts	failed	5	1	1	failed	5	1	2	
+NB/💾️storage/🧰️programs/🧪️tests/🟦️.ts	failed	3	1	0	failed	3	1	1	error: expect(received).toEqual(expected)
+NB/💾️storage/🧱️fixed/🎛️command/🧪️tests/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+NB/💾️storage/🧱️fixed/🧪️tests/🌱️birth/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/💾️storage/🧱️fixed/🧪️tests/📥️paths/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/💾️storage/🧱️fixed/🧪️tests/📥️receipt/🟦️.ts	failed	1	1	1	failed	1	1	2	error: expect(received).toThrow(expected)
+NB/💾️storage/🧱️fixed/🧪️tests/🟦️.ts	passed	7	0	1	passed	7	0	1	PASS
+NB/💾️storage/🧷️live-children/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	
+NB/💾️storage/🧹️cleanup/🎛️command/🐚️shell/🧪️tests/🟦️.ts	passed	3	0	0	passed	3	0	0	PASS
+NB/💾️storage/🧹️cleanup/🎛️command/🧪️tests/🟦️.ts	passed	6	0	1	passed	6	0	1	PASS
+NB/💾️storage/🧹️cleanup/📥️operation/🤲️lifetime/🧪️tests/🟦️.ts	failed	3	1	1	failed	3	1	1	error: Bounded backend preparation branch required: directory-partition
+NB/💾️storage/🧹️cleanup/📥️operation/🧪️tests/🟦️.ts	passed	12	0	5	passed	12	0	5	PASS
+NB/💾️storage/🧹️cleanup/📥️receiver/🧪️tests/📎️existing/🟦️.ts	failed	0	5	1	failed	0	5	1	RepoError: invalid process.testing.capabilities-differ {"owner":"test:existing-native-maintenance"}
+NB/💾️storage/🧹️cleanup/📥️receiver/🧪️tests/📥️release/🟦️.ts	failed	1	1	1	failed	1	1	1	error: expect(received).toBe(expected)
+NB/💾️storage/🧹️cleanup/📥️receiver/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+NB/💾️storage/🧹️cleanup/🧪️tests/📋️state/🟦️.ts	passed	26	0	1	passed	26	0	1	PASS
+NB/💾️storage/🧹️cleanup/🧪️tests/🛑️failed-birth/🟦️.ts	passed	1	0	5	passed	1	0	5	PASS
+NB/💾️storage/🧹️cleanup/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+NB/💾️storage/🧹️cleanup/🧪️tests/🤫️silence/🟦️.ts	passed	1	0	7	passed	1	0	7	PASS
+NB/💾️storage/🧹️cleanup/🧪️tests/🧩️model/fixture.ts	passed	0	0	2	passed	0	0	2	PASS
+NB/💾️storage/🧹️whole/🧪️tests/🟦️.ts	passed	6	0	1	passed	6	0	1	PASS
+NB/💾️storage/🪟️conditional-retirement/🧪️tests/🟦️.ts	passed	7	0	1	passed	7	0	1	PASS
+NB/💾️storage/🪶️extent/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+NB/📈️telemetry/🧪️tests/🟦️.ts	failed	5	2	4	failed	5	2	7	error: repo cargo --store=shared --configuration=release -- build --bins --examples --message-format
+NB/📋️plan/🧪️tests/🟦️.ts	passed	18	0	1	passed	18	0	1	PASS
+NB/📋️plan/🧪️tests/🧵️control/🟦️.ts	failed	0	3	1	failed	0	3	1	RepoError: invalid process.testing.capabilities-differ {"owner":"test:cargo-artifact-plan-control"}
+NB/📏️path-envelope/📐️budget/🧪️tests/🟦️.ts	failed	4	2	85	failed	4	2	98	error: expect(received).toEqual(expected)
+NB/📏️path-envelope/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+NB/📏️paths/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+NB/📣️diagnostics/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/📥️inputs/🤲️continuations/🧪️tests/🟦️.ts	passed	2	0	4	passed	2	0	4	PASS
+NB/📥️inputs/🧪️tests/⚙️operation/🟦️.ts	passed	1	0	3	passed	1	0	3	PASS
+NB/📥️inputs/🧪️tests/✍️writer/🟦️.ts	passed	1	0	2	passed	1	0	2	
+NB/📥️inputs/🧪️tests/📋️planning/🟦️.ts	passed	7	0	0	passed	7	0	0	PASS
+NB/📥️inputs/🧪️tests/📥️consumers/🟦️.ts	failed	0	2	1	failed	0	2	2	ReferenceError: withProvisionedPythonV1 is not defined
+NB/📥️source/🎟️admission/📖️read/🧪️tests/🟦️.ts	passed	6	0	38	passed	6	0	38	PASS
+NB/📥️source/🎟️admission/🧪️tests/🏎️throughput/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+NB/📥️source/🎟️admission/🧪️tests/🔁️recheck/🟦️.ts	failed	2	1	1	failed	2	1	1	error: three-units-with-seven-embedded-inputs
+NB/📥️source/🎟️admission/🧪️tests/🟦️.ts	passed	7	0	1	passed	7	0	1	PASS
+NB/📥️source/🎟️admission/🧪️tests/🧠️memo/🟦️.ts	passed	4	0	2	passed	4	0	2	
+NB/📥️source/🏭️generated-owner/🧪️tests/🟦️.ts	passed	4	0	0	passed	4	0	0	PASS
+NB/📥️source/📎️retained/🧪️tests/🟦️.ts	failed	0	3	1	failed	0	3	1	RepoError: invalid process.testing.capabilities-differ {"owner":"cargo-retained-source"}
+NB/📥️source/🧪️tests/🟦️.ts	failed	48	1	4	failed	48	1	5	error: expect(received).toContain(expected)
+NB/📦️observation/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/🔒️lease/🎯️target/🧪️tests/📋️callers/🟦️.ts	failed			36	failed	0	1	50	NOERR
+NB/🔒️lease/🧪️tests/🏎️overlap/🟦️.ts	failed	1	1	2	failed	1	1	2	error: A test reached the live repository store of the checkout /Users/ueli/Documents/semio; give it
+NB/🔒️lease/🧪️tests/🔐️custody/🟦️.ts	passed	4	0	12	passed	4	0	12	PASS
+NB/🔒️lease/🧪️tests/🔓️unit-lock-model/🟦️.ts	passed	3	0	3	passed	3	0	3	PASS
+NB/🔒️lease/🧪️tests/🧱️unit-exclusion/🟦️.ts	passed	0	0	1	passed	0	0	1	PASS
+NB/🕸️units/📥️capture/🧠️memo/🧪️tests/🟦️.ts	failed	1	1	4	failed	1	1	5	error: process didn't exit successfully: `repo '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑
+NB/🕸️units/📥️capture/🧪️tests/🟦️.ts	passed	4	0	2	passed	4	0	2	PASS
+NB/🕸️units/🧪️tests/⚓️plan-stability/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/🕸️units/🧪️tests/🔁️duplicate-edges/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/🗃️stage-cache/🧪️tests/🟦️.ts	passed	6	0	5	passed	6	0	5	PASS
+NB/🧩️component-pass/⏳️job-wait/🧪️tests/🟦️.ts	passed	5	0	1	passed	5	0	1	PASS
+NB/🧩️component-pass/🎟️stage/🧪️tests/🟦️.ts	passed	6	0	3	passed	6	0	3	PASS
+NB/🧩️component-pass/📋️contract/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/🧩️component-pass/🔁️failure-churn/🧪️tests/reclaim.test.ts	passed	8	0	2	passed	8	0	2	PASS
+NB/🧩️component-pass/🔁️failure-churn/🧪️tests/🟦️.ts	passed	40	0	5	passed	40	0	5	PASS
+NB/🧩️component-pass/🧪️tests/📥️inputs/🟦️.ts	failed	2	1	2	failed	2	1	3	ReferenceError: withoutJobserverEnvironmentV1 is not defined
+NB/🧩️component-pass/🧪️tests/🟦️.ts	failed	0	2	391	failed	0	2	391	
+NB/🧩️component-pass/🧪️tests/🧠️memo-wiring/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+NB/🧩️component-pass/🧪️tests/🧶️feature-unification/🟦️.ts	failed	0	1	5	failed	0	1	60	error: [capacity] cargo: sized at 81% of the default from 2 earlier run(s) of its class
+NB/🧩️component-pass/🩺️failure-diagnosis/🧪️tests/🟦️.ts	passed	8	0	1	passed	8	0	1	
+NB/🧪️tests/🟦️.ts	failed	32	6	116	failed	32	6	160	
+NB/🧪️tests/🦀️cargo/🟦️.ts	passed	0	0	1	passed	0	0	1	
+NB/🧮️phase-ledger/🧪️tests/🟦️.ts	failed	6	1	1	failed	6	1	1	
+NB/🧾️receipt/📎️source-witness/🧪️tests/🟦️.ts	failed	0	4	1	failed	0	4	1	
+NB/🧾️receipt/📦️retention/🧪️tests/🟦️.ts	passed	19	0	757	passed	19	0	757	
+NB/🧾️receipt/📦️retention/🧪️tests/🪟️recheck-window/🟦️.ts	passed	1	0	1	passed	1	0	1	
+NB/🧾️receipt/📦️retention/🧪️tests/🪶️size-law/🟦️.ts	passed	1	0	0	passed	1	0	0	
+NB/🧾️receipt/🧪️tests/⏱️linear/🟦️.ts	passed	3	0	2	passed	3	0	2	
+NB/🧾️receipt/🧪️tests/🟦️.ts	passed	26	0	2	passed	26	0	2	
+C/☁️stage-fleet/🧪️tests/🟦️.ts	passed	13	0	10	passed	13	0	10	PASS
+C/🌐️vite/🏗️compiler/🎟️admission/🧪️tests/🟦️.ts	passed	3	0	5	passed	3	0	5	PASS
+C/🌐️vite/🏗️compiler/💧️drain/🧪️tests/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🌐️vite/💾️storage/🧪️tests/🟦️.ts	passed	9	0	40	passed	9	0	40	PASS
+C/🌐️vite/📥️environment/🧪️tests/🟦️.ts	passed	5	0	3	passed	5	0	3	PASS
+C/🌐️vite/📥️inputs/🧪️tests/🟦️.ts	passed	4	0	2	passed	4	0	2	PASS
+C/🌐️vite/🧪️tests/🎟️service-capacity/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🌐️vite/🧪️tests/🧭️acquisition-order/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/⏳️phase/🧪️tests/🟦️.ts	passed	6	0	6	passed	6	0	6	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/📍️layout/🧪️tests/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/⏳️declared-wait/🟦️.ts	passed	3	0	3	passed	3	0	3	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/♻️pressure/🟦️.ts	passed	1	0	39	passed	1	0	39	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/⛓️cpu-last/🟦️.ts	passed	5	0	25	passed	5	0	25	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🔒️exclusive-writer/🟦️.ts	passed	1	0	9	passed	1	0	9	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts	failed	11	2	180	failed	11	2	180	error: Isolated build test did not end with its declared primary rejection: compact recovery is refu
+C/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🤝️shared/🟦️.ts	passed	1	0	5	passed	1	0	5	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🪢️borrowing/🟦️.ts	passed	6	0	3	passed	6	0	3	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/👁️profile-recheck/🟦️.ts	failed	2	1	2	failed	2	1	2	error: expect(received).toBe(expected)
+C/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/📮️order.ts	passed	1	0	2	passed	1	0	2	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/🪜️steps/🟦️.ts	passed	1	0	3	passed	1	0	3	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/🌍️environment/🧪️tests/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📥️arguments/📤️forwarding/🧪️tests/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📥️arguments/🧪️tests/🟦️.ts	passed	1	0	7	passed	1	0	7	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/🧪️tests/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🛠️native-compiler/🪟️windows/🧪️tests/🌍️path.ts	passed	1	0	2	passed	1	0	2	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🛠️native-compiler/🪟️windows/🧪️tests/🟦️.ts	passed	2	0	3	passed	2	0	3	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🛠️native-toolchain/🧪️tests/📸️caller.ts	passed	1	0	3	passed	1	0	3	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🛠️native-toolchain/🧪️tests/🟦️.ts	passed	2	0	3	passed	2	0	3	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🧪️tests/🟦️.ts	passed	3	0	3	passed	3	0	3	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts	passed	11	0	58	passed	11	0	58	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🛑️settlement/🟦️.ts	passed	1	0	3	passed	1	0	3	PASS
+C/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts	passed	2	0	16	passed	2	0	16	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/⚡️recovery/🧪️tests/🟦️.ts	passed	5	0	4	passed	5	0	4	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/⌛️wait/🟦️.ts	passed	2	0	7	passed	2	0	7	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🌱️regrow/🟦️.ts	passed	2	0	6	passed	2	0	6	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/📋️profiles/🟦️.ts	passed	18	0	20	passed	18	0	20	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🟦️.ts	passed	13	0	12	passed	13	0	12	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🎟️reservation/🧪️tests/🟦️.ts	passed	2	0	6	passed	2	0	6	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/📇️format/🧪️tests/🟦️.ts	passed	6	0	7	passed	6	0	7	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/🆔️identity/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️phase/🟦️.ts	passed	6	0	6	passed	6	0	6	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️queued/🟦️.ts	passed	4	0	11	passed	4	0	11	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️required/🟦️.ts	passed	8	0	16	passed	8	0	16	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📦️child/🟦️.ts	passed	9	0	6	passed	9	0	6	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/🟦️.ts	failed	3	6	54	failed	3	6	45	error: expect(received).toBe(expected)
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📂️parents/🧪️tests/🟦️.ts	passed	1	0	4	passed	1	0	4	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/♻️retirement/🧪️tests/🌀️bindings-moved/🟦️.ts	passed	8	0	1	passed	8	0	1	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/♻️retirement/🧪️tests/📏️roster-bound/🟦️.ts	passed	9	0	1	passed	9	0	1	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/♻️retirement/🧪️tests/🔁️busy-driver/🟦️.ts	passed	12	0	1	passed	12	0	1	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/♻️retirement/🧪️tests/🟦️.ts	passed	5	0	1	passed	5	0	1	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/♻️retirement/🧪️tests/🧾️roster-refusal/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/♻️retirement/🧪️tests/🪦️stale-generation/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/💰️funding/🧪️tests/🧬️reused-pid/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/💰️funding/🧪️tests/🫀️heartbeat/🟦️.ts	passed	4	0	5	passed	4	0	5	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧪️tests/⏳️busy-funding/🟦️.ts	passed	23	0	4	passed	23	0	4	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧪️tests/🌊️moving-tree/🟦️.ts	passed	7	0	2	passed	7	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧪️tests/🟦️.ts	passed	10	0	3	passed	10	0	3	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/📸️observation/🧪️tests/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/📸️observation/🧪️tests/🪪️exact-identity/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🔒️bindings/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/♻️phase/🟦️.ts	passed	15	0	2	passed	15	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/⚓️anchor/🟦️.ts	failed	0	1	5	failed	0	1	3	error: /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acae
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts	passed	11	0	28	passed	11	0	28	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🔎️receipt-conflict/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts	failed	3	4	3	failed	3	4	2	error: Explicit original setup-all asset purpose required
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/📋️roles/🟦️.ts	passed	2	0	18	passed	2	0	18	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🧵️prepared-worker/🟦️.ts	failed	1	2	7	failed	1	2	4	error: expect(received).toBe(expected)
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧹️foreign-names/🧪️tests/🟦️.ts	passed	5	0	2	passed	5	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🔄️refresh/🧪️tests/🟦️.ts	passed	18	0	1	passed	18	0	1	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🏪️scope/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/📐️layout/🍎️physical/🟦️.ts	passed	1	0	29	passed	1	0	29	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/📐️layout/🟦️.ts	passed	3	0	3	passed	3	0	3	PASS
+C/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🧹️stamp/🟦️.ts	passed	8	0	2	passed	8	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📇️records/🧪️tests/🟦️.ts	passed	5	0	14	passed	5	0	14	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🔀️selected-state-recovery/🟦️.ts	failed	0	2	19	failed	0	2	21	ReferenceError: refreshStaleImageBeforeOpenV1 is not defined
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🔁️revalidation/🍎️withdrawn-cleanup-recheck/🟦️.ts	passed	2	0	76	passed	2	0	76	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🔁️revalidation/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🗑️orphan-admission/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts	failed	25	2	316	failed	25	2	316	NOERR
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🧾️receipt-bound/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🧪️tests/♻️lru/🟦️.ts	passed	7	0	5	passed	7	0	5	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🧪️tests/👷️child/🟦️.ts	passed	2	0	8	passed	2	0	8	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🧪️tests/🔎️scan/🟦️.ts	passed	11	0	1	passed	11	0	1	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🧪️tests/🟦️.ts	passed	11	0	3	passed	11	0	3	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🧪️tests/🧱️resolve/🟦️.ts	passed	9	0	3	passed	9	0	3	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🧪️tests/🧹️supersede/🟦️.ts	passed	16	0	9	passed	16	0	9	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/♻️groups/🟦️.ts	failed	2	11	202	failed	2	11	202	error: Isolated build test failed: graph optional group retirement complete
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🌀️row-log-spill/🟦️.ts	passed	7	0	2	passed	7	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🌊️authority-stream/🟦️.ts	passed	4	0	4	passed	4	0	4	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📁️census/🟦️.ts	failed	2	2	24	failed	2	2	18	error: {"name":".metadata_never_index","root":false,"kind":"file","service":true,"omitted":false,"ac
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📇️formats/🟦️.ts	passed	4	0	6	passed	4	0	6	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📈️owner-peaks-spill/🟦️.ts	passed	6	0	2	passed	6	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📏️cardinality/🟦️.ts	failed	0	1	2	failed	0	1	2	error: expect(received).toBe(expected)
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/💳️credit-and-debit/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/📣️failure/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/🔄️cohort-controller/🟦️.ts	passed	1	0	3	passed	1	0	3	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/🚦️startup/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/🟦️.ts	failed	4	1	9	failed	4	1	8	error: closure-admitted-birth:{"version":1,"ingress":"birth-owning-program","owner":"test-file","max
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📤️packet/🟦️.ts	failed	0	1	3	failed	0	1	2	ReferenceError: schema is not defined
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📥️inference/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔏️admission/🧪️admitted-worker-harness/🟦️.ts	failed	1	2	3	failed	1	2	3	error: compileNxAuthorizerSnapshotV1
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔏️authority-seal/🟦️.ts	passed	4	0	2	passed	4	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🔢️batch/🟦️.ts	passed	1	0	27	passed	1	0	27	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🕰️generation/🟦️.ts	passed	2	0	4	passed	2	0	4	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🚩️fleet-marker/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🟦️.ts	failed	12	14	233	failed	12	14	233	error: Isolated build test failed: shared graph closure maintenance referenced
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🪟️window/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🧪️tests/🟦️.ts	passed	5	0	14	passed	5	0	14	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🖼️full/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts	failed	27	21	10	failed	27	21	17	error: Fixed: owned detach reveals exact underlying creator
+C/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🟦️.ts	failed	17	2	17	failed	17	2	26	error: Actual Native platform image required
+C/💾️storage/🔒️enforcement/📦️budget/🧭️root/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧪️tests/🟦️.ts	passed	14	0	2	passed	14	0	2	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/📥️inputs/📋️data/🧪️tests/🟦️.ts	failed	10	1	1	failed	10	1	3	error: Required original cache consumer unavailable
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/⏱️deadline/🟦️.ts	failed	2	4	1	failed	2	4	1	error: expect(received).toContain(expected)
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🎛️operation/🟦️.ts	failed	2	3	11	failed	2	3	17	error: expect(received).toBe(expected)
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🏦️funded/♻️retirement.ts	passed	1	0	1	passed	1	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🏦️funded/🟦️.ts	passed	9	0	142	passed	9	0	142	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/📜️script.ts	failed	0	2	2	failed	0	2	3	error: Exact graph purpose context required
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/🟦️.ts	passed	0	0	1	passed	0	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/🧪️tests/🟦️.ts	failed	2	2	1	failed	2	2	2	error: Exact carried graph purpose receipt required
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🔓️pool-order/🟦️.ts	passed	7	0	1	passed	7	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts	failed	11	36	17	failed	11	36	22	error: expect(received).toBeGreaterThanOrEqual(expected)
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🤝️yield/🟦️.ts	passed	11	0	3	passed	11	0	3	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🧭️ambient-scope/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🧮️sizing/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🪙️funding/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🪶️sparse/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧯️release-failure/🧪️tests/🟦️.ts	passed	5	0	1	passed	5	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/👁️observation/🧪️tests/🔑️kernel/🟦️.ts	unparsed			8	unparsed			13	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/👁️observation/🧪️tests/🟦️.ts	failed	14	1	1	passed	15	0	2	error: expect(received).rejects.toBe(expected)
+C/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/📍️paths/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/📚️cohorts/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📋️registration/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/🟦️.ts	passed	0	0	1	passed	0	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/🧪️tests/🟦️.ts	failed	1	2	2	failed	1	2	8	AssertionError: Expected values to be strictly deep-equal:
+C/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🗄️persistent-state/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts	failed	7	8	10	failed	7	8	13	error: expect(received).toEqual(expected)
+C/💾️storage/🔒️enforcement/🔌️nx/🤝️nested-custody/🧪️tests/🔒️cross-process/🟦️.ts	passed	3	0	2	passed	3	0	2	
+C/💾️storage/🔒️enforcement/🔌️nx/🤝️nested-custody/🧪️tests/🟦️.ts	passed	14	0	0	passed	14	0	0	PASS
+C/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🟦️.ts	passed	7	0	0	passed	7	0	0	PASS
+C/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🧮️lifecycle/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/💾️storage/🧾️ledger/🎚️machine/🧪️tests/🟦️.ts	passed	11	0	1	passed	11	0	1	PASS
+C/💾️storage/🧾️ledger/🧪️tests/⚖️law/🌐️native/🟦️.ts	passed	4	0	34	passed	4	0	34	PASS
+C/💾️storage/🧾️ledger/🧪️tests/⚖️law/🟦️.ts	passed	8	0	10	passed	8	0	10	PASS
+C/💾️storage/🧾️ledger/🧪️tests/📏️needs/🟦️.ts	passed	9	0	1	passed	9	0	1	PASS
+C/💾️storage/🧾️ledger/🧪️tests/📐️model/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/💾️storage/🧾️ledger/🧪️tests/🔮️sqlite/🟦️.ts	passed	10	0	1	passed	10	0	1	PASS
+C/💾️storage/🧾️ledger/🧪️tests/🙈️ignored/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/💾️storage/🧾️ledger/🧪️tests/🟦️.ts	passed	15	0	1	passed	15	0	1	PASS
+C/💾️storage/🧾️ledger/🧪️tests/🧾️sizes/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/📖️texts/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/📥️inference/🧪️tests/🔍️imports/🟦️.ts	failed	3	1	1	failed	3	1	3	AssertionError: registered Nx invocation must publish its current repository graph and file map
+C/📥️inference/🧪️tests/🟦️.ts	failed	2	1	15	failed	2	1	15	error: Reducing finite Source revision request required
+C/📦️artifacts/🏗️native-build/⏱️observation/🧪️tests/🟦️.ts	passed	6	0	2	passed	6	0	2	PASS
+C/📦️artifacts/🏗️native-build/📥️published/🧪️tests/🟦️.ts	passed	1	0	31	passed	1	0	31	PASS
+C/📦️artifacts/🐳️containers/🧪️tests/🔁️lifecycle/🚪️gate/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/📦️artifacts/🐳️containers/🧪️tests/🔁️lifecycle/🪝️automatic-hooks/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/📦️artifacts/👓️reading/📚️group/🧪️tests/🟦️.ts	passed	5	0	1	passed	5	0	1	
+C/📦️artifacts/👓️reading/📥️inspection/🧪️tests/🟦️.ts	passed	3	0	0	passed	3	0	0	PASS
+C/📦️artifacts/👓️reading/📥️settlement/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/📦️artifacts/👓️reading/🧪️tests/📥️physical/🟦️.ts	passed	0	0	1	passed	0	0	1	
+C/📦️artifacts/👓️reading/🧪️tests/🔒️scope/📥️control/🟦️.ts	passed	0	0	0	passed	0	0	0	PASS
+C/📦️artifacts/👓️reading/🧪️tests/🔒️scope/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/📦️artifacts/👓️reading/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/📦️artifacts/💾️storage/🧪️tests/📏️extent/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/📦️artifacts/💾️storage/🧪️tests/📥️physical/🟦️.ts	failed	1	15	23	failed	1	15	38	error: Actual artifact repository authority required
+C/📦️artifacts/💾️storage/🧪️tests/🔑️scratch/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/📦️artifacts/💾️storage/🧪️tests/🟦️.ts	passed	15	0	3	passed	15	0	3	PASS
+C/📦️artifacts/📋️native-orchestration/🌱️environment/🧪️tests/🟦️.ts	passed	1	0	4	passed	1	0	4	PASS
+C/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🧪️tests/🟦️.ts	passed	1	0	7	passed	1	0	7	PASS
+C/📦️artifacts/📋️native-orchestration/📥️invocation/🧪️tests/🏠️caller-root/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/📦️artifacts/📋️native-orchestration/📥️invocation/🧪️tests/🟦️.ts	failed	2	2	2	failed	2	2	3	error: Original Repo build caller required
+C/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts	failed	5	6	16	failed	5	6	17	error: [script] {"owner":"native-owner-command-original-law","command":"native","stage":"loading"}
+C/📦️artifacts/📋️native-orchestration/🧪️tests/📐️grant/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts	failed	0	9	2	failed	0	9	3	error: Original native caller capabilities required
+C/📦️artifacts/📋️native-orchestration/🧪️tests/🗺️owner-test-manifests/🟦️.ts	passed	5	0	3	passed	5	0	3	PASS
+C/📦️artifacts/📝️derived-config/🧪️tests/📝️derived-config/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/📦️artifacts/🔒️bounded/🧪️tests/🍎️image/🟦️.ts	failed	0	1	14	failed	0	1	20	NOERR
+C/📦️artifacts/🔒️bounded/🧪️tests/🏠️state-directory/🟦️.ts	passed	1	0	3	passed	1	0	3	PASS
+C/📦️artifacts/🔒️bounded/🧪️tests/🟦️.ts	unparsed			11	unparsed			16	error: expect(received).toBe(expected)
+C/📦️artifacts/🟦️typescript/🔗️binding/🧪️tests/🟦️.ts	passed	4	0	3	passed	4	0	3	PASS
+C/📦️artifacts/🟦️typescript/🧪️tests/🔒️held-capacity/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/📦️artifacts/🟦️typescript/🧪️tests/🧬️workspace-declarations/🟦️.ts	passed	1	0	3	passed	1	0	3	PASS
+C/📦️artifacts/🟦️typescript/🧪️tests/🧭️bundle-runtime/🟦️.ts	passed	1	0	5	passed	1	0	5	PASS
+C/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts	passed	6	0	4	passed	6	0	4	PASS
+C/📦️artifacts/🧪️tests/🟦️.ts	failed	3	2	8	failed	3	2	13	error: Isolated build test did not end with its declared primary rejection: repository artifact publ
+C/📦️bundle/🟦️bun/📤️stream/🧪️tests/🟦️.ts	passed	5	0	2	passed	5	0	2	PASS
+C/📦️bundle/🟦️bun/🧪️tests/📝️text-loader/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/📦️bundle/🧪️tests/🔬️concurrency/🟦️.ts	passed	1	0	1	passed	1	0	1	
+C/📦️bundle/🧪️tests/🟦️.ts	passed	4	0	0	passed	4	0	0	PASS
+C/🔍️discovery/📂️source/🧪️tests/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🕸️graph/✅️verification/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🕸️graph/🏁️startup/📥️phase/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🕸️graph/🏁️startup/🗃️lease-directory/🧪️tests/🏠️outside-checkout/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🕸️graph/🏁️startup/🚏️admission/🧪️tests/🟦️.ts	passed	55	0	1	passed	55	0	1	PASS
+C/🕸️graph/🏁️startup/🚦️service/👁️workspace/🧪️tests/🟦️.ts	passed	10	0	2	passed	10	0	2	PASS
+C/🕸️graph/🏁️startup/🚦️service/🧪️tests/👁️outputs/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🕸️graph/🏁️startup/🚦️service/🧪️tests/👁️outputs/🧊️provider/🟦️.ts	failed	10	1	5	failed	10	1	8	error: Isolated build test did not end with its declared primary rejection: admitted consumer refuse
+C/🕸️graph/🏁️startup/🚦️service/🧪️tests/🔭️startup-journal/🟦️.ts	passed	2	0	3	passed	2	0	3	PASS
+C/🕸️graph/🏁️startup/🚦️service/🧪️tests/🟦️.ts	failed	0	2	1	failed	0	2	2	error: Original loaded SDK root required
+C/🕸️graph/🏁️startup/🚦️service/🧪️tests/🧮️handoff/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🕸️graph/🏁️startup/🧪️tests/🟦️.ts	passed	23	0	2	passed	23	0	2	PASS
+C/🕸️graph/🏁️startup/🧬️lifetime/🧪️tests/🟦️.ts	passed	9	0	15	passed	9	0	15	PASS
+C/🕸️graph/🏇️waiter/🧪️tests/🟦️.ts	failed	0	1	2	failed	0	1	1	error: Original installed tooling identity and ticket artifact directory required
+C/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/🕸️graph/📤️publication/🧪️tests/📦️transaction/🟦️.ts	failed	0	3	12	failed	0	3	18	error: A test reached the live repository store of the checkout /Users/ueli/Documents/semio; give it
+C/🕸️graph/📤️publication/🧪️tests/🟦️.ts	failed	0	6	24	failed	0	6	16	error: A test reached the live repository store of the checkout /Users/ueli/Documents/semio; give it
+C/🕸️graph/📤️publication/🧪️tests/🧭️workspace-root/🟦️.ts	passed	1	0	3	passed	1	0	3	PASS
+C/🕸️graph/🔏️seal/🎯️selection/📥️scope/🧪️tests/🟦️.ts	failed	6	12	2	failed	6	12	4	error: Required original cache consumer unavailable
+C/🕸️graph/🔏️seal/🎯️selection/🧪️tests/🎛️phase/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts	failed	3	13	123	failed	3	13	138	error: A test reached the live repository store of the checkout /Users/ueli/Documents/semio; give it
+C/🕸️graph/🔏️seal/📌️generation/🧪️tests/🟦️.ts	passed	19	0	1	passed	19	0	1	PASS
+C/🕸️graph/🔏️seal/📥️membership/📥️journal/🧪️tests/🟦️.ts	unparsed			18	unparsed			23	NOERR
+C/🕸️graph/🔏️seal/📦️facts/🧪️tests/🟦️.ts	passed	5	0	2	passed	5	0	2	PASS
+C/🕸️graph/🔏️seal/🧪️tests/🟦️.ts	failed	0	4	11	failed	0	4	23	error: Nested persistent image requires actual parent scope
+C/🗂️suites/🧪️tests/🟦️.ts	failed	4	1	4	failed	4	1	5	error: bootstrap starts processes in 🚀️bootstrap/🔌️nx-plugin/🧊️engine-references/🧪️tests/🟦️.ts
+C/🗂️suites/🧮️aggregate/🧪️tests/🟦️.ts	passed	7	0	1	passed	7	0	1	PASS
+C/🗃️records/🧪️tests/🔌️descriptor-limit/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🗃️records/🧪️tests/🔑️key-parts/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🗃️records/🧪️tests/🟦️.ts	passed	7	0	1	passed	7	0	1	PASS
+C/🚀️bootstrap/🎛️dashboard/📦️installation/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🚀️bootstrap/📖️texts/🧪️tests/🟦️.ts	passed	3	0	0	passed	3	0	0	PASS
+C/🚀️bootstrap/📥️admission/💾️storage/🧪️tests/🟦️.ts	failed	0	3	2	failed	0	3	2	error: Original canonical collection graph backing required
+C/🚀️bootstrap/📥️invocation/🧪️tests/🟦️.ts	unparsed			13	unparsed			19	NOERR
+C/🚀️bootstrap/📦️dependencies/⌨️commands/🧪️tests/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/🚀️bootstrap/📦️dependencies/♻️collection/🧪️tests/🟦️.ts	passed	17	0	6	passed	17	0	6	PASS
+C/🚀️bootstrap/📦️dependencies/🏗️native/🌐️system/🧪️tests/🟦️.ts	passed	27	0	1	passed	27	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/🐕️stall/🧪️tests/🟦️.ts	passed	5	0	1	passed	5	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/📥️read-context/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🆔️identity/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🌐️platform/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🌱️seeded/🟦️.ts	passed	4	0	1	passed	4	0	1	
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/🟦️.ts	unparsed			0	unparsed			1	
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/📥️recheck/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts	failed	54	31	9	failed	54	31	14	error: cancel
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📈️profile/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📏️paths/🟦️.ts	passed	3	0	3	passed	3	0	3	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📏️work/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📣️report/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📤️diagnostics/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📶️progress/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔖️stable-stamp/🟦️.ts	passed	5	0	1	passed	5	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔗️pair/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️edge-scan/🟦️.ts	passed	1	0	0	passed	1	0	0	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/pressure.test.ts	passed	2	0	4	passed	2	0	4	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🚧️fence/🟦️.ts	passed	8	0	2	passed	8	0	2	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🚰️deferred-flush/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts	passed	47	0	14	passed	47	0	14	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🧵️singletons/🟦️.ts	passed	8	0	6	passed	8	0	6	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🧹️tree-removal/🟦️.ts	passed	7	0	1	passed	7	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🧾️content-recheck/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🧾️field-diagnosis/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🪜️ancestry/🟦️.ts	passed	7	0	2	passed	7	0	2	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🧪️tests/🟦️.ts	passed	6	0	3	passed	6	0	3	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/📄️metadata/🧪️tests/🟦️.ts	passed	2	0	5	passed	2	0	5	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/🧪️tests/♻️roles.ts	failed	1	1	1	failed	1	1	2	error: unready-generation:none
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/🧪️tests/🧹️cuts.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🧪️tests/🟦️.ts	passed	14	0	1	passed	14	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🧪️tests/🪢️custody/🟦️.ts	passed	1	0	6	passed	1	0	6	PASS
+C/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🧪️tests/🟦️.ts	passed	104	0	4	passed	104	0	4	PASS
+C/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts	passed	94	0	6	passed	94	0	6	PASS
+C/🚀️bootstrap/📦️dependencies/🔒️lock-sync/🧪️tests/🟦️.ts	passed	23	0	1	passed	23	0	1	
+C/🚀️bootstrap/📦️dependencies/🕓️walk/🧪️tests/🟦️.ts	passed	5	0	0	passed	5	0	0	PASS
+C/🚀️bootstrap/📦️dependencies/🚦️concurrent/🧪️tests/🟦️.ts	passed	18	0	7	passed	18	0	7	PASS
+C/🚀️bootstrap/📦️dependencies/🚦️concurrent/🧪️tests/🪟️free-space/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts	passed	15	0	4	passed	15	0	4	PASS
+C/🚀️bootstrap/📦️dependencies/🧮️fence/🧪️tests/🟦️.ts	passed	9	0	1	passed	9	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🌡️heap-environment/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🚪️ingress/🟦️.ts	passed	10	0	3	passed	10	0	3	PASS
+C/🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🛡️followup/🟦️.ts	passed	8	0	2	passed	8	0	2	PASS
+C/🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🟦️.ts	passed	17	0	9	passed	17	0	9	PASS
+C/🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🧭️scoping/🟦️.ts	passed	9	0	2	passed	9	0	2	PASS
+C/🚀️bootstrap/📦️dependencies/🧾️generation/🪪️profile/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🏎️ports/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/📉️decode/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/📏️progress/🟦️.ts	passed	7	0	1	passed	7	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🟦️.ts	failed	18	1	111	failed	18	1	110	error: hardlink control
+C/🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🩹️evidence/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/📦️dependencies/🪞️adopt/🧪️tests/♻️resume/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/🚀️bootstrap/📦️dependencies/🪞️adopt/🧪️tests/🟦️.ts	passed	8	0	9	passed	8	0	9	PASS
+C/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🧪️tests/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts	unparsed			42	unparsed			46	error: A test reached the live repository store of the checkout /Users/ueli/Documents/semio; give it
+C/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts	unparsed			292	unparsed			292	error: [capacity] run: sized at 46% of the default from 1 earlier run(s) of its class
+C/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🧪️tests/🌱️probe/🟦️.ts	passed	4	0	2	passed	4	0	2	PASS
+C/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🧪️tests/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/🚀️bootstrap/🔌️nx-plugin/🧊️engine-references/🧪️tests/🟦️.ts	passed	5	0	4	passed	5	0	4	PASS
+C/🚀️bootstrap/🔌️nx-plugin/🧪️tests/🔁️continuous-exit/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🧪️tests/🔖️task-semantics/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🧪️tests/🟦️.ts	failed	11	1	13	failed	11	1	14	error: cut 🏗️build/📜️script.ts
+C/🚀️bootstrap/🛠️tools/⚙️operations/🧪️tests/🟦️.ts	passed	8	0	4	passed	8	0	4	PASS
+C/🚀️bootstrap/🛠️tools/⚙️operations/🧪️tests/🧮️arguments/🟦️.ts	passed	6	0	3	passed	6	0	3	
+C/🚀️bootstrap/🛠️tools/🌡️host-capacity/🧪️tests/🟦️.ts	passed	1	0	0	passed	1	0	0	PASS
+C/🚀️bootstrap/🛠️tools/🌡️host-capacity/🧪️tests/🧮️settings/🟦️.ts	passed	2	0	0	passed	2	0	0	PASS
+C/🚀️bootstrap/🛠️tools/🏗️bazel/🧪️tests/📥️pins/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🏗️bazel/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🏗️bazel/🩺️readiness/🧪️tests/🟦️.ts	passed	7	0	1	passed	7	0	1	PASS
+C/🚀️bootstrap/🛠️tools/👷️workers/🧪️tests/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/🚀️bootstrap/🛠️tools/👷️workers/🧪️tests/🧮️mapping/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📥️purpose/🧪️tests/🟦️.ts	failed	1	3	2	failed	1	3	2	error: Exact same-wire toolkit refusal receipt required
+C/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📬️task-child/🟦️.ts	failed	0	2	1	failed	0	2	2	error: Original SDK and artifacts required
+C/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/🟦️.ts	passed	1	0	50	passed	1	0	50	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/🎯️need-scope/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📏️artefact-scale/🟦️.ts	passed	8	0	1	passed	8	0	1	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/⚠️failure/🟦️.ts	failed	0	3	2	failed	0	3	2	error: expect(received).toBe(expected)
+C/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/🟦️.ts	failed	3	5	1	failed	3	5	2	error: A test reached the live repository store of the checkout /Users/ueli/Documents/semio; give it
+C/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/🟦️.ts	passed	8	0	66	passed	8	0	66	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/🧾️sealed-plan/🟦️.ts	passed	5	0	1	passed	5	0	1	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🧪️tests/🟦️.ts	passed	3	0	10	passed	3	0	10	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🧪️tests/🟦️.ts	failed	8	1	6	failed	8	1	8	AssertionError: typecheck stage must be awaited before the test files start
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🧪️tests/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🧪️tests/🪟️live-recipe/🟦️.ts	failed	4	1	1	failed	4	1	1	error: expect(received).toContain(expected)
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🧪️tests/🧮️fetch/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📚️layers/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📤️copy/🧪️tests/🟦️.ts	passed	10	0	30	passed	10	0	30	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/⏱️observation/🧪️tests/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🧊️stamps/🧪️tests/🟦️.ts	passed	9	0	2	passed	9	0	2	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🧪️tests/🟦️.ts	passed	4	0	21	passed	4	0	21	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/📥️phase/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🛂️sdk-fences/🟦️.ts	passed	13	0	45	passed	13	0	45	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts	failed	17	7	55	failed	17	7	50	error: expect(received).toBe(expected)
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🗃️archive/🧪️tests/🟦️.ts	passed	6	0	2	passed	6	0	2	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/📋️plan/🧪️tests/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🧪️tests/🧮️restore/🟦️.ts	passed	3	0	3	passed	3	0	3	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/🎟️phase/🟦️.ts	failed	1	2	2	failed	1	2	2	error: expect(received).toBe(expected)
+C/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/🟦️.ts	passed	4	0	7	passed	4	0	7	PASS
+C/🚀️bootstrap/🛠️tools/📦️sdk/🪪️identity/🧪️tests/🧮️keys/🟦️.ts	passed	6	0	2	passed	6	0	2	PASS
+C/🚀️bootstrap/🛠️tools/🔁️probe/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🔌️sdk/🧪️tests/🟦️.ts	passed	4	0	5	passed	4	0	5	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/📥️loading/🧪️tests/🟦️.ts	passed	2	0	3	passed	2	0	3	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️bundle/🧪️tests/🟦️.ts	passed	8	0	2	passed	8	0	2	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/🟦️.ts	passed	5	0	2	passed	5	0	2	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🧪️tests/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📈️growth/🟦️.ts	passed	11	0	22	passed	11	0	22	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📏️capacity/🟦️.ts	passed	10	0	4	passed	10	0	4	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️data/📥️engine/🟦️.ts	passed	1	0	5	passed	1	0	5	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️data/🟦️.ts	passed	5	0	3	passed	5	0	3	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️scope/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📦️bundle-load/🟦️.ts	passed	3	0	8	passed	3	0	8	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📦️compiler-init/🟦️.ts	passed	2	0	5	passed	2	0	5	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🔩️msvc/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🚪️entry-law/🟦️.ts	passed	3	0	4	passed	3	0	4	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts	unparsed			15	unparsed			19	NOERR
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧊️memo/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧭️ancestry/🟦️.ts	passed	8	0	0	passed	8	0	0	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧭️closure-law/🟦️.ts	passed	4	0	66	passed	4	0	66	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧲️node-native/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧪️tests/🟦️.ts	passed	6	0	1	passed	6	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🔗️activation/🧪️tests/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🟦️bun/🧪️tests/🟦️.ts	passed	5	0	1	passed	5	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🟦️.ts	passed	20	0	2	passed	20	0	2	PASS
+C/🚀️bootstrap/🛠️tools/🦀️rustup/🧰️adoption/🧪️tests/🟦️.ts	passed	4	0	20	passed	4	0	20	PASS
+C/🚀️bootstrap/🛠️tools/🧪️tests/🏠️state-directory/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🧪️tests/📦️install-images/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🧪️tests/🔖️bundle-isolation/🟦️.ts	passed	6	0	2	passed	6	0	2	PASS
+C/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts	failed	5	5	18	failed	5	5	33	error: expect(received).toBe(expected)
+C/🚀️bootstrap/🛠️tools/🧪️tests/🧹️cleanup/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🧰️native/🧪️tests/🟦️.ts	passed	17	0	5	passed	17	0	5	PASS
+C/🚀️bootstrap/🛠️tools/🧹️retention/🎚️store-bound/🧪️tests/🟦️.ts	passed	13	0	2	passed	13	0	2	PASS
+C/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/🟦️.ts	failed	1	2	112	failed	1	2	112	NOERR
+C/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🎯️selection/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🟦️.ts	passed	0	0	1	passed	0	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🧪️tests/🟦️.ts	failed	1	3	1	failed	1	3	5	error: Exact private retention workspace required
+C/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts	failed	41	3	84	failed	41	3	97	error: Isolated build test failed: managed tooling crash witness cannot block authenticated retireme
+C/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🧪️tests/🟦️.ts	passed	2	0	11	passed	2	0	11	PASS
+C/🚀️bootstrap/🛠️tools/🧹️retention/🧪️tests/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🚀️bootstrap/🛠️tools/🩹️patch/🧪️tests/🟦️.ts	passed	7	0	2	passed	7	0	2	PASS
+C/🚀️bootstrap/🛰️fleet-fetch/🎟️work-claim/🧪️tests/🔗️wiring/🟦️.ts	passed	5	0	3	passed	5	0	3	PASS
+C/🚀️bootstrap/🛰️fleet-fetch/🎟️work-claim/🧪️tests/🟦️.ts	passed	8	0	30	passed	8	0	30	PASS
+C/🚀️bootstrap/🛰️fleet-fetch/🐍️uv/🧪️tests/🟦️.ts	passed	2	0	3	passed	2	0	3	PASS
+C/🚀️bootstrap/🛰️fleet-fetch/📦️install/🧪️tests/🟦️.ts	passed	27	0	54	passed	27	0	54	PASS
+C/🚀️bootstrap/🛰️fleet-fetch/🦀️crates/🧪️tests/🟦️.ts	failed	3	1	4	failed	3	1	5	error: error: current package believes it's in a workspace when it's not:
+C/🚀️bootstrap/🛰️fleet-fetch/🧪️tests/📣️claim-wait/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🚀️bootstrap/🛰️fleet-fetch/🧪️tests/🛖️staging/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🚀️bootstrap/🛰️fleet-fetch/🧪️tests/🟦️.ts	passed	8	0	1	passed	8	0	1	PASS
+C/🚀️bootstrap/🛰️fleet-fetch/🧰️setup/🧪️tests/🟦️.ts	passed	11	0	3	passed	11	0	3	PASS
+C/🚀️bootstrap/🛰️fleet-fetch/🪞️mirror/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🚦️ci/🧭️baseline/🏃️resolve/🧪️tests/🧮️matrix/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🎟️funding/🟦️.ts	passed	13	0	3	passed	13	0	3	PASS
+C/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts	passed	23	0	2	passed	23	0	2	PASS
+C/🦀️cargo/📦️units/🏗️compiler/📍️workspace/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🦀️cargo/📦️units/🏗️compiler/🔏️code/🧪️tests/📖️reader/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🦀️cargo/📦️units/🏗️compiler/🔏️code/🧪️tests/🖊️writer/🟦️.ts	passed	3	0	19	passed	3	0	19	PASS
+C/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🎟️capacity/🧪️tests/🟦️.ts	passed	5	0	4	passed	5	0	4	PASS
+C/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/📚️dependencies/🧪️tests/🟦️.ts	passed	5	0	11	passed	5	0	11	PASS
+C/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧪️tests/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧾️invocation/🧪️tests/🟦️.ts	passed	13	0	3	passed	13	0	3	PASS
+C/🦀️cargo/📦️units/📋️plan/🔏️identity/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🦀️cargo/📦️units/📋️plan/🧪️tests/🔗️binding/🟦️.ts	passed	7	0	6	passed	7	0	6	PASS
+C/🦀️cargo/📦️units/📋️plan/🧪️tests/🟦️.ts	passed	22	0	2	passed	22	0	2	PASS
+C/🦀️cargo/📦️units/📤️receipt/🧪️tests/🟦️.ts	passed	15	0	9	passed	15	0	9	PASS
+C/🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🧪️tests/📦️batch/🟦️.ts	passed	6	0	7	passed	6	0	7	PASS
+C/🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🧪️tests/🟦️.ts	failed	5	13	2	failed	5	13	3	error: expect(received).toBe(expected)
+C/🦀️cargo/📦️units/📥️descriptor/🎯️selection/🧪️tests/🧫️fixture/🧪️tests/🟦️.ts	passed	3	0	4	passed	3	0	4	PASS
+C/🦀️cargo/📦️units/📥️descriptor/💾️cache/📂️files/🗄️catalog/🧪️tests/🟦️.ts	passed	8	0	6	passed	8	0	6	PASS
+C/🦀️cargo/📦️units/📥️descriptor/💾️cache/📂️files/🚧️staging/🧪️tests/🟦️.ts	passed	8	0	6	passed	8	0	6	PASS
+C/🦀️cargo/📦️units/📥️descriptor/💾️cache/📤️publication/🧪️tests/🟦️.ts	passed	6	0	12	passed	6	0	12	PASS
+C/🦀️cargo/📦️units/📥️descriptor/💾️cache/🧪️tests/🟦️.ts	passed	21	0	10	passed	21	0	10	PASS
+C/🦀️cargo/📦️units/📥️descriptor/💾️cache/🧺️set/🧪️tests/🟦️.ts	failed	17	7	6	failed	17	7	9	error: expect(received).toHaveLength(expected)
+C/🦀️cargo/📦️units/📥️descriptor/📖️read/🧪️tests/🟦️.ts	passed	33	0	11	passed	33	0	11	PASS
+C/🦀️cargo/📦️units/📥️descriptor/📖️read/🧪️tests/🧺️batch/🟦️.ts	passed	6	0	11	passed	6	0	11	PASS
+C/🦀️cargo/📦️units/📥️descriptor/🕸️nodes/🧪️tests/♻️composition/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/🦀️cargo/📦️units/📥️descriptor/🕸️nodes/🧪️tests/🟦️.ts	passed	24	0	5	passed	24	0	5	PASS
+C/🦀️cargo/📦️units/📥️inputs/🔏️snapshot/🧪️tests/🟦️.ts	passed	9	0	2	passed	9	0	2	PASS
+C/🦀️cargo/📦️units/📥️inputs/🧪️tests/🟦️.ts	passed	3	0	5	passed	3	0	5	PASS
+C/🦀️cargo/📦️units/🧪️tests/📐️profile/♻️preparation/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🦀️cargo/📦️units/🧪️tests/📐️profile/🟦️.ts	passed	7	0	2	passed	7	0	2	PASS
+C/🦀️cargo/📦️units/🧪️tests/📥️source/🟦️.ts	passed	1	0	27	passed	1	0	27	PASS
+C/🦀️cargo/📦️units/🧪️tests/🟦️.ts	failed	11	17	11	failed	11	17	18	error: expect(received).toThrow(expected)
+C/🦀️cargo/📦️units/🧭️context/🧪️tests/🟦️.ts	passed	9	0	2	passed	9	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/✅️complete/🧪️tests/🟦️.ts	passed	10	0	27	passed	10	0	27	PASS
+C/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🚦️pool/🟦️.ts	passed	4	0	190	passed	4	0	190	PASS
+C/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧪️tests/🟦️.ts	passed	5	0	7	passed	5	0	7	PASS
+C/🦀️cargo/🗃️unit-cache/🏁️exit/🧪️tests/🟦️.ts	passed	5	0	8	passed	5	0	8	PASS
+C/🦀️cargo/🗃️unit-cache/🏗️buildscript/☁️offload/🧪️tests/🟦️.ts	failed	8	2	52	passed	10	0	48	error: expect(received).toBe(expected)
+C/🦀️cargo/🗃️unit-cache/🏗️buildscript/🧪️tests/🌐️fleet-run/🟦️.ts	passed	2	0	21	passed	2	0	21	PASS
+C/🦀️cargo/🗃️unit-cache/🏗️buildscript/🧪️tests/🔓️slot-held/🟦️.ts	passed	3	0	12	passed	3	0	12	PASS
+C/🦀️cargo/🗃️unit-cache/🏗️buildscript/🧪️tests/🛤️lanes/🟦️.ts	passed	4	0	2	passed	4	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🏛️seal/🧪️tests/🟦️.ts	passed	10	0	4	passed	10	0	4	PASS
+C/🦀️cargo/🗃️unit-cache/💾️store/🧪️tests/💧️spill/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/💾️store/🧪️tests/📦️contract/🟦️.ts	passed	24	0	3	passed	24	0	3	PASS
+C/🦀️cargo/🗃️unit-cache/💾️store/🧪️tests/🫥️forget/🟦️.ts	passed	1	0	4	passed	1	0	4	PASS
+C/🦀️cargo/🗃️unit-cache/📖️admission/📚️foreign/🧪️tests/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/📖️admission/🧪️tests/🏁️racy/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/📖️admission/🧪️tests/🔑️key-stability/🟦️.ts	passed	5	0	2	passed	5	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🔏️key/🔗️sources/🧪️tests/🟦️.ts	passed	6	0	4	passed	6	0	4	PASS
+C/🦀️cargo/🗃️unit-cache/🔏️key/🧪️tests/🟦️.ts	passed	8	0	2	passed	8	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🔏️key/🧪️tests/🧩️parts/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🔏️key/🧪️tests/🧬️components/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🔭️interface/🧪️tests/🟦️.ts	passed	30	0	12	passed	30	0	12	PASS
+C/🦀️cargo/🗃️unit-cache/🛰️fleet/📊️counters/🧪️tests/🟦️.ts	passed	3	0	14	passed	3	0	14	PASS
+C/🦀️cargo/🗃️unit-cache/🛰️fleet/📤️uploader/🧪️tests/🟦️.ts	passed	5	0	19	passed	5	0	19	PASS
+C/🦀️cargo/🗃️unit-cache/🛰️fleet/🔑️key-samples/🧪️tests/🟦️.ts	passed	6	0	8	passed	6	0	8	PASS
+C/🦀️cargo/🗃️unit-cache/🛰️fleet/🧪️tests/⚡️pipeline/🟦️.ts	passed	7	0	4	passed	7	0	4	PASS
+C/🦀️cargo/🗃️unit-cache/🛰️fleet/🧪️tests/🌳️rooted/🟦️.ts	passed	4	0	65	passed	4	0	65	PASS
+C/🦀️cargo/🗃️unit-cache/🛰️fleet/🧪️tests/🟦️.ts	passed	18	0	244	passed	18	0	244	PASS
+C/🦀️cargo/🗃️unit-cache/🛰️fleet/🧪️tests/🥀️stale/🟦️.ts	failed	0	1	2	passed	1	0	3	error: the unit of the old tree is retired
+C/🦀️cargo/🗃️unit-cache/🛰️fleet/🧪️tests/🧯️fallback/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🛰️fleet/🧪️tests/🧷️session/🟦️.ts	passed	2	0	56	passed	2	0	56	PASS
+C/🦀️cargo/🗃️unit-cache/🛰️fleet/🪪️identity/🧪️tests/🌍️machine-law/🟦️.ts	passed	4	0	2	passed	4	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🛰️fleet/🪪️identity/🧪️tests/🏠️local-key/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🛰️fleet/🪪️identity/🧪️tests/🟦️.ts	passed	8	0	1	passed	8	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧪️tests/🆔️metadata/🟦️.ts	passed	4	0	3	passed	4	0	3	PASS
+C/🦀️cargo/🗃️unit-cache/🧪️tests/🌍️cross-root/🟦️.ts	passed	2	0	3	passed	2	0	3	PASS
+C/🦀️cargo/🗃️unit-cache/🧪️tests/🌱️incremental/🟦️.ts	passed	1	0	5	passed	1	0	5	PASS
+C/🦀️cargo/🗃️unit-cache/🧪️tests/🏖️scratch/🧪️tests/🟦️.ts	passed	9	0	3	passed	9	0	3	PASS
+C/🦀️cargo/🗃️unit-cache/🧪️tests/🔁️churn/🟦️.ts	passed	9	0	13	passed	9	0	13	PASS
+C/🦀️cargo/🗃️unit-cache/🧪️tests/🔭️cutoff/🟦️.ts	passed	4	0	4	passed	4	0	4	PASS
+C/🦀️cargo/🗃️unit-cache/🧪️tests/🕰️freshness/🟦️.ts	passed	2	0	26	passed	2	0	26	PASS
+C/🦀️cargo/🗃️unit-cache/🧪️tests/🕵️leaks/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts	failed	27	1	76	passed	28	0	82	error: {"version":1,"key":"3c0c95634f8830511e5872fc832de5ee82e305fd8f6a6bda590f6ea01d6970aa","retent
+C/🦀️cargo/🗃️unit-cache/🧪️tests/🧳️portable/🟦️.ts	passed	36	0	3	passed	36	0	3	PASS
+C/🦀️cargo/🗃️unit-cache/🧪️tests/🪟️windows/🟦️.ts	passed	8	0	5	passed	8	0	5	PASS
+C/🦀️cargo/🗃️unit-cache/🧪️tests/🪶️light-slot/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🧭️remap/🔍️embedding/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧭️remap/🧪️tests/🟦️.ts	passed	7	0	2	passed	7	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🎯️product/🧪️tests/🟦️.ts	passed	8	0	1	passed	8	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🧪️tests/🌱️sessions/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🧪️tests/🏊️pool-model/🟦️.ts	passed	6	0	2	passed	6	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🧪️tests/🔐️pool-claims/🟦️.ts	passed	7	0	3	passed	7	0	3	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🧪️tests/🛡️product-retention/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/📤️retention-model/🟦️.ts	passed	5	0	1	passed	5	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🔀️retention-interleaving/🟦️.ts	passed	3	0	3	passed	3	0	3	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🔐️retention-io/🟦️.ts	passed	10	0	2	passed	10	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🛣️consumer-lanes/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🧾️provenance-equality/🟦️.ts	passed	1	0	8	passed	1	0	8	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🪢️link-less/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🪦️dead-holder/🟦️.ts	passed	7	0	21	passed	7	0	21	PASS
+C/🦀️cargo/🗃️unit-cache/🧵️lane/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧹️gc/♻️auto-reclaim/🧪️tests/🟦️.ts	passed	12	0	2	passed	12	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🧹️gc/🌱️incremental/🧪️tests/🟦️.ts	passed	8	0	1	passed	8	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🧪️tests/🟦️.ts	passed	20	0	13	passed	20	0	13	PASS
+C/🦀️cargo/🗃️unit-cache/🧹️gc/📈️fill/🧪️tests/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🧹️gc/📖️admissions/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧹️gc/🛟️ballast/🧪️tests/🟦️.ts	passed	3	0	1	passed	3	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧹️gc/🧩️runs/🧪️tests/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧹️gc/🧪️tests/🎯️budget/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🧹️gc/🧪️tests/🟦️.ts	passed	14	0	2	passed	14	0	2	PASS
+C/🦀️cargo/🗃️unit-cache/🧹️gc/🧪️tests/🫀️live-holder/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🟦️.ts	failed	12	1	2	passed	13	0	2	error: expect(received).toBe(expected)
+C/🦀️cargo/🗃️unit-cache/🧹️gc/🪢️supersession/🧪️tests/🟦️.ts	passed	8	0	3	passed	8	0	3	PASS
+C/🦀️cargo/🗃️unit-cache/🪪️extern/🧪️tests/🟦️.ts	passed	2	0	1	passed	2	0	1	PASS
+C/🧪️tests/🌍️caller-environment/🟦️.ts	unparsed			59	unparsed			102	error: node -e (async()=>{const fs=require('node:fs'),path=require('node:path'),sdk=require('node:mo
+C/🧪️tests/🎮️playground-preparation/🧪️tests/🟦️.ts	unparsed			12	unparsed			17	NOERR
+C/🧪️tests/📋️values/🧪️tests/🟦️.ts	passed	4	0	2	passed	4	0	2	
+C/🧪️tests/📐️phases/🟦️.ts	failed	0	1	0	failed	0	1	1	AssertionError: typecheck stage must be awaited before the test files start
+C/🧪️tests/📚️library-search-path/🟦️.ts	passed	2	0	4	passed	2	0	4	PASS
+C/🧪️tests/📦️artifact-packages/🔮️oracle/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/🧪️tests/📦️native-dependencies/🧪️tests/🟦️.ts	failed	2	6	3	failed	2	6	3	AssertionError: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔍️discovery/📂️source/🟦️.
+C/🧪️tests/📦️native-dependencies/🧪️tests/🧪go.ts	passed	1	0	2	passed	1	0	2	PASS
+C/🧪️tests/🔗️import-edges/🏛️graph/🔑️authority/🟦️.ts	failed	0	1	1	failed	0	1	2	error: Original bounded Nx namespace required
+C/🧪️tests/🔗️import-edges/🏛️graph/🟦️.ts	failed	0	2	1	failed	0	2	1	NOERR
+C/🧪️tests/🔗️import-edges/📁️paths/🟦️.ts	failed	1	8	1	failed	1	8	2	error: Original bounded graph writer custody required
+C/🧪️tests/🔗️import-edges/🔁️context/🟦️.ts	failed	2	11	5	failed	2	11	5	error: Original bounded graph writer custody required
+C/🧪️tests/🕸️wasm-bindgen-locks/🟦️.ts	passed	4	0	2	passed	4	0	2	PASS
+C/🧪️tests/🗃️compiler-state/🟦️.ts	failed	15	2	1	failed	15	2	2	error: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧪️tests/🟦️.ts
+C/🧪️tests/🗿️artifact-source/🟦️.ts	failed	0	1	2	failed	0	1	2	error: Exact Original workspace required
+C/🧪️tests/🚪️artifact-rust-check/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🧪️tests/🛑️coordinator/🔮️oracle/🟦️.ts	failed	0	1	2	failed	0	1	2	ReferenceError: createIssuedResourceControlV1 is not defined
+C/🧪️tests/🧱️command-source/🟦️.ts	passed	11	0	7	passed	11	0	7	PASS
+C/🧪️tests/🧾️cargo-provenance/🟦️.ts	passed	6	0	5	passed	6	0	5	PASS
+C/🧹️pruning/⏱️continuation/🧪️tests/🟦️.ts	passed	3	0	6	passed	3	0	6	PASS
+C/🧹️pruning/⏱️measurement/🧪️tests/🟦️.ts	passed	2	0	2	passed	2	0	2	PASS
+C/🧹️pruning/⏱️recency/🧪️tests/🟦️.ts	passed	5	0	1	passed	5	0	1	PASS
+C/🧹️pruning/🌐️workspace/🧪️tests/🔗️imports/🟦️.ts	passed	1	0	1	passed	1	0	1	PASS
+C/🧹️pruning/🌐️workspace/🧪️tests/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/🧹️pruning/🌐️workspace/🧪️tests/🧮️projection/🟦️.ts	passed	4	0	1	passed	4	0	1	PASS
+C/🧹️pruning/🏪️budget/📜️history/🧪️tests/📦️compact/🟦️.ts	passed	0	0	1	passed	0	0	1	PASS
+C/🧹️pruning/🏪️budget/📜️history/🧪️tests/🟦️.ts	failed	1	2	12	failed	1	2	19	NOERR
+C/🧹️pruning/🏪️budget/🧪️tests/🟦️.ts	passed	12	0	4	passed	12	0	4	PASS
+C/🧹️pruning/📉️pressure/🧪️tests/🟦️.ts	passed	4	0	4	passed	4	0	4	PASS
+C/🧹️pruning/📦️metadata/🧪️tests/🟦️.ts	passed	3	0	2	passed	3	0	2	PASS
+C/🧹️pruning/🔒️incremental/🧪️tests/🟦️.ts	unparsed			12	unparsed			17	NOERR
+C/🧹️pruning/🔒️store/🧪️tests/🟦️.ts	unparsed			11	unparsed			18	NOERR
+C/🧹️pruning/🧪️tests/⏱️recency/🟦️.ts	passed	1	0	2	passed	1	0	2	PASS
+C/🧹️pruning/🧪️tests/🧮️plan/🟦️.ts	passed	5	0	1	passed	5	0	1	PASS
+C/🩹️patches/🧪️tests/🔭️loader/🟦️.ts	passed	5	0	1	passed	5	0	1	PASS
+C/🩹️patches/🧪️tests/🟦️.ts	unparsed			6	unparsed			14	PASS

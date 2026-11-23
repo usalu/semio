@@ -282,7 +282,7 @@ const sp: Species = {
   stems,
   leaves,
   leafBone: isLeafBone,
-  bands: (bone, scale) => (/b$/.test(bone) ? (scale <= 100 ? 7 : scale === 200 ? 3 : 2) : scale <= 100 ? 3 : 2),
+  bands: (bone, scale) => (/b$/.test(bone) ? (scale <= 100 ? 7 : scale === 200 ? 3 : 1) : scale <= 100 ? 3 : 2),
   thermal: {
     leafRegion: "leaves", deadRegion: "dead-leaves", leafMaterial: "hemp-palm-leaf", deadMaterial: "dead-palm-leaf", leafJointR: 0.022, supportR: 0.5, symbolStemTop: 6.3,
     plateBands: { 50: LOD[50].bands, 100: LOD[100].bands, 200: LOD[200].bands, 500: LOD[500].bands },

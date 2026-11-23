@@ -22,7 +22,7 @@ test("the stages to refresh equal an independent Python implementation on a grid
  const stages:[string,string][]=names.map((name,index)=>[name,`d${index}`]);
  const rows=[];
  const maximum=P.refreshMaximumAgeMilliseconds,now=10*maximum;
- for(const marker of[true,false])for(const repo of[true,false])for(const readyMs of[null,5])for(const failure of[null,{code:"stage-failed"}])for(const stale of[[],[0],[3],[1,4],[0,1,2,3,4]])for(const age of[0,maximum,maximum+1])for(const unverified of[false,true]){
+ for(const marker of[true,false])for(const repo of[true,false])for(const readyMs of[null,5])for(const failure of[null,{code:"stage-failed"},{code:"tooling-compiler"},{code:"stage-timeout"},{code:"store-full"}])for(const stale of[[],[0],[3],[1,4],[0,1,2,3,4]])for(const age of[0,maximum,maximum+1])for(const unverified of[false,true]){
   const done=Object.fromEntries(stages.filter(([,,],index)=>!(unverified&&stale.includes(index))).map(([name,digest],index)=>[name,stale.includes(index)?"old":digest]));
   const doneMs=Object.fromEntries(stages.map(([name],index)=>[name,stale.includes(index)?now-age:now]));
   rows.push({stages,done,doneMs,now,maximum,marker,repo,readyMs,failure});
@@ -30,6 +30,7 @@ test("the stages to refresh equal an independent Python implementation on a grid
  const expected=oracle("refresh",rows) as (string[]|null)[];
  rows.forEach((row,index)=>expect(readyRefreshV1({stages:row.stages.map(([name,digest])=>({name,digest})),done:row.done,doneMs:row.doneMs,now:row.now,marker:row.marker,repo:row.repo,readyMs:row.readyMs,failure:row.failure}),JSON.stringify(row)).toEqual(expected[index]));
  expect(expected.some(row=>row===null)&&expected.some(row=>row!==null)).toBe(true);
+ expect(rows.some((row,index)=>row.failure?.code==="stage-timeout"&&expected[index]!==null)).toBe(true);
 });
 
 test("law: a landing touching unrelated files keeps every stage digest, one touching a stage input changes exactly the stages that declare it, equal to an independent Python digest",()=>{
@@ -112,7 +113,8 @@ test("a worker that never was ready reports the stage as work, not as ready",asy
 
 test("the refreshing patch rewrites only working states and every consumer reads a refreshing record as ready but busy",()=>{
  expect(readyRefreshingPatchV1({tail:["x"]},"tools")).toEqual({tail:["x"]});
- expect(readyRefreshingPatchV1({state:"backoff",ready:false},"tools").refreshing).toBe(false);
+ expect(readyRefreshingPatchV1({state:"backoff",ready:false},null).refreshing).toBe(false);
+ {const patch=readyRefreshingPatchV1({state:"backoff",ready:false,stage:"tools",refusal:{code:"stage-timeout"} as never},"tools");expect([patch.state,patch.ready,patch.refreshing,patch.refusal?.code]).toEqual(["ready",true,true,"stage-timeout"]);}
  for(const state of["running","waiting","observing"] as const){const patch=readyRefreshingPatchV1({state,ready:false,stage:"tools"},"tools");expect([patch.state,patch.ready,patch.refreshing,patch.refusal]).toEqual(["ready",true,true,null]);}
  const nowMs=1_000_000,record={state:"ready",ready:true,refreshing:true,stage:"tools",updatedMs:nowMs-1000,beatMilliseconds:P.beatByState.running};
  expect(readyForegroundBusyV1(record,nowMs)).toBe(true);

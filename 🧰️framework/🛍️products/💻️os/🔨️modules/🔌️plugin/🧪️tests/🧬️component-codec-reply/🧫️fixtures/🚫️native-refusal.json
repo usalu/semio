@@ -1,7 +1,13 @@
 {
   "failure": "semantic",
   "expectedMessage": "original-turn.native-return-refused: semantic",
-  "expectedReceiptEpochs": [1, 2, 3],
+  "expectedReceiptEpochs": [
+    1,
+    2,
+    3
+  ],
   "expectedHeldCount": 1,
-  "expectedCloseMessage": "original-turn.original-return-pending"
+  "expectedCloseMessage": "original-turn.original-return-pending",
+  "expectedDetail": "pdf.page.refused: Page edit refused",
+  "expectedFullMessage": "original-turn.native-return-refused: semantic: pdf.page.refused: Page edit refused"
 }

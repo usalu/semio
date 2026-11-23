@@ -5,9 +5,9 @@
     "materials": [{ "id": "steel", "name": "Steel", "e": 200000000000, "g": 80000000000, "nu": 0.25, "rho": 7850 }],
     "sections": [{ "id": "section", "name": "Section", "area": 1, "iy": 1, "iz": 1, "j": 1 }],
     "solids": [{ "id": "slab", "name": "Slab", "outline": [[0, 0], [2, 0], [2, 2], [0, 2]], "holes": [], "baseZ": 0, "height": 2, "layers": 1, "meshSize": 1, "materialId": "steel", "axis": "z" }],
-    "supports": [{ "id": "support", "nodeId": "n1", "fixed": ["tx", "ty", "tz"] }],
+    "supports": [{ "id": "support", "nodeId": "n1", "fixed": ["Tx", "Ty", "Tz"] }],
     "loadCases": [{ "id": "case", "name": "Case", "selfWeight": false, "loads": [
-      { "kind": "nodal", "id": "nodeLoad", "nodeId": "n2", "dof": "tz", "value": -1000 },
+      { "kind": "nodal", "id": "nodeLoad", "nodeId": "n2", "dof": "Tz", "value": -1000 },
       { "kind": "memberUdl", "id": "memberLoad", "elementId": "member", "wx": 0, "wy": 0, "wz": -100 },
       { "kind": "area", "id": "areaLoad", "solidId": "slab", "pressure": 100 }
     ] }],

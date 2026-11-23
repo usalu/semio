@@ -42,6 +42,7 @@
       "actionResults": "complete",
       "maximumActionResultBytes": 4194304,
       "maintenanceSeconds": 300,
+      "blobSharePercent": 50,
       "graceSeconds": 600,
       "staleness": {
         "mode": "dry-run",
@@ -557,7 +558,10 @@
       "maximumMessageBytes": 33554432,
       "maximumBatchBytes": 4194304,
       "loadExpireSeconds": 15,
-      "refusalCooldownSeconds": 10
+      "refusalCooldownSeconds": 10,
+      "keepAliveSeconds": 5,
+      "cancelGraceSeconds": 20,
+      "stuckSeconds": 600
     },
     "worker": {
       "concurrency": 0,

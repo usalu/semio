@@ -83,9 +83,9 @@ fn view_preview_payload(snapshot: &Process3dSnapshot) -> UiAssemblyResult<(Strin
 }
 
 /// 👁️ The viewer's own pure render function — never calls into the sibling `editor` module.
-pub fn render(snapshot: &Process3dSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &Process3dSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let (meshes_json, instances_json) = view_preview_payload(snapshot)?;
-    MeshWindowKit::render(&MeshView { camera_json: default_camera_json(), meshes_json, instances_json, selection_json: world3d_selection_json("rectangle", &[], None) })
+    MeshWindowKit::render(&MeshView { camera_json: default_camera_json(), meshes_json, instances_json, selection_json: world3d_selection_json("rectangle", &[], None) }, locale)
 }
 //#endregion 🔖️Render
 

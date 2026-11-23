@@ -11,6 +11,8 @@ use semio_s_artifact_stdio_pdf_mut_base_4::standards::v1_7::subsets::base::{
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{PdfImage, PdfImageBody, PdfStreamFilter};
 
 const MAX_PREVIEW_EDGE: f64 = 256.0;
+/// 🫧️ MuPDF smooths an image upscaled by less than this factor on both axes and keeps larger upscales as crisp samples.
+const SMOOTH_UPSCALE_LIMIT: f64 = 4.0;
 const MAX_DCT_WORKING_BYTES: usize = 96 * 1024 * 1024;
 
 pub fn image_layer(snapshot: &PdfSnapshot, content: &[PdfOp], item: &Placed) -> Option<Value> {
@@ -39,8 +41,9 @@ pub fn image_layer(snapshot: &PdfSnapshot, content: &[PdfOp], item: &Placed) -> 
     let (x2, y2) = display(0.0, 1.0);
     let (a, b, c, d) = (x1 - x0, y1 - y0, x2 - x0, y2 - y0);
     let inverse = invert([a, b, c, d, x0, y0])?;
-    let horizontal = f64::from(width) / a.hypot(b);
-    let vertical = f64::from(height) / c.hypot(d);
+    let (upscale_x, upscale_y) = (a.hypot(b) / f64::from(width), c.hypot(d) / f64::from(height));
+    let smooth = (1.0..SMOOTH_UPSCALE_LIMIT).contains(&upscale_x) && (1.0..SMOOTH_UPSCALE_LIMIT).contains(&upscale_y);
+    let (horizontal, vertical) = if smooth { (1.0, 1.0) } else { (1.0 / upscale_x, 1.0 / upscale_y) };
     let columns = a.abs() * horizontal + c.abs() * vertical;
     let rows = b.abs() * horizontal + d.abs() * vertical;
     let scale = (MAX_PREVIEW_EDGE / columns.max(rows)).min(1.0);
@@ -53,7 +56,7 @@ pub fn image_layer(snapshot: &PdfSnapshot, content: &[PdfOp], item: &Placed) -> 
         let x = item.canvas_x + item.canvas_w * (col as f64 + 0.5) / f64::from(preview_width);
         let y = item.canvas_y + item.canvas_h * (row as f64 + 0.5) / f64::from(preview_height);
         let (u, v) = apply(inverse, x, y);
-        rgba.copy_from_slice(&samples.rgba(u, v));
+        rgba.copy_from_slice(&if smooth { samples.rgba_smooth(u, v) } else { samples.rgba(u, v) });
     }
     raster_layer(item, [item.canvas_x, item.canvas_y, item.canvas_w, item.canvas_h], &raster)
 }

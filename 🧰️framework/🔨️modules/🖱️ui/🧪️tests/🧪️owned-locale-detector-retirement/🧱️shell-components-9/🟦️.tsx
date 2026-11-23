@@ -7,7 +7,7 @@ export async function registerShellComponents9Tests(vitest: Tests1Vitest, depend
 
 describe("Shell components", () => {
 
-    it("Window pane chrome uses semantic icons in U-cutout chips, never fold chevrons", () => {
+    it("Window pane chrome uses semantic icons in glass chips, never fold chevrons", () => {
       const { container } = render(
         <Window
           id="pane-chrome-window"
@@ -25,7 +25,7 @@ describe("Shell components", () => {
       expect(container.querySelector('[data-slot="window-engagement-overlay"] [data-icon="play"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-search-overlay"] [data-icon="search"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="utility-bar-overlay"] [data-icon="hammer"]')).toBeTruthy();
-      expect(container.querySelectorAll('[data-slot="window-chrome-silhouette-border"]').length).toBeGreaterThanOrEqual(4);
+      expect(container.querySelectorAll('[data-slot="window-chrome-frame-border"]').length).toBeGreaterThanOrEqual(4);
       expect(container.querySelector('[data-slot="window-measures-overlay"] [data-icon="chevron-left"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-engagement-overlay"] [data-icon="chevron-right"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-search-overlay"] [data-icon="chevron-down"]')).toBeNull();
@@ -187,7 +187,6 @@ describe("Shell components", () => {
       expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
       expect(overlay.style.right).toBe("0px");
       expect(container.querySelector('[data-testid="measure-slot"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-chrome-gap"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeTruthy();
       expect(screen.getByText("Window Options")).toBeTruthy();
     });
@@ -268,7 +267,7 @@ describe("Shell components", () => {
       const stack = container.querySelector('[data-slot="utility-bar"]') as HTMLElement;
       expect(stack).toBeTruthy();
       expect(stack.getAttribute("data-level")).toBe("pane");
-      expect(stack.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+      expect(stack.querySelector('[data-slot="window-chrome-frame-border"]')).toBeTruthy();
       expect(screen.queryByText("Utility")).toBeNull();
       fireEvent.click(container.querySelector('[id="framework.window.utilityBarWindow.utilityBar.unfold"]')!);
       expect(screen.getByText("Utility")).toBeTruthy();

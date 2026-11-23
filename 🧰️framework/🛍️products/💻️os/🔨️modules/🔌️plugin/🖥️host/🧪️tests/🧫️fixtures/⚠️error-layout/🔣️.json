@@ -1,4 +1,4 @@
 {
   "maximumHostErrorInlineBytes": 64,
-  "maximumTurnFaultInlineBytes": 112
+  "maximumTurnFaultInlineBytes": 144
 }

@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import {readFileSync,existsSync} from "node:fs";
 import {join} from "node:path";
 import {spawnSync} from "node:child_process";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import CRC32C from "crc-32/crc32c";
 import {parse as parseMath} from "mathjs";
 const base=join(import.meta.dir,"..");

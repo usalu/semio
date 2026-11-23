@@ -103,9 +103,8 @@ pub fn vertex_input_state(buffers: &[VertexBufferSpec]) -> (Vec<vk::VertexInputB
 
 //#region ✂️Scissor
 
-/// ✂️ Per-batch dynamic scissor — the ticket brief's explicit Vulkan divergence from the Metal target
-/// (which resets to full-viewport every batch and clips entirely through the stencil silhouette mask;
-/// see `📓️terra-backend-metal-report.md`'s "Decisions"). `batch.layer_state.scissor` is `None` for
+/// ✂️ Per-batch dynamic scissor — a frame clips its content with exactly this rectangle, the same
+/// rectangle every backend derives with `viewport_scissor`. `batch.layer_state.scissor` is `None` for
 /// content painted outside any `push_scissor`/`pop_scissor` region, which maps to the full viewport;
 /// `Some(rect)` is already physical-pixel and already intersected with its parent scissor by
 /// `SceneBuilder::push_scissor` (see `🎬️scene.rs`), so this function only has to clamp it into the

@@ -4,9 +4,7 @@ strict-mode=false catalog=file=header-version="3805" manufacturer=DEMO created="
 extensions=fields={
 }
 products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
-  AT-100 {manufacturer-code=DEMO product-group=AT article-number=AT-100} [ {locale=de text=Luftdurchlass} {locale=en text="Air terminal"} ] 5 [ {family="100" fields=[ "100" DEMO AT AT-100 "5" ] extensions=fields={
-  }
-  } {family="210" fields=[ "210" airflow_m3_s "-1" pressure_drop_pa "25" product_group AT type_code INVALID ] extensions=fields={
+  AT-100 {manufacturer-code=DEMO product-group=AT article-number=AT-100} [ {locale=de text=Luftdurchlass} {locale=en text="Air terminal"} ] 5 [ {family="210" fields=[ "210" airflow_m3_s "-1" pressure_drop_pa "25" product_group AT type_code INVALID ] extensions=fields={
   }
   } {family="700" fields=[ "700" de Luftdurchlass en "Air terminal" ] extensions=fields={
   }

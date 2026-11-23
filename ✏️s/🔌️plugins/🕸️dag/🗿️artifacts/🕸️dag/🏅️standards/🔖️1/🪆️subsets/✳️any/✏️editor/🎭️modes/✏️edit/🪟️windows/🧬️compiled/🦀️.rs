@@ -48,10 +48,10 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &DagScene, camera: &DagCamera) -> UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &DagScene, camera: &DagCamera, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let document = semio_framework_artifact_infinite_dag::DagSnapshot { schema: crate::DAG_DOCUMENT_SCHEMA.into(), nodes: scene.nodes.clone(), edges: scene.edges.clone() };
     let fixture = dag_host_snapshot_from_document(&document, camera.clone());
-    scene_surface(DAG_PLAY_SURFACE_COMPILED, semio_plugin::plugin_app_close_prelude::SurfaceKind::TextEditor, &TextEditorScene::base(dag_host_snapshot_to_wire_literal(&fixture), Some("wire".into()), None))
+    scene_surface(DAG_PLAY_SURFACE_COMPILED, semio_plugin::plugin_app_close_prelude::SurfaceKind::TextEditor, &TextEditorScene::base(dag_host_snapshot_to_wire_literal(&fixture), Some("wire".into()), None), semio_plugin::surface_name(locale, "Compiled wire format", "Kompiliertes Wire-Format"), None)
 }
 //#endregion 🔖️Render
 

@@ -33,6 +33,7 @@ semio-framework-value-derive = { path="../../../../✨️derive/📦️packages/
 semio-framework-value-clone-source = { path = "../../../../🧬️retained-clone/🔗️source/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-clone-source-testing = { path = "../../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-value-testing-effect-bank = { path="../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-value-retirement-queue = { path="../../../📋️queue/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

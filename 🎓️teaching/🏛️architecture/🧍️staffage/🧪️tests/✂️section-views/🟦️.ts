@@ -163,7 +163,7 @@ describe("elevation section catalog", () => {
       for (const rep of Object.values(asset.representations).filter((candidate): candidate is AuthoredRepresentation => candidate.status === "authored")) {
         const plane = scales[String(rep.denominator)];
         expect(sectionOf(rep, "elevation")?.plane, `1:${rep.denominator}`).toBe(plane);
-        expect(rep.sections?.front === undefined || id === "retractable-bollard", `1:${rep.denominator} front`).toBe(true);
+        expect(rep.sections?.front, `1:${rep.denominator} front`).toBeUndefined();
       }
     });
 });

@@ -10,6 +10,7 @@
     "generation",
     "epoch",
     "initialFuel",
+    "admissionWork",
     "deadlineUs",
     "clockUs",
     "originalGrant",
@@ -68,6 +69,9 @@
     "initialFuel": {
       "const": 7
     },
+    "admissionWork": {
+      "const": 4
+    },
     "deadlineUs": {
       "const": 12345
     },
@@ -92,13 +96,13 @@
       ]
     },
     "ownedFuel": {
-      "const": 5
+      "const": 3
     },
     "guestWork": {
       "const": 2
     },
     "remainingFuel": {
-      "const": 3
+      "const": 1
     },
     "guestReceipt": {
       "const": [

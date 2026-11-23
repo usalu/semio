@@ -22,23 +22,30 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                 cursor.phase = 2;
             }
             2 => {
-                if cursor.item == 0 && cursor.group_phase == 0 && cursor.shared_border_rects.is_empty() {
-                    let mut frames = Vec::new();
-                    let mut index = 0;
-                    while let Some((anchor, node, rect)) = self.footer_tab_row_rect(atlas, theme, index, width, btn_y, btn_h) {
-                        let active = self.dock.anchor_open(anchor) && self.dock.anchor_state(anchor).path.first() == Some(&node.id);
-                        let state = if rect.contains(input.pointer_x, input.pointer_y) { semio_renderer_wgpu_dock::shared_borders::BorderState::Hover } else if active { semio_renderer_wgpu_dock::shared_borders::BorderState::Active } else { semio_renderer_wgpu_dock::shared_borders::BorderState::Normal };
-                        frames.push(semio_renderer_wgpu_shell_view_chrome::ChromeBorderFrame { owner: node.id.clone(), rect: [rect.x, rect.y, rect.w, rect.h], state });
-                        cursor.shared_border_rects.insert(node.id, rect);
-                        index += 1;
+                if cursor.item == 0 && cursor.group_phase == 0 && !cursor.shared_border_planned {
+                    match self.footer_tab_row_rect(atlas, theme, cursor.shared_border_sweep, width, btn_y, btn_h) {
+                        Some((anchor, node, rect)) => {
+                            let active = self.dock.anchor_open(anchor) && self.dock.anchor_state(anchor).path.first() == Some(&node.id);
+                            let state = if rect.contains(input.pointer_x, input.pointer_y) { semio_renderer_wgpu_dock::shared_borders::BorderState::Hover } else if active { semio_renderer_wgpu_dock::shared_borders::BorderState::Active } else { semio_renderer_wgpu_dock::shared_borders::BorderState::Normal };
+                            cursor.shared_border_frames.push(semio_renderer_wgpu_shell_view_chrome::ChromeBorderFrame { owner: node.id.clone(), rect: [rect.x, rect.y, rect.w, rect.h], state });
+                            cursor.shared_border_rects.insert(node.id, rect);
+                            cursor.shared_border_sweep += 1;
+                        }
+                        None => {
+                            if let Ok(plan) = semio_renderer_wgpu_shell_view_chrome::chrome_border_plan(&cursor.shared_border_frames, theme.stroke_hairline) {
+                                cursor.shared_border_plan = plan;
+                            }
+                            cursor.shared_border_frames = Vec::new();
+                            cursor.shared_border_planned = true;
+                        }
                     }
-                    if let Ok(plan) = semio_renderer_wgpu_shell_view_chrome::chrome_border_plan(&frames, theme.stroke_hairline) {
-                        cursor.shared_border_plan = plan;
-                    }
+                    return false;
                 }
                 let Some((anchor, node, band_rect)) = self.footer_tab_row_rect(atlas, theme, cursor.item, width, btn_y, btn_h) else {
                     cursor.shared_border_plan.clear();
                     cursor.shared_border_rects.clear();
+                    cursor.shared_border_sweep = 0;
+                    cursor.shared_border_planned = false;
                     cursor.item = 0;
                     cursor.rect = None;
                     cursor.phase = 3;

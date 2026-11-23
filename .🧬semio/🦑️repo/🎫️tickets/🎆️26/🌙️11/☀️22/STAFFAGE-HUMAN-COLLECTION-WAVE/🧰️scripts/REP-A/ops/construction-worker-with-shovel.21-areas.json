@@ -1,0 +1,38 @@
+[
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=head-skin",
+   "areaM2"
+  ],
+  "value": 0.138,
+  "was": 0.105,
+  "measuredAt": 50
+ },
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=arm-clothing",
+   "areaM2"
+  ],
+  "value": 0.392,
+  "was": 0.2999,
+  "measuredAt": 50
+ },
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=gloves",
+   "areaM2"
+  ],
+  "value": 0.138,
+  "was": 0.105,
+  "measuredAt": 50
+ }
+]

@@ -39,9 +39,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host_snapshot: &SequenceHostSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(host_snapshot: &SequenceHostSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let host = neural_engine::ColdOwner::new(host_from_host_snapshot(host_snapshot));
-    semio_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_COMPILED, semio_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
+    semio_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_COMPILED, semio_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None), semio_plugin::surface_name(locale, "Compiled wire format", "Kompiliertes Wire-Format"), None)
 }
 //#endregion 🔖️Render
 

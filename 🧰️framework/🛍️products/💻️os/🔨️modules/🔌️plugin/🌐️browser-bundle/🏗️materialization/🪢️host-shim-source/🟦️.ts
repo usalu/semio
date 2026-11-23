@@ -40,10 +40,12 @@ export function operationProgress(completed, total, owned) { const refused = ori
 export function operationAllocation(bytes, owned, next, maximum) { const refused = originalCheck(); if (refused) return refused; const capacity = BigInt(originalTurn.input.grant.maximumCapacityBytes); if (maximum !== capacity) return 4; return owned > capacity || next > capacity - owned ? 2 : 0; }
 export function operationReserveReturn(kind, count) { const refused = originalCheck(); if (refused) return refused; return count > BigInt(originalTurn.input.grant.maximumItems) ? 2 : 0; }
 export function operationFinish(owned) { const refused = originalCheck(); if (refused) return refused; return owned > BigInt(originalTurn.input.grant.maximumCapacityBytes) ? 2 : 0; }
+let actorFault;
 export function log(level, message) {
-  if (level === "error") console.error(\`[actor] \${message}\`);
+  if (level === "error") { if (message.startsWith("original-turn.semantic ")) actorFault = message.slice(23); console.error(\`[actor] \${message}\`); }
   else console.log(\`[actor] \${message}\`);
 }
+export function __takeActorFault() { const fault = actorFault; actorFault = undefined; return fault; }
 
 export function nowMs() {
   return BigInt(Date.now());

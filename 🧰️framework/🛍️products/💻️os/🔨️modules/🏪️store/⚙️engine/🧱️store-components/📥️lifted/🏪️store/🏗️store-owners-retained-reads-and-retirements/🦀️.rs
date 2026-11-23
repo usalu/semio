@@ -319,6 +319,11 @@ where
         self.snapshot_read_leases.terminal_is_empty()
     }
 
+    /// ⏳️ True while a lease is outstanding and none has been returned yet: only its external holder can advance the close.
+    pub fn snapshot_read_leases_await_return(&self) -> bool {
+        !self.snapshot_read_leases.terminal_is_empty() && !self.snapshot_read_leases.has_returned()
+    }
+
     /// 🧾️ Leases returned to the registry whose roots it still holds until a returned-read pump reclaims them —
     /// every one of them keeps a whole document root alive.
     pub fn returned_snapshot_read_count(&self) -> usize {

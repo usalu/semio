@@ -14,13 +14,13 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🖼️ Paints the document for an unhosted window.
-pub fn render(document: &PdfSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    page::render_window(document)
+pub fn render(document: &PdfSnapshot, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    page::render_window(document, locale)
 }
 
 /// 🖼️ Paints the document through the ephemeral local view (zoom and anchored page) with search highlights on top.
-pub fn render_windowed(document: &PdfSnapshot, selected: Option<&str>, view: &page::ViewState, viewport: (f64, f64), highlights: Vec<page::OverlayLayer>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    page::render_view(document, selected, view, viewport, highlights)
+pub fn render_windowed(document: &PdfSnapshot, selected: Option<&str>, view: &page::ViewState, viewport: (f64, f64), highlights: Vec<page::OverlayLayer>, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    page::render_view(document, selected, view, viewport, highlights, locale)
 }
 
 

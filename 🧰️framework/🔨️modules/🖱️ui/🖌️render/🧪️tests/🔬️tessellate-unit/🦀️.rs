@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::scene::LayoutRect;
+use crate::scene::{LayoutRect, ScissorRect};
 
 #[test]
 fn dashed_line_segments_emit_dashes_along_segment() {
@@ -52,19 +52,20 @@ fn snap_to_device_pixels_is_deterministic_across_common_dprs() {
 }
 
 #[test]
-fn silhouette_mask_reset_is_bounded_to_previous_and_current_unions() {
-    let previous = Some(ScissorRect { x: 10, y: 10, w: 30, h: 20 });
-    let clip = ClipRegion::from_rects(&[LayoutRect::new(80.0, 15.0, 20.0, 25.0)]);
-    let (instances, current) = mask_instances(None, Some(&clip), previous, 500.0, 400.0);
-    assert_eq!(instances[0].rect, [10.0, 10.0, 90.0, 30.0]);
-    assert_eq!(instances[1].rect, [80.0, 15.0, 20.0, 25.0]);
-    assert_eq!(current, Some(ScissorRect { x: 80, y: 15, w: 20, h: 25 }));
+fn a_frame_clip_is_its_rectangle_intersected_with_the_viewport() {
+    let frame = ScissorRect::from_rect(LayoutRect::new(10.0, 20.0, 200.0, 120.0));
+    assert_eq!(viewport_scissor(Some(frame), 500.0, 400.0), Some(ScissorRect { x: 10, y: 20, w: 200, h: 120 }));
+    assert_eq!(viewport_scissor(Some(frame), 100.0, 60.0), Some(ScissorRect { x: 10, y: 20, w: 90, h: 40 }), "a frame never paints outside the viewport");
 }
 
 #[test]
-fn empty_silhouette_clip_writes_no_visible_stencil_region() {
-    let empty = ClipRegion { scissors: Vec::new() };
-    let (instances, current) = mask_instances(None, Some(&empty), None, 500.0, 400.0);
-    assert!(instances.is_empty(), "a cleared pass needs neither a reset nor a reference-one mask draw");
-    assert_eq!(current, None);
+fn a_batch_without_scissor_is_clipped_to_the_viewport_only() {
+    assert_eq!(viewport_scissor(None, 500.0, 400.0), Some(ScissorRect { x: 0, y: 0, w: 500, h: 400 }));
+}
+
+#[test]
+fn a_frame_outside_the_viewport_or_without_area_paints_nothing() {
+    assert_eq!(viewport_scissor(Some(ScissorRect { x: 600, y: 0, w: 10, h: 10 }), 500.0, 400.0), None);
+    assert_eq!(viewport_scissor(Some(ScissorRect { x: 10, y: 10, w: 0, h: 10 }), 500.0, 400.0), None);
+    assert_eq!(viewport_scissor(None, 0.0, 400.0), None);
 }

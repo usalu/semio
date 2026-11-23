@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_job::{Generation,OperationId,OriginalNativeLease,OriginalTurnFailure,StepContext};
 use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
-use std::panic::{catch_unwind,AssertUnwindSafe};
+use std::panic::{catch_unwind,resume_unwind,AssertUnwindSafe};
 use std::cell::Cell;
 use std::sync::{Mutex,MutexGuard};
 
@@ -17,7 +17,7 @@ fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:usize::MAX>>2,ma
 const SCOPE_DEADLINE_MICROS:u64=600_000_000;
 /// 🔐️ Serializes every law of this process that touches the process-wide arena registry or its handbacks.
 pub fn ui_arena_serial()->MutexGuard<'static,()>{SERIAL.lock().unwrap_or_else(|error|error.into_inner())}
-/// 🏟️ One test owns this arena until every registered value and its actual Source is returned; a panicking test still closes it so the process-wide registry is free for the next test, and only a refused close leaks it.
+/// 🏟️ One test owns this arena until every registered value and its actual Source is returned; a test that panics, or whose close is refused, still frees the process-wide registry for the next test, leaking only the unclosable Source.
 pub struct UiArenaFixture{caller:Option<OriginalJobFixtureCaller>,lease:Option<OriginalNativeLease<UiArenaLifetime>>,_serial:Option<MutexGuard<'static,()>>}
 impl UiArenaFixture{
  /// 🪆️ A scope opened while this thread's test already owns the arena is a handle onto that owner, so fixtures and a law's own scope compose without deadlocking on the serial lock; only the owner drives turns.
@@ -41,11 +41,16 @@ impl UiArenaFixture{
 }
 struct Release;
 impl Drop for Release{fn drop(&mut self){OWNED.with(|owned|owned.set(false))}}
+impl UiArenaFixture{
+ /// 🧯️ A close that cannot finish still frees the process-wide registry: the unclosable Source and caller leak, the registry and its handbacks reset, so one failing test never poisons the next.
+ fn abandon(&mut self){
+  if let Some(lease)=self.lease.take(){std::mem::forget(lease)}if let Some(caller)=self.caller.take(){std::mem::forget(caller)}ui_value_arena_registry().abandon()
+ }
+}
 impl Drop for UiArenaFixture{
  fn drop(&mut self){
   if self._serial.is_none(){return}let _release=Release;
-  if std::thread::panicking(){if catch_unwind(AssertUnwindSafe(||self.close())).is_err(){if let Some(lease)=self.lease.take(){std::mem::forget(lease)}if let Some(caller)=self.caller.take(){std::mem::forget(caller)}}return}
-  self.close()
+  if let Err(failure)=catch_unwind(AssertUnwindSafe(||self.close())){self.abandon();if !std::thread::panicking(){resume_unwind(failure)}}
  }
 }
 

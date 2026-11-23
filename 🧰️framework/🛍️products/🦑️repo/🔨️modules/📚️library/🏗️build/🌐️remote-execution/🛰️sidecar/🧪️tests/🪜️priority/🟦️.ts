@@ -1,8 +1,9 @@
 /** 🪜️ Contract: every sidecar role and provisioned service has a declared scheduling class (latency-critical ones are never throttled, batch ones stay in the background), the declaration agrees with an independent JSON-schema implementation, the renderers produce the keys each platform documents, and a role applies its class to its own process once, with injected platform facts and against a real child process. */
 import {afterAll,expect,test} from "bun:test";
 import {spawn,spawnSync} from "node:child_process";
+import {setPriority} from "node:os";
 import {fileURLToPath} from "node:url";
-import {applyServicePriorityV1,launchdPriorityKeysV1,servicePriorityOfRoleV1,servicePriorityOfServiceV1,servicePriorityTextV1,servicePriorityV1,shellPriorityLinesV1,taskPriorityXmlV1,realServicePriorityPortsV1,type ServicePriorityPortsV1} from "../../🪜️priority/🟦️.ts";
+import {applyServicePriorityV1,applyServiceUnitPriorityV1,launchdPriorityKeysV1,servicePriorityOfRoleV1,servicePriorityOfServiceV1,servicePriorityTextV1,servicePriorityV1,shellPriorityLinesV1,taskPriorityXmlV1,realServicePriorityPortsV1,type ServicePriorityPortsV1} from "../../🪜️priority/🟦️.ts";
 
 const schemaPath=fileURLToPath(new URL("../../🪜️priority/🧬️schema/🔣️.json",import.meta.url)),oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url));
 const ROLES=["agent","scheduler","cache","graph","pool","ready"],SERVICES=["replica","cache","relay","compact"];
@@ -89,6 +90,27 @@ test("windows: the nice value goes through the same call (libuv maps it to the p
  const scheduler=ports("win32",0);
  expect(applyServicePriorityV1("scheduler",scheduler)).toMatchObject({name:"interactive",nice:-5,outcome:"applied",io:undefined});
  expect(scheduler.calls).toEqual(["set -5"]);
+});
+
+test("a provisioned service applies its own class: the replica started below normal by a stale Windows task rises to interactive, macOS leaves it to launchd, an undeclared service is refused",()=>{
+ const windows=ports("win32",10);
+ expect(applyServiceUnitPriorityV1("replica",windows)).toMatchObject({role:"replica",name:"interactive",nice:-5,outcome:"applied",io:undefined});
+ expect(windows.calls).toEqual(["set -5"]);
+ const darwin=ports("darwin",0);
+ expect(applyServiceUnitPriorityV1("replica",darwin)).toMatchObject({name:"interactive",nice:0,outcome:"inherited"});expect(darwin.calls).toEqual([]);
+ const compact=ports("linux",0);
+ expect(applyServiceUnitPriorityV1("compact",compact)).toMatchObject({name:"background",nice:10,outcome:"applied",io:"idle"});
+ expect(()=>applyServiceUnitPriorityV1("unknown",ports("win32",0))).toThrow("Undeclared");
+});
+
+test.skipIf(process.platform!=="win32")("windows: a real child process started below normal ends up in the priority class Get-Process reports for the replica service",async()=>{
+ const child=spawn(process.execPath,["-e","setTimeout(()=>{},30000)"],{stdio:"ignore",windowsHide:true});children.push(child);
+ await new Promise(done=>setTimeout(done,300));
+ setPriority(child.pid!,10);
+ const result=applyServiceUnitPriorityV1("replica",realServicePriorityPortsV1(child.pid!));
+ expect(result).toMatchObject({name:"interactive",outcome:"applied"});
+ const ps=spawnSync("powershell.exe",["-NoProfile","-Command",`(Get-Process -Id ${child.pid}).PriorityClass`],{encoding:"utf8"});
+ expect(ps.stdout.trim()).toBe("AboveNormal");
 });
 
 test("the log line names the role, the class, the nice value and the outcome in English and German",()=>{

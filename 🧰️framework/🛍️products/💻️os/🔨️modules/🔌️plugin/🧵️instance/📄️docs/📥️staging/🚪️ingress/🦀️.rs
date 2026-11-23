@@ -40,14 +40,14 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
     /// pump either drains the disposer it owns or probes its Store for the next returned lease.
     pub fn snapshot_read_returns_demands(&self, stores: &InstanceStores<A>, interaction: &LocalInteraction<A>,body:usize)->Result<RetirementDemand,ValueError>{
         let stage=self.next_snapshot_read_return_stage(stores, interaction).unwrap_or(interaction.snapshot_read_return_stage);
-        let parent_copy=size_of::<usize>();let child=match stage{0=>self.document_snapshot_read_returns.retirement_demands(body.saturating_sub(parent_copy),||stores.store.returned_snapshot_read_retirement_demand())?,1=>interaction.config_snapshot_read_returns.retirement_demands(body.saturating_sub(parent_copy),||stores.config_store.returned_snapshot_read_retirement_demand())?,2=>interaction.interaction_snapshot_read_returns.retirement_demands(body.saturating_sub(parent_copy),||stores.interaction_store.returned_snapshot_read_retirement_demand())?,_=>match stores.transient_local_root_retirement_factory.as_ref(){Some(_)=>stores.transient_store.maintenance_returned_reads_demands_root(body.saturating_sub(parent_copy))?,None=>Default::default()}};ChildContentRetirement::parent_snapshot_demand(child,parent_copy)
+        let parent_copy=size_of::<usize>();let child=match stage{0=>self.document_snapshot_read_returns.retirement_demands(body.saturating_sub(parent_copy),||stores.store.returned_snapshot_read_retirement_demand())?,1=>interaction.config_snapshot_read_returns.retirement_demands(body.saturating_sub(parent_copy),||stores.config_store.returned_snapshot_read_retirement_demand())?,2=>interaction.interaction_snapshot_read_returns.retirement_demands(body.saturating_sub(parent_copy),||stores.interaction_store.returned_snapshot_read_retirement_demand())?,4=>interaction.draft_snapshot_read_returns.retirement_demands(body.saturating_sub(parent_copy),||stores.draft_store.returned_snapshot_read_retirement_demand())?,_=>match stores.transient_local_root_retirement_factory.as_ref(){Some(_)=>stores.transient_store.maintenance_returned_reads_demands_root(body.saturating_sub(parent_copy))?,None=>Default::default()}};ChildContentRetirement::parent_snapshot_demand(child,parent_copy)
     }
 
     pub fn advance_snapshot_read_returns_one(&mut self, stores: &mut InstanceStores<A>, interaction: &mut LocalInteraction<A>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,Fault>{
         let grant=effect.grant();let empty=RetainedCloneProgress::default();let demand=self.snapshot_read_returns_demands(stores, interaction, grant.maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.into_message()))?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty))}
         let stage = self.next_snapshot_read_return_stage(stores, interaction).unwrap_or(interaction.snapshot_read_return_stage);
-        let next_demand=match stage{1=>stores.config_store.returned_snapshot_read_retirement_demand(),2=>stores.interaction_store.returned_snapshot_read_retirement_demand(),_=>Ok(Default::default())}.map_err(|error|plugin_sdk_fault(error.into_message()))?;
-        let parent_copy=size_of::<usize>();let mut inner=effect.nested(RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent_copy,maximum_depth:grant.maximum_depth-1,..grant});let step=match stage{0=>self.advance_document_snapshot_read_return(stores,&mut inner),1=>interaction.config_snapshot_read_returns.drive(next_demand,|original|stores.config_store.take_returned_snapshot_read_retirement(original).map_err(|error|plugin_sdk_fault(error.into_message())),&mut inner),2=>interaction.interaction_snapshot_read_returns.drive(next_demand,|original|stores.interaction_store.take_returned_snapshot_read_retirement(original).map_err(|error|plugin_sdk_fault(error.into_message())),&mut inner),_=>match stores.transient_local_root_retirement_factory.clone(){Some(factory)=>semio_plugin_ownership::bounded_ownership::plugin_settle_value(stores.transient_store.maintenance_returned_reads_step_root(&factory,&mut inner)).map_err(|error|plugin_sdk_fault(error.into_message())),None=>Ok(RetainedCloneStep::Progress(empty))}}?;let mut receipt=step.progress();interaction.snapshot_read_return_stage=(stage+1)%4;receipt.copied_items=receipt.copied_items.max(1);receipt.copied_bytes=receipt.copied_bytes.checked_add(parent_copy).expect("original snapshot rotation preflight");let receipt=semio_framework_value::retained_clone::admit_retained_clone_progress(grant,receipt,"original snapshot return rotation").map_err(|error|plugin_sdk_fault(error.into_message()))?;Ok(RetainedCloneStep::Progress(receipt))
+        let next_demand=match stage{1=>stores.config_store.returned_snapshot_read_retirement_demand(),2=>stores.interaction_store.returned_snapshot_read_retirement_demand(),4=>stores.draft_store.returned_snapshot_read_retirement_demand(),_=>Ok(Default::default())}.map_err(|error|plugin_sdk_fault(error.into_message()))?;
+        let parent_copy=size_of::<usize>();let mut inner=effect.nested(RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent_copy,maximum_depth:grant.maximum_depth-1,..grant});let step=match stage{0=>self.advance_document_snapshot_read_return(stores,&mut inner),1=>interaction.config_snapshot_read_returns.drive(next_demand,|original|stores.config_store.take_returned_snapshot_read_retirement(original).map_err(|error|plugin_sdk_fault(error.into_message())),&mut inner),2=>interaction.interaction_snapshot_read_returns.drive(next_demand,|original|stores.interaction_store.take_returned_snapshot_read_retirement(original).map_err(|error|plugin_sdk_fault(error.into_message())),&mut inner),4=>interaction.draft_snapshot_read_returns.drive(next_demand,|original|stores.draft_store.take_returned_snapshot_read_retirement(original).map_err(|error|plugin_sdk_fault(error.into_message())),&mut inner),_=>match stores.transient_local_root_retirement_factory.clone(){Some(factory)=>semio_plugin_ownership::bounded_ownership::plugin_settle_value(stores.transient_store.maintenance_returned_reads_step_root(&factory,&mut inner)).map_err(|error|plugin_sdk_fault(error.into_message())),None=>Ok(RetainedCloneStep::Progress(empty))}}?;let mut receipt=step.progress();interaction.snapshot_read_return_stage=(stage+1)%5;receipt.copied_items=receipt.copied_items.max(1);receipt.copied_bytes=receipt.copied_bytes.checked_add(parent_copy).expect("original snapshot rotation preflight");let receipt=semio_framework_value::retained_clone::admit_retained_clone_progress(grant,receipt,"original snapshot return rotation").map_err(|error|plugin_sdk_fault(error.into_message()))?;Ok(RetainedCloneStep::Progress(receipt))
     }
 
     /// 👁️ Borrows whether the original returned-read frontier allows another publication item.
@@ -73,10 +73,11 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
 
     /// 🧭️ The first rotation stage at or after the cursor whose pump or store still holds a returned read.
     pub fn next_snapshot_read_return_stage(&self, stores: &InstanceStores<A>, interaction: &LocalInteraction<A>) -> Option<u8> {
-        (0..4u8).map(|offset| (interaction.snapshot_read_return_stage + offset) % 4).find(|stage| match stage {
+        (0..5u8).map(|offset| (interaction.snapshot_read_return_stage + offset) % 5).find(|stage| match stage {
             0 => !self.document_snapshot_read_returns.terminal_is_empty() || (!stores.store.terminal_is_empty() && stores.store.returned_snapshot_read_count() != 0),
             1 => !interaction.config_snapshot_read_returns.terminal_is_empty() || (!stores.config_store.terminal_is_empty() && stores.config_store.returned_snapshot_read_count() != 0),
             2 => !interaction.interaction_snapshot_read_returns.terminal_is_empty() || (!stores.interaction_store.terminal_is_empty() && stores.interaction_store.returned_snapshot_read_count() != 0),
+            4 => !interaction.draft_snapshot_read_returns.terminal_is_empty() || (!stores.draft_store.terminal_is_empty() && stores.draft_store.returned_snapshot_read_count() != 0),
             _ => stores.transient_local_root_retirement_factory.is_some() && stores.transient_store.returned_read_pending(),
         })
     }
@@ -542,6 +543,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
     /// ship. Each minted entry is owner-stamped to the candidate root and takes the next ordinal after the
     /// archived ones; the fixed member and byte authorities are re-checked over the completed roster. A
     /// slot the app cannot derive is left alone, so closure validation still rejects it as `Incomplete`.
+    /// Archived members the hydrated parent no longer reaches by slot, child id and artifact id, including members owned only through those, are removed first, so a superseded content-addressed child never stays in the roster of the head closure.
     ///
     /// 🔢️ Archived entries are already reversed for ordinal-ordered popping; ordinals stay
     /// `0..n` for them and continue at `n` for every minted member, whatever the pop order.
@@ -557,11 +559,19 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         let parent = ArtifactRef { artifact_id: candidate.envelope().id.clone(), dialect };
         let snapshot = candidate.snapshot_ref();
         let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, format!("document archive genesis child projection failed: {error}")))?;
+        let root_id = parent.artifact_id.clone();
+        let projected: Vec<(&str, &str, &str)> = (0..projection.len()).filter_map(|index| projection.get(index).map(|(slot, fields)| (slot, fields.child_id, fields.artifact_id))).collect();
+        let before = archive.members.len();
+        retain_head_reachable_members(&mut archive.members, &root_id, &projected);
+        active.total = active.total.saturating_sub((before - archive.members.len()) as u64);
+        for (index, entry) in archive.members.iter_mut().enumerate() {
+            entry.ordinal = u32::try_from(index).map_err(|_| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "document archive genesis ordinal exceeds u32"))?;
+        }
         let mut ordinal = archive.members.len();
         let mut payload_bytes = archive.members.iter().fold(archive.parent_spr.len(), |total, entry| total + entry.envelope_pack.len());
         for index in 0..projection.len() {
             let Some((slot, fields)) = projection.get(index) else { break };
-            if archive.members.iter().any(|entry| entry.owner.slot == slot && entry.owner.child_id == fields.child_id) {
+            if archive.members.iter().any(|entry| entry.reference.artifact_id == fields.artifact_id) {
                 continue;
             }
             let Some(initial_pack) = A::genesis_child_pack(snapshot, slot, fields.child_id).map_err(|error| plugin_sdk_fault(error.into_message()))? else { continue };
@@ -647,3 +657,29 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         Ok(())
     }
 }
+
+/// 🪢️ Keeps exactly the roster members the head snapshot reaches: a root-owned member survives only when the head projection names its slot, child id and artifact id, and a deeper member only through a surviving parent, so a superseded content-addressed child never stays in the closure. See [`ArtifactApp::genesis_child_pack`].
+pub(crate) fn retain_head_reachable_members(members: &mut Vec<protocol::OwnedDocumentMemberPackEntry>, root_id: &str, projected: &[(&str, &str, &str)]) {
+    let mut alive = std::collections::BTreeSet::new();
+    alive.insert(root_id.to_owned());
+    let mut grew = true;
+    while grew {
+        grew = false;
+        for entry in members.iter() {
+            if !alive.contains(&entry.owner.parent.artifact_id) {
+                continue;
+            }
+            if entry.owner.parent.artifact_id == root_id && !projected.iter().any(|(slot, child_id, artifact_id)| *slot == entry.owner.slot && *child_id == entry.owner.child_id && *artifact_id == entry.reference.artifact_id) {
+                continue;
+            }
+            if alive.insert(entry.reference.artifact_id.clone()) {
+                grew = true;
+            }
+        }
+    }
+    members.retain(|entry| alive.contains(&entry.reference.artifact_id));
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

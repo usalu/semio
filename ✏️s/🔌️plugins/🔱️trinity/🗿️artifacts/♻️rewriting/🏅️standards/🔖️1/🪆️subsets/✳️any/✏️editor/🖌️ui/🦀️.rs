@@ -85,13 +85,15 @@ pub fn trinity_rewriting_lod_measure(window_id: &str, current_mode: &str) -> Win
 /// wrapper's `stamp_and_cache_interaction_ui` post-pass would stamp either. The live node-graph host
 /// reads domain "graph"'s `DomainSelection`/`DomainHover` directly, so the interactive surface stays
 /// correct even though this snapshot doesn't carry it.
-pub fn render_graph_snapshot(surface_id: &str, snapshot: &JackSnapshot, cfg: &window_config::RewritingWindowConfig, editable: bool) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render_graph_snapshot(surface_id: &str, snapshot: &JackSnapshot, cfg: &window_config::RewritingWindowConfig, editable: bool, name: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let (nodes, edges, scene_viewport) = semio_s_artifact_trinity_jack::editor::jack::snapshot_to_workflow(snapshot).map_err(|error|semio_plugin::PluginAssemblyError::new("trinity.child.unavailable",error.into_message()))?;
     let viewport = cfg.camera.as_ref().map_or(scene_viewport, |camera| Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom });
     semio_plugin::scene_surface(
         surface_id,
         SemanticSurfaceKind::NodeGraph,
         &semio_plugin::NodeGraphScene { lod_json: Some(rewriting_lod_json_for_window(cfg)), editable: editable.then_some(true), ..semio_plugin::NodeGraphScene::base(nodes, edges, viewport) },
+        name,
+        None,
     )
 }
 //#endregion 🔖️Render

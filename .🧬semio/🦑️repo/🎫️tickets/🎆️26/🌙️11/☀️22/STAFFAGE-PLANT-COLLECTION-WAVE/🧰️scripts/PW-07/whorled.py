@@ -204,7 +204,7 @@ def build(S):
         env[0] = (hi, 0.0)
         env = [(y, w) for y, w in env if w > 1e-6 or y == hi]
         halves = [simplify(env, 0.03 + 0.005 * i) for i in range(9)]
-        half = next((h for h in halves if len(h) <= 40), halves[-1])
+        half = next((h for h in halves if len(h) <= 34), halves[-1])
         split = S.sun_from - 0.3
         above = [p for p in half if p[0] > split]
         below = [p for p in half if p[0] < split]
@@ -447,7 +447,7 @@ def build(S):
         reps[scale] = representation(scale, shapes, S.rep_decisions(scale, len(tiers), dims, fmt))
         th = [{"id": "th-%s" % s.id, "of": s.id, "region": s.region} for s in body]
         if scale == "500":
-            core = Revolve("bark-upper-core", bones[names[1]], 0, 0, stem_profile(S.crown_base + 1.0, top_y, 6), S.bark_upper, 0.36).json()
+            core = Revolve("bark-upper-core", bones[names[1]], 0, 0, stem_profile(S.crown_base + 1.0, top_y, 3), S.bark_upper, 0.36).json()
             th.append(dict(core, region="bark-upper"))
         for reg, eid in (("needles-sun", "transpiration-sun"), ("needles-shade", "transpiration-shade")):
             for j, (aid, t, p) in enumerate(outlets[reg]):

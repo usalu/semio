@@ -59,10 +59,14 @@ impl StreamSpanCursor {
             if self.position == source_len {
                 if self.matched == MARKER.len() {
                     self.finish_marker();
-                } else if matches!(self.phase, Phase::Declared { .. }) {
+                } else if matches!(self.phase, Phase::Declared { .. }) && self.start != source_len {
                     self.start_search();
                 } else {
-                    self.phase = Phase::Complete(StreamSpan { start: self.start, end: source_len, resume: source_len });
+                    let end = match self.phase {
+                        Phase::Declared { end, .. } => end,
+                        _ => source_len,
+                    };
+                    self.phase = Phase::Complete(StreamSpan { start: self.start, end, resume: source_len });
                 }
                 continue;
             }

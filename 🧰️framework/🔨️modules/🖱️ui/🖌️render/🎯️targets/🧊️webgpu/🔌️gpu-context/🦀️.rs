@@ -140,7 +140,7 @@ pub(crate) fn configure_surface(device: &wgpu::Device, surface: &wgpu::Surface<'
     surface.configure(device, &config);
 }
 
-/// 🕳️ The shared depth/stencil texture every content/mask/vector/world3d pipeline attaches — matches
+/// 🕳️ The shared depth/stencil texture every content/viewport-mask/vector/world3d pipeline attaches — matches
 /// `gpu.rs`'s `ensure_depth`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub(crate) fn create_depth_texture(device: &wgpu::Device, width: u32, height: u32) -> wgpu::Texture {

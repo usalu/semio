@@ -30,7 +30,13 @@ pub(super) fn acceptance_text_difference(left: &str, right: &str) -> String {
     }
 }
 
-/// 🗂️ Every directory under `root` that commits a mutation wire (`🦠️mutation/🔣️.json`), in path order.
+/// 📄️ One committed fixture file of `directory`: the nested form (`🦠️mutation/🔣️.json`) or the flat form of the family fixtures (`🔣️.mutation.json`).
+fn acceptance_fixture_file(directory: &std::path::Path, nested: &[&str], flat: &str) -> std::path::PathBuf {
+    let nested = nested.iter().fold(directory.to_path_buf(), |path, part| path.join(part));
+    if nested.is_file() { nested } else { directory.join(flat) }
+}
+
+/// 🗂️ Every directory under `root` that commits a mutation wire (`🦠️mutation/🔣️.json` or `🔣️.mutation.json`), in path order.
 fn acceptance_fixture_directories(root: &std::path::Path) -> Vec<std::path::PathBuf> {
     fn walk(directory: &std::path::Path, found: &mut Vec<std::path::PathBuf>) {
         let Ok(entries) = std::fs::read_dir(directory) else { return };
@@ -40,7 +46,7 @@ fn acceptance_fixture_directories(root: &std::path::Path) -> Vec<std::path::Path
             if !path.is_dir() || name.starts_with('.') || ["target", "dist", "node_modules", "🗑️generated"].contains(&name.as_str()) {
                 continue;
             }
-            if path.join("🦠️mutation").join("🔣️.json").is_file() {
+            if acceptance_fixture_file(&path, &["🦠️mutation", "🔣️.json"], "🔣️.mutation.json").is_file() {
                 found.push(path.clone());
             }
             walk(&path, found);
@@ -108,16 +114,16 @@ pub fn acceptance_cases<A: ArtifactApp>(root: &std::path::Path) -> Vec<Acceptanc
 {
     let mut cases = Vec::new();
     for directory in acceptance_fixture_directories(root) {
-        let Some(wire) = acceptance_json(&directory.join("🦠️mutation").join("🔣️.json")) else { continue };
+        let Some(wire) = acceptance_json(&acceptance_fixture_file(&directory, &["🦠️mutation", "🔣️.json"], "🔣️.mutation.json")) else { continue };
         let record = acceptance_record(&wire);
-        let applied = record || acceptance_json(&directory.join("🎯️outcome").join("🔣️.json")).is_some_and(|outcome| outcome.get("status").and_then(DslValue::as_str).is_some_and(|status| status != "rejected"));
+        let applied = record || acceptance_json(&acceptance_fixture_file(&directory, &["🎯️outcome", "🔣️.json"], "🔣️.outcome.json")).is_some_and(|outcome| outcome.get("status").and_then(DslValue::as_str).is_some_and(|status| status != "rejected"));
         if !applied {
             continue;
         }
         let before = directory.join("📸️snapshot").join("⬅️before");
         let base = match std::fs::read_to_string(before.join("🗣️.dsl.semio")) {
             Ok(text) => Some(text),
-            Err(_) => (if record { wire.get("before").cloned() } else { acceptance_json(&before.join("🔣️.json")) }).and_then(acceptance_dsl_of::<A>),
+            Err(_) => (if record { wire.get("before").cloned() } else { acceptance_json(&acceptance_fixture_file(&directory, &["📸️snapshot", "⬅️before", "🔣️.json"], "🔣️.before.json")) }).and_then(acceptance_dsl_of::<A>),
         };
         let Some(base) = base else { continue };
         let Some(op) = acceptance_operation::<A>(&wire) else { continue };
@@ -148,7 +154,7 @@ pub async fn acceptance_example_cases<A: ArtifactApp>(root: &std::path::Path, ex
         }
     }
     let operations: Vec<(String, A::Mutation)> =
-        acceptance_fixture_directories(root).into_iter().filter_map(|directory| Some((directory.to_string_lossy().into_owned(), acceptance_operation::<A>(&acceptance_json(&directory.join("🦠️mutation").join("🔣️.json"))?)?))).collect();
+        acceptance_fixture_directories(root).into_iter().filter_map(|directory| Some((directory.to_string_lossy().into_owned(), acceptance_operation::<A>(&acceptance_json(&acceptance_fixture_file(&directory, &["🦠️mutation", "🔣️.json"], "🔣️.mutation.json"))?)?))).collect();
     let mut cases = Vec::new();
     for (name, base) in &documents {
         for (directory, op) in &operations {

@@ -12,7 +12,7 @@ import { WindowChrome, windowChromeTitleChipClass } from "../🗂️WindowChrome
 // #endregion 🔌️Adapters
 
 // #region 🃏️OverviewCard
-/** 🃏️ What every overview card shows: a title chip (glyph and title), a body, and optional chips at the bottom left
+/** 🃏️ What every overview card shows: a title chip (glyph and title) overlaid on the top of the body, the body, and optional chips overlaid on the bottom left
  * and right. `slot` prefixes the card's `data-slot`s (`<slot>-title-chip`, `<slot>-content`, `<slot>-stack`), so each
  * product keeps its own hooks for styles and tests. */
 export interface OverviewCardBaseProps {
@@ -28,7 +28,7 @@ export interface OverviewCardBaseProps {
   readonly contentClassName?: string;
   /** 🧱️ Takes the body's padding away and makes the content a vertical shared-border group: its direct children are
    * cells (`data-shared-border-cell`, each with its own padding) whose single dividers lie between them (framed controls placed directly in it are cells too, see `data-shared-border-cells`) and whose outer
-   * edges are the card's own silhouette, so no frame of a child lies inside the card's frame with a gap. */
+   * edges are the card's own frame, so no frame of a child lies inside the card's frame with a gap. */
   readonly flush?: boolean;
   readonly data?: Readonly<Record<`data-${string}`, string | undefined>>;
 }
@@ -43,7 +43,7 @@ export interface OverviewCardSectionProps extends OverviewCardBaseProps {
   readonly focusableHeading?: boolean;
 }
 
-/** 🔘️ A card that is itself one action (open this app): the whole card is a `<button>` whose silhouette responds to hover. Its body
+/** 🔘️ A card that is itself one action (open this app): the whole card is a `<button>` whose frame responds to hover. Its body
  * holds phrasing text only, so the button keeps a valid content model. */
 export interface OverviewCardButtonProps extends OverviewCardBaseProps {
   readonly as: "button";
@@ -55,11 +55,11 @@ export interface OverviewCardButtonProps extends OverviewCardBaseProps {
 /** ⚙️ Props of {@link OverviewCard}. */
 export type OverviewCardProps = OverviewCardSectionProps | OverviewCardButtonProps;
 
-const CARD_STACK_DATA = { "data-overview-card-stack": "", "data-shared-border-hover": "silhouette" } as const;
+const CARD_STACK_DATA = { "data-overview-card-stack": "", "data-shared-border-hover": "frame" } as const;
 
 /** 💳️ The overview card of semio's landing pages (play, the demonstrator, the quizzes): the design system's
- * {@link WindowChrome} at dialog level, never `active`, with the title in its cap chip and actions in its footer chips.
- * Sharp corners, glass and the 1 px silhouette come from the chrome; the stack stays transparent through
+ * {@link WindowChrome} at dialog level, never `active`, with the title in a glass chip on its top row and actions in glass chips on its bottom row, both inside the frame.
+ * Sharp corners, glass and the 1 px frame come from the chrome: the card is one rectangle, the title chip and the footer chips are glass overlays inside it above the body, and the body keeps the chip row clearance. The stack stays transparent through
  * `data-overview-card-stack`, and its outline is emphasised while the pointer is over the card.
  *
  * @see ../🗂️WindowChrome/🟦️.tsx

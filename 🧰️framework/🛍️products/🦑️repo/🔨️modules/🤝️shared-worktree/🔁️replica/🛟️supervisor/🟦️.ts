@@ -258,6 +258,15 @@ async function recordBlock(root:string,pid:number,beat:Beat,reason:"blocked"|"si
 
 type SilenceModuleV1={readySidecarSilenceV1(input:{status:unknown;nowMs:number}):{state:string;missedBeats:number;ageMs:number};readySilenceWatchV1():{observe(status:unknown,nowMs:number):"wait"|"restart"};readySilenceNoticeV1(silence:{state:"silent";missedBeats:number;ageMs:number}):string};
 const silenceModuleRelativeV1=["🧰️framework","🛍️products","🦑️repo","🔨️modules","📚️library","🏗️build","🌐️remote-execution","🛰️sidecar","🚦️ready","💔️silence","🟦️.ts"];
+const priorityModuleRelativeV1=["🧰️framework","🛍️products","🦑️repo","🔨️modules","📚️library","🏗️build","🌐️remote-execution","🛰️sidecar","🪜️priority","🟦️.ts"];
+
+/** 🏎️ Puts this process (the boot stage or the daemon child, whose watchdog thread shares its priority) into the declared class of the `replica` service before it runs, so a service manager that starts it lower (a Windows task without `<Priority>` runs below normal) cannot starve its event loop and its beat behind other work on a saturated machine; reports the outcome on `notice` and never throws. See `../../../📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🪜️priority/🟦️.ts`. */
+async function applyReplicaPriorityV1(root:string,notice:Sink):Promise<void>{
+ try{
+  const module=await import(pathToFileURL(join(root,...priorityModuleRelativeV1)).href) as {applyServiceUnitPriorityV1(service:string):unknown;servicePriorityTextV1(result:unknown):string};
+  notice(module.servicePriorityTextV1(module.applyServiceUnitPriorityV1("replica")));
+ }catch(error){notice(`replica scheduling: not applied (${text(error)}) / replica Scheduling: nicht angewendet (${text(error)})`);}
+}
 
 /** 💔️ The `ready.json` of this machine's readiness sidecar (`<store>/v1/origins/<origin>/ready.json`), `undefined` without a fleet store. */
 function readyStatusFileV1(root:string,environment:Readonly<Record<string,string|undefined>>):string|undefined{
@@ -409,6 +418,7 @@ export async function scriptMainV1(argv:readonly string[]):Promise<number>{
  for(const name of signals)process.once(name,stop);
  const staged=import.meta.dirname.endsWith(join(".cache","f","boot")),worktreeRoot=process.env.SEMIO_FLEET_BOOT_ROOT??(staged?resolve(import.meta.dirname,"../../.."):resolve(import.meta.dirname,"../../../../../../..")),out:Sink=line=>{process.stdout.write(`${line}\n`);},err:Sink=line=>{process.stderr.write(`${line}\n`);};
  const childMode=argv[0]==="--boot-child",args=argv.slice(childMode?1:0);
+ if(args[0]==="run")await applyReplicaPriorityV1(worktreeRoot,err);
  const base=process.env.SEMIO_FLEET_BOOT_BASE,module=staged||(base!==undefined&&base!==""&&resolve(base)!==resolve(worktreeRoot))?join(worktreeRoot,...bootModuleRelativeV1.split("/")):resolve(import.meta.dirname,"..","..");
  let code:number;
  if(childMode){

@@ -17,8 +17,8 @@ use semio_framework_value_derive::ToValue;
 use crate::context::view;
 use semio_plugin::HistoryView;
 
-fn demo() -> Fem3dSnapshot {
-    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
+fn demo() -> crate::context::Retiring<Fem3dSnapshot> {
+    crate::context::Retiring::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot"))
 }
 
 /// 🎯️ LAW: focusing re-aims the orbit at the entity and carries the eye offset along, on the
@@ -27,7 +27,7 @@ fn demo() -> Fem3dSnapshot {
 fn focus_entity_re_aims_the_addressed_window_orbit() {
     let doc = demo();
     let history = HistoryView::empty();
-    let view_doc = ArtifactView::new(&doc, &history);
+    let view_doc = ArtifactView::new(&*doc, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle_window(&FocusEntity { id: semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap() }, &view_doc, &cfg, &view(model::FEM3D_WINDOW_MODEL)).expect("focus");

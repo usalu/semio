@@ -1,0 +1,49 @@
+{
+  "stock": {
+    "items": 8,
+    "copyBytes": 1024,
+    "capacityBytes": 1024,
+    "releaseBytes": 1024,
+    "depth": 4
+  },
+  "fuel": 100,
+  "cases": [
+    {
+      "name": "whole stock",
+      "grant": {
+        "items": 8,
+        "copyBytes": 1024,
+        "capacityBytes": 1024,
+        "releaseBytes": 1024,
+        "depth": 4
+      },
+      "work": 50
+    },
+    {
+      "name": "one quoted body",
+      "grant": {
+        "items": 1,
+        "copyBytes": 512,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "work": 1
+    },
+    {
+      "name": "no item",
+      "grant": {
+        "items": 0,
+        "copyBytes": 64,
+        "capacityBytes": 16,
+        "releaseBytes": 8,
+        "depth": 2
+      },
+      "work": 2
+    }
+  ],
+  "wallets": 2,
+  "runsPerWallet": 3,
+  "expectedBindingsPerWallet": 1,
+  "expectedBindingsAcrossWallets": 2
+}

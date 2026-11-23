@@ -91,9 +91,6 @@ pub mod standards {
                     #[path = "."]
                     pub mod fonts {
                         pub use semio_s_artifact_stdio_pdf_fonts::standards::v1_7::subsets::base::modules::fonts::*;
-                        #[cfg(test)]
-                        #[path = "../../7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
                 #[path = "."]

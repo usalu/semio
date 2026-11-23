@@ -1,7 +1,7 @@
 import { packValueFromBase64 } from "@semio-tech/framework-os";
 import type { InvocationResponse, PluginDispatchHintV1 } from "@semio-tech/framework";
 import type { WgpuEphemeralSnapshot, WgpuPluginHandle } from "./🧾️typed-operations-and-handle/🟦️.ts";
-import { naturalFileMediaInputV1 } from "../../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { naturalFileMediaInputV1 } from "../../../🧱️elements/🛠️ShellHelpers/🎞️media-import/🟦️.ts";
 
 /** 🌉️ The raw string-in/string-out JS surface `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s `wasm32` branch reads
  * via `Reflect::get` — `manifest`/`createApp`/`render` are HARD requirements at

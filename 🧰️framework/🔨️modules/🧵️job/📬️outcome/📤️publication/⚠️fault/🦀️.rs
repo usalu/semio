@@ -70,7 +70,7 @@ impl RetainedFaultPublication{
   if !self.closing{self.closing=true;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
   let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
   if !self.wire.terminal_is_empty(){let turn=self.wire.close_step(child);return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}
-  if !self.builder.terminal_is_empty(){let turn=self.builder.close_step(&mut effect.reborrow(child,effect.maximum_work_units()).expect("fault builder close exceeds original effect"));return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}
+  if !self.builder.terminal_is_empty(){let turn=self.builder.close_step(&mut effect.nested(child));return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}
   self.binding=None;self.flush_cursor=0;self.delivered=false;self.closing=false;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
  }
 }

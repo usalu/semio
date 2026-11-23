@@ -228,22 +228,23 @@ fn values_capacity_for_clip_law(row: &serde_json::Value) -> usize {
 }
 
 #[test]
-fn overlapping_silhouette_pieces_are_refused_before_retained_draw_ownership() {
+fn overlapping_scanline_pieces_are_refused_before_retained_draw_ownership() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🖥️prepared-gpu-clip-pieces/🔣️.json")).expect("neutral prepared GPU clip fixture");
     let row = fixture["cases"].as_array().expect("clip cases").iter().find(|row| row["id"] == "overlapping-pieces-refused-before-alpha").expect("overlap refusal case");
-    let rects = row["clip"]
+    let bands = row["clip"]
         .as_array()
         .expect("overlapping pieces")
         .iter()
         .map(|value| {
             let rect = clip_fixture_rect(value);
-            crate::geometry::Rect::new(rect.x as f32, rect.y as f32, rect.w as f32, rect.h as f32)
+            [rect.x, rect.y, rect.w, rect.h]
         })
         .collect::<Vec<_>>();
     let mut draw = semio_ui_draw_contract::DrawList::default();
     draw.begin_retained_output(16, 4_096).expect("bounded retained output grant");
-    draw.begin_silhouette_clip(&rects);
-    assert_eq!(draw.finish_retained_output(), Err(semio_ui_draw_contract::RetainedOutputError::LimitExceeded), "overlapping alpha pieces must be rejected before they can double-blend a pixel");
+    assert!(!draw.begin_scanline_clip(&bands), "overlapping alpha pieces must be rejected before they can double-blend a pixel");
+    assert!(draw.finish_retained_output().is_ok(), "a refused clip records nothing");
+    assert!(draw.layers.iter().all(|layer| layer.clip.is_none()));
 }
 
 /// 🪟️ Glass insertion ends earlier content and retains the enclosing foreground.
@@ -254,7 +255,7 @@ fn authored_glass_boundaries_preserve_the_enclosing_layer() {
     draw.push_solid([0.0, 0.0, 100.0, 100.0], theme.accent);
     let panel = draw.push_glass([0.0, 0.0, 100.0, 100.0], 0.0, theme.glass(semio_ui_theme::Level::Window));
     draw.begin_glass_content(panel);
-    draw.begin_silhouette_clip(&[crate::geometry::Rect::new(0.0, 0.0, 80.0, 80.0)]);
+    assert!(draw.begin_scanline_clip(&[[0, 0, 80, 80]]));
     draw.push_scissor(crate::geometry::Rect::new(4.0, 4.0, 60.0, 60.0));
     draw.push_solid([0.0, 0.0, 100.0, 20.0], theme.accent);
     let previous = draw.layers.last().expect("panel text layer");
@@ -270,7 +271,7 @@ fn authored_glass_boundaries_preserve_the_enclosing_layer() {
     assert_eq!(draw.layers[layer].foreground_of, foreground);
     assert!(draw.layers[layer].ui_instances.is_empty());
     draw.pop_scissor();
-    draw.end_silhouette_clip();
+    draw.end_clip();
     draw.end_glass_content();
 }
 

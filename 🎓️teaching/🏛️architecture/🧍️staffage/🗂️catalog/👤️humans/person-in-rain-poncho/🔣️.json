@@ -21432,12 +21432,12 @@
           "breathing": "rest-standing",
           "regions": {
             "face-skin": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8593,
               "sunlitFraction": 0,
               "wettedness": 0.2
             },
             "hood": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3342,
               "sunlitFraction": 0,
               "wettedness": 0.9
             },
@@ -21446,17 +21446,17 @@
               "sunlitFraction": 0
             },
             "poncho": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3725,
               "sunlitFraction": 0,
               "wettedness": 0.85
             },
             "trousers": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8412,
               "sunlitFraction": 0,
               "wettedness": 0.4
             },
             "wellies": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3205,
               "sunlitFraction": 0,
               "wettedness": 0.9
             }
@@ -21527,12 +21527,12 @@
           "breathing": "rest-standing",
           "regions": {
             "face-skin": {
-              "exposedFraction": 0.8,
+              "exposedFraction": 0.6875,
               "sunlitFraction": 0,
               "wettedness": 0.2
             },
             "hood": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3342,
               "sunlitFraction": 0,
               "wettedness": 0.9
             },
@@ -21541,17 +21541,17 @@
               "sunlitFraction": 0
             },
             "poncho": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3725,
               "sunlitFraction": 0,
               "wettedness": 0.85
             },
             "trousers": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8412,
               "sunlitFraction": 0,
               "wettedness": 0.4
             },
             "wellies": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3205,
               "sunlitFraction": 0,
               "wettedness": 0.9
             }
@@ -21638,12 +21638,12 @@
           "breathing": "walking",
           "regions": {
             "face-skin": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8593,
               "sunlitFraction": 0,
               "wettedness": 0.2
             },
             "hood": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3342,
               "sunlitFraction": 0,
               "wettedness": 0.9
             },
@@ -21652,17 +21652,17 @@
               "sunlitFraction": 0
             },
             "poncho": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3725,
               "sunlitFraction": 0,
               "wettedness": 0.85
             },
             "trousers": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8412,
               "sunlitFraction": 0,
               "wettedness": 0.4
             },
             "wellies": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3205,
               "sunlitFraction": 0,
               "wettedness": 0.9
             }
@@ -21750,12 +21750,12 @@
           "breathing": "walking",
           "regions": {
             "face-skin": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8593,
               "sunlitFraction": 0,
               "wettedness": 0.2
             },
             "hood": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3342,
               "sunlitFraction": 0,
               "wettedness": 0.9
             },
@@ -21764,17 +21764,17 @@
               "sunlitFraction": 0
             },
             "poncho": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3725,
               "sunlitFraction": 0,
               "wettedness": 0.85
             },
             "trousers": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8412,
               "sunlitFraction": 0,
               "wettedness": 0.4
             },
             "wellies": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3205,
               "sunlitFraction": 0,
               "wettedness": 0.9
             }
@@ -21862,12 +21862,12 @@
           "breathing": "walking",
           "regions": {
             "face-skin": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8593,
               "sunlitFraction": 0,
               "wettedness": 0.2
             },
             "hood": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3342,
               "sunlitFraction": 0,
               "wettedness": 0.9
             },
@@ -21876,17 +21876,17 @@
               "sunlitFraction": 0
             },
             "poncho": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3725,
               "sunlitFraction": 0,
               "wettedness": 0.85
             },
             "trousers": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8412,
               "sunlitFraction": 0,
               "wettedness": 0.4
             },
             "wellies": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3205,
               "sunlitFraction": 0,
               "wettedness": 0.9
             }
@@ -21974,12 +21974,12 @@
           "breathing": "walking",
           "regions": {
             "face-skin": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8593,
               "sunlitFraction": 0,
               "wettedness": 0.2
             },
             "hood": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3342,
               "sunlitFraction": 0,
               "wettedness": 0.9
             },
@@ -21988,17 +21988,17 @@
               "sunlitFraction": 0
             },
             "poncho": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3725,
               "sunlitFraction": 0,
               "wettedness": 0.85
             },
             "trousers": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8412,
               "sunlitFraction": 0,
               "wettedness": 0.4
             },
             "wellies": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3205,
               "sunlitFraction": 0,
               "wettedness": 0.9
             }
@@ -22087,12 +22087,12 @@
           "breathing": "walking",
           "regions": {
             "face-skin": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8593,
               "sunlitFraction": 0,
               "wettedness": 0.2
             },
             "hood": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3342,
               "sunlitFraction": 0,
               "wettedness": 0.9
             },
@@ -22101,17 +22101,17 @@
               "sunlitFraction": 0
             },
             "poncho": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3725,
               "sunlitFraction": 0,
               "wettedness": 0.85
             },
             "trousers": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8412,
               "sunlitFraction": 0,
               "wettedness": 0.4
             },
             "wellies": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3205,
               "sunlitFraction": 0,
               "wettedness": 0.9
             }
@@ -22199,12 +22199,12 @@
           "breathing": "walking",
           "regions": {
             "face-skin": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8593,
               "sunlitFraction": 0,
               "wettedness": 0.2
             },
             "hood": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3342,
               "sunlitFraction": 0,
               "wettedness": 0.9
             },
@@ -22213,17 +22213,17 @@
               "sunlitFraction": 0
             },
             "poncho": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3725,
               "sunlitFraction": 0,
               "wettedness": 0.85
             },
             "trousers": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.8412,
               "sunlitFraction": 0,
               "wettedness": 0.4
             },
             "wellies": {
-              "exposedFraction": 1,
+              "exposedFraction": 0.3205,
               "sunlitFraction": 0,
               "wettedness": 0.9
             }
@@ -25541,7 +25541,7 @@
           "kind": "skin",
           "model": "body",
           "material": "skin",
-          "areaM2": 0.0947,
+          "areaM2": 0.1102,
           "characteristicLengthM": 0.206,
           "geometry": "sphere",
           "skyViewFactor": 0.5,
@@ -25564,7 +25564,7 @@
           "kind": "clothing",
           "model": "body",
           "material": "pvc-poncho",
-          "areaM2": 0.09,
+          "areaM2": 0.2693,
           "characteristicLengthM": 0.17,
           "geometry": "sphere",
           "skyViewFactor": 0.8,
@@ -25626,7 +25626,7 @@
           "kind": "clothing",
           "model": "body",
           "material": "pvc-poncho",
-          "areaM2": 1.2502,
+          "areaM2": 3.356,
           "characteristicLengthM": 0.309,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.5,
@@ -25725,7 +25725,7 @@
           "kind": "clothing",
           "model": "body",
           "material": "wool-trouser",
-          "areaM2": 0.5871,
+          "areaM2": 0.6979,
           "characteristicLengthM": 0.1339,
           "geometry": "cylinder",
           "skyViewFactor": 0.1,
@@ -25779,7 +25779,7 @@
           "kind": "surface",
           "model": "body",
           "material": "rubber-boot",
-          "areaM2": 0.1937,
+          "areaM2": 0.6044,
           "characteristicLengthM": 0.103,
           "geometry": "horizontal-plate-up",
           "skyViewFactor": 0.1,
@@ -30128,7 +30128,7 @@
               {
                 "at": [
                   -0.01903,
-                  -7e-05,
+                  -0.00007,
                   -0.02602
                 ],
                 "rx": 0.04521,
@@ -30896,7 +30896,7 @@
               {
                 "at": [
                   -0.01903,
-                  -7e-05,
+                  -0.00007,
                   0.02602
                 ],
                 "rx": 0.04521,
@@ -32104,7 +32104,7 @@
               {
                 "at": [
                   0.057,
-                  -3e-05,
+                  -0.00003,
                   0
                 ],
                 "rx": 0.07553,
@@ -32312,7 +32312,7 @@
               {
                 "at": [
                   0.14092,
-                  -7e-05,
+                  -0.00007,
                   0
                 ],
                 "rx": 0.03399,
@@ -72411,7 +72411,7 @@
               {
                 "at": [
                   -0.01903,
-                  -7e-05,
+                  -0.00007,
                   -0.02602
                 ],
                 "rx": 0.03903,
@@ -72809,7 +72809,7 @@
               {
                 "at": [
                   -0.01903,
-                  -7e-05,
+                  -0.00007,
                   -0.02602
                 ],
                 "rx": 0.03594,
@@ -73207,7 +73207,7 @@
               {
                 "at": [
                   -0.01903,
-                  -7e-05,
+                  -0.00007,
                   -0.02602
                 ],
                 "rx": 0.0347,
@@ -73611,7 +73611,7 @@
               {
                 "at": [
                   -0.01903,
-                  -7e-05,
+                  -0.00007,
                   0.02602
                 ],
                 "rx": 0.03903,
@@ -74009,7 +74009,7 @@
               {
                 "at": [
                   -0.01903,
-                  -7e-05,
+                  -0.00007,
                   0.02602
                 ],
                 "rx": 0.03594,
@@ -74407,7 +74407,7 @@
               {
                 "at": [
                   -0.01903,
-                  -7e-05,
+                  -0.00007,
                   0.02602
                 ],
                 "rx": 0.0347,
@@ -80149,7 +80149,7 @@
               {
                 "at": [
                   0.057,
-                  -3e-05,
+                  -0.00003,
                   0
                 ],
                 "rx": 0.07553,
@@ -86265,7 +86265,7 @@
               {
                 "at": [
                   0.26707,
-                  -7e-05,
+                  -0.00007,
                   0.05369
                 ],
                 "rx": 0.00412,
@@ -86455,7 +86455,7 @@
               {
                 "at": [
                   0.26707,
-                  -7e-05,
+                  -0.00007,
                   -0.05369
                 ],
                 "rx": 0.00412,
@@ -91150,7 +91150,7 @@
             ],
             "p1": [
               0.18293,
-              -3e-05,
+              -0.00003,
               0.00139
             ],
             "r0": 0.00577,
@@ -91172,7 +91172,7 @@
             ],
             "p1": [
               0.18293,
-              -3e-05,
+              -0.00003,
               -0.00139
             ],
             "r0": 0.00577,
@@ -126583,7 +126583,7 @@
               {
                 "at": [
                   0.26707,
-                  -7e-05,
+                  -0.00007,
                   0.05369
                 ],
                 "rx": 0.00773,
@@ -126677,7 +126677,7 @@
               {
                 "at": [
                   0.26707,
-                  -7e-05,
+                  -0.00007,
                   -0.05369
                 ],
                 "rx": 0.00773,
@@ -128132,7 +128132,7 @@
             ],
             "p1": [
               0.18293,
-              -3e-05,
+              -0.00003,
               0.00139
             ],
             "r0": 0.00773,
@@ -128154,7 +128154,7 @@
             ],
             "p1": [
               0.18293,
-              -3e-05,
+              -0.00003,
               -0.00139
             ],
             "r0": 0.00773,
@@ -132273,7 +132273,7 @@
               {
                 "at": [
                   0.13108,
-                  6e-05,
+                  0.00006,
                   0
                 ],
                 "rx": 0.05253,
@@ -132609,7 +132609,7 @@
               {
                 "at": [
                   0.13108,
-                  6e-05,
+                  0.00006,
                   0
                 ],
                 "rx": 0.05253,
@@ -133288,9 +133288,9 @@
             ],
             "transform": {
               "translation": [
-                0.06592,
-                0,
-                0.01648
+                0.06806,
+                0.00575,
+                0.01199
               ]
             }
           },

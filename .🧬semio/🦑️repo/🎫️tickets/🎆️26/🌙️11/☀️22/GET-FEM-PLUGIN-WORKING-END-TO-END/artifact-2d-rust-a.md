@@ -20,3 +20,13 @@ Results state (#5): `🎭️modes/✏️edit/🪟️windows/📊️results/🫧�
 
 ## Test run
 See the section below.
+
+## Test run status (NOT complete)
+`cargo test --workspace --no-fail-fast` was attempted 7 times (`a-test1..7.log`); none reached test execution because of environment issues: link.exe stalls on the saturated G: HDD, C: at 0 bytes (os error 112 in rustc/link), and the shared C:\t\2d-a build dir lock held by other cargo runs. Stopped on coordinator order (C: full).
+
+Real compile errors found by `a-test6.log` in lib test of `semio-s-artifact-fem-2d` (it mounts the io sqlite snapshot tests, #2) and fixed afterwards, not yet re-verified by compiler:
+- `🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: removed the stale `native_caller` mount (framework file `🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/🦀️.rs` is out of date vs the retained-work API: `close_retirement_recipient` gone, `.result` on `RetainedWorkPoll`; it should be ported or deleted by the framework owner, the 3D/energy twins still mount it); `materials[0].name.as_str()` for the sealed name; `real_interior` match arms made error-type uniform with `.is_err()`.
+- snapshot-tests crate: the one error in `a-test4.log` was disk-full (LLVM IO failure); `a-test5.log` compiled it cleanly.
+
+## Next
+After the coordinator wipes C:\t\2d-a/2d-ab: rerun with `CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 -j 6` (`TMP=C:\t\tmp CARGO_INCREMENTAL=0`), check `semio-s-artifact-fem-2d` lib test compiles, then run the whole test pass and fix failures.

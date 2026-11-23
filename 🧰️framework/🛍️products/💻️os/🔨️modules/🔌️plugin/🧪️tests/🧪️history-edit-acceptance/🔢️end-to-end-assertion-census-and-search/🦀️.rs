@@ -42,7 +42,7 @@ where
             };
             let meta = ActionMeta { actor: app.stores.store.local_actor_id().0.as_str().into(), ..acceptance_meta() };
             let admitted = semio_plugin_testing_laws::with_authoring_identity!(|identity|
-                artifact_app_laws::dispatch_fixture_action(&mut app, "undo", None, &meta, &mut identity, &mut cx, acceptance_policy().close).await)
+                Box::pin(artifact_app_laws::dispatch_fixture_action(&mut app, "undo", None, &meta, &mut identity, &mut cx, acceptance_policy().close)).await)
                 .unwrap_or_else(|failure| panic!("{plugin}: undo of {} faulted: {failure:?}", case.directory));
             let (job, input) = admitted.requested_effects.iter().find_map(|effect| match effect {
                 semio_framework::kernel::Effect::SpawnJob { job, kind, input, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND => Some((*job, input.clone())),

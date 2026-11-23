@@ -39,8 +39,6 @@ impl UiPipelines {
         };
         let world_prepared = prepared_holder.as_deref();
         let (all_ui, all_vec, batches) = build_layer_batches(draw, LayerBatchFilter::Backdrop);
-        let (mask_data, mask_ranges) = build_batch_masks(&batches, width, height);
-        let mask_buffer = frame_buffers.mask_instances.upload(device, queue, &mask_data, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "silhouette_masks");
         let ui_buffer = if all_ui.is_empty() { None } else { frame_buffers.ui_instances.upload(device, queue, &all_ui, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "ui_instances") };
         let vector_buffer = if all_vec.is_empty() { None } else { frame_buffers.vector_vertices.upload(device, queue, &all_vec, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "vector_vertices") };
         let instance_buffer = frame_buffers.world_instances.slice();
@@ -62,8 +60,6 @@ impl UiPipelines {
             &mut pass,
             draw,
             &batches,
-            mask_buffer.as_ref(),
-            &mask_ranges,
             ui_buffer.as_ref(),
             vector_buffer.as_ref(),
             world_prepared,
@@ -89,8 +85,6 @@ impl UiPipelines {
         }
         let (overlay_ui, overlay_vec, overlay_batches) = build_overlay_layer_batches(draw, LayerBatchFilter::Backdrop);
         if !overlay_ui.is_empty() || !overlay_vec.is_empty() {
-            let (overlay_mask_data, overlay_mask_ranges) = build_batch_masks(&overlay_batches, width, height);
-            let overlay_mask_buffer = frame_buffers.mask_instances.upload(device, queue, &overlay_mask_data, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "overlay_silhouette_masks");
             let overlay_ui_buffer = if overlay_ui.is_empty() { None } else { frame_buffers.ui_instances.upload(device, queue, &overlay_ui, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "overlay_ui_instances") };
             let overlay_vector_buffer = if overlay_vec.is_empty() { None } else { frame_buffers.vector_vertices.upload(device, queue, &overlay_vec, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "overlay_vector_vertices") };
             let mut overlay_pass = encoder.begin_render_pass(&gpu_device::RenderPassDescriptor {
@@ -105,8 +99,6 @@ impl UiPipelines {
                 &mut overlay_pass,
                 draw,
                 &overlay_batches,
-                overlay_mask_buffer.as_ref(),
-                &overlay_mask_ranges,
                 overlay_ui_buffer.as_ref(),
                 overlay_vector_buffer.as_ref(),
                 None,
@@ -178,8 +170,6 @@ impl UiPipelines {
         if all_ui.is_empty() && all_vec.is_empty() && batches.is_empty() && world_prepared.is_none() && !has_overlay {
             return;
         }
-        let (mask_data, mask_ranges) = build_batch_masks(&batches, width, height);
-        let mask_buffer = frame_buffers.mask_instances.upload(device, queue, &mask_data, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "glass_foreground_silhouette_masks");
         let ui_buffer = if all_ui.is_empty() { None } else { frame_buffers.ui_instances.upload(device, queue, &all_ui, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "glass_foreground_ui_instances") };
         let vector_buffer = if all_vec.is_empty() { None } else { frame_buffers.vector_vertices.upload(device, queue, &all_vec, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "glass_foreground_vector_vertices") };
         let instance_buffer = frame_buffers.world_instances.slice();
@@ -196,8 +186,6 @@ impl UiPipelines {
             &mut pass,
             draw,
             &batches,
-            mask_buffer.as_ref(),
-            &mask_ranges,
             ui_buffer.as_ref(),
             vector_buffer.as_ref(),
             world_prepared,
@@ -223,8 +211,6 @@ impl UiPipelines {
         }
         let (overlay_ui, overlay_vec, overlay_batches) = build_overlay_layer_batches(draw, LayerBatchFilter::Foreground);
         if !overlay_ui.is_empty() || !overlay_vec.is_empty() {
-            let (overlay_mask_data, overlay_mask_ranges) = build_batch_masks(&overlay_batches, width, height);
-            let overlay_mask_buffer = frame_buffers.mask_instances.upload(device, queue, &overlay_mask_data, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "glass_foreground_overlay_silhouette_masks");
             let overlay_ui_buffer = if overlay_ui.is_empty() { None } else { frame_buffers.ui_instances.upload(device, queue, &overlay_ui, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "glass_foreground_overlay_ui_instances") };
             let overlay_vector_buffer =
                 if overlay_vec.is_empty() { None } else { frame_buffers.vector_vertices.upload(device, queue, &overlay_vec, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "glass_foreground_overlay_vector_vertices") };
@@ -240,8 +226,6 @@ impl UiPipelines {
                 &mut overlay_pass,
                 draw,
                 &overlay_batches,
-                overlay_mask_buffer.as_ref(),
-                &overlay_mask_ranges,
                 overlay_ui_buffer.as_ref(),
                 overlay_vector_buffer.as_ref(),
                 None,
@@ -449,19 +433,11 @@ impl UiPipelines {
         pass.set_bind_group(0, &self.resources.glyph_bind_group, &[]);
 
         let (all_ui, all_vec, batches) = build_layer_batches(overlay, LayerBatchFilter::Backdrop);
-        let (mask_data, mask_ranges) = build_batch_masks(&batches, width, height);
-        let mask_buffer = frame_buffers.mask_instances.upload(device, queue, &mask_data, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "top_overlay_silhouette_masks");
         let ui_buffer = if all_ui.is_empty() { None } else { frame_buffers.ui_instances.upload(device, queue, &all_ui, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "overlay_ui_instances") };
         let vector_buffer = if all_vec.is_empty() { None } else { frame_buffers.vector_vertices.upload(device, queue, &all_vec, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "overlay_vector_vertices") };
 
-        for (batch_index, batch) in batches.iter().enumerate() {
-            if let Some((start, count)) = mask_ranges.get(batch_index).copied() {
-                if let Some(mask_buffer) = mask_buffer.as_ref() {
-                    self.draw_silhouette_mask(pass, mask_buffer, start, count, width, height);
-                } else {
-                    pass.set_stencil_reference(1);
-                }
-            }
+        for batch in batches.iter() {
+            set_pass_scissor(pass, batch.scissor, self.resources.surface_scale, width, height);
             if batch.ui_count > 0 {
                 if let Some(instance_buffer) = &ui_buffer {
                     pass.set_pipeline(&self.resources.ui_pipeline);

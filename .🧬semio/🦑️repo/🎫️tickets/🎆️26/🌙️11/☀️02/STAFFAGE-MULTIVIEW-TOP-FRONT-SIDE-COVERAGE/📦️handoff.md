@@ -292,3 +292,18 @@ Covers 33 files and 169 call sites; asset checks were sampled. Routed to sonnet-
 - TODO: open items per owner, from the brief's ownership table.
 - TODO: unresolved issues from the view inventory (`T/📖️view-documentation-inventory.md`, section 4), each marked resolved or open.
 - TODO: follow-ups for the ticket close (`ticket_close` summary, files created, updated or removed).
+
+## State on 2026-11-23
+
+Written by the finisher of the umbrella ticket `🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS`; the full account with every measurement is its `older-tickets.md` (section 4). The TODO lines above were never filled by the fleet; this section replaces them with what can be measured today on the catalog of 375 assets.
+
+- **Declarations.** 1,416 authored representations, each with side, front and plan; 84 unavailable ones, each with a cause; 152 symbols, each with three views; no gap.
+- **One state, three views.** `🎨️view-synchrony` 15 of 15, `🏗️structure-projection` 53 of 53, `🌐️thermal-multiview` 23 of 23, `🧊️lateral-spread` 27 of 27, `🧊️axial-twist` 33 of 33, `🎨️seven-modes` 6 of 6.
+- **Sheets and exports.** `📑️multiview-sheet` 27 of 27 (SVG, PDF, DXF and DWG, first and third angle; the DWG sheet is no longer unverified, the wasm writer exists). The PDF oracle now measures the figure from the visible, clipped drawing.
+- **Regression suite.** `🔭️multiview-coverage` 21 of 23. Red: "keeps planted contacts still and advances the root as one state in the three views" (`walking-commuter`, redrawn on 2026-11-22: plan feet and hand no longer follow the stride) and "reads one magnitude per region and member across the three views" (`standing-adult`, rewritten on 2026-11-22 with lateral girdle bones: the moments view gives each view its in-plane part). Both are in the umbrella's `requests.md`.
+- **Three-views guard.** 747 of 775; 28 assets red in the pose and clip sweep, all redrawn or added on 2026-11-22.
+- **Coverage matrix.** No full run after v2 of 2026-11-02 is on record. A sample of today (bicycle-stand, boxwood-ball, tilt-window): 777 cells, 677 ok, 21 unavailable, 79 fail (`derived-view-band-copy`, `analysis-cue`, `derived-view-in-band`). A full run over 375 assets is many hours in one process.
+- **Proof sheets and example animations.** None on record, none made today.
+- **W1.** 162 script files of this folder still name `C:/git/semio`.
+
+Verdict of the finisher: the ticket cannot close on this state (two red reference cases, no clean matrix on record).

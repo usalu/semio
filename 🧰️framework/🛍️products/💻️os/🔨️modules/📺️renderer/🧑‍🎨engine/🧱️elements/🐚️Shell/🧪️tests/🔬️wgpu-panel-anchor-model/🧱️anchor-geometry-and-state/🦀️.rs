@@ -77,18 +77,16 @@ fn an_open_top_panel_is_pulled_into_the_navbar_band_like_reacts_chrome_hosted_st
     assert!((rect.h - (body.h + overhang - theme.control_height)).abs() < 0.01, "🧭️ and its band omits the chrome-owned root-row height");
 }
 
-/// 🧭️ The same rule mirrored on the bottom row: a bottom child panel ends where the footer-owned
-/// root row starts, and a middle anchor — which React gives no bonded vertical edge — still centres
+/// 🧭️ The bottom row: a bottom panel ends at the body bottom edge (React `bottom: 0`, chip row inside the canvas), and a middle anchor — which React gives no bonded vertical edge — still centres
 /// on the plain mode body.
 #[test]
-fn a_bottom_anchor_overhangs_into_the_footer_and_a_middle_anchor_keeps_the_body() {
+fn a_bottom_anchor_ends_on_the_canvas_bottom_chip_row_and_a_middle_anchor_keeps_the_body() {
     let theme = Theme::default();
-    let overhang = (theme.navbar_height + theme.control_height) * 0.5;
     let body = Rect::new(0.0, theme.navbar_height, 1600.0, 1000.0 - theme.navbar_height - theme.footer_height);
     let mut shell = fixture_dock_shell();
     shell.dock.toggle_anchor(PanelAnchor::BottomLeft);
     let bottom = ChromeViewCtx::of(&mut shell).anchor_rect(PanelAnchor::BottomLeft, body, &theme);
-    assert!((bottom.y + bottom.h - (body.y + body.h + overhang - theme.control_height)).abs() < 0.01, "🧭️ a bottom child panel ends at its footer-owned root row: {bottom:?}");
+    assert!((bottom.y + bottom.h - (body.y + body.h)).abs() < 0.01, "🧭️ a bottom panel ends at the body bottom, its cap on the chip row inside the canvas, not overhanging the footer: {bottom:?}");
     let mut middle_shell = fixture_dock_shell();
     middle_shell.dock.toggle_anchor(PanelAnchor::LeftMiddle);
     let middle = ChromeViewCtx::of(&mut middle_shell).anchor_rect(PanelAnchor::LeftMiddle, body, &theme);

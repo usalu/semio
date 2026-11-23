@@ -115,6 +115,7 @@ export { ownerBoundaryFailureV1 } from "./📦️project-nodes/🚧️source-fai
 
 /** 🚪️ Observes one canonical owner and only its selected executable source closures. */
 export const discoverBuildOwnerAdmissionFactsV1 = current.modules["owner-discovery"].discoverBuildOwnerAdmissionFactsV1;
+export { ownerFactsFarmV1 } from "./🔎️owner-discovery/🏭️farm/🟨️.mjs";
 
 /** 📜️ Reads the workspace's canonical owner declaration through original physical Source ancestry. */
 export const readBuildOwnerRegistrySourceV1 = current.modules["owner-discovery"].readBuildOwnerRegistrySourceV1;

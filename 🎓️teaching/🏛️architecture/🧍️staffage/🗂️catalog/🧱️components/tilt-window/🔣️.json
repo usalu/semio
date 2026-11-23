@@ -5023,22 +5023,6 @@
             }
           },
           {
-            "id": "hinge-leaf-frame",
-            "kind": "box",
-            "bone": "sill",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.06, 0.008, 0.06],
-            "transform": {
-              "translation": [0.067, 0.004, 0.3]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, -0.6]
-            }
-          },
-          {
             "id": "stay-arc",
             "kind": "extrude",
             "bone": "sill",
@@ -5112,11 +5096,11 @@
               ]
             ],
             "plane": "xy",
-            "from": 0.392,
+            "from": 0.385,
             "to": 0.4,
             "repeat": {
               "count": 2,
-              "translation": [0, 0, -0.792]
+              "translation": [0, 0, -0.785]
             }
           },
           {
@@ -5338,22 +5322,6 @@
             }
           },
           {
-            "id": "hinge-leaf-sash",
-            "kind": "box",
-            "bone": "sash",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.06, 0.008, 0.06],
-            "transform": {
-              "translation": [0.034, -0.004, 0.3]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, -0.6]
-            }
-          },
-          {
             "id": "grip-post-left",
             "kind": "capsule",
             "bone": "sash",
@@ -5362,8 +5330,8 @@
             "tone": 0.3,
             "p0": [1.169, -0.008, 0.05],
             "p1": [1.169, 0.025, 0.05],
-            "r0": 0.006,
-            "r1": 0.006
+            "r0": 0.0075,
+            "r1": 0.0075
           },
           {
             "id": "grip-post-right",
@@ -5374,8 +5342,8 @@
             "tone": 0.3,
             "p0": [1.169, -0.008, -0.05],
             "p1": [1.169, 0.025, -0.05],
-            "r0": 0.006,
-            "r1": 0.006
+            "r0": 0.0075,
+            "r1": 0.0075
           },
           {
             "id": "grip-bar",
@@ -5386,8 +5354,8 @@
             "tone": 0.3,
             "p0": [1.169, 0.025, -0.05],
             "p1": [1.169, 0.025, 0.05],
-            "r0": 0.006,
-            "r1": 0.006
+            "r0": 0.0075,
+            "r1": 0.0075
           },
           {
             "id": "stay-pin",
@@ -5396,12 +5364,12 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0, 0.004], [0.011, 0.004]],
+            "profile": [[0, 0.0075], [0.015, 0.0075]],
             "axis": [0, 0, 1],
-            "origin": [1.15, -0.053, 0.388],
+            "origin": [1.15, -0.053, 0.385],
             "repeat": {
               "count": 2,
-              "translation": [0, 0, -0.787]
+              "translation": [0, 0, -0.785]
             }
           }
         ],
@@ -5756,6 +5724,10 @@
           {
             "en": "Minimal: both pane surfaces and their physical cavity remain necessary at every scale. The thermal field groups adjoining gas depth cells at smaller scales.",
             "de": "Minimal: Beide Scheiben und ihr tatsächlicher Zwischenraum bleiben in jedem Maßstab erforderlich. Das Temperaturfeld fasst bei kleineren Maßstäben benachbarte Tiefenzellen des Gasraums zusammen."
+          },
+          {
+            "en": "Hardware for the 15 mm feature: each tilt hinge is its 16 mm knuckle on the sill (the 8 mm leaves are let in flush), the quadrant stays are 15 mm plates with 15 mm pins and the grip is a 15 mm bar on two posts.",
+            "de": "Beschläge für das 15-mm-Merkmal: jedes Kippband ist seine 16-mm-Rolle auf der Sohlbank (die 8 mm starken Lappen sind bündig eingelassen), die Scherenbögen sind 15-mm-Platten mit 15-mm-Zapfen und der Griff ist eine 15-mm-Stange auf zwei Stützen."
           }
         ]
       },
@@ -5818,9 +5790,9 @@
             "material": "timber",
             "role": "body",
             "tone": 0.5,
-            "size": [0.025, 1.224, 0.03],
+            "size": [0.03, 1.224, 0.03],
             "transform": {
-              "translation": [0.2075, 0.612, 0.385]
+              "translation": [0.205, 0.612, 0.385]
             }
           },
           {
@@ -5830,9 +5802,9 @@
             "material": "timber",
             "role": "body",
             "tone": 0.5,
-            "size": [0.025, 1.224, 0.03],
+            "size": [0.03, 1.224, 0.03],
             "transform": {
-              "translation": [0.2075, 0.612, -0.385]
+              "translation": [0.205, 0.612, -0.385]
             }
           },
           {
@@ -5842,9 +5814,9 @@
             "material": "timber",
             "role": "body",
             "tone": 0.5,
-            "size": [0.025, 0.03, 0.74],
+            "size": [0.03, 0.03, 0.74],
             "transform": {
-              "translation": [0.2075, 0.015, 0.0]
+              "translation": [0.205, 0.015, 0.0]
             }
           },
           {
@@ -5854,25 +5826,9 @@
             "material": "timber",
             "role": "body",
             "tone": 0.5,
-            "size": [0.025, 0.03, 0.74],
+            "size": [0.03, 0.03, 0.74],
             "transform": {
-              "translation": [0.2075, 1.209, 0.0]
-            }
-          },
-          {
-            "id": "hinge-leaf-frame",
-            "kind": "box",
-            "bone": "sill",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.06, 0.008, 0.06],
-            "transform": {
-              "translation": [0.067, 0.004, 0.3]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, -0.6]
+              "translation": [0.205, 1.209, 0.0]
             }
           },
           {
@@ -5882,78 +5838,13 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [
-              [0.1759, 1.1685],
-              [0.1654, 1.1692],
-              [0.155, 1.1698],
-              [0.1445, 1.1702],
-              [0.1341, 1.1706],
-              [0.1236, 1.1709],
-              [0.1131, 1.1711],
-              [0.1027, 1.1712],
-              [0.0922, 1.1712],
-              [0.0817, 1.1711],
-              [0.0713, 1.1709],
-              [0.0608, 1.1707],
-              [0.0504, 1.1703],
-              [0.0399, 1.1698],
-              [0.0294, 1.1693],
-              [0.019, 1.1686],
-              [0.0086, 1.1679],
-              [0.0104, 1.1439],
-              [0.0206, 1.1447],
-              [0.0308, 1.1453],
-              [0.0411, 1.1458],
-              [0.0513, 1.1463],
-              [0.0616, 1.1467],
-              [0.0718, 1.1469],
-              [0.0821, 1.1471],
-              [0.0923, 1.1472],
-              [0.1026, 1.1472],
-              [0.1128, 1.1471],
-              [0.123, 1.1469],
-              [0.1333, 1.1466],
-              [0.1435, 1.1463],
-              [0.1538, 1.1458],
-              [0.164, 1.1452],
-              [0.1742, 1.1446]
-            ],
-            "holes": [
-              [
-                [0.1553, 1.1628],
-                [0.1443, 1.1633],
-                [0.1334, 1.1636],
-                [0.1225, 1.1639],
-                [0.1116, 1.1641],
-                [0.1006, 1.1642],
-                [0.0897, 1.1642],
-                [0.0788, 1.1641],
-                [0.0679, 1.1639],
-                [0.0569, 1.1635],
-                [0.046, 1.1631],
-                [0.0351, 1.1626],
-                [0.0242, 1.1619],
-                [0.0248, 1.1519],
-                [0.0356, 1.1526],
-                [0.0465, 1.1531],
-                [0.0573, 1.1535],
-                [0.0681, 1.1539],
-                [0.0789, 1.1541],
-                [0.0898, 1.1542],
-                [0.1006, 1.1542],
-                [0.1114, 1.1541],
-                [0.1223, 1.1539],
-                [0.1331, 1.1537],
-                [0.1439, 1.1533],
-                [0.1547, 1.1528]
-              ]
-            ],
+            "profile": [[0.0086, 1.1412], [0.1759, 1.1412], [0.1759, 1.1712], [0.0086, 1.1712]],
             "plane": "xy",
-            "from": 0.392,
+            "from": 0.37,
             "to": 0.4,
             "repeat": {
               "count": 2,
-              "translation": [0, 0, -0.792]
+              "translation": [0, 0, -0.77]
             }
           },
           {
@@ -5963,18 +5854,7 @@
             "material": "timber",
             "role": "body",
             "tone": 0.6,
-            "profile": [
-              [-0.008, 0.336],
-              [-0.008, 0.388],
-              [-0.047, 0.388],
-              [-0.047, 0.378],
-              [-0.059, 0.378],
-              [-0.059, 0.388],
-              [-0.098, 0.388],
-              [-0.098, 0.318],
-              [-0.058, 0.318],
-              [-0.058, 0.336]
-            ],
+            "profile": [[-0.008, 0.318], [-0.008, 0.388], [-0.098, 0.388], [-0.098, 0.318]],
             "plane": "yz",
             "from": 0.004,
             "to": 1.204
@@ -5986,18 +5866,7 @@
             "material": "timber",
             "role": "body",
             "tone": 0.6,
-            "profile": [
-              [-0.058, -0.336],
-              [-0.058, -0.318],
-              [-0.098, -0.318],
-              [-0.098, -0.388],
-              [-0.059, -0.388],
-              [-0.059, -0.378],
-              [-0.047, -0.378],
-              [-0.047, -0.388],
-              [-0.008, -0.388],
-              [-0.008, -0.336]
-            ],
+            "profile": [[-0.008, -0.388], [-0.008, -0.318], [-0.098, -0.318], [-0.098, -0.388]],
             "plane": "yz",
             "from": 0.004,
             "to": 1.204
@@ -6009,7 +5878,7 @@
             "material": "timber",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.004, -0.008], [0.004, -0.098], [0.084, -0.098], [0.084, -0.058], [0.066, -0.058], [0.066, -0.008]],
+            "profile": [[0.004, -0.008], [0.004, -0.098], [0.084, -0.098], [0.084, -0.008]],
             "plane": "xy",
             "from": -0.336,
             "to": 0.336
@@ -6021,58 +5890,10 @@
             "material": "timber",
             "role": "body",
             "tone": 0.6,
-            "profile": [[1.204, -0.008], [1.204, -0.098], [1.134, -0.098], [1.134, -0.058], [1.152, -0.058], [1.152, -0.008]],
+            "profile": [[1.204, -0.008], [1.204, -0.098], [1.134, -0.098], [1.134, -0.008]],
             "plane": "xy",
             "from": -0.336,
             "to": 0.336
-          },
-          {
-            "id": "bead-bottom",
-            "kind": "extrude",
-            "bone": "sash",
-            "material": "timber",
-            "role": "body",
-            "tone": 0.62,
-            "profile": [[0.066, -0.008], [0.076, -0.008], [0.084, -0.016], [0.084, -0.034], [0.066, -0.034]],
-            "plane": "xy",
-            "from": -0.336,
-            "to": 0.336
-          },
-          {
-            "id": "bead-top",
-            "kind": "extrude",
-            "bone": "sash",
-            "material": "timber",
-            "role": "body",
-            "tone": 0.62,
-            "profile": [[1.152, -0.008], [1.142, -0.008], [1.134, -0.016], [1.134, -0.034], [1.152, -0.034]],
-            "plane": "xy",
-            "from": -0.336,
-            "to": 0.336
-          },
-          {
-            "id": "bead-left",
-            "kind": "extrude",
-            "bone": "sash",
-            "material": "timber",
-            "role": "body",
-            "tone": 0.62,
-            "profile": [[-0.008, 0.336], [-0.008, 0.326], [-0.016, 0.318], [-0.034, 0.318], [-0.034, 0.336]],
-            "plane": "yz",
-            "from": 0.084,
-            "to": 1.134
-          },
-          {
-            "id": "bead-right",
-            "kind": "extrude",
-            "bone": "sash",
-            "material": "timber",
-            "role": "body",
-            "tone": 0.62,
-            "profile": [[-0.034, -0.336], [-0.034, -0.318], [-0.016, -0.318], [-0.008, -0.326], [-0.008, -0.336]],
-            "plane": "yz",
-            "from": 0.084,
-            "to": 1.134
           },
           {
             "id": "weather-bar",
@@ -6158,7 +5979,7 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.25,
-            "profile": [[0, 0.008], [0.06, 0.008]],
+            "profile": [[0, 0.015], [0.06, 0.015]],
             "axis": [0, 0, 1],
             "origin": [0.0, 0.0, 0.27],
             "repeat": {
@@ -6167,71 +5988,16 @@
             }
           },
           {
-            "id": "hinge-leaf-sash",
-            "kind": "box",
-            "bone": "sash",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.06, 0.008, 0.06],
-            "transform": {
-              "translation": [0.034, -0.004, 0.3]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, -0.6]
-            }
-          },
-          {
-            "id": "grip-post-left",
-            "kind": "capsule",
-            "bone": "sash",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.3,
-            "p0": [1.169, -0.008, 0.05],
-            "p1": [1.169, 0.025, 0.05],
-            "r0": 0.006,
-            "r1": 0.006
-          },
-          {
-            "id": "grip-post-right",
-            "kind": "capsule",
-            "bone": "sash",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.3,
-            "p0": [1.169, -0.008, -0.05],
-            "p1": [1.169, 0.025, -0.05],
-            "r0": 0.006,
-            "r1": 0.006
-          },
-          {
             "id": "grip-bar",
             "kind": "capsule",
             "bone": "sash",
             "material": "steel",
             "role": "detail",
             "tone": 0.3,
-            "p0": [1.169, 0.025, -0.05],
-            "p1": [1.169, 0.025, 0.05],
-            "r0": 0.006,
-            "r1": 0.006
-          },
-          {
-            "id": "stay-pin",
-            "kind": "revolve",
-            "bone": "sash",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0, 0.004], [0.011, 0.004]],
-            "axis": [0, 0, 1],
-            "origin": [1.15, -0.053, 0.388],
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, -0.787]
-            }
+            "p0": [1.169, 0.007, -0.05],
+            "p1": [1.169, 0.007, 0.05],
+            "r0": 0.015,
+            "r1": 0.015
           }
         ],
         "thermal": [
@@ -6374,30 +6140,6 @@
             "sectionFaces": ["+v"]
           },
           {
-            "id": "th-bead-bottom",
-            "of": "bead-bottom",
-            "region": "frame-timber",
-            "sectionFaces": ["+v"]
-          },
-          {
-            "id": "th-bead-top",
-            "of": "bead-top",
-            "region": "frame-timber",
-            "sectionFaces": ["+v"]
-          },
-          {
-            "id": "th-bead-left",
-            "of": "bead-left",
-            "region": "frame-timber",
-            "sectionFaces": ["+v"]
-          },
-          {
-            "id": "th-bead-right",
-            "of": "bead-right",
-            "region": "frame-timber",
-            "sectionFaces": ["+v"]
-          },
-          {
             "id": "th-weather-bar",
             "of": "weather-bar",
             "region": "frame-timber"
@@ -6510,9 +6252,21 @@
           },
           {
             "id": "j-stay-pin",
-            "of": "stay-pin",
             "member": "sash",
-            "part": "joint"
+            "part": "joint",
+            "kind": "box",
+            "bone": "sash",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.03, 0.03, 0.03],
+            "transform": {
+              "translation": [1.15, -0.053, 0.385]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, -0.77]
+            }
           },
           {
             "id": "support-hinge",
@@ -6555,6 +6309,10 @@
           {
             "en": "Minimal: both pane surfaces and their physical cavity remain necessary at every scale. The thermal field groups adjoining gas depth cells at smaller scales.",
             "de": "Minimal: Beide Scheiben und ihr tatsächlicher Zwischenraum bleiben in jedem Maßstab erforderlich. Das Temperaturfeld fasst bei kleineren Maßstäben benachbarte Tiefenzellen des Gasraums zusammen."
+          },
+          {
+            "en": "Authored for the 30 mm feature: stops of 30 x 30 mm, hinge knuckles of 30 mm, stays as plain 30 x 30 mm bars without slot, stiles and rails as plain 70 x 90 mm sections that take the glazing beads in, and one 30 mm grip bar on the top rail; the stay pin is a joint block of the structure only.",
+            "de": "Für das 30-mm-Merkmal modelliert: Anschläge 30 x 30 mm, Bandrollen 30 mm, Scheren als glatte Stäbe 30 x 30 mm ohne Schlitz, Flügelfriese als glatte Querschnitte 70 x 90 mm, die die Glasleisten einschließen, und eine 30-mm-Griffstange am oberen Fries; der Scherenzapfen ist nur ein Gelenkblock der Struktur."
           }
         ]
       },
@@ -6611,148 +6369,19 @@
             }
           },
           {
-            "id": "stop-left",
-            "kind": "box",
-            "bone": "sill",
-            "material": "timber",
-            "role": "body",
-            "tone": 0.5,
-            "size": [0.025, 1.224, 0.03],
-            "transform": {
-              "translation": [0.2075, 0.612, 0.385]
-            }
-          },
-          {
-            "id": "stop-right",
-            "kind": "box",
-            "bone": "sill",
-            "material": "timber",
-            "role": "body",
-            "tone": 0.5,
-            "size": [0.025, 1.224, 0.03],
-            "transform": {
-              "translation": [0.2075, 0.612, -0.385]
-            }
-          },
-          {
-            "id": "stop-sill",
-            "kind": "box",
-            "bone": "sill",
-            "material": "timber",
-            "role": "body",
-            "tone": 0.5,
-            "size": [0.025, 0.03, 0.74],
-            "transform": {
-              "translation": [0.2075, 0.015, 0.0]
-            }
-          },
-          {
-            "id": "stop-head",
-            "kind": "box",
-            "bone": "sill",
-            "material": "timber",
-            "role": "body",
-            "tone": 0.5,
-            "size": [0.025, 0.03, 0.74],
-            "transform": {
-              "translation": [0.2075, 1.209, 0.0]
-            }
-          },
-          {
-            "id": "hinge-leaf-frame",
-            "kind": "box",
-            "bone": "sill",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.06, 0.008, 0.06],
-            "transform": {
-              "translation": [0.067, 0.004, 0.3]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, -0.6]
-            }
-          },
-          {
             "id": "stay-arc",
             "kind": "extrude",
             "bone": "sill",
             "material": "steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [
-              [0.1759, 1.1685],
-              [0.1654, 1.1692],
-              [0.155, 1.1698],
-              [0.1445, 1.1702],
-              [0.1341, 1.1706],
-              [0.1236, 1.1709],
-              [0.1131, 1.1711],
-              [0.1027, 1.1712],
-              [0.0922, 1.1712],
-              [0.0817, 1.1711],
-              [0.0713, 1.1709],
-              [0.0608, 1.1707],
-              [0.0504, 1.1703],
-              [0.0399, 1.1698],
-              [0.0294, 1.1693],
-              [0.019, 1.1686],
-              [0.0086, 1.1679],
-              [0.0104, 1.1439],
-              [0.0206, 1.1447],
-              [0.0308, 1.1453],
-              [0.0411, 1.1458],
-              [0.0513, 1.1463],
-              [0.0616, 1.1467],
-              [0.0718, 1.1469],
-              [0.0821, 1.1471],
-              [0.0923, 1.1472],
-              [0.1026, 1.1472],
-              [0.1128, 1.1471],
-              [0.123, 1.1469],
-              [0.1333, 1.1466],
-              [0.1435, 1.1463],
-              [0.1538, 1.1458],
-              [0.164, 1.1452],
-              [0.1742, 1.1446]
-            ],
-            "holes": [
-              [
-                [0.1553, 1.1628],
-                [0.1443, 1.1633],
-                [0.1334, 1.1636],
-                [0.1225, 1.1639],
-                [0.1116, 1.1641],
-                [0.1006, 1.1642],
-                [0.0897, 1.1642],
-                [0.0788, 1.1641],
-                [0.0679, 1.1639],
-                [0.0569, 1.1635],
-                [0.046, 1.1631],
-                [0.0351, 1.1626],
-                [0.0242, 1.1619],
-                [0.0248, 1.1519],
-                [0.0356, 1.1526],
-                [0.0465, 1.1531],
-                [0.0573, 1.1535],
-                [0.0681, 1.1539],
-                [0.0789, 1.1541],
-                [0.0898, 1.1542],
-                [0.1006, 1.1542],
-                [0.1114, 1.1541],
-                [0.1223, 1.1539],
-                [0.1331, 1.1537],
-                [0.1439, 1.1533],
-                [0.1547, 1.1528]
-              ]
-            ],
+            "profile": [[0.0086, 1.1412], [0.1759, 1.1412], [0.1759, 1.1712], [0.0086, 1.1712]],
             "plane": "xy",
-            "from": 0.392,
+            "from": 0.37,
             "to": 0.4,
             "repeat": {
               "count": 2,
-              "translation": [0, 0, -0.792]
+              "translation": [0, 0, -0.77]
             }
           },
           {
@@ -6762,18 +6391,7 @@
             "material": "timber",
             "role": "body",
             "tone": 0.6,
-            "profile": [
-              [-0.008, 0.336],
-              [-0.008, 0.388],
-              [-0.047, 0.388],
-              [-0.047, 0.378],
-              [-0.059, 0.378],
-              [-0.059, 0.388],
-              [-0.098, 0.388],
-              [-0.098, 0.318],
-              [-0.058, 0.318],
-              [-0.058, 0.336]
-            ],
+            "profile": [[-0.008, 0.318], [-0.008, 0.388], [-0.098, 0.388], [-0.098, 0.318]],
             "plane": "yz",
             "from": 0.004,
             "to": 1.204
@@ -6785,18 +6403,7 @@
             "material": "timber",
             "role": "body",
             "tone": 0.6,
-            "profile": [
-              [-0.058, -0.336],
-              [-0.058, -0.318],
-              [-0.098, -0.318],
-              [-0.098, -0.388],
-              [-0.059, -0.388],
-              [-0.059, -0.378],
-              [-0.047, -0.378],
-              [-0.047, -0.388],
-              [-0.008, -0.388],
-              [-0.008, -0.336]
-            ],
+            "profile": [[-0.008, -0.388], [-0.008, -0.318], [-0.098, -0.318], [-0.098, -0.388]],
             "plane": "yz",
             "from": 0.004,
             "to": 1.204
@@ -6808,7 +6415,7 @@
             "material": "timber",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.004, -0.008], [0.004, -0.098], [0.084, -0.098], [0.084, -0.058], [0.066, -0.058], [0.066, -0.008]],
+            "profile": [[0.004, -0.008], [0.004, -0.098], [0.084, -0.098], [0.084, -0.008]],
             "plane": "xy",
             "from": -0.336,
             "to": 0.336
@@ -6820,58 +6427,10 @@
             "material": "timber",
             "role": "body",
             "tone": 0.6,
-            "profile": [[1.204, -0.008], [1.204, -0.098], [1.134, -0.098], [1.134, -0.058], [1.152, -0.058], [1.152, -0.008]],
+            "profile": [[1.204, -0.008], [1.204, -0.098], [1.134, -0.098], [1.134, -0.008]],
             "plane": "xy",
             "from": -0.336,
             "to": 0.336
-          },
-          {
-            "id": "bead-bottom",
-            "kind": "extrude",
-            "bone": "sash",
-            "material": "timber",
-            "role": "body",
-            "tone": 0.62,
-            "profile": [[0.066, -0.008], [0.076, -0.008], [0.084, -0.016], [0.084, -0.034], [0.066, -0.034]],
-            "plane": "xy",
-            "from": -0.336,
-            "to": 0.336
-          },
-          {
-            "id": "bead-top",
-            "kind": "extrude",
-            "bone": "sash",
-            "material": "timber",
-            "role": "body",
-            "tone": 0.62,
-            "profile": [[1.152, -0.008], [1.142, -0.008], [1.134, -0.016], [1.134, -0.034], [1.152, -0.034]],
-            "plane": "xy",
-            "from": -0.336,
-            "to": 0.336
-          },
-          {
-            "id": "bead-left",
-            "kind": "extrude",
-            "bone": "sash",
-            "material": "timber",
-            "role": "body",
-            "tone": 0.62,
-            "profile": [[-0.008, 0.336], [-0.008, 0.326], [-0.016, 0.318], [-0.034, 0.318], [-0.034, 0.336]],
-            "plane": "yz",
-            "from": 0.084,
-            "to": 1.134
-          },
-          {
-            "id": "bead-right",
-            "kind": "extrude",
-            "bone": "sash",
-            "material": "timber",
-            "role": "body",
-            "tone": 0.62,
-            "profile": [[-0.034, -0.336], [-0.034, -0.318], [-0.016, -0.318], [-0.008, -0.326], [-0.008, -0.336]],
-            "plane": "yz",
-            "from": 0.084,
-            "to": 1.134
           },
           {
             "id": "weather-bar",
@@ -6931,79 +6490,12 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.25,
-            "profile": [[0, 0.008], [0.06, 0.008]],
+            "profile": [[0, 0.015], [0.06, 0.015]],
             "axis": [0, 0, 1],
             "origin": [0.0, 0.0, 0.27],
             "repeat": {
               "count": 2,
               "translation": [0, 0, -0.6]
-            }
-          },
-          {
-            "id": "hinge-leaf-sash",
-            "kind": "box",
-            "bone": "sash",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.06, 0.008, 0.06],
-            "transform": {
-              "translation": [0.034, -0.004, 0.3]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, -0.6]
-            }
-          },
-          {
-            "id": "grip-post-left",
-            "kind": "capsule",
-            "bone": "sash",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.3,
-            "p0": [1.169, -0.008, 0.05],
-            "p1": [1.169, 0.025, 0.05],
-            "r0": 0.006,
-            "r1": 0.006
-          },
-          {
-            "id": "grip-post-right",
-            "kind": "capsule",
-            "bone": "sash",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.3,
-            "p0": [1.169, -0.008, -0.05],
-            "p1": [1.169, 0.025, -0.05],
-            "r0": 0.006,
-            "r1": 0.006
-          },
-          {
-            "id": "grip-bar",
-            "kind": "capsule",
-            "bone": "sash",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.3,
-            "p0": [1.169, 0.025, -0.05],
-            "p1": [1.169, 0.025, 0.05],
-            "r0": 0.006,
-            "r1": 0.006
-          },
-          {
-            "id": "stay-pin",
-            "kind": "revolve",
-            "bone": "sash",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0, 0.004], [0.011, 0.004]],
-            "axis": [0, 0, 1],
-            "origin": [1.15, -0.053, 0.388],
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, -0.787]
             }
           }
         ],
@@ -7132,30 +6624,6 @@
             "sectionFaces": ["+v"]
           },
           {
-            "id": "th-bead-bottom",
-            "of": "bead-bottom",
-            "region": "frame-timber",
-            "sectionFaces": ["+v"]
-          },
-          {
-            "id": "th-bead-top",
-            "of": "bead-top",
-            "region": "frame-timber",
-            "sectionFaces": ["+v"]
-          },
-          {
-            "id": "th-bead-left",
-            "of": "bead-left",
-            "region": "frame-timber",
-            "sectionFaces": ["+v"]
-          },
-          {
-            "id": "th-bead-right",
-            "of": "bead-right",
-            "region": "frame-timber",
-            "sectionFaces": ["+v"]
-          },
-          {
             "id": "th-weather-bar",
             "of": "weather-bar",
             "region": "frame-timber"
@@ -7183,26 +6651,6 @@
             "of": "sill",
             "region": "frame-sill",
             "sectionFaces": ["-u"]
-          },
-          {
-            "id": "th-stop-left",
-            "of": "stop-left",
-            "region": "frame-timber"
-          },
-          {
-            "id": "th-stop-right",
-            "of": "stop-right",
-            "region": "frame-timber"
-          },
-          {
-            "id": "th-stop-sill",
-            "of": "stop-sill",
-            "region": "frame-timber"
-          },
-          {
-            "id": "th-stop-head",
-            "of": "stop-head",
-            "region": "frame-timber"
           }
         ],
         "structure": [
@@ -7256,96 +6704,13 @@
           },
           {
             "id": "m-stay-arc",
-            "kind": "extrude",
-            "bone": "sill",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [
-              [0.1759, 1.1685],
-              [0.1654, 1.1692],
-              [0.155, 1.1698],
-              [0.1445, 1.1702],
-              [0.1341, 1.1706],
-              [0.1236, 1.1709],
-              [0.1131, 1.1711],
-              [0.1027, 1.1712],
-              [0.0922, 1.1712],
-              [0.0817, 1.1711],
-              [0.0713, 1.1709],
-              [0.0608, 1.1707],
-              [0.0504, 1.1703],
-              [0.0399, 1.1698],
-              [0.0294, 1.1693],
-              [0.019, 1.1686],
-              [0.0086, 1.1679],
-              [0.0104, 1.1439],
-              [0.0206, 1.1447],
-              [0.0308, 1.1453],
-              [0.0411, 1.1458],
-              [0.0513, 1.1463],
-              [0.0616, 1.1467],
-              [0.0718, 1.1469],
-              [0.0821, 1.1471],
-              [0.0923, 1.1472],
-              [0.1026, 1.1472],
-              [0.1128, 1.1471],
-              [0.123, 1.1469],
-              [0.1333, 1.1466],
-              [0.1435, 1.1463],
-              [0.1538, 1.1458],
-              [0.164, 1.1452],
-              [0.1742, 1.1446]
-            ],
-            "holes": [
-              [
-                [0.1553, 1.1628],
-                [0.1443, 1.1633],
-                [0.1334, 1.1636],
-                [0.1225, 1.1639],
-                [0.1116, 1.1641],
-                [0.1006, 1.1642],
-                [0.0897, 1.1642],
-                [0.0788, 1.1641],
-                [0.0679, 1.1639],
-                [0.0569, 1.1635],
-                [0.046, 1.1631],
-                [0.0351, 1.1626],
-                [0.0242, 1.1619],
-                [0.0248, 1.1519],
-                [0.0356, 1.1526],
-                [0.0465, 1.1531],
-                [0.0573, 1.1535],
-                [0.0681, 1.1539],
-                [0.0789, 1.1541],
-                [0.0898, 1.1542],
-                [0.1006, 1.1542],
-                [0.1114, 1.1541],
-                [0.1223, 1.1539],
-                [0.1331, 1.1537],
-                [0.1439, 1.1533],
-                [0.1547, 1.1528]
-              ]
-            ],
-            "plane": "xy",
-            "from": 0.392,
-            "to": 0.4,
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, -0.792]
-            },
             "part": "member",
-            "member": "sill"
+            "member": "sill",
+            "of": "stay-arc"
           },
           {
             "id": "j-hinge",
             "of": "hinge-barrel",
-            "member": "sash",
-            "part": "joint"
-          },
-          {
-            "id": "j-stay-pin",
-            "of": "stay-pin",
             "member": "sash",
             "part": "joint"
           },
@@ -7374,7 +6739,7 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "radii": [0.03, 0.03, 0.03],
+            "radii": [0.0375, 0.0375, 0.0375],
             "transform": {
               "translation": [0.5812, -0.0485, 0.0]
             },
@@ -7390,6 +6755,10 @@
           {
             "en": "Minimal: both pane surfaces and their physical cavity remain necessary at every scale. The thermal field groups adjoining gas depth cells at smaller scales.",
             "de": "Minimal: Beide Scheiben und ihr tatsächlicher Zwischenraum bleiben in jedem Maßstab erforderlich. Das Temperaturfeld fasst bei kleineren Maßstäben benachbarte Tiefenzellen des Gasraums zusammen."
+          },
+          {
+            "en": "3D only, a massing of the 1:200 parts: plain sash sections, 30 mm hinge knuckles and stay bars; the stops belong to the reveal lining and the grip is left out.",
+            "de": "Nur 3D, eine Massierung der Teile von 1:200: glatte Flügelquerschnitte, 30-mm-Bandrollen und Scherenstäbe; die Anschläge gehören zur Laibungszarge und der Griff entfällt."
           }
         ]
       }

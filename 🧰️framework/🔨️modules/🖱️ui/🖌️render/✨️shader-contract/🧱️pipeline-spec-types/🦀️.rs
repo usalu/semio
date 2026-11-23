@@ -87,7 +87,7 @@ pub struct BindGroupSpec {
 
 /// 🎨️ Fixed-function color blending. `Replace` writes the fragment color unblended (used by the
 /// opaque world mesh and both blur/blit fullscreen passes); `None` disables blending altogether
-/// (the silhouette mask pass, which writes no color at all — see `color_write`).
+/// (the world viewport mask pass, which writes no color at all — see `color_write`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BlendMode {
     None,

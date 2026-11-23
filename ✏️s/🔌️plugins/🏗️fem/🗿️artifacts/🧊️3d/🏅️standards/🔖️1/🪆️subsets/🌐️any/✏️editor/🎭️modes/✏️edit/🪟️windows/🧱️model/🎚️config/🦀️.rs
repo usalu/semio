@@ -46,6 +46,14 @@ impl pack::snapshot::ArtifactPack for Fem3dModelWindowConfig {
         Some(Self::__dsl_spec())
     }
 }
+impl semio_os_store_codec_registry::native_snapshot::OriginalArtifactPackReceiving for Fem3dModelWindowConfig {
+    type Receiving = semio_os_store_codec_registry::native_snapshot::OriginalSnapshotRecordReceiving<Self>;
+    fn original_pack_birth_demand() -> semio_framework_value::RetirementDemand { semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self::Receiving>(), depth: 1, ..Default::default() } }
+    fn admit_original_pack(source: &[u8], limits: protocol::PackLimits, native: &semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant) -> Result<Option<(Self::Receiving, semio_framework_value::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        Self::Receiving::admit(source, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), limits, native, grant)
+    }
+}
+
 impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Fem3dModelWindowConfig {
     fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
@@ -55,7 +63,7 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Fem3d
 impl store::ConfigRecord for Fem3dModelWindowConfig {}
 
 /// 📬️ The one field-set payload of the window-config mutation: the patch of exactly the fields it sets.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "update")]
@@ -64,11 +72,26 @@ pub struct Fem3dModelWindowConfigUpdate {
     pub patch: Box<Fem3dModelWindowConfigPatch>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum Fem3dModelWindowConfigMutation {
     #[dsl(key = "update")]
     Update(Fem3dModelWindowConfigUpdate),
+}
+
+
+impl semio_os_store_operation_wire::ArtifactOperationTargets for Fem3dModelWindowConfigMutation {
+    fn len(&self) -> usize { 1 }
+    fn segment_len(&self, index: usize) -> Result<usize, semio_framework_value::ValueError> {
+        if index == 0 { Ok(6) } else { Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "Window target ordinal is absent")) }
+    }
+    fn read_segment(&self, index: usize, offset: usize, output: &mut [u8]) -> Result<usize, semio_framework_value::ValueError> {
+        if index != 0 || offset > 6 { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "Window target ordinal is absent")); }
+        let source = &b"update"[offset..];
+        let count = source.len().min(output.len());
+        output[..count].copy_from_slice(&source[..count]);
+        Ok(count)
+    }
 }
 
 impl protocol::OpText for Fem3dModelWindowConfigMutation {
@@ -164,6 +187,11 @@ impl semio_plugin::WindowConfigOwner for Fem3dModelWindowConfigOwner {
     type Mutation = Fem3dModelWindowConfigMutation;
     type Edit = semio_plugin::WindowConfigApplyEdit<Fem3dModelWindowConfig, Fem3dModelWindowConfigMutation>;
     const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn native_operation_wire() -> semio_os_store_operation_wire::ArtifactOperationWire<Self::Mutation> {
+        semio_os_store_operation_wire::original_edit::with_original_edit_message(semio_os_store_operation_wire::ArtifactOperationWire::canonical().with_original_binary_receiving().with_original_target(|operation| Some(operation)))
+    }
+    fn native_pair_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { Ok(semio_plugin::window_config_native_pair_demands::<Self::State>()) }
+    fn admit_native_pair(pack: &[u8], spr: &[u8], pack_limits: protocol::PackLimits, history_limits: semio_os_store_codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits, native: &mut semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant, output: &mut Option<Box<dyn semio_plugin::WindowConfigNativePairReceiving<Self::State>>>) -> Result<semio_framework_value::RetainedCloneProgress, semio_os_store_codec_registry::native_snapshot::OriginalArtifactPairFailure> { semio_plugin::admit_window_config_native_pair::<Self::State>(pack, spr, pack_limits, history_limits, native, grant, output) }
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
         std::sync::Arc::new(semio_plugin::WindowConfigApplyEdit::new())
     }

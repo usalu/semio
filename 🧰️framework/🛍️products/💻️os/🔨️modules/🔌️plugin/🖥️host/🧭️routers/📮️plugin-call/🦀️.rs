@@ -67,7 +67,7 @@ fn refused(message: &'static str) -> ValueError {
 
 fn failure_error(failure: GuestRelayAdmissionFailure) -> PluginHostError {
     match failure.primary {
-        Some(primary) => PluginHostError::OriginalTurn(primary),
+        Some(primary) => PluginHostError::OriginalTurn(Box::new(primary)),
         None => PluginHostError::Plugin("plugin call failed without a primary cause".into()),
     }
 }

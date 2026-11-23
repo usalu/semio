@@ -1,0 +1,56 @@
+{
+  "id": "rowan",
+  "category": "vegetation",
+  "title": {
+    "en": "Rowan, Mountain Ash",
+    "de": "Eberesche, Vogelbeere"
+  },
+  "heightM": 10,
+  "widthM": 6.1998,
+  "powerW": 0,
+  "poses": [
+    "late-summer-calm",
+    "fresh-breeze",
+    "gale",
+    "berry-laden",
+    "early-wet-snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "rowan-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A small native tree with a continuous silver-grey leader, steeply ascending limbs and an ovoid crown of pinnate leaves, the only plant of the archive that carries hanging berry corymbs as drawn clusters and a berry crop as a seasonal load.",
+    "de": "Ein kleiner heimischer Baum mit durchgehendem silbergrauem Leittrieb, steil aufsteigenden Ästen und einer eiförmigen Krone aus gefiederten Blättern, die einzige Pflanze des Archivs, die hängende Beerendolden als gezeichnete Büschel und einen Beerenbehang als jahreszeitliche Last trägt."
+  },
+  "completion": "authored"
+}

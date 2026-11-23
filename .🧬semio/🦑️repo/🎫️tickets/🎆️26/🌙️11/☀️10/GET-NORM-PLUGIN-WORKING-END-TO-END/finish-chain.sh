@@ -8,5 +8,6 @@ ROOT="$(cd "$T/../../../../../../.." && pwd)"
   din4108 din16798 iso16757 vdi3805 din18599 en1990 en1991 en1997 en1998 en1992 en1993 en1994 en1995 en1996 en1999
 cd "$ROOT"
 repo cache gc --lang=en > "$G/cache-gc-test.log" 2>&1
-NATIVE_EXEC_TARGET=@semio-tech/norm-plugin:test repo "$T/native-exec.ts" "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust" ./📜️script.ts test > "$G/normtest-rs-test-h2.log" 2>&1
+# The package floor for semio-hub-norm is 30 min and only applies at quick. A contended compile already died at 60 min with no test result, so this run keeps a two-hour budget.
+SEMIO_TEST_LEVEL=quick SEMIO_TEST_BUDGET_MS=7200000 NATIVE_EXEC_TARGET=@semio-tech/norm-plugin:test repo "$T/native-exec.ts" "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust" ./📜️script.ts test quick > "$G/normtest-rs-test-h2.log" 2>&1
 echo "[DEBUG] norm-plugin:test exit $?"

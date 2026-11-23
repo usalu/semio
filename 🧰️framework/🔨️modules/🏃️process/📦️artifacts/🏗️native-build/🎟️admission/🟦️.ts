@@ -1,6 +1,7 @@
 import {registeredToolExecutableV1} from "../../../🧰️tools/🏃️run/🟦️.ts";
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {unitCacheChainEnvironmentV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import {cargoPlanningOutputBytesV1,captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "../🕸️units/📥️capture/🟦️.ts";
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1} from "../📥️source/🎟️admission/🟦️.ts";
 import { compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../🏗️build/🎟️capacity/🟦️.ts";
@@ -413,7 +414,7 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
 export function compilerWrapperEnvironmentV1(scheduler: string, laneRoot: string, environment: Readonly<Record<string, string | undefined>>): Record<string, string> {
   const root = environment.SEMIO_UNIT_CACHE_ROOT, wrapper = environment.SEMIO_UNIT_CACHE_WRAPPER;
   if (!root || !wrapper || environment.SEMIO_UNIT_CACHE === "off") return {};
-  return { RUSTC_WRAPPER: wrapper, SEMIO_UNIT_CACHE_ROOT: root, SEMIO_UNIT_CACHE_LANE: "g", SEMIO_UNIT_CACHE_LANE_ROOT: laneRoot, SEMIO_UNIT_CACHE_INNER: JSON.stringify([scheduler, environment.RUSTC ?? "rustc"]), SEMIO_UNIT_CACHE_SLOTS: environment.SEMIO_UNIT_CACHE_SLOTS ?? String(availableParallelism()), ...(environment.SEMIO_UNIT_CACHE_LIGHT_SLOTS ? { SEMIO_UNIT_CACHE_LIGHT_SLOTS: environment.SEMIO_UNIT_CACHE_LIGHT_SLOTS } : {}), SEMIO_UNIT_CACHE_FOCUS: "", SEMIO_UNIT_CACHE_BUILD_SCRIPTS: "on", SEMIO_UNIT_CACHE_BROKER_REPLAY: "on", ...(environment.SEMIO_UNIT_CACHE_TOOLCHAIN ? { SEMIO_UNIT_CACHE_TOOLCHAIN: environment.SEMIO_UNIT_CACHE_TOOLCHAIN } : {}) };
+  return unitCacheChainEnvironmentV1({ wrapper, cacheRoot: root, lane: "g", laneRoot, inner: [scheduler, environment.RUSTC ?? "rustc"], focus: [], slots: Number(environment.SEMIO_UNIT_CACHE_SLOTS ?? availableParallelism()), ...(environment.SEMIO_UNIT_CACHE_LIGHT_SLOTS ? { lightSlots: Number(environment.SEMIO_UNIT_CACHE_LIGHT_SLOTS) } : {}), environment, features: { buildScripts: true, brokerReplay: true }, ...(environment.SEMIO_UNIT_CACHE_TOOLCHAIN ? { toolchain: environment.SEMIO_UNIT_CACHE_TOOLCHAIN } : {}) });
 }
 
 /** 🪜️ The observation of one successful compiled unit, `null` for a failed or cached one: peak, measured output footprint, wall, CPU and remaining critical path, at the time the unit ended. */

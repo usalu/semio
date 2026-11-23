@@ -241,20 +241,19 @@ pub(super) fn paint_group_node_step(
     }
 }
 
-/// 🃏️ One card of a native stack as the painter sees it: its absolute rect, its chip texts and the chip rows' widths.
+/// 🃏️ One card of a native stack as the painter sees it: its absolute frame rect, its chip texts and the chip widths.
 struct CardGeometry {
     rect: Rect,
     title: String,
     footer: Option<String>,
     title_chip: f32,
     footer_chip: f32,
-    shares_footer: bool,
     disabled: bool,
     authored_hover: bool,
     routed_hover: bool,
 }
 
-/// 📐️ The cards of the stack `id`, with chips clamped so a cap chip and a footer chip never touch (the band is always shared, which is what the layout reserved).
+/// 📐️ The cards of the stack `id`, with every chip clamped to its frame.
 fn card_stack_geometry(tree: &UiTree, id: NodeId, bounds: Rect, atlas: &mut FontAtlas, theme: &Theme) -> Vec<CardGeometry> {
     let kids: Vec<_> = tree.children(id).filter_map(|child| {
         let node = tree.node(child)?;
@@ -262,9 +261,8 @@ fn card_stack_geometry(tree: &UiTree, id: NodeId, bounds: Rect, atlas: &mut Font
         Some((card, tree.accepted_layout(child)?, hover_owner(node.flags)))
     }).collect();
     let pad = theme.padding_standard;
-    let count = kids.len();
-    kids.iter().enumerate().map(|(index, (card, layout, routed_hover))| {
-        let limit = ((layout.width - semio_ui_wgpu_light::card_bands::CARD_BAND_MIN_GAP as f32) * 0.5).max(0.0);
+    kids.iter().map(|(card, layout, routed_hover)| {
+        let limit = layout.width.max(0.0);
         let chip = |text: &str, atlas: &mut FontAtlas| (atlas.measure_text(text, theme.font_size_body).0 + pad * 2.0).min(limit);
         CardGeometry {
             rect: Rect::new(bounds.x + layout.x, bounds.y + layout.y, layout.width, layout.height),
@@ -272,7 +270,6 @@ fn card_stack_geometry(tree: &UiTree, id: NodeId, bounds: Rect, atlas: &mut Font
             footer: card.footer.clone(),
             title_chip: chip(card.title.as_str(), atlas),
             footer_chip: card.footer.as_deref().map_or(0.0, |footer| chip(footer, atlas)),
-            shares_footer: index + 1 < count && card.footer.is_some(),
             disabled: card.presence.state == UiState::Disabled,
             authored_hover: card.presence.hover,
             routed_hover: *routed_hover,
@@ -281,29 +278,11 @@ fn card_stack_geometry(tree: &UiTree, id: NodeId, bounds: Rect, atlas: &mut Font
 }
 
 fn card_stack_cards(geometry: &[CardGeometry], row: f64) -> Vec<semio_ui_wgpu_light::card_stack::CardStackCard> {
-    use semio_ui_wgpu_light::card_bands::CardBandSpan;
-    use semio_ui_wgpu_light::card_stack::{CardStackCard, CardStackEdge};
-    geometry.iter().map(|card| {
-        let width = f64::from(card.rect.w);
-        CardStackCard {
-            height: f64::from(card.rect.h),
-            top: CardStackEdge { depth: row, chips: vec![CardBandSpan { left: 0.0, right: f64::from(card.title_chip) }] },
-            bottom: CardStackEdge { depth: if card.footer.is_some() { row } else { 0.0 }, chips: if card.footer.is_some() { vec![CardBandSpan { left: width - f64::from(card.footer_chip), right: width }] } else { Vec::new() } },
-        }
-    }).collect::<Vec<_>>()
+    use semio_ui_wgpu_light::card_stack::CardStackCard;
+    geometry.iter().map(|card| CardStackCard { height: f64::from(card.rect.h), row, top_chip: f64::from(card.title_chip), bottom_chip: if card.footer.is_some() { f64::from(card.footer_chip) } else { 0.0 } }).collect()
 }
 
-/// 🪢️ Extends every card that shares its footer band with the next card by that band's lift, so the model's next top equals the laid-out one whatever lift `resolve_card_bands` (the single source of truth, `bands.cases.json`) decides.
-fn lift_shared_cards(mut cards: Vec<semio_ui_wgpu_light::card_stack::CardStackCard>) -> Vec<semio_ui_wgpu_light::card_stack::CardStackCard> {
-    use semio_ui_wgpu_light::card_bands::{resolve_card_bands, CardBandCard};
-    let bands = resolve_card_bands(&cards.iter().map(|card| CardBandCard { cap: card.top.depth, footer: card.bottom.depth, cap_chips: card.top.chips.clone(), footer_chips: card.bottom.chips.clone() }).collect::<Vec<_>>(), 0.0);
-    for (card, band) in cards.iter_mut().zip(bands) {
-        card.height += band.lift;
-    }
-    cards
-}
-
-/// 🃏️ Paints one step of a native card stack: the interlocked silhouettes as shared-border lines (each coincident line once), then every chip text.
+/// 🃏️ Paints one step of a native card stack: every card frame and chip inner edge as shared-border lines (each coincident line once), the chip glass inside each frame, then every chip text.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
 pub(super) fn paint_card_stack_node_step(
     tree: &UiTree,
@@ -324,15 +303,12 @@ pub(super) fn paint_card_stack_node_step(
             cursor.advance(cursor.phase + 1);
             return RetainedNodePaintStep::Pending;
         };
-        let cards = lift_shared_cards(card_stack_cards(&geometry, row));
-        let outlines = semio_ui_wgpu_light::card_stack::card_stack_outlines(f64::from(first.rect.x), f64::from(first.rect.y), f64::from(first.rect.w), &cards);
-        let hovered = pointer.map(|(x, y)| {
-            outlines.iter().position(|outline| semio_ui_wgpu_light::card_stack::card_outline_contains(outline, f64::from(x), f64::from(y)))
-        });
-        let items = outlines.iter().map(Vec::len).sum::<usize>();
+        let frames = semio_ui_wgpu_light::card_stack::card_stack_frames(f64::from(first.rect.x), f64::from(first.rect.y), f64::from(first.rect.w), &card_stack_cards(&geometry, row));
+        let hovered = pointer.map(|(x, y)| frames.iter().position(|frame| semio_ui_wgpu_light::card_stack::card_frame_contains(frame, f64::from(x), f64::from(y))));
+        let items = semio_ui_wgpu_light::card_stack::card_stack_paint_items(&frames);
         let result = retained_fixed_output_budgeted(draw, items, |draw| {
             use semio_ui_draw_contract::SharedBorderState;
-            semio_ui_wgpu_light::card_stack::paint_card_stack(draw, &outlines, theme.stroke_hairline, |index| {
+            semio_ui_wgpu_light::card_stack::paint_card_stack(draw, &frames, theme.stroke_hairline, theme.glass(semio_ui_theme::Level::Window), |index| {
                 let card = &geometry[index];
                 let routed_hover = hovered.map_or(card.routed_hover, |owner| owner == Some(index));
                 if !card.disabled && (card.authored_hover || routed_hover) {
@@ -353,7 +329,7 @@ pub(super) fn paint_card_stack_node_step(
         let (text, x, chip, y, color) = if slot % 2 == 0 {
             (Some(card.title.as_str()), card.rect.x, card.title_chip, card.rect.y, theme.text)
         } else {
-            let y = if card.shares_footer { card.rect.y + card.rect.h } else { card.rect.y + card.rect.h - theme.control_height };
+            let y = card.rect.y + card.rect.h - theme.control_height;
             (card.footer.as_deref(), card.rect.x + card.rect.w - card.footer_chip, card.footer_chip, y, theme.text_muted)
         };
         let Some(text) = text else {

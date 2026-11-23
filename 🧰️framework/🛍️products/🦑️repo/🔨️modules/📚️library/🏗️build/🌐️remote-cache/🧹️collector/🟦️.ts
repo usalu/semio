@@ -59,6 +59,25 @@ export function planRemoteCacheCollectionV1(rows:Iterable<RemoteCacheRowV1>,boun
  return drops;
 }
 
+/** 🧺️ One entry as the blob bound sees it: the blobs it references, how valuable it is (0 stale or unreached, 1 undeclared, 2 declared and live) and whether a claim, a write in flight or the grace guards it. */
+export type RemoteCacheBlobRowV1=Readonly<{key:string;accessed:number;tier:number;refs:readonly string[];guarded:boolean}>;
+
+/** 📐️ Plans the removals that bring the bytes of the blobs the entries reference (each blob once, however many entries share it) down to nine tenths of `bound` when they exceed it: least valuable tier first (stale or unreached, undeclared, declared), least recently used first, ties by key; guarded entries and entries without blobs are never taken. Answers the keys in removal order and the referenced bytes before and after. */
+export function planRemoteCacheBlobBoundV1(rows:Iterable<RemoteCacheBlobRowV1>,sizeOf:(hash:string)=>number,bound:number):Readonly<{before:number;after:number;keys:readonly string[]}>{
+ const holders=new Map<string,number>(),all=[...rows];
+ for(const row of all)for(const hash of new Set(row.refs))holders.set(hash,(holders.get(hash)??0)+1);
+ let before=0;for(const hash of holders.keys())before+=sizeOf(hash);
+ if(before<=bound)return {before,after:before,keys:[]};
+ const target=Math.floor(bound*LOW_WATER_NUMERATOR/LOW_WATER_DENOMINATOR),keys:string[]=[];let after=before;
+ const order=all.filter(row=>!row.guarded&&row.refs.length>0).sort((left,right)=>(left.tier-right.tier)||left.accessed-right.accessed||(left.key<right.key?-1:left.key>right.key?1:0));
+ for(const row of order){
+  if(after<=target)break;
+  for(const hash of new Set(row.refs)){const left=holders.get(hash)!-1;holders.set(hash,left);if(left===0)after-=sizeOf(hash);}
+  keys.push(row.key);
+ }
+ return {before,after,keys};
+}
+
 /** 🥀️ Judges every entry of a scanned store against the synchronized tree: the entries come from the scan and the sidecars (`declaration` is what an entry declared), the tree from `tree`, the tombstones are the blobs of entries an earlier sweep retired. */
 export async function judgeRemoteCacheStalenessV1(index:ReadonlyMap<string,unknown>,metas:ReadonlyMap<string,RemoteCacheMetaV1>,input:Readonly<{now:number;graceMilliseconds:number;tree:Pick<TreeDigestsV1,"digest">;toolchains?:ReadonlySet<string>|undefined;retired?:ReadonlySet<string>|undefined;signal?:AbortSignal|undefined}>):Promise<Map<string,StalenessVerdictV1>>{
  const entries=[...index.keys()].filter(key=>key.split("/")[1]!=="cas").map(key=>{const meta=metas.get(key);return {key,storedAt:meta?.storedAt??0,refs:meta?.refs??[],declaration:meta?.declaration};});

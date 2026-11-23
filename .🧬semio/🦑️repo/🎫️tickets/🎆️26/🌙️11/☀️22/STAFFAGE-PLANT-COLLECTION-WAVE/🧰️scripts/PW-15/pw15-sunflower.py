@@ -1,7 +1,7 @@
 """🌻 PW-15, vegetation/sunflower: a group of three flowering common sunflowers (Helianthus annuus) up to 2.5 m on a hilled soil ridge: stout bristly stems, spirally set long-petioled ovate leaves and nodding heads that face east, with a heliotropic clip. Stated by hand in world space (x ahead = east, y up, z left = north, metres) per scale and built from the round-3 miscanthus plant parts (`pw15-lib.Plant`, kit `K`), solids, outlines, strips and drawings.
 
 Reference: Flora of North America 21 (Schilling 2006): annuals 100-300 cm, stems erect, usually hispid; leaf blades lance-ovate to ovate, 10-40 x 5-40 cm, petioles 2-20 cm; involucres 15-40 (-200+) mm diameter; rays 17-30 (-100+), laminae 25-50 mm. Heliotropism: Atamian et al. (2016), Science 353, 587-590.
-Usage: repo tools exec python -- pw15-sunflower.py
+Usage: sh pw15-build.sh sunflower
 See: ../../📝️PW-15.md
 """
 import importlib.util
@@ -44,10 +44,10 @@ def leaf_rows(count, low, high, l0, l1, peak):
 
 
 S = {
-    50: {"leaves": leaf_rows(16, 0.12, 0.9, 0.24, 0.12, 0.34), "keep": None, "thick": 0.0005, "points": 9, "petiole_r": 0.003, "stem_r": (0.017, 0.012, 0.008), "rays": 24, "ray": (0.048, 0.016), "ray_thick": 0.0005, "mound": [(0.002, 0.32), (0.03, 0.3), (0.06, 0.22), (0.085, 0.1), (0.09, 0.04)], "strip": (0.25, 0.75, 0.32)},
-    100: {"leaves": leaf_rows(16, 0.12, 0.9, 0.24, 0.12, 0.34), "keep": None, "thick": 0.0008, "points": 7, "petiole_r": 0.0035, "stem_r": (0.017, 0.012, 0.009), "rays": 14, "ray": (0.048, 0.024), "ray_thick": 0.0009, "mound": [(0.004, 0.32), (0.05, 0.26), (0.085, 0.1), (0.09, 0.04)], "strip": (0.25, 0.75, 0.3)},
-    200: {"leaves": leaf_rows(16, 0.12, 0.9, 0.24, 0.12, 0.34), "keep": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "thick": 0.0015, "points": 6, "petiole_r": 0.0045, "stem_r": (0.018, 0.013, 0.01), "rays": 0, "mound": [(0.004, 0.32), (0.06, 0.22), (0.09, 0.05)], "strip": (0.1, 0.9, 0.02)},
-    500: {"leaves": leaf_rows(16, 0.12, 0.9, 0.24, 0.12, 0.34), "keep": [0, 2, 3, 4, 5, 6, 8, 10], "thick": 0.003, "points": 5, "petiole_r": 0.005, "stem_r": (0.019, 0.015, 0.012), "rays": 0, "mound": [(0.004, 0.32), (0.07, 0.22), (0.095, 0.06)], "strip": (0.1, 0.9, 0.025)},
+    50: {"leaves": leaf_rows(16, 0.12, 0.9, 0.24, 0.12, 0.34), "keep": None, "thick": 0.0005, "points": 9, "petiole_r": 0.004, "stem_r": (0.017, 0.012, 0.008), "rays": 24, "ray": (0.048, 0.016), "ray_thick": 0.0005, "mound": [(0.002, 0.32), (0.035, 0.3), (0.065, 0.26), (0.085, 0.12), (0.09, 0.04)], "strip": (0.25, 0.75, 0.32)},
+    100: {"leaves": leaf_rows(16, 0.12, 0.9, 0.24, 0.12, 0.34), "keep": None, "thick": 0.0008, "points": 7, "petiole_r": 0.004, "stem_r": (0.017, 0.012, 0.009), "rays": 14, "ray": (0.048, 0.024), "ray_thick": 0.0009, "mound": [(0.004, 0.32), (0.065, 0.26), (0.085, 0.12), (0.09, 0.04)], "strip": (0.25, 0.75, 0.3)},
+    200: {"leaves": leaf_rows(16, 0.12, 0.9, 0.24, 0.12, 0.34), "keep": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "thick": 0.0015, "points": 6, "petiole_r": 0.0045, "stem_r": (0.018, 0.013, 0.01), "rays": 0, "mound": [(0.004, 0.32), (0.065, 0.26), (0.09, 0.05)], "strip": (0.1, 0.9, 0.02)},
+    500: {"leaves": leaf_rows(16, 0.12, 0.9, 0.24, 0.12, 0.34), "keep": [0, 2, 3, 4, 5, 6, 8, 10], "thick": 0.003, "points": 5, "petiole_r": 0.005, "stem_r": (0.019, 0.015, 0.012), "rays": 0, "mound": [(0.004, 0.32), (0.07, 0.26), (0.095, 0.06)], "strip": (0.1, 0.9, 0.025)},
 }
 STRIP_LEAVES = (4, 6, 8, 10)
 
@@ -80,7 +80,7 @@ def head(plant, rig, n, scale):
     top, ax = rig.origin(bone), axis(rig, bone)
     up = K.unit(K.sub(rig.origin(bone), rig.origin(f"stem-{n}b")))
     back = K.add(K.add(top, K.mul(up, 0.05)), K.mul(ax, 0.05))
-    neck = K.bezier(top, K.add(top, K.mul(up, 0.07)), back, 5 if scale <= 100 else 4)
+    neck = K.bezier(top, K.add(top, K.mul(up, 0.07)), back, 5) if scale <= 100 else [top, K.lerp(top, back, 0.5), back]
     r = {50: 0.0085, 100: 0.009, 200: 0.01, 500: 0.012}[scale]
     plant.round(f"neck-{n}", bone, neck, [r] * len(neck), "stems", STEM)
     disc = p["disc"]
@@ -163,7 +163,15 @@ ROOT_KG = round(MASS - sum(r["kg"] for r in BONES), 4)
 
 
 def member_radius(bone, scale):
-    return {"a": 0.014, "b": 0.01}.get(bone[-1], 0.007) if bone.startswith("stem") else 0.007
+    """🥢 Stem rods of the declared sections; at 1:500 the 11 cm of neck and receptacle are too short for a slender rod (two smallest features), so the head member is the receptacle block itself, 80 mm thick."""
+    if bone.startswith("stem"):
+        return {"a": 0.014, "b": 0.01}[bone[-1]]
+    return 0.04 if scale == 500 else 0.007
+
+
+def joint_radius(bone):
+    """⚙️ A joint ball a little thicker than the stem it sits in: 20 mm at the stem base, 16 mm between the stem halves, 12 mm under the head."""
+    return 0.012 if bone.startswith("head") else 0.016 if bone.endswith("b") else 0.02
 
 
 def masses(scale):
@@ -171,7 +179,7 @@ def masses(scale):
     return {f"head-{n}": (1.0, r) for n in PLANTS}
 
 
-AREAS = {}
+AREAS = {"heads": 0.33}
 
 
 def thermal(r50, anchors):
@@ -268,32 +276,32 @@ REP = {
          "retained": D("Retained: every leaf and petiole, the stems in two segments, the curved necks, the receptacle with its domed disc and 24 ray florets per head, the soil hill.", "Beibehalten: jedes Blatt und jeder Blattstiel, die Stängel in zwei Abschnitten, die gebogenen Hälse, der Blütenboden mit gewölbter Scheibe und 24 Zungenblüten je Korb, der Erdhügel."),
          "merged": D("Merged: the phyllaries into the receptacle outline, the disc florets into the disc.", "Zusammengefasst: die Hüllblätter in den Umriss des Blütenbodens, die Röhrenblüten in die Scheibe."),
          "omitted": D("Omitted: stem bristles, leaf veins and serration, the spiral pattern of the disc florets.", "Weggelassen: Stängelborsten, Blattadern und Blattzähne, das Spiralmuster der Röhrenblüten."),
-         "thinElements": D("Stems are strokes of their true width (0.68 to 0.32 mm), petioles 0.12 mm; leaves and rays are filled outlines, and a leaf or ray seen edge-on becomes a stroke of its projected width.", "Stängel sind Striche ihrer wahren Breite (0,68 bis 0,32 mm), Blattstiele 0,12 mm; Blätter und Zungenblüten sind gefüllte Umrisse, ein Blatt oder eine Zungenblüte in Kantenansicht wird ein Strich seiner projizierten Breite."),
+         "thinElements": D("Stems, petioles, leaves and rays are filled outlines, the true projection of their solids (stems 34 to 16 mm, 0.68 to 0.32 mm on paper; petioles 8 mm, 0.16 mm; a leaf or ray seen edge-on is 0.5 mm thin); the outline pen of 0.2 mm carries the thin ones, nothing prints below 0.2 mm.", "Stängel, Blattstiele, Blätter und Zungenblüten sind gefüllte Umrisse, die wahre Projektion ihrer Körper (Stängel 34 bis 16 mm, 0,68 bis 0,32 mm auf dem Papier; Blattstiele 8 mm, 0,16 mm; ein Blatt oder eine Zungenblüte in Kantenansicht ist 0,5 mm dünn); der Umrissstift von 0,2 mm trägt die dünnen Teile, nichts druckt unter 0,2 mm."),
          "hatching": D("No hatching.", "Keine Schraffur."),
          "styles": D("Line views: outlines of leaves, rays and discs over the stems. Solid views: leaves mid tone, rays light, discs dark, the classic sunflower contrast.", "Linienansichten: Umrisse von Blättern, Zungenblüten und Scheiben über den Stängeln. Flächenansichten: Blätter im Mittelton, Zungenblüten hell, Scheiben dunkel, der klassische Sonnenblumenkontrast."),
          "overlays": D("Every shape is bound to its thermal region (leaves, heads, stems, soil) and to the bone that carries it.", "Jede Form ist an ihre thermische Region (Blätter, Körbe, Stängel, Erde) und an den tragenden Knochen gebunden.")},
     100: {"silhouette": D("At 1:100 (1 m is 10 mm) every leaf is kept with a coarser outline; each head keeps fourteen broader rays (two florets merged into one) around the disc. All three views are projections of the 1:100 body.", "Bei 1:100 (1 m sind 10 mm) bleibt jedes Blatt mit gröberem Umriss erhalten; jeder Korb behält vierzehn breitere Zungenblüten (zwei Blüten in einer) um die Scheibe. Alle drei Ansichten sind Projektionen des Körpers von 1:100."),
           "retained": D("Retained: all leaves and petioles, stems, necks, discs, fourteen rays per head, the soil hill.", "Beibehalten: alle Blätter und Blattstiele, Stängel, Hälse, Scheiben, vierzehn Zungenblüten je Korb, der Erdhügel."),
           "merged": D("Merged: pairs of ray florets.", "Zusammengefasst: Paare von Zungenblüten."), "omitted": D("Omitted: the dome of the disc is flattened.", "Weggelassen: die Wölbung der Scheibe ist abgeflacht."),
-          "thinElements": D("Stems 0.34 to 0.18 mm, petioles at the 0.1 mm minimum.", "Stängel 0,34 bis 0,18 mm, Blattstiele am Minimum von 0,1 mm."), "hatching": D("No hatching.", "Keine Schraffur."),
+          "thinElements": D("Stems of 34 to 18 mm and petioles of 8 mm as filled outlines with the 0.2 mm pen.", "Stängel von 34 bis 18 mm und Blattstiele von 8 mm als gefüllte Umrisse mit dem Stift von 0,2 mm."), "hatching": D("No hatching.", "Keine Schraffur."),
           "styles": D("Line views: outlines. Solid views: tones of the regions.", "Linienansichten: Umrisse. Flächenansichten: Töne der Regionen."), "overlays": D("Every shape is bound to its thermal region and bone.", "Jede Form ist an ihre thermische Region und ihren Knochen gebunden.")},
     200: {"silhouette": D("At 1:200 (1 m is 5 mm) the group keeps its twelve lower leaves per stem; each head is one disc whose rim is the ray corona. All three views are projections of the 1:200 body.", "Bei 1:200 (1 m sind 5 mm) behält die Gruppe ihre zwölf unteren Blätter je Stängel; jeder Korb ist eine Scheibe, deren Rand der Strahlenkranz ist. Alle drei Ansichten sind Projektionen des Körpers von 1:200."),
           "retained": D("Retained: twelve leaves per stem, stems, necks, three heads, the soil hill.", "Beibehalten: zwölf Blätter je Stängel, Stängel, Hälse, drei Körbe, der Erdhügel."),
           "merged": D("Merged: the ray florets into the rim of the head disc.", "Zusammengefasst: die Zungenblüten in den Rand der Korbscheibe."), "omitted": D("Omitted: the four small upper leaves of every stem.", "Weggelassen: die vier kleinen oberen Blätter jedes Stängels."),
-          "thinElements": D("Stems 0.18 to 0.1 mm, petioles 0.1 mm.", "Stängel 0,18 bis 0,1 mm, Blattstiele 0,1 mm."), "hatching": D("No hatching.", "Keine Schraffur."),
+          "thinElements": D("Stems of 36 to 20 mm and petioles of 9 mm as filled outlines with the 0.2 mm pen.", "Stängel von 36 bis 20 mm und Blattstiele von 9 mm als gefüllte Umrisse mit dem Stift von 0,2 mm."), "hatching": D("No hatching.", "Keine Schraffur."),
           "styles": D("Line views: outlines. Solid views: tonal masses.", "Linienansichten: Umrisse. Flächenansichten: getönte Massen."), "overlays": D("Every shape is bound to its thermal region and bone.", "Jede Form ist an ihre thermische Region und ihren Knochen gebunden.")},
     500: {"silhouette": D("At 1:500 (1 m is 2 mm) three stem lines with eight large leaves each and a round head on top: the unmistakable sunflower sign even at site-plan scale. All three views are projections of the 1:500 body.", "Bei 1:500 (1 m sind 2 mm) drei Stängellinien mit je acht großen Blättern und einem runden Korb obenauf: das unverwechselbare Sonnenblumenzeichen auch im Lageplanmaßstab. Alle drei Ansichten sind Projektionen des Körpers von 1:500."),
           "retained": D("Retained: eight leaves per stem, stems, three heads of 8 cm depth, the soil hill of 95 mm.", "Beibehalten: acht Blätter je Stängel, Stängel, drei Körbe von 8 cm Tiefe, der Erdhügel von 95 mm."),
           "merged": D("Merged: rays into the head disc, the head deepened to 80 mm, the printable feature.", "Zusammengefasst: Zungenblüten in die Korbscheibe, der Korb auf 80 mm, die druckbare Einzelheit, vertieft."), "omitted": D("Omitted: half of the leaves (the smaller and the hidden ones).", "Weggelassen: die Hälfte der Blätter (die kleineren und die verdeckten)."),
-          "thinElements": D("Stems and petioles at 0.1 mm.", "Stängel und Blattstiele mit 0,1 mm."), "hatching": D("No hatching.", "Keine Schraffur."),
+          "thinElements": D("Stems of 38 to 24 mm and petioles of 10 mm as filled outlines with the 0.2 mm pen.", "Stängel von 38 bis 24 mm und Blattstiele von 10 mm als gefüllte Umrisse mit dem Stift von 0,2 mm."), "hatching": D("No hatching.", "Keine Schraffur."),
           "styles": D("Line views: restrained outlines. Solid views: tonal masses by depth.", "Linienansichten: zurückhaltende Umrisse. Flächenansichten: getönte Massen nach Tiefe."), "overlays": D("Every shape is bound to its thermal region and bone.", "Jede Form ist an ihre thermische Region und ihren Knochen gebunden.")},
 }
 VOL = {
-    50: [D("1:50 body: soil hill, three stems of two segments, sixteen leaves per stem at 137.5 degrees on petioles of a quarter to half their length, curved necks, receptacles with domed disc and 24 ray florets each.", "1:50-Körper: Erdhügel, drei Stängel aus zwei Abschnitten, sechzehn Blätter je Stängel im Winkel von 137,5 Grad an Stielen von einem Viertel bis zur Hälfte ihrer Länge, gebogene Hälse, Blütenböden mit gewölbter Scheibe und je 24 Zungenblüten."),
-         D("Leaves (0.5 mm) and rays are declared sheets, stems, necks and petioles slender rods. Thermal by reference plus twelve transpiration strips; structure: root disc, stem rods of 28 and 20 mm, neck rods, joints, support disc, head masses.", "Blätter (0,5 mm) und Zungenblüten sind deklarierte Flächen, Stängel, Hälse und Blattstiele schlanke Stäbe. Thermik per Verweis plus zwölf Transpirationsstreifen; Tragwerk: Wurzelscheibe, Stängelstäbe von 28 und 20 mm, Halsstäbe, Gelenke, Auflagerscheibe, Korbmassen.")],
+    50: [D("1:50 body: soil hill, three stems of two segments, sixteen leaves per stem at 137.5 degrees on petioles of 8 mm and a quarter to half their length, curved necks, receptacles with domed disc and 24 ray florets each.", "1:50-Körper: Erdhügel, drei Stängel aus zwei Abschnitten, sechzehn Blätter je Stängel im Winkel von 137,5 Grad an Stielen von 8 mm und einem Viertel bis zur Hälfte ihrer Länge, gebogene Hälse, Blütenböden mit gewölbter Scheibe und je 24 Zungenblüten."),
+         D("Every part is a closed triangle mesh (`polyhedron`) through its stated sections: leaves and rays as rhombic sheets 0.5 mm thick, stems, necks and petioles as octagonal prisms, receptacles with sixteen sides, the hill with thirty-two; each drawing is the outline of the projected mesh, so the three views and the volume are the same polygons. Thermal by reference plus twelve transpiration strips; structure: root disc, stem rods of 28 and 20 mm, neck rods, joints, support disc, head masses.", "Jedes Teil ist ein geschlossenes Dreiecksnetz (`polyhedron`) durch seine angegebenen Querschnitte: Blätter und Zungenblüten als rhombische Platten von 0,5 mm Dicke, Stängel, Hälse und Blattstiele als achteckige Prismen, Blütenböden mit sechzehn Seiten, der Hügel mit zweiunddreißig; jede Zeichnung ist der Umriss des projizierten Netzes, sodass die drei Ansichten und das Volumen dieselben Polygone sind. Thermik per Verweis plus zwölf Transpirationsstreifen; Tragwerk: Wurzelscheibe, Stängelstäbe von 28 und 20 mm, Halsstäbe, Gelenke, Auflagerscheibe, Korbmassen.")],
     100: [D("1:100 body: all leaves with seven stations, heads with fourteen rays.", "1:100-Körper: alle Blätter mit sieben Stationen, Körbe mit vierzehn Zungenblüten."), D("Thermal by reference plus twelve strips; structure with simplified rods.", "Thermik per Verweis plus zwölf Streifen; Tragwerk mit vereinfachten Stäben.")],
-    200: [D("1:200 body: twelve leaves per stem, heads as one disc of 6 cm depth with the ray corona as rim.", "1:200-Körper: zwölf Blätter je Stängel, Körbe als eine Scheibe von 6 cm Tiefe mit dem Strahlenkranz als Rand."), D("Thermal by reference plus twelve strips; structure without joints.", "Thermik per Verweis plus zwölf Streifen; Tragwerk ohne Gelenke.")],
-    500: [D("1:500 body: eight leaves per stem, heads 8 cm deep, soil hill 95 mm.", "1:500-Körper: acht Blätter je Stängel, Körbe 8 cm tief, Erdhügel 95 mm."), D("Thermal by reference plus twelve strips; structure with three-point rods.", "Thermik per Verweis plus zwölf Streifen; Tragwerk mit Dreipunktstäben.")],
+    200: [D("1:200 body: twelve leaves per stem, straight necks, heads as one disc of 6 cm depth with the ray corona as rim.", "1:200-Körper: zwölf Blätter je Stängel, gerade Hälse, Körbe als eine Scheibe von 6 cm Tiefe mit dem Strahlenkranz als Rand."), D("Thermal by reference plus twelve strips; structure without joints.", "Thermik per Verweis plus zwölf Streifen; Tragwerk ohne Gelenke.")],
+    500: [D("1:500 body: eight leaves per stem, straight necks, heads 8 cm deep, soil hill 95 mm.", "1:500-Körper: acht Blätter je Stängel, gerade Hälse, Körbe 8 cm tief, Erdhügel 95 mm."), D("Thermal by reference plus twelve strips; structure with two-point rods and the receptacle block of 80 mm as head member.", "Thermik per Verweis plus zwölf Streifen; Tragwerk mit Zweipunktstäben und dem Blütenbodenblock von 80 mm als Korbstab.")],
 }
 REFERENCES = [
     {"id": "en-1991-1-4", "citation": "EN 1991-1-4:2005 Eurocode 1, Actions on structures, Part 1-4: Wind actions. Air density 1.25 kg/m3, F = 0.5 rho cd A v^2, peak velocity pressure (1 + 7 Iv) q_m."},
@@ -314,15 +322,15 @@ def spec(dims):
         "bones": BONES, "lateral": LATERAL, "rename": {},
         "leaf_material": "sunflower-leaf", "leaf_region": "leaves", "emitter": "transpiration-leaves", "emitter_title": t("Transpiration of the leaves", "Transpiration der Blätter"),
         "stem_material": "sunflower-stem", "mat_material": "sunflower-soil", "top_material": "sunflower-disc",
-        "mat": {50: [(0.002, 0.27), (0.04, 0.22), (0.07, 0.12)], 100: [(0.004, 0.27), (0.07, 0.12)], 200: [(0.004, 0.27), (0.07, 0.12)], 500: [(0.004, 0.27), (0.08, 0.12)]},
-        "member_radius": member_radius, "joint_radius": {50: 0.02, 100: 0.02}, "support_radius": 0.27,
+        "mat": {50: [(0.002, 0.3), (0.04, 0.285), (0.064, 0.25)], 100: [(0.004, 0.3), (0.064, 0.25)], 200: [(0.004, 0.3), (0.064, 0.25)], 500: [(0.004, 0.3), (0.08, 0.25)]},
+        "member_radius": member_radius, "joint_radius": {50: joint_radius, 100: joint_radius}, "member_points": {500: 2}, "support_radius": 0.27,
         "crown_mass_radii": {50: [0.03, 0.15, 0.15], 100: [0.03, 0.15, 0.15], 200: [0.035, 0.15, 0.15], 500: [0.04, 0.15, 0.15]},
         "masses": masses, "footprint": 0.6,
         "support_title": t("Root anchorage in the soil", "Wurzelverankerung im Boden"),
         "title": t("Sunflower", "Sonnenblume"),
         "summary": t(f"A group of three flowering common sunflowers (Helianthus annuus) {L.fmt(dims['heightM'])} m tall on a hilled soil ridge: stout bristly stems, sixteen long-petioled, heart-shaped leaves per plant set in a spiral, and nodding flower heads up to 34 cm across with golden ray florets around a dark disc, facing east.", f"Eine Gruppe aus drei blühenden Sonnenblumen (Helianthus annuus), {L.fmt(dims['heightM'], 'de')} m hoch auf einem angehäufelten Erddamm: kräftige, borstige Stängel, je Pflanze sechzehn langgestielte, herzförmige Blätter in einer Spirale und nickende Blütenkörbe bis 34 cm Durchmesser mit goldenen Zungenblüten um eine dunkle Scheibe, nach Osten gerichtet."),
         "tags": ["annual", "crop", "flower", "sunflower", "heliotropism", "wind", "transpiration"],
-        "provenance": {"author": "Semio staffage vegetation content worker PW-15", "method": "handcrafted", "created": "2026-11-22", "references": REFERENCES, "notes": t("Built from the plant parts of the round-3 miscanthus clump (paths, whole parts on the bone of their node, outlines and strokes of true width). Stems 32 mm at the base, 2.1 to 2.4 m to the neck (FNA 21: 100-300 cm); blades 12 to 34 cm long and 0.82 times as wide on petioles of 4 to 19 cm (10-40 x 5-40 cm, petioles 2-20 cm); discs 20 to 25 cm, 24 rays of 4.8 cm (rays 17-30, 25-50 mm). The head bone points along the disc axis; the heads face east (+x) as mature heads do (Atamian et al. 2016), the clip `heliotropic-tracking` shows the late, reduced daily swing. Leaves and rays are declared sheets; seen edge-on they are drawn as strokes.", "Aus den Pflanzenteilen des Chinaschilf-Horstes aus Runde 3 gebaut (Bahnen, ganze Teile am Knochen ihres Knotens, Umrisse und Striche wahrer Breite). Stängel am Fuß 32 mm, 2,1 bis 2,4 m bis zum Hals (FNA 21: 100-300 cm); Spreiten 12 bis 34 cm lang und 0,82-mal so breit an Stielen von 4 bis 19 cm (10-40 x 5-40 cm, Stiele 2-20 cm); Scheiben 20 bis 25 cm, 24 Zungenblüten von 4,8 cm (17-30, 25-50 mm). Der Korbknochen zeigt entlang der Scheibenachse; die Körbe schauen wie reife Körbe nach Osten (+x) (Atamian et al. 2016), der Clip `heliotropic-tracking` zeigt die späte, verkleinerte Tagesbewegung. Blätter und Zungenblüten sind deklarierte Flächen; in Kantenansicht werden sie als Striche gezeichnet.")},
+        "provenance": {"author": "Semio staffage vegetation content worker PW-15", "method": "handcrafted", "created": "2026-11-22", "references": REFERENCES, "notes": t("Built from the plant parts of the round-3 miscanthus clump (paths, whole parts on the bone of their node). Stems 32 mm at the base, 2.1 to 2.4 m to the neck (FNA 21: 100-300 cm); blades 12 to 34 cm long and 0.82 times as wide on petioles of 4 to 19 cm and 8 mm thickness (10-40 x 5-40 cm, petioles 2-20 cm); discs 20 to 25 cm, 24 rays of 4.8 cm (rays 17-30, 25-50 mm). The head bone points along the disc axis; the heads face east (+x) as mature heads do (Atamian et al. 2016), the clip `heliotropic-tracking` shows the late, reduced daily swing. Leaves and rays are sheets 0.5 mm thick; seen edge-on they are drawn as the thin outline of that thickness.", "Aus den Pflanzenteilen des Chinaschilf-Horstes aus Runde 3 gebaut (Bahnen, ganze Teile am Knochen ihres Knotens). Stängel am Fuß 32 mm, 2,1 bis 2,4 m bis zum Hals (FNA 21: 100-300 cm); Spreiten 12 bis 34 cm lang und 0,82-mal so breit an Stielen von 4 bis 19 cm und 8 mm Dicke (10-40 x 5-40 cm, Stiele 2-20 cm); Scheiben 20 bis 25 cm, 24 Zungenblüten von 4,8 cm (17-30, 25-50 mm). Der Korbknochen zeigt entlang der Scheibenachse; die Körbe schauen wie reife Körbe nach Osten (+x) (Atamian et al. 2016), der Clip `heliotropic-tracking` zeigt die späte, verkleinerte Tagesbewegung. Blätter und Zungenblüten sind 0,5 mm dicke Flächen; in Kantenansicht werden sie als dünner Umriss dieser Dicke gezeichnet.")},
         "dimensions": dims,
         "materials": [
             {"id": "sunflower-leaf", "title": t("Sunflower leaves", "Sonnenblumenblätter"), "emissivity": 0.97, "solarAbsorptivity": 0.5, "source": "literature", "reference": "jones-2014"},
@@ -341,7 +349,7 @@ def spec(dims):
 def main():
     M.TARGET, M.P = TARGET, PLANT_NS
     rig = K.Rig(L.rig_bones(spec({"heightM": 0})))
-    e = M.extent(build(rig, 50))
+    e = L.extent(build(rig, 50))
     DIMS.update({"heightM": round(e["y+"], 2), "widthM": round(e["x+"] - e["x-"], 2), "depthM": round(e["z+"] - e["z-"], 2), "massKg": MASS})
     document, report = L.build_asset(spec(DIMS), {s: (lambda rig, s=s: build(rig, s)) for s in L.SCALES})
     print(f"[DEBUG] dimensions {DIMS} 1:50 extent {e}")

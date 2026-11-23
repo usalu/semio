@@ -154,7 +154,7 @@ fn json_array<'a>(records: impl Iterator<Item = &'a str>) -> String {
 }
 
 /// 📄️ Returns the retained World3d at a clamped page index, with room for its surrounding viewport controls.
-pub fn render_viewport_page(body_key: &str, lowered: &LoweredViewport, domain_id: &str, sun: bool, requested_page: usize, additional_nodes: usize) -> UiAssemblyResult<(BuiltNode, usize, usize)> {
+pub fn render_viewport_page(body_key: &str, lowered: &LoweredViewport, domain_id: &str, sun: bool, requested_page: usize, additional_nodes: usize, name: &str) -> UiAssemblyResult<(BuiltNode, usize, usize)> {
     let mut scene = world3d_scene_with_geometry(lowered, domain_id, sun, "[]".into(), "[]".into());
     let mut fixed_lanes = scene.clone();
     let fixed = Footprint { nodes: 1 + additional_nodes, items: 1 + (1 + additional_nodes) * FIXED_CHROME_NODE_ITEMS,
@@ -195,6 +195,6 @@ pub fn render_viewport_page(body_key: &str, lowered: &LoweredViewport, domain_id
             scene.scalar_field = Some(field);
         }
     }
-    let surface = scene_surface(body_key, SurfaceKind::World3d, &scene)?;
+    let surface = scene_surface(body_key, SurfaceKind::World3d, &scene, name, None)?;
     Ok((surface, current, pages.len()))
 }

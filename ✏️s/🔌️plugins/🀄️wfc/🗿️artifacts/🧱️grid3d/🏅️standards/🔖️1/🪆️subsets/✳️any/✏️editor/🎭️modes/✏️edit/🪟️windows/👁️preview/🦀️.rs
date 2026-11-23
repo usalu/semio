@@ -87,7 +87,7 @@ pub fn paint_assignments(transient:&Grid3dTransient,tool_run:Option<&ToolRunView
 //#region 🔖️Render
 /// 👁️ The solved scene. A contradiction paints the empty instance set and says so in the status line,
 /// rather than failing the surface.
-pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, transient:&Grid3dTransient, tool_run: Option<&ToolRunView>, revision:Option<&[u8;32]>) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, transient:&Grid3dTransient, tool_run: Option<&ToolRunView>, revision:Option<&[u8;32]>, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
     let (position, target) = super::grid::framed_camera(document, config);
     let (assignments,satisfiable)=paint_assignments(transient,tool_run,revision);
     let instances=crate::standards::v1::subsets::any::io::text::inferences::scene_projection::preview_instances_json(document,&assignments);
@@ -103,7 +103,7 @@ pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, transient:
             &WorldSunConfig::default(),
         )
     };
-    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene, semio_plugin::surface_name(locale, "Preview", "Vorschau"), None)
 }
 
 /// 🩺️ The one-line verdict the window chrome shows: solved cell count against the cells the grid

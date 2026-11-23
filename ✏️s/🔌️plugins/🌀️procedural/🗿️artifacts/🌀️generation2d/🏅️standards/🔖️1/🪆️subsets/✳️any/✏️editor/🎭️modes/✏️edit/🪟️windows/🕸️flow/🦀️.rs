@@ -137,7 +137,7 @@ fn document_operator_records(dag: &semio_os_infinite_directed_presentation::DagH
 //#region 🔖️Render
 /// 🕹️ `selection` is the live `graph`-domain widget ids `render_with_request_context` resolved —
 /// the marks-free `render` path passes an empty slice.
-pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMainWindowConfig, session: &FlowEvalSession, selection: &[String]) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMainWindowConfig, session: &FlowEvalSession, selection: &[String], locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let host_snapshot = &document.host_snapshot;
     let dag = FlowHost::project_registered_dag_snapshot(host_snapshot);
     let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
@@ -165,6 +165,8 @@ pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMain
             selection: selection.to_vec(),
             ..NodeGraphScene::base(nodes, edges, viewport)
         },
+        semio_plugin::surface_name(locale, "Flow", "Fluss"),
+        None,
     )
 }
 //#endregion 🔖️Render

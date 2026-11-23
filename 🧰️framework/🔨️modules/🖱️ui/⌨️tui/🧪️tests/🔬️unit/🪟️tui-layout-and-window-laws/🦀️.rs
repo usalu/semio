@@ -1,4 +1,4 @@
-/// 🪟️ Tui layout and window laws: the row text helper, the weighted, auto, padded layouts, the window layouts and chrome silhouettes, the window controls and hits, the wizard and the remount.
+/// 🪟️ Tui layout and window laws: the row text helper, the weighted, auto, padded layouts, the window layouts and chrome frames, the window controls and hits, the wizard and the remount.
 
 fn row_text(buf: &CellBuffer, y: u16) -> String {
     (0..buf.size.width).filter_map(|x| buf.get(x, y)).map(|c| c.ch).filter(|&c| c != '\0').collect()
@@ -66,9 +66,9 @@ fn window_layout_stack_exposes_tabs() {
     assert_eq!(measures[0].stack_tabs, vec!["a", "b"]);
 }
 
-/// 🧱 A single top-left corner tab with its close glyph; the focused stack uses the heavy line set and the right edge stays flat at the body hairline.
+/// 🧱 A single top-left chip with its close glyph inside the first interior row of one closed box; the focused stack uses the heavy line set and the outline stays one plain rectangle.
 #[test]
-fn window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape() {
+fn window_chrome_places_chips_inside_the_first_interior_row_of_a_closed_box() {
     let theme = Theme::new(AppearanceName::Dark);
     let rect = Rect::new(0, 0, 40, 5);
     let mut buf = CellBuffer::new(Size { width: 40, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
@@ -79,21 +79,23 @@ fn window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape() {
     let row0 = row_text(&buf, 0);
     let row1 = row_text(&buf, 1);
     let row2 = row_text(&buf, 2);
-    assert!(row0.starts_with('\u{250f}'), "tab top-left corner: {row0:?}");
-    assert!(row1.contains("Puzzle 3D"), "title in tab: {row1:?}");
+    assert!(row0.starts_with('\u{250f}') && row0.ends_with('\u{2513}'), "the frame edge is plain: {row0:?}");
+    assert!(row1.starts_with('\u{2503}') && row1.ends_with('\u{2503}'), "the chip row stays inside the box walls: {row1:?}");
+    assert!(row1.contains("Puzzle 3D"), "title in chip: {row1:?}");
     assert!(!row1.contains('\u{2922}'), "a lone window has nothing to maximize against: {row1:?}");
-    assert!(!row1.contains('\u{29C9}'), "the per-tab new-window glyph is gone: {row1:?}");
     assert!(row1.contains('\u{2715}'), "close glyph: {row1:?}");
-    assert!(row2.contains('\u{253b}'), "tab closes onto the body: {row2:?}");
-    assert_eq!(row2.chars().last(), Some('\u{2513}'), "flat top-right at body: {row2:?}");
+    assert!(row0.contains('\u{2533}'), "the chip wall meets the frame edge: {row0:?}");
+    assert!(row2.starts_with('\u{2503}') && row2.ends_with('\u{2503}') && row2[3..row2.len() - 3].trim().is_empty(), "no hairline under the chip, the content continues: {row2:?}");
     assert_eq!(row_text(&buf, 4).chars().next(), Some('\u{2517}'));
     assert_eq!(row_text(&buf, 4).chars().last(), Some('\u{251b}'));
 
     let title_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == 'P').expect("title text rendered");
     let title = buf.get(title_x, 1).unwrap();
     assert_eq!(title.fg, theme.role(Role::Foreground));
-    assert_eq!(title.bg, theme.surface(Surface::Window), "the active tab retains the window surface");
-    assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::ActiveBase), "active tab cap uses its selected outline");
+    assert_eq!(title.bg, theme.surface(Surface::Pane), "the chip is the opaque capability fallback one elevation step above the content");
+    assert_eq!(buf.get(30, 2).unwrap().bg, theme.surface(Surface::Window));
+    assert_eq!(buf.get(30, 1).unwrap().bg, theme.surface(Surface::Window), "uncovered chip-row cells show the content surface");
+    assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::ActiveBase), "active chip and focused frame share the active outline");
     assert_eq!(buf.get(0, 4).unwrap().fg, theme.role(Role::ActiveBase), "focused body retains its separate active border");
 }
 
@@ -113,8 +115,10 @@ fn window_chrome_flattens_the_right_side_when_no_controls_tab_is_wanted() {
     assert!(row0.starts_with('\u{250c}'), "{row0:?}");
     assert!(row1.contains("Log"), "{row1:?}");
     assert!(!row1.contains('\u{2922}') && !row1.contains('\u{2715}'), "no action glyphs: {row1:?}");
-    assert!(row2.contains('\u{2534}'), "chip closes onto the body: {row2:?}");
-    assert_eq!(row2.chars().last(), Some('\u{2510}'), "flat right corner: {row2:?}");
+    assert!(row0.contains('\u{252c}'), "the chip wall meets the frame edge: {row0:?}");
+    assert_eq!(row0.chars().last(), Some('\u{2510}'), "the frame edge is plain: {row0:?}");
+    assert_eq!(row1.chars().last(), Some('\u{2502}'), "the box wall continues past the chip: {row1:?}");
+    assert_eq!(row2.chars().next(), Some('\u{2502}'), "{row2:?}");
     assert!(!row_text(&buf, 0).contains('\u{2922}') && !row_text(&buf, 1).contains('\u{2922}'), "no controls tab was requested");
 }
 
@@ -146,8 +150,8 @@ fn window_control_clicks_resolve_to_close_and_maximize_signals() {
     let close_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2715}').expect("close glyph rendered");
     assert_eq!(window.window_control_at(rect, Pos { x: maximize_x, y: 1 }), Some(WidgetSignal::WindowMaximize(0)));
     assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 1 }), Some(WidgetSignal::WindowClose(0)));
-    assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 0 }), None, "clicks on the tab's own top edge must not trigger a control");
-    assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 2 }), None, "clicks below the tab row must not trigger a control");
+    assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 0 }), None, "clicks on the frame edge must not trigger a control");
+    assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 2 }), None, "clicks below the chip row belong to the content");
 }
 
 #[test]
@@ -253,30 +257,37 @@ fn tui_dispatch_emits_window_close_signal_on_click() {
     assert_eq!(signals, vec![(window_id, WidgetSignal::WindowClose(0))]);
 }
 
-/// 🫸️ The cell rule is the pixel rule of `bands.cases.json` at 8 px per cell, and no window width leaves a sliver gap between the title chip and the controls.
+/// 🫥️ No window width leaves gap cells in the chip row: a cell is either covered by a chip, or it paints the content and hits the content.
 #[test]
-fn window_cap_row_chips_abut_instead_of_leaving_a_sliver_gap() {
+fn window_chip_row_leaves_uncovered_cells_to_the_content() {
     use semio_ui_tui_core::docking::WindowStackCorner;
-    use semio_ui_tui_frame::chrome::{chip_gap_cells_read_as_sliver, TabKind, CELL_WIDTH_PX};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧱️elements/🃏️CardStack/bands.cases.json")).unwrap();
-    for case in fixture["gaps"].as_array().unwrap() {
-        let px = case["gap"].as_f64().unwrap();
-        if px < 0.0 || px.fract() != 0.0 || px % f64::from(CELL_WIDTH_PX) != 0.0 { continue; }
-        assert_eq!(chip_gap_cells_read_as_sliver((px / f64::from(CELL_WIDTH_PX)) as u16), case["sliver"].as_bool().unwrap() && px > 0.0, "{case}");
-    }
-    let mut abutted = 0;
+    let theme = Theme::new(AppearanceName::Dark);
+    let mut uncovered = 0;
     for width in 14..90u16 {
         let rect = Rect::new(0, 0, width, 8);
         let mut w = WindowState::new("Main").with_stack_tabs(vec!["tab1".into(), "tab2".into()], 0);
         w.new_tab = true;
         let layout = window_chip_layout(&w, rect);
-        let Some(left) = layout.groups.iter().find(|g| g.corner == WindowStackCorner::TopLeft) else { continue };
-        let Some(controls) = layout.groups.iter().flat_map(|g| g.tabs.iter()).find(|tab| tab.kind == TabKind::Controls) else { continue };
-        let last = left.tabs.last().unwrap();
-        let wall = last.x + last.interior_width + 1;
-        let gap = controls.x.saturating_sub(wall);
-        assert!(controls.x <= wall || !chip_gap_cells_read_as_sliver(gap), "width {width}: sliver of {gap} cells");
-        abutted += u32::from(controls.x == wall);
+        let window = ChromeState::Window(Box::new(w));
+        let mut buf = CellBuffer::new(Size { width, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        window.paint(&theme, rect, &mut buf);
+        let y = layout.text_y(WindowStackCorner::TopLeft, rect);
+        let chips: Vec<Rect> = layout.groups.iter().flat_map(|group| group.tabs.iter().map(|tab| layout.chip_rect(group.corner, tab, rect)).collect::<Vec<_>>()).collect();
+        for chip in &chips {
+            assert!(chip.x >= rect.x && chip.x + chip.width <= rect.x + rect.width && chip.y > rect.y && chip.y + chip.height < rect.y + rect.height, "width {width}: chip {chip:?} lies inside the box");
+        }
+        for x in 1..width - 1 {
+            let pos = Pos { x, y };
+            let covered = chips.iter().any(|chip| chip.contains(pos));
+            assert_eq!(window.chip_at(rect, pos), covered, "width {width}: hit testing agrees with coverage at {x}");
+            if !covered {
+                uncovered += 1;
+                let cell = buf.get(x, y).unwrap();
+                assert_eq!((cell.ch, cell.bg), (' ', theme.surface(Surface::Window)), "width {width}: uncovered cell {x} paints the content");
+                assert_eq!(window.window_target(rect, pos), None);
+            }
+        }
+        assert!(!window.chip_at(rect, Pos { x: 2, y: 0 }) && !window.chip_at(rect, Pos { x: 2, y: 2 }), "only the chip row carries chips");
     }
-    assert!(abutted > 0, "the sweep never abutted");
+    assert!(uncovered > 0, "the sweep never left the content uncovered");
 }

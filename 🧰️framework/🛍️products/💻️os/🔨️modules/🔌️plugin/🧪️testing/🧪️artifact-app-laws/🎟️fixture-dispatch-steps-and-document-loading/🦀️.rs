@@ -79,7 +79,7 @@ pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Op
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         fixture_renew_turn(cx,fresh_fuel,fresh_grant)?;
         semio_framework_job::testkit::renew_payload_page_grant(cx);
-        result=app.handle_action(action,&mut original_args,&mut original_meta,identity,cx).await;
+        result=Box::pin(app.handle_action(action,&mut original_args,&mut original_meta,identity,cx)).await;
         if !matches!(result,Ok(None)){break}
         if let Err(failure)=app.maintenance_step(cx,close_loan){result=Err(failure.into());break}
     }
@@ -104,12 +104,17 @@ pub async fn dispatch_fixture_command<P:PluginApp>(app:&mut P,address:&semio_fra
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         fixture_renew_turn(cx,fresh_fuel,fresh_grant)?;
         semio_framework_job::testkit::renew_payload_page_grant(cx);
-        result=app.handle_command(address,&mut original_args,&mut original_fault,active_mode,&mut original_meta,identity,cx).await;
+        result=Box::pin(app.handle_command(address,&mut original_args,&mut original_fault,active_mode,&mut original_meta,identity,cx)).await;
         if !matches!(result,Ok(None)){break}
         if let Err(failure)=app.maintenance_step(cx,close_loan){result=Err(failure.into());break}
     }
+    let stalled = matches!(result, Ok(None)).then(|| format!(
+        "original command fixture dispatch exceeded its authored turn bound: fuel {}, deadline exceeded {}, cancelled {}, decoder {}, args {}, metadata {}, remaining grant {:?}, {}",
+        cx.fuel_remaining(), cx.deadline_exceeded(), cx.is_cancelled(), cx.native_receiving_identity().is_some(),
+        original_args.is_some(), original_meta.is_some(), cx.retained_grant(), app.typed_operation_diagnostic(),
+    ));
     close_fixture_action_inputs(original_args,original_fault,cx,close_loan);
-    result?.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original command fixture dispatch exceeded its authored turn bound").into())
+    result?.ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,stalled.expect("pending fixture dispatch recorded its original turn")).into())
 }
 
 /// 📤️ Exports one media port through the real original-caller loop: each pending turn funds one maintenance step under the authored close loan until the port answers.
@@ -380,6 +385,17 @@ where
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let archive = PluginApp::document_load_archive(app, files)?;
+    admit_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, archive, cx)?;
+    settle_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, identity, cx).await
+}
+
+/// 🤝️ Joins `app` to an existing document: the pair keeps its own identity (no live-store stamp), so peers of one shared document report one `document_identity()`.
+pub async fn join_document<A, M>(app: &mut VcsArtifactApp<A, M>, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure>
+where
+    A: ArtifactApp,
+    M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
+{
+    let archive = protocol::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr: files.spr.clone(), members: Vec::new() };
     admit_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, archive, cx)?;
     settle_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, identity, cx).await
 }

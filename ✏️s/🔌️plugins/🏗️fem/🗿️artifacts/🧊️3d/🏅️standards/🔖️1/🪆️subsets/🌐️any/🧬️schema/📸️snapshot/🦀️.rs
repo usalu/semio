@@ -25,6 +25,10 @@ pub use native::Fem3dReceiving;
 #[path="projection.rs"]mod projection;
 semio_s_fem_receiving::write_pack!(Fem3dSnapshot,Fem3dSnapshotValue,"fem.fem3d");
 #[path="identity-index.rs"]mod identity_index;
+#[cfg(feature = "testkit")]
+#[path="retiring.rs"]mod retiring;
+#[cfg(feature = "testkit")]
+pub use retiring::Fem3dSnapshotRetiring;
 pub use identity_index::{FemIdentityIndex,FemIdentityKind,FemIdentitySource};
 //#region 🔖️Snapshot
 /// 📸️ Persisted fem3d document snapshot (persistent fields of the artifact).

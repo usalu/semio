@@ -17,7 +17,7 @@ use semio_framework::{AppDefinition, IconName};
 use semio_framework::kernel::UiDirtyScope;
 use semio_os_config::opening_config::{UiPreferences, UserNamedLayout};
 use semio_os_config::opening_config::mutations::{UiPreferencesConfigMutation, set_named_layout};
-use semio_renderer_wgpu_dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockState, WindowSilhouette};
+use semio_renderer_wgpu_dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockState, WindowFrame};
 use semio_renderer_wgpu_shell_vocab::shell_chrome_string;
 use semio_ui_locale::Label;
 use semio_framework_value::{FromValue, ToValue};

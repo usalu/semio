@@ -39,8 +39,8 @@ fn selection_gesture_reproduces_language_neutral_cases() {
     }
 }
 
-fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("demo document parses")
+fn demo() -> semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring {
+    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("the bundled demo fixture parses"))
 }
 
 fn addressed(utility: &str) -> ViewModel {
@@ -89,7 +89,7 @@ fn marquee_hits_multiple_nodes_in_a_screen_rectangle() {
 async fn marquee_drag_commits_on_pointer_up() {
     let doc = demo();
     let history = HistoryView::empty();
-    let view = ArtifactView::new(&doc, &history);
+    let view = ArtifactView::new(&*doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
     let model = addressed(FEM2D_UTILITY_SELECT_MARQUEE);
     let camera = Viewport2d::default();

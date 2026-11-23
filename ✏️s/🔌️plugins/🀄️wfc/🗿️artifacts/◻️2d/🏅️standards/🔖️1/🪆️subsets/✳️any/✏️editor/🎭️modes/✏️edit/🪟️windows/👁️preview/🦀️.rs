@@ -218,10 +218,10 @@ pub fn preview_layers_json(document: &Wfc2dSnapshot, transient: &Wfc2dTransient,
 //#endregion 🔖️Paint
 
 //#region 🔖️Render
-pub fn render(document: &Wfc2dSnapshot, transient: &Wfc2dTransient, tool_run: Option<&ToolRunView>, camera_x: f64, camera_y: f64, zoom: f64) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Wfc2dSnapshot, transient: &Wfc2dTransient, tool_run: Option<&ToolRunView>, camera_x: f64, camera_y: f64, zoom: f64, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
     let fill = live_fill_payload(tool_run);
     let layers = preview_layers_json(document, transient, fill.as_ref());
-    scene_surface(WFC_2D_PREVIEW_SURFACE, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(camera_x, camera_y, zoom, layers))
+    scene_surface(WFC_2D_PREVIEW_SURFACE, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(camera_x, camera_y, zoom, layers), semio_plugin::surface_name(locale, "Preview", "Vorschau"), None)
 }
 //#endregion 🔖️Render
 

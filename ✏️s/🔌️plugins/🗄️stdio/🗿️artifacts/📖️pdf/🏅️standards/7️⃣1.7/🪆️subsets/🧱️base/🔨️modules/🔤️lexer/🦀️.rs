@@ -552,7 +552,7 @@ pub fn write_dict(out: &mut Vec<u8>, entries: &[PdfDictEntry]) {
             out.push(b' ');
         }
         write_name(out, &entry.key);
-        if !matches!(entry.value, PdfObject::Name(_) | PdfObject::Array(_) | PdfObject::Dict(_) | PdfObject::Str(_) | PdfObject::Stream { .. }) {
+        if !matches!(entry.value, PdfObject::Name(_) | PdfObject::Array(_) | PdfObject::Dict(_) | PdfObject::Str(_) | PdfObject::Text(_) | PdfObject::Date(_) | PdfObject::Stream { .. }) {
             out.push(b' ');
         }
         if let ("URI",PdfObject::Text(text))=(entry.key.as_str(),&entry.value) {write_string(out,text.as_bytes());}else{write_object(out, &entry.value);}

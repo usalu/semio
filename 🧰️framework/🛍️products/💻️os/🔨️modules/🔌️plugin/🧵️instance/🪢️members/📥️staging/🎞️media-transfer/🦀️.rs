@@ -85,6 +85,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             media=Some(natural_file_input_media(codec,media_type,data));
         }
         let consumption=self.import_artifact_media(port,&mut media,cx).await?;
+        if let (Some(Media{payload:MediaPayload::Intrinsic{value:DslValue::Bytes(data),..},..}),Some(source))=(media,artifact.as_mut()){source.data=data;}
         Ok(consumption)
     }
 

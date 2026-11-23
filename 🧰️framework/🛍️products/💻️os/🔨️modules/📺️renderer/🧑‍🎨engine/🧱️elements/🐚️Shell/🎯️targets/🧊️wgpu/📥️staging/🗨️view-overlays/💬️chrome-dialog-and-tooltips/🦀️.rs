@@ -3,6 +3,8 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
+use semio_renderer_wgpu_shell_input::context_menu_item_at_path;
+use super::staged_view_overlays__identity_and_types::{context_menu_paths_equal, context_menu_submenu_open};
 
 /// 🪟️ Salt of the dialog enter fade in the shared chrome motion registry.
 const CHROME_DIALOG_ENTER_SALT: u32 = 0x6469_616c;

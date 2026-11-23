@@ -64,7 +64,7 @@ Where each number lives, so a change is made once:
 | `c_Luft`, winter/summer `Δθ`, `Δx`, `Q̇_V,sens`, `Q̇_V,lat` | `🌡️heat-flow/🐍️.py` |
 | `η_WRG`, duct `v_m`, `A`, `r` | `⚙️mechanical/🐍️.py` |
 
-Standards cited per beat via the `_din_ref()` chip, built from the registry `🏗️authoring/📚️references`: DIN EN 12831-1:2017-09, DIN/TS 18599-1:2025-10,
+Standards cited per beat via the `reference_chip()` chip, built from the registry `🏗️authoring/📚️references`: DIN EN 12831-1:2017-09, DIN/TS 18599-1:2025-10,
 DIN 1946-4:2018-09, DIN 1946-6:2019-12, DIN EN 16798-1:2022-03, DIN EN 16798-3:2026-10, DIN EN 16798-7:2017-11, DIN EN 308:2022-04, VDI 2087:2006-12, DIN 4108-2:2026-05, VDI 2078:2015-06.
 The "Grenzwert nach Pettenkofer" (1000 ppm CO₂): Pettenkofer (1858), *Ueber den Luftwechsel in Wohngebäuden*, München: Cotta, and Bundesgesundheitsbl. 51 (2008) 1358–1369 (Ad-hoc-AG Innenraumrichtwerte, *Gesundheitliche Bewertung von Kohlendioxid in der Innenraumluft*); the DIN 1946-6:2019-12 attribution of the old corner label was dropped because only the guideline article gives the 1000 ppm value.
 

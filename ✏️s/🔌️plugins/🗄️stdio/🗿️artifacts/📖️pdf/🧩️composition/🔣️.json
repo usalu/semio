@@ -300,7 +300,8 @@
       "ports": {
         "react": 6260,
         "wgpu": 6360
-      }
+      },
+      "devContribution": "✏️s/🧑‍💻dev/🎭️variants/📘️stdio-pdf/🧬️schema/🔣️.json"
     },
     {
       "owner": "stdio-pdf",

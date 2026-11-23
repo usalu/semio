@@ -11,7 +11,7 @@ use semio_renderer_wgpu_shell_commands::{CommandState, resolved_execute_args};
 use semio_renderer_wgpu_shell_directory::DirectoryState;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_shell_directory::ShellInferenceRunner;
-use semio_renderer_wgpu_shell_doc_open::{OpenArtifactRelayTarget, OpeningState, request_file_open, wgpu_document_socket_surface};
+use semio_renderer_wgpu_shell_doc_open::{OpenArtifactRelayTarget, OpeningState, TaskManagerToolRun, TaskManagerToolRunControls, request_file_open, wgpu_document_socket_surface};
 #[cfg(target_arch = "wasm32")]
 use semio_renderer_wgpu_shell_doc_open::PendingFileOpen;
 use semio_renderer_wgpu_shell_dock::{ShellDockState, tutorial_resolve_gesture_point};
@@ -23,7 +23,6 @@ use semio_renderer_wgpu_shell_history::HistoryState;
 use semio_renderer_wgpu_shell_history::HostRouteFolder;
 use semio_renderer_wgpu_shell_input::ShellInputState;
 use semio_renderer_wgpu_shell_plugins::{PluginState, find_dialect_app, flatten_panel_tab_leaves};
-#[cfg(target_arch = "wasm32")]
 use semio_renderer_wgpu_shell_plugins::PendingExtensionInvocation;
 use semio_renderer_wgpu_shell_prefs::{ActiveSession, PrefsState, ReplayRefusalReasonV1, dsl_value_as_json, labels, with_chrome_prefs};
 use semio_renderer_wgpu_shell_session::{SessionCtx, app_owns_command, declare_boot_subphase, download_media_export, panel_state_from_view, program_space_index, resident_census, staged_arg_row, staged_number};

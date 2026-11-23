@@ -85,7 +85,7 @@ async fn deck_to_canvas_layers_treats_pdf_kind_as_non_image() {
 fn the_first_paint_camera_frames_every_layer_inside_the_narrowest_pane() {
     const PANE: f64 = 469.0;
     for deck in [crate::default_presentation_snapshot(), crate::demo_presentation_snapshot()] {
-        let node = render(&deck).expect("tile editor canvas");
+        let node = render(&deck, semio_plugin::Locale::En).expect("tile editor canvas");
         let semio_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
         let scene: Canvas2dScene = semio_ui_scene::decode(props).expect("packed canvas");
         assert!(scene.zoom > 0.0 && scene.zoom <= 1.0, "zoom {} must fit, never magnify", scene.zoom);

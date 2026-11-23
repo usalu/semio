@@ -75,15 +75,15 @@ fn refused_byte_birth(_: &mut semio_framework_value_native_owned::native_decodin
 
 #[test]
 fn actual_native_construction_forwards_null_attempt_work_without_inventing_physical_items(){
- let row:serde_json::Value=serde_json::from_str(fixture_text!("../../🏭️construction/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let law=&row["workLaw"];let controller:serde_json::Value=serde_json::from_str(include_str!("admission.json")).unwrap();let controller=&controller["controller"];let overhead_work=controller["scopeAdmissionWork"].as_u64().unwrap()+controller["sourceWork"].as_u64().unwrap()+controller["captureWork"].as_u64().unwrap();let overhead_items=controller["scopeAdmissionItems"].as_u64().unwrap()+controller["sourceItems"].as_u64().unwrap()+controller["captureItems"].as_u64().unwrap();let mut caller=OriginalJobFixtureCaller::admit(OperationId(7542),Generation(2),stock(),clock,u64::MAX,100000);let mut decoder=OriginalJobDecodeOwner::empty();let mut admission=OriginalConstructionAdmission::default();let mut output=None;let demand=OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:1,release_bytes:0,depth:1};caller.admit_return_table();bind(&mut caller,&mut decoder,&mut admission);
+ let row:serde_json::Value=serde_json::from_str(fixture_text!("../../🏭️construction/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let law=&row["workLaw"];let controller:serde_json::Value=serde_json::from_str(include_str!("admission.json")).unwrap();let controller=&controller["controller"];let candidate_work=controller["candidateWork"].as_u64().unwrap();let candidate_items=controller["candidateItems"].as_u64().unwrap();let mut caller=OriginalJobFixtureCaller::admit(OperationId(7542),Generation(2),stock(),clock,u64::MAX,100000);let mut decoder=OriginalJobDecodeOwner::empty();let mut admission=OriginalConstructionAdmission::default();let mut output=None;let demand=OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:1,release_bytes:0,depth:1};caller.admit_return_table();bind(&mut caller,&mut decoder,&mut admission);
  caller.turn_with_decoder(RetainedCloneGrant{maximum_items:0,..stock()},&mut decoder,|cx|{let before=cx.original_work_units_spent();assert_eq!(admit_original_construction(cx,&mut output,&mut admission,demand,1,actual_byte_birth)?,OriginalConstructionStatus::Pending);assert_eq!(cx.original_work_units_spent()-before,u128::from(law["deniedWork"].as_u64().unwrap()));assert!(output.is_none());Ok(())}).unwrap();
- for _ in 0..16{if caller.turn_with_decoder(stock(),&mut decoder,|cx|{let before=cx.original_work_units_spent();let physical=cx.retained_progress();let(result,heap)=observe_heap(||admit_original_construction(cx,&mut output,&mut admission,demand,1,refused_byte_birth));let result=result?;if result==OriginalConstructionStatus::Pending{return Ok(false)}let attempts=REFUSED_ATTEMPTS.with(|cell|cell.take());assert_eq!(attempts,1);assert_eq!(result,OriginalConstructionStatus::Failed);assert!(admission.is_failed());assert_eq!(cx.original_work_units_spent()-before,u128::from(law["attemptWork"].as_u64().unwrap()+overhead_work));assert_eq!(cx.retained_progress().copied_items-physical.copied_items,(law["failedItems"].as_u64().unwrap()+overhead_items)as usize);assert!(output.is_none());assert_eq!((heap.0,heap.1),(0,0));Ok(true)}).unwrap(){break}}
+ let(mut work,mut items)=(0u128,0usize);for _ in 0..16{if caller.turn_with_decoder(stock(),&mut decoder,|cx|{let before=cx.original_work_units_spent();let physical=cx.retained_progress();let(result,heap)=observe_heap(||admit_original_construction(cx,&mut output,&mut admission,demand,1,refused_byte_birth));let result=result?;work+=cx.original_work_units_spent()-before;items+=cx.retained_progress().copied_items-physical.copied_items;if result==OriginalConstructionStatus::Pending{return Ok(false)}let attempts=REFUSED_ATTEMPTS.with(|cell|cell.take());assert_eq!(attempts,1);assert_eq!(result,OriginalConstructionStatus::Failed);assert!(admission.is_failed());assert_eq!(work,u128::from(law["attemptWork"].as_u64().unwrap()+candidate_work));assert_eq!(items,(law["failedItems"].as_u64().unwrap()+candidate_items)as usize);assert!(output.is_none());assert_eq!((heap.0,heap.1),(0,0));Ok(true)}).unwrap(){break}}
  let mut failure=None;caller.turn(stock(),|cx|{assert!(admission.take_failure_into_step(&mut failure,cx)?);Ok(())}).unwrap();retire(&mut caller,&mut failure);close_admission(&mut caller,&mut admission);
  // Measure both physical attempts with a fresh scope and an already resident return table.
  finish(&mut caller,&mut decoder);
  decoder=OriginalJobDecodeOwner::empty();
  bind(&mut caller,&mut decoder,&mut admission);
- caller.turn_with_decoder(stock(),&mut decoder,|cx|{let before=cx.original_work_units_spent();let physical=cx.retained_progress();let(result,heap)=observe_heap(||admit_original_construction(cx,&mut output,&mut admission,demand,1,actual_byte_birth));assert_eq!(result?,OriginalConstructionStatus::Pending);assert_eq!(cx.receiving_issued_grant(),None,"a born candidate returns its physical scope before metadata settlement");assert_eq!(cx.receiving_child_progress(),RetainedCloneProgress::default());assert_eq!(cx.original_work_units_spent()-before,u128::from(law["attemptWork"].as_u64().unwrap()+overhead_work+controller["candidateWork"].as_u64().unwrap()));let child_items=(law["successItems"].as_u64().unwrap()+controller["candidateItems"].as_u64().unwrap())as usize;assert_eq!(admission.child.as_ref().unwrap().as_ref().unwrap().copied_items,child_items);assert_eq!(cx.retained_progress().copied_items-physical.copied_items,child_items+overhead_items as usize);assert_eq!((heap.0,heap.1),(1,0));Ok(())}).unwrap();assert_eq!(serde_json::to_value(**output.as_ref().unwrap()).unwrap(),law["value"]);
+ caller.turn_with_decoder(stock(),&mut decoder,|cx|{let before=cx.original_work_units_spent();let physical=cx.retained_progress();let(result,heap)=observe_heap(||admit_original_construction(cx,&mut output,&mut admission,demand,1,actual_byte_birth));assert_eq!(result?,OriginalConstructionStatus::Pending);assert_eq!(cx.receiving_issued_grant(),None,"a born candidate returns its physical scope before metadata settlement");assert_eq!(cx.receiving_child_progress(),RetainedCloneProgress::default());assert_eq!(cx.original_work_units_spent()-before,u128::from(law["attemptWork"].as_u64().unwrap()+candidate_work+controller["candidateWork"].as_u64().unwrap()));let child_items=(law["successItems"].as_u64().unwrap()+controller["candidateItems"].as_u64().unwrap())as usize;assert_eq!(admission.child.as_ref().unwrap().as_ref().unwrap().copied_items,child_items);assert_eq!(cx.retained_progress().copied_items-physical.copied_items,child_items+candidate_items as usize);assert_eq!((heap.0,heap.1),(1,0));Ok(())}).unwrap();assert_eq!(serde_json::to_value(**output.as_ref().unwrap()).unwrap(),law["value"]);
  caller.turn(stock(),|cx|{assert_eq!(admit_original_construction(cx,&mut output,&mut admission,demand,1,|_,_|panic!("ready attempt must not rerun"))?,OriginalConstructionStatus::Ready);Ok(())}).unwrap();
  retire(&mut caller,&mut output);close_admission(&mut caller,&mut admission);finish(&mut caller,&mut decoder);caller.retire(stock());
 }
@@ -280,20 +280,35 @@ fn ready_never_escapes_an_unfinished_native_construction_receipt() {
         let (mut caller, mut decoder, mut admission) = prepared(9100 + reads as u64);
         let mut slot = None::<Box<u8>>;
         let ran = std::cell::Cell::new(false);
-        CLOCK_READS_LEFT.with(|left| left.set(reads));
-        let cut = caller.refreshed_turn_with_decoder(quote_grant(quote), &mut decoder, |cx| {
-            admit_original_construction(cx, &mut slot, &mut admission, demand, 1, |_, actual| valued_byte_birth(value, &ran, actual))
-        });
-        CLOCK_READS_LEFT.with(|left| left.set(usize::MAX));
+        let mut cut = Ok(());
+        for _ in 0..16 {
+            CLOCK_READS_LEFT.with(|left| left.set(reads));
+            let turn = caller.refreshed_turn_with_decoder(quote_grant(quote), &mut decoder, |cx| {
+                admit_original_construction(cx, &mut slot, &mut admission, demand, 1, |_, actual| valued_byte_birth(value, &ran, actual))
+            });
+            CLOCK_READS_LEFT.with(|left| left.set(usize::MAX));
+            if turn.is_err() || admission.is_failed() || slot.is_some() {
+                cut = turn.map(|_| ());
+                break;
+            }
+        }
+        if cut.is_ok() && admission.is_failed() && slot.is_some() {
+            exercised += 1;
+            let mut failure = None;
+            caller.turn(stock(), |cx| { assert!(admission.take_failure_into_step(&mut failure, cx)?); Ok(()) }).unwrap();
+            retire(&mut caller, &mut slot);
+            retire(&mut caller, &mut failure);
+            close_admission(&mut caller, &mut admission);
+            finish(&mut caller, &mut decoder);
+            caller.retire(stock());
+            continue;
+        }
         if cut.is_err() || admission.is_failed() || slot.is_none() {
             std::mem::forget((caller, decoder, admission, slot));
             continue;
         }
         let original = **slot.as_ref().unwrap();
         assert_eq!(original, value);
-        if admission.pending_recovery().is_some() {
-            exercised += 1;
-        }
         let mut settled = false;
         for _ in 0..32 {
             let status = caller.refreshed_turn_with_decoder(stock(), &mut decoder, |cx| {
@@ -315,5 +330,5 @@ fn ready_never_escapes_an_unfinished_native_construction_receipt() {
         finish(&mut caller, &mut decoder);
         caller.retire(stock());
     }
-    assert!(exercised > 0, "the clock sweep must interrupt a born candidate before receipt closure");
+    assert!(exercised > 0, "the clock sweep must cancel a born candidate before receipt closure");
 }

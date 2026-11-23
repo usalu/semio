@@ -1,6 +1,6 @@
 //! 🧪️ Retained source receiving observes the same fifteen independently authored graph populations.
 use super::{overlay::*, receive::*};
-use semio_plugin::app_testing::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 #[test]
@@ -46,9 +46,9 @@ fn original_overlay_and_semantic_receiving_match_every_authoring_oracle_graph() 
                 .turn(grant, |cx| {
                     cx.with_original_retirement(|cx| {
                         if !receiver.terminal_is_empty() {
-                            semio_framework_job::close_original_retained_step(cx, receiver.close_demands(4096)?, |loan| receiver.close_step(loan))
+                            semio_framework_job::close_original_retained_effect_step(cx, receiver.close_demands(4096)?, |effect| receiver.close_step(effect))
                         } else {
-                            semio_framework_job::close_original_retained_step(cx, overlay.close_demands(4096)?, |loan| overlay.close_step(loan))
+                            semio_framework_job::close_original_retained_effect_step(cx, overlay.close_demands(4096)?, |effect| overlay.close_step(effect))
                         }
                     })
                 })

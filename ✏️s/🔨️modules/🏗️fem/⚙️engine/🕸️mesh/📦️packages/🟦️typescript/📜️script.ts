@@ -23,7 +23,7 @@ class SurfaceContractScript extends BundleScript {
 class NeutralSurfaceScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw new Error("Neutral surface oracle accepts no implicit selection");
-  const native=join(this.root,"../🦀️rust");
+  const native=join(this.root,"../../🧬️derived/📦️packages/🦀️rust");
   await withScratchDirectoryV1("fem-neutral-surface",async directory=>{
    const results=join(directory,"neutral.json");
    await runRepositoryCommand(this.invocation,"cargo",["test","--offline","--manifest-path",join(native,"Cargo.toml"),"--lib","surface_tests::complete_portable_region_surface_corpus","--","--exact","--nocapture"],native,"fem-mesh-surface-test",nativeCommandPolicyV1({maximumBytes:134217728,maximumLines:65536}),{env:{...process.env,SEMIO_FEM_NEUTRAL_RESULTS:results}});

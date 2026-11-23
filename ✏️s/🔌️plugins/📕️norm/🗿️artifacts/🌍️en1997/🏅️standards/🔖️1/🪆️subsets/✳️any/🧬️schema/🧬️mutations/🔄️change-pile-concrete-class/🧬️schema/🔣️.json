@@ -55,7 +55,49 @@
         "widget": "select",
         "role": "value",
         "group": "value",
-        "order": 20
+        "order": 20,
+        "options": {
+          "notGiven": {
+            "en": "Not given (explicit modulus or none)",
+            "de": "Nicht angegeben (expliziter Modul oder keiner)"
+          },
+          "c1215": {
+            "en": "C12/15",
+            "de": "C12/15"
+          },
+          "c1620": {
+            "en": "C16/20",
+            "de": "C16/20"
+          },
+          "c2025": {
+            "en": "C20/25",
+            "de": "C20/25"
+          },
+          "c2530": {
+            "en": "C25/30",
+            "de": "C25/30"
+          },
+          "c3037": {
+            "en": "C30/37",
+            "de": "C30/37"
+          },
+          "c3545": {
+            "en": "C35/45",
+            "de": "C35/45"
+          },
+          "c4050": {
+            "en": "C40/50",
+            "de": "C40/50"
+          },
+          "c4555": {
+            "en": "C45/55",
+            "de": "C45/55"
+          },
+          "c5060": {
+            "en": "C50/60",
+            "de": "C50/60"
+          }
+        }
       }
     }
   }

@@ -121,6 +121,7 @@ pub fn render_body(
     transient: &Wfc2dTransient,
     tool_run: Option<&semio_plugin::ToolRunView>,
     revision: Option<[u8;32]>,
+    locale: semio_ui_locale::Locale,
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let empty = Wfc2dTransient::default();
     let transient = if crate::editor::wfc2d::transient::source_matches(&transient.source_revision, revision.as_ref()) { transient } else { &empty };
@@ -128,9 +129,9 @@ pub fn render_body(
     match body_key {
         graph::WFC_GRAPH_BODY => {
             let camera = graph::GraphCamera { x: config.camera_x, y: config.camera_y, zoom: config.camera_zoom };
-            graph::render(&Wfc2dGraphView(document), camera, &[]).map(semio_plugin::built_to_component_tree)
+            graph::render(&Wfc2dGraphView(document), camera, &[], locale).map(semio_plugin::built_to_component_tree)
         }
-        preview::WFC_2D_PREVIEW_BODY => preview::render(document, transient, tool_run, config.camera_x, config.camera_y, config.camera_zoom).map(semio_plugin::built_to_component_tree),
+        preview::WFC_2D_PREVIEW_BODY => preview::render(document, transient, tool_run, config.camera_x, config.camera_y, config.camera_zoom, locale).map(semio_plugin::built_to_component_tree),
         _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
     }
 }
@@ -395,8 +396,8 @@ impl ArtifactEditor for Wfc2dEditor {
     /// transient lane at all, so this path can only paint what the DOCUMENT says (authored pins).
     /// Every host request goes through `render_with_request_context` below, which does carry the
     /// lane; this exists for callers that have no request context to offer.
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-        render_body(body_key, doc.snapshot, cfg.snapshot, &Wfc2dTransient::default(), None, None)
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+        render_body(body_key, doc.snapshot, cfg.snapshot, &Wfc2dTransient::default(), None, None, view_state.locale)
     }
 
     /// 🫧️ The HOST-FACING render: the framework hands the app-local transient store in here, so this
@@ -408,13 +409,13 @@ impl ArtifactEditor for Wfc2dEditor {
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &semio_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         transient: &semio_plugin::TransientView<'_, Self::Transient>,
         _interaction: &semio_plugin::app::InteractionView<'_>,
         cx:&mut semio_plugin::StepContext<'_>,
     ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
-        render_with_transient(body_key, doc, cfg, transient)
+        render_with_transient(body_key, doc, cfg, transient, view_state.locale)
 
         })();
         rendered.map(Some).map_err(Into::into)
@@ -430,7 +431,8 @@ pub fn render_with_transient(
     doc: &ArtifactView<'_, Wfc2dSnapshot>,
     cfg: &ConfigView<'_, Wfc2dConfig>,
     transient: &semio_plugin::TransientView<'_, Wfc2dTransient>,
+    locale: semio_ui_locale::Locale,
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-    render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot, doc.tool_run(), doc.render_operation_ref().map(|operation| operation.canonical_base_revision))
+    render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot, doc.tool_run(), doc.render_operation_ref().map(|operation| operation.canonical_base_revision), locale)
 }
 //#endregion 🔖️Editor

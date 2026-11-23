@@ -24,11 +24,11 @@ const workerSource = {
     let reserved = 0, retired = 0;
     export const frameTurns = {request: () => {}};
     export const runtime = {
-      pollAssetRequest: () => JSON.stringify({available: true, url: globalThis.asset, world: true, responseByteCapacity: ASSET_RESPONSE_BYTE_CAPACITY, pageByteCapacity: ASSET_RESPONSE_PAGE_BYTES}),
+      pollAssetRequest: () => JSON.stringify({available: true, url: globalThis.asset, world: true, transportRetry: true, responseByteCapacity: ASSET_RESPONSE_BYTE_CAPACITY, pageByteCapacity: ASSET_RESPONSE_PAGE_BYTES}),
       assetResponseCurrent: () => true,
       reserveAssetResponse: bytes => { if (reserved) throw Error("double reservation"); reserved = bytes; return true; },
       pushAssetResponsePage: page => { pages.push(page); self.postMessage({kind: "page"}); },
-      resetWorldAssetResponseStep: () => {
+      resetAssetResponseStep: () => {
         if (pages.length) { pages.pop(); retired++; }
         if (pages.length) return false;
         reserved = 0;

@@ -79,8 +79,8 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Real `Model -> World3d surface`, with neither picking nor a results overlay — the read-only
 /// projection of the same geometry the editor's twin renders.
-pub fn render(model: &impl crate::scene::EnergySceneModel) -> UiAssemblyResult<BuiltNode> {
-    render_with_camera(model, None)
+pub fn render(model: &impl crate::scene::EnergySceneModel, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
+    render_with_camera(model, None, locale)
 }
 
 /// 🎥️ The same render, plus the addressed window's RETAINED orbit pose when it has one
@@ -88,12 +88,12 @@ pub fn render(model: &impl crate::scene::EnergySceneModel) -> UiAssemblyResult<B
 /// once; `Some` republishes exactly the pose the host last sent, which
 /// `shouldReattachWorldViewportCamera` recognizes as its own echo and therefore does NOT reattach —
 /// so a re-render never yanks a camera the user just moved.
-pub fn render_with_camera(model: &impl crate::scene::EnergySceneModel, camera: Option<&config::EnergyModelViewerWindowConfig>) -> UiAssemblyResult<BuiltNode> {
+pub fn render_with_camera(model: &impl crate::scene::EnergySceneModel, camera: Option<&config::EnergyModelViewerWindowConfig>, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let mut scene = energy_model_scene(model, &EnergySceneStyle::default(), None);
     if let Some(window) = camera {
         scene.camera_json = window.camera.scene_camera_json();
     }
-    semio_plugin::scene_surface(BODY_KEY, SemanticSurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(BODY_KEY, SemanticSurfaceKind::World3d, &scene, semio_plugin::surface_name(locale, "Model view", "Modellansicht"), None)
 }
 //#endregion 🔖️Render
 

@@ -14,7 +14,7 @@ export type OffloadToolV1=Readonly<{path:string;readable:readonly string[]}>;
 export type OffloadWorkerOfferV1=Readonly<{tools:Readonly<Record<string,OffloadToolV1>>;properties:readonly RemoteExecutionPropertyV1[];toolchain:OffloadToolchainV1}>;
 
 const sdkMemo=new Map<string,string|undefined>();
-/** 🍎️ The identity of the macOS SDK that a link on this machine uses (the name of the SDK directory, as the unit key sees it): `SDKROOT` when set, else the SDK `xcrun` reports; `undefined` off macOS or when none is found. Memoised per `SDKROOT`. */
+/** 🍎️ The identity of the macOS SDK that a link on this machine uses (its declared version, `macosx27.2`, from the one function the unit key uses): `SDKROOT` when set, else the SDK `xcrun` reports; `undefined` off macOS or when none is found. Memoised per `SDKROOT`. */
 export function offloadSdkIdentityV1(environment:Environment=process.env,platform:string=process.platform):string|undefined{
  if(platform!=="darwin")return undefined;
  const given=environment.SDKROOT??"";

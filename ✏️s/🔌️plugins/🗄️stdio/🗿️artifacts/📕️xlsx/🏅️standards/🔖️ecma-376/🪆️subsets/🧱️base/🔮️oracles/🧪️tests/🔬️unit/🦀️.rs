@@ -153,6 +153,20 @@ fn a_referenced_shared_string_is_refused_and_the_arranged_entry_is_removable() {
     assert_eq!(shared_strings::read_pool(&removed).unwrap(), shared_strings::read_pool(&input).unwrap());
 }
 
+/// 🔭️ An entry no cell references is invisible to calamine. openpyxl's string-table reader sees it, and this reader must
+/// report the same pool, including that entry. The package and the pool are committed by `🐍️.py`.
+#[test]
+fn the_pool_reader_matches_openpyxl_on_an_unreferenced_entry() {
+    const PACKAGE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🕳️unreferenced-shared-string/📦️package.xlsx");
+    let witness = semio_repo_test_host::parse_json(include_str!("../../../🧪️tests/🧫️fixtures/🕳️unreferenced-shared-string/🔣️.json")).expect("the openpyxl witness is JSON");
+    let expected: Vec<String> = witness.array("sharedStrings").into_iter().map(|item| match item { Json::String(text) => text, other => panic!("a pool entry is a string, got {other:?}") }).collect();
+    let pool = shared_strings::read_pool(PACKAGE).unwrap();
+    assert_eq!(pool, expected, "the independent pool reader and openpyxl.reader.strings.read_string_table diverge");
+    let index = expected.len() - 1;
+    assert_eq!(pool[index], witness.str("unreferencedValue"));
+    assert!(!shared_strings::is_referenced(PACKAGE, index).unwrap(), "the witnessed entry is unreferenced");
+}
+
 fn object(entries: Vec<(&str, Json)>) -> Json {
     Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
 }

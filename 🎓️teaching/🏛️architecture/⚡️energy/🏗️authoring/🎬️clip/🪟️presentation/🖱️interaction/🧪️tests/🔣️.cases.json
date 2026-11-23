@@ -333,50 +333,15 @@
       ]
     },
     {
-      "id": "transparent-window-cap-gap",
+      "id": "window-cap-gap-hits-content",
       "point": [
         300,
         161.2
       ],
-      "outlines": {
-        "window": [
-          [
-            40,
-            150
-          ],
-          [
-            200,
-            150
-          ],
-          [
-            200,
-            172.4
-          ],
-          [
-            497.6,
-            172.4
-          ],
-          [
-            497.6,
-            150
-          ],
-          [
-            520,
-            150
-          ],
-          [
-            520,
-            422
-          ],
-          [
-            40,
-            422
-          ]
-        ]
-      },
       "path": [
         "app",
-        "canvas"
+        "canvas",
+        "window"
       ]
     }
   ],

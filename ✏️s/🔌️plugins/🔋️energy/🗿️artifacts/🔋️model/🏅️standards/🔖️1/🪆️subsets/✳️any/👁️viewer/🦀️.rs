@@ -274,7 +274,7 @@ impl ArtifactViewer for EnergyModelViewer {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         let node = match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot, view_state.locale)?,
-            zones::BODY_KEY => zones::render(doc.snapshot)?,
+            zones::BODY_KEY => zones::render(doc.snapshot, view_state.locale)?,
             simulation::BODY_KEY => simulation::render(doc.snapshot.model.read().run_period),
             model_window::BODY_KEY => model_window::render_with_camera(&doc.snapshot.model.read(), model_window::config::current(cfg))?,
             _ => {

@@ -2,7 +2,7 @@ import {lstat,mkdir,open,readdir,readFile,rename,stat,unlink,writeFile} from "no
 import {basename,join} from "node:path";
 import type {FileHandle} from "node:fs/promises";
 import {compactCasShardV1,foldCasShardV1,openCasShardViewV1,type CasShardViewV1} from "../📒️ledger/🟦️.ts";
-import {casPinDirectoryV1,readCasPinsV1} from "../📌️pins/🟦️.ts";
+import {casPinDirectoryV1,compactCasTransientsV1,readCasPinsV1,readCasTransientsV1,stampCasTransientsV1} from "../📌️pins/🟦️.ts";
 import {casPartitionNeedBytesV1,casPartitionUsedFractionV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {CAS_GRAPH_CLOSURE_AREA_V1,CAS_POLICY_V1,casTextV1,requireCasPolicyV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
@@ -17,7 +17,7 @@ export type CasAreaSourceV1=Readonly<{id:string;directory:string;skip?:RegExp}>;
 export type CasProgressV1=Readonly<{stage:"scan"|"evict"|"compact";entries:number;usedBytes:number;freedBytes:number}>;
 /** 🔌️ Everything a collection needs from its host; `partition` is the partition that holds the store as measured by the caller (none: only the cap is enforced). */
 export type CasCollectOptionsV1=Readonly<{
- root:string;policy?:CasPolicyV1;areas?:readonly CasAreaSourceV1[];externalBytes?:number;partition?:CasPartitionV1;signal?:AbortSignal;dryRun?:boolean;
+ root:string;policy?:CasPolicyV1;incremental?:boolean;areas?:readonly CasAreaSourceV1[];externalBytes?:number;partition?:CasPartitionV1;signal?:AbortSignal;dryRun?:boolean;
  now?():number;pid?:number;progress?(event:CasProgressV1):void|Promise<void>;
  automaticScope?():Promise<string|undefined>;
  completedAutomatic?(hint:CasUsageHintV1):void;
@@ -34,7 +34,7 @@ const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(er
 const sorted=(names:string[]):string[]=>names.sort((left,right)=>left<right?-1:left>right?1:0);
 const TEMPORARY=/(^\.)|(\.tmp$)/u;
 
-type Entry={area:string;path:string;size:number;access:number;protectedEntry:boolean;shard?:string;hash?:string;pin?:string};
+type Entry={area:string;path:string;size:number;access:number;protectedEntry:boolean;expired?:boolean;shard?:string;hash?:string;pin?:string};
 const pinOfFileV1=(path:string):string|undefined=>{const name=basename(path);return /^[0-9a-f]{64}\.json$/u.test(name)?name.slice(0,64):undefined;};
 
 const fullDisk=(error:unknown):boolean=>["ENOSPC","EDQUOT"].includes((error as NodeJS.ErrnoException)?.code??"");
@@ -73,7 +73,7 @@ async function* walk(directory:string,skip:RegExp,signal?:AbortSignal):AsyncGene
  }
 }
 
-async function* entries(options:CasCollectOptionsV1,policy:CasPolicyV1,pins:ReadonlyMap<string,string>,nowMs:number,views:Map<string,CasShardViewV1>):AsyncGenerator<Entry>{
+async function* entries(options:CasCollectOptionsV1,policy:CasPolicyV1,pins:ReadonlyMap<string,string>,nowMs:number,views:Map<string,CasShardViewV1>,transients:ReadonlyMap<string,number>=new Map()):AsyncGenerator<Entry>{
  const objects=join(options.root,"v1","o");let shards:string[];
  try{shards=sorted(await readdir(objects));}catch{shards=[];}
  for(const shard of shards){
@@ -83,7 +83,8 @@ async function* entries(options:CasCollectOptionsV1,policy:CasPolicyV1,pins:Read
    const path=join(objects,shard,name),hash=shard+name;let info;try{info=await lstat(path);}catch{continue;}
    if(!info.isFile())continue;
    const access=Math.max(info.mtimeMs,ledger.get(hash)??0);
-   yield{area:STORE,path,size:info.size,access,protectedEntry:pins.has(hash)||info.nlink>1||nowMs-access<policy.minAgeMs,shard,hash};
+   const until=transients.get(hash),leased=until!==undefined&&until>nowMs,expired=until!==undefined&&until<=nowMs&&access<=until&&!pins.has(hash)&&info.nlink<=1;
+   yield{area:STORE,path,size:info.size,access,protectedEntry:pins.has(hash)||info.nlink>1||leased||(!expired&&nowMs-access<policy.minAgeMs),expired,shard,hash};
   }
  }
  for(const area of options.areas??[]){
@@ -122,11 +123,11 @@ export async function collectCasV1(options:CasCollectOptionsV1):Promise<CasColle
   };
   const started=now(),partitionNeed=casPartitionNeedBytesV1(options.partition,policy),partition=options.partition?Object.freeze({partition:options.partition.partition,usedFraction:casPartitionUsedFractionV1(options.partition),needBytes:partitionNeed}):undefined,lockless=lock.lockless?{lockless:true as const}:{};
   const bounds=[{id:STORE,capBytes:null,maxAgeMs:null},...(options.areas??[]).map(area=>{const row=policy.areas.find(candidate=>candidate.id===area.id);return{id:area.id,capBytes:row?.capBytes??null,maxAgeMs:row?.maxAgeMs??null};})];
-  const planner=createCasPlannerV1({policy,areas:bounds,externalBytes:options.externalBytes??0,nowMs:started,partitionNeedBytes:partitionNeed});
-  let pins=await readCasPinsV1(options.root,started);
+  const planner=createCasPlannerV1({policy,incremental:options.incremental===true,areas:bounds,externalBytes:options.externalBytes??0,nowMs:started,partitionNeedBytes:partitionNeed});
+  let pins=await readCasPinsV1(options.root,started),transients=await readCasTransientsV1(options.root);
   try{
-   for await(const entry of entries(options,policy,pins,started,views)){
-    planner.add(entry.area,entry.access,entry.size,entry.protectedEntry);scanned++;used+=entry.size;
+   for await(const entry of entries(options,policy,pins,started,views,transients)){
+    planner.add(entry.area,entry.access,entry.size,entry.protectedEntry,entry.expired);scanned++;used+=entry.size;
     if(entry.area===CAS_GRAPH_CLOSURE_AREA_V1)graphClosureBytes+=entry.size;
     if(scanned%policy.checkEvery===0)await report("scan");
    }
@@ -138,17 +139,18 @@ export async function collectCasV1(options:CasCollectOptionsV1):Promise<CasColle
    await compactAll(options,policy,started,views);await finishUsage(totals.keptBytes-(options.externalBytes??0));
    return{status:"idle",partial:false,dryRun:options.dryRun===true,scanned,evicted,freedBytes:freed,busy,skipped,totals,byReason,...graphClosures,...lockless,...partition?{partition}:{}};
   }
-  const evaluator=plan.evaluator();pins=await readCasPinsV1(options.root,now());let currentShard:string|undefined,view:CasShardViewV1|undefined,pinStamp=(await stat(casPinDirectoryV1(options.root)).catch(()=>undefined))?.mtimeMs??0;
+  const evaluator=plan.evaluator();pins=await readCasPinsV1(options.root,now());let transientStamp=await stampCasTransientsV1(options.root);transients=await readCasTransientsV1(options.root);let currentShard:string|undefined,view:CasShardViewV1|undefined,pinStamp=(await stat(casPinDirectoryV1(options.root)).catch(()=>undefined))?.mtimeMs??0;
   try{
-   for await(const entry of entries(options,policy,pins,started,views)){
-    if(entry.shard!==currentShard){currentShard=entry.shard;pins=await readCasPinsV1(options.root,now());view=entry.shard?views.get(entry.shard):undefined;}
+   for await(const entry of entries(options,policy,pins,started,views,transients)){
+    if(entry.shard!==currentShard){currentShard=entry.shard;pins=await readCasPinsV1(options.root,now());{const next=await stampCasTransientsV1(options.root);if(next!==transientStamp){transientStamp=next;transients=await readCasTransientsV1(options.root);}}view=entry.shard?views.get(entry.shard):undefined;}
     if(entry.protectedEntry)continue;
-    const reason=evaluator.decide(entry.area,entry.access,entry.size);
+    const reason=evaluator.decide(entry.area,entry.access,entry.size,entry.expired);
     if(reason===null)continue;
     if(options.dryRun){evicted++;freed+=entry.size;byReason[reason]++;continue;}
     await options.beforeEvict?.(entry.path);
     await view?.refresh();const stamp=(await stat(casPinDirectoryV1(options.root)).catch(()=>undefined))?.mtimeMs??0;if(stamp!==pinStamp){pinStamp=stamp;pins=await readCasPinsV1(options.root,now());}const fresh=entry.hash?Math.max((await lstat(entry.path).catch(()=>undefined))?.mtimeMs??-1,view?.latest(entry.hash)??0):(await lstat(entry.path).catch(()=>undefined))?.atimeMs??-1;
     if(fresh<0)continue;
+    if(entry.hash!==undefined&&(transients.get(entry.hash)??0)>now()){skipped++;continue;}
     if(fresh>entry.access||fresh>=started||((entry.hash??entry.pin)!==undefined&&pins.has((entry.hash??entry.pin)!))){skipped++;continue;}
     try{await unlink(entry.path);evicted++;freed+=entry.size;used-=entry.size;byReason[reason]++;}
     catch(error){const code=(error as NodeJS.ErrnoException).code;if(code==="ENOENT")continue;if(code==="EBUSY"||code==="EPERM"||code==="EACCES"){busy++;continue;}throw error;}
@@ -163,6 +165,7 @@ export async function collectCasV1(options:CasCollectOptionsV1):Promise<CasColle
 
 async function compactAll(options:CasCollectOptionsV1,policy:CasPolicyV1,nowMs:number,views:ReadonlyMap<string,CasShardViewV1>):Promise<void>{
  if(options.dryRun)return;
+ await compactCasTransientsV1(options.root,policy,nowMs,digest=>lstat(join(options.root,"v1","o",digest.slice(0,policy.fanOutHexLength),digest.slice(policy.fanOutHexLength))).then(()=>true,()=>false)).catch(()=>0);
  const objects=join(options.root,"v1","o");let shards:string[];try{shards=sorted(await readdir(objects));}catch{return;}
  for(const shard of shards){
   options.signal?.throwIfAborted();let names:string[];try{names=await readdir(join(objects,shard));}catch{continue;}

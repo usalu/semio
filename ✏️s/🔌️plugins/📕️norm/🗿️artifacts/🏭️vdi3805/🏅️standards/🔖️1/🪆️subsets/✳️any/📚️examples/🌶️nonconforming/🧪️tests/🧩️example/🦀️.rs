@@ -29,3 +29,19 @@ async fn inference_default_law() {
     use protocol::Inference;
     assert_eq!(Vdi3805Inference::infer(&Vdi3805Snapshot::default()).expect("valid materialized inference fixture"), Vdi3805Inference::default());
 }
+
+#[semio_framework_async_macros::async_test]
+async fn primary_asset_fails_named_checks_with_remedies() {
+    use semio_s_artifact_norm_vdi3805_inferences::evaluate;
+    use semio_s_artifact_norm_vdi3805_io::text::snapshot::decode_vdi3805_dsl;
+    let report = evaluate(&decode_vdi3805_dsl(super::PRIMARY_TEXT).expect("nonconforming dsl"));
+    let fails: Vec<_> = report.failing().collect();
+    assert!(fails.len() >= 5, "expected >=5 fails, got {}", fails.len());
+    for fail in &fails {
+        assert!(!fail.remedies.is_empty(), "fail {} must carry a remedy", fail.id);
+    }
+    assert!(fails.iter().any(|c| c.id.contains("dn")));
+    assert!(fails.iter().any(|c| c.id.contains("kvs")));
+    assert!(fails.iter().any(|c| c.id.contains("structure")));
+    assert!(fails.iter().any(|c| c.id.contains("historical")));
+}

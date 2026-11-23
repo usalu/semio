@@ -1,0 +1,11 @@
+import {pathToFileURL} from "node:url";
+import {basename} from "node:path";
+const root="C:\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\📚️library\\🏗️build\\";
+const memo=await import(pathToFileURL(root+"🕸️graph\\📥️load\\🧠️admission-memo\\🟦️.ts").href);
+const path=process.argv[2],scope=basename(path).split(".")[0];
+let t=performance.now();
+const value=await memo.readAdmissionMemoV1(path,scope,()=>true);
+console.log("readAdmissionMemoV1 ms",Math.round(performance.now()-t),value===undefined?"MISS":"observations "+value.observations.length+" files "+value.admission.files?.length);
+t=performance.now();
+const owners=memo.ownersOfAdmissionMemoV1(value,new Set());
+console.log("ownersOfAdmissionMemoV1 ms",Math.round(performance.now()-t),owners.length);

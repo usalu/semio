@@ -32,7 +32,7 @@ fn replace_page_unicode_text(page: &PdfPage, text: &str) -> Option<Vec<PdfOp>> {
 pub fn page_text_agent_revision(snapshot: &PdfSnapshot, args: &semio_framework_value::DslValue) -> Result<Option<String>, Fault> {
     let page_index = semio_s_artifact_stdio_contract::window_kit_required_index_argument(Some(args), "page")? as usize;
     let target = snapshot.pages.get(page_index).ok_or_else(|| {
-        Fault::new(FaultOrigin::App, FaultCode::new("stdio.pdf.set-page.stale-target"), format!("PDF page {page_index} no longer exists"))
+        refuse(PdfFault::StaleTarget, format!("PDF page {page_index} no longer exists"))
     })?;
     Ok(Some(semio_plugin::app::DocumentWindowKit::text_revision(&target.text())))
 }
@@ -40,19 +40,11 @@ pub fn page_text_agent_revision(snapshot: &PdfSnapshot, args: &semio_framework_v
 /// 📄️ Builds a reversible page-text edit and supplies a font when the page has no editable text.
 pub fn page_text_edit_mutations(snapshot: &PdfSnapshot, page: u32, item: u32, revision: &str, text: &str) -> Result<Vec<PdfMutation>, Fault> {
     if item != 0 {
-        return Err(Fault::new(
-            FaultOrigin::App,
-            FaultCode::new("stdio.pdf.set-page.invalid-item"),
-            "PDF page drafts require item zero",
-        ));
+        return Err(refuse(PdfFault::InvalidItem, "PDF page drafts require item zero"));
     }
     let page_index = page as usize;
     let target = snapshot.pages.get(page_index).ok_or_else(|| {
-        Fault::new(
-            FaultOrigin::App,
-            FaultCode::new("stdio.pdf.set-page.stale-target"),
-            format!("PDF page {page_index} no longer exists"),
-        )
+        refuse(PdfFault::StaleTarget, format!("PDF page {page_index} no longer exists"))
     })?;
     semio_s_artifact_stdio_contract::require_window_kit_document_revision(&target.text(), revision, "stdio.pdf.set-page.conflict")?;
     if target.text() == text {

@@ -16,14 +16,16 @@ fn generous()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,..STOCK}}
 
 fn stage<M:RetireOwned+Sync+'static>(owner:Box<Edit<M>>)->RetainedCloneSource<Box<Edit<M>>>{let mut bank=EffectBank::new(Wallet::new(STOCK,CPU));let admitted=admit_owned(&mut bank,owner,(),STOCK).result;let source=match admitted{Ok((source,_))=>source,Err(_)=>panic!("staged edit source admission")};source}
 
-fn seal<M:RetireOwned+Sync+'static+ArtifactCanonicalJsonTree>(edit:Edit<M>,paged:bool)->(u64,[u8;32],usize){
+fn seal<M:RetireOwned+Sync+'static+ArtifactCanonicalJsonTree>(edit:Edit<M>,paged:bool)->(u64,[u8;32],usize){seal_with(edit,paged,1)}
+
+fn seal_with<M:RetireOwned+Sync+'static+ArtifactCanonicalJsonTree>(edit:Edit<M>,paged:bool,work_factor:u64)->(u64,[u8;32],usize){
  let mut source=Some(stage(Box::new(edit)));
  let(mut cursor,_)=ArtifactCanonicalEditSealCursor::admit_source(&mut source,generous()).unwrap().unwrap();
  let mut turns=0;
  while !cursor.is_ready(){
   turns+=1;assert!(turns<10_000_000,"seal did not settle");
   let grant=if paged{generous()}else{exact(cursor.next_demand().unwrap())};
-  let units=cursor.next_work_demand().unwrap();let step=drive(grant,units,|effect|cursor.advance(effect)).result.unwrap_or_else(|_|panic!("seal turn refused"));assert!(step.progress().fits(grant));
+  let units=cursor.next_work_demand().unwrap()*work_factor;let step=drive(grant,units,|effect|cursor.advance(effect)).result.unwrap_or_else(|_|panic!("seal turn refused"));assert!(step.progress().fits(grant));
  }
  let(length,digest)=(cursor.canonical_length(),cursor.digest().unwrap());
  let(edit,_,_)=cursor.take_edit(generous()).unwrap().unwrap();
@@ -64,5 +66,19 @@ fn paged_seal_digests_equal_the_one_event_seal_and_the_independent_framed_oracle
   assert_eq!(paged_length,canonical.len()as u64);
   assert_eq!(paged_digest,framed_digest("heavy",canonical.as_bytes()),"count {count}: independent framed digest");
   if count>=700{assert!(paged_turns*40<exact_turns,"count {count}: {paged_turns} paged vs {exact_turns} one-event turns");}
+ }
+}
+
+/// 🪜️ A turn funded with many work units per step stops at its first page allocation and resumes on the next turn; it never reserves a second page inside one effect.
+#[test]
+fn a_wide_work_turn_seals_the_same_digest_as_a_one_step_turn(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📄️wide-work.json")).unwrap();
+ for count in fixture["counts"].as_array().unwrap().iter().map(|count|count.as_u64().unwrap() as usize){
+  let samples:Vec<u16>=(0..count).map(|index|((index*40503+12345)%65536)as u16).collect();
+  let json=serde_json::json!({"id":"wide","forwards":[samples],"inverse":[samples],"sequenceNumber":3,"startedAt":"now","line":null});
+  let decode=||semio_framework_pack_json::from_json_str::<Edit<Vec<u16>>>(&json.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+  let(one_length,one_digest,_)=seal_with(decode(),true,1);
+  let(wide_length,wide_digest,_)=seal_with(decode(),true,fixture["workFactor"].as_u64().unwrap());
+  assert_eq!((wide_length,wide_digest),(one_length,one_digest),"count {count}");
  }
 }

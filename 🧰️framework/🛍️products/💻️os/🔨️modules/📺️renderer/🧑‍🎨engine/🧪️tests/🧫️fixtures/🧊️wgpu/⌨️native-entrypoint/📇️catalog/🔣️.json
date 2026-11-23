@@ -12,7 +12,7 @@
   "flowProducer": "semio-framework-os-flow-browser-package:wasm",
   "nativeArgs": [
     "--example",
-    "🎬️demo",
+    "demo",
     "--smoke"
   ],
   "entry": {

@@ -135,9 +135,10 @@ fn inputs(now_ms: f64) -> FrameBuildInputs {
 /// this law reads are invisible.
 fn admit_deadline(job:FrameBuildJob,original:&mut semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1)->BatchJobSession<FrameBuildJob>{
     let mut source=original.turn(|cx|semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation())));
+    let mut admitted=None;
     for _ in 0..32{
-        if let Some(session)=original.turn(|cx|source.admit_pending_batch(BatchDriveConfig{retained:cx.retained_grant(),site:"original-frame-deadline-law",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:1000000},cx)).expect("original deadline admission"){
-            assert!(source.terminal_is_empty());return session;
+        if original.turn(|cx|source.admit_pending_batch(BatchDriveConfig{retained:cx.retained_grant(),site:"original-frame-deadline-law",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:1000000},&mut admitted,cx)).expect("original deadline admission"){
+            assert!(source.terminal_is_empty());return admitted.take().expect("the completed admission hands its session to the caller");
         }
     }
     panic!("original deadline admission did not complete")
@@ -158,7 +159,7 @@ fn compute(inputs: FrameBuildInputs) -> FrameDirectives {
         assert!(receipt.fits(grant));
         let complete=matches!(session.checked_out_outcome().unwrap(),Some(JobOutcomeView::Complete{..}));
         if complete{
-            for _ in 0..4{original.turn(|cx|semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:2,..Default::default()},|grant|Ok(session.acknowledge_outcome(grant)))).unwrap();}
+            let mut acknowledged=false;for _ in 0..4{if original.turn(|cx|session.acknowledge_outcome(cx)).expect("same original outcome acknowledgement"){acknowledged=true;break;}}assert!(acknowledged,"the deadline outcome is acknowledged inside four original turns");
             directives=session.checked_out_job_mut().and_then(FrameBuildJob::take_directives);break;
         }
         session.resume().expect("same original deadline continuation");

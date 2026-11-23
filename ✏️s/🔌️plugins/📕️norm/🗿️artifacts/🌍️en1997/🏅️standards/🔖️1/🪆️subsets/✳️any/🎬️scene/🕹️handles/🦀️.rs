@@ -1,5 +1,5 @@
 //! 🕹️ Handles: viewport grips for layer interfaces, groundwater, footing size, embedment and position, wall dimensions, slope geometry, pile length, diameter, count and position, embedded-wall height, embedment and prop level, anchor lengths and inclination, pile-group spacing and counts, and the piezometric level of a layer.
-//! The drag parameter `s` is the displacement in metres (radians for angular grips) from the anchor along the grip direction; every field value is `base + k * s`.
+//! The drag parameter `s` of a grip along an axis is the coordinate in metres along that axis (it rests at the projection of its anchor, see `rest_parameter`); the other kinds measure it from their anchor (radians for angular grips). The builders below state every field as `base + k * (s - rest)`, a grip along an axis stores `base - k * rest`.
 
 use super::kit::*;
 use super::scene::projection_kit::handle_kit::choice_handle;
@@ -31,15 +31,20 @@ struct Grip {
 
 impl Grip {
     fn build(self) -> Handle {
+        let rest = match &self.kind {
+            HandleKind::ScalarAlong { axis } => self.anchor.dot(axis),
+            _ => 0.0,
+        };
+        let writes = self.writes.into_iter().map(|write| FieldBinding { map: Affine { base: write.map.base - write.map.k * rest, k: write.map.k }, ..write }).collect();
         Handle {
             id: self.id,
             entity: self.entity,
             kind: self.kind,
             anchor: self.anchor,
             grip: self.style,
-            writes: self.writes,
+            writes,
             snap: SnapRule { grid: Some(GRID), increment: None, targets: Vec::new(), catalogue: Vec::new(), tolerance: 0.02 },
-            limits: (self.limits.0 < self.limits.1).then(|| Interval::new(self.limits.0, self.limits.1)),
+            limits: (self.limits.0 < self.limits.1).then(|| Interval::new(self.limits.0 + rest, self.limits.1 + rest)),
             accessible_name: LocalizedCopy::new(self.names.0, self.names.1),
         }
     }

@@ -554,6 +554,15 @@ fn prepare_retained_edit(event: &editing::SnapshotEditEvent, snapshot: &IfcSnaps
     retained_edit_case(event, snapshot, None).0.unwrap()
 }
 
+fn loaned<T>(cx: &mut semio_framework_job::StepContext<'_>, grant: semio_framework_value::retained_clone::RetainedCloneGrant, run: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> Result<T, semio_framework_job::OriginalTurnFailure>) -> Result<T, semio_framework_job::OriginalTurnFailure> {
+    let mut output = None;
+    cx.with_retained_loan(grant, |cx| {
+        output = Some(run(cx)?);
+        Ok(())
+    })?;
+    Ok(output.expect("loaned run completed"))
+}
+
 fn reference_operation_wire(source: semio_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Vec<u8> {
     use semio_plugin::plugin_app_close_prelude::store;
     let mut cursor = store::ArtifactPreparedOperationCursor::default();
@@ -566,37 +575,30 @@ fn reference_operation_wire(source: semio_plugin::plugin_app_close_prelude::stor
         grant.maximum_capacity_bytes = demand.capacity_bytes;
         grant.maximum_release_bytes = demand.release_bytes;
         grant.maximum_depth = demand.depth;
-        let step = cx.with_retained_loan(grant, |cx| {
-            let step = cursor.advance(source, &mut chunk, cx.retained_grant()).unwrap();
-            cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress {
-                copied_items: step.processed_items,
-                copied_bytes: step.copied_bytes,
-                retained_capacity_bytes: step.retained_capacity_bytes,
-                released_bytes: step.released_bytes,
-            })
-            .unwrap();
-            cx.consume_fuel(step.processed_items as u64);
-            step
-        });
-        result.extend_from_slice(&chunk[..step.written_bytes]);
-        if step.complete {
+        let (written, complete) = loaned(cx, grant, |cx| {
+            let loan = cx.retained_grant();
+            let (step, performed) = cx.with_original_effect(loan, |_, effect| cursor.advance(source, &mut chunk, effect))?.ok_or_else(|| semio_framework_value::ValueError::invariant("reference operation wire advance was not admitted"))?;
+            cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+            let step = step.unwrap();
+            Ok((step.written_bytes, step.complete))
+        })
+        .unwrap();
+        result.extend_from_slice(&chunk[..written]);
+        if complete {
             let demand = cursor.retirement_demands().unwrap();
             let mut grant = editing::fixture_mounted_owner_policy().preparation;
             grant.maximum_copy_bytes = demand.copy_bytes;
             grant.maximum_capacity_bytes = demand.capacity_bytes;
             grant.maximum_release_bytes = demand.release_bytes;
             grant.maximum_depth = demand.depth;
-            cx.with_retained_loan(grant, |cx| {
-                let progress = cursor.close(cx.retained_grant()).unwrap();
-                assert!(progress.complete);
-                cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress {
-                    copied_items: progress.processed_items,
-                    copied_bytes: progress.copied_bytes,
-                    retained_capacity_bytes: progress.retained_capacity_bytes,
-                    released_bytes: progress.released_bytes,
-                })
-                .unwrap();
-            });
+            loaned(cx, grant, |cx| {
+                let loan = cx.retained_grant();
+                let (progress, performed) = cx.with_original_effect(loan, |_, effect| cursor.close(effect))?.ok_or_else(|| semio_framework_value::ValueError::invariant("reference operation wire close was not admitted"))?;
+                cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+                assert!(progress.unwrap().complete);
+                Ok(())
+            })
+            .unwrap();
             return result;
         }
     }
@@ -649,7 +651,7 @@ fn retained_edit_control_case(
         .map(maximum_text)
         .max()
         .unwrap_or(0);
-    let mut caller = semio_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
+    let mut caller = semio_plugin::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
     let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
     let mut cx = caller.context().with_original_decoder(&mut decoder);
     let grant = retained_contiguous_owner_loan();
@@ -682,7 +684,7 @@ fn retained_edit_control_case(
     };
     let mut emit = None;
     for _ in 0..100_000 {
-        match cx.with_retained_loan(grant, |cx| work.step(&input, cx)) {
+        match loaned(&mut cx, grant, |cx| work.step(&input, cx)) {
             Ok(ArtifactCommandWorkStep::Complete(output)) => {
                 emit = Some(output);
                 break;
@@ -772,7 +774,7 @@ fn actual_publication_wire_matches_neutral_cases_and_json_escaping() {
     use semio_plugin::plugin_app_close_prelude::store;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔎️details/🧪️tests/wire.json")).unwrap();
     let snapshot = IfcSnapshot { entities: vec![IfcEntity { id: 1, name: "IFCPROPERTYSINGLEVALUE".into(), args: vec![IfcValue::String("old".into()), IfcValue::Unset, IfcValue::Unset, IfcValue::Unset], complex: Vec::new() }], ..Default::default() };
-    let mut caller = semio_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
+    let mut caller = semio_plugin::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
     let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
     let mut cx = caller.context().with_original_decoder(&mut decoder);
     for case in fixture["cases"].as_array().unwrap() {
@@ -935,7 +937,7 @@ fn large_existing_argument_preparation_yields_and_cancels_before_emission() {
     assert!(<Ifc4x3AnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_is_admitted(&event, &snapshot));
     let command = Ifc4x3EditCommand::EditSnapshot { event };
     let mut work = <Ifc4x3AnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_work(editing::SET_SNAPSHOT_VALUE_ACTION_ID);
-    let mut caller = semio_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
+    let mut caller = semio_plugin::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
     let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
     let mut cx = caller.context().with_original_decoder(&mut decoder);
     let grant = editing::fixture_mounted_owner_policy().preparation;
@@ -966,11 +968,11 @@ fn large_existing_argument_preparation_yields_and_cancels_before_emission() {
     };
     assert!(work.extent(&command, &snapshot, &interaction, None).is_some());
     for _ in 0..8 {
-        let step = cx.with_retained_loan(grant, |cx| work.step(&input, cx)).unwrap();
+        let step = loaned(&mut cx, grant, |cx| work.step(&input, cx)).unwrap();
         assert!(!matches!(step, ArtifactCommandWorkStep::Complete(_)));
     }
     cx.original_cancel_token().cancel_now();
-    assert!(cx.with_retained_loan(grant, |cx| work.step(&input, cx)).is_err());
+    assert!(loaned(&mut cx, grant, |cx| work.step(&input, cx)).is_err());
     assert_eq!(snapshot.entities[0].args[2].as_aggregate().unwrap()[1999].as_typed().unwrap().1[0].as_str(), Some("x".repeat(256).as_str()));
     work.begin_close();
     for _ in 0..100_000 {
@@ -996,7 +998,7 @@ fn official_4x3_tessellation_projects_real_geometry_and_cancellation_has_no_visi
     assert_eq!(scene.meshes[0].vertices.len(), 8);
     assert_eq!(scene.meshes[0].triangles.len(), 12);
     assert!(scene.issues.is_empty());
-    let cancelled = semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::geometry::render_with(&snapshot, geometry::GeometryLimits::default(), &mut |_| false).unwrap();
+    let cancelled = semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::geometry::render_with(&snapshot, geometry::GeometryLimits::default(), &mut |_| false, semio_plugin::Locale::En).unwrap();
     let independent = serde_json::to_string(&cancelled).unwrap();
     assert!(independent.contains("cancelled"));
     assert!(!independent.contains("positions"));
@@ -1034,7 +1036,7 @@ fn domain_insertion_uses_retained_forward_inverse_admission_and_original_cancel(
         }
         let parsed = semio_framework_pack_json::parse(&invalid.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let event = editing::SnapshotEditEvent::InsertValue { path: case["path"].as_str().unwrap().into(), value: semio_framework_pack_json::to_dsl_value(&parsed) };
-        assert!(<Ifc4x3AnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).unwrap_err().message().contains("ifc-domain-"));
+        assert!(<Ifc4x3AnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).err().unwrap().message.contains("ifc-domain-"));
         assert!(retained_edit_control_case(&event, &snapshot, None, None, Some("ifc-domain-")).0.is_none());
     }
 }
@@ -1063,7 +1065,7 @@ fn constituent_domains_validate_prepared_context_without_rejecting_structural_re
         };
         let direct = <Ifc4x3AnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot);
         if !case["admitted"].as_bool().unwrap() {
-            assert!(direct.unwrap_err().message().contains("ifc-domain-"), "{}", case["name"]);
+            assert!(direct.err().unwrap().message.contains("ifc-domain-"), "{}", case["name"]);
             assert!(retained_edit_control_case(&event, &snapshot, None, None, Some("ifc-domain-")).0.is_none(), "{}", case["name"]);
             continue;
         }

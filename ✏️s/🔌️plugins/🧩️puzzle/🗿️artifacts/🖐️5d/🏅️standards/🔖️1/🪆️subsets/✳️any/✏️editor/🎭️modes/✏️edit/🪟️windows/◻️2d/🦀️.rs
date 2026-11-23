@@ -245,7 +245,7 @@ pub fn board_suggestion_menu_json(envelope: &Puzzle5dScene, labels: &Puzzle5dLab
 pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, suggestions: Option<&semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let mut scene = puzzle5d_board_scene(envelope);
     scene.suggestion_menu_json = board_suggestion_menu_json(envelope, labels, suggestions);
-    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Board2d, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Board2d, &scene, labels.window_2d.as_str(), None)
 }
 //#endregion 🔖️Render
 

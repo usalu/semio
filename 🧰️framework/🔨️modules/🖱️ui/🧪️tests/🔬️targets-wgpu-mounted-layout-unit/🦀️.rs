@@ -215,7 +215,6 @@ fn mounted_layout_worker_runs_on_the_original_caller_turn() {
         let before = caller.cumulative_receipt();
         let (_, step) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(funded, |cx| admission.advance(&mut original_job, &mut original_params, &mut output, cx)).expect("original mounted worker admission turn"));
         let after = caller.cumulative_receipt();
-        eprintln!("[DEBUG] admission turn {turn} phase {} receipt +{}/-{} heap +{}/-{}", admission.phase(), after.retained_capacity_bytes - before.retained_capacity_bytes, after.released_bytes - before.released_bytes, step.requested_bytes, step.released_bytes);
         heap.requested_bytes += step.requested_bytes;
         heap.released_bytes += step.released_bytes;
     }

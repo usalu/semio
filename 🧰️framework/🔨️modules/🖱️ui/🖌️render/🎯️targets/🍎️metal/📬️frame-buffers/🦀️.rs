@@ -54,10 +54,10 @@ impl GrowBuffer {
 /// its own fresh small buffer (`build_layer_batches`/`build_overlay_layer_batches`) because its
 /// `DrawLayer`s are the unit of storage. This crate's `RenderPacket` already did that flattening in
 /// `Scene::finish`: `quad_instances`/`vector_vertices` are each **one** array covering every batch
-/// (backdrop, foreground, overlay, and the silhouette-mask quads `build_batch_masks` appends), and
-/// every `DrawBatch::instance_range`/`mask_range` is already an offset into that same shared array. So
+/// (backdrop, foreground, overlay), and
+/// every `DrawBatch::instance_range` is already an offset into that same shared array. So
 /// this backend uploads each array **once per frame** and reads every batch's slice out of it by byte
-/// offset — no separate mask/overlay buffers, and no re-collection pass.
+/// offset — no separate overlay buffers, and no re-collection pass.
 #[derive(Default)]
 pub struct FrameBuffers {
     pub quad_instances: GrowBuffer,

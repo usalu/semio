@@ -16,6 +16,7 @@ const definition = (text: string, name: string): string => {
 /** 🏷️ Checks joined page chrome against neutral vectors and independent arithmetic. */
 export function verifyPageChromeBorders(): void {
   verifyPageChromeHeader();
+  verifyChipFrameModel();
   const text = readFileSync(new URL("../../🖋️latex/semio-window.sty", import.meta.url), "utf8");
   const projectStart = text.indexOf("\\cs_new_protected:Npn \\semio_chrome_navbar_project_chip:");
   const projectEnd = text.indexOf("\\cs_new_protected:Npn \\semio_chrome_navbar_center_chip:", projectStart);
@@ -38,16 +39,17 @@ export function verifyPageChromeBorders(): void {
     if (row.label) assert.ok(readFileSync(new URL("./" + row.language + ".tex", import.meta.url), "utf8").includes("left={" + row.label + "}"));
   }
   const chip = definition(text, "semio@chrome@chip");
-  assert.ok(!chip.includes("\\fcolorbox"));
-  assert.ok(chip.includes("\\ifsemio@chrome@footer"));
-  assert.equal((chip.match(/\\semio@chrome@chip@rule/g) ?? []).length, 2);
-  assert.ok(chip.includes("\\semio@chrome@chip@body"));
-  assert.ok(chip.includes("\\kern0pt"));
+  assert.ok(!chip.includes("\\fcolorbox") && !chip.includes("\\colorbox") && !chip.includes("chip@rule"));
+  assert.ok(chip.includes("\\semio@chip@box{\\ifsemio@chrome@footer b\\else t\\fi lr}"));
+  assert.ok(!text.includes("\\semio@chrome@chip@rule") && !text.includes("\\semio@chrome@chip@body"));
   for (const name of ["SemioFooterAuthorChips", "SemioFooterLogoChips", "SemioChromeNavbarProjectChip", "SemioChromeNavbarCenterChip", "SemioChromeNavbarLabelsCompute"]) assert.ok(text.includes("\\cs_new_eq:NN \\" + name), name);
+  const edgeLetters: Record<string, string> = { top: "t", bottom: "b", left: "l", right: "r" };
   for (const row of fixture.cases) {
-    const body = fixture.rowHeight + 2 * fixture.padding, open = body + fixture.stroke, total = open + fixture.stroke;
-    for (const [actual, expected] of [[body, row.bodyHeight], [open, row.openHeight], [total, row.totalHeight]]) assert.ok(Math.abs(actual! - expected!) < 1e-8);
+    const body = fixture.rowHeight + 2 * fixture.padding, chipHeight = body + fixture.stroke, total = chipHeight + fixture.stroke;
+    for (const [actual, expected] of [[body, row.bodyHeight], [chipHeight, row.chipHeight], [total, row.totalHeight]]) assert.ok(Math.abs(actual! - expected!) < 1e-8);
     assert.equal(total, Number(evaluate("rowHeight + 2 * padding + 2 * stroke", {rowHeight: fixture.rowHeight, padding: fixture.padding, stroke: fixture.stroke})));
+    assert.equal(row.edges.map((edge) => edgeLetters[edge]).join(""), (row.side === "bottom" ? "t" : "b") + "lr");
+    assert.ok(!row.edges.includes(row.side), row.name);
     const bar = definition(text, "semio@chrome@" + row.bar + "@bar");
     assert.ok(!bar.includes("\\semio@spacing@single"), row.name);
     assert.ok(bar.includes("\\semio@chrome@footer" + (row.bar === "footer" ? "true" : "false")));
@@ -57,6 +59,35 @@ export function verifyPageChromeBorders(): void {
   }
   assert.ok(definition(text, "semio@chrome@bar@threezone").includes("\\vbox to \\dimexpr#1-\\semio@stroke@hairline\\relax"));
   assert.match(definition(text, "SemioChromeNavbarHead"), /\\semio@chrome@navbar@chip@text\{\\semio@chrome@font@chip\}\{%\s*\\semio@chrome@fit@width/);
+}
+
+/** 🪟 Checks that every chip is one glass overlay inside a single rectangular frame. */
+export function verifyChipFrameModel(): void {
+  const text = readFileSync(new URL("../../🖋️latex/semio-window.sty", import.meta.url), "utf8");
+  const table = readFileSync(new URL("../../🖋️latex/semio-table.sty", import.meta.url), "utf8");
+  for (const name of fixture.frame.removed) assert.ok(!text.includes(name) && !table.includes(name), name);
+  assert.ok(!text.includes("toprule=0pt") && !text.includes("toprule~at~break=0pt"));
+  assert.equal((text.match(/\\pgfsetfillopacity/g) ?? []).length, 1);
+  const fill = definition(text, "semio@chip@fill");
+  assert.ok(fill.includes("\\ifsemio@chip@glass") && fill.includes("\\pgfsetfillopacity{\\semio@chip@opacity}"));
+  assert.ok(text.includes("\\newif\\ifsemio@chip@glass") && text.includes("\\newcommand{\\semio@chip@opacity}{" + fixture.surface.opacity + "}"));
+  assert.ok(text.includes("\\newcommand{\\semio@chip@surface}{" + fixture.surface.opaque + "}"));
+  assert.equal(fixture.surface.glass, fixture.surface.opaque);
+  assert.ok(fixture.surface.opacity > 0 && fixture.surface.opacity < 1);
+  const letters: Record<string, string> = { top: "t", bottom: "b", left: "l", right: "r" };
+  const overlay = definition(text, "semio@window@chips@overlay");
+  assert.ok(overlay.includes("\\semio@chip@muted{" + fixture.frame.edges.title.map((e: string) => letters[e]).join("") + "}"));
+  assert.ok(overlay.includes("\\semio@chip@muted{" + fixture.frame.edges.number.map((e: string) => letters[e]).join("") + "}"));
+  assert.ok(overlay.includes("frame.north west") && overlay.includes("frame.north east"));
+  for (const hook of ["finish~unbroken", "finish~first", "finish~middle", "finish~last"]) assert.match(text, new RegExp(hook + "=\\{\\\\semio@window@chips@overlay\\}"));
+  assert.match(text, /toprule=\\semio@stroke@hairline/);
+  assert.match(text, /toprule~at~break=\\semio@stroke@hairline/);
+  const heading = definition(text, "semio@heading@frame");
+  assert.ok(heading.includes("\\semio@chip@box{" + fixture.frame.edges.heading.title.map((e: string) => letters[e]).join("") + "}"));
+  assert.ok(heading.includes("\\semio@chip@box{" + fixture.frame.edges.heading.number.map((e: string) => letters[e]).join("") + "}"));
+  const validator = new Ajv({strict:true}).compile({type:"array",uniqueItems:true,items:{enum:["top","bottom","left","right"]}});
+  for (const edges of [fixture.frame.edges.title, fixture.frame.edges.number, fixture.frame.edges.heading.title, fixture.frame.edges.heading.number]) assert.equal(validator(edges), true);
+  assert.ok(!fixture.frame.edges.title.includes("top") && !fixture.frame.edges.number.includes("top"));
 }
 
 /** 🎓️ Verifies the original university assets with an independent image decoder. */

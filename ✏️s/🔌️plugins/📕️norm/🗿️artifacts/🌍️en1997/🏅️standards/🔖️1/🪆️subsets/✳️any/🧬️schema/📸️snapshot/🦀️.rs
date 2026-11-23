@@ -113,10 +113,13 @@ pub struct En1997Snapshot {
 }
 //#endregion 🔖️Snapshot
 
-/// 🌱 Initial subject of a live evaluation session: the worked example.
+/// 🌱 Initial subject of a live evaluation session: the worked example with one borehole and one declared characteristic basis, so that every kind of the insert palette has a row to start from.
 impl Default for En1997Snapshot {
     fn default() -> Self {
-        Self::example(semio_s_plugin_norm_compliance::AnnexChoice::En)
+        let mut s = Self::example(semio_s_plugin_norm_compliance::AnnexChoice::En);
+        s.investigations.push(investigation_point("bh-1", InvestigationKind::Borehole, (4.5, -4.5), 20.0, &[]));
+        s.characteristic_bases.push(CharacteristicBasis { id: "cb-sand-phi".into(), layer_id: "layer-sand".into(), parameter: CharacteristicParameter::FrictionAngle, basis: ParameterBasis::Declared });
+        s
     }
 }
 

@@ -81,10 +81,10 @@
     "keyframesByProperty": {
       "--celebrate-border-angle": ["celebrate-border-spin"],
       "--loading-border-angle": ["loading-border-spin"],
-      "--loading-border-dashoffset": ["window-silhouette-border-loading-dash"],
+      "--loading-border-dashoffset": ["window-frame-border-loading-dash"],
       "--loading-border-pulse-opacity": ["loading-border-pulse"],
       "--waiting-border-angle": ["waiting-border-spin"],
-      "--waiting-border-dashoffset": ["window-silhouette-border-waiting-dash"],
+      "--waiting-border-dashoffset": ["window-frame-border-waiting-dash"],
       "--waiting-border-pulse-opacity": ["waiting-border-pulse"]
     },
     "violations": []

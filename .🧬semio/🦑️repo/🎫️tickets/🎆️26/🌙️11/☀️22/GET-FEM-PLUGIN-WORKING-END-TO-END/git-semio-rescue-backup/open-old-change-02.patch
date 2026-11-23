@@ -1,0 +1,812 @@
+diff --git "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmp_rzs0k_g\\b.lf" "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmp_rzs0k_g\\o.lf"
+index 774b402..c7dd691 100644
+--- "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmp_rzs0k_g\\b.lf"
++++ "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmp_rzs0k_g\\o.lf"
+@@ -33,4 +33,5 @@ FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
+ _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+ P_PRIMARY = _manim_module.P_PRIMARY
++reference_chip = _manim_module.reference_chip
+ section_material = _manim_module.section_material
+ section_assembly = _manim_module.section_assembly
+@@ -66,5 +67,4 @@ swap_caption = _manim_module.swap_caption
+ hold_for = _manim_module.hold_for
+ subtitle_text = _manim_module.subtitle_text
+-set_vo_language = _manim_module.set_vo_language
+ tr = _manim_module.tr
+ load_vo_timing = _manim_module.load_vo_timing
+@@ -84,7 +84,7 @@ staffage_motion = _manim_module.staffage_motion
+ staffage_height = _manim_module.staffage_height
+ _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
++_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
+ TRANSITIONS = _Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
+ 
+-set_vo_language("de")
+ _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
+ if _VO_TIMING.is_file():
+@@ -94,19 +94,4 @@ TITLE_DE = "Natürliche Lüftung"
+ 
+ 
+-#region DIN citation
+-def _din_ref(text: str):
+-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+-
+-    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
+-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
+-    that never competes with the diagram. The formula panel sits on the
+-    bottom edge, so this corner is clear in every beat.
+-    """
+-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+-    ref.set_opacity(0.72)
+-    ref.to_corner(UR, buff=0.30)
+-    return ref
+-#endregion
+-
+ 
+ #region Shared visual motifs
+@@ -276,5 +261,5 @@ def _energy_row(x0: float, y: float, unit: float, parts, *, height: float = 0.5)
+ """🔢 Laufendes Beispiel — Zahlenquellen: Kapitel 2 (V, n), Kapitel 3 (c_Luft, Δθ_Winter, Δθ_Sommer).
+ 
+-c_Luft = ρ·c_p/3600 = 1,2 · 1005 / 3600 ≈ 0,34 Wh/(m³·K); Winter 20 °C innen gegen 0 °C außen (Δθ = 20 K),
++c_Luft = ρ·c_p/3600 = 1,2 kg/m³ · 1005 J/(kg·K) / (3600 J/Wh) ≈ 0,34 Wh/(m³·K); Winter 20 °C innen gegen 0 °C außen (Δθ = 20 K),
+ Sommer 26 °C innen gegen 32 °C außen am Tag und 18 °C in der Nacht.
+ """
+@@ -296,10 +281,20 @@ def _rho_air(theta: float) -> float:
+ 
+ 
+-def _stack_dp(height_m: float, t_out: float, t_in: float) -> float:
+-    """⬆️ Thermischer Auftrieb Δp = h · g · (ρ_a − ρ_i) in Pa.
++CD_OPENING, A_OPENING = 0.6, 0.1
++
++
++def _stack_chain(height_m: float, t_out: float, t_in: float) -> dict:
++    """⬆️ Auftriebskette Δρ(θ) → Δp = Δρ · g · h → v = √(2Δp/ρ) → V̇ = C_d · A · v, in kg/m³, Pa, m/s und m³/s.
+ 
+     https://de.wikipedia.org/wiki/Kamineffekt
+     """
+-    return height_m * G_ACC * (_rho_air(t_out) - _rho_air(t_in))
++    rho_e, rho_i = _rho_air(t_out), _rho_air(t_in)
++    drho = rho_e - rho_i
++    dp = height_m * G_ACC * drho
++    v = float(np.sqrt(2.0 * dp / RHO_AIR))
++    vdot = CD_OPENING * A_OPENING * v
++    return {"rho_e": rho_e, "rho_i": rho_i, "drho": drho, "dp": dp, "v": v, "vdot": vdot, "vdot_h": vdot * 3600.0}
++
++
+ #endregion
+ 
+@@ -336,5 +331,5 @@ class Beat1_Fensterregeln(Scene):
+ 
+         subtitle = section_heading(tr("The window is a control", "Das Fenster ist ein Regler"))
+-        din = _din_ref("DIN 1946-6")
++        din = reference_chip(_references.cite("din-1946-6"))
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -538,33 +533,34 @@ class Beat2_StossOderKipp(Scene):
+     NARRATION = [
+         ("room",
+-         "Winter case: a room of 20 square metres and 2.5 metres height holds 50 cubic metres of air; inside 20, outside 0 degrees.",
+-         "Winterfall: Ein Raum mit 20 m² und 2,5 m Höhe enthält 50 m³ Luft. Innen 20 °C, außen 0 °C."),
++         r"Winter case: a room of $20\,\mathrm{m^2}$ and $2.5\,\mathrm{m}$ height holds $V = 50\,\mathrm{m^3}$ of air; inside $\theta_i = 20\,\mathrm{°C}$, outside $\theta_e = 0\,\mathrm{°C}$.",
++         r"Winterfall: Ein Raum mit $20\,\mathrm{m^2}$ und $2{,}5\,\mathrm{m}$ Höhe enthält $V = 50\,\mathrm{m^3}$ Luft. Innen $\theta_i = 20\,\mathrm{°C}$, außen $\theta_e = 0\,\mathrm{°C}$."),
+         ("open",
+          "Two ways to air it: the thermostat turned down and the window wide open — or the window tilted.",
+          "Zwei Arten zu lüften: Thermostat zu und Fenster weit auf — oder Fenster gekippt."),
+         ("five",
+-         "After five minutes the wide-open window has exchanged the whole air once; the tilted one only about eight percent.",
+-         "Nach fünf Minuten ist beim weit offenen Fenster die ganze Luft getauscht, beim gekippten erst etwa 8 %."),
++         r"After five minutes the open window has exchanged all the air; the tilted one ($n \approx 1\,\mathrm{h^{-1}}$) only $\frac{5\,\mathrm{min}}{60\,\mathrm{min}} \approx 8\,\%$.",
++         r"Nach fünf Minuten ist beim offenen Fenster alle Luft getauscht, beim gekippten ($n \approx 1\,\mathrm{h^{-1}}$) erst $\frac{5\,\mathrm{min}}{60\,\mathrm{min}} \approx 8\,\%$."),
+         ("stoss",
+-         "Purge ventilation only reheats the air: 0.34 times 50 times 20 is 340 watt-hours. The walls stay warm.",
+-         "Beim Stoßlüften wird nur die Luft nachgeheizt: 0,34 · 50 · 20 = 340 Wh. Die Wände bleiben warm."),
++         r"Purge ventilation only reheats the air: $0.34\,\mathrm{Wh/(m^3K)} \cdot 50\,\mathrm{m^3} \cdot 20\,\mathrm{K} = 340\,\mathrm{Wh}$. The walls stay warm.",
++         r"Beim Stoßlüften wird nur die Luft nachgeheizt: $0{,}34\,\mathrm{Wh/(m^3K)} \cdot 50\,\mathrm{m^3} \cdot 20\,\mathrm{K} = 340\,\mathrm{Wh}$. Die Wände bleiben warm."),
+         ("hour",
+-         "The tilted window needs about an hour for one full air change.",
+-         "Das gekippte Fenster braucht für einen vollen Luftwechsel etwa eine Stunde."),
++         r"The tilted window needs about an hour for one full air change: $n \approx 1\,\mathrm{h^{-1}}$.",
++         r"Das gekippte Fenster braucht für einen vollen Luftwechsel etwa eine Stunde: $n \approx 1\,\mathrm{h^{-1}}$."),
+         ("thermostat",
+-         "Cold air falls onto the thermostat below the window; the valve opens and half of 600 watts flows straight out: 300 watt-hours.",
+-         "Kalte Luft fällt auf das Thermostat unter dem Fenster. Das Ventil öffnet, die Hälfte von 600 W geht direkt hinaus: 300 Wh."),
++         r"Cold air falls onto the thermostat below the window; the valve opens and half of $600\,\mathrm{W}$ flows straight out: $300\,\mathrm{Wh}$.",
++         r"Kalte Luft fällt auf das Thermostat unter dem Fenster. Das Ventil öffnet, die Hälfte von $600\,\mathrm{W}$ geht direkt hinaus: $300\,\mathrm{Wh}$."),
+         ("laibung",
+-         "Reveal and lintel cool by about 5 kelvin; reheating 160 kilograms of masonry costs about 190 watt-hours.",
+-         "Laibung und Sturz kühlen um etwa 5 K ab. 160 kg Mauerwerk wieder zu erwärmen kostet rund 190 Wh."),
++         r"Reveal and lintel cool by about $5\,\mathrm{K}$; reheating $160\,\mathrm{kg}$ of masonry costs about $190\,\mathrm{Wh}$.",
++         r"Laibung und Sturz kühlen um etwa $5\,\mathrm{K}$ ab. $160\,\mathrm{kg}$ Mauerwerk wieder zu erwärmen kostet rund $190\,\mathrm{Wh}$."),
+         ("sum",
+-         "For the same 50 cubic metres of fresh air: 340 watt-hours purge, about 830 tilted.",
+-         "Für dieselben 50 m³ Frischluft: 340 Wh beim Stoßlüften, rund 830 Wh bei Kipplüftung."),
++         r"For the same $50\,\mathrm{m^3}$ of fresh air: $340\,\mathrm{Wh}$ purge, about $830\,\mathrm{Wh}$ tilted.",
++         r"Für dieselben $50\,\mathrm{m^3}$ Frischluft: $340\,\mathrm{Wh}$ beim Stoßlüften, rund $830\,\mathrm{Wh}$ bei Kipplüftung."),
+         ("rule",
+          "So in winter, open the window wide for a short time instead of tilting it.",
+          "Darum im Winter: kurz und weit öffnen statt kippen."),
+         ("summer",
+-         "Summer: ≈100 Wh of air heat at 6 K, no radiator or reveal. Tilt moves little air: open wide, briefly, in cool hours.",
+-         "Im Sommer entfallen Heizkörper und Laibung: nur etwa 100 Wh bei 6 K.\nGekippt tauscht kaum Luft — weit und kurz, in den kühlen Stunden."),
++         r"Summer: $\Delta\theta = 6\,\mathrm{K}$ gives only about $100\,\mathrm{Wh}$ of air heat, no radiator or reveal. Tilt moves little air: open wide, briefly, in cool hours.",
++         r"Im Sommer entfallen Heizkörper und Laibung: bei $\Delta\theta = 6\,\mathrm{K}$ nur etwa $100\,\mathrm{Wh}$."
++         "\nGekippt tauscht kaum Luft — weit und kurz, in den kühlen Stunden."),
+     ]
+ 
+@@ -576,9 +572,10 @@ class Beat2_StossOderKipp(Scene):
+         e_air = C_LUFT * vol * D_THETA
+         e_rad = P_RAD * (T_KIPP / 60.0) * RAD_SHARE
+-        e_lb = M_LAIBUNG * C_MASONRY * DT_LAIBUNG / 3.6
++        e_lb = round(M_LAIBUNG * C_MASONRY * DT_LAIBUNG / 3.6, -1)
+         e_kipp = e_air + e_rad + e_lb
+ 
+         subtitle = section_heading(tr("Burst ventilation or tilted window", "Stoßlüften oder Kipplüftung"))
+-        din = _din_ref("DIN 1946-6")
++        din = reference_chip(_references.cite("din-1946-6"))
++        source = reference_chip(_references.cite(("maas-1995", "kap8")) + tr(": n = 0.56 … 1.38 1/h", ": n = 0,56 … 1,38 1/h")).next_to(din, DOWN, buff=0.08, aligned_edge=RIGHT)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+         caption = caption_bar(subtitle_text(N, "room"))
+@@ -639,5 +636,5 @@ class Beat2_StossOderKipp(Scene):
+             (lambda: e_air * frac_k(), P_CYAN),
+             (lambda: P_RAD * RAD_SHARE * t_k.get_value() / 60.0, P_RED),
+-            (lambda: M_LAIBUNG * C_MASONRY * DT_LAIBUNG * cool.get_value() / 3.6, P_YELLOW),
++            (lambda: e_lb * cool.get_value(), P_YELLOW),
+         ])
+         row_labels = VGroup(
+@@ -650,5 +647,5 @@ class Beat2_StossOderKipp(Scene):
+         def total_k():
+             return e_air * frac_k() + P_RAD * RAD_SHARE * t_k.get_value() / 60.0 + \
+-                M_LAIBUNG * C_MASONRY * DT_LAIBUNG * cool.get_value() / 3.6
++                e_lb * cool.get_value()
+ 
+         tot_s = math_readout(lambda: rf"{label_number(e_air * frac_s())}\,\mathrm{{Wh}}",
+@@ -658,5 +655,9 @@ class Beat2_StossOderKipp(Scene):
+                              lambda: np.array([bx + total_k() * unit + 0.15, yr_k - 0.08, 0]),
+                              size=LABEL_FONT_SIZE, color=P_ORANGE)
+-        self.play(FadeIn(row_labels), *running(0.4), run_time=0.4)
++        n_kipp_box = window_chip(VGroup(
++            math_label(rf"n_{{\mathrm{{{tr('tilt', 'Kipp')}}}}} \approx 1\,\mathrm{{h^{{-1}}}}", size=LABEL_FONT_SIZE, color=P_ORANGE),
++            math_label(r"\frac{5\,\mathrm{min}}{60\,\mathrm{min}} \approx 8\,\%", size=LABEL_FONT_SIZE, color=P_ORANGE),
++        ).arrange(DOWN, buff=0.12), color=P_ORANGE).move_to([-0.55, 1.05, 0])
++        self.play(FadeIn(row_labels), FadeIn(source), *running(0.4), run_time=0.4)
+         self.add(row_s, row_k, tot_s, tot_k)
+ 
+@@ -684,5 +685,5 @@ class Beat2_StossOderKipp(Scene):
+         state["air"] = ["s", "k"]
+         self.play(t_s.animate.set_value(T_STOSS), t_k.animate.set_value(T_STOSS), valve_k.animate.set_value(0.75),
+-                  cool.animate.set_value(T_STOSS / T_KIPP), *running(4.0), run_time=4.0, rate_func=linear)
++                  cool.animate.set_value(T_STOSS / T_KIPP), FadeIn(n_kipp_box), *running(4.0), run_time=4.0, rate_func=linear)
+         hold_for(self, N, "five", during=running)
+ 
+@@ -690,7 +691,11 @@ class Beat2_StossOderKipp(Scene):
+         air_s_lbl = math_label(tr(rf"\text{{Air}}\; {label_number(e_air)}\,\mathrm{{Wh}}", rf"\text{{Luft}}\; {label_number(e_air)}\,\mathrm{{Wh}}"), size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
+         air_s_lbl.move_to([bx + e_air * unit / 2, yr_s, 0])
++        stoss_eq = math_label(
++            rf"Q = c_{{\mathrm{{Luft}}}} \cdot V \cdot \Delta\theta = {label_number(C_LUFT, 2)}\,\frac{{\mathrm{{Wh}}}}{{\mathrm{{m^{{3}}\,K}}}} \cdot {label_number(vol)}\,\mathrm{{m^{{3}}}} \cdot {label_number(D_THETA)}\,\mathrm{{K}} = {label_number(e_air)}\,\mathrm{{Wh}}",
++            size=LABEL_FONT_SIZE, color=P_CYAN)
++        stoss_eq.scale_to_fit_width(min(stoss_eq.width, 6.2)).move_to([3.35, yr_s + 0.05, 0])
+         state["air"] = ["k"]
+         self.play(_open_sash(rs["window"], run_time=1.0, close=True), valve_s.animate.set_value(0.6),
+-                  *_power(rs["rad"], True), FadeIn(air_s_lbl), *running(1.0), run_time=1.0)
++                  *_power(rs["rad"], True), FadeIn(air_s_lbl), FadeIn(stoss_eq), FadeOut(n_kipp_box), *running(1.0), run_time=1.0)
+         state["heat"] = [rs, rk]
+         hold_for(self, N, "stoss", during=running)
+@@ -711,7 +716,7 @@ class Beat2_StossOderKipp(Scene):
+         rad_lbl = math_label(rf"\dot{{Q}} = {label_number(P_RAD)}\,\mathrm{{W}} \cdot {label_number(100 * RAD_SHARE)}\,\%",
+                              np.array([rk["ox"] + 0.15, fy + 0.2, 0]), size=LABEL_FONT_SIZE, color=P_RED, edge="left")
+-        seg_rad = math_label(tr(rf"\text{{Radiator}}\; {label_number(e_rad)}", rf"\text{{Heizkörper}}\; {label_number(e_rad)}"), size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
++        seg_rad = math_label(tr(rf"\text{{Radiator}}\; {label_number(e_rad)}\,\mathrm{{Wh}}", rf"\text{{Heizkörper}}\; {label_number(e_rad)}\,\mathrm{{Wh}}"), size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
+         seg_rad.move_to([bx + (e_air + e_rad / 2) * unit, yr_k, 0])
+-        seg_air = math_label(tr(rf"\text{{Air}}\; {label_number(e_air)}", rf"\text{{Luft}}\; {label_number(e_air)}"), size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
++        seg_air = math_label(tr(rf"\text{{Air}}\; {label_number(e_air)}\,\mathrm{{Wh}}", rf"\text{{Luft}}\; {label_number(e_air)}\,\mathrm{{Wh}}"), size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
+         seg_air.move_to([bx + e_air * unit / 2, yr_k, 0])
+         self.play(Indicate(rk["valve"], color=P_YELLOW, scale_factor=1.8), FadeIn(rad_lbl), FadeIn(seg_air),
+@@ -720,8 +725,8 @@ class Beat2_StossOderKipp(Scene):
+ 
+         caption = swap_caption(self, caption, subtitle_text(N, "laibung"))
+-        lb_lbl = math_label(rf"\Delta T = {label_number(DT_LAIBUNG)}\,\mathrm{{K}}", np.array([rk["x_out"] + 0.2, rk["sill"] + 0.05, 0]),
++        lb_lbl = math_label(rf"\Delta\theta = {label_number(DT_LAIBUNG)}\,\mathrm{{K}}", np.array([rk["x_out"] + 0.2, rk["sill"] + 0.05, 0]),
+                             size=LABEL_FONT_SIZE, color=P_BLUE, edge="left")
+-        seg_lb = math_label(tr(rf"\text{{Reveal}}\; {label_number(round(e_lb, -1))}", rf"\text{{Laibung}}\; {label_number(round(e_lb, -1))}"), size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
+-        seg_lb.move_to([bx + (e_air + e_rad + e_lb / 2) * unit, yr_k, 0])
++        seg_lb = math_label(tr(rf"\text{{Reveal}}\; {label_number(e_lb)}\,\mathrm{{Wh}}", rf"\text{{Laibung}}\; {label_number(e_lb)}\,\mathrm{{Wh}}"), size=LABEL_FONT_SIZE, color=P_DEEP_DARK)
++        seg_lb.scale_to_fit_width(min(seg_lb.width, e_lb * unit - 0.12)).move_to([bx + (e_air + e_rad + e_lb / 2) * unit, yr_k, 0])
+         self.play(Indicate(VGroup(rk["sturz"], rk["laibung"]), color=P_BLUE, scale_factor=1.05), FadeIn(lb_lbl),
+                   FadeIn(seg_lb), *running(1.0), run_time=1.0)
+@@ -742,5 +747,5 @@ class Beat2_StossOderKipp(Scene):
+         rule_box = SurroundingRectangle(rule, color=P_GREEN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=_theme_module.CHROME_BORDER)
+         VGroup(rule, rule_box).move_to([3.3, yr_s, 0])
+-        self.play(FadeOut(rad_lbl), FadeIn(rule), Create(rule_box), *running(0.8), run_time=0.8)
++        self.play(FadeOut(rad_lbl), FadeOut(stoss_eq), FadeIn(rule), Create(rule_box), *running(0.8), run_time=0.8)
+         hold_for(self, N, "rule", during=running)
+ 
+@@ -748,11 +753,11 @@ class Beat2_StossOderKipp(Scene):
+         e_sum = C_LUFT * vol * (T_OUT_DAY - T_IN_SUMMER)
+         winter_rows = VGroup(row_s, row_k, tot_s, tot_k_final, ratio, air_s_lbl, seg_air, seg_rad, seg_lb,
+-                             row_labels, lb_lbl)
+-        sun = sun_glyph(np.array([bx - 0.9, yr_s - 0.3, 0.0])).scale(0.32)
++                             row_labels, lb_lbl, source)
++        sun =sun_glyph(np.array([bx - 0.9, yr_s - 0.3, 0.0])).scale(0.32)
+         sum_bar = Rectangle(width=e_sum * unit, height=0.5, stroke_width=1.2, color=P_YELLOW, fill_color=P_YELLOW,
+                             fill_opacity=0.72).move_to([bx + e_sum * unit / 2, yr_s - 0.3, 0])
+         sum_head = math_label(tr(r"\text{Summer}\quad \Delta\theta = 6\,\mathrm{K}", r"\text{Sommer}\quad \Delta\theta = 6\,\mathrm{K}"), size=LABEL_FONT_SIZE, color=P_YELLOW)
+         sum_head.move_to([bx + sum_head.width / 2, yr_s + 0.28, 0])
+-        sum_val = math_label(rf"{label_number(C_LUFT, 2)} \cdot {label_number(vol)} \cdot 6 \approx {label_number(round(e_sum, -1))}\,\mathrm{{Wh}}",
++        sum_val = math_label(rf"{label_number(C_LUFT, 2)}\,\frac{{\mathrm{{Wh}}}}{{\mathrm{{m^{{3}}\,K}}}} \cdot {label_number(vol)}\,\mathrm{{m^{{3}}}} \cdot {label_number(T_OUT_DAY - T_IN_SUMMER)}\,\mathrm{{K}} \approx {label_number(round(e_sum, -1))}\,\mathrm{{Wh}}",
+                              size=LABEL_FONT_SIZE, color=P_YELLOW)
+         sum_val.next_to(sum_bar, RIGHT, buff=0.2)
+@@ -776,12 +781,12 @@ class Beat3_Querlueftung(Scene):
+          "Wind drückt auf der Luvseite und saugt auf der Leeseite —\ndiese Druckdifferenz treibt die Luft, kein Ventilator."),
+         ("formula",
+-         "How much air gets through is set by an effective area that combines both openings.",
+-         "Wie viel Luft durchkommt, bestimmt eine wirksame Fläche aus beiden Öffnungen."),
++         r"How much air gets through is set by an effective area $A_{eff}$ that combines both openings.",
++         r"Wie viel Luft durchkommt, bestimmt eine wirksame Fläche $A_{eff}$ aus beiden Öffnungen."),
+         ("a1",
+-         "A one is the inlet on the windward facade.",
+-         "A eins ist die Zuluftöffnung auf der Luvseite."),
++         r"$A_1$ is the inlet opening on the windward facade.",
++         r"$A_1$ ist die Zuluftöffnung auf der Luvseite."),
+         ("a2",
+-         "A two is the outlet on the leeward facade.",
+-         "A zwei ist die Abluftöffnung auf der Leeseite."),
++         r"$A_2$ is the outlet opening on the leeward facade.",
++         r"$A_2$ ist die Abluftöffnung auf der Leeseite."),
+         ("limit",
+          "The smaller series opening governs. Shrinking the outlet chokes cross flow even with the inlet wide open.",
+@@ -800,5 +805,5 @@ class Beat3_Querlueftung(Scene):
+ 
+         subtitle = section_heading(tr("Cross ventilation: both openings count", "Querlüftung: beide Öffnungen zählen"))
+-        din = _din_ref("DIN EN 16798-7")
++        din = reference_chip(_references.cite("din-en-16798-7"))
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -867,5 +872,5 @@ class Beat3_Querlueftung(Scene):
+              rf"\textcolor{{{P_ORANGE}}}{{\frac{{1}}{{A_{{2}}^{{2}}}}}}}}}}",
+              P_WHITE),
+-            (None, r"\;[\mathrm{m^{2}}]", P_PRIMARY),
++            (None, r"\quad A_{eff}\;\text{in}\;\mathrm{m^{2}}", P_PRIMARY),
+         ], color=P_CYAN)
+         _inner = items["root"][0][2][0][1]
+@@ -950,30 +955,41 @@ class Beat3_Querlueftung(Scene):
+ 
+ #region Beat4 – Stack effect: height makes the pressure
++S_LOW = _stack_chain(2.5, T_OUT_NIGHT, T_IN_SUMMER)
++S_TALL = _stack_chain(4.4, T_OUT_NIGHT, T_IN_SUMMER)
++S_WINTER = _stack_chain(4.4, T_OUT_WINTER, T_IN_WINTER)
++
++
+ class Beat4_Auftrieb(Scene):
+     NARRATION = [
+         ("intro",
+-         "When the wind drops, buoyancy still moves air. Warm room air is lighter, rises, and leaves high, while cool air is drawn in low.",
+-         "Fällt der Wind aus, bleibt der Auftrieb: warme Raumluft\nist leichter und entweicht oben, kühle Luft strömt unten nach."),
++         "When the wind drops, buoyancy remains: warm air is lighter, rises and leaves through a high opening; cool air enters through a low one.",
++         "Fällt der Wind aus, bleibt der Auftrieb: warme Luft ist leichter, steigt und geht durch eine hohe Öffnung, kühle strömt durch eine tiefe nach."),
+         ("shaft",
+-         "A stairwell or a dedicated shaft carries that warm air up to a high outlet, so the flow keeps running even on a still day.",
+-         "Treppenhaus oder Schacht führt die warme Luft zu einem\nhohen Auslass — auch an windstillen Tagen."),
+-        ("formula",
+-         "The driving pressure is the height difference, times gravity, times the density difference between outdoor and indoor air.",
+-         "Der treibende Druck ist Höhendifferenz mal Erdbeschleunigung\nmal Dichteunterschied zwischen außen und innen."),
+-        ("h",
+-         "h is the vertical distance between the low inlet and the high outlet.",
+-         "h ist der senkrechte Abstand zwischen tiefem Einlass und hohem Auslass."),
+-        ("rho",
+-         "Summer night: 18 °C outside, 26 °C inside. Warmer indoor air is less dense, so it rises more strongly.",
+-         "Der Dichteunterschied folgt aus der Temperaturdifferenz: 18 °C außen,\n26 °C innen — je wärmer die Raumluft, desto stärker der Auftrieb."),
++         "A stairwell or a chimney-like shaft carries the warm air up to the high outlet opening, so the flow keeps running even on a still day.",
++         "Treppenhaus oder Schacht (Kamin) führt die warme Luft zur hohen Abluftöffnung — auch an windstillen Tagen."),
++        ("density",
++         r"Why does it rise? Warm air is lighter: the density $\rho(\theta)$ falls as the temperature $\theta$ rises.",
++         r"Warum steigt sie? Warme Luft ist leichter: die Dichte $\rho(\theta)$ sinkt mit steigender Temperatur $\theta$."),
++        ("drho",
++         r"Outside ($\theta_e = 18\,\mathrm{°C}$) air has $\rho = 1.212\,\mathrm{kg/m^3}$, inside ($\theta_i = 26\,\mathrm{°C}$) $1.180\,\mathrm{kg/m^3}$: $\Delta\rho = 0.032\,\mathrm{kg/m^3}$.",
++         r"Außen ($\theta_e = 18\,\mathrm{°C}$) hat Luft $\rho = 1{,}212\,\mathrm{kg/m^3}$, innen ($\theta_i = 26\,\mathrm{°C}$) $1{,}180\,\mathrm{kg/m^3}$: $\Delta\rho = 0{,}032\,\mathrm{kg/m^3}$."),
++        ("pressure",
++         r"Over the height $h$ between inlet and outlet this becomes a pressure: $\Delta p = \Delta\rho \cdot g \cdot h = 0.8\,\mathrm{Pa}$ for $h = 2.5\,\mathrm{m}$.",
++         r"Über die Höhe $h$ zwischen Zu- und Abluftöffnung wird daraus ein Druck: $\Delta p = \Delta\rho \cdot g \cdot h = 0{,}8\,\mathrm{Pa}$ bei $h = 2{,}5\,\mathrm{m}$."),
++        ("speed",
++         r"The pressure accelerates the air: $v = \sqrt{2\,\Delta p/\rho}$ gives $1.15\,\mathrm{m/s}$ with $\rho \approx 1.2\,\mathrm{kg/m^3}$ (20 °C).",
++         r"Der Druck beschleunigt die Luft: $v = \sqrt{2\,\Delta p/\rho}$ ergibt $1{,}15\,\mathrm{m/s}$ mit $\rho \approx 1{,}2\,\mathrm{kg/m^3}$ (20 °C)."),
++        ("flow",
++         r"Speed times open area is the flow: $\dot{V} = C_d \cdot A \cdot v = 0.069\,\mathrm{m^3/s} \approx 250\,\mathrm{m^3/h}$ for $C_d \approx 0.6$ and $A = 0.1\,\mathrm{m^2}$.",
++         r"Geschwindigkeit mal Öffnungsfläche ist der Volumenstrom: $\dot{V} = C_d \cdot A \cdot v = 0{,}069\,\mathrm{m^3/s} \approx 250\,\mathrm{m^3/h}$ bei $C_d \approx 0{,}6$ und $A = 0{,}1\,\mathrm{m^2}$."),
+         ("taller",
+-         "Raise the outlet and the driving pressure grows with the height. Here the shaft lifts it from 2.5 to 4.4 metres, and the flow speeds up with it.",
+-         "Höherer Auslass, größere Höhe — der Druck wächst mit.\nDer Schacht hebt h von 2,5 auf 4,4 m, der Strom wird schneller."),
++         r"Raise the outlet and $h$ grows: the shaft lifts it from $2.5\,\mathrm{m}$ to $4.4\,\mathrm{m}$, so $\Delta p$ rises to $1.4\,\mathrm{Pa}$ and the flow speeds up.",
++         r"Höherer Auslass, größeres $h$: der Schacht hebt es von $2{,}5\,\mathrm{m}$ auf $4{,}4\,\mathrm{m}$, $\Delta p$ steigt auf $1{,}4\,\mathrm{Pa}$, der Strom wird schneller."),
+         ("winter",
+-         "Winter: 20 K instead of 8 K gives the same shaft almost three times the pressure. Buoyancy is strongest in cold weather.",
+-         "Im Winter: 20 statt 8 K, im selben Schacht fast dreifacher Druck. Bei Kälte wirkt der Auftrieb am stärksten."),
++         r"Winter: $\Delta\theta = 20\,\mathrm{K}$ instead of $8\,\mathrm{K}$ gives the same shaft $3.8\,\mathrm{Pa}$, about $2.7$ times the pressure. Buoyancy is strongest in the cold.",
++         r"Im Winter: $\Delta\theta = 20\,\mathrm{K}$ statt $8\,\mathrm{K}$ ergibt im selben Schacht $3{,}8\,\mathrm{Pa}$, das $2{,}7$-fache. Bei Kälte wirkt der Auftrieb am stärksten."),
+         ("comfort",
+          "That is why inlets sit low, near the people, and outlets sit high at the roof: comfort without a fan.",
+-         "Deshalb sitzen Zulüfte tief bei den Menschen und die\nAbluft hoch am Dach — Komfort ohne Ventilator."),
++         "Deshalb sitzen Zuluftöffnungen tief bei den Menschen und Abluftöffnungen hoch am Dach — Komfort ohne Ventilator."),
+     ]
+ 
+@@ -998,10 +1014,11 @@ class Beat4_Auftrieb(Scene):
+         apply_scene_style(self)
+         stage = _morph.stage(self, TRANSITIONS)
++        N = self.NARRATION
+ 
+         subtitle = section_heading(tr("Stack effect: height creates pressure", "Auftrieb: Höhe erzeugt Druck"))
+-        din = _din_ref("DIN EN 16798-7")
++        din = reference_chip(_references.cite("din-en-16798-7"))
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+-        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
++        caption = caption_bar(subtitle_text(N, "intro"))
+         self.play(FadeIn(caption), run_time=0.3)
+ 
+@@ -1010,7 +1027,10 @@ class Beat4_Auftrieb(Scene):
+         room, floor = shell[0], shell[1]
+         room_top = room.get_top()[1]
+-        inlet = _window(np.array([room_c[0] - 2.1, -0.85, 0.0]), height=0.60)
+-        inlet_lbl = Text(tr("Supply air", "Zuluft"), font_size=LABEL_FONT_SIZE, color=P_CYAN)
+-        inlet_lbl.next_to(inlet, LEFT, buff=0.34)
++        inlet = Rectangle(width=0.16, height=0.60, color=P_CYAN, stroke_width=2.5, fill_opacity=0.0)
++        inlet.move_to(np.array([room_c[0] - 2.1, -0.85, 0.0]))
++        inlet_arrow = Arrow(inlet.get_center() + LEFT * 0.95, inlet.get_center() + LEFT * 0.12, buff=0, color=P_CYAN,
++                            stroke_width=4, max_tip_length_to_length_ratio=0.28)
++        inlet_lbl = Text(tr("Inlet opening", "Zuluftöffnung"), font_size=LABEL_FONT_SIZE, color=P_CYAN)
++        inlet_lbl.next_to(inlet_arrow, UP, buff=0.12).align_to(inlet_arrow.get_left() + LEFT * 0.9, LEFT)
+         person = _stand(room_c, 1.7, -1.75)
+ 
+@@ -1023,28 +1043,31 @@ class Beat4_Auftrieb(Scene):
+             for s in (-1, 1)
+         ])
+-        outlet = Line(
++        ceiling_gap = Rectangle(width=2 * self.SHAFT_HW - 0.07, height=0.18, stroke_width=0, fill_color=P_DEEP_DARK,
++                                fill_opacity=1.0).move_to(np.array([self.SHAFT_X, room_top - 0.08, 0.0]))
++        outlet = DashedLine(
+             np.array([self.SHAFT_X - self.SHAFT_HW, self.TOP_LOW, 0.0]),
+             np.array([self.SHAFT_X + self.SHAFT_HW, self.TOP_LOW, 0.0]),
+-            color=P_ORANGE, stroke_width=3.0,
++            color=P_ORANGE, stroke_width=3.0, dash_length=0.09,
+         )
+-        outlet_lbl = Text(tr("Extract air", "Abluft"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
++        outlet_arrow = Arrow(outlet.get_center() + UP * 0.05, outlet.get_center() + UP * 0.62, buff=0, color=P_ORANGE,
++                             stroke_width=4, max_tip_length_to_length_ratio=0.3)
++        outlet_lbl = Text(tr("Outlet opening", "Abluftöffnung"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+         outlet_lbl.next_to(outlet, LEFT, buff=0.25)
++        outlet_group = VGroup(outlet, outlet_arrow, outlet_lbl)
+ 
+         def _legend(season, season_color, t_out, t_in):
++            def line(sym, t, rho, tag, c):
++                return VGroup(
++                    math_label(rf"\rho(\theta_{{{sym}}}) = {label_number(rho, 3)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}", size=LABEL_FONT_SIZE, color=c),
++                    VGroup(math_label(rf"\theta_{{{sym}}} = {label_number(t)}\,\mathrm{{°C}}", size=LABEL_FONT_SIZE, color=P_WHITE),
++                           Text(tag, font_size=LABEL_FONT_SIZE, color=P_WHITE)).arrange(RIGHT, buff=0.16),
++                ).arrange(DOWN, aligned_edge=LEFT, buff=0.06)
+             rows = VGroup(
+                 Text(season, font_size=LABEL_FONT_SIZE, color=season_color),
+-                VGroup(
+-                    math_label(r"\rho_{a}", size=BODY_FONT_SIZE, color=P_BLUE),
+-                    math_label(rf"{label_number(t_out)}\,\mathrm{{°C}}", size=LABEL_FONT_SIZE, color=P_WHITE),
+-                    Text(tr("outside · cool · heavy", "außen · kühl · schwer"), font_size=LABEL_FONT_SIZE, color=P_WHITE),
+-                ).arrange(RIGHT, buff=0.16),
+-                VGroup(
+-                    math_label(r"\rho_{i}", size=BODY_FONT_SIZE, color=P_ORANGE),
+-                    math_label(rf"{label_number(t_in)}\,\mathrm{{°C}}", size=LABEL_FONT_SIZE, color=P_WHITE),
+-                    Text(tr("inside · warm · light", "innen · warm · leicht"), font_size=LABEL_FONT_SIZE, color=P_WHITE),
+-                ).arrange(RIGHT, buff=0.16),
+-            ).arrange(DOWN, aligned_edge=LEFT, buff=0.12)
++                line("e", t_out, _rho_air(t_out), tr("outside · cool · heavy", "außen · kühl · schwer"), P_BLUE),
++                line("i", t_in, _rho_air(t_in), tr("inside · warm · light", "innen · warm · leicht"), P_ORANGE),
++            ).arrange(DOWN, aligned_edge=LEFT, buff=0.14)
+             box = SurroundingRectangle(rows, color=P_PRIMARY, corner_radius=0, buff=_theme_module.UI_SPACING, stroke_width=_theme_module.CHROME_BORDER)
+-            return VGroup(box, rows).move_to(np.array([1.85, 1.30, 0.0]))
++            return VGroup(box, rows).move_to(np.array([2.35, 1.20, 0.0]))
+ 
+         legend = _legend(tr("Summer night", "Sommernacht"), P_BLUE, T_OUT_NIGHT, T_IN_SUMMER)
+@@ -1052,7 +1075,6 @@ class Beat4_Auftrieb(Scene):
+         legend_rows = legend[1]
+ 
+-        scaffold = VGroup(room, floor, inlet, inlet_lbl, person,
+-                          shaft_walls, outlet, outlet_lbl, legend)
+-        fit_band(scaffold, bottom=SAFE_BOTTOM_FORMULA)
++        scaffold = VGroup(room, floor, inlet, inlet_arrow, inlet_lbl, person, shaft_walls, outlet_group, legend)
++        fit_band(scaffold, bottom=-0.98)
+ 
+         warm_spots = [person.get_top() + UP * 0.05, np.array([-2.30, floor.get_top()[1] + 0.02, 0.0])]
+@@ -1065,76 +1087,133 @@ class Beat4_Auftrieb(Scene):
+             return [_streams([(stack["paths"], P_CYAN, P_ORANGE)], rt, speed=stack["speed"]), *warmth(rt, 0.4)]
+ 
+-        dp = meter("Δp", length=2.2, thickness=0.52, color=P_YELLOW)
+-        dp["group"].move_to(np.array([4.65, 0.35, 0.0]))
+-        press = ValueTracker(0.0)
+-        bind_meter(dp, press)
+-        dp_max = 5.0
+-        dp_low, dp_high = _stack_dp(2.5, T_OUT_NIGHT, T_IN_SUMMER), _stack_dp(4.4, T_OUT_NIGHT, T_IN_SUMMER)
+-        dp_winter = _stack_dp(4.4, T_OUT_WINTER, T_IN_WINTER)
+-        dp_read = math_readout(
+-            lambda: rf"{label_number(press.get_value() * dp_max, 1)}\,\mathrm{{Pa}}",
+-            dp["track"].get_bottom() + DOWN * 0.34, size=BODY_FONT_SIZE, color=P_YELLOW, edge="center",
+-        )
+-
+-        eq, eq_box, items = math_panel([
+-            ("dp", r"Δp", P_YELLOW), (None, "=", P_WHITE),
+-            ("h", "h", P_CYAN), (None, r"\cdot", P_WHITE),
+-            (None, "g", P_WHITE), (None, r"\cdot", P_WHITE),
+-            ("rho", r"(\rho_{a} - \rho_{i})", P_BLUE),
+-            (None, r"\;[\mathrm{Pa}]", P_PRIMARY),
+-        ], color=P_YELLOW)
+-
+-        self.play(Create(room), Create(floor), FadeIn(inlet), FadeIn(inlet_lbl), FadeIn(person), run_time=1.4)
++        height, t_out_tr, t_in_tr = ValueTracker(2.5), ValueTracker(T_OUT_NIGHT), ValueTracker(T_IN_SUMMER)
++
++        def chain():
++            return _stack_chain(height.get_value(), t_out_tr.get_value(), t_in_tr.get_value())
++
++        x_read = 4.45
++        out_dp = math_readout(lambda: rf"\Delta p = {label_number(chain()['dp'], 1)}\,\mathrm{{Pa}}",
++                              np.array([x_read, 1.80, 0.0]), size=BODY_FONT_SIZE, color=P_YELLOW)
++        out_v = math_readout(lambda: rf"v = {label_number(chain()['v'], 2)}\,\frac{{\mathrm{{m}}}}{{\mathrm{{s}}}}",
++                             np.array([x_read, 1.20, 0.0]), size=BODY_FONT_SIZE, color=P_CYAN)
++        out_q = math_readout(lambda: rf"\dot{{V}} = {label_number(round(chain()['vdot_h'], -1))}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
++                             np.array([x_read, 0.60, 0.0]), size=BODY_FONT_SIZE, color=P_GREEN)
++
++        def case_tag(en, de):
++            return Text(tr(en, de), font_size=LABEL_FONT_SIZE, color=P_WHITE).move_to(np.array([6.9, 2.85, 0.0]), aligned_edge=RIGHT)
++
++        case_low = case_tag("Summer night · h = 2.5 m", "Sommernacht · h = 2,5 m")
++        case_tall = case_tag("Summer night · h = 4.4 m", "Sommernacht · h = 4,4 m")
++        case_winter = case_tag("Winter · h = 4.4 m", "Winter · h = 4,4 m")
++
++        def ru(value, digits=0):
++            return label_number(value, digits)
++
++        def panel_density(s):
++            kgm3 = r"\,\frac{\mathrm{kg}}{\mathrm{m^{3}}}"
++            return math_panel([
++                ("drho", r"\Delta\rho", P_BLUE), (None, "=", P_WHITE),
++                ("diff", r"\rho(\theta_{e}) - \rho(\theta_{i})", P_BLUE), (None, "=", P_WHITE),
++                ("val", rf"{ru(s['rho_e'], 3)}{kgm3} - {ru(s['rho_i'], 3)}{kgm3} = {ru(s['drho'], 3)}{kgm3}", P_YELLOW),
++            ], color=P_BLUE)
++
++        def panel_dp(s, h):
++            return math_panel([
++                ("dp", r"\Delta p", P_YELLOW), (None, "=", P_WHITE),
++                ("drho", r"\Delta\rho", P_BLUE), (None, r"\cdot", P_WHITE),
++                ("g", "g", P_WHITE), (None, r"\cdot", P_WHITE),
++                ("h", "h", P_CYAN), (None, "=", P_WHITE),
++                ("val", rf"{ru(s['drho'], 3)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}} \cdot {ru(G_ACC, 2)}\,\frac{{\mathrm{{m}}}}{{\mathrm{{s^{{2}}}}}} \cdot {ru(h, 1)}\,\mathrm{{m}} = {ru(s['dp'], 1)}\,\mathrm{{Pa}}", P_YELLOW),
++            ], color=P_YELLOW)
++
++        def panel_v(s):
++            return math_panel([
++                ("v", "v", P_CYAN), (None, "=", P_WHITE),
++                ("root", r"\sqrt{2\,\Delta p\,/\,\rho}", P_WHITE), (None, "=", P_WHITE),
++                ("val", rf"\sqrt{{2 \cdot {ru(s['dp'], 1)}\,\mathrm{{Pa}}\,/\,{ru(RHO_AIR, 1)}\,\mathrm{{kg/m^{{3}}}}}} ={ru(s['v'], 2)}\,\mathrm{{m/s}}", P_CYAN),
++            ], color=P_CYAN, size=0.85 * FORMULA_FONT_SIZE, edge_buff=1.86)
++
++        def panel_q(s):
++            return math_panel([
++                ("q", r"\dot{V}", P_GREEN), (None, "=", P_WHITE),
++                ("cd", r"C_{d}", P_WHITE), (None, r"\cdot", P_WHITE),
++                ("a", "A", P_CYAN), (None, r"\cdot", P_WHITE),
++                ("v", "v", P_CYAN), (None, "=", P_WHITE),
++                ("val", rf"{ru(CD_OPENING, 1)} \cdot {ru(A_OPENING, 1)}\,\mathrm{{m^{{2}}}} \cdot {ru(s['v'], 2)}\,\frac{{\mathrm{{m}}}}{{\mathrm{{s}}}} = {ru(s['vdot'], 3)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{s}}}} \approx {ru(round(s['vdot_h'], -1))}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", P_GREEN),
++            ], color=P_GREEN)
++
++        def swap_panel(old, new):
++            return [FadeOut(old[0]), FadeOut(old[1]), FadeIn(new[0]), FadeIn(new[1])]
++
++        self.play(Create(room), Create(floor), Create(inlet), GrowArrow(inlet_arrow), FadeIn(inlet_lbl), FadeIn(person), run_time=1.4)
+         self.play(*warmth(1.1), run_time=1.1)
+-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 1.1, during=warmth)
++        hold_for(self, N, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 1.1, during=warmth)
+ 
+-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "shaft"))
+-        self.play(Create(shaft_walls), Create(outlet), FadeIn(outlet_lbl), *warmth(1.2), run_time=1.2)
+-        self.play(FadeIn(legend), *warmth(0.8), run_time=0.8)
++        caption = swap_caption(self, caption, subtitle_text(N, "shaft"))
++        self.play(Create(shaft_walls), FadeIn(ceiling_gap), Create(outlet), GrowArrow(outlet_arrow), FadeIn(outlet_lbl), *warmth(1.2), run_time=1.2)
+         stack["paths"] = stack_low = self._stack_paths(inlet.get_center(), room_top, self.TOP_LOW)
+         guides_low = flow_guides(stack_low, P_ORANGE)
+         self.play(Create(guides_low), *warmth(0.6), run_time=0.6)
+         self.play(*rising(2.6), run_time=2.6)
+-        hold_for(self, self.NARRATION, "shaft", during=rising)
++        hold_for(self, N, "shaft", during=rising)
+ 
+-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
+-        self.play(FadeIn(eq), Create(eq_box), *rising(1.0), run_time=1.0)
+-        self.play(FadeIn(dp["group"]), FadeIn(dp_read), press.animate.set_value(dp_low / dp_max), *rising(1.0), run_time=1.0)
+-        hold_for(self, self.NARRATION, "formula", during=rising)
++        caption = swap_caption(self, caption, subtitle_text(N, "density"))
++        panel = panel_density(S_LOW)
++        self.play(FadeIn(legend), *rising(1.2), run_time=1.2)
++        hold_for(self, N, "density", during=rising)
++
++        caption = swap_caption(self, caption, subtitle_text(N, "drho"))
++        self.play(FadeIn(panel[0]), Create(panel[1]), Indicate(legend_rows[1], color=P_BLUE), Indicate(legend_rows[2], color=P_ORANGE),
++                  *rising(1.4), run_time=1.4)
++        hold_for(self, N, "drho", during=rising)
+ 
+         h_dim = dim_arrow(
+-            np.array([-0.30, inlet.get_center()[1], 0.0]),
+-            np.array([-0.30, self.TOP_LOW, 0.0]),
++            np.array([-0.20, inlet.get_center()[1], 0.0]),
++            np.array([-0.20, self.TOP_LOW, 0.0]),
+             color=P_CYAN,
+         )
+-        h_tok = math_label(tr(r"h \approx 2.5\,\mathrm{m}", r"h \approx 2{,}5\,\mathrm{m}"), size=LABEL_FONT_SIZE, color=P_CYAN)
+-        h_tok.next_to(h_dim, RIGHT, buff=0.14)
+-        h_tok_tall = math_label(tr(r"h \approx 4.4\,\mathrm{m}", r"h \approx 4{,}4\,\mathrm{m}"), size=LABEL_FONT_SIZE, color=P_CYAN)
+-        ring_h = highlight_param(items, "h", color=P_CYAN)
+-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "h"))
+-        self.play(Create(h_dim), FadeIn(h_tok), Create(ring_h), *rising(1.0), run_time=1.0)
+-        hold_for(self, self.NARRATION, "h", during=rising)
++        h_tok = math_label(tr(r"h = 2.5\,\mathrm{m}", r"h = 2{,}5\,\mathrm{m}"), size=LABEL_FONT_SIZE, color=P_CYAN).rotate(PI / 2)
++        h_tok.next_to(h_dim, LEFT, buff=0.10)
++        h_tok_tall = math_label(tr(r"h = 4.4\,\mathrm{m}", r"h = 4{,}4\,\mathrm{m}"), size=LABEL_FONT_SIZE, color=P_CYAN).rotate(PI / 2)
++
++        caption = swap_caption(self, caption, subtitle_text(N, "pressure"))
++        new = panel_dp(S_LOW, 2.5)
++        self.play(*swap_panel(panel, new), Create(h_dim), FadeIn(h_tok), FadeIn(out_dp), FadeIn(case_low), *rising(1.2), run_time=1.2)
++        panel = new
++        ring_h = highlight_param(panel[2], "h", color=P_CYAN)
++        self.play(Create(ring_h), *rising(0.8), run_time=0.8)
++        hold_for(self, N, "pressure", during=rising)
+         self.play(FadeOut(ring_h), *rising(0.25), run_time=0.25)
+ 
+-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "rho"))
+-        ring_rho = highlight_param(items, "rho", color=P_BLUE)
+-        self.play(
+-            Create(ring_rho),
+-            Indicate(legend_rows[1], color=P_BLUE),
+-            Indicate(legend_rows[2], color=P_ORANGE),
+-            *rising(1.0),
+-            run_time=1.0,
+-        )
+-        hold_for(self, self.NARRATION, "rho", during=rising)
+-        self.play(FadeOut(ring_rho), *rising(0.25), run_time=0.25)
+-
+-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "taller"))
++        caption = swap_caption(self, caption, subtitle_text(N, "speed"))
++        new = panel_v(S_LOW)
++        stack["speed"] = 0.9
++        self.play(*swap_panel(panel, new), FadeIn(out_v), *rising(1.2), run_time=1.2)
++        panel = new
++        ring_v = highlight_param(panel[2], "root", color=P_CYAN)
++        self.play(Create(ring_v), *rising(0.8), run_time=0.8)
++        hold_for(self, N, "speed", during=rising)
++        self.play(FadeOut(ring_v), *rising(0.25), run_time=0.25)
++
++        caption = swap_caption(self, caption, subtitle_text(N, "flow"))
++        new = panel_q(S_LOW)
++        a_lbl = math_label(rf"A = {ru(A_OPENING, 1)}\,\mathrm{{m^{{2}}}}", size=LABEL_FONT_SIZE, color=P_CYAN)
++        a_lbl.next_to(inlet_arrow, DOWN, buff=0.12).align_to(inlet_arrow.get_left() + LEFT * 0.9, LEFT)
++        self.play(*swap_panel(panel, new), FadeIn(out_q), FadeIn(a_lbl), Indicate(inlet, color=P_CYAN, scale_factor=1.3), *rising(1.2), run_time=1.2)
++        panel = new
++        ring_q = highlight_param(panel[2], "a", color=P_CYAN)
++        self.play(Create(ring_q), *rising(0.8), run_time=0.8)
++        hold_for(self, N, "flow", during=rising)
++        self.play(FadeOut(ring_q), *rising(0.25), run_time=0.25)
++
++        caption = swap_caption(self, caption, subtitle_text(N, "taller"))
+         rise = self.TOP_HIGH - self.TOP_LOW
+         h_tok_tall.move_to(h_tok.get_center() + UP * rise / 2)
+         tall_dim = dim_arrow(
+-            np.array([-0.30, inlet.get_center()[1], 0.0]),
+-            np.array([-0.30, self.TOP_HIGH, 0.0]),
++            np.array([-0.20, inlet.get_center()[1], 0.0]),
++            np.array([-0.20, self.TOP_HIGH, 0.0]),
+             color=P_CYAN,
+         )
++        new = panel_dp(S_TALL, 4.4)
+         self.play(
+             *[
+@@ -1144,41 +1223,45 @@ class Beat4_Auftrieb(Scene):
+                 for wall in shaft_walls
+             ],
+-            outlet.animate.shift(UP * rise),
+-            outlet_lbl.animate.shift(UP * rise),
++            outlet_group.animate.shift(UP * rise),
+             stage.transition("ventilation.natural.stack-effect.height-dimension-taller", source=h_dim, target=tall_dim),
+             stage.transition("ventilation.natural.stack-effect.height-token-taller", source=h_tok, target=h_tok_tall),
+             FadeOut(guides_low),
+-            press.animate.set_value(dp_high / dp_max),
++            FadeOut(case_low), FadeIn(case_tall),
++            height.animate.set_value(4.4),
++            *swap_panel(panel, new),
+             run_time=1.6,
+         )
++        panel = new
+         stack["paths"] = stack_high = self._stack_paths(inlet.get_center(), room_top, self.TOP_HIGH)
+         stack["speed"] = 1.1
+         self.play(Create(flow_guides(stack_high, P_ORANGE)), run_time=0.5)
+         self.play(*rising(2.4), run_time=2.4)
+-        hold_for(self, self.NARRATION, "taller", during=rising)
++        hold_for(self, N, "taller", during=rising)
+ 
+-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "winter"))
++        caption = swap_caption(self, caption, subtitle_text(N, "winter"))
+         stack["speed"] = 1.8
++        new = panel_dp(S_WINTER, 4.4)
+         self.play(
+             stage.transition("ventilation.natural.stack-effect.legend-winter", source=legend, target=legend_winter),
+-            press.animate.set_value(dp_winter / dp_max),
+-            recolor_meter(dp, P_CYAN),
++            FadeOut(case_tall), FadeIn(case_winter),
++            t_out_tr.animate.set_value(T_OUT_WINTER), t_in_tr.animate.set_value(T_IN_WINTER),
++            *swap_panel(panel, new),
+             *rising(1.6),
+             run_time=1.6,
+         )
++        panel = new
+         self.play(*rising(2.4), run_time=2.4)
+-        hold_for(self, self.NARRATION, "winter", during=rising)
++        hold_for(self, N, "winter", during=rising)
+ 
+-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "comfort"))
++        caption = swap_caption(self, caption, subtitle_text(N, "comfort"))
+         low_ring = VGroup(
+-            SurroundingRectangle(inlet, color=P_CYAN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5),
++            SurroundingRectangle(VGroup(inlet, inlet_arrow, inlet_lbl, a_lbl), color=P_CYAN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5),
+             SurroundingRectangle(person, color=P_CYAN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5),
+         )
+-        high_ring = SurroundingRectangle(outlet, color=P_ORANGE, buff=_theme_module.UI_SPACING,
++        high_ring = SurroundingRectangle(VGroup(outlet, outlet_arrow), color=P_ORANGE, buff=_theme_module.UI_SPACING,
+                                          corner_radius=0, stroke_width=2.5)
+         self.play(Create(low_ring), Create(high_ring), *rising(1.0), run_time=1.0)
+         self.play(Indicate(person, scale_factor=1.0), *rising(0.9), run_time=0.9)
+-        hold_for(self, self.NARRATION, "comfort", during=rising)
+-        dp["fill"].clear_updaters()
++        hold_for(self, N, "comfort", during=rising)
+         self.play(FadeOut(caption), run_time=0.3)
+         self.wait(0.5)
+@@ -1192,4 +1275,7 @@ class Beat5_Nachtlueftung(Scene):
+          "Summer comfort lives on night ventilation once the envelope is shaded. Here are two summer days, with the outdoor temperature in yellow.",
+          "Sommerkomfort lebt von der Nachtlüftung, sobald die Hülle\nverschattet ist — hier zwei Sommertage, Außentemperatur in Gelb."),
++        ("shade",
++         "By day the sun hits the facade. External shading stops the radiation before the glass; the rest reaches the thermal mass.",
++         "Tagsüber trifft die Sonne die Fassade. Außenliegende Verschattung hält die Strahlung vor dem Glas ab; der Rest erreicht die Speichermasse."),
+         ("day",
+          "By day the outdoor air is hotter than the room, so the windows stay shut and the structure soaks up the heat it cannot reject.",
+@@ -1229,5 +1315,5 @@ class Beat5_Nachtlueftung(Scene):
+ 
+         subtitle = section_heading(tr("Night ventilation: discharging the thermal mass", "Nachtlüftung: den Speicher entladen"))
+-        din = _din_ref("DIN 4108-2")
++        din = reference_chip(_references.cite("din-4108-2"))
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -1247,12 +1333,12 @@ class Beat5_Nachtlueftung(Scene):
+             for v, s in ((0, "0"), (12, "12"), (24, "24"), (36, "36"), (48, "48"))
+         ])
+-        x_unit = Text(tr("Hours", "Stunden"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY)
+-        x_unit.next_to(axes.c2p(48, 18), DOWN, buff=0.14).shift(RIGHT * 0.78)
++        x_unit = math_label(r"t\;\text{in}\;\mathrm{h}", size=LABEL_FONT_SIZE, color=P_PRIMARY)
++        x_unit.next_to(axes.c2p(48, 18), DOWN, buff=0.14).shift(RIGHT * 0.62)
+         y_ticks = VGroup(*[
+             Text(s, font_size=LABEL_FONT_SIZE, color=P_WHITE).next_to(axes.c2p(0, v), LEFT, buff=0.14)
+             for v, s in ((22, "22"), (26, "26"), (30, "30"), (34, "34"))
+         ])
+-        y_unit = Text("°C", font_size=LABEL_FONT_SIZE, color=P_PRIMARY)
+-        y_unit.next_to(axes.c2p(0, 34), UP, buff=0.14)
++        y_unit = math_label(r"\theta\;\text{in}\;\mathrm{°C}", size=LABEL_FONT_SIZE, color=P_PRIMARY)
++        y_unit.next_to(axes.c2p(0, 34), UP, buff=0.14).shift(RIGHT * 0.45)
+ 
+         def _zone(t0, t1, v0, v1, color, opacity):
+@@ -1287,9 +1373,9 @@ class Beat5_Nachtlueftung(Scene):
+         keys.move_to(np.array([4.85, -0.55, 0.0]))
+ 
+-        room_c = np.array([4.85, 1.55, 0.0])
+-        icon = Rectangle(width=2.1, height=1.25, stroke_width=0).move_to(room_c)
+-        icon_room = _room(room_c, 2.1, 1.25, t=0.12, window_side="both", window_y=room_c[1] + 0.28, window_h=0.45)
++        room_c = np.array([5.05, 1.10, 0.0])
++        icon = Rectangle(width=2.3, height=1.3, stroke_width=0).move_to(room_c)
++        icon_room = _room(room_c, 2.3, 1.3, t=0.12, window_side="both", window_y=room_c[1] + 0.28, window_h=0.45)
+         mass = Rectangle(
+-            width=1.85, height=0.42, stroke_width=0,
++            width=2.05, height=0.42, stroke_width=0,
+             fill_color=P_RED, fill_opacity=0.0,
+         ).move_to(icon.get_bottom() + UP * 0.24)
+@@ -1302,6 +1388,26 @@ class Beat5_Nachtlueftung(Scene):
+             _window(icon.get_right() + UP * 0.28, height=0.45, width=0.12, inward=-1),
+         )
+-        sky_pos = icon.get_corner(UL) + LEFT * 0.42 + UP * 0.44
++        win_c = icon.get_left() + UP * 0.28
++        sky_pos = win_c + np.array([-1.05, 1.0, 0.0])
+         sun = sun_glyph(sky_pos).scale(0.32)
++        blind_c = win_c + LEFT * 0.32
++        blind = VGroup(
++            Rectangle(width=0.5, height=0.05, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.9).move_to(win_c + np.array([-0.32, 0.39, 0.0])),
++            *[Line(blind_c + np.array([-0.12, dy, 0.0]), blind_c + np.array([0.12, dy - 0.07, 0.0]), color=P_ORANGE, stroke_width=3.2)
++              for dy in np.linspace(0.30, -0.28, 6)],
++        )
++        shade_lbl = Text(tr("Shading", "Verschattung"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
++        shade_lbl.scale(0.85).next_to(blind, DOWN, buff=0.12)
++        shade_lbl.shift(RIGHT * (blind_c[0] + 0.12 - shade_lbl.get_right()[0]))
++        ray_dir = (blind_c + UP * 0.1 - sky_pos) / np.linalg.norm(blind_c + UP * 0.1 - sky_pos)
++        ray_normal = np.array([-ray_dir[1], ray_dir[0], 0.0])
++        rays = VGroup(*[
++            Arrow(sky_pos + ray_dir * 0.36 + ray_normal * k, sky_pos + ray_dir * (np.linalg.norm(blind_c + UP * 0.1 - sky_pos) - 0.10) + ray_normal * k,
++                  buff=0, color=P_YELLOW, stroke_width=3.5, max_tip_length_to_length_ratio=0.3)
++            for k in (-0.2, 0.0, 0.2)
++        ])
++        leak = Arrow(win_c + RIGHT * 0.12, mass.get_top() + LEFT * 0.55, buff=0, color=P_YELLOW, stroke_width=2.0,
++                     max_tip_length_to_length_ratio=0.25).set_stroke(opacity=0.7)
++        sun_group = VGroup(sun, rays, blind, shade_lbl, leak)
+         moon = VGroup(
+             moon_glyph(sky_pos).scale(0.85),
+@@ -1326,5 +1432,5 @@ class Beat5_Nachtlueftung(Scene):
+ 
+         chart = VGroup(axes, x_ticks, x_unit, y_ticks, y_unit, comfort, comfort_lbl,
+-                       keys, icon, icon_room, mass, mass_lbl, icon_win, schedule, season_lbl)
++                       keys, icon, icon_room, mass, mass_lbl, icon_win, schedule, season_lbl, sun_group)
+         fit_band(chart)
+ 
+@@ -1337,9 +1443,14 @@ class Beat5_Nachtlueftung(Scene):
+         self.play(FadeIn(comfort), FadeIn(comfort_lbl), run_time=0.7)
+         self.play(Create(outdoor), FadeIn(keys[0]), run_time=2.2)
+-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.6 + 0.7 + 2.2)
+-
+-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "day"))
+         self.play(Create(icon_room), FadeIn(icon_win), FadeIn(mass_lbl), FadeIn(sun), run_time=1.1)
++        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.6 + 0.7 + 2.2 + 1.1)
++
++        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "shade"))
+         self.add(mass)
++        self.play(LaggedStart(*[GrowArrow(a) for a in rays], lag_ratio=0.2), FadeIn(blind), FadeIn(shade_lbl), run_time=1.4)
++        self.play(GrowArrow(leak), run_time=0.8)
++        hold_for(self, self.NARRATION, "shade", used=1.4 + 0.8)
++
++        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "day"))
+         self.play(mass.animate.set_fill(P_RED, opacity=0.55), FadeIn(mass_hot), *stored(1.3), run_time=1.3)
+         hold_for(self, self.NARRATION, "day", during=stored)
+@@ -1354,5 +1465,5 @@ class Beat5_Nachtlueftung(Scene):
+         self.play(
+             FadeIn(nights), FadeIn(night_lbl), FadeOut(warn),
+-            FadeOut(sun, shift=UP * 0.3), FadeIn(moon, shift=DOWN * 0.3),
++            FadeOut(sun_group, shift=UP * 0.3), FadeIn(moon, shift=DOWN * 0.3),
+             run_time=1.0,
+         )
+@@ -1391,5 +1502,6 @@ class Beat5_Nachtlueftung(Scene):
+ 
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "schedule"))
+-        self.play(FadeIn(schedule, shift=UP * 0.12), FadeIn(season_lbl), run_time=1.0)
++        self.play(FadeIn(schedule, shift=UP * 0.12), FadeIn(season_lbl), FadeOut(moon), FadeIn(sun), FadeIn(blind), FadeIn(rays),
++                  run_time=1.0)
+         hold_for(self, self.NARRATION, "schedule", used=1.0 + 0.35)
+ 
+@@ -1428,9 +1540,9 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
+          "Der Volumenstrom folgt dem Wetter, nicht dem Entwurf — auf eine\nHeiz- oder Kühllast lässt er sich nicht auslegen."),
+         ("recovery",
+-         "At η = 0, exhaust energy escapes through the opening. No heat is recovered: winter ventilation loses all 1500 W.",
+-         "Bei η = 0 entweicht die Abluftenergie durch die Öffnung. Keine Rückgewinnung: im Winter gehen volle 1500 W verloren."),
++         r"At $\eta = 0$, exhaust energy escapes through the opening. No heat is recovered: winter ventilation loses all $1500\,\mathrm{W}$.",
++         r"Bei $\eta = 0$ entweicht die Abluftenergie durch die Öffnung. Keine Rückgewinnung: im Winter gehen volle $1500\,\mathrm{W}$ verloren."),
+         ("handover",
+-         "Fan-assisted ventilation with heat recovery closes these four gaps. The next chapter underpins Heating and Cooling.",
+-         "Mechanische Lüftung mit WRG schließt diese vier Lücken. Das nächste Kapitel legt die Basis für Heizung und Kühlung."),
++         "Fan-assisted ventilation with heat recovery closes these four gaps. The next chapter underpins heating and cooling technology.",
++         "Mechanische Lüftung mit WRG schließt diese vier Lücken. Das nächste Kapitel legt die Basis für Heizung und Kühltechnik."),
+     ]
+ 
+@@ -1440,5 +1552,5 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
+ 
+         subtitle = section_heading(tr("Limits of natural ventilation", "Grenzen der freien Lüftung"))
+-        din = _din_ref("DIN EN 16798-7")
++        din = reference_chip(_references.cite("din-en-16798-7"))
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -1491,5 +1603,5 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
+         )
+         lost_tag = Text(tr("unused", "ungenutzt"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+-        lost_tag.next_to(lost, UP, buff=0.12).set_x(room.get_left()[0] - 0.12 - lost_tag.width / 2)
++        lost_tag.next_to(lost, UP, buff=0.55).set_x(lost_tag.width / 2 - 6.8)
+ 
+         gaps = VGroup(*[
+@@ -1514,6 +1626,6 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
+         handover = VGroup(
+             chip(tr("→ mechanical ventilation · next chapter", "→ mechanische Lüftung · nächstes Kapitel"), P_PRIMARY, font_size=LABEL_FONT_SIZE),
+-            _hand_chip(tr("→ Heating:", "→ Heizung:"), r"\Phi_{\mathrm{V}}", P_ORANGE),
+-            _hand_chip(tr("→ Cooling:", "→ Kühlung:"), r"\dot{Q}_{\mathrm{L}}", P_CYAN),
++            _hand_chip(tr("→ Heating:", "→ Heizung:"), r"\dot{Q}_{\mathrm{V}}", P_ORANGE),
++            _hand_chip(tr("→ Cooling:", "→ Kühltechnik:"), r"\dot{Q}_{\mathrm{V,sens}} + \dot{Q}_{\mathrm{V,lat}}", P_CYAN),
+         ).arrange(RIGHT, buff=0.3)
+         handover.move_to(np.array([0.0, -1.95, 0.0]))

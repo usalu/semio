@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::x::schema::mutations::remove_trim_box::RemoveTrimBox;
 use crate::standards::v1_7::subsets::x::schema::mutations::PdfXMutation;
 #[allow(unused_imports)]
@@ -20,7 +20,7 @@ fn changes_the_owned_conformance_axis_and_plans_its_inverse() {
     let mutation = SetTrimBox { page_index: 0, trim_box: [1.0, 2.0, 300.0, 400.0], entry_index: None };
     let next = applied(&base, &PdfXMutation::SetTrimBox(mutation.clone()));
     assert_eq!(support::page_box(&next, page, "TrimBox"), Some([1.0, 2.0, 300.0, 400.0]));
-    assert_eq!(<SetTrimBox as MutationKind<PdfSnapshot, PdfXMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfXMutation::RemoveTrimBox(RemoveTrimBox { page_index: 0 })]);
+    assert_eq!(<SetTrimBox as ColdMutationKind<PdfSnapshot, PdfXMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfXMutation::RemoveTrimBox(RemoveTrimBox { page_index: 0 })]);
 }
 
 #[semio_framework_async_macros::async_test]

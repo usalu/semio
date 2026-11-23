@@ -110,7 +110,7 @@ impl Lifter<'_> {
             dict_get(&dict, key).map(|v| lifter.source.deref(v)).map(|v| match v {
                 PdfObject::Array(items) => items.iter().filter_map(|item| match item {
                     PdfObject::Text(text) => Some(text.clone()),
-                    PdfObject::Str(bytes) => Some(decode_text_string(bytes)),
+                    PdfObject::Str(bytes) => Some(decode_text_string(&bytes)),
                     PdfObject::Name(name) => Some(name.clone()),
                     _ => None,
                 }).collect(),

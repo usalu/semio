@@ -1,4 +1,4 @@
-//! 🧱️ Instance records and clip: the draw kind constants, the glass region, the ui instance, the vector vertex, the scissor rect and the silhouette clip region. See [`super`].
+//! 🧱️ Instance records and clip: the draw kind constants, the glass region, the ui instance, the vector vertex, the scissor rect and the scanline clip region. See [`super`].
 
 use super::*;
 
@@ -119,7 +119,7 @@ pub struct VectorVertex {
     pub color: [f32; 4],
 }
 
-//#region SilhouetteClip
+//#region Clip
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ScissorRect {
     pub x: u32,
@@ -144,23 +144,6 @@ impl ScissorRect {
         let y1 = (self.y + self.h).min(other.y + other.h);
         Self { x: x0, y: y0, w: x1.saturating_sub(x0), h: y1.saturating_sub(y0) }
     }
-
-    fn subtract(&self, other: &Self) -> [Option<Self>; 4] {
-        let overlap = self.intersect(other);
-        if overlap.w == 0 || overlap.h == 0 {
-            return [Some(*self), None, None, None];
-        }
-        let right = self.x + self.w;
-        let bottom = self.y + self.h;
-        let overlap_right = overlap.x + overlap.w;
-        let overlap_bottom = overlap.y + overlap.h;
-        [
-            (self.y < overlap.y).then_some(Self { x: self.x, y: self.y, w: self.w, h: overlap.y - self.y }),
-            (overlap_bottom < bottom).then_some(Self { x: self.x, y: overlap_bottom, w: self.w, h: bottom - overlap_bottom }),
-            (self.x < overlap.x).then_some(Self { x: self.x, y: overlap.y, w: overlap.x - self.x, h: overlap.h }),
-            (overlap_right < right).then_some(Self { x: overlap_right, y: overlap.y, w: right - overlap_right, h: overlap.h }),
-        ]
-    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -169,48 +152,10 @@ pub struct ClipRegion {
 }
 
 impl ClipRegion {
-    /// 🪟️ Builds a bounded orthogonal clip union; callers provide non-overlapping pieces.
-    pub fn from_rects(rects: &[semio_ui_theme::geometry::Rect], screen_h: f32) -> Self {
-        let scissors = rects.iter().map(|rect| ScissorRect::from_rect(*rect, screen_h)).filter(|rect| rect.w > 0 && rect.h > 0).collect();
-        Self { scissors }
-    }
-
-    pub(super) fn from_disjoint_rects(rects: &[semio_ui_theme::geometry::Rect], screen_h: f32) -> Self {
-        let mut scissors: Vec<ScissorRect> = Vec::new();
-        for rect in rects {
-            let candidate = ScissorRect::from_rect(*rect, screen_h);
-            if candidate.w == 0 || candidate.h == 0 {
-                continue;
-            }
-            let mut pieces = vec![candidate];
-            for prior in &scissors {
-                pieces = pieces.into_iter().flat_map(|piece| piece.subtract(prior).into_iter().flatten()).collect();
-            }
-            scissors.extend(pieces);
-        }
-        Self { scissors: scissors.into_iter().collect() }
-    }
-
-    pub(super) fn source_pieces_overlap(rects: &[semio_ui_theme::geometry::Rect]) -> bool {
-        (0..rects.len()).any(|left| {
-            (left + 1..rects.len()).any(|right| {
-                let left = rects[left];
-                let right = rects[right];
-                left.x.max(right.x) < (left.x + left.w.max(0.0)).min(right.x + right.w.max(0.0)) && left.y.max(right.y) < (left.y + left.h.max(0.0)).min(right.y + right.h.max(0.0))
-            })
-        })
-    }
-
     pub(super) fn intersect(&self, other: &Self) -> Self {
         let scissors = self.scissors.iter().flat_map(|left| other.scissors.iter().map(move |right| left.intersect(right))).filter(|rect| rect.w > 0 && rect.h > 0).collect();
         Self { scissors }
     }
-
-    #[cfg(any(test, feature = "testkit"))]
-    pub fn effective_scissors(&self, scissor: Option<ScissorRect>, width: f32, height: f32) -> Vec<ScissorRect> {
-        let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
-        self.scissors.iter().map(|clip| clip.intersect(&viewport)).map(|clip| scissor.map_or(clip, |parent| clip.intersect(&parent))).filter(|clip| clip.w > 0 && clip.h > 0).collect()
-    }
 }
-//#endregion SilhouetteClip
+//#endregion Clip
 // #endregion draw_types

@@ -37,9 +37,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &ProcedureScene) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &ProcedureScene, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let host = ImperativeHost::from_scene(scene);
-    TextWindowKit::render(&TextView { text: host.compile_text(), language: Some("imperative".into()) })
+    TextWindowKit::render(&TextView { text: host.compile_text(), language: Some("imperative".into()) }, locale)
 }
 //#endregion 🔖️Render
 

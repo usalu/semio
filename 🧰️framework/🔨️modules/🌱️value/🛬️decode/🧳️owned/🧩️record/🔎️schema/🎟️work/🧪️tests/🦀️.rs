@@ -13,6 +13,9 @@ use source_bank::Bank;
 
 fn nested_schema(index:usize)->Option<NativeRecordSchema>{match index{0=>Some(NativeRecordSchema::Leaf(NativeSchemaLeaf{name:"dup",ordinal:0})),1=>Some(NativeRecordSchema::Leaf(NativeSchemaLeaf{name:"beta",ordinal:1})),2=>Some(NativeRecordSchema::Leaf(NativeSchemaLeaf{name:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaz",ordinal:2})),_=>None}}
 fn root_schema(index:usize)->Option<NativeRecordSchema>{match index{0=>Some(NativeRecordSchema::Leaf(NativeSchemaLeaf{name:"alpha",ordinal:0})),1=>Some(NativeRecordSchema::Flatten{fields:unsafe{NativeSchemaFields::native(nested_schema)},count:3}),2=>Some(NativeRecordSchema::Leaf(NativeSchemaLeaf{name:"dup",ordinal:2})),3=>Some(NativeRecordSchema::Union{fields:unsafe{NativeSchemaFields::native(union_schema)},count:2}),_=>None}}
+#[derive(serde::Deserialize)]struct SerdeNested{beta:Option<u8>,#[serde(rename="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaz")]long:Option<u8>,dup:Option<u8>}
+#[derive(serde::Deserialize)]struct SerdeRoot{alpha:Option<u8>,#[serde(flatten)]nested:SerdeNested,dup:Option<u8>,union:Option<u8>}
+fn serde_owner(key:&str)->Option<usize>{let root:SerdeRoot=serde_json::from_value(serde_json::json!({key:1})).unwrap();[root.alpha,root.nested.beta.or(root.nested.long).or(root.nested.dup),root.dup,root.union].iter().position(Option::is_some)}
 fn union_schema(index:usize)->Option<NativeRecordSchema>{if index<2{Some(NativeRecordSchema::Leaf(NativeSchemaLeaf{name:"union",ordinal:7}))}else{None}}
 
 #[derive(semio_framework_value_native_owned::RetireOwned)]#[value(crate="semio_framework_value_native_owned")]struct KeySource{name:String,ordinal:Option<u16>,refusal:Option<String>}
@@ -137,6 +140,7 @@ fn actual_native_schema_matcher_driver_visits_flattened_original_names(){
    assert!(failure.is_none(),"{failure:?} after {:?}",trace.steps.iter().rev().take(6).collect::<Vec<_>>());
    let actual=match matcher.result().unwrap_or_else(||panic!("matcher result absent after {:?}",trace.steps.iter().rev().take(8).collect::<Vec<_>>())){NativeFieldMatch::Missing=>serde_json::json!({"kind":"missing","field":null}),NativeFieldMatch::Field(field)=>serde_json::json!({"kind":"field","field":field}),NativeFieldMatch::Ambiguous=>serde_json::json!({"kind":"ambiguous","field":null})};
    assert_eq!(actual,serde_json::json!({"kind":case["kind"],"field":case["field"]}));
+   if let Some(name)=case["key"].as_str(){let owner=serde_owner(name);match case["kind"].as_str().unwrap(){"field"=>assert_eq!(owner,case["field"].as_u64().map(|field|field as usize)),"missing"=>assert_eq!(owner,None),_=>assert_eq!(owner,Some(2),"serde resolves an own field before a flattened one")}}
    if let Some(turns)=case["turns"].as_u64(){assert_eq!(count as u64,turns,"turns for {}",case["key"]);}
   }
   close(&mut bank,&mut native,&mut matcher,maximum,&mut trace).unwrap_or_else(|error|panic!("close {error:?} after {:?}",trace.steps.iter().rev().take(8).collect::<Vec<_>>()));

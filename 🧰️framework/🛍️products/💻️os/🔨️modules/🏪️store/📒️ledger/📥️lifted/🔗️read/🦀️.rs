@@ -17,6 +17,7 @@ impl ArtifactStoreStringRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreStringRetirement {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owner.next_demand(body) }
     fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();semio_framework_value::RetirementPollExit::resume(self.owner.step(effect.grant().maximum_copy_bytes, effect))})(); semio_framework_value::RetirementPollExit::settle(effect, result) }
     fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
@@ -53,6 +54,7 @@ impl<Mutation> ArtifactStoreEditRetirement<Mutation> {
 }
 
 impl<Mutation:Send+'static> ErasedSnapshotRetirement for ArtifactStoreEditRetirement<Mutation>{
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_computational_work(&self, body: usize) -> Result<u64, ValueError> {
         if let Some(state) = self.state.as_ref() { return if state.terminal_is_empty() { Ok(0) } else { state.next_computational_work(body) }; }
         if self.forwards.is_some() { return Ok(0); }

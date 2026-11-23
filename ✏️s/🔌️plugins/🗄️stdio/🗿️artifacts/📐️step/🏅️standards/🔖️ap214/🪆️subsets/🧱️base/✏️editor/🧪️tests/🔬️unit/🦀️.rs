@@ -74,7 +74,7 @@ fn natural_step_decodes_to_what_the_independent_reference_parser_read() {
 fn the_scene_draws_the_files_cartesian_points() {
     let snapshot = <StepAnyEditor as ArtifactEditor>::decode_natural_file(include_bytes!("../🧫️fixtures/📂️natural/sample.step")).expect("step opens");
     assert_eq!(snapshot.scene_points(), vec![[1.0, 2.0, 3.0]]);
-    assert!(main::render(&snapshot).is_ok());
+    assert!(main::render(&snapshot, semio_ui_locale::Locale::En).is_ok());
 }
 
 #[test]

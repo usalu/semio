@@ -1,7 +1,7 @@
 //! 🧾️ Catalogue reference verifications of the snapshot entities: the retaining wall (RW-01, RW-02, RW-04, RW-05, RW-06, RW-10), the slope (SLOPE-01, SLOPE-02, SLOPE-03, SLOPE-04), the uplift case (UPL-01), the footing sliding (GEO-F04) and DIN 4017 bearing resistance (GEO-F03), the passive resistance of an embedded wall (RW-03), the resistance-settlement of a pile (PILE-09) and the groundwater drawdown at an embedded wall (DEW-03). Each is one catalogue case of the entity; limit comparisons are reported as information (the governing project check of the entity decides compliance), and every result is retargeted to the entity row.
 
 use super::*;
-use crate::catalogue::{earth_pressure as ep, evaluate_outcomes, outcomes_to_results, slopes::Circle, Case, Mode, Outcome, R};
+use crate::catalogue::{earth_pressure as ep, evaluate_standalone, outcomes_to_results, slopes::Circle, Case, Mode, Outcome, R};
 use crate::geo_entities::{case, retarget};
 use semio_s_artifact_norm_en1997_model::{EmbeddedWall, LabTest, LayerWater, Pile, RetainingWall, Slope, UpliftCase};
 
@@ -11,7 +11,7 @@ fn informative(outcomes: R) -> R {
 }
 
 fn reference(report: &mut CheckReport, entry: &str, input: &Case, collection: &str, id: &str, label: &LocalizedCopy) {
-    report.extend(retarget(outcomes_to_results(entry, input, informative(evaluate_outcomes(entry, input))), collection, id, &label.en, &label.de));
+    report.extend(retarget(outcomes_to_results(entry, input, informative(evaluate_standalone(entry, input))), collection, id, &label.en, &label.de));
 }
 
 /// 🗄️ Earth-pressure, surcharge, traffic and gravity-wall reference verifications of one retaining wall from its backfill, geometry and loads.

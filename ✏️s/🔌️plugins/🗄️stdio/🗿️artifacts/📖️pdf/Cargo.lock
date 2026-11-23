@@ -6074,6 +6074,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-value",
  "semio-os-kernel",
+ "semio-plugin-command",
  "semio-plugin-decl-app",
  "semio-plugin-instance-app",
  "semio-plugin-instance-initialization",
@@ -8186,6 +8187,7 @@ dependencies = [
  "semio-framework-action-bus",
  "semio-framework-job",
  "semio-framework-pack",
+ "semio-framework-test-original-snapshot-owners",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-snapshot-read",
@@ -8684,7 +8686,6 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-snapshot",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-s-artifact-stdio-pdf-test-oracle",
- "semio-s-artifact-stdio-pdf-tests",
  "semio-ui-contract",
  "semio-ui-locale",
  "semio-ui-scene",
@@ -8748,6 +8749,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -8953,6 +8955,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-mut-family-9",
  "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-s-artifact-stdio-pdf-test-oracle",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -10227,6 +10230,20 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-locale",
  "semio-ui-scene",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-mutation-round-trip-tests"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-pack-json",
+ "semio-framework-test-fixtures",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-s-artifact-stdio-pdf-conformance-support",
  "serde_json",
 ]
 

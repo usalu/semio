@@ -1,17 +1,33 @@
 Feature: Unified page chrome chip borders
-  Running page metadata uses the same joined chip and border design as chapters.
+  Running page metadata is one rectangular band whose chips sit inside it as glass overlays.
 
-  Scenario Outline: A single shared edge closes the metadata chips
+  Scenario Outline: A single shared rule is the band's outer edge
     Given the page chrome geometry in the shared language-neutral fixture
     When the <bar> is rendered
-    Then its chips are open toward the <side> shared border
-    And the chip sides meet that border without a gap
+    Then its chips are anchored to the <side> shared rule inside the band
+    And each chip draws only its inner edges and none on the shared rule
     And exactly one hairline closes the shared edge
+    And no gap, overlap or welded seam joins a chip to the rule
 
     Examples:
       | bar    | side   |
       | navbar | bottom |
       | footer | top    |
+
+  Scenario: Chips are glass surfaces one step above the page
+    Given the chip surface in the shared language-neutral fixture
+    When a chip is rendered with transparency enabled
+    Then its fill is the chip surface at the fixture opacity so the content beneath stays visible
+    When the transparency switch is off
+    Then the same chip is filled with the opaque chip surface
+
+  Scenario: Window, table, figure and heading chips share one rectangle
+    Given the frame geometry in the shared language-neutral fixture
+    When a window, figure, table or heading is rendered
+    Then the component is one rectangle with a continuous top rule
+    And its title chip draws only its right and bottom edges inside the frame
+    And its number chip draws only its left and bottom edges inside the frame
+    And no raised cap, open-bottom tab or gap connector exists
 
   Scenario: Long running headings retain full-height borders
     Given a running heading wider than its available slot

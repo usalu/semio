@@ -43,6 +43,11 @@
       "covers": "host-side external slot resolution on changed bodies"
     },
     {
+      "id": "refresh.sections",
+      "owner": "ShellHost.refreshUi",
+      "covers": "the follow-up section request answered by the program after the slots resolved"
+    },
+    {
       "id": "refresh.apply",
       "owner": "ShellHost.refreshUi",
       "covers": "the React state dispatches that apply a refresh response"

@@ -68,8 +68,9 @@ async fn fem2d_document_text_round_trips_through_the_store() {
     ];
     store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").to_reference(), fixture);
-    semio_os_kernel::os_store::test_support::assert_document_text_round_trip(&store).await;
-    semio_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_kernel::os_store::test_support::assert_owned_document_text_round_trip(&store).await;
+    semio_os_kernel::os_store::test_support::assert_owned_document_pack_round_trip(&store).await;
+    drop(store.detach_backbone().expect("fem2d store releases its backbone"));
     store.close_owned_unscheduled().expect("fem2d document store closes through its exact bounded owners");
 }
 

@@ -88,18 +88,24 @@ enum RetainedInteractiveSyncPhase {
     SelectWrite,
     /// 🖼️ An icon selector's cell `cursor.item` has no retained child yet or one to refresh — find it by key.
     IconCellScan,
+    /// 🖼️ Compares exactly one sibling per grant against the cell's key.
+    IconCellFind,
     /// 🖼️ Synthesize the cell (mode `Select`, mono editor `Input`, Import and Clear `Button`s) as a ledgered composite child.
     IconCellMint,
     /// 🖼️ Write the cell's spec and its explicit rect inside the selector.
     IconCellWrite,
     /// 🔌️ An extension host's row `cursor.item` has no retained child yet or one to refresh — find it by key.
     ExtRowScan,
+    /// 🔌️ Compares exactly one sibling per grant against the row's key.
+    ExtRowFind,
     /// 🔌️ Synthesize the host's control as a ledgered composite child of the slot.
     ExtRowMint,
     /// 🔌️ Write the row's spec and its stacked rect inside the slot.
     ExtRowWrite,
     /// 🗓️ A date or colour input's open popup: find cell `cursor.item` by key, synthesize it if absent, write its spec and rect.
     PickerScan,
+    /// 🗓️ Compares exactly one sibling per grant against the cell's key.
+    PickerFind,
     PickerMint,
     PickerWrite,
     StackWrite,
@@ -133,7 +139,7 @@ pub struct RetainedInteractiveSyncCursor {
     tree_item_count: usize,
     tree_apply: usize,
     /// 🩺️ The source line of the `let … else` arm that last answered
-    /// [`RetainedInteractiveSyncStep::Fault`], `0` while the walk is healthy. See
+    /// [`RetainedInteractiveSyncStep::Fault`], `0` when the walk is healthy. See
     /// [`retained_sync_fault`].
     pub fault_line: u32,
 }
@@ -426,10 +432,11 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
         }
         RetainedInteractiveSyncPhase::SelectMint => {
             let row = tree.node(id).and_then(|node| match &node.spec.0 {
-                UiNode::Select(select) => select.items.get(cursor.item).map(|item| (semio_ui_retained_tree::reconcile::select_item_row_committing(select, item, &semio_ui_retained_tree::reconcile::select_commit_value(tree, id, &item.value)), item.value.clone())),
+                UiNode::Select(select) => select.items.get(cursor.item).map(|item| (semio_ui_retained_tree::reconcile::select_item_row_committing(select, item, &semio_ui_retained_tree::reconcile::select_commit_value(tree, id, &item.value)), RetainedSyncKey::try_from_str(&item.value))),
                 _ => None,
             });
             let Some((spec, key)) = row else { return retained_sync_fault(cursor, line!()) };
+            let Some(key) = key.as_ref().and_then(RetainedSyncKey::as_str).map(str::to_owned) else { return retained_sync_select_skip(cursor) };
             let minted = tree.mint_composite_row(id, Node::new(NodeKey::Explicit(key), WidgetSpec(spec)));
             let Some(minted) = minted else { return retained_sync_select_skip(cursor) };
             cursor.matched = Some(minted);
@@ -495,17 +502,29 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
                 _ => None,
             });
             let Some(key) = key else { return retained_sync_fault(cursor, line!()) };
-            let mut found = None;
-            let mut child = tree.node(id).and_then(|node| node.first_child);
-            while let Some(candidate) = child {
-                if matches!(tree.node(candidate).map(|node| &node.key), Some(NodeKey::Explicit(existing)) if *existing == key) {
-                    found = Some(candidate);
-                    break;
-                }
-                child = tree.node(candidate).and_then(|node| node.next_sibling);
+            cursor.matched = None;
+            cursor.child_scan = tree.node(id).and_then(|node| node.first_child);
+            cursor.phase = RetainedInteractiveSyncPhase::IconCellFind;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::IconCellFind => {
+            let Some(candidate) = cursor.child_scan else {
+                cursor.matched = None;
+                cursor.phase = RetainedInteractiveSyncPhase::IconCellMint;
+                return RetainedInteractiveSyncStep::Pending;
+            };
+            let key = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::IconSelect(select) => Some(semio_ui_retained_tree::reconcile::icon_select_cell_key(select, cursor.item)),
+                _ => None,
+            });
+            let Some(key) = key else { return retained_sync_fault(cursor, line!()) };
+            if matches!(tree.node(candidate).map(|node| &node.key), Some(NodeKey::Explicit(existing)) if *existing == key) {
+                cursor.matched = Some(candidate);
+                cursor.child_scan = None;
+                cursor.phase = RetainedInteractiveSyncPhase::IconCellWrite;
+            } else {
+                cursor.child_scan = tree.node(candidate).and_then(|node| node.next_sibling);
             }
-            cursor.matched = found;
-            cursor.phase = if found.is_some() { RetainedInteractiveSyncPhase::IconCellWrite } else { RetainedInteractiveSyncPhase::IconCellMint };
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::IconCellMint => {
@@ -548,27 +567,38 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::ExtRowScan => {
-            let Some((body_key, params_json)) = tree.node(id).and_then(|node| match &node.spec.0 {
-                UiNode::ExternalSlot(slot) => Some((slot.body_key.clone(), slot.params_json.clone())),
+            let Some(rows) = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::ExternalSlot(slot) => Some(if slot.body_key.len() <= RETAINED_SYNC_KEY_BYTES { semio_ui_retained_tree::reconcile::extension_host_rows(&slot.body_key, &slot.params_json).len() } else { 0 }),
                 _ => None,
             }) else {
                 return retained_sync_fault(cursor, line!());
             };
-            if cursor.item >= semio_ui_retained_tree::reconcile::extension_host_rows(&body_key, &params_json).len() {
+            if cursor.item >= rows {
                 return cursor.finish();
             }
-            let key = semio_ui_retained_tree::reconcile::extension_row_key(&body_key, cursor.item);
-            let mut found = None;
-            let mut child = tree.node(id).and_then(|node| node.first_child);
-            while let Some(candidate) = child {
-                if matches!(tree.node(candidate).map(|node| &node.key), Some(NodeKey::Explicit(existing)) if *existing == key) {
-                    found = Some(candidate);
-                    break;
-                }
-                child = tree.node(candidate).and_then(|node| node.next_sibling);
+            cursor.matched = None;
+            cursor.child_scan = tree.node(id).and_then(|node| node.first_child);
+            cursor.phase = RetainedInteractiveSyncPhase::ExtRowFind;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::ExtRowFind => {
+            let Some(candidate) = cursor.child_scan else {
+                cursor.matched = None;
+                cursor.phase = RetainedInteractiveSyncPhase::ExtRowMint;
+                return RetainedInteractiveSyncStep::Pending;
+            };
+            let key = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::ExternalSlot(slot) => Some(semio_ui_retained_tree::reconcile::extension_row_key(&slot.body_key, cursor.item)),
+                _ => None,
+            });
+            let Some(key) = key else { return retained_sync_fault(cursor, line!()) };
+            if matches!(tree.node(candidate).map(|node| &node.key), Some(NodeKey::Explicit(existing)) if *existing == key) {
+                cursor.matched = Some(candidate);
+                cursor.child_scan = None;
+                cursor.phase = RetainedInteractiveSyncPhase::ExtRowWrite;
+            } else {
+                cursor.child_scan = tree.node(candidate).and_then(|node| node.next_sibling);
             }
-            cursor.matched = found;
-            cursor.phase = if found.is_some() { RetainedInteractiveSyncPhase::ExtRowWrite } else { RetainedInteractiveSyncPhase::ExtRowMint };
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::ExtRowMint => {
@@ -614,26 +644,34 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::PickerScan => {
-            let kind = tree.node(id).and_then(|node| match &node.spec.0 {
-                UiNode::Input(input) => Some(input.input_kind.clone()),
+            let Some(count) = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::Input(input) => Some(picker_cells::picker_cell_count(&input.input_kind)),
                 _ => None,
-            });
-            let Some(kind) = kind else { return retained_sync_fault(cursor, line!()) };
-            if cursor.item >= picker_cells::picker_cell_count(&kind) {
+            }) else {
+                return retained_sync_fault(cursor, line!());
+            };
+            if cursor.item >= count {
                 return cursor.finish();
             }
+            cursor.matched = None;
+            cursor.child_scan = tree.node(id).and_then(|node| node.first_child);
+            cursor.phase = RetainedInteractiveSyncPhase::PickerFind;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::PickerFind => {
+            let Some(candidate) = cursor.child_scan else {
+                cursor.matched = None;
+                cursor.phase = RetainedInteractiveSyncPhase::PickerMint;
+                return RetainedInteractiveSyncStep::Pending;
+            };
             let key = picker_cells::picker_cell_key(cursor.item);
-            let mut found = None;
-            let mut child = tree.node(id).and_then(|node| node.first_child);
-            while let Some(candidate) = child {
-                if matches!(tree.node(candidate).map(|node| &node.key), Some(NodeKey::Explicit(existing)) if *existing == key) {
-                    found = Some(candidate);
-                    break;
-                }
-                child = tree.node(candidate).and_then(|node| node.next_sibling);
+            if matches!(tree.node(candidate).map(|node| &node.key), Some(NodeKey::Explicit(existing)) if *existing == key) {
+                cursor.matched = Some(candidate);
+                cursor.child_scan = None;
+                cursor.phase = RetainedInteractiveSyncPhase::PickerWrite;
+            } else {
+                cursor.child_scan = tree.node(candidate).and_then(|node| node.next_sibling);
             }
-            cursor.matched = found;
-            cursor.phase = if found.is_some() { RetainedInteractiveSyncPhase::PickerWrite } else { RetainedInteractiveSyncPhase::PickerMint };
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::PickerMint => {

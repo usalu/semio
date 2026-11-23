@@ -39,11 +39,13 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(geometry: &EquationGeometry) -> UiAssemblyResult<BuiltNode> {
+pub fn render(geometry: &EquationGeometry, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     semio_plugin::scene_surface(
         MATH_PLAY_BODY_GEOMETRY,
         semio_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
         &Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: geometry_layers_json(geometry), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        semio_plugin::surface_name(locale, "Geometry view", "Geometrieansicht"),
+        None,
     )
 }
 //#endregion 🔖️Render

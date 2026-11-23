@@ -95,8 +95,9 @@ export function cargoIdentityArgumentsV1(args:readonly string[]):readonly string
  return rows;
 }
 
-/** 🆔️ The metadata every compilation of one unit gets, whoever compiles it and in whichever workspace: a short hash of the portable key of the unit (its key without Cargo's identity, see {@link cargoIdentityArgumentsV1}), so equal units carry equal stable crate ids and distinct units (other sources, features, dependencies, flags) distinct ones. */
-export function canonicalMetadataV1(portableKey:string):string{return sha256V1(JSON.stringify([policy.namespace,"metadata",portableKey])).slice(0,policy.key.metadataCharacters);}
+/** 🆔️ The metadata every compilation of one unit gets, whoever compiles it, in whichever workspace and after whichever edit: a short hash of the slot-level identity of the unit (see `slotMetadataV1`), never of its content.
+ * @see ../🛰️fleet/🪪️identity/🟦️.ts */
+export function canonicalMetadataV1(identity:string):string{return sha256V1(JSON.stringify([policy.namespace,"metadata",identity])).slice(0,policy.key.metadataCharacters);}
 
 /** 🔁️ The command line with the value of every `-C metadata=` replaced by `metadata` (in the spelling it had); `extra-filename` stays as Cargo gave it, because the file names Cargo looks for derive from it. */
 export function withCanonicalMetadataV1(args:readonly string[],metadata:string):readonly string[]{
@@ -147,10 +148,12 @@ export function normalizeRustcArgumentsV1(args:readonly string[],externDigests:R
  return result;
 }
 
-/** 🍎️ The identity of a macOS SDK as the key sees it: the name of the SDK directory after its links are resolved (`MacOSX15.4.sdk`), never where it is installed (Xcode, the command line tools or a task's own copy), so two machines with the same SDK in different places compile alike. */
+/** 🍎️ The identity of a macOS SDK as the key and the worker placement see it: the canonical name its `SDKSettings.json` declares (`macosx27.2`), else the version in the name of the SDK directory (`MacOSX15.4.sdk` gives `macosx15.4`, links resolved first, the given name second), never where it is installed or which link names it (Xcode's unversioned `MacOSX.sdk`, the command line tools or a task's own copy), so every machine with the same SDK version compiles and links alike. */
 export function sdkIdentityV1(path:string):string{
- let real=path;try{real=realpathSync(path);}catch{}
- return basename(real.replace(/[\\/]+$/u,""));
+ const trimmed=path.replace(/[\\/]+$/u,"");let real=trimmed;try{real=realpathSync(trimmed);}catch{}
+ try{const name=(JSON.parse(readFileSync(join(real,"SDKSettings.json"),"utf8")) as {CanonicalName?:unknown}).CanonicalName;if(typeof name==="string"&&name!=="")return name.toLowerCase();}catch{}
+ for(const candidate of [real,trimmed]){const found=/^(.*?)(\d+(?:\.\d+)*)\.sdk$/iu.exec(basename(candidate));if(found)return found[1]!.toLowerCase()+found[2];}
+ return basename(real);
 }
 
 /** 🚩️ The Cargo-encoded compiler flags (separated by U+001F) with the machine-specific `FROM` of each path remapping replaced by the role it plays (see {@link machineNeutralRemapV1}), in the joined form and in the two-argument form. */
@@ -175,6 +178,17 @@ export function withoutIncrementalV1(args:readonly string[]):readonly string[]{
   kept.push(argument);
  }
  return kept;
+}
+
+/** 📦️ The OUT_DIR of a build script as a key value: `<anything>/build/<crate>-<hash>/out` (classic layout) or `<anything>/build/<crate>/<hash>/out` (`build-dir-new-layout`) is `⟨out⟩<crate>` (Cargo's hash of the unit and the directory the build lives in differ between checkouts, lanes and machines, the generated files are keyed by their bytes), any other path stays as it is, with the lane root replaced. */
+export function outDirectoryIdentityV1(path:string,laneRoot:string|undefined):string{
+ const text=laneNeutralV1(path,laneRoot),named=/(?:^|[\\/])build[\\/](?:([^\\/]+)-[0-9a-f]{16}|([^\\/]+)[\\/][0-9a-f]{16})[\\/]out[\\/]?$/u.exec(text);
+ return named?"⟨out⟩"+(named[1]??named[2]):text;
+}
+
+/** 🌱️ The key form of an environment value the compiler's sources read with `env!`: the selected names as `keyEnvironmentV1` gives them, the OUT_DIR as `outDirectoryIdentityV1`, every other value with the lane root replaced. */
+export function sourceValueV1(name:string,text:string,laneRoot:string|undefined):string{
+ return name==="OUT_DIR"?outDirectoryIdentityV1(text,laneRoot):keyEnvironmentV1({[name]:text},laneRoot)[0]?.[1]??laneNeutralV1(text,laneRoot);
 }
 
 /** 📥️ The selected environment the compilation can observe without declaring it in its dependency file; values that name a place of this machine (the SDK, the remapped roots of the compiler flags) are reduced to what they are. */
@@ -248,10 +262,22 @@ export function admitFactsV1(args:readonly string[],environment:Readonly<Record<
  return Object.freeze({crate:unit.crateName,package:environment.CARGO_PKG_NAME??"",version:environment.CARGO_PKG_VERSION??"",target:unit.target??"host",crateTypes:Object.freeze(unit.crateTypes.length?[...unit.crateTypes]:["lib"]),outDir:absolute(unit.outDir),extraFilename,source:absolute(unit.source),manifestDir:environment.CARGO_MANIFEST_DIR??"",primary:environment.CARGO_PRIMARY_PACKAGE!==undefined,buildScriptOutDir:environment.OUT_DIR??null,externs:Object.freeze(unit.externs.filter(row=>row.path!=="").map(row=>absolute(row.path)))});
 }
 
+/** 🧱️ A path of a build directory as a key value: every `<anything>/build/<crate>-<hash>` (classic layout) or `<anything>/build/<crate>/<hash>` (`build-dir-new-layout`) inside a text is `⟨build⟩<crate>` (Cargo's hash of the unit and the directory the build lives in differ between lanes, checkouts and machines; the files below are what the key must not depend on by path). */
+export function buildPathIdentityV1(text:string):string{
+ return text.replace(/(?:[A-Za-z]:)?[\\/][^\s\u001f"';]*?[\\/]build[\\/](?:([^\\/\s]+)-[0-9a-f]{16}|([^\\/\s]+)[\\/][0-9a-f]{16})(?=[\\/\s\u001f"';]|$)/gu,(_,named:string|undefined,nested:string|undefined)=>"⟨build⟩"+(named??nested));
+}
+
+/** 🧭️ The directories of the build scripts of dependencies a run was told about (`DEP_<LINKS>_<KEY>` variables whose value is an absolute path in a build directory), each with the token its text carries in a stored run: longest path first, so a directory below another is replaced before it. A replay in another lane replaces the token with that lane's own directory. */
+export function buildDependencyPathsV1(environment:Readonly<Record<string,string|undefined>>):Array<readonly [string,string]>{
+ const rows:Array<readonly [string,string]>=[];
+ for(const name of Object.keys(environment).sort()){const value=environment[name];if(value!==undefined&&name.startsWith("DEP_")&&/^[A-Z0-9_]+$/u.test(name)&&buildPathIdentityV1(value)!==value)rows.push(["@@semio-"+name.toLowerCase().replaceAll("_","-")+"@@",value]);}
+ return rows.sort((left,right)=>right[1].length-left[1].length);
+}
+
 /** 🧪️ The environment a build script run is keyed by: Cargo's per-package, per-feature, per-cfg and dependency-metadata variables with the lane neutralised, the compiler flags with the machine-specific part of their path remappings reduced to its role and the compiler, wrapper and linker paths reduced to the program's name (the same neutralisation as {@link keyEnvironmentV1}); never `NUM_JOBS` or the job server. */
 export function buildKeyEnvironmentV1(environment:Readonly<Record<string,string|undefined>>,laneRoot:string|undefined):Array<[string,string]>{
  const names=new Set(policy.buildScript.environmentNames),rows:Array<[string,string]>=[];
- for(const name of Object.keys(environment).sort()){const value=environment[name];if(value===undefined)continue;if(names.has(name)||policy.buildScript.environmentPrefixes.some(prefix=>name.startsWith(prefix)))rows.push([name,machineValueV1(name,laneNeutralV1(value,laneRoot))]);}
+ for(const name of Object.keys(environment).sort()){const value=environment[name];if(value===undefined)continue;if(names.has(name)||policy.buildScript.environmentPrefixes.some(prefix=>name.startsWith(prefix)))rows.push([name,buildPathIdentityV1(machineValueV1(name,laneNeutralV1(value,laneRoot)))]);}
  return rows;
 }
 

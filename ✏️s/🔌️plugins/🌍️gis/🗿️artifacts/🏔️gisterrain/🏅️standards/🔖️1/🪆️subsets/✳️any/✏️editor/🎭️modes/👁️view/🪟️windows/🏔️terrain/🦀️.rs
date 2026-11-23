@@ -82,7 +82,7 @@ pub fn render(document: &GisTerrainSnapshot, cfg: config::GisTerrainWindowConfig
         None => semio_framework_pack_json::json!({"activeUtility": utility}),
     };
     scene.interaction_json = Some(interaction.to_string());
-    scene_surface(GIS3D_PLAY_SURFACE, ContractSurfaceKind::World3d, &scene)
+    scene_surface(GIS3D_PLAY_SURFACE, ContractSurfaceKind::World3d, &scene, semio_plugin::surface_name(view.locale, "Terrain view", "Geländeansicht"), None)
 }
 //#endregion 🔖️Render
 

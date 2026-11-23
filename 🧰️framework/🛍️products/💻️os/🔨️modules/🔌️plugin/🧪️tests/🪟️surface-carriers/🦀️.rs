@@ -143,7 +143,7 @@ use std::collections::BTreeMap;
         let assembled_bytes = <semio_ui_scene::World3dScene as semio_ui_scene::SceneDoc>::encode_pack(&scene).unwrap().len();
         assert!(assembled_bytes > semio_ui_contract::UI_FIXED_BYTES, "the unsplit scene must be past the fixed doc ceiling to prove anything");
 
-        let node = crate::window_surface::scene_surface("viewport", semio_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+        let node = crate::window_surface::scene_surface("viewport", semio_ui_contract::SurfaceKind::World3d, &scene, "Scene", None).unwrap();
         let (projection, lanes) = project_scene_surface(node);
 
         let doc_bytes = projection["component"]["doc"]["bytes"].as_array().unwrap().len();
@@ -172,13 +172,13 @@ use std::collections::BTreeMap;
     #[semio_framework_async_macros::async_test]
     async fn world3d_scene_surface_republishes_only_the_lanes_that_changed() {
         let selection = r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#;
-        let (_, first) = project_scene_surface(crate::window_surface::scene_surface("viewport", semio_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", selection)).unwrap());
+        let (_, first) = project_scene_surface(crate::window_surface::scene_surface("viewport", semio_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", selection), "Scene", None).unwrap());
 
-        let (moved_projection, moved) = project_scene_surface(crate::window_surface::scene_surface("viewport", semio_ui_contract::SurfaceKind::World3d, &oversized_world_scene(r#"{"position":[9,9,9]}"#, selection)).unwrap());
+        let (moved_projection, moved) = project_scene_surface(crate::window_surface::scene_surface("viewport", semio_ui_contract::SurfaceKind::World3d, &oversized_world_scene(r#"{"position":[9,9,9]}"#, selection), "Scene", None).unwrap());
         assert_eq!(moved, first, "a camera move must leave every lane carrier byte-identical");
 
         let picked = r#"{"method":"rectangle","mode":"replace","ids":["capsule-0007"],"hoveredId":null}"#;
-        let (picked_projection, picked_lanes) = project_scene_surface(crate::window_surface::scene_surface("viewport", semio_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", picked)).unwrap());
+        let (picked_projection, picked_lanes) = project_scene_surface(crate::window_surface::scene_surface("viewport", semio_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", picked), "Scene", None).unwrap());
         let changed: Vec<&String> = picked_lanes.keys().filter(|key| picked_lanes.get(*key) != first.get(*key)).collect();
         assert_eq!(changed, vec![semio_ui_scene::World3dSceneLane::Selection.body_key()]);
         assert_ne!(picked_projection["component"], moved_projection["component"], "a changed lane must still move the spine so its consumer re-reads");
@@ -189,7 +189,7 @@ use std::collections::BTreeMap;
         let instances = serde_json::to_string(&(0..3_000).map(|index| json!({"id": format!("capsule-{index:05}"), "meshId": "box"})).collect::<Vec<_>>()).unwrap();
         assert!(instances.len() > UI_TEXT_MAX_BYTES * UI_BUILT_CHILDREN_MAX, "one lane must be past a single carrier level to prove paging");
         let scene = semio_ui_scene::World3dScene::base("{}".into(), "[]".into(), instances.clone(), "{}".into());
-        let (_, lanes) = project_scene_surface(crate::window_surface::scene_surface("viewport", semio_ui_contract::SurfaceKind::World3d, &scene).unwrap());
+        let (_, lanes) = project_scene_surface(crate::window_surface::scene_surface("viewport", semio_ui_contract::SurfaceKind::World3d, &scene, "Scene", None).unwrap());
         let (leaves, depth) = assert_lane_carrier(lanes.get(semio_ui_scene::World3dSceneLane::Instances.body_key()).unwrap(), &instances);
         let pack = UI_TEXT_MAX_BYTES * (1 + UI_FIXED_LIST_ITEMS);
         assert!(leaves <= instances.len().div_ceil(pack).max(1) + 2, "packed instances leaves must stay near ceil(bytes/pack), got {leaves} for {} bytes", instances.len());
@@ -199,7 +199,7 @@ use std::collections::BTreeMap;
     #[semio_framework_async_macros::async_test]
     async fn a_scene_that_declares_no_lanes_still_publishes_one_childless_surface() {
         let scene = semio_ui_scene::IconRenderScene { request_json: r#"{"meshId":"box"}"#.into(), footer: None, frame_json: None };
-        let (projection, lanes) = project_scene_surface(crate::window_surface::scene_surface("preview", semio_ui_contract::SurfaceKind::IconRender, &scene).unwrap());
+        let (projection, lanes) = project_scene_surface(crate::window_surface::scene_surface("preview", semio_ui_contract::SurfaceKind::IconRender, &scene, "Scene", None).unwrap());
         assert!(lanes.is_empty());
         assert_eq!(projection["component"]["type"], "surface");
         assert_eq!(artifact_app_laws::decode_fixture_scene_with_lanes::<semio_ui_scene::IconRenderScene>(&serde_json::to_string(&projection).unwrap()).unwrap(), scene);
@@ -208,7 +208,7 @@ use std::collections::BTreeMap;
     #[semio_framework_async_macros::async_test]
     async fn nakagin_scale_world3d_surface_fits_document_node_cap() {
         let scene = oversized_world_scene("{}", r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#);
-        let node = crate::window_surface::scene_surface("viewport", semio_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+        let node = crate::window_surface::scene_surface("viewport", semio_ui_contract::SurfaceKind::World3d, &scene, "Scene", None).unwrap();
         let (projection, _) = project_scene_surface(node);
         let nodes = count_projected_nodes(&projection);
         assert!(nodes <= semio_ui_contract::UI_DOCUMENT_NODES, "Nakagin-scale world-3d surface presented {nodes} nodes over UI_DOCUMENT_NODES");

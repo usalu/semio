@@ -907,7 +907,6 @@ impl EditableTreeNode {
 pub struct TreeWindowKit;
 
 impl WindowKit for TreeWindowKit {
-    type ViewModel = TreeView;
     const KIND_ID: &'static str = "framework.window.tree";
 
     fn window_kind() -> WindowKindDefinition {
@@ -933,13 +932,13 @@ impl WindowKit for TreeWindowKit {
                 ))],
         )
     }
-
-    fn render(view: &TreeView) -> UiAssemblyResult<BuiltNode> {
-        Self::render_windowed(view, &TreeWindows::unhosted())
-    }
 }
 
 impl TreeWindowKit {
+    pub fn render(view: &TreeView) -> UiAssemblyResult<BuiltNode> {
+        Self::render_windowed(view, &TreeWindows::unhosted())
+    }
+
     /// 🪟️ One node of a `TreeView`, windowed at EVERY level: a node's children are materialised only
     /// while the host holds it open, and only for the rows its window names. An archive, JSON array or
     /// XML element with hundreds of siblings anywhere in its structure renders its viewport instead of

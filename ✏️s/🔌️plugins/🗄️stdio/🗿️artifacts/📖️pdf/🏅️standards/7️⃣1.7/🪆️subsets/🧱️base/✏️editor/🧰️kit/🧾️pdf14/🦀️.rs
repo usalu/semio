@@ -109,6 +109,10 @@ impl ArtifactEditor for $editor {
     semio_s_artifact_stdio_pdf_view_lane::view_lane_stores!();
     semio_s_artifact_stdio_pdf_presence_lane::presence_lane_stores!();
 
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_plugin::__kernel::semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
+        semio_plugin::__kernel::semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.pdf.child-projection"), error.to_string()))
+    }
+
     fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
         semio_plugin::cold_replay_document_store_owners_source_demands::<PdfSnapshot, PdfMutation>()
     }
@@ -138,6 +142,10 @@ impl ArtifactEditor for $editor {
         bounded_native: true
     }
 
+    fn fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
+        canvas::pdf_fault_notices()
+    }
+
     fn command_id(command: &Self::Command) -> &'static str {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |native| match native {
             $command::SetPage { .. } => "set-page",
@@ -162,7 +170,7 @@ impl ArtifactEditor for $editor {
                 let payload = canvas::edit_from_action(other, args)?;
                 Ok($command::PageEdit { action: other.into(), payload })
             }
-            other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.pdf.unhandled-action"), format!("unknown pdf editor action '{other}'"))),
+            other => Err(canvas::refuse(canvas::PdfFault::UnhandledAction, format!("unknown pdf editor action '{other}'")).with_param("action", other)),
         })
     }
 
@@ -207,7 +215,7 @@ impl ArtifactEditor for $editor {
                 &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
             .map(built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(canvas::pdf_editor_labels(view_state.locale).unknown_body.fill(&[("body", body_key)])),
         }
     }
 

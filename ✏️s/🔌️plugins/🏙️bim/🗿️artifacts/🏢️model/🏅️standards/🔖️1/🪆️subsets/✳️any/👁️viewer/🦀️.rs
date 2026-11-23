@@ -301,10 +301,10 @@ fn marks_of(interaction: &semio_plugin::app::InteractionView<'_>) -> semio_s_art
     semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::Marks { selected: interaction.selection(ELEMENT_DOMAIN).ids.clone(), hovered: interaction.hover(ELEMENT_DOMAIN, HOVER_CHANNEL).ids.clone() }
 }
 
-fn render_body(body_key: &str, instance: semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, snapshot: &ModelSnapshot, cfg: &ConfigView<'_, NoConfig>, marks: &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::Marks, labels: &semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels) -> UiAssemblyResult<ComponentTree> {
+fn render_body(body_key: &str, instance: semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, snapshot: &ModelSnapshot, cfg: &ConfigView<'_, NoConfig>, marks: &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::Marks, labels: &semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels, locale: semio_plugin::Locale) -> UiAssemblyResult<ComponentTree> {
     let node = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(instance, snapshot, |inference| match body_key {
-        semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::BODY_KEY => semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::render(snapshot, inference, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::current(cfg), marks),
-        semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::BODY_KEY => semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::render(snapshot, inference, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::config::current(cfg), &marks.selected),
+        semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::BODY_KEY => semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::render(snapshot, inference, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::current(cfg), marks, locale),
+        semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::BODY_KEY => semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::render(snapshot, inference, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::config::current(cfg), &marks.selected, locale),
         _ => semio_plugin::built_text_node(Label::data(format!("{}: {body_key}", labels.unknown_body.as_str()))).map_err(|_| semio_plugin::PluginAssemblyError::new("bim.viewer.ui.capacity", "viewer label admission failed")),
     })?;
     Ok(semio_plugin::built_to_component_tree(node))
@@ -427,7 +427,7 @@ impl ArtifactViewer for BimModelViewer {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-        render_body(body_key, None, doc.snapshot, cfg, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::Marks::default(), semio_s_artifact_bim_model_tests::viewer::bim::terminology::bim_viewer_labels(view_state))
+        render_body(body_key, None, doc.snapshot, cfg, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::Marks::default(), semio_s_artifact_bim_model_tests::viewer::bim::terminology::bim_viewer_labels(view_state), view_state.locale)
     }
 
     fn render_with_request_context(
@@ -441,7 +441,7 @@ impl ArtifactViewer for BimModelViewer {
         cx:&mut semio_plugin::StepContext<'_>,
     ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
-        render_body(body_key, Some(owner), doc.snapshot, cfg, &marks_of(interaction), semio_s_artifact_bim_model_tests::viewer::bim::terminology::bim_viewer_labels(view_state))
+        render_body(body_key, Some(owner), doc.snapshot, cfg, &marks_of(interaction), semio_s_artifact_bim_model_tests::viewer::bim::terminology::bim_viewer_labels(view_state), view_state.locale)
 
         })();
         rendered.map(Some).map_err(Into::into)

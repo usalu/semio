@@ -130,7 +130,8 @@ impl RetainedPackSymbolTable {
         let capacity=if symbol{self.symbols.next_capacity_allocation_bytes(target)}else{self.scalars.next_capacity_allocation_bytes(if target>self.scalars.capacity(){self.maximum_scalars}else{target})}.map_err(error)?.unwrap_or(0);
         if self.allocated_bytes_checked().and_then(|owned|owned.checked_add(capacity)).is_none_or(|next|next>self.maximum_allocation_bytes){return Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::OwnershipLimit,"retained-pack.source-reserve",offset))}
         let depth=if symbol{self.symbols.next_reserve_depth_demand()}else{self.scalars.next_reserve_depth_demand()}.map_err(error)?;
-        Ok(RetirementDemand{capacity_bytes:capacity,depth,..Default::default()})
+        let copy_bytes=if capacity==0{0}else{if symbol{self.symbols.next_capacity_copy_byte_demand(target)}else{self.scalars.next_capacity_copy_byte_demand(if target>self.scalars.capacity(){self.maximum_scalars}else{target})}.map_err(error)?};
+        Ok(RetirementDemand{copy_bytes,capacity_bytes:capacity,depth,..Default::default()})
     }
     /// ✍️ Native original char writes consume payload copy while symbol spans move semantic metadata.
     pub fn source_write_demands(&self,symbol:bool)->Result<RetirementDemand,ValueError>{

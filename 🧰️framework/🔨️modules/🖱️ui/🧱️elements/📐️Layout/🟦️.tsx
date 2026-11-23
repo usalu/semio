@@ -17,6 +17,7 @@ import { type PanelProps, Panel, PanelTreeUnitsPane } from "../🖼️Panel/🟦
 import { type PanelTabNode, usePanelTabSelection, findPanelTabNode, PanelTabBar, progressPanelTabSelection, resolvePanelBranchBodyLeaf } from "../🧭️PanelTabBar/🟦️.tsx";
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
 import { CanvasSkeleton } from "../🦴️Skeletons/🟦️.tsx";
+import { CanvasBottomChipRow, type CanvasBottomChips } from "../🎨️Canvas/🦶️bottom-chips/🟦️.tsx";
 import { LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
 import { chromeStatusBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { type Anchor, ANCHORS } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
@@ -104,6 +105,8 @@ export interface LayoutProps {
   panels?: Partial<Record<Anchor, Omit<PanelProps, "anchor">>>;
   mobilePanel?: LayoutMobilePanelProps;
   canvas: React.ReactNode;
+  /** 🦶️ Glass chips overlaid inside the canvas rectangle on its bottom edge (start / center / end) — they replace tab rows a footer band would hold. */
+  canvasChips?: CanvasBottomChips;
   /** 📜️ Scrolls page content beneath the navbar and footer while keeping its first and last items clear of the bars. */
   scrollCanvas?: boolean;
   /** 🌀️ When set, paints a loading/waiting ring on the canvas viewport wrapper. */
@@ -129,7 +132,7 @@ function bindScrollBand(band: HTMLDivElement | null) {
   };
 }
 
-const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, subfooter, panels, mobilePanel, canvas, scrollCanvas = false, canvasStatus, canvasSkeleton, mobile = false, className = "" }) => {
+const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, subfooter, panels, mobilePanel, canvas, canvasChips, scrollCanvas = false, canvasStatus, canvasSkeleton, mobile = false, className = "" }) => {
   const canvasBody = canvasStatus === "loading" || canvasStatus === "waiting" ? (canvasSkeleton ?? <CanvasSkeleton />) : canvas;
   const canvasClassName = cn("flex-1 min-w-0 min-h-0 relative", scrollCanvas && "isolate", chromeStatusBorderClass(canvasStatus));
   const middle = mobile ? (
@@ -141,7 +144,10 @@ const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, subfooter, p
     <div className="flex flex-1 min-h-0 relative">
       <div data-slot="layout-canvas-column" className="flex flex-col flex-1 min-w-0 relative">
         <div className="flex flex-1 min-h-0 relative">
-          <div className={canvasClassName}>{canvasBody}</div>
+          <div className={canvasClassName}>
+            {canvasBody}
+            <CanvasBottomChipRow chips={canvasChips} />
+          </div>
         </div>
       </div>
       {ANCHORS.map((anchor) => {

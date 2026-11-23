@@ -20,7 +20,17 @@ const env = scriptProcessEnvironment(createScriptProcessEnvelope({ version: 1, o
   ...process.env, SEMIO_BUILD_MODE: buildMode, SEMIO_PLUGIN: process.env.TRINITY_VARIANT ?? "trinity-jack", SEMIO_RENDERER: "react",
   SEMIO_PLUGIN_CATALOG: join(workspaceRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"),
 });
-const child = spawn("repo", args, { cwd: resolve(workspaceRoot, directory), env, stdio: "inherit", windowsHide: true });
-for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => child.kill(signal));
-child.once("error", error => { console.error(error); process.exitCode = 1; });
-child.once("exit", code => { process.exitCode = code ?? 1; });
+const RESTART_EXIT_CODE = 75;
+const MAXIMUM_RESTARTS = 6;
+const cwd = resolve(workspaceRoot, directory);
+for (let attempt = 1; ; attempt++) {
+  const child = spawn("repo", args, { cwd, env, stdio: "inherit", windowsHide: true });
+  for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => child.kill(signal));
+  const code = await new Promise<number>(accept => {
+    child.once("error", error => { console.error(error); accept(1); });
+    child.once("exit", (exitCode, signal) => { console.error(`[DEBUG] repo exited code=${exitCode} signal=${signal} attempt=${attempt} at ${new Date().toISOString()}`); accept(exitCode ?? 1); });
+  });
+  if (code === RESTART_EXIT_CODE && attempt < MAXIMUM_RESTARTS) continue;
+  process.exitCode = code;
+  break;
+}

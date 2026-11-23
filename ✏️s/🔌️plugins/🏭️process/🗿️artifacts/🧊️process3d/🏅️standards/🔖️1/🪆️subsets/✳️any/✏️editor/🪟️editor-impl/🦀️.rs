@@ -15,7 +15,7 @@ pub(super) fn process3d_render_body(body_key: &str, document: &ArtifactView<'_, 
     let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
     let windows = semio_plugin::TreeWindows::for_body(view_state, base_body_key);
     match base_body_key {
-        PROCESS_3D_PLAY_BODY_MAIN => workpiece::render_with_placement(doc, config, active_utility, selected_ids, hover.position(active_utility), hover.capability()).map(semio_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_MAIN => workpiece::render_with_placement(doc, config, active_utility, selected_ids, hover.position(active_utility), hover.capability(), view_state.locale).map(semio_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_ARTIFACT => document_panel::render(doc, config.resolved_up_to, labels, &windows, document.parent_document_id()).map(semio_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc, &config.contributions_json, labels, &windows).map(semio_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc, &config.contributions_json, labels, &windows).map(semio_plugin::built_to_component_tree),

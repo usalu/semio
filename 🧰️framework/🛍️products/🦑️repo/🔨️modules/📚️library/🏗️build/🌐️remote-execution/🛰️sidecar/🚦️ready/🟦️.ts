@@ -150,14 +150,14 @@ export type ReadyDiskShortV1=Readonly<{path:string;resource:"space"|"inodes";nee
 export type ReadyDiskConsumerV1=Readonly<{id:string;root:string;bytes:number;command:string}>;
 /** 🧹️ What the collection for a waiting stage answered: whether the need fits now and, when it does not, the largest consumers that remain. */
 export type ReadyDiskRecoveryV1=Readonly<{fits:boolean;consumers:readonly ReadyDiskConsumerV1[]}>;
-/** 📐️ What a stage needs free, in megabytes and inodes, and where the number comes from: the declared estimate (`diskRequirements`) until the machine has measured the stage, then the largest net growth of free space over the last successful runs times the safety factor of the workspace scale family (read from the cas budget, not copied), never below the floor and never above `diskGrowth.ceilingPercent` of the volume (a volume of 60 GB never asks for more than a quarter of itself, so a stage can always start once the build-owned caches are collected; the floor of the need wins on a volume that small); the inodes the stage needs never exceed that share of the inode table either. */
+/** 📐️ What a stage needs free, in megabytes and inodes, and where the number comes from: the declared estimate (`diskRequirements`) until the machine has measured the stage, then the largest net growth of free space over the last successful runs times the safety factor of the workspace scale family (read from the cas budget, not copied), never below the floor and never above `diskGrowth.measuredCeilingMegabytes` (the net growth of free space also counts every other writer of the machine, replica sync, caches of other stages, so a measured need is bounded by what one stage may plausibly write: the one measured run that grew 15.6 GB asked 31 GB of a 121 GB volume and kept a worker from ever starting) and never above `diskGrowth.ceilingPercent` of the volume (a volume of 60 GB never asks for more than a quarter of itself, so a stage can always start once the build-owned caches are collected; the floor of the need wins on a volume that small); the inodes the stage needs never exceed that share of the inode table either. */
 export function readyDiskNeedV1(stage:string,runs:readonly ReadyTimingV1[]=[],totalBytes?:number|null,totalInodes?:number|null):Readonly<{megabytes:number;inodes:number;source:"declared"|"measured"}>{
  const declared=(P.diskRequirements as Record<string,{megabytes:number;inodes:number}>)[stage]??P.diskDefaultRequirement;
  const ceiling=typeof totalBytes==="number"&&Number.isFinite(totalBytes)&&totalBytes>0?Math.max(P.diskGrowth.floorMegabytes,Math.floor(totalBytes/1048576*P.diskGrowth.ceilingPercent/100)):Infinity;
  const inodeCeiling=typeof totalInodes==="number"&&Number.isFinite(totalInodes)&&totalInodes>0?Math.max(P.diskDefaultRequirement.inodes,Math.floor(totalInodes*P.diskGrowth.ceilingPercent/100)):Infinity,inodes=Math.min(declared.inodes,inodeCeiling);
  const grown=runs.filter(run=>run.stage===stage&&run.outcome==="ok"&&typeof run.growthMegabytes==="number").slice(-P.diskGrowth.keptRuns).map(run=>run.growthMegabytes as number);
  if(grown.length===0)return Object.freeze({megabytes:Math.min(declared.megabytes,ceiling),inodes,source:"declared" as const});
- return Object.freeze({megabytes:Math.min(ceiling,Math.max(P.diskGrowth.floorMegabytes,Math.ceil(Math.max(...grown)*CAS_RESERVE_FACTOR_V1))),inodes,source:"measured" as const});
+ return Object.freeze({megabytes:Math.min(ceiling,P.diskGrowth.measuredCeilingMegabytes,Math.max(P.diskGrowth.floorMegabytes,Math.ceil(Math.max(...grown)*CAS_RESERVE_FACTOR_V1))),inodes,source:"measured" as const});
 }
 
 /** 🔎️ The facts of the filesystem that holds `path` (its nearest existing ancestor when it is not there yet), from the one free-space question of the build system (`readFreeSpaceV1`: `statfs` on POSIX, `GetDiskFreeSpaceExW` on Windows, where the runtime's `statfs` answers a row of zeros). A volume that cannot be measured has `freeBytes` `null` and the reason; a filesystem that reports no inode table (NTFS, btrfs, some network shares) has `freeInodes` `null`, never 0. Disk quotas of a user are not visible to `statfs` (only project quotas of a directory are), so a quota shortage still shows as the write error that the stage classifier names.
@@ -252,20 +252,21 @@ export function readyDecideV1(input:ReadyDecisionInputV1):ReadyDecisionV1{
  return act("run",index,null,0);
 }
 
-/** 🔄️ The stages a worker that was ready re-verifies in the background while it stays ready: every stage whose own input digest changed, in bootstrap order, `null` when none is stale or the worker is not in a state to stay ready (no marker or `repo` binary, never ready, a recorded failure: a re-verification that failed leaves Ready, a stale stage that was never verified here or last verified more than `refreshMaximumAgeMilliseconds` ago: old evidence is no evidence). A pure function.
+/** 🔄️ The stages a worker that was ready re-verifies in the background while it stays ready: every stage whose own input digest changed, in bootstrap order, `null` when none is stale or the worker is not in a state to stay ready (no marker or `repo` binary, never ready, a recorded failure of real evidence (`stage-failed`, `tooling-compiler`: the stage ran and said no; a timeout, an exhausted stall budget, a full disk, an interruption, a spawn or loop failure says nothing about the machine and keeps Ready, `refreshKeepingFailureCodes`), a stale stage that was never verified here or last verified more than `refreshMaximumAgeMilliseconds` ago: old evidence is no evidence). A pure function.
  * @see ./🧪️tests/🔄️refresh/🟦️.ts */
 export function readyRefreshV1(input:Readonly<{stages:readonly Readonly<{name:string;digest:string}>[];done:Readonly<Record<string,string>>;doneMs:Readonly<Record<string,number>>;now:number;marker:boolean;repo:boolean;readyMs:number|null;failure:unknown}>):readonly string[]|null{
- if(!input.marker||!input.repo||input.readyMs===null||input.failure!==null)return null;
+ if(!input.marker||!input.repo||input.readyMs===null||input.failure!==null&&!(P.refreshKeepingFailureCodes as readonly string[]).includes((input.failure as {code?:string}).code??""))return null;
  const stale=input.stages.filter(stage=>input.done[stage.name]!==stage.digest);
  if(stale.length===0||stale.some(stage=>input.done[stage.name]===undefined||!(input.now-(input.doneMs[stage.name]??-Infinity)<=P.refreshMaximumAgeMilliseconds)))return null;
  return Object.freeze(stale.map(stage=>stage.name));
 }
 
-/** 🔄️ A status patch of a stage that runs while the worker stays ready: working states say `ready` with `refreshing` and the stage, the refusal is dropped and the reason names the refresh; a recorded failure (`backoff`) passes through unchanged and every other state change clears `refreshing`. A pure function.
+/** 🔄️ A status patch of a stage that runs while the worker stays ready: working states say `ready` with `refreshing` and the stage, the refusal is dropped and the reason names the refresh; a back-off of a transient failure keeps its refusal and stays ready, and every other state change clears `refreshing` (a back-off of a failure that left Ready is never patched, its stage is `null`). A pure function.
  * @see ./🧪️tests/🔄️refresh/🟦️.ts */
 export function readyRefreshingPatchV1(patch:Partial<ReadyStatusV1>,stage:string|null):Partial<ReadyStatusV1>{
  if(patch.state===undefined)return patch;
- if(stage===null||patch.state==="ready"||patch.state==="backoff"||patch.state==="server")return{...patch,refreshing:false};
+ if(stage===null||patch.state==="ready"||patch.state==="server")return{...patch,refreshing:false};
+ if(patch.state==="backoff")return{...patch,state:"ready",ready:true,refreshing:true,reason:readyReasonV1("refreshing",patch.stage??stage)};
  return{...patch,state:"ready",ready:true,refreshing:true,refusal:null,reason:readyReasonV1("refreshing",patch.stage??stage)};
 }
 

@@ -13,10 +13,10 @@ pub fn verify<S:semio_os_store_text_io::ArtifactSqliteSnapshotHost+semio_framewo
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let mut output_callback=|_|true;
   let mut output_control=SqliteSnapshotControl::new(&mut output_callback,SqliteDatabaseLimits::default());
-  let encoded=long.encode_sqlite_snapshot_native(encoding,&mut output_control,&mut native.snapshot_encode().unwrap()).result.expect("actual owner native producer prepares the independent file ceiling outside preflight observation");
+  let mut encoded_slot=None;let encoded_turn=long.encode_sqlite_snapshot_native(encoding,&mut output_control,&mut native.snapshot_encode().unwrap(),&mut encoded_slot);let reason=match &encoded_turn.result{Ok(())=>String::new(),Err(SqliteStageFailure::Operation(failure))=>failure.message().to_string(),Err(SqliteStageFailure::NotStarted(error))=>error.message.to_string(),Err(_)=>"settlement refusal".to_string()};assert!(encoded_turn.result.is_ok(),"actual owner native producer prepares the independent file ceiling outside preflight observation: {reason}");let encoded=encoded_slot.take().and_then(Result::ok).expect("actual owner native producer publishes its encoded file");
   let mut input_callback=|_|true;
   let mut input_control=SqliteSnapshotControl::new(&mut input_callback,SqliteDatabaseLimits::default());
-  let mut input_owner=native.snapshot_decode().unwrap();let decoded=S::decode_sqlite_snapshot_native(&encoded,&mut input_control,&mut input_owner).result.unwrap();
+  let mut input_owner=native.snapshot_decode().unwrap();let mut decoded_slot=None;let decoded_turn=S::decode_sqlite_snapshot_native(&encoded,&mut input_control,&mut input_owner,&mut decoded_slot);assert!(decoded_turn.result.is_ok());let decoded=decoded_slot.take().and_then(Result::ok).expect("actual native decoder publishes its owner");
   assert_eq!(decoded,*long,"actual native specimen preserves every typed owner field before preflight observation");
   let mut decoded=semio_framework_value::retirement::controlled::ControlledRetirement::new(decoded).unwrap_or_else(|_|panic!("original preflight decoded specimen custody"));
   close_specimen(&mut decoded,&mut input_owner);
@@ -89,5 +89,5 @@ pub fn verify<S:semio_os_store_text_io::ArtifactSqliteSnapshotHost+semio_framewo
 }
 
 fn close_specimen<S:semio_framework_value::retirement::RetireOwned>(original:&mut semio_framework_value::retirement::controlled::ControlledRetirement<S>,owner:&mut semio_os_io::control::NativeSnapshotDecodeOwner<'_, '_>){
- while !original.terminal_is_empty(){let grant=owner.remaining_grant();let capacity=original.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap();owner.native().checkpoint().unwrap();owner.native().charge(capacity).unwrap();let result=original.step(grant);let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};owner.record_progress(progress).unwrap();let step=result.unwrap();assert!(step.progress().copied_items!=0||original.terminal_is_empty());}
+ while !original.terminal_is_empty(){let grant=owner.remaining_grant();let capacity=original.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap();owner.native().checkpoint().unwrap();owner.native().charge(capacity).unwrap();let(turn,_)=semio_framework_value::AuthoringWallet::new(grant,1<<24).run_settled(grant,1<<10,|effect|original.step(grant.maximum_copy_bytes,effect)).expect("authoring specimen close effect").expect("specimen close work quote admitted");let result=turn.result;let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};owner.record_progress(progress).unwrap();let step=result.unwrap();assert!(step.progress().copied_items!=0||original.terminal_is_empty());}
 }

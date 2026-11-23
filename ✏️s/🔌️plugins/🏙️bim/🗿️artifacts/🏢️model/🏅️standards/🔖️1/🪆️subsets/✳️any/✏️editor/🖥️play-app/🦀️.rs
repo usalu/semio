@@ -72,12 +72,12 @@ pub(crate) fn render_body(instance: semio_s_artifact_bim_model_inferences::stand
             let config = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::current(cfg);
             let revision = semio_s_artifact_bim_model_plan_linework::render::plan::framing_revision(&semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::active_view(snapshot, &config).unwrap_or_default());
             let overlay = semio_s_artifact_bim_model_move_storey::editor::bim::gestures::overlay::plan_records(snapshot, elements, utility, preview, 1.0 / config.viewport.zoom.max(0.01));
-            let body = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::render_over(snapshot, inference, &config, elements, hover, utility, revision, labels, &overlay)?;
+            let body = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::render_over(snapshot, inference, &config, elements, hover, utility, revision, labels, view_state.locale, &overlay)?;
             semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::options::with_switcher(snapshot, inference, &config.selected_options, &config.workset_visibility, labels, &windows(), body)
         }
         semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::BODY_KEY => {
             let config = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::current(cfg);
-            let body = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::render_over(snapshot, inference, &config, elements, hover, semio_s_artifact_bim_model_plan_linework::render::plan::framing_revision(&format!("{}{}", config.isolated_storey, config.projection.kind)), preview)?;
+            let body = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::render_over(snapshot, inference, &config, elements, hover, semio_s_artifact_bim_model_plan_linework::render::plan::framing_revision(&format!("{}{}", config.isolated_storey, config.projection.kind)), view_state.locale, preview)?;
             semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::options::with_switcher(snapshot, inference, &config.selected_options, &config.workset_visibility, labels, &windows(), body)
         }
         semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::BODY_KEY => {
@@ -85,17 +85,17 @@ pub(crate) fn render_body(instance: semio_s_artifact_bim_model_inferences::stand
             let (start, end) = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::plane_of(snapshot, &config).map_or(([0.0, 0.0], [0.0, 0.0]), |plane| ([plane.start.x, plane.start.y], [plane.end.x, plane.end.y]));
             let overlay = semio_s_artifact_bim_model_move_storey::editor::bim::gestures::overlay::section_records(inference, start, end, utility, preview, 1.0 / config.viewport.zoom.max(0.01));
             let revision = semio_s_artifact_bim_model_plan_linework::render::plan::framing_revision(&semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::active_view(snapshot, &config).unwrap_or_default());
-            semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::render_over(snapshot, inference, &config, elements, utility, revision, labels, &overlay)
+            semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::render_over(snapshot, inference, &config, elements, utility, revision, labels, view_state.locale, &overlay)
         }
-        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::BODY_KEY => semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::render(snapshot, inference, &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::config::current(cfg), labels),
-        semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::BODY_KEY => semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::render(snapshot, inference, elements, library, labels),
-        semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::VIEW_BODY_KEY => semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::view_render(snapshot, inference, elements, library),
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::BODY_KEY => semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::render(snapshot, inference, &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::config::current(cfg), labels, view_state.locale),
+        semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::BODY_KEY => semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::render(snapshot, inference, elements, library, labels, view_state.locale),
+        semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::VIEW_BODY_KEY => semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::view_render(snapshot, inference, elements, library, view_state.locale),
         semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::BODY_KEY => {
             let config = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::config::current(cfg);
             let active = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::active_sheet(snapshot, &config);
             let layout = active.as_ref().and_then(|id| inference.sheet_layouts.get(id));
             let overlay = semio_s_artifact_bim_model_move_storey::editor::bim::gestures::overlay::sheet_records(layout, elements, utility, preview, 1.0 / config.viewport.zoom.max(0.01));
-            semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::render_over(snapshot, inference, &config, elements, utility, semio_s_artifact_bim_model_plan_linework::render::plan::framing_revision(&active.unwrap_or_default()), labels, &overlay)
+            semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::render_over(snapshot, inference, &config, elements, utility, semio_s_artifact_bim_model_plan_linework::render::plan::framing_revision(&active.unwrap_or_default()), labels, view_state.locale, &overlay)
         }
         semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::options::BODY_KEY => semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::options::render(snapshot, inference, labels, &windows()),
         semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::BODY_KEY => semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::render(snapshot, inference, labels, &windows()),

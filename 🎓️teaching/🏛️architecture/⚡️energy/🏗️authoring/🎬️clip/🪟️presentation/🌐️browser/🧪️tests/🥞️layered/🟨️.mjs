@@ -63,7 +63,7 @@ try{
   const initialBorders=await borderStatus();assert(initialBorders.length>0);assert(initialBorders.some(Boolean));
   await page.clock.runFor(1200);await page.evaluate(()=>document.fonts.ready);
   assert((await borderStatus()).every(pending=>!pending));
-  await page.evaluate(()=>document.querySelector('[data-window-silhouette]').dispatchEvent(new PointerEvent('pointerover',{bubbles:true})));
+  await page.evaluate(()=>document.querySelector('[data-window-frame]').dispatchEvent(new PointerEvent('pointerover',{bubbles:true})));
   assert((await borderStatus()).some(Boolean));
   for(let attempt=0;attempt<50&&!(await borderStatus()).every(pending=>!pending);attempt++){await page.clock.runFor(100);await page.waitForTimeout(20)}assert((await borderStatus()).every(pending=>!pending));
   result.defaultChip=await measure();

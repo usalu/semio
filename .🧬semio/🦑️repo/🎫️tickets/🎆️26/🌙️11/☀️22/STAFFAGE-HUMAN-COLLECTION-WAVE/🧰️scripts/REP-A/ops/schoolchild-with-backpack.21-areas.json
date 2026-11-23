@@ -1,0 +1,26 @@
+[
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=top",
+   "areaM2"
+  ],
+  "value": 0.314,
+  "was": 0.4829,
+  "measuredAt": 50
+ },
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=backpack",
+   "areaM2"
+  ],
+  "value": 0.307,
+  "was": 0.42,
+  "measuredAt": 50
+ }
+]

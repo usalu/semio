@@ -286,6 +286,11 @@ impl Scene {
             }) {
                 return Some(id);
             }
+            if let NodeContent::Chrome(chrome) = &node.content {
+                if chrome.chip_at(node.rect, pos) {
+                    return Some(id);
+                }
+            }
             for &child in node.children.iter().rev() {
                 if let Some(hit) = walk(scene, child, pos) {
                     return Some(hit);

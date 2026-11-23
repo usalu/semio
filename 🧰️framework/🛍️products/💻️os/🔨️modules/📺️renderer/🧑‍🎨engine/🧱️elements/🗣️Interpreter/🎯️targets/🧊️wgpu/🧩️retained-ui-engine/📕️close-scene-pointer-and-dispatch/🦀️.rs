@@ -23,15 +23,17 @@ pub fn request_ui_document_close(window_id: &str) -> bool {
 pub fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     if cx.should_yield(){return Ok(false)}let mut failure=None;
     if close_retiring_focus_clipboard_one() {
+        eprintln!("[DEBUG] close: retiring focus clipboard");
         return Ok(true);
     }
     if semio_renderer_wgpu_scene_state::close_retired_scene_surface_one(cx)? {
+        eprintln!("[DEBUG] close: retired scene surface one");
         return Ok(true);
     }
     let advanced=(||{
     let Some(owner) = UI_DOCUMENT_CLOSE_QUEUE.with(|cell| cell.borrow().owners.front().cloned()) else { return false };
     let window_id = owner.window_id.as_ref();
-    if UI_ENGINE.with(|cell|{let engine=cell.borrow();engine.layout_retirement_refusal(window_id).is_some()&&!engine.layout_retirement_failure_pending(window_id)}){return false;}
+    if UI_ENGINE.with(|cell|{let engine=cell.borrow();engine.layout_retirement_refusal(window_id).is_some()&&!engine.layout_retirement_failure_pending(window_id)}){eprintln!("[DEBUG] close: layout refusal");return false;}
     if close_window_focus_clipboard_one(window_id, owner.generation) {
         return true;
     }
@@ -54,6 +56,7 @@ pub fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Resu
         return true;
     }
     if !semio_renderer_wgpu_scene_state::scene_surface_retirement_can_admit() {
+        eprintln!("[DEBUG] close: cannot admit scene retirement");
         return true;
     }
     let (complete, retirement) = UI_ENGINE.with(|cell| {
@@ -65,10 +68,11 @@ pub fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Resu
             Err(error)=>{failure=Some(error);(false,None)},
             Ok(step)=>match step{
             semio_ui_wgpu_engine_surface::UiSurfaceCloseStep::Refused(refusal) => {
+                eprintln!("[DEBUG] close refusal stage={} kind={}", refusal.stage, refusal.kind.as_str());
                 document_debug_log(&format!("[TRACE] ui-doc retained close refusal window={window_id} stage={} kind={}", refusal.stage, refusal.kind.as_str()));
                 (false, None)
             }
-            semio_ui_wgpu_engine_surface::UiSurfaceCloseStep::Pending => (false, None),
+            semio_ui_wgpu_engine_surface::UiSurfaceCloseStep::Pending => {eprintln!("[DEBUG] close: pending");(false, None)},
             semio_ui_wgpu_engine_surface::UiSurfaceCloseStep::RetiredScene(retirement) => (false, Some(retirement)),
             semio_ui_wgpu_engine_surface::UiSurfaceCloseStep::Complete => (true, None),
         },

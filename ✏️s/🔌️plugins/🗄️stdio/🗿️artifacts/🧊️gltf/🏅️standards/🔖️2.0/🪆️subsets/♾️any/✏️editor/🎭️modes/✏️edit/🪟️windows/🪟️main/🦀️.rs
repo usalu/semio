@@ -20,9 +20,9 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 🧊️ The document's own triangles on the shared mesh scene: accessor geometry placed by the node hierarchy, framed on its bounds, never a placeholder.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &GltfSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &GltfSnapshot, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let (positions, triangles, markers) = semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::scene_geometry(&document.document, &document.buffers);
-    semio_s_artifact_stdio_contract::mesh_scene("glTF", &positions, &triangles, &markers)
+    semio_s_artifact_stdio_contract::mesh_scene("glTF", &positions, &triangles, &markers, locale)
 }
 //#endregion 🔖️Render
 

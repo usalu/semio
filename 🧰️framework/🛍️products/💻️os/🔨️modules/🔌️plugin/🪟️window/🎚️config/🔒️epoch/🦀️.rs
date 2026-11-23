@@ -61,7 +61,7 @@ impl OriginalWindowPreviewEpoch{
   let grant=RetainedCloneGrant{maximum_items:1,..cx.retained_grant()};let(partition,epoch,published,body)=(self.partition,self.epoch,self.published,self.body);let owner=registry.owners.get_index_mut(self.owner).unwrap();let mut ready=false;
   let Some((polled,performed))=cx.with_original_effect(grant,|cx,effect|cx.with_native_retirement(|native|{
    let child=RetainedCloneGrant{maximum_copy_bytes:effect.grant().maximum_copy_bytes-size_of::<bool>(),..effect.grant()};
-   let result=effect.reborrow(child,effect.maximum_work_units()).and_then(|mut child|owner.preview_epoch_close_step(partition,epoch,published,body,&mut child,native)).map(|(done,mut p)|{if done{ready=true;p.copied_items=p.copied_items.max(1);p.copied_bytes+=size_of::<bool>()}RetainedCloneStep::Progress(p)});
+   let result=Ok::<_,ValueError>(effect.nested(child)).and_then(|mut child|owner.preview_epoch_close_step(partition,epoch,published,body,&mut child,native)).map(|(done,mut p)|{if done{ready=true;p.copied_items=p.copied_items.max(1);p.copied_bytes+=size_of::<bool>()}RetainedCloneStep::Progress(p)});
    Ok::<_,ValueError>(RetirementPollExit::settle(effect,result.map_err(RetirementPollExit::from)))
   }))?else{return Ok(false)};
   let turn=match polled?{RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work},RetainedWorkPoll::Complete(turn)=>turn};

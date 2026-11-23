@@ -92,7 +92,6 @@ pub use drawing_session::*;
 //#endregion 🧵️TracePointerContinuation
 
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase")]
 #[dsl(keyword = "canvas-pointer-down")]
 pub struct CanvasPointerDown {
     pub x: f64,

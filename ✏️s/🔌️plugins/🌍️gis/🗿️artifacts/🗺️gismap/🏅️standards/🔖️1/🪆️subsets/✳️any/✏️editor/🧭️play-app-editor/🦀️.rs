@@ -51,7 +51,7 @@ impl Gis2dPlayApp {
         let config = &map_config::current(cfg);
         let labels = gis2d_labels(view_state);
         match body_key {
-            map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.snapshot, config, interaction).map(semio_plugin::built_to_component_tree),
+            map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.snapshot, config, interaction, view_state.locale).map(semio_plugin::built_to_component_tree),
             document_panel::GIS2D_PLAY_BODY_ARTIFACT => document_panel::render(config, labels, &semio_plugin::TreeWindows::for_body(view_state, document_panel::GIS2D_PLAY_BODY_ARTIFACT)).map(semio_plugin::built_to_component_tree),
             catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE)).map(semio_plugin::built_to_component_tree),
             inspection_panel::GIS2D_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, config, interaction, labels).map(semio_plugin::built_to_component_tree),

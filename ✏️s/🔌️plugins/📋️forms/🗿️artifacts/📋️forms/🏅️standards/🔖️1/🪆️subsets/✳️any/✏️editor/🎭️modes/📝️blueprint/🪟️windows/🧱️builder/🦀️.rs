@@ -55,7 +55,7 @@ pub fn render(spec: &FormsSnapshot, config: &FormsConfig, view: &semio_plugin::V
         dragging_id: None,
         domain_id: Some(crate::editor::forms::support::FORMS_INTERACTION_FIELDS.into()),
     };
-    semio_plugin::scene_surface(FORMS_PLAY_SURFACE_BLUEPRINT, semio_ui_contract::SurfaceKind::BlockList, &scene)
+    semio_plugin::scene_surface(FORMS_PLAY_SURFACE_BLUEPRINT, semio_ui_contract::SurfaceKind::BlockList, &scene, semio_plugin::surface_name(view.locale, "Form builder", "Formularbaukasten"), None)
 }
 //#endregion 🔖️Render
 

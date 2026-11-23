@@ -5,7 +5,7 @@
     "holds": "[holds, key, expected]",
     "queued": "[queued, key, expected]",
     "leave": "[leave, key, changed]: the lane releases or drops its queue slot",
-    "idlePublication": "[idlePublication, key, commandSourcePending, changed]: an idle publication may release a lane only after its retained command source settles",
+    "idlePublication": "[idlePublication, key, commandSourcePending, changed]: an idle publication may release a lane only after its retained command source settles and its grant was confirmed by the lane's own claim",
     "idle": "[idle, expected]: no holder and no waiter"
   },
   "scripts": {
@@ -20,6 +20,7 @@
       ["idlePublication", "a", false, true],
       ["claim", "b", false, false],
       ["holds", "b", true],
+      ["claim", "b", false, true],
       ["idlePublication", "b", false, true],
       ["idle", true]
     ],
@@ -85,6 +86,29 @@
       ["queued", "b", true],
       ["leave", "b", true],
       ["leave", "a", true],
+      ["idle", true]
+    ],
+    "aFreshGrantSurvivesIdlePublicationUntilItsFirstClaim": [
+      ["claim", "a", false, false],
+      ["idlePublication", "a", false, false],
+      ["holds", "a", true],
+      ["claim", "a", false, true],
+      ["idlePublication", "a", false, true],
+      ["idle", true]
+    ],
+    "aFreshGrantStillYieldsToAnExplicitLeave": [
+      ["claim", "a", false, false],
+      ["leave", "a", true],
+      ["idle", true]
+    ],
+    "everyRegrantIsArmedAgain": [
+      ["claim", "a", false, false],
+      ["claim", "a", false, true],
+      ["idlePublication", "a", false, true],
+      ["claim", "a", false, false],
+      ["idlePublication", "a", false, false],
+      ["claim", "a", false, true],
+      ["idlePublication", "a", false, true],
       ["idle", true]
     ],
     "droppedWaiterLeavesNoSlot": [

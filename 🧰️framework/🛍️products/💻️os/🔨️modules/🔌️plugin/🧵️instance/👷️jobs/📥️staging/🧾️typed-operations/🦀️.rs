@@ -182,14 +182,29 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// as it runs. Measured first on the signed-in `s` Home, whose `applyDirectoryEventPage` config
     /// publication answered `Blocked` on every unit (ticket 26/09/18 S8).
     pub fn fault_stalled_typed_operation_publication(&mut self, operation_id: u64, streak: u64) -> Result<(), Fault> {
+        let Some(mounted) = self.tool_operations.get(operation_id) else { return Ok(()) };
+        let message = format!("typed operation '{}' advanced {streak} publication units without moving its ladder", mounted.verb);
+        self.fault_typed_operation_publication(operation_id, message)
+    }
+
+    /// 🛑️ Terminates a `Publishing`-stage operation whose preparation its owner refused for a reason no retry can change (an `InvariantViolated` or `UnsupportedOwner` refusal): the operation carries the refusal itself instead of spinning into [`Self::fault_stalled_typed_operation_publication`].
+    pub fn fault_refused_typed_operation_publication(&mut self, operation_id: u64) -> Result<(), Fault> {
+        let Some(mounted) = self.tool_operations.get(operation_id) else { return Ok(()) };
+        let Some(reason) = mounted.deterministic_preparation_refusal() else { return Ok(()) };
+        let message = format!("typed operation '{}' {reason}", mounted.verb);
+        self.fault_typed_operation_publication(operation_id, message)
+    }
+
+    fn fault_typed_operation_publication(&mut self, operation_id: u64, message: String) -> Result<(), Fault> {
         let Some(mounted) = self.tool_operations.get_mut(operation_id) else { return Ok(()) };
         if mounted.stage != MountedTypedCommandFullOperationStage::Publishing || mounted.result_page.is_some() {
             return Ok(());
         }
+        eprintln!("[DEBUG] stalled '{}' pending_artifact={} pending_child={} owned_group={} publication={} plan={} ack={}",mounted.verb,mounted.pending_artifact_publication.is_some(),mounted.pending_child_publication.is_some(),mounted.owned_child_group.is_some(),mounted.publication.is_some(),mounted.page_publication.plan.is_some(),mounted.result_page.is_some());
         let fault = ArtifactBoundedToolFault::from_fault(&Fault::new(
             FaultOrigin::Framework,
             FaultCode::new("interactive-job.publication-stalled"),
-            format!("typed operation '{}' advanced {streak} publication units without moving its ladder", mounted.verb),
+            message,
         ));
         if let Some(lease) = mounted.cancellation_lease.as_ref() {
             lease.cancel();

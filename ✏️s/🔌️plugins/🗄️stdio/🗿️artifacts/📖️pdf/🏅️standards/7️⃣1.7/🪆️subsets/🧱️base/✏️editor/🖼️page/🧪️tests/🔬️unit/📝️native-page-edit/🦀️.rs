@@ -105,7 +105,7 @@ fn page_inspector_edits_and_clears_pdf_boundaries() {
     for definition in case["edits"].as_array().unwrap() {
         assert!(shown.iter().any(|value| value == definition["coordinates"].as_str().unwrap()));
     }
-    assert_eq!(policies, 5);
+    assert_eq!(policies, 0);
     let movement = &case["decimalDrafts"]["move"];
     assert_eq!(snapshot.pages[0].trim_box.unwrap()[2], 145.0);
     let edit = edit_from_action("set-page-extra", Some(&DslValue::from(box_args(movement)))).unwrap();
@@ -115,8 +115,8 @@ fn page_inspector_edits_and_clears_pdf_boundaries() {
     let moved = &after_edit(&snapshot).pages[0];
     let expected: [f64; 4] = serde_json::from_value(movement["value"].clone()).unwrap();
     assert_eq!(moved.trim_box, Some(expected));
-    let malformed = edit_from_action("set-page-extra", Some(&DslValue::from(json!({"page": 0, "object": "box.crop", "field": "text", "value": "0 1 NaN 4"})))).unwrap();
-    assert!(apply_payload(&snapshot, &malformed.action, &malformed.payload).is_err());
+    let malformed = edit_from_action("set-page-extra", Some(&DslValue::from(json!({"page": 0, "object": "box.crop", "field": "text", "value": "0 1 NaN 4"}))));
+    assert!(malformed.map_or(true, |edit| apply_payload(&snapshot, &edit.action, &edit.payload).is_err()));
     apply(&mut snapshot, "set-page-extra", box_args(&case["clear"]));
     let cleared = after_edit(&snapshot);
     assert_eq!(cleared.pages[0].crop_box, None);

@@ -24,7 +24,7 @@ pub use pipeline_spec_types::{
 #[path = "🧵️ui-and-vector-families/🦀️.rs"]
 mod ui_and_vector_families;
 pub use ui_and_vector_families::{
-    UI_CONTENT_PIPELINE, UI_FAMILY, UI_MASK_PIPELINE, UI_SHADER, VECTOR_FAMILY, VECTOR_PIPELINE,
+    UI_CONTENT_PIPELINE, UI_FAMILY, VIEWPORT_MASK_PIPELINE, UI_SHADER, VECTOR_FAMILY, VECTOR_PIPELINE,
     VECTOR_SHADER,
 };
 use ui_and_vector_families::UI_GLOBALS_BIND_GROUP;

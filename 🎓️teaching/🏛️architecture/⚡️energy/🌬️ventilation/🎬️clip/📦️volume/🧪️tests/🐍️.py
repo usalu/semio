@@ -81,6 +81,8 @@ class AirChangeTransitionTest(unittest.TestCase):
         class Driver:
             """🎭 Drive the authored play boundary with real Manim animation objects."""
 
+            mobjects = ()
+
             def play(self, *animations, **kwargs):
                 """▶️ Interpolate each submitted native animation at the portable sample times."""
                 for animation in animations:

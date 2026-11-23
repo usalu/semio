@@ -89,13 +89,13 @@ pub fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<No
 //#endregion 🔖️Workflow
 
 //#region 🔖️Render
-pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, selection: &[String]) -> UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, selection: &[String], locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let live=snapshot.read_source().map_err(|error|semio_plugin::PluginAssemblyError::new("flow.source",error.into_message()))?;
-    render_source(&live,config,session,selection)
+    render_source(&live,config,session,selection,locale)
 }
 
 /// 🏞️ Renders the already retained execution source.
-pub fn render_source(live:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,config:&FlowMainWindowConfig,session:&FlowEvalSession,selection:&[String])->UiAssemblyResult<BuiltNode>{
+pub fn render_source(live:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,config:&FlowMainWindowConfig,session:&FlowEvalSession,selection:&[String],locale:semio_plugin::Locale)->UiAssemblyResult<BuiltNode>{
     let (nodes,edges)=dag_host_snapshot_to_workflow(&flow::FlowHost::project_dag_snapshot(live,&flow::flow_neuron_kind_info_map()));
     let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     let flow_extras=flow_backed_node_graph_extras(live,&config.lod_mode,config.proximity_distance,config.grid_visible,config.grid_snap_enabled,config.grid_factor,Some(session));
@@ -117,7 +117,7 @@ pub fn render_source(live:&dyn semio_framework_artifact_flow_flow::FlowSnapshotS
         preview_off_json,
         ..NodeGraphScene::base(nodes, edges, viewport)
     };
-    scene_surface(FLOW_PLAY_SURFACE_MAIN, ContractSurfaceKind::NodeGraph, &scene)
+    scene_surface(FLOW_PLAY_SURFACE_MAIN, ContractSurfaceKind::NodeGraph, &scene, semio_plugin::surface_name(locale, "Flow graph", "Flussgraph"), None)
 }
 //#endregion 🔖️Render
 

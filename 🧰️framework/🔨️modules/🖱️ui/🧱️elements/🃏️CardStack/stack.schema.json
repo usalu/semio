@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.ui.card-stack.v1",
+  "title": "Card stack of abutting rectangular frames with in-content chips",
+  "type": "object",
+  "required": ["cases"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "left", "top", "width", "cards", "expected"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "left": { "type": "number" },
+          "top": { "type": "number" },
+          "width": { "type": "number", "exclusiveMinimum": 0 },
+          "cards": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["height", "row", "topChip", "bottomChip"],
+              "additionalProperties": false,
+              "properties": {
+                "height": { "type": "number", "minimum": 0 },
+                "row": { "type": "number", "minimum": 0 },
+                "topChip": { "type": "number", "minimum": 0 },
+                "bottomChip": { "type": "number", "minimum": 0 }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "required": ["frames"],
+            "additionalProperties": false,
+            "properties": {
+              "frames": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["rect", "chips"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "rect": { "$ref": "#/$defs/rect" },
+                    "chips": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["rect", "dock", "innerEdges"],
+                        "additionalProperties": false,
+                        "properties": {
+                          "rect": { "$ref": "#/$defs/rect" },
+                          "dock": { "enum": ["top", "bottom"] },
+                          "innerEdges": { "type": "array", "items": { "type": "boolean" }, "minItems": 4, "maxItems": 4, "description": "top, right, bottom, left: true when the edge does not lie on the frame outline" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": { "rect": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4, "description": "x, y, width, height" } }
+}

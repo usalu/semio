@@ -29,6 +29,6 @@ async fn definition_declares_a_node_graph_window() {
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_scene_node_for_the_default_document() {
     let document = crate::standards::v1::subsets::any::schema::snapshot::empty_trinity_graph_snapshot::<crate::test_support::FixtureComposition>();
-    let node = render(&document, crate::standards::v1::subsets::any::schema::content::jack_content_for_handle(&document.content).expect("retained content child").read()).expect("node graph surface");
+    let node = render(&document, crate::standards::v1::subsets::any::schema::content::jack_content_for_handle(&document.content).expect("retained content child").read(), semio_plugin::Locale::En).expect("node graph surface");
     assert!(semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project semantic UI test tree").contains("node-graph"));
 }

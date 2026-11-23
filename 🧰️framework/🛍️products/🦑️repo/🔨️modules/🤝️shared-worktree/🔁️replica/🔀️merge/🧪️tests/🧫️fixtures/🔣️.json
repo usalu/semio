@@ -1,0 +1,23 @@
+{
+ "version": 1,
+ "vectors": [
+  {"name": "edits far apart merge", "base": "a\nb\nc\nd\ne\nf\n", "ours": "A\nb\nc\nd\ne\nf\n", "theirs": "a\nb\nc\nd\ne\nF\n", "merged": "A\nb\nc\nd\ne\nF\n"},
+  {"name": "same line changed differently conflicts", "base": "a\nb\nc\n", "ours": "a\nB1\nc\n", "theirs": "a\nB2\nc\n", "merged": null},
+  {"name": "same change on both sides merges", "base": "a\nb\nc\n", "ours": "a\nB\nc\n", "theirs": "a\nB\nc\n", "merged": "a\nB\nc\n"},
+  {"name": "adjacent lines conflict", "base": "a\nb\nc\nd\n", "ours": "a\nB\nc\nd\n", "theirs": "a\nb\nC\nd\n", "merged": null},
+  {"name": "one unchanged line between edits merges", "base": "a\nb\nc\nd\ne\n", "ours": "a\nB\nc\nd\ne\n", "theirs": "a\nb\nc\nD\ne\n", "merged": "a\nB\nc\nD\ne\n"},
+  {"name": "different insertions at the same place conflict", "base": "a\nb\n", "ours": "a\nx\nb\n", "theirs": "a\ny\nb\n", "merged": null},
+  {"name": "deletion and distant insertion merge", "base": "a\nb\nc\nd\ne\nf\ng\n", "ours": "a\nc\nd\ne\nf\ng\n", "theirs": "a\nb\nc\nd\ne\nf\nnew\ng\n", "merged": "a\nc\nd\ne\nf\nnew\ng\n"},
+  {"name": "append and prepend merge", "base": "m1\nm2\nm3\n", "ours": "top\nm1\nm2\nm3\n", "theirs": "m1\nm2\nm3\nbottom\n", "merged": "top\nm1\nm2\nm3\nbottom\n"},
+  {"name": "last line without newline", "base": "a\nb\nc\nd", "ours": "A\nb\nc\nd", "theirs": "a\nb\nc\nD", "merged": "A\nb\nc\nD"},
+  {"name": "crlf lines stay crlf", "base": "a\r\nb\r\nc\r\nd\r\ne\r\n", "ours": "A\r\nb\r\nc\r\nd\r\ne\r\n", "theirs": "a\r\nb\r\nc\r\nd\r\nE\r\n", "merged": "A\r\nb\r\nc\r\nd\r\nE\r\n"},
+  {"name": "theirs unchanged keeps ours", "base": "a\nb\n", "ours": "a\nb\nours\n", "theirs": "a\nb\n", "merged": "a\nb\nours\n"},
+  {"name": "ours unchanged takes theirs", "base": "a\nb\n", "ours": "a\nb\n", "theirs": "theirs\na\nb\n", "merged": "theirs\na\nb\n"},
+  {"name": "empty base with different content conflicts", "base": "", "ours": "x\n", "theirs": "y\n", "merged": null},
+  {"name": "utf-8 lines merge byte exact", "base": "Größe\nfür\nMaß\nÄnderung\nende\n", "ours": "Grösse\nfür\nMaß\nÄnderung\nende\n", "theirs": "Größe\nfür\nMaß\nÄnderung\nEnde ✓\n", "merged": "Grösse\nfür\nMaß\nÄnderung\nEnde ✓\n"},
+  {"name": "rust function added while a distant import changes", "base": "use a::b;\n\nfn one() {\n    1\n}\n\nfn two() {\n    2\n}\n", "ours": "use a::{b, c};\n\nfn one() {\n    1\n}\n\nfn two() {\n    2\n}\n", "theirs": "use a::b;\n\nfn one() {\n    1\n}\n\nfn two() {\n    2\n}\n\nfn three() {\n    3\n}\n", "merged": "use a::{b, c};\n\nfn one() {\n    1\n}\n\nfn two() {\n    2\n}\n\nfn three() {\n    3\n}\n"},
+  {"name": "edit inside a block the other side deleted conflicts", "base": "keep\nx1\nx2\nx3\nkeep2\n", "ours": "keep\nx1\nX2\nx3\nkeep2\n", "theirs": "keep\nkeep2\n", "merged": null},
+  {"name": "both delete the same line merge", "base": "a\nb\nc\n", "ours": "a\nc\n", "theirs": "a\nc\n", "merged": "a\nc\n"},
+  {"name": "many independent edits merge", "base": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n", "ours": "1\ntwo\n3\n4\nfive\n6\n7\n8\n9\n10\n", "theirs": "1\n2\n3\n4\n5\n6\n7\neight\n9\nten\n", "merged": "1\ntwo\n3\n4\nfive\n6\n7\neight\n9\nten\n"}
+ ]
+}

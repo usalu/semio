@@ -26,8 +26,8 @@ fn portable(node: &semio_ui_contract::BuiltNode) -> serde_json::Value {
 }
 
 #[cfg(feature = "retained-json")]
-fn publish<S: SceneDoc>(id: &str, kind: semio_ui_contract::SurfaceKind, scene: &S) {
-    let root = semio_plugin::scene_surface(id, kind, scene).expect("retained surface admission");
+fn publish<S: SceneDoc>(id: &str, kind: semio_ui_contract::SurfaceKind, scene: &S, name: &str) {
+    let root = semio_plugin::scene_surface(id, kind, scene, name, None).expect("retained surface admission");
     println!("[DEBUG] retained {}", portable(&root));
 }
 
@@ -57,7 +57,7 @@ fn world(id: &str, scene: StructuralScene) {
     assert_eq!(world.camera_json, restored.camera_json);
     println!("[DEBUG] {id} preserved {} meshes and {} instances with a {fixed}-byte fixed scene", lowered.meshes.len(), lowered.instances.len());
     #[cfg(feature = "retained-json")]
-    publish(&format!("{id}.model"), semio_ui_contract::SurfaceKind::World3d, &world);
+    publish(&format!("{id}.model"), semio_ui_contract::SurfaceKind::World3d, &world, semio_plugin::surface_name(Locale::En, "Structural model", "Tragwerksmodell"));
 }
 
 #[cfg(feature = "viewport-census")]
@@ -88,7 +88,7 @@ fn viewport_census(paths: impl Iterator<Item = String>) {
             let fixed = toolbar_nodes + 1 + 4 + 2 + 16;
             println!("[DEBUG] {id} chrome={fixed} toolbar={} toolbar reserve={toolbar_nodes} top meshes={:?}", count(&toolbar.unwrap()), &meshes[..5.min(meshes.len())]);
             for chrome in [0, 16, 32, 48, fixed] {
-                let page = render_viewport_page(&body, &lowered, &semio_s_plugin_norm_app_surface_visual_chrome::interaction_domain_id(id), false, 0, chrome);
+                let page = render_viewport_page(&body, &lowered, &semio_s_plugin_norm_app_surface_visual_chrome::interaction_domain_id(id), false, 0, chrome, "Viewport");
                 println!("[DEBUG] {id} chrome={chrome} page {:?}", page.as_ref().map(|(node, _, total)| (count(node), *total)));
             }
             return;
@@ -405,7 +405,7 @@ fn diagrams(id: &str, diagrams: &[semio_s_plugin_norm_structural_scene::Diagram2
     assert!(largest.0 > UI_FIXED_BYTES);
     println!("[DEBUG] {id} preserved {} real diagrams, reducing the largest fixed payload from {} to {} bytes", diagrams.len(), largest.0, largest.1);
     #[cfg(feature = "retained-json")]
-    publish(&format!("{id}.diagram"), semio_ui_contract::SurfaceKind::Canvas2d, &retained.expect("largest diagram"));
+    publish(&format!("{id}.diagram"), semio_ui_contract::SurfaceKind::Canvas2d, &retained.expect("largest diagram"), semio_plugin::surface_name(options.locale, "Diagram", "Diagramm"));
 }
 
 #[cfg(not(feature = "structural-only"))]

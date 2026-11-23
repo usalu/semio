@@ -2,12 +2,14 @@
 #![allow(clippy::all)]
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
-use semio_framework_value::retirement::{RetireOwned, RetirementCursor, RetirementStep};
 use semio_framework_value::ValueError;
-use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands, SnapshotRead, SnapshotReadRegistryHandle};
+use semio_framework_value_snapshot_read::{SnapshotRead, SnapshotReadRegistryHandle};
 use std::sync::Arc;
 
 use semio_framework_value_testing_allocator as _;
+use semio_framework_value_testing_admission::{BankWallet,EffectBank,RetainedWorkPoll,with_original_invocation};
+use semio_framework_value::{RetainedCloneProgress,RetainedWorkOutcome};
+fn close_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:16,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:16}}
 
 #[test]
 fn registered_owned_serializer_rejections_preserve_exact_read_and_options(){
@@ -30,13 +32,11 @@ fn registered_owned_serializer_rejections_preserve_exact_read_and_options(){
   let g=&row["grant"];let grant=RetainedCloneGrant{maximum_items:g["items"].as_u64().unwrap()as usize,maximum_copy_bytes:g["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:g["release"].as_u64().unwrap()as usize,maximum_depth:g["depth"].as_u64().unwrap()as usize};let calls=CALLS.load(std::sync::atomic::Ordering::Relaxed);
   let(missing,heap)=observe(||semio_os_io::io_mechanism::owned_serialization::io_begin_owned_serialization(request,grant));let missing=match missing{Err(refused)=>refused,Ok(_)=>panic!("unregistered original source route admitted")};assert_eq!(missing.error.kind,semio_framework_value::ValueRefusalKind::UnsupportedOwner);assert_eq!(missing.progress,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(missing.request.source.get::<u32>().unwrap()as*const u32,Arc::as_ptr(&source));assert_eq!(missing.request.options.as_str().unwrap().as_ptr(),options_pointer);let request=missing.request;
   let(result,heap)=observe(||entry.begin_owned_serialization(request,grant));let refused=match result{Err(refused)=>refused,Ok(_)=>panic!("deliberately rejecting fixture admitted a job")};assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(refused.progress,Default::default());assert_eq!(refused.request.source.get::<u32>().unwrap()as*const u32,Arc::as_ptr(&source));assert_eq!(refused.request.options.as_str().unwrap().as_ptr(),options_pointer);assert_eq!(CALLS.load(std::sync::atomic::Ordering::Relaxed)-calls,row["factoryCalls"].as_u64().unwrap()as usize);
-  let original=match refused.request.source.try_into_typed::<u32>(){Ok(read)=>read,Err(_)=>panic!("original type lost")};let witness=match original.try_return_to_registry_witness(){Ok(witness)=>witness,Err(_)=>panic!("exact source return refused")};let mut read_close=witness.retirement();
-  let birth=semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<u32>();let birth_grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:birth,maximum_depth:2,..Default::default()};
-  let(returned,heap)=observe(||registry.try_admit_one_returned::<u32,_>(birth_grant,|owner,grant|semio_framework_value::retirement::arc_custody::admit_shared_retirement(owner,grant,true)).result.unwrap());assert_eq!(heap.requested_bytes,returned.1.retained_capacity_bytes);assert_eq!(heap.released_bytes,returned.1.released_bytes);let mut slot_close=returned.0;assert!(slot_close.is_some());
-  for _ in 0..1000{let Some(owner)=slot_close.as_ref()else{break;};let demand=artifact_retirement_box_demands(owner,4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe(||artifact_retirement_box_close_step(&mut slot_close,grant).result.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(slot_close.is_none());
-  for _ in 0..16{if read_close.terminal_is_empty(){break;}let demand=read_close.next_demand(0).unwrap();assert!(!matches!(read_close.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth,..Default::default()}),RetirementStep::Failure(..)));}assert!(read_close.terminal_is_empty());
+  let original=match refused.request.source.try_into_typed::<u32>(){Ok(read)=>read,Err(_)=>panic!("original type lost")};let witness=match original.try_return_to_registry_witness(){Ok(witness)=>witness,Err(_)=>panic!("exact source return refused")};assert!(!witness.terminal_is_empty());
+  let mut bank=EffectBank::new(BankWallet::new(close_grant(),1<<30));
+  let returned=bank.run_outcome(close_grant(),1<<10,|effect|registry.try_admit_one_returned::<u32,_>(effect,|owner,_|RetainedWorkOutcome{result:Ok(owner.take().map(|owner|(owner,RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1})).result.ok().unwrap();bank.take_admitted();assert!(returned.0.is_some());drop(returned);assert!(witness.terminal_is_empty());drop(witness);
   let mut options_close=semio_framework_value::retirement::controlled::ControlledRetirement::new(refused.request.options).unwrap_or_else(|_|panic!("native options controlled authority"));
-  for _ in 0..1000{if options_close.terminal_is_empty(){break;}let copy=options_close.next_copy_byte_demand().unwrap();options_close.step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:options_close.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:options_close.next_release_byte_demand().unwrap(),maximum_depth:options_close.next_depth_demand().unwrap()}).unwrap();}assert!(options_close.terminal_is_empty());
+  for _ in 0..1000{if options_close.terminal_is_empty(){break;}let turn=bank.run_outcome(close_grant(),1<<10,|effect|{let mut turn=None;with_original_invocation(None,effect,&mut |effect|turn=Some(match options_close.step(65536,effect){RetainedWorkPoll::Complete(done)=>done,RetainedWorkPoll::Pending{..}=>panic!("options close stayed pending")})).unwrap();turn.expect("options close ran")});bank.take_admitted();turn.result.unwrap();}assert!(options_close.terminal_is_empty());
  }
 }
 

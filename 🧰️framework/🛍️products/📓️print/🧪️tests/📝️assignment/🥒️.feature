@@ -55,7 +55,7 @@ Feature: Reusable assignment document
     And every writing row is exactly 6 millimetres tall independently of the header
     And two matrix bodies occupy 128 millimetres before borders and surrounding prose
 
-  Scenario: Worked example uses the native table silhouette
+  Scenario: Worked example uses the native table frame
     Given the worked example parameter matrix in either supported language
     Then its left name chip is absent while its automatic right number uses the connected outline
     And blank titles do not disable table chrome or its counter

@@ -13,7 +13,7 @@ pub use super::touch_artifact::{touch_artifact, TouchArtifact};
 
 //#region 🔖️Aggregate
 /// 🧮️ Semantic S Space index mutation vocabulary.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = SSpaceSnapshot, diff = SSpaceDiff, schema = "s.space.space", reference = SSpaceSnapshot, reference_diff = SSpaceDiff)]

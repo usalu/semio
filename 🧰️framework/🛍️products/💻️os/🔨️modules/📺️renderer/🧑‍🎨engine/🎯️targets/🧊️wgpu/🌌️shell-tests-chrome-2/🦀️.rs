@@ -8,7 +8,7 @@ use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition};
 use semio_renderer_wgpu_dock as dock;
 use semio_renderer_wgpu_dock::*;
 use semio_renderer_wgpu_dock::{
-    DockDragKind, DockDragPayload, DockDropZone, DockNode, DockPath, DockRenderContext, DockSide, DockStackTab, DockState, MODE_DOCK_TAB_MAX_WIDTH_PX, SPLIT_MIN_FRACTION, WindowSilhouette, WindowSilhouetteEdge, WindowSilhouetteSpan,
+    DockDragKind, DockDragPayload, DockDropZone, DockNode, DockPath, DockRenderContext, DockSide, DockStackTab, DockState, MODE_DOCK_TAB_MAX_WIDTH_PX, SPLIT_MIN_FRACTION, WindowFrame, WindowFrameEdge, WindowFrameChip,
     compute_dock_drop_zone, compute_tab_insert_index, dock_cap_depth, dock_node_to_layout_root, dock_tab_actions, dock_tab_content_width, resolve_split_side, split_drop_preview_in_body, truncate_label_to_width,
 };
 use semio_renderer_wgpu_engine_board::tiled_map;

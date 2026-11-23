@@ -1,12 +1,13 @@
 use super::*;
+use crate::editor::fem3d::interaction::retiring::Retiring;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::fem_gumball_drive;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballDrive;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransient;
 
-fn demo() -> Fem3dSnapshot {
-    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot")
+fn demo() -> Retiring<Fem3dSnapshot> {
+    Retiring::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot"))
 }
 
 fn ids(values: &[&str]) -> Vec<String> {
@@ -17,10 +18,10 @@ fn targets(values: &[(&str, &str)]) -> Vec<String> {
     values.iter().map(|(kind, id)| super::super::fem3d_entity_target(kind, id).unwrap()).collect()
 }
 
-fn moved(doc: &Fem3dSnapshot, tick: MoveSelection) -> Fem3dSnapshot {
+fn moved(doc: &Fem3dSnapshot, tick: MoveSelection) -> Retiring<Fem3dSnapshot> {
     let mut value = doc.to_reference();
     semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation(&mut value, &Fem3dMutation::MoveSelection(tick)).expect("the tick applies");
-    Fem3dSnapshot::from_reference(value).expect("the moved snapshot")
+    Retiring::new(Fem3dSnapshot::from_reference(value).expect("the moved snapshot"))
 }
 
 fn node(doc: &Fem3dSnapshot, id: &str) -> [f64; 3] {
@@ -45,7 +46,7 @@ fn wide_selection_resolves_each_geometry_once_in_document_order() {
     for index in 0..vector["nodeCount"].as_u64().unwrap() {
         value.nodes.push(semio_s_fem_node::volumetric::FemNodeValue { id: format!("node:{index}"), x: index as f64, y: 0.0, z: 0.0 });
     }
-    let doc = Fem3dSnapshot::from_reference(value).expect("wide snapshot");
+    let doc = Retiring::new(Fem3dSnapshot::from_reference(value).expect("wide snapshot"));
     let rows: Vec<_> = doc.nodes.iter().collect();
     let selection: Vec<String> = rows.into_iter().rev().flat_map(|node| {
         let identity = super::super::fem3d_entity_target("node", node.id.as_str()).unwrap();
@@ -140,7 +141,7 @@ fn streamed_ticks_commit_the_net_leaf_once() {
     let second = drive(&open, "w", "rotateSelection", GesturePhase::Stream, tick(std::f64::consts::FRAC_PI_2 - 0.5), "base");
     let open = second.transient.expect("the second tick advances it");
     assert_eq!(open.gesture("w").expect("window w holds a gesture").transaction, minted, "every tick rides the same transaction");
-    let preview = open.preview::<Fem3dSnapshot, Fem3dSnapshotValue, Fem3dMutation>(&doc, Fem3dSnapshot::to_reference, |value| Fem3dSnapshot::from_reference(value).ok()).expect("an open gesture previews");
+    let preview = open.preview::<Fem3dSnapshot, Fem3dSnapshotValue, Fem3dMutation>(&doc, Fem3dSnapshot::to_reference, |value| Fem3dSnapshot::from_reference(value).ok()).map(Retiring::new).expect("an open gesture previews");
     let swung = node(&preview, "n20_g");
     assert!((swung[0] - 4.0).abs() < 1e-9 && (swung[1] - 4.0).abs() < 1e-9, "the preview is the net quarter turn: {swung:?}");
     let done = drive(&open, "w", "rotateSelection", GesturePhase::Commit, tick(0.0), "base");
@@ -206,7 +207,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = tick(Fem3dGumballMotion::Translate { dx: -0.5, dy: 3.0, dz: 0.25 });
     let drafts: protocol::HistoryInputDrafts = [(ids[0].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
-    assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &base, "the preview base is the state right before the edited move");
+    assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &*base, "the preview base is the state right before the edited move");
     let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited move");
     assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
     let result = replay.finish().expect("a finished replay yields its result");
@@ -216,15 +217,15 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
         for mutation in mutations {
             semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation(&mut value, mutation).expect("the log folds");
         }
-        Fem3dSnapshot::from_reference(value).expect("the folded snapshot")
+        Retiring::new(Fem3dSnapshot::from_reference(value).expect("the folded snapshot"))
     };
     let fresh = fold(&[edited, log[1].clone(), log[2].clone()]);
-    assert_ne!(fresh, fold(&log), "the edit changes the outcome");
-    assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
+    assert_ne!(*fresh, *fold(&log), "the edit changes the outcome");
+    assert_eq!(result.state().expect("the replay reached a state").as_ref(), &*fresh, "the replay equals the fresh fold of the edited log");
     store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
-    assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
+    assert_eq!(store.snapshot_ref(), &*fresh, "the overwritten history folds to the edited state");
     let mut disposer = semio_plugin::bounded_document_store_disposer::<Fem3dSnapshot, Fem3dMutation>();
-    for _ in 0..4_096 {
+    for _ in 0..1 << 16 {
         if disposer.terminal_is_empty(&store) {
             break;
         }

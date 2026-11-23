@@ -1,6 +1,6 @@
 import {buildBackendAlternationV1,buildBackendIdsV1} from "../../🔌️backends/🟦️.ts";
 
-import {access,mkdir,mkdtemp,readdir,rm} from "node:fs/promises";
+import {access,chmod,copyFile,mkdir,mkdtemp,readdir,rm} from "node:fs/promises";
 import {homedir,tmpdir} from "node:os";
 import {join,posix,win32} from "node:path";
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
@@ -83,7 +83,23 @@ export function renderIncrementalPlanV1(set:IncrementalScenarioSetV1,rows:readon
  return out.join("\n");
 }
 
-const bootstrap:readonly (readonly string[])[]=[["preflight"],["tools","setup","all"],["dependencies","sync","--all"],["tools","setup","all"]];
+/** 🧱️ The declared prepare stages in dependency order: a stage runs only after every stage it requires, so tools never set up before the packages they load are synced. */
+export function incrementalBootstrapV1(stages:readonly Readonly<{id:string;command:readonly string[];requires:readonly string[]}>[]=policy.bootstrap):readonly (readonly string[])[]{
+ const done=new Set<string>(),out:(readonly string[])[]=[];
+ for(const stage of stages){const missing=stage.requires.filter(id=>!done.has(id));if(missing.length)throw Error(`Bootstrap stage ${stage.id} runs before ${missing.join(", ")}`);done.add(stage.id);out.push(stage.command);}
+ return out;
+}
+
+const bootstrap=incrementalBootstrapV1();
+
+/** 🛰️ Gives a prepared root the fleet state of the checkout (cache facts, machine record, identity keys) so its tiers look up and publish to the one fleet cache; the withheld keys (admin, origin) authorise fleet administration and serving and are never duplicated into a disposable clone. */
+export async function incrementalFleetProvisionV1(live:string,root:string,signal:AbortSignal,fleet:typeof policy.fleet=policy.fleet):Promise<readonly string[]>{
+ const copied:string[]=[],put=async(from:string,to:string)=>{signal.throwIfAborted();await mkdir(join(to,".."),{recursive:true});await copyFile(from,to);await chmod(to,0o600);copied.push(to);},exists=(path:string)=>access(path).then(()=>true,()=>false);
+ for(const name of fleet.files){const from=join(live,fleet.directory,name);if(await exists(from))await put(from,join(root,fleet.directory,name));}
+ const source=join(live,fleet.directory,fleet.identityDirectory);
+ if(await exists(source))for(const entry of await readdir(source,{withFileTypes:true}))if(entry.isFile()&&!fleet.withheld.includes(entry.name))await put(join(source,entry.name),join(root,fleet.directory,fleet.identityDirectory,entry.name));
+ return copied;
+}
 
 /** 🚀️ Runs `repo incremental`: lists the scenarios, plans their expected sets, prepares the disposable root, runs the scenarios in it with every implementation and judges minimality, or discards the root. Progress is published per stage and every stage checks for cancellation. */
 export async function runIncrementalCommandV1(live:string,args:readonly string[],ports:IncrementalCommandPortsV1):Promise<void>{
@@ -102,6 +118,8 @@ export async function runIncrementalCommandV1(live:string,args:readonly string[]
    const files=await ports.files(live,ports.signal);
    if(!exists||parsed.fresh)await incrementalCloneV1(live,root,files,{signal:ports.signal,progress:async(done,total)=>{await ports.progress(`clone:${done}/${total}`);}});
    else await incrementalRefreshV1(live,root,files,{signal:ports.signal,progress:async(done,total)=>{await ports.progress(`refresh:${done}/${total}`);}});
+   await ports.progress("fleet");
+   await incrementalFleetProvisionV1(live,root,ports.signal);
    const pre=host();
    for(const step of bootstrap){ports.check();await ports.progress(`bootstrap:${step.join(" ")}`);const cli=incrementalCliArgumentsV1(pre.executable,root,script,tools[0]!,step);await ports.run(cli.command,cli.args,root,incrementalChildEnvironmentV1(ports.environment,{}),ports.signal);}
    ports.write(`${text(set,"progress",lang)}: ${root}`);

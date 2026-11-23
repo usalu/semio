@@ -2,6 +2,7 @@ use semio_s_artifact_procedural_3d_editor::*;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::SetSun;
 #[cfg(test)] use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
 
 

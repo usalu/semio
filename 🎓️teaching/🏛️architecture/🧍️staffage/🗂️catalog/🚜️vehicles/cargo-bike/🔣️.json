@@ -21095,7 +21095,7 @@
           "material": "aluminium",
           "role": "detail",
           "tone": 0.32,
-          "profile": [[0, 0.013], [0.008, 0.013]],
+          "profile": [[0, 0.016], [0.008, 0.016]],
           "axis": [0, 0, 1],
           "origin": [0.5, 0.035, 0.046]
         },
@@ -21136,7 +21136,7 @@
           "material": "aluminium",
           "role": "detail",
           "tone": 0.32,
-          "profile": [[0, 0.013], [0.008, 0.013]],
+          "profile": [[0, 0.016], [0.008, 0.016]],
           "axis": [0, 0, -1],
           "origin": [0.5, 0.035, -0.046]
         },
@@ -22096,7 +22096,10 @@
             }
           ],
           "capStart": true,
-          "capEnd": true
+          "capEnd": true,
+          "transform": {
+            "translation": [0, -0.002, 0]
+          }
         },
         {
           "id": "crate-upper",
@@ -22157,7 +22160,10 @@
             }
           ],
           "capStart": true,
-          "capEnd": true
+          "capEnd": true,
+          "transform": {
+            "translation": [0, -0.005, 0]
+          }
         },
         {
           "id": "stand-pivot",
@@ -27890,7 +27896,7 @@
           "material": "aluminium",
           "role": "body",
           "tone": 0.4,
-          "profile": [[0, 0.0102], [0.27499, 0.0102], [0.27499, 0.012], [0, 0.012], [0, 0.0102]],
+          "profile": [[0, 0.0102], [0.285, 0.0102], [0.285, 0.012], [0, 0.012], [0, 0.0102]],
           "axis": [0.992747, 0.120002, -0.007273],
           "origin": [0.207, 0.002, 0.052],
           "member": "fork",
@@ -27909,7 +27915,7 @@
           "material": "aluminium",
           "role": "body",
           "tone": 0.4,
-          "profile": [[0, 0.0102], [0.27499, 0.0102], [0.27499, 0.012], [0, 0.012], [0, 0.0102]],
+          "profile": [[0, 0.0102], [0.285, 0.0102], [0.285, 0.012], [0, 0.012], [0, 0.0102]],
           "axis": [0.992747, 0.120002, 0.007273],
           "origin": [0.207, 0.002, -0.052],
           "member": "fork",
@@ -28981,12 +28987,6 @@
           "part": "member"
         },
         {
-          "id": "st-sprocket",
-          "of": "sprocket",
-          "member": "wheel-r",
-          "part": "member"
-        },
-        {
           "id": "st-tyre-f",
           "of": "tyre-f",
           "member": "wheel-f",
@@ -29231,6 +29231,10 @@
         {
           "en": "Each wheel carries 36 crossed tension spokes from the two hub flanges. The bent ends and headed nipples sit on the actual flange and rim. The carrier rails and forked stays keep their separate sections.",
           "de": "Jedes Rad trägt 36 gekreuzte Zugspeichen zwischen den beiden Nabenflanschen und der Felge. Die gekröpften Enden und Speichennippel sitzen an Flansch und Felge. Die Gepäckträgerrohre und gegabelten Streben behalten ihre getrennten Querschnitte."
+        },
+        {
+          "en": "The fork ends are 32 mm eyes that the blades reach. The two crates stand on the box floor and on each other; the sprocket is drivetrain and no member of the wheel structure.",
+          "de": "Die Gabelenden sind 32-mm-Augen, die die Gabelscheiden erreichen. Die zwei Kisten stehen auf dem Kastenboden und aufeinander; das Ritzel gehört zum Antrieb und ist kein Stab der Radstruktur."
         }
       ]
     },
@@ -29632,9 +29636,9 @@
           "material": "aluminium",
           "role": "detail",
           "tone": 0.25,
-          "profile": [[0, 0.0165], [0.021, 0.0165]],
+          "profile": [[0, 0.0165], [0.03, 0.0165]],
           "axis": [-1, 0, 0],
-          "origin": [0.021, 0, 0]
+          "origin": [0.03, 0, 0]
         },
         {
           "id": "fork-crown",
@@ -30462,31 +30466,9 @@
           "material": "alloy-rim",
           "role": "detail",
           "tone": 0.7,
-          "profile": [[0, 0.005], [0.174, 0.005]],
+          "profile": [[0, 0.0075], [0.174, 0.0075]],
           "axis": [0, 0, 1],
           "origin": [0, 0, -0.087]
-        },
-        {
-          "id": "nut-r-l",
-          "kind": "revolve",
-          "bone": "wheel-r",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.009], [0.008, 0.009]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, 0.0755]
-        },
-        {
-          "id": "nut-r-r",
-          "kind": "revolve",
-          "bone": "wheel-r",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.009], [0.008, 0.009]],
-          "axis": [0, 0, -1],
-          "origin": [0, 0, -0.0755]
         },
         {
           "kind": "polyhedron",
@@ -32426,31 +32408,9 @@
           "material": "alloy-rim",
           "role": "detail",
           "tone": 0.7,
-          "profile": [[0, 0.005], [0.132, 0.005]],
+          "profile": [[0, 0.0075], [0.132, 0.0075]],
           "axis": [0, 0, 1],
           "origin": [0, 0, -0.066]
-        },
-        {
-          "id": "nut-f-l",
-          "kind": "revolve",
-          "bone": "wheel-f",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.009], [0.008, 0.009]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, 0.054]
-        },
-        {
-          "id": "nut-f-r",
-          "kind": "revolve",
-          "bone": "wheel-f",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.009], [0.008, 0.009]],
-          "axis": [0, 0, -1],
-          "origin": [0, 0, -0.054]
         },
         {
           "kind": "polyhedron",
@@ -34608,8 +34568,8 @@
           "tone": 0.32,
           "p0": [-0.3, 0.748, -0.075],
           "p1": [-0.3, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
+          "r0": 0.0075,
+          "r1": 0.0075
         },
         {
           "id": "carrier-bar-2",
@@ -34620,8 +34580,8 @@
           "tone": 0.32,
           "p0": [-0.17, 0.748, -0.075],
           "p1": [-0.17, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
+          "r0": 0.0075,
+          "r1": 0.0075
         },
         {
           "id": "carrier-bar-3",
@@ -34632,8 +34592,8 @@
           "tone": 0.32,
           "p0": [-0.04, 0.748, -0.075],
           "p1": [-0.04, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
+          "r0": 0.0075,
+          "r1": 0.0075
         },
         {
           "id": "carrier-bar-4",
@@ -34644,8 +34604,8 @@
           "tone": 0.32,
           "p0": [0.09, 0.748, -0.075],
           "p1": [0.09, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
+          "r0": 0.0075,
+          "r1": 0.0075
         },
         {
           "id": "carrier-bar-5",
@@ -34656,8 +34616,8 @@
           "tone": 0.32,
           "p0": [0.235, 0.748, -0.075],
           "p1": [0.235, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
+          "r0": 0.0075,
+          "r1": 0.0075
         },
         {
           "id": "carrier-tail",
@@ -34682,6 +34642,30 @@
           "axis": [1, 0, 0],
           "origin": [0.04, 0, 0],
           "texture": true
+        },
+        {
+          "id": "lamp-bracket-f",
+          "kind": "capsule",
+          "bone": "fork",
+          "p0": [0.19, 0.02, 0],
+          "p1": [0.19, 0.06, 0],
+          "r0": 0.0075,
+          "r1": 0.0075,
+          "material": "plastic",
+          "role": "body",
+          "tone": 0.85
+        },
+        {
+          "id": "fender-bracket-f",
+          "kind": "capsule",
+          "bone": "fork",
+          "p0": [0.191, 0.07, 0],
+          "p1": [0.235, 0.06, 0],
+          "r0": 0.0075,
+          "r1": 0.0075,
+          "material": "plastic",
+          "role": "body",
+          "tone": 0.22
         }
       ],
       "thermal": [
@@ -34906,16 +34890,6 @@
           "region": "rims-spokes"
         },
         {
-          "id": "th-nut-r-l",
-          "of": "nut-r-l",
-          "region": "rims-spokes"
-        },
-        {
-          "id": "th-nut-r-r",
-          "of": "nut-r-r",
-          "region": "rims-spokes"
-        },
-        {
           "id": "th-spoke-r-1",
           "of": "spoke-r-1",
           "region": "rims-spokes"
@@ -34983,16 +34957,6 @@
         {
           "id": "th-axle-f",
           "of": "axle-f",
-          "region": "rims-spokes"
-        },
-        {
-          "id": "th-nut-f-l",
-          "of": "nut-f-l",
-          "region": "rims-spokes"
-        },
-        {
-          "id": "th-nut-f-r",
-          "of": "nut-f-r",
           "region": "rims-spokes"
         },
         {
@@ -35154,6 +35118,11 @@
           "id": "th-steerer-r",
           "of": "steerer-r",
           "region": "frame"
+        },
+        {
+          "id": "th-fender-bracket-f",
+          "of": "fender-bracket-f",
+          "region": "fenders"
         }
       ],
       "structure": [
@@ -35992,7 +35961,7 @@
           "material": "aluminium",
           "role": "body",
           "tone": 0.5,
-          "profile": [[0, 0.008], [0.08, 0.008]],
+          "profile": [[0, 0.015], [0.08, 0.015]],
           "axis": [0, 0, 1],
           "origin": [0, 0, -0.04],
           "member": "stand",
@@ -36434,6 +36403,14 @@
         {
           "en": "Each wheel carries 36 crossed tension spokes from the two hub flanges. The bent ends and headed nipples sit on the actual flange and rim. The carrier rails and forked stays keep their separate sections.",
           "de": "Jedes Rad trägt 36 gekreuzte Zugspeichen zwischen den beiden Nabenflanschen und der Felge. Die gekröpften Enden und Speichennippel sitzen an Flansch und Felge. Die Gepäckträgerrohre und gegabelten Streben behalten ihre getrennten Querschnitte."
+        },
+        {
+          "en": "Axle and nuts of each wheel are one 15 mm stud and the five carrier cross bars are 15 mm, the smallest feature of 1:100.",
+          "de": "Achse und Muttern jedes Rades sind ein 15-mm-Bolzen und die fünf Querstäbe des Gepäckträgers messen 15 mm, das kleinste Merkmal von 1:100."
+        },
+        {
+          "en": "Joins: the steerer cap reaches the head tube, the head lamp stands on a bracket from the steering drum and carries the front mudguard on a second bracket; the stand hinge of the structure is a 30 mm sleeve at the beam box.",
+          "de": "Verbindungen: die Gabelschaftkappe erreicht das Steuerrohr, der Scheinwerfer steht auf einem Halter von der Lenktrommel und trägt das vordere Schutzblech über einen zweiten Halter; das Ständergelenk der Struktur ist eine 30-mm-Hülse am Trägerkasten."
         }
       ]
     },
@@ -36936,27 +36913,7 @@
           "material": "alloy-rim",
           "role": "body",
           "tone": 0.7,
-          "profile": [
-            [-0.0675, 0.008],
-            [-0.0675, 0.014],
-            [-0.042, 0.014],
-            [-0.042, 0.03],
-            [-0.032, 0.03],
-            [-0.032, 0.046],
-            [-0.028, 0.046],
-            [-0.028, 0.033],
-            [0.028, 0.033],
-            [0.028, 0.046],
-            [0.032, 0.046],
-            [0.032, 0.03],
-            [0.04, 0.03],
-            [0.04, 0.024],
-            [0.052, 0.024],
-            [0.052, 0.014],
-            [0.0675, 0.014],
-            [0.0675, 0.008],
-            [-0.0675, 0.008]
-          ],
+          "profile": [[-0.087, 0.0], [-0.087, 0.015], [-0.0675, 0.015], [-0.0675, 0.046], [0.0675, 0.046], [0.0675, 0.015], [0.087, 0.015], [0.087, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 0]
         },
@@ -36971,39 +36928,6 @@
           "axis": [0, 0, 1],
           "origin": [0, 0, 0],
           "texture": true
-        },
-        {
-          "id": "axle-r",
-          "kind": "revolve",
-          "bone": "wheel-r",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.005], [0.174, 0.005]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, -0.087]
-        },
-        {
-          "id": "nut-r-l",
-          "kind": "revolve",
-          "bone": "wheel-r",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.009], [0.008, 0.009]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, 0.0755]
-        },
-        {
-          "id": "nut-r-r",
-          "kind": "revolve",
-          "bone": "wheel-r",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.009], [0.008, 0.009]],
-          "axis": [0, 0, -1],
-          "origin": [0, 0, -0.0755]
         },
         {
           "kind": "polyhedron",
@@ -38520,23 +38444,7 @@
           "material": "alloy-rim",
           "role": "body",
           "tone": 0.7,
-          "profile": [
-            [-0.046, 0.007],
-            [-0.046, 0.012],
-            [-0.034, 0.012],
-            [-0.034, 0.031],
-            [-0.03, 0.031],
-            [-0.03, 0.021],
-            [0.026, 0.021],
-            [0.026, 0.031],
-            [0.03, 0.031],
-            [0.03, 0.024],
-            [0.036, 0.024],
-            [0.036, 0.012],
-            [0.046, 0.012],
-            [0.046, 0.007],
-            [-0.046, 0.007]
-          ],
+          "profile": [[-0.066, 0.0], [-0.066, 0.015], [-0.046, 0.015], [-0.046, 0.031], [0.046, 0.031], [0.046, 0.015], [0.066, 0.015], [0.066, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 0]
         },
@@ -38551,39 +38459,6 @@
           "axis": [0, 0, 1],
           "origin": [0, 0, 0],
           "texture": true
-        },
-        {
-          "id": "axle-f",
-          "kind": "revolve",
-          "bone": "wheel-f",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.005], [0.132, 0.005]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, -0.066]
-        },
-        {
-          "id": "nut-f-l",
-          "kind": "revolve",
-          "bone": "wheel-f",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.009], [0.008, 0.009]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, 0.054]
-        },
-        {
-          "id": "nut-f-r",
-          "kind": "revolve",
-          "bone": "wheel-f",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.009], [0.008, 0.009]],
-          "axis": [0, 0, -1],
-          "origin": [0, 0, -0.054]
         },
         {
           "kind": "polyhedron",
@@ -40215,7 +40090,7 @@
           "material": "aluminium",
           "role": "body",
           "tone": 0.32,
-          "profile": [[0, 0.0115], [0.4268, 0.0085]],
+          "profile": [[0, 0.015], [0.4268, 0.015]],
           "axis": [-0.991105, 0.079663, 0.106608],
           "origin": [0.435, 0.296, 0.026]
         },
@@ -40228,7 +40103,8 @@
           "tone": 0.32,
           "profile": [[0, 0.0095], [0.4736, 0.0075]],
           "axis": [-0.558904, -0.822619, 0.104519],
-          "origin": [0.2707, 0.73359, 0.022]
+          "origin": [0.2707, 0.73359, 0.022],
+          "slender": true
         },
         {
           "id": "chainstay-r",
@@ -40237,7 +40113,7 @@
           "material": "aluminium",
           "role": "body",
           "tone": 0.32,
-          "profile": [[0, 0.0115], [0.4268, 0.0085]],
+          "profile": [[0, 0.015], [0.4268, 0.015]],
           "axis": [-0.991105, 0.079663, -0.106608],
           "origin": [0.435, 0.296, -0.026]
         },
@@ -40250,7 +40126,8 @@
           "tone": 0.32,
           "profile": [[0, 0.0095], [0.4736, 0.0075]],
           "axis": [-0.558904, -0.822619, -0.104519],
-          "origin": [0.2707, 0.73359, -0.022]
+          "origin": [0.2707, 0.73359, -0.022],
+          "slender": true
         },
         {
           "id": "chainstay-bridge",
@@ -40259,7 +40136,7 @@
           "material": "aluminium",
           "role": "detail",
           "tone": 0.32,
-          "profile": [[0, 0.007], [0.09, 0.007]],
+          "profile": [[0, 0.015], [0.09, 0.015]],
           "axis": [0, 0, 1],
           "origin": [0.395, 0.318, -0.045]
         },
@@ -40273,7 +40150,8 @@
           "p0": [-0.3, 0.748, 0.075],
           "p1": [0.235, 0.748, 0.075],
           "r0": 0.006,
-          "r1": 0.006
+          "r1": 0.006,
+          "slender": true
         },
         {
           "id": "carrier-rail-r",
@@ -40285,7 +40163,8 @@
           "p0": [-0.3, 0.748, -0.075],
           "p1": [0.235, 0.748, -0.075],
           "r0": 0.006,
-          "r1": 0.006
+          "r1": 0.006,
+          "slender": true
         },
         {
           "id": "carrier-leg-a-l",
@@ -40297,7 +40176,8 @@
           "p0": [-0.04, 0.748, 0.075],
           "p1": [-0.004, 0.346, 0.081],
           "r0": 0.006,
-          "r1": 0.006
+          "r1": 0.006,
+          "slender": true
         },
         {
           "id": "carrier-leg-b-l",
@@ -40309,7 +40189,8 @@
           "p0": [-0.24, 0.748, 0.075],
           "p1": [-0.004, 0.346, 0.081],
           "r0": 0.006,
-          "r1": 0.006
+          "r1": 0.006,
+          "slender": true
         },
         {
           "id": "carrier-strut-l",
@@ -40320,8 +40201,8 @@
           "tone": 0.32,
           "p0": [0.235, 0.748, 0.05],
           "p1": [0.2527, 0.70359, 0.026],
-          "r0": 0.006,
-          "r1": 0.006
+          "r0": 0.015,
+          "r1": 0.015
         },
         {
           "id": "carrier-leg-a-r",
@@ -40333,7 +40214,8 @@
           "p0": [-0.04, 0.748, -0.075],
           "p1": [-0.004, 0.346, -0.081],
           "r0": 0.006,
-          "r1": 0.006
+          "r1": 0.006,
+          "slender": true
         },
         {
           "id": "carrier-leg-b-r",
@@ -40345,7 +40227,8 @@
           "p0": [-0.24, 0.748, -0.075],
           "p1": [-0.004, 0.346, -0.081],
           "r0": 0.006,
-          "r1": 0.006
+          "r1": 0.006,
+          "slender": true
         },
         {
           "id": "carrier-strut-r",
@@ -40356,8 +40239,8 @@
           "tone": 0.32,
           "p0": [0.235, 0.748, -0.05],
           "p1": [0.2527, 0.70359, -0.026],
-          "r0": 0.006,
-          "r1": 0.006
+          "r0": 0.015,
+          "r1": 0.015
         },
         {
           "id": "carrier-bar-1",
@@ -40368,8 +40251,8 @@
           "tone": 0.32,
           "p0": [-0.3, 0.748, -0.075],
           "p1": [-0.3, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
+          "r0": 0.015,
+          "r1": 0.015
         },
         {
           "id": "carrier-bar-2",
@@ -40380,8 +40263,8 @@
           "tone": 0.32,
           "p0": [-0.17, 0.748, -0.075],
           "p1": [-0.17, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
+          "r0": 0.015,
+          "r1": 0.015
         },
         {
           "id": "carrier-bar-3",
@@ -40392,8 +40275,8 @@
           "tone": 0.32,
           "p0": [-0.04, 0.748, -0.075],
           "p1": [-0.04, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
+          "r0": 0.015,
+          "r1": 0.015
         },
         {
           "id": "carrier-bar-4",
@@ -40404,8 +40287,8 @@
           "tone": 0.32,
           "p0": [0.09, 0.748, -0.075],
           "p1": [0.09, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
+          "r0": 0.015,
+          "r1": 0.015
         },
         {
           "id": "carrier-bar-5",
@@ -40416,20 +40299,8 @@
           "tone": 0.32,
           "p0": [0.235, 0.748, -0.075],
           "p1": [0.235, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
-        },
-        {
-          "id": "carrier-tail",
-          "kind": "extrude",
-          "bone": "frame",
-          "material": "aluminium",
-          "role": "detail",
-          "tone": 0.32,
-          "profile": [[-0.312, 0.688], [-0.294, 0.688], [-0.294, 0.752], [-0.312, 0.752]],
-          "plane": "xy",
-          "from": -0.06,
-          "to": 0.06
+          "r0": 0.015,
+          "r1": 0.015
         },
         {
           "id": "steerer-r",
@@ -40450,7 +40321,7 @@
           "material": "aluminium",
           "role": "detail",
           "tone": 0.3,
-          "profile": [[0, 0.01], [0, 0.034], [0.025, 0.034], [0.025, 0.01], [0, 0.01]],
+          "profile": [[0.0, 0.01], [0.0, 0.034], [0.03, 0.034], [0.03, 0.01], [0.0, 0.01]],
           "axis": [1, 0, 0],
           "origin": [0.045, 0, 0]
         },
@@ -40487,6 +40358,29 @@
           "profile": [[0, 0.019], [0.05, 0.019]],
           "axis": [0, 0, 1],
           "origin": [0.82, -0.032, -0.025]
+        },
+        {
+          "id": "crank-axle",
+          "kind": "revolve",
+          "bone": "crank",
+          "profile": [[0, 0.015], [0.16, 0.015]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, -0.08],
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.3
+        },
+        {
+          "id": "stand-bracket",
+          "kind": "box",
+          "bone": "frame",
+          "size": [0.04, 0.05, 0.11],
+          "transform": {
+            "translation": [1.55, 0.22, 0]
+          },
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.32
         }
       ],
       "thermal": [
@@ -40626,21 +40520,6 @@
           "region": "brakes"
         },
         {
-          "id": "th-axle-r",
-          "of": "axle-r",
-          "region": "rims-spokes"
-        },
-        {
-          "id": "th-nut-r-l",
-          "of": "nut-r-l",
-          "region": "rims-spokes"
-        },
-        {
-          "id": "th-nut-r-r",
-          "of": "nut-r-r",
-          "region": "rims-spokes"
-        },
-        {
           "id": "th-spoke-r-1",
           "of": "spoke-r-1",
           "region": "rims-spokes"
@@ -40704,21 +40583,6 @@
           "id": "th-rotor-f",
           "of": "rotor-f",
           "region": "brakes"
-        },
-        {
-          "id": "th-axle-f",
-          "of": "axle-f",
-          "region": "rims-spokes"
-        },
-        {
-          "id": "th-nut-f-l",
-          "of": "nut-f-l",
-          "region": "rims-spokes"
-        },
-        {
-          "id": "th-nut-f-r",
-          "of": "nut-f-r",
-          "region": "rims-spokes"
         },
         {
           "id": "th-spoke-f-1",
@@ -40898,6 +40762,11 @@
         {
           "id": "th-bar-clamp",
           "of": "bar-clamp",
+          "region": "frame"
+        },
+        {
+          "id": "th-stand-bracket",
+          "of": "stand-bracket",
           "region": "frame"
         }
       ],
@@ -41505,7 +41374,7 @@
           "material": "alloy-rim",
           "role": "body",
           "tone": 0.5,
-          "profile": [[0, 0.011], [0.135, 0.011]],
+          "profile": [[0, 0.015], [0.135, 0.015]],
           "axis": [0, 0, 1],
           "origin": [0, 0, -0.0675],
           "member": "wheel-r",
@@ -41532,7 +41401,7 @@
           "material": "alloy-rim",
           "role": "body",
           "tone": 0.5,
-          "profile": [[0, 0.011], [0.092, 0.011]],
+          "profile": [[0, 0.015], [0.092, 0.015]],
           "axis": [0, 0, 1],
           "origin": [0, 0, -0.046],
           "member": "wheel-f",
@@ -41573,12 +41442,6 @@
         {
           "id": "st-rotor-r",
           "of": "rotor-r",
-          "member": "wheel-r",
-          "part": "member"
-        },
-        {
-          "id": "st-axle-r",
-          "of": "axle-r",
           "member": "wheel-r",
           "part": "member"
         },
@@ -41657,12 +41520,6 @@
         {
           "id": "st-rotor-f",
           "of": "rotor-f",
-          "member": "wheel-f",
-          "part": "member"
-        },
-        {
-          "id": "st-axle-f",
-          "of": "axle-f",
           "member": "wheel-f",
           "part": "member"
         },
@@ -41859,12 +41716,6 @@
           "part": "member"
         },
         {
-          "id": "st-carrier-tail",
-          "of": "carrier-tail",
-          "member": "frame",
-          "part": "member"
-        },
-        {
           "id": "steerer-r",
           "of": "steerer-r",
           "member": "bar",
@@ -41891,6 +41742,14 @@
         {
           "en": "Rework 2026-11-22: the seat post (215 mm of it showing between seat tube and saddle) is modelled at this scale too, so the saddle is carried by the frame.",
           "de": "Überarbeitung 2026-11-22: Die Sattelstütze (215 mm sichtbar zwischen Sitzrohr und Sattel) ist auch in diesem Maßstab modelliert, sodass der Sattel vom Rahmen getragen wird."
+        },
+        {
+          "en": "Authored for the 30 mm feature: each hub is one drum with a 30 mm stud to the dropouts, chainstays, their bridge, the carrier struts and cross bars are 30 mm, seatstays, carrier rails and legs stay true rods, the steering drum is 30 mm deep and the carrier tail plate is left out.",
+          "de": "Für das 30-mm-Merkmal modelliert: jede Nabe ist eine Trommel mit einem 30-mm-Bolzen bis zu den Ausfallenden, Kettenstreben, ihr Steg, die Trägerstreben und Querstäbe messen 30 mm, Sitzstreben, Trägerholme und -beine bleiben wahre Stäbe, die Lenktrommel ist 30 mm tief und die Heckplatte des Trägers entfällt."
+        },
+        {
+          "en": "Joins: a 30 mm crank axle through the motor carries both crank arms, and a bracket block under the beam carries the two stand legs.",
+          "de": "Verbindungen: eine 30-mm-Tretlagerwelle durch den Motor trägt beide Kurbelarme, und ein Konsolenblock unter dem Träger trägt die zwei Ständerbeine."
         }
       ]
     },
@@ -42262,7 +42121,8 @@
             [-0.015, 0.2875]
           ],
           "axis": [0, 0, 1],
-          "origin": [0, 0, 0]
+          "origin": [0, 0, 0],
+          "slender": true
         },
         {
           "id": "hub-r",
@@ -42271,27 +42131,7 @@
           "material": "alloy-rim",
           "role": "body",
           "tone": 0.7,
-          "profile": [
-            [-0.0675, 0.008],
-            [-0.0675, 0.014],
-            [-0.042, 0.014],
-            [-0.042, 0.03],
-            [-0.032, 0.03],
-            [-0.032, 0.046],
-            [-0.028, 0.046],
-            [-0.028, 0.033],
-            [0.028, 0.033],
-            [0.028, 0.046],
-            [0.032, 0.046],
-            [0.032, 0.03],
-            [0.04, 0.03],
-            [0.04, 0.024],
-            [0.052, 0.024],
-            [0.052, 0.014],
-            [0.0675, 0.014],
-            [0.0675, 0.008],
-            [-0.0675, 0.008]
-          ],
+          "profile": [[-0.087, 0.0], [-0.087, 0.046], [0.087, 0.046], [0.087, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 0]
         },
@@ -42306,39 +42146,6 @@
           "axis": [0, 0, 1],
           "origin": [0, 0, 0],
           "texture": true
-        },
-        {
-          "id": "axle-r",
-          "kind": "revolve",
-          "bone": "wheel-r",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.005], [0.174, 0.005]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, -0.087]
-        },
-        {
-          "id": "nut-r-l",
-          "kind": "revolve",
-          "bone": "wheel-r",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.009], [0.008, 0.009]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, 0.0755]
-        },
-        {
-          "id": "nut-r-r",
-          "kind": "revolve",
-          "bone": "wheel-r",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.009], [0.008, 0.009]],
-          "axis": [0, 0, -1],
-          "origin": [0, 0, -0.0755]
         },
         {
           "kind": "polyhedron",
@@ -43667,7 +43474,8 @@
             [-0.015, 0.2115]
           ],
           "axis": [0, 0, 1],
-          "origin": [0, 0, 0]
+          "origin": [0, 0, 0],
+          "slender": true
         },
         {
           "id": "hub-f",
@@ -43676,23 +43484,7 @@
           "material": "alloy-rim",
           "role": "body",
           "tone": 0.7,
-          "profile": [
-            [-0.046, 0.007],
-            [-0.046, 0.012],
-            [-0.034, 0.012],
-            [-0.034, 0.031],
-            [-0.03, 0.031],
-            [-0.03, 0.021],
-            [0.026, 0.021],
-            [0.026, 0.031],
-            [0.03, 0.031],
-            [0.03, 0.024],
-            [0.036, 0.024],
-            [0.036, 0.012],
-            [0.046, 0.012],
-            [0.046, 0.007],
-            [-0.046, 0.007]
-          ],
+          "profile": [[-0.066, 0.0], [-0.066, 0.0375], [0.066, 0.0375], [0.066, 0.0]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 0]
         },
@@ -43707,39 +43499,6 @@
           "axis": [0, 0, 1],
           "origin": [0, 0, 0],
           "texture": true
-        },
-        {
-          "id": "axle-f",
-          "kind": "revolve",
-          "bone": "wheel-f",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.005], [0.132, 0.005]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, -0.066]
-        },
-        {
-          "id": "nut-f-l",
-          "kind": "revolve",
-          "bone": "wheel-f",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.009], [0.008, 0.009]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, 0.054]
-        },
-        {
-          "id": "nut-f-r",
-          "kind": "revolve",
-          "bone": "wheel-f",
-          "material": "alloy-rim",
-          "role": "detail",
-          "tone": 0.7,
-          "profile": [[0, 0.009], [0.008, 0.009]],
-          "axis": [0, 0, -1],
-          "origin": [0, 0, -0.054]
         },
         {
           "kind": "polyhedron",
@@ -45007,99 +44766,99 @@
           "sections": [
             {
               "at": [0.555, 0.255, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.7071068, 0, 0.7071068, 0]
             },
             {
               "at": [1.6, 0.255, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.7071054, 0.0013737, 0.7071054, -0.0013737]
             },
             {
               "at": [1.63525, 0.2592, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.7007435, 0.0946499, 0.7007435, -0.0946499]
             },
             {
               "at": [1.66101, 0.27179, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.6673234, 0.2338365, 0.6673234, -0.2338365]
             },
             {
               "at": [1.67728, 0.29277, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.5949882, 0.3820852, 0.5949882, -0.3820852]
             },
             {
               "at": [1.68406, 0.32216, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.5522807, 0.4415722, 0.5522807, -0.4415722]
             },
             {
               "at": [1.69138, 0.35528, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.5627902, 0.4280971, 0.5627902, -0.4280971]
             },
             {
               "at": [1.70218, 0.3876, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.584464, 0.3979973, 0.584464, -0.3979973]
             },
             {
               "at": [1.71638, 0.41875, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.6045293, 0.3668028, 0.6045293, -0.3668028]
             },
             {
               "at": [1.73383, 0.44838, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.622931, 0.3345998, 0.622931, -0.3345998]
             },
             {
               "at": [1.75439, 0.47615, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.6396185, 0.3014767, 0.6396185, -0.3014767]
             },
             {
               "at": [1.77785, 0.50172, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.654546, 0.2675247, 0.654546, -0.2675247]
             },
             {
               "at": [1.80397, 0.52481, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.6676726, 0.2328374, 0.6676726, -0.2328374]
             },
             {
               "at": [1.8325, 0.54512, 0],
-              "rx": 0.025,
-              "ry": 0.035,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 4,
               "rotation": [0.6735365, 0.2152872, 0.6735365, -0.2152872]
             }
@@ -45114,7 +44873,7 @@
           "material": "aluminium",
           "role": "body",
           "tone": 0.32,
-          "profile": [[0, 0.0225], [0.14, 0.0225]],
+          "profile": [[0, 0.0375], [0.14, 0.0375]],
           "axis": [-0.34202, 0.939693, 0],
           "origin": [1.85253, 0.55783, 0]
         },
@@ -45125,7 +44884,7 @@
           "material": "aluminium",
           "role": "body",
           "tone": 0.32,
-          "profile": [[0, 0.0225], [0.355, 0.0225]],
+          "profile": [[0, 0.0375], [0.355, 0.0375]],
           "axis": [-0.173648, 0.984808, 0],
           "origin": [0.80698, 0.36386, 0]
         },
@@ -45139,22 +44898,22 @@
           "sections": [
             {
               "at": [0.522, 0.372, 0],
-              "rx": 0.02,
-              "ry": 0.025,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 2.6,
               "rotation": [0.6367499, 0.3074891, 0.6367499, -0.3074891]
             },
             {
               "at": [0.63801, 0.51811, 0],
-              "rx": 0.02,
-              "ry": 0.025,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 2.6,
               "rotation": [0.6367499, 0.3074891, 0.6367499, -0.3074891]
             },
             {
               "at": [0.75401, 0.66423, 0],
-              "rx": 0.02,
-              "ry": 0.025,
+              "rx": 0.0375,
+              "ry": 0.0375,
               "exponent": 2.6,
               "rotation": [0.6367499, 0.3074891, 0.6367499, -0.3074891]
             }
@@ -45169,7 +44928,7 @@
           "material": "aluminium",
           "role": "body",
           "tone": 0.32,
-          "profile": [[0, 0.0175], [0.475, 0.0175]],
+          "profile": [[0, 0.0375], [0.475, 0.0375]],
           "axis": [-0.374607, 0.927184, 0],
           "origin": [0.46063, 0.32318, 0]
         },
@@ -45191,7 +44950,7 @@
           "material": "aluminium",
           "role": "body",
           "tone": 0.32,
-          "profile": [[0, 0.0115], [0.4268, 0.0085]],
+          "profile": [[0, 0.0375], [0.4268, 0.0375]],
           "axis": [-0.991105, 0.079663, 0.106608],
           "origin": [0.435, 0.296, 0.026]
         },
@@ -45214,7 +44973,7 @@
           "material": "aluminium",
           "role": "body",
           "tone": 0.32,
-          "profile": [[0, 0.0115], [0.4268, 0.0085]],
+          "profile": [[0, 0.0375], [0.4268, 0.0375]],
           "axis": [-0.991105, 0.079663, -0.106608],
           "origin": [0.435, 0.296, -0.026]
         },
@@ -45229,17 +44988,6 @@
           "axis": [-0.558904, -0.822619, -0.104519],
           "origin": [0.2707, 0.73359, -0.022],
           "slender": true
-        },
-        {
-          "id": "chainstay-bridge",
-          "kind": "revolve",
-          "bone": "frame",
-          "material": "aluminium",
-          "role": "detail",
-          "tone": 0.32,
-          "profile": [[0, 0.007], [0.09, 0.007]],
-          "axis": [0, 0, 1],
-          "origin": [0.395, 0.318, -0.045]
         },
         {
           "id": "carrier-rail-l",
@@ -45294,18 +45042,6 @@
           "slender": true
         },
         {
-          "id": "carrier-strut-l",
-          "kind": "capsule",
-          "bone": "frame",
-          "material": "aluminium",
-          "role": "body",
-          "tone": 0.32,
-          "p0": [0.235, 0.748, 0.05],
-          "p1": [0.2527, 0.70359, 0.026],
-          "r0": 0.006,
-          "r1": 0.006
-        },
-        {
           "id": "carrier-leg-a-r",
           "kind": "capsule",
           "bone": "frame",
@@ -45332,90 +45068,6 @@
           "slender": true
         },
         {
-          "id": "carrier-strut-r",
-          "kind": "capsule",
-          "bone": "frame",
-          "material": "aluminium",
-          "role": "body",
-          "tone": 0.32,
-          "p0": [0.235, 0.748, -0.05],
-          "p1": [0.2527, 0.70359, -0.026],
-          "r0": 0.006,
-          "r1": 0.006
-        },
-        {
-          "id": "carrier-bar-1",
-          "kind": "capsule",
-          "bone": "frame",
-          "material": "aluminium",
-          "role": "detail",
-          "tone": 0.32,
-          "p0": [-0.3, 0.748, -0.075],
-          "p1": [-0.3, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
-        },
-        {
-          "id": "carrier-bar-2",
-          "kind": "capsule",
-          "bone": "frame",
-          "material": "aluminium",
-          "role": "detail",
-          "tone": 0.32,
-          "p0": [-0.17, 0.748, -0.075],
-          "p1": [-0.17, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
-        },
-        {
-          "id": "carrier-bar-3",
-          "kind": "capsule",
-          "bone": "frame",
-          "material": "aluminium",
-          "role": "detail",
-          "tone": 0.32,
-          "p0": [-0.04, 0.748, -0.075],
-          "p1": [-0.04, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
-        },
-        {
-          "id": "carrier-bar-4",
-          "kind": "capsule",
-          "bone": "frame",
-          "material": "aluminium",
-          "role": "detail",
-          "tone": 0.32,
-          "p0": [0.09, 0.748, -0.075],
-          "p1": [0.09, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
-        },
-        {
-          "id": "carrier-bar-5",
-          "kind": "capsule",
-          "bone": "frame",
-          "material": "aluminium",
-          "role": "detail",
-          "tone": 0.32,
-          "p0": [0.235, 0.748, -0.075],
-          "p1": [0.235, 0.748, 0.075],
-          "r0": 0.005,
-          "r1": 0.005
-        },
-        {
-          "id": "carrier-tail",
-          "kind": "extrude",
-          "bone": "frame",
-          "material": "aluminium",
-          "role": "detail",
-          "tone": 0.32,
-          "profile": [[-0.312, 0.688], [-0.294, 0.688], [-0.294, 0.752], [-0.312, 0.752]],
-          "plane": "xy",
-          "from": -0.06,
-          "to": 0.06
-        },
-        {
           "id": "steerer-r",
           "kind": "revolve",
           "bone": "bar",
@@ -45434,7 +45086,7 @@
           "material": "aluminium",
           "role": "detail",
           "tone": 0.3,
-          "profile": [[0, 0.01], [0, 0.034], [0.025, 0.034], [0.025, 0.01], [0, 0.01]],
+          "profile": [[0, 0.01103], [0, 0.0375], [0.075, 0.0375], [0.075, 0.01103], [0, 0.01103]],
           "axis": [1, 0, 0],
           "origin": [0.045, 0, 0]
         },
@@ -45445,7 +45097,7 @@
           "material": "aluminium",
           "role": "body",
           "tone": 0.32,
-          "profile": [[0, 0.0175], [0.41, 0.0175]],
+          "profile": [[0, 0.0375], [0.41, 0.0375]],
           "axis": [1, 0, 0],
           "origin": [0.434, 0, 0]
         },
@@ -45458,8 +45110,8 @@
           "tone": 0.32,
           "p0": [0.816, 0, 0],
           "p1": [0.82, -0.032, 0],
-          "r0": 0.016,
-          "r1": 0.016
+          "r0": 0.0375,
+          "r1": 0.0375
         },
         {
           "id": "bar-clamp",
@@ -45468,9 +45120,9 @@
           "material": "aluminium",
           "role": "detail",
           "tone": 0.25,
-          "profile": [[0, 0.019], [0.05, 0.019]],
+          "profile": [[0, 0.0375], [0.075, 0.0375]],
           "axis": [0, 0, 1],
-          "origin": [0.82, -0.032, -0.025]
+          "origin": [0.82, -0.032, -0.0375]
         }
       ],
       "thermal": [
@@ -45570,21 +45222,6 @@
           "region": "brakes"
         },
         {
-          "id": "th-axle-r",
-          "of": "axle-r",
-          "region": "rims-spokes"
-        },
-        {
-          "id": "th-nut-r-l",
-          "of": "nut-r-l",
-          "region": "rims-spokes"
-        },
-        {
-          "id": "th-nut-r-r",
-          "of": "nut-r-r",
-          "region": "rims-spokes"
-        },
-        {
           "id": "th-spoke-r-1",
           "of": "spoke-r-1",
           "region": "rims-spokes"
@@ -45648,21 +45285,6 @@
           "id": "th-rotor-f",
           "of": "rotor-f",
           "region": "brakes"
-        },
-        {
-          "id": "th-axle-f",
-          "of": "axle-f",
-          "region": "rims-spokes"
-        },
-        {
-          "id": "th-nut-f-l",
-          "of": "nut-f-l",
-          "region": "rims-spokes"
-        },
-        {
-          "id": "th-nut-f-r",
-          "of": "nut-f-r",
-          "region": "rims-spokes"
         },
         {
           "id": "th-spoke-f-1",
@@ -45755,11 +45377,6 @@
           "region": "frame"
         },
         {
-          "id": "th-chainstay-bridge",
-          "of": "chainstay-bridge",
-          "region": "frame"
-        },
-        {
           "id": "th-carrier-rail-l",
           "of": "carrier-rail-l",
           "region": "frame"
@@ -45780,11 +45397,6 @@
           "region": "frame"
         },
         {
-          "id": "th-carrier-strut-l",
-          "of": "carrier-strut-l",
-          "region": "frame"
-        },
-        {
           "id": "th-carrier-leg-a-r",
           "of": "carrier-leg-a-r",
           "region": "frame"
@@ -45792,36 +45404,6 @@
         {
           "id": "th-carrier-leg-b-r",
           "of": "carrier-leg-b-r",
-          "region": "frame"
-        },
-        {
-          "id": "th-carrier-strut-r",
-          "of": "carrier-strut-r",
-          "region": "frame"
-        },
-        {
-          "id": "th-carrier-bar-1",
-          "of": "carrier-bar-1",
-          "region": "frame"
-        },
-        {
-          "id": "th-carrier-bar-2",
-          "of": "carrier-bar-2",
-          "region": "frame"
-        },
-        {
-          "id": "th-carrier-bar-3",
-          "of": "carrier-bar-3",
-          "region": "frame"
-        },
-        {
-          "id": "th-carrier-bar-4",
-          "of": "carrier-bar-4",
-          "region": "frame"
-        },
-        {
-          "id": "th-carrier-bar-5",
-          "of": "carrier-bar-5",
           "region": "frame"
         },
         {
@@ -46439,7 +46021,7 @@
           "material": "alloy-rim",
           "role": "body",
           "tone": 0.5,
-          "profile": [[0, 0.011], [0.135, 0.011]],
+          "profile": [[0, 0.0375], [0.135, 0.0375]],
           "axis": [0, 0, 1],
           "origin": [0, 0, -0.0675],
           "member": "wheel-r",
@@ -46452,7 +46034,7 @@
           "material": "alloy-rim",
           "role": "body",
           "tone": 0.5,
-          "radii": [0.03, 0.03, 0.03],
+          "radii": [0.0375, 0.0375, 0.0375],
           "transform": {
             "translation": [0, 0, 0]
           },
@@ -46466,7 +46048,7 @@
           "material": "alloy-rim",
           "role": "body",
           "tone": 0.5,
-          "profile": [[0, 0.011], [0.092, 0.011]],
+          "profile": [[0, 0.0375], [0.092, 0.0375]],
           "axis": [0, 0, 1],
           "origin": [0, 0, -0.046],
           "member": "wheel-f",
@@ -46479,7 +46061,7 @@
           "material": "alloy-rim",
           "role": "body",
           "tone": 0.5,
-          "radii": [0.03, 0.03, 0.03],
+          "radii": [0.0375, 0.0375, 0.0375],
           "transform": {
             "translation": [0, 0, 0]
           },
@@ -46507,12 +46089,6 @@
         {
           "id": "st-rotor-r",
           "of": "rotor-r",
-          "member": "wheel-r",
-          "part": "member"
-        },
-        {
-          "id": "st-axle-r",
-          "of": "axle-r",
           "member": "wheel-r",
           "part": "member"
         },
@@ -46591,12 +46167,6 @@
         {
           "id": "st-rotor-f",
           "of": "rotor-f",
-          "member": "wheel-f",
-          "part": "member"
-        },
-        {
-          "id": "st-axle-f",
-          "of": "axle-f",
           "member": "wheel-f",
           "part": "member"
         },
@@ -46709,12 +46279,6 @@
           "part": "member"
         },
         {
-          "id": "st-chainstay-bridge",
-          "of": "chainstay-bridge",
-          "member": "frame",
-          "part": "member"
-        },
-        {
           "id": "carrier-rail-l",
           "of": "carrier-rail-l",
           "member": "frame",
@@ -46739,12 +46303,6 @@
           "part": "member"
         },
         {
-          "id": "carrier-strut-l",
-          "of": "carrier-strut-l",
-          "member": "frame",
-          "part": "member"
-        },
-        {
           "id": "carrier-leg-a-r",
           "of": "carrier-leg-a-r",
           "member": "frame",
@@ -46753,48 +46311,6 @@
         {
           "id": "carrier-leg-b-r",
           "of": "carrier-leg-b-r",
-          "member": "frame",
-          "part": "member"
-        },
-        {
-          "id": "carrier-strut-r",
-          "of": "carrier-strut-r",
-          "member": "frame",
-          "part": "member"
-        },
-        {
-          "id": "st-carrier-bar-1",
-          "of": "carrier-bar-1",
-          "member": "frame",
-          "part": "member"
-        },
-        {
-          "id": "st-carrier-bar-2",
-          "of": "carrier-bar-2",
-          "member": "frame",
-          "part": "member"
-        },
-        {
-          "id": "st-carrier-bar-3",
-          "of": "carrier-bar-3",
-          "member": "frame",
-          "part": "member"
-        },
-        {
-          "id": "st-carrier-bar-4",
-          "of": "carrier-bar-4",
-          "member": "frame",
-          "part": "member"
-        },
-        {
-          "id": "st-carrier-bar-5",
-          "of": "carrier-bar-5",
-          "member": "frame",
-          "part": "member"
-        },
-        {
-          "id": "st-carrier-tail",
-          "of": "carrier-tail",
           "member": "frame",
           "part": "member"
         },
@@ -46825,6 +46341,10 @@
         {
           "en": "Rework 2026-11-22: the seat post (215 mm of it showing between seat tube and saddle) is modelled at this scale too, so the saddle is carried by the frame.",
           "de": "Überarbeitung 2026-11-22: Die Sattelstütze (215 mm sichtbar zwischen Sitzrohr und Sattel) ist auch in diesem Maßstab modelliert, sodass der Sattel vom Rahmen getragen wird."
+        },
+        {
+          "en": "Authored for the 75 mm feature: hubs are plain drums from dropout to dropout, rims true hoops, and beam, head tubes, down tube, seat tube, chainstays, riser, stem, bar clamp and steering drum are 75 mm masses like the seat post; chainstay bridge, carrier struts, cross bars and tail plate are left out.",
+          "de": "Für das 75-mm-Merkmal modelliert: die Naben sind glatte Trommeln von Ausfallende zu Ausfallende, die Felgen wahre Reifen, und Träger, Steuerrohre, Unterrohr, Sitzrohr, Kettenstreben, Lenksäule, Vorbau, Lenkerklemme und Lenktrommel sind 75-mm-Massen wie die Sattelstütze; Kettenstrebensteg, Trägerstreben, Querstäbe und Heckplatte entfallen."
         }
       ]
     }

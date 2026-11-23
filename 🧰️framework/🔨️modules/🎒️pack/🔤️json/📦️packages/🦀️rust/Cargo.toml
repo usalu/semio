@@ -54,6 +54,10 @@ name = "bounded-json-length"
 path = "../../🧪️tests/📏️bounded-json-length/🦀️.rs"
 
 [[test]]
+name = "frontier-depth-law"
+path = "../../🧪️tests/🪜️frontier-depth/🦀️.rs"
+
+[[test]]
 name = "pending-quote-law"
 path = "../../🧪️tests/🪢️pending-quote/🦀️.rs"
 

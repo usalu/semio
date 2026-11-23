@@ -1,0 +1,241 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:framework:process:accepted-physical-cleanup-request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "resource",
+    "reserveMilliseconds"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "enum": [
+        "native-image",
+        "artifact-scratch"
+      ]
+    },
+    "resource": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000]+$"
+    },
+    "reserveMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60000
+    }
+  },
+  "definitions": {
+    "LifetimeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "availableMilliseconds",
+        "reserveMilliseconds",
+        "accepted",
+        "bodyMilliseconds",
+        "cleanupMilliseconds"
+      ],
+      "properties": {
+        "availableMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "reserveMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "bodyMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "cleanupMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "FundingFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "resource",
+        "acceptedAtEpochMilliseconds",
+        "deadlineEpochMilliseconds",
+        "bodyDeadlineEpochMilliseconds",
+        "reserveMilliseconds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "enum": [
+            "native-image",
+            "artifact-scratch"
+          ]
+        },
+        "resource": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "reserveMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
+        },
+        "acceptedAtEpochMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deadlineEpochMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "bodyDeadlineEpochMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "ProgressProtocol": {
+      "const": {
+        "version": 1,
+        "appliesTo": "ordinary-body",
+        "renewal": "observable-progress",
+        "events": [
+          "control-publish",
+          "control-yield",
+          "owned-work-settled",
+          "lease-wait"
+        ],
+        "maximumMilliseconds": 300000
+      }
+    },
+    "RenewalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reserveMilliseconds",
+        "elapsedMilliseconds",
+        "windowMilliseconds"
+      ],
+      "properties": {
+        "reserveMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
+        },
+        "elapsedMilliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "windowMilliseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000
+        }
+      }
+    },
+    "EnrollmentObservations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "privateToken",
+        "bodyDrained",
+        "lateBodyRefused",
+        "independentCleanup",
+        "fixedDeadline",
+        "sameBeginPromise",
+        "retiredTokenRefused",
+        "insufficientFundingBeforeEffects",
+        "ordinaryAcceptedWithFixedReserve",
+        "ordinaryProgressRenewal",
+        "ordinaryIdleExpiry"
+      ],
+      "properties": {
+        "privateToken": {
+          "type": "boolean"
+        },
+        "bodyDrained": {
+          "type": "boolean"
+        },
+        "lateBodyRefused": {
+          "type": "boolean"
+        },
+        "independentCleanup": {
+          "type": "boolean"
+        },
+        "fixedDeadline": {
+          "type": "boolean"
+        },
+        "sameBeginPromise": {
+          "type": "boolean"
+        },
+        "retiredTokenRefused": {
+          "type": "boolean"
+        },
+        "insufficientFundingBeforeEffects": {
+          "type": "boolean"
+        },
+        "ordinaryAcceptedWithFixedReserve": {
+          "type": "boolean"
+        },
+        "ordinaryProgressRenewal": {
+          "type": "boolean"
+        },
+        "ordinaryIdleExpiry": {
+          "type": "boolean"
+        }
+      }
+    },
+    "OperationProtocol": {
+      "const": {
+        "version": 1,
+        "maximumPending": 32,
+        "maximumAccepted": 32,
+        "settlementObservation": "wait-only",
+        "selfWait": false
+      }
+    },
+    "BodyCustodyProtocol": {
+      "const": {
+        "version": 1,
+        "actualAncestry": true,
+        "sameEnrollment": true,
+        "sameDeadline": true,
+        "issuesControl": false,
+        "ordinaryEffects": false
+      }
+    }
+  }
+}

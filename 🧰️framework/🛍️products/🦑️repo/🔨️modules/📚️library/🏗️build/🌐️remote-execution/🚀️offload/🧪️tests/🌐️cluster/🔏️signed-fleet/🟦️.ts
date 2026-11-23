@@ -52,7 +52,7 @@ afterAll(async()=>{await cache?.stop().catch(()=>{});for(const child of children
 const countingRustc=(directory:string):{path:string;log:string}=>{
  mkdirSync(directory,{recursive:true});
  const path=join(directory,"counting-rustc.sh"),log=join(directory,"rustc-calls.log");
- writeFileSync(path,`#!/bin/sh\ncase " $* " in *" -vV "*|*" -Z ls="*) ;; *) echo call >> '${log}';; esac\nexec rustc "$@"\n`);chmodSync(path,0o755);
+ writeFileSync(path,`#!/bin/sh\ncase " $* " in *" -vV "*|*" -Z ls="*|*" --print "*) ;; *) echo call >> '${log}';; esac\nexec rustc "$@"\n`);chmodSync(path,0o755);
  return{path,log};
 };
 const callsOf=(log:string):number=>existsSync(log)?readFileSync(log,"utf8").split("\n").filter(Boolean).length:0;

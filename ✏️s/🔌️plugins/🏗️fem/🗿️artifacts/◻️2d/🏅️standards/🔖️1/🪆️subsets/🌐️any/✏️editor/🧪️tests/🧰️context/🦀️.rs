@@ -114,6 +114,15 @@ pub async fn dispatch(app: &mut Fem2dApp, command: Fem2dCommand) -> InvocationRe
     finish_dispatch(app, invoked).await
 }
 
+/// 🚫️ Dispatches `command` from the model window and returns the debug text of the refusal its retained publication settles with.
+pub async fn dispatch_refused(app: &mut Fem2dApp, command: Fem2dCommand) -> String {
+    let mut action = meta("local");
+    action.view_state = Some(view(model_window::WINDOW_KIND_ID).into());
+    let mut identity = fixture_identity();
+    dispatch_original_fixture_command(&mut app.0, &command, &action, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, app.1.cx()).await.expect("dispatch");
+    format!("{:?}", settle_registered_typed_operation(&mut app.0, FEM2D_TEST_INSTANCE, fixture_mounted_policy(), &mut identity, app.1.cx()).await.err().expect("the publication is refused"))
+}
+
 async fn finish_dispatch(app: &mut Fem2dApp, mut invoked: InvocationResult) -> InvocationResult {
     let mut identity = fixture_identity();
     let settled = settle_registered_typed_operation(&mut app.0, FEM2D_TEST_INSTANCE, fixture_mounted_policy(), &mut identity, app.1.cx()).await.expect("settle the typed operation");

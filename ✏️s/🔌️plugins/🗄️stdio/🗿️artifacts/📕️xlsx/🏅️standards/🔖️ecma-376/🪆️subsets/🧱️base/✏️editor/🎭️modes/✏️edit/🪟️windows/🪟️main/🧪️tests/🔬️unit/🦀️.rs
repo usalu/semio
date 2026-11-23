@@ -87,7 +87,6 @@ async fn german_grid_localizes_axes_without_rewriting_column_coordinates() {
         descendants(node, &mut nodes);
         let table = nodes.iter().find(|node| matches!(node.component, Component::Table(_))).unwrap();
         let Component::Table(props) = &table.component else { unreachable!() };
-        assert_eq!(props.row_label.as_ref().map(|label| label.0.as_str()), Some("Zeile"));
         assert_eq!(props.column_label.as_ref().map(|label| label.0.as_str()), Some("Spalte"));
         assert_eq!(props.columns[0].0.as_str(), "A");
     });

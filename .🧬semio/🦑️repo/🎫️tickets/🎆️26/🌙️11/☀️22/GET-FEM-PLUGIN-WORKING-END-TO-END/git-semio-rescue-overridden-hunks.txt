@@ -1,0 +1,1027 @@
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+Standards cited per beat via the `_din_ref()` chip, built from the registry `🏗️authoring/📚️references`: DIN EN 12831-1:2017-09, DIN/TS 18599-1:2025-10,
+DIN 1946-4:2018-09, DIN 1946-6:2019-12, DIN EN 16798-1:2022-03, DIN EN 16798-3:2026-10, DIN EN 16798-7:2017-11, DIN EN 308:2022-04, VDI 2087:2006-12, DIN 4108-2:2026-05, VDI 2078:2015-06.
+The "Grenzwert nach Pettenkofer" (1000 ppm CO₂): Pettenkofer (1858), *Ueber den Luftwechsel in Wohngebäuden*, München: Cotta, and Bundesgesundheitsbl. 51 (2008) 1358–1369 (Ad-hoc-AG Innenraumrichtwerte, *Gesundheitliche Bewertung von Kohlendioxid in der Innenraumluft*); the DIN 1946-6:2019-12 attribution of the old corner label was dropped because only the guideline article gives the 1000 ppm value.
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-1946-6"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-1946-6"))
+        source = _din_ref(_references.cite(("maas-1995", "kap8")) + tr(": n = 0.56 … 1.38 1/h", ": n = 0,56 … 1,38 1/h")).next_to(din, DOWN, buff=0.08, aligned_edge=RIGHT)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-16798-7"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 3 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-16798-7"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 4 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        inlet = Rectangle(width=0.16, height=0.60, color=P_CYAN, stroke_width=2.5, fill_opacity=0.0)
+        inlet.move_to(np.array([room_c[0] - 2.1, -0.85, 0.0]))
+        inlet_arrow = Arrow(inlet.get_center() + LEFT * 0.95, inlet.get_center() + LEFT * 0.12, buff=0, color=P_CYAN,
+                            stroke_width=4, max_tip_length_to_length_ratio=0.28)
+        inlet_lbl = Text(tr("Inlet opening", "Zuluftöffnung"), font_size=LABEL_FONT_SIZE, color=P_CYAN)
+        inlet_lbl.next_to(inlet_arrow, UP, buff=0.10, aligned_edge=RIGHT)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 5 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        scaffold = VGroup(room, floor, inlet, inlet_arrow, inlet_lbl, person, shaft_walls, outlet_group, legend)
+        fit_band(scaffold, bottom=SAFE_BOTTOM_FORMULA)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 6 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        height, t_out_tr, t_in_tr = ValueTracker(2.5), ValueTracker(T_OUT_NIGHT), ValueTracker(T_IN_SUMMER)
+
+        def chain():
+            return _stack_chain(height.get_value(), t_out_tr.get_value(), t_in_tr.get_value())
+
+        x_read = 4.45
+        out_dp = math_readout(lambda: rf"\Delta p = {label_number(chain()['dp'], 1)}\,\mathrm{{Pa}}",
+                              np.array([x_read, 1.80, 0.0]), size=BODY_FONT_SIZE, color=P_YELLOW)
+        out_v = math_readout(lambda: rf"v = {label_number(chain()['v'], 2)}\,\frac{{\mathrm{{m}}}}{{\mathrm{{s}}}}",
+                             np.array([x_read, 1.20, 0.0]), size=BODY_FONT_SIZE, color=P_CYAN)
+        out_q = math_readout(lambda: rf"\dot{{V}} = {label_number(round(chain()['vdot_h'], -1))}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
+                             np.array([x_read, 0.60, 0.0]), size=BODY_FONT_SIZE, color=P_GREEN)
+
+        def ru(value, digits=0):
+            return label_number(value, digits)
+
+        def panel_density(s):
+            kgm3 = r"\,\frac{\mathrm{kg}}{\mathrm{m^{3}}}"
+            return math_panel([
+                ("drho", r"\Delta\rho", P_BLUE), (None, "=", P_WHITE),
+                ("diff", r"\rho(\theta_{e}) - \rho(\theta_{i})", P_BLUE), (None, "=", P_WHITE),
+                ("val", rf"{ru(s['rho_e'], 3)}{kgm3} - {ru(s['rho_i'], 3)}{kgm3} = {ru(s['drho'], 3)}{kgm3}", P_YELLOW),
+            ], color=P_BLUE)
+
+        def panel_dp(s, h):
+            return math_panel([
+                ("dp", r"\Delta p", P_YELLOW), (None, "=", P_WHITE),
+                ("drho", r"\Delta\rho", P_BLUE), (None, r"\cdot", P_WHITE),
+                ("g", "g", P_WHITE), (None, r"\cdot", P_WHITE),
+                ("h", "h", P_CYAN), (None, "=", P_WHITE),
+                ("val", rf"{ru(s['drho'], 3)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}} \cdot {ru(G_ACC, 2)}\,\frac{{\mathrm{{m}}}}{{\mathrm{{s^{{2}}}}}} \cdot {ru(h, 1)}\,\mathrm{{m}} = {ru(s['dp'], 1)}\,\mathrm{{Pa}}", P_YELLOW),
+            ], color=P_YELLOW)
+
+        def panel_v(s):
+            return math_panel([
+                ("v", "v", P_CYAN), (None, "=", P_WHITE),
+                ("root", r"\sqrt{2\,\Delta p\,/\,\rho}", P_WHITE), (None, "=", P_WHITE),
+                ("val", rf"\sqrt{{2 \cdot {ru(s['dp'], 1)}\,\mathrm{{Pa}}\,/\,{ru(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}}} ={ru(s['v'], 2)}\,\frac{{\mathrm{{m}}}}{{\mathrm{{s}}}}", P_CYAN),
+            ], color=P_CYAN)
+
+        def panel_q(s):
+            return math_panel([
+                ("q", r"\dot{V}", P_GREEN), (None, "=", P_WHITE),
+                ("cd", r"C_{d}", P_WHITE), (None, r"\cdot", P_WHITE),
+                ("a", "A", P_CYAN), (None, r"\cdot", P_WHITE),
+                ("v", "v", P_CYAN), (None, "=", P_WHITE),
+                ("val", rf"{ru(CD_OPENING, 1)} \cdot {ru(A_OPENING, 1)}\,\mathrm{{m^{{2}}}} \cdot {ru(s['v'], 2)}\,\frac{{\mathrm{{m}}}}{{\mathrm{{s}}}} = {ru(s['vdot'], 3)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{s}}}} \approx {ru(round(s['vdot_h'], -1))}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", P_GREEN),
+            ], color=P_GREEN)
+
+        def swap_panel(old, new):
+            return [FadeOut(old[0]), FadeOut(old[1]), FadeIn(new[0]), FadeIn(new[1])]
+
+        self.play(Create(room), Create(floor), Create(inlet), GrowArrow(inlet_arrow), FadeIn(inlet_lbl), FadeIn(person), run_time=1.4)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 7 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        h_tok = math_label(tr(r"h = 2.5\,\mathrm{m}", r"h = 2{,}5\,\mathrm{m}"), size=LABEL_FONT_SIZE, color=P_CYAN).rotate(PI / 2)
+        h_tok.next_to(h_dim, LEFT, buff=0.10)
+        h_tok_tall = math_label(tr(r"h = 4.4\,\mathrm{m}", r"h = 4{,}4\,\mathrm{m}"), size=LABEL_FONT_SIZE, color=P_CYAN).rotate(PI / 2)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "pressure"))
+        new = panel_dp(S_LOW, 2.5)
+        self.play(*swap_panel(panel, new), Create(h_dim), FadeIn(h_tok), FadeIn(out_dp), *rising(1.2), run_time=1.2)
+        panel = new
+        ring_h = highlight_param(panel[2], "h", color=P_CYAN)
+        self.play(Create(ring_h), *rising(0.8), run_time=0.8)
+        hold_for(self, N, "pressure", during=rising)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 8 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        caption = swap_caption(self, caption, subtitle_text(N, "speed"))
+        new = panel_v(S_LOW)
+        stack["speed"] = 0.9
+        self.play(*swap_panel(panel, new), FadeIn(out_v), *rising(1.2), run_time=1.2)
+        panel = new
+        ring_v = highlight_param(panel[2], "root", color=P_CYAN)
+        self.play(Create(ring_v), *rising(0.8), run_time=0.8)
+        hold_for(self, N, "speed", during=rising)
+        self.play(FadeOut(ring_v), *rising(0.25), run_time=0.25)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "flow"))
+        new = panel_q(S_LOW)
+        a_lbl = math_label(rf"A = {ru(A_OPENING, 1)}\,\mathrm{{m^{{2}}}}", size=LABEL_FONT_SIZE, color=P_CYAN)
+        a_lbl.next_to(inlet_arrow, DOWN, buff=0.10, aligned_edge=RIGHT)
+        self.play(*swap_panel(panel, new), FadeIn(out_q), FadeIn(a_lbl), Indicate(inlet, color=P_CYAN, scale_factor=1.3), *rising(1.2), run_time=1.2)
+        panel = new
+        ring_q = highlight_param(panel[2], "a", color=P_CYAN)
+        self.play(Create(ring_q), *rising(0.8), run_time=0.8)
+        hold_for(self, N, "flow", during=rising)
+        self.play(FadeOut(ring_q), *rising(0.25), run_time=0.25)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "taller"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 9 kind=other: C:\semio side replaced by old side; C:\semio text was:
+            height.animate.set_value(4.4),
+            *swap_panel(panel, new),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 10 kind=other: C:\semio side replaced by old side; C:\semio text was:
+            t_out_tr.animate.set_value(T_OUT_WINTER), t_in_tr.animate.set_value(T_IN_WINTER),
+            *swap_panel(panel, new),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 11 kind=other: C:\semio side replaced by old side; C:\semio text was:
+            SurroundingRectangle(VGroup(inlet, inlet_arrow), color=P_CYAN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 12 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-4108-2"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py hunk 13 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-16798-7"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+      "en": "From part 4 we know the load: $30\\,\\mathrm{m^2}\\cdot 0.70\\cdot 0.15\\cdot 0.60\\cdot 800\\,\\mathrm{W/m^2}$ gives about $1510\\,\\mathrm{W}$.",
+      "de": "Aus Teil 4 kennen wir die Last: $30\\,\\mathrm{m^2}\\cdot 0{,}70\\cdot 0{,}15\\cdot 0{,}60\\cdot 800\\,\\mathrm{W/m^2}$ ergeben rund $1510\\,\\mathrm{W}$.",
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/README.md hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+Use `--chapter Heating_05_Solar` with `--video heating` to render that declared chapter. The Python lesson wrapper exposes `compose(chapters=[...], **settings)` through the same execution plan. Omit chapter selection for the complete lesson.
+
+Every overview card (course, topic, lesson, chapter, and the blurred levels behind them) shows a real poster frame of its chapter, never a placeholder. A chapter's poster is one Manim frame (`--save_last_frame`) of the end state of its last segment, or of the manifest chapter's `poster` (`segment`, and `animation` to stop after that Manim animation; a partial `clauses` segment needs one). A lesson card uses the poster of its `poster.chapter` (default: its first chapter); topic and course cards use the first poster below them. Posters are rendered before the lessons, cached by source fingerprint in the shared teaching cache (`posters/<profile>/<language>/<audience>`, one OS file lock per poster so concurrent renders wait instead of repeating), and a missing one fails the render. Code: `🪟️presentation/🖼️posters`.
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🟦️.tsx hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+    titleChips={<div data-presentation-title-chip={entry.id} className={windowChromeTitleChipClass+(active?" "+interactiveActiveFillClass:"")} style={{paddingBlock:0}}><span id={entry.id+":tab"} className="min-w-0 truncate" title={title(entry)}>{title(entry)}</span><button id={entry.id+":fullscreen"} data-slot="fullscreen" type="button" aria-label={text().restore} data-shared-border-frame="" data-shared-border-edges="" className={windowChromeControlButtonClass+" shrink-0 outline-none"} onClick={onClose} onPointerDown={()=>setPressed(true)} onPointerUp={()=>setPressed(false)} onPointerCancel={()=>setPressed(false)}><Icon name="minimize-2"/></button></div>}
+    body={<div data-presentation-body={entry.id} style={{position:"absolute",left:3.2,right:3.2,top:"calc(var(--window-silhouette-top-clearance) + 3.2px)",bottom:3.2,pointerEvents:"none"}}>{media?.body_image?<img src={media.body_image} alt="" style={{width:"100%",height:"100%",objectFit:"contain",opacity:media.body_opacity??1,background:"var(--base)"}}/>:<Poster entry={entry}/>}</div>}/>;
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🟨️render.mjs hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+    if(previous?.cursor?.pressed&&previous.cursor.point&&!frame.cursor?.pressed){
+      await page.evaluate(value=>window.semioPresentation.render(value,true),previous);
+      await page.clock.runFor(0);
+      await page.mouse.move(previous.cursor.point[0],previous.cursor.point[1]);
+      await page.mouse.down();down=true;
+      await page.evaluate(()=>{window.semioPresentation.pointerEvents.length=0});
+      if(JSON.stringify(previous.hierarchy.opened_path)!==JSON.stringify(frame.hierarchy.opened_path)){await page.mouse.up();down=false}
+    }
+    await page.evaluate(([value,reset])=>window.semioPresentation.render(value,reset),[frame,!down]);
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🧪️tests/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+    def test_winter_latent_load_is_as_large_as_the_summer_one(self):
+        self.assertAlmostEqual(E.D_X_WINTER_G_KG, 4.3, places=1)
+        self.assertEqual(round(E.Q_LAT_WINTER_W, -1), 770.0)
+        self.assertGreater(E.Q_LAT_WINTER_W, E.Q_SENS_SUMMER_W)
+
+    def test_the_example_winter_day_and_the_design_day_are_two_named_cases(self):
+        self.assertEqual((E.THETA_E_WINTER_C, E.D_THETA_WINTER_K), (0.0, 20.0))
+        self.assertEqual((E.THETA_E_DESIGN_C, E.D_THETA_DESIGN_K), (-12.0, 32.0))
+        self.assertEqual(round(E.Q_H_DESIGN_W), 6080)
+        self.assertIn("Beispiel-Wintertag", E.winter_day_label("de"))
+        self.assertIn("Example winter day", E.winter_day_label("en"))
+        for language, day in (("de", "Auslegungstag"), ("en", "Design day")):
+            label = E.design_day_label(language)
+            self.assertIn(day, label)
+            self.assertIn("{-}12", label)
+            self.assertIn("DIN/TS 12831-1:2020-04", E.design_day_source(language))
+
+    def test_the_glazing_values_every_video_shares(self):
+        self.assertAlmostEqual(E.G_PERP, 0.60)
+        self.assertAlmostEqual(E.G_PERP, E.G_PERP_SPLIT)
+        self.assertAlmostEqual(E.G_SHARE_DIRECT + E.G_SHARE_SECONDARY_IN + E.G_SHARE_REFLECTED + E.G_SHARE_SECONDARY_OUT, 1.0)
+        self.assertAlmostEqual(E.WINDOW_A_M2, 1.92)
+        self.assertAlmostEqual(E.F_SOLAR_WINTER, 0.6 * 0.8 * 0.7 * 0.9)
+
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+Standards cited per beat via the `_din_ref()` chip, always built from the registry `🏗️authoring/📚️references` with edition and keyword locator (verified 2026-11-13):
+GModG (formerly GEG, in force since 29 July 2026; official text on gesetze-im-internet.de): § 15 and Anlage 1 (reference building), § 20 (still names DIN V 18599:2018-09), § 22 and Anlage 4 (primary energy factors), §§ 79–87 and Anlage 10 (Energieausweis); the 65-%-rule of §§ 71–73 is repealed.
+DIN V 4108-6:2003-06 (zurückgezogen, kept for the symbol notation `Q_h`, `Q_l`, `Q_g`; its status chip is shown once in `🔁️recap/Beat1_Bilanzgrenze`): keyword locators symbols, transmission and ventilation losses, internal and solar gains, utilisation factor, climate data, heating-period method (`Q_l = 0,024 · (H_T + H_V) · G_{t,20/15}`). Clause numbers are not cited because the withdrawn text could not be checked.
+DIN/TS 18599:2025-10 (Teile 1, 2, 5, 10; replaces DIN V 18599:2018-09); DIN V 4701-10:2003-08 (zurückgezogen, successor DIN/TS 18599-5:2025-10); DIN EN 12831-1:2017-09 Abschn. 6 with DIN/TS 12831-1:2020-04; VDI 2078:2015-06; DIN 4108-2:2026-05 (replaces DIN 4108-2:2013-02, which GModG § 14 still names); VDI 4645:2023-04; VDI 4650 Blatt 1:2024-02; VOB/C DIN 18380:2019-09.
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        subtitle = _label(tr("Free heat gains (DIN V 4108-6:2003-06)", "Freie Wärmegewinne (DIN V 4108-6:2003-06)"), size=18, color=SUBTEXT_GREY)
+        subtitle.next_to(title, DOWN, buff=0.15)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        norm = _m(tr(rf"\text{{{_references.cite('din-en-iso-13786')} · heat storage}}", rf"\text{{{_references.cite('din-en-iso-13786')} · Wärmespeicherung}}"),
+                  np.array([6.6, -1.75, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+#region DIN citation
+def _din_ref(text: str, title=None):
+    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
+    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
+
+    def line(content: str):
+        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+
+    lines = []
+    for part in text.replace("\n", " · ").split(" · "):
+        if lines and line(f"{lines[-1]} · {part}").width <= room:
+            lines[-1] += f" · {part}"
+        else:
+            lines.append(part)
+    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
+    if ref.width > room:
+        ref.scale_to_fit_width(room)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
+
+
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-ts-18599-10", "nutzungsprofile")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din_pre = _din_ref(_references.cite("sunikka-galvin-2012"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py hunk 3 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("gmodg", "p60c"), ("din-18380", "abgleich")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py hunk 4 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"We start with $Q_{h}=100\,\mathrm{kWh/(m^2\,a)}$ of useful energy in the room.",
+         r"Wir starten mit $Q_{h}=100\,\mathrm{kWh/(m^2\,a)}$ Nutzenergie im Raum."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py hunk 5 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"On the gas path the meter reads $Q_{E}=140\,\mathrm{kWh/(m^2\,a)}$, with the dimensionless factor $e_{E}=1.40$.",
+         r"Auf dem Gasweg zeigt der Zähler $Q_{E}=140\,\mathrm{kWh/(m^2\,a)}$, mit dem einheitenlosen Faktor $e_{E}=1{,}40$."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py hunk 6 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"At the source the primary energy is $Q_{P}=154\,\mathrm{kWh/(m^2\,a)}$, with the dimensionless factor $f_{P}=1.1$.",
+         r"An der Quelle sind es $Q_{P}=154\,\mathrm{kWh/(m^2\,a)}$ Primärenergie, mit dem einheitenlosen Faktor $f_{P}=1{,}1$."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py hunk 7 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"The heat pump delivers the same useful energy $Q_{h}=100\,\mathrm{kWh/(m^2\,a)}$ as heat, but buys only $Q_{E}=31\,\mathrm{kWh/(m^2\,a)}$ of electricity.",
+         r"Die Wärmepumpe liefert dieselbe Nutzenergie $Q_{h}=100\,\mathrm{kWh/(m^2\,a)}$ als Wärme, kauft aber nur $Q_{E}=31\,\mathrm{kWh/(m^2\,a)}$ Strom."),
+        ("zahlen_wp_quelle",
+         r"At the source that is $Q_{P}=56\,\mathrm{kWh/(m^2\,a)}$, with $f_{P}=1.8$ for electricity.",
+         r"An der Quelle sind das $Q_{P}=56\,\mathrm{kWh/(m^2\,a)}$, mit $f_{P}=1{,}8$ für Strom."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py hunk 8 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-ts-18599-1", "primaerenergie"), ("gmodg", "p22")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py hunk 9 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        e_gas_txt, f_gas_txt = label_number(CHAIN_END / CHAIN_NUTZ, 2), label_number(CHAIN_FP_GAS, 1)
+        frac = r"\frac{\mathrm{kWh}}{\mathrm{m^{2}\,a}}"
+
+        def _step_panel(parts):
+            return math_panel(parts, size=24, edge_buff=2.32)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py hunk 10 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        panel_h = _step_panel([
+            ("qh", r"Q_{h}", COL_NUTZ), (None, "=", P_WHITE), (None, rf"{CHAIN_NUTZ}\,{frac}", COL_NUTZ),
+        ])
+        panel_e = _step_panel([
+            ("qe", r"Q_{E}=Q_{h}\cdot e_{E}", COL_END_TXT), (None, "=", P_WHITE),
+            (None, rf"{CHAIN_NUTZ}\,{frac}\cdot {e_gas_txt}={CHAIN_END}\,{frac}", COL_END_TXT),
+        ])
+        panel_p = _step_panel([
+            ("qp", r"Q_{P}=Q_{E}\cdot f_{P}", COL_PRIM), (None, "=", P_WHITE),
+            (None, rf"{CHAIN_END}\,{frac}\cdot {f_gas_txt}={CHAIN_PRIM}\,{frac}", COL_PRIM),
+        ])
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(tr("2nd law of thermodynamics", "2. Hauptsatz der Thermodynamik"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-iso-6946"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-iso-6946"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py hunk 3 kind=other: C:\semio side replaced by old side; C:\semio text was:
+SPECTRUM_RAINBOW = (PASTEL_PURPLE, PASTEL_BLUE, PASTEL_CYAN, PASTEL_GREEN, PASTEL_YELLOW, PASTEL_ORANGE, PASTEL_RED)
+
+
+def _spectrum():
+    """🌈 Wavelength strip from UV over visible light to infrared: sun short-wave, room surfaces long-wave.
+
+    https://en.wikipedia.org/wiki/Wien%27s_displacement_law
+    """
+    x0, x1, y, h = -4.4, 4.4, 0.15, 0.38
+    lo, span = -0.7, 2.4
+
+    def X(um):
+        return x0 + (np.log10(um) - lo) / span * (x1 - x0)
+
+    def band(a, b, color, opacity):
+        return _box(X(a), y, X(b), y + h, stroke_width=0, fill_color=color, fill_opacity=opacity)
+
+    visible_edges = np.geomspace(0.38, 0.78, len(SPECTRUM_RAINBOW) + 1)
+    ir_edges = np.geomspace(0.78, 50.0, 7)
+    bands = VGroup(
+        band(0.2, 0.38, PASTEL_PURPLE, 0.28),
+        *[band(visible_edges[k], visible_edges[k + 1], SPECTRUM_RAINBOW[k], 0.9) for k in range(len(SPECTRUM_RAINBOW))],
+        *[band(ir_edges[k], ir_edges[k + 1], PASTEL_RED, 0.6 - 0.07 * k) for k in range(6)],
+    )
+    ticks = VGroup(*[
+        VGroup(Line(np.array([X(um), y, 0.0]), np.array([X(um), y - 0.09, 0.0]), color=P_PRIMARY, stroke_width=1.6),
+               math_label(label_number(um, 1 if um < 1 else 0), np.array([X(um), y - 0.62, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY))
+        for um in (0.2, 1.0, 10.0, 50.0)
+    ])
+    names = VGroup(
+        Text("UV", font_size=LABEL_FONT_SIZE, color=PASTEL_PURPLE).move_to(np.array([X(0.27), y + h + 0.28, 0.0])),
+        Text(tr("visible light", "sichtbares Licht"), font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to(np.array([X(0.55), y - 0.3, 0.0])),
+        Text(tr("infrared = thermal radiation", "Infrarot = Wärmestrahlung"), font_size=LABEL_FONT_SIZE, color=PASTEL_RED).move_to(np.array([X(6.0), y - 0.3, 0.0])),
+    )
+    axis = math_label(tr(r"\text{wavelength}\;\lambda\;\text{in}\;\mu\mathrm{m}\quad(\text{electromagnetic waves})",
+                         r"\text{Wellenlänge}\;\lambda\;\text{in}\;\mu\mathrm{m}\quad(\text{elektromagnetische Wellen})"),
+                      np.array([0.0, y - 1.12, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY)
+    heading = Text(tr("Light and heat are the same kind of wave", "Licht und Wärmestrahlung sind dieselbe Wellenart"),
+                   font_size=BODY_FONT_SIZE, color=PASTEL_YELLOW).move_to(np.array([0.0, y + 2.05, 0.0]))
+
+    def marker(um, text, color):
+        arrow = _flow_arrow((X(um), y + 1.12, 0.0), (X(um), y + h + 0.06, 0.0), color, width=3)
+        tag = Text(text, font_size=LABEL_FONT_SIZE, color=color).move_to(np.array([X(um), y + 1.42, 0.0]))
+        return VGroup(arrow, tag)
+
+    marks = VGroup(
+        marker(0.5, tr("Sun (5800 K): short-wave", "Sonne (5800 K): kurzwellig"), PASTEL_YELLOW),
+        marker(10.0, tr("Room surfaces (20 °C): long-wave", "Raumflächen (20 °C): langwellig"), PASTEL_ORANGE),
+    )
+    panel = RoundedRectangle(corner_radius=0.15, width=10.6, height=4.5, stroke_color=P_PRIMARY, stroke_width=1.6,
+                             fill_color=P_DEEP_DARK, fill_opacity=0.97).move_to(np.array([0.0, y + 0.55, 0.0]))
+    base = VGroup(bands, ticks, names, axis, heading)
+    for m in (panel, base, marks):
+        m.set_z_index(901)
+    panel.set_z_index(900)
+    return {"panel": panel, "base": base, "marks": marks, "group": VGroup(panel, base, marks)}
+
+
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py hunk 4 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-iso-6946"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py hunk 5 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        spec = _spectrum()
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "light"))
+        self.play(FadeIn(spec["panel"]), FadeIn(spec["base"]), run_time=1.2)
+        hold_for(self, self.NARRATION, "light", used=1.2 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "short"))
+        self.play(LaggedStart(*[FadeIn(m, shift=DOWN * 0.12) for m in spec["marks"]], lag_ratio=0.4), run_time=1.4)
+        hold_for(self, self.NARRATION, "short", used=1.4 + 0.35)
+        self.play(FadeOut(spec["group"]), run_time=0.6)
+
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py hunk 6 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"Heat transfer at the surface: $R_{\mathrm{si}}$ and $R_{\mathrm{se}}$ combine radiation and convection into one resistance.",
+         r"Wärmeübergang: $R_{\mathrm{si}}$ und $R_{\mathrm{se}}$ fassen Strahlung und Konvektion zusammen."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py hunk 7 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        iso = _din_ref(_references.cite(("din-en-iso-6946", "rse")))
+        surf_note = math_label(
+            tr(r"\text{Heat transfer:}\;R_{\mathrm{si}}\;\text{and}\;R_{\mathrm{se}}\;\text{combine radiation and convection}",
+               r"\text{Wärmeübergang:}\;R_{\mathrm{si}}\;\text{und}\;R_{\mathrm{se}}\;\text{fassen Strahlung und Konvektion zusammen}"),
+            np.array([0.0, 2.72, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_GREEN)
+        surf_box = SurroundingRectangle(surf_note, color=PASTEL_GREEN, buff=0.14, corner_radius=0.1, stroke_width=2)
+        r_tags = VGroup(
+            math_label(r"R_{\mathrm{si}}", p(-0.62, _profile_y(THETA_I - 0.6 * (THETA_I - theta_si)) + 0.34), size=LABEL_FONT_SIZE, color=PASTEL_GREEN),
+            math_label(r"R_{\mathrm{se}}", p(0.62, _profile_y(THETA_E + 0.6 * (theta_se - THETA_E)) + 0.34), size=LABEL_FONT_SIZE, color=PASTEL_GREEN),
+        )
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py hunk 8 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-iso-6946"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py hunk 9 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-iso-6946"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py hunk 10 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-iso-6946"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py hunk 11 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-12831-1"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Same size, colour, opacity and corner as ``_din_ref`` in the other Heating
+    modules. Module 5's solar-gain chain — Q̇_S = I_s · A · g_⊥ · F_F · F_W · F_S · F_C —
+    is the DIN V 4108-6 method (6.4 Solare Wärmegewinne, Anhang B.4 for F_C); the g-value beat
+    cites DIN EN 410 next to it. Added in absolute frame coordinates.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
+
+
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "solar")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        subtitle = section_heading(tr("Irradiance and window area", "Strahlungsintensität und Fensterfläche"))
+        din = _din_ref(_references.cite(("din-v-4108-6", "solar")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 3 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        subtitle = section_heading(tr("Total solar energy transmittance g⊥", "Gesamtenergiedurchlassgrad g⊥"))
+        din = _din_ref(_references.cite(("din-v-4108-6", "solar"), ("din-en-410", "g")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 4 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "solar")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 5 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        subtitle = section_heading(tr("Sun protection and shading", "Sonnenschutz und Verschattung"))
+        din = _din_ref(_references.cite(("din-v-4108-6", "solar")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 6 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "solar")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 7 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        token_src = [("g", SYM_IS, COLOR_G), ("a", "A", COLOR_A), ("gval", SYM_G, COLOR_GVAL), ("ff", SYM_FF, COLOR_FF),
+                     ("fw", SYM_FW, COLOR_FW), ("fs", SYM_FS, COLOR_FSH), ("fsh", SYM_FC, COLOR_FC)]
+        unit_src = [r"\frac{\mathrm{W}}{\mathrm{m^{2}}}", r"\mathrm{m^{2}}", r"\text{–}", r"\text{–}", r"\text{–}", r"\text{–}", r"\text{–}"]
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 8 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        tokens.arrange(RIGHT, buff=0.6).move_to(ORIGIN)
+        labs = VGroup(*[math_text(src, font_size=BODY_FONT_SIZE, color=col)
+                        for src, (_k, _s, col) in zip(unit_src, token_src)])
+        for lab, tok in zip(labs, tokens):
+            lab.next_to(tok, DOWN, buff=0.2)
+        VGroup(tokens, labs).move_to(DOWN * 0.2)
+        unit_head = Text(tr("unit", "Einheit"), font_size=LABEL_FONT_SIZE, color=GREY_B).next_to(labs[0], LEFT, buff=0.5)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 9 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        self.play(
+            LaggedStart(*[FadeIn(t, shift=DOWN * 0.15) for t in tokens], lag_ratio=0.12),
+            LaggedStart(*[FadeIn(l) for l in labs], lag_ratio=0.12), FadeIn(unit_head),
+            run_time=1.4,
+        )
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 10 kind=other: C:\semio side replaced by old side; C:\semio text was:
+            FadeOut(labs), FadeOut(unit_head),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 11 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        def opening():
+            return fac["g"].get_value() * fac["a"].get_value()
+
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py hunk 12 kind=other: C:\semio side replaced by old side; C:\semio text was:
+            v = {key: t.get_value() for key, t in fac.items()}
+            return rf"{SYM_QS} = {label_number(opening())}\,\mathrm{{W}} \cdot " + r" \cdot ".join(
+                rf"\textcolor{{{col}}}{{{label_number(v[key], 2)}}}" for key, col in (
+                    ("gval", COLOR_GVAL), ("ff", COLOR_FF), ("fw", COLOR_FW), ("fs", COLOR_FSH), ("fsh", COLOR_FC))
+            ) + rf" \approx {label_number(phi())}\,\mathrm{{W}}"
+
+        def detail_src():
+            return (rf"\textcolor{{{COLOR_G}}}{{{label_number(fac['g'].get_value())}}}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}} \cdot "
+                    rf"\textcolor{{{COLOR_A}}}{{{label_number(fac['a'].get_value(), 2)}}}\,\mathrm{{m^{{2}}}} = {label_number(opening())}\,\mathrm{{W}}")
+
+        chain = math_readout(chain_src, lambda: box.get_bottom() + DOWN * 0.72, size=BODY_FONT_SIZE,
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+UNIT = r"\frac{\mathrm{kWh}}{\mathrm{m^{2}\,a}}"
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 1 kind=other: C:\semio side replaced by old side; C:\semio text was:
+#region DIN citation
+def _din_ref(text: str, title=None):
+    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
+    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
+
+    def line(content: str):
+        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+
+    lines = []
+    for part in text.replace("\n", " · ").split(" · "):
+        if lines and line(f"{lines[-1]} · {part}").width <= room:
+            lines[-1] += f" · {part}"
+        else:
+            lines.append(part)
+    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
+    if ref.width > room:
+        ref.scale_to_fit_width(room)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+
+
+def _math_note(tex: str, color: str = P_PRIMARY):
+    """💭 One-line aside with typeset symbols on the reserved band under the beat subtitle."""
+    return math_label(tex, np.array([0.0, _manim_module.NOTE_BAND_Y, 0.0]), size=LABEL_FONT_SIZE, color=color)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 2 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"That is why the building energy act caps the primary energy demand $Q_{P} = Q_{E} \cdot f_{P}$.",
+         r"Deshalb begrenzt das Gebäudeenergiegesetz den Primärenergiebedarf $Q_{P} = Q_{E} \cdot f_{P}$."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 3 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-ts-18599-1", "energiearten")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 4 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         "The value is fixed by law: Annex 4 of the building energy act.",
+         "Der Wert ist gesetzlich festgelegt: Anlage 4 des Gebäudeenergiegesetzes."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 5 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("gmodg", "p22")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 6 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"The same $100\,\mathrm{kWh/(m^2\,a)}$ of useful energy $Q_{h}$ as in the last chapter.",
+         r"Dieselben $100\,\mathrm{kWh/(m^2\,a)}$ Nutzenergie $Q_{h}$ wie im letzten Kapitel."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 7 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"The gas boiler draws $140\,\mathrm{kWh/(m^2\,a)}$.",
+         r"Der Gaskessel nimmt $140\,\mathrm{kWh/(m^2\,a)}$ auf."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 8 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"The heat pump needs only $31\,\mathrm{kWh/(m^2\,a)}$ of electricity, its final energy.",
+         r"Die Wärmepumpe braucht nur $31\,\mathrm{kWh/(m^2\,a)}$ Strom als Endenergie."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 9 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"Of the useful energy, $74\,\mathrm{kWh/(m^2\,a)}$ come free from the ambient air, and only $26\,\mathrm{kWh/(m^2\,a)}$ are driven by electricity.",
+         r"Von der Nutzenergie liefert die Umweltwärme der Luft $74\,\mathrm{kWh/(m^2\,a)}$ kostenlos, nur $26\,\mathrm{kWh/(m^2\,a)}$ gehen auf den Strom zurück."),
+        ("end_rest",
+         r"The remaining $5\,\mathrm{kWh/(m^2\,a)}$ of electricity cover the losses of emission, distribution and storage.",
+         r"Die übrigen $5\,\mathrm{kWh/(m^2\,a)}$ Strom decken die Verluste von Übergabe, Verteilung und Speicherung."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 10 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         "Because the factor is applied to a final energy that was already more than three quarters smaller.",
+         "Weil der Faktor auf eine Endenergie trifft, die schon gut drei Viertel kleiner war."),
+        ("anlagenzahl",
+         r"Primary over useful energy is the primary-energy expenditure figure $e_{P} = e_{E}\cdot f_{P} = Q_{P}/Q_{h}$: $1.54$ against $0.56$.",
+         r"Primärenergie durch Nutzenergie ist die primärenergetische Aufwandszahl $e_{P} = e_{E}\cdot f_{P} = Q_{P}/Q_{h}$: $1{,}54$ gegen $0{,}56$."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 11 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("gmodg", "p20-22"), ("din-ts-18599-1", "primaerenergie")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 12 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        ep_note = _math_note(tr(r"e_{P}=Q_{P}/Q_{h}:\;1.54\;\text{(gas)},\;0.56\;\text{(heat pump)}\;\cdot\;e_{P}\;\text{and}\;f_{P}\;\text{are dimensionless}", r"e_{P}=Q_{P}/Q_{h}:\;1{,}54\;\text{(Gas)},\;0{,}56\;\text{(Wärmepumpe)}\;\cdot\;e_{P}\;\text{und}\;f_{P}\;\text{sind dimensionslos}"))
+        say("anlagenzahl", (0.6, [FadeOut(legend_unit), *[FadeOut(w) for w in words.values()]]), (1.2, [FadeIn(ep_note)]))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 13 kind=other: C:\semio side replaced by old side; C:\semio text was:
+            caption, box, row, ghost_q, ghost_e, legend_unit, ep_note, *words.values(),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 14 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"Its calculated primary energy $Q_{P}$ sets the benchmark: $120\,\mathrm{kWh/(m^2\,a)}$ in this schematic example.",
+         r"Dessen Primärenergiebedarf $Q_{P}$ setzt den Maßstab: im schematischen Beispiel $120\,\mathrm{kWh/(m^2\,a)}$."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 15 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"A new residential building may reach at most $0.55$ of it, that is $66\,\mathrm{kWh/(m^2\,a)}$.",
+         r"Ein neues Wohngebäude darf höchstens das $0{,}55$-Fache davon erreichen, also $66\,\mathrm{kWh/(m^2\,a)}$."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 16 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"In this example the heat pump, $56\,\mathrm{kWh/(m^2\,a)}$, clears the line.",
+         r"Im Beispiel unterschreitet die Wärmepumpe mit $56\,\mathrm{kWh/(m^2\,a)}$ die Linie."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py hunk 17 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("gmodg", "p71")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("vdi-2078", "solar")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-4108-2", "fc")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("vdi-2078", "opak")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("vdi-2078", "aussenluft")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("vdi-2078", "zuluft")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("vdi-2078", "zuluft")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Same size, colour, opacity and corner as ``_din_ref`` in ``1_introduction/scene_1.py`` and
+    ``2_conduction/scene_2.py`` so every module footnotes its norm identically. The winter ventilation loss is the
+    chain of DIN EN 12831-1 (Q̇_V = V · n · c_Luft · Δθ).
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
+
+
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-12831-1"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("!din-v-4108-6") + "\n" + _references.cite(("din-ts-18599-2", "intern")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-4108-2", "abschn8")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("vdi-2078", "kuehllast")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-4108-2", "abschn8")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("vdi-6022-1", "hygiene")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-en-16798-1", "kategorien")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("pettenkofer-1858", "adhoc-ag-2008"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py hunk 1 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        tag_pk = tag(tr("Limit after Pettenkofer (1858)", "Grenzwert nach Pettenkofer (1858)"), r"1000\,\mathrm{ppm}", tick_pk.get_y())
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-12831-1"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Same size, colour, opacity and corner as ``_din_ref`` in
+    ``1_introduction/scene_1.py`` and ``2_conduction/scene_2.py`` so every module
+    footnotes its norm identically. Module 3 is the ventilation-loss chain of
+    DIN EN 12831-1 (Q̇_V = V̇ · c_Luft · Δθ); the systems beat cites DIN 1946-6.
+    Beats whose diagram already prints the standard in full get no corner chip.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
+
+
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-ts-18599-1", "din-en-12831-1"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-12831-1", "din-1946-4"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py hunk 3 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-12831-1", "din-en-16798-1"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+COL_RHO, COL_R0 = P_WHITE, P_RED
+CARD_W, CARD_H = 1.42, 1.40
+#endregion
+
+
+#region DIN citation
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner."""
+    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        subtitle = section_heading(tr("Nine quantities, one chain", "Neun Größen, eine Kette"))
+        din = _din_ref(_references.cite("din-en-12831-1", "vdi-2078"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        subtitle = section_heading(tr("What heating and cooling technology take over", "Was Heizung und Kühltechnik übernehmen"))
+        din = _din_ref(_references.cite("din-en-12831-1", "vdi-2078"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py hunk 3 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        w_term = row(tr(r"\text{Ventilation term }\dot{Q}_{\mathrm{V}}\text{ of the load}", r"\text{Lüftungsterm }\dot{Q}_{\mathrm{V}}\text{ der Heizlast}"), ROW_Y[2], X_COL_W, P_WHITE)
+        w_wrg = live(lambda: tr(rf"\text{{with HRV:}}\;\dot{{Q}}_{{\mathrm{{V,sens}}}}={label_number(w0.get_value())}\,\mathrm{{W}}", rf"\text{{mit WRG:}}\;\dot{{Q}}_{{\mathrm{{V,sens}}}}={label_number(w0.get_value())}\,\mathrm{{W}}"), ROW_Y[3], X_COL_W, COL_ETA)
+        w_lat = live(lambda: rf"\dot{{Q}}_{{\mathrm{{V,lat}}}}={label_number(w2.get_value())}\,\mathrm{{W}}", ROW_Y[4], X_COL_W, COL_DX)
+        w_lat_note = row(tr(r"\text{not in the load}", r"\text{nicht in der Heizlast}"), ROW_Y[5], X_COL_W, COL_DX, size=17)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+#region DIN citation
+def _din_ref(text: str, title=None):
+    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
+    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
+
+    def line(content: str):
+        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+
+    lines = []
+    for part in text.replace("\n", " · ").split(" · "):
+        if lines and line(f"{lines[-1]} · {part}").width <= room:
+            lines[-1] += f" · {part}"
+        else:
+            lines.append(part)
+    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
+    if ref.width > room:
+        ref.scale_to_fit_width(room)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+
+
+def _regroup(scene, group):
+    """🧲 Make ``group`` the scene's own entry for its parts, so a transition that consumes it removes every part and not just the group object."""
+    family = set(group.get_family())
+    scene.remove(*[m for m in scene.mobjects if m is not group and family.intersection(m.get_family())])
+    scene.add(group)
+
+
+def _math_note(tex: str, color: str = P_PRIMARY):
+    """💭 One-line aside with typeset symbols on the reserved band under the beat subtitle."""
+    return math_label(tex, np.array([0.0, _manim_module.NOTE_BAND_Y, 0.0]), size=LABEL_FONT_SIZE, color=color)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-ts-18599-5", "uebergabe")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-ts-18599-5", "erzeuger"), ("vdi-4650-1", "jaz")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py hunk 3 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        subtitle = section_heading(tr("The plant chain: from useful to final energy", "Die Anlagenkette: von Nutzenergie zu Endenergie"))
+        din = _din_ref(_references.cite(("din-ts-18599-5", "aufwandszahl"), ("din-ts-18599-1", "endenergie")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("vdi-2078", "innere")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("vdi-2078", "personen")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("vdi-2078", "geraete")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py hunk 3 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("vdi-2078", "innere")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py hunk 4 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("vdi-2078", "innere")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-16798-3"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py hunk 1 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-308"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py hunk 2 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        lat_note = window_chip(math_label(
+            tr(rf"\dot{{Q}}_{{\mathrm{{V,lat}}}}:\;\text{{winter}}\;{label_number(Q_V_LAT_WINTER)}\,\mathrm{{W}}\quad\text{{summer}}\;{label_number(Q_V_LAT_SUMMER)}\,\mathrm{{W}}",
+               rf"\dot{{Q}}_{{\mathrm{{V,lat}}}}:\;\text{{Winter}}\;{label_number(Q_V_LAT_WINTER)}\,\mathrm{{W}}\quad\text{{Sommer}}\;{label_number(Q_V_LAT_SUMMER)}\,\mathrm{{W}}"),
+            size=LABEL_FONT_SIZE, color=P_CYAN), color=P_CYAN).move_to(np.array([-3.0, -1.46, 0.0]))
+        self.play(FadeIn(lat_note), *exchanger(0.8), run_time=0.8)
+        hold_for(self, N, "latent", used=0.8, during=exchanger)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "latent_use"))
+        hold_for(self, N, "latent_use", during=exchanger)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py hunk 3 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-1946-6"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py hunk 4 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("vdi-2087"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+#region DIN citation
+def _din_ref(text: str, title=None):
+    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
+    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
+
+    def line(content: str):
+        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+
+    lines = []
+    for part in text.replace("\n", " · ").split(" · "):
+        if lines and line(f"{lines[-1]} · {part}").width <= room:
+            lines[-1] += f" · {part}"
+        else:
+            lines.append(part)
+    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
+    if ref.width > room:
+        ref.scale_to_fit_width(room)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+
+
+def _regroup(scene, group):
+    """🧲 Make ``group`` the scene's own entry for its parts, so a transition that consumes it removes every part and not just the group object."""
+    family = set(group.get_family())
+    scene.remove(*[m for m in scene.mobjects if m is not group and family.intersection(m.get_family())])
+    scene.add(group)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("gmodg", "p79-82")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("gmodg", "p86")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py hunk 3 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("gmodg", "p84-87")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py hunk 4 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        _regroup(self, big_sheet)
+        self.play(stage.transition("demand.certificate.mandatory.sheet-to-listing-size",source=big_sheet, target=small_sheet), run_time=1.4)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"We call the heat from persons $\dot{Q}_{\mathrm{i,p}}$ — the heat flow $\Phi$ as a load at the room, unit watt.",
+         r"Wir nennen die Personenwärme $\dot{Q}_{\mathrm{i,p}}$ — der Wärmestrom $\Phi$ als Last am Raum, Einheit Watt."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "intern"), ("din-ts-18599-10", "intern")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "intern"), ("din-ts-18599-10", "intern")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py hunk 3 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "intern"), ("din-ts-18599-10", "intern")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py hunk 4 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"That specific load $q_{\mathrm{i}}$ is tabulated in DIN/TS 18599-10; over the heating season it becomes the internal gain $Q_{\mathrm{i}}$.",
+         r"Diese spezifische Last $q_{\mathrm{i}}$ steht tabellarisch in DIN/TS 18599-10; über die Heizperiode wird daraus der interne Gewinn $Q_{\mathrm{i}}$."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+
+
+def _solar_kwh(i_s: float) -> float:
+    """☀️ Solar gains Q_S = A · I_s · g⊥ · F_S · F_C · F_F · F_W in kWh, every factor from the running example."""
+    return A_WINDOW * G_VALUE * F_S * F_C * F_F * F_W * i_s
+
+
+Q_SOLAR = _solar_kwh(I_S)
+Q_L, Q_G = _loss_kwh(D_THETA_MONTH), Q_SOLAR + Q_INTERN
+ETA_H = _eta_heat(Q_G / Q_L)
+Q_USABLE = ETA_H * Q_G
+Q_L_JAN, Q_G_JAN = _loss_kwh(D_THETA_JAN), _solar_kwh(I_S_JAN) + Q_INTERN
+ETA_JAN = _eta_heat(Q_G_JAN / Q_L_JAN)
+Q_USABLE_JAN = ETA_JAN * Q_G_JAN
+Q_L_JUL, Q_G_JUL = _loss_kwh(D_THETA_JUL), _solar_kwh(I_S_JUL) + Q_INTERN
+ETA_C = _eta_cool(Q_G_JUL / Q_L_JUL)
+#endregion
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py hunk 1 kind=other: C:\semio side replaced by old side; C:\semio text was:
+#region DIN citation
+def _din_ref(text: str, title=None):
+    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
+    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
+
+    def line(content: str):
+        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+
+    lines = []
+    for part in text.replace("\n", " · ").split(" · "):
+        if lines and line(f"{lines[-1]} · {part}").width <= room:
+            lines[-1] += f" · {part}"
+        else:
+            lines.append(part)
+    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
+    if ref.width > room:
+        ref.scale_to_fit_width(room)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("!din-v-4108-6"), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py hunk 3 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "verluste")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py hunk 4 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "gewinne")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py hunk 5 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "ausnutzung"), ("din-ts-18599-2", "nutzenergie")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-4108-2"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py hunk 1 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-iso-6946"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-iso-6946"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py hunk 3 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-iso-6946"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py hunk 4 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-en-iso-13789", "transmission")))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py hunk 5 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-4108-beiblatt-2", "din-ts-18599-2"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py hunk 0 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-12831-1"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py hunk 1 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        rho_lbl = math_label(rf"\rho \approx {label_number(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}\;(20\,°\mathrm{{C}})", np.array([xl, 2.25, 0]),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py hunk 2 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        rho_note = math_label(rf"{label_number(1.27, 2)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}\;(5\,°\mathrm{{C}})", np.array([xl, 1.2, 0]),
+                              size=LABEL_FONT_SIZE, color=P_CYAN, edge="left")
+        m_read = math_readout(lambda: rf"m = {label_number(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}} \cdot 1\,\mathrm{{m^{{3}}}} = {label_number(mass.get_value(), 2)}\,\mathrm{{kg}}",
+                              np.array([xl, 1.72, 0]), size=BODY_FONT_SIZE, color=P_CYAN)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py hunk 3 kind=other: C:\semio side replaced by old side; C:\semio text was:
+        cp_lbl = math_label(rf"c_{{p}} = {label_number(CP_AIR)}\,\frac{{\mathrm{{J}}}}{{\mathrm{{kg\,K}}}}", np.array([xl, 0.55, 0]),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py hunk 4 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-12831-1", "vdi-2078"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py hunk 5 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("vdi-2078"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py hunk 6 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite("din-en-12831-1", "vdi-2078"))
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+#region DIN citation
+def _din_ref(text: str, title=None):
+    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
+    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
+
+    def line(content: str):
+        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+
+    lines = []
+    for part in text.replace("\n", " · ").split(" · "):
+        if lines and line(f"{lines[-1]} · {part}").width <= room:
+            lines[-1] += f" · {part}"
+        else:
+            lines.append(part)
+    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
+    if ref.width > room:
+        ref.scale_to_fit_width(room)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
+
+
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py hunk 1 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"The Gebäudeenergiegesetz — continued since July 2026 as the Gebäudemodernisierungsgesetz — sets the target.",
+         r"Das Gebäudeenergiegesetz — seit Juli 2026 als Gebäudemodernisierungsgesetz fortgeführt — setzt das Ziel."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py hunk 2 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("gmodg", "p15-20")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py hunk 3 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "heizperiode"), ("din-ts-18599-2", "nutzenergie")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py hunk 4 kind=other: C:\semio side replaced by old side; C:\semio text was:
+         r"For certain proofs under the building energy law a standardised reference climate is fixed.",
+         r"Für bestimmte Nachweise nach dem Gebäudeenergiegesetz ist ein standardisiertes Referenzklima festgelegt."),
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py hunk 5 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "klima"), "dwd-try-2017"), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py hunk 6 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "heizperiode")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py hunk 0 kind=other: C:\semio side replaced by old side; C:\semio text was:
+_example = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📏️running-example.🐍️")
+H_T_VAL, H_V_VAL = _example.H_T_W_K, _example.H_V_W_K
+THETA_I = _example.THETA_I_WINTER_C
+THETA_E = _example.THETA_E_DESIGN_C
+DESIGN_DT = _example.D_THETA_DESIGN_K
+PEAK_KW = (H_T_VAL + H_V_VAL) * DESIGN_DT / 1000.0
+GAIN_LIMIT = 12.0
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py hunk 1 kind=other: C:\semio side replaced by old side; C:\semio text was:
+#region DIN citation
+def _din_ref(text: str, title=None):
+    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
+    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
+
+    def line(content: str):
+        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+
+    lines = []
+    for part in text.replace("\n", " · ").split(" · "):
+        if lines and line(f"{lines[-1]} · {part}").width <= room:
+            lines[-1] += f" · {part}"
+        else:
+            lines.append(part)
+    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
+    if ref.width > room:
+        ref.scale_to_fit_width(room)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
+
+
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py hunk 2 kind=other: C:\semio side replaced by old side; C:\semio text was:
+def _annual_load(n: int = PROFILE_N, seed: int = 5) -> np.ndarray:
+    """📉 Synthetic annual heating-power profile, normalised to its own peak.
+
+    Shape only — a cosine season plus multi-day weather driving ``θ_i − θ_e``
+    below the building heating limit that the free gains lower to ``GAIN_LIMIT``, one sample per hour of the year. It is deliberately
+    not measured data; multiplying by ``PEAK_KW`` is what gives the beats real
+    kW/kWh.
+    """
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py hunk 3 kind=other: C:\semio side replaced by old side; C:\semio text was:
+    theta_e = 9.0 - 9.5 * np.cos(2 * np.pi * t) + 3.0 * noise / noise.std()
+    load = np.maximum(0.0, GAIN_LIMIT - theta_e)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py hunk 4 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-v-4108-6", "symbole")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py hunk 5 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        subtitle = section_heading(tr("The standard heating load per DIN EN 12831-1:2017-09", "Die Norm-Heizlast nach DIN EN 12831-1:2017-09"))
+        din = _din_ref(_references.cite(("din-en-12831-1", "abschn6"), "din-ts-12831-1"), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py hunk 6 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-en-12831-1", "abschn6"), ("din-v-4108-6", "bilanz")), subtitle)
+
+##### 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py hunk 7 kind=R: C:\semio side replaced by old side; C:\semio text was:
+        din = _din_ref(_references.cite(("din-en-12831-1", "abschn6"), "vdi-4645"), subtitle)
+

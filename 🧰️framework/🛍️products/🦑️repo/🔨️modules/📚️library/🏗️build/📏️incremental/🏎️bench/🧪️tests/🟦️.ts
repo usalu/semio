@@ -735,7 +735,7 @@ test("the command prepares a fresh copy on request so that the cold graph probe 
   await runBenchCommandV1(live,["bench","run","--slo=graph-scope-cold-max","--implementations=nx","--prepare","--root",prepared,"--json"],world.ports);
   const report=JSON.parse(world.out[0]!) as BenchReportV1;
   expect(existsSync(join(prepared,script))).toBe(true);
-  expect(steps.map(step=>step.join(" "))).toEqual(["preflight","tools setup all","dependencies sync --all","tools setup all"]);
+  expect(steps.map(step=>step.join(" "))).toEqual(["preflight","dependencies sync --all","tools setup all"]);
   expect(report.rows[0]).toMatchObject({slo:"graph-scope-cold-max",status:"pass",n:1});
   const warm=commandPorts(live,prepared,env);
   await runBenchCommandV1(live,["bench","run","--slo=graph-scope-cold-max","--implementations=nx","--root",prepared,"--json"],warm.ports);

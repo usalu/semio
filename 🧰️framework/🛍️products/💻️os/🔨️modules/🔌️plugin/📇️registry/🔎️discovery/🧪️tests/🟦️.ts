@@ -4,6 +4,7 @@ import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";
 import { buildSync } from "esbuild";
 import { spawnSync } from "node:child_process";
+import { examplesForApp } from "@semio-tech/framework-manifest";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { discoverPluginBuildTargets, generatePluginRegistry, generatePluginRegistryReport, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, parseRegistryChannelDiagnosticsV1 } from "../🟦️.ts";
@@ -155,7 +156,7 @@ test("source playground catalogs retain example membership while compiled channe
   for(const example of examples){const folder=join(root,"owner/🗿️artifacts/🖍️drawing/📚️examples",example);mkdirSync(folder,{recursive:true});writeFileSync(join(folder,"🦀️.rs"),"");}
   const [row]=generateWithheldPlaygroundRegistry(root,[{code:"stale-channel",pluginId:"owner",cratePath,descriptorChannel:REGISTRY_HOST_APP_CHANNEL_VERSION-1,hostChannel:REGISTRY_HOST_APP_CHANNEL_VERSION}],registryCatalogInputView(root,(await import("../🟦️.ts")).TAXONOMY));
   const parsed = parseToml(cargo) as { package: { metadata: { semio: { playground: { engines: string[]; ports: {react:number;wgpu:number} }[] } } } };
-  expect(row!.examples).toEqual(examples);expect(row!.engines).toEqual(parsed.package.metadata.semio.playground[0].engines);expect(row!.ports).toEqual(parsed.package.metadata.semio.playground[0].ports);
+  expect(row!.examples).toEqual(["demo","demo-session"]);const dialect={artifactKind:"owner.drawing",standard:"1",subset:"*"};expect(examplesForApp(row!.examples.map(id=>({id,dialect})),{dialect}).map(example=>example.id)).toEqual(["demo","demo-session"]);expect(row!.engines).toEqual(parsed.package.metadata.semio.playground[0].engines);expect(row!.ports).toEqual(parsed.package.metadata.semio.playground[0].ports);
 });
 
 

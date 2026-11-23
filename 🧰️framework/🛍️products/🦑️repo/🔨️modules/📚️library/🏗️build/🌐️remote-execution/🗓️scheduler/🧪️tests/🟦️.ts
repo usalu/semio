@@ -280,3 +280,66 @@ test("an action whose requester is gone is not placed during the linger and is c
  expect(scheduler.status().counters).toMatchObject({queueWaitSamples:1,queueWaitP50Milliseconds:3000,queueWaitP90Milliseconds:3000,queueWaitMaxMilliseconds:3000});
  expect(scheduler.report(worker.id,task.id,resultOf())).toBe(true);await next.done;
 });
+
+test("an operation that has nothing new to say is repeated to its client every keep-alive interval, so a silent server can be told from a patient one",async()=>{
+ const {memory,scheduler}=harness({keepAliveSeconds:0.05}),run=submit(scheduler,memory.action([],"beat"));
+ await Bun.sleep(400);run.abort.abort();await run.done;
+ expect(run.rows.length).toBeGreaterThanOrEqual(5);
+ expect(new Set(run.rows.slice(1).map(row=>row.stage))).toEqual(new Set(["QUEUED"]));
+});
+
+test("a client that joins an operation whose cancellation was already sent to the worker revokes it: the action keeps running and its result reaches the new client",async()=>{
+ const {memory,scheduler}=harness(),action=memory.action([],"rejoin"),first=submit(scheduler,action),worker=scheduler.register(profile("w"));await Bun.sleep(20);
+ const task=(await polled(scheduler,worker.id)).task!;
+ first.abort.abort();await first.done;await Bun.sleep(150);
+ expect(scheduler.status().counters.cancelledExecuting).toBe(1);
+ const second=submit(scheduler,action);await Bun.sleep(20);
+ expect(scheduler.heartbeat(worker.id,[task.id]).cancel).toEqual([]);
+ expect(scheduler.report(worker.id,task.id,resultOf())).toBe(true);await second.done;
+ expect(second.rows.at(-1)!.outcome!.status.code).toBe(0);
+});
+
+test("a cancellation that the worker does not acknowledge within the grace frees the operation, and a cancel entry the worker no longer holds neither spins its long poll nor starves it",async()=>{
+ const {memory,scheduler,advance}=harness({cancelGraceSeconds:5}),run=submit(scheduler,memory.action([],"grace")),worker=scheduler.register(profile("w"));await Bun.sleep(20);
+ const task=(await polled(scheduler,worker.id)).task!;
+ run.abort.abort();await run.done;await Bun.sleep(150);
+ expect((await polled(scheduler,worker.id,10)).cancel).toEqual([task.id]);
+ const waited=Date.now();expect((await polled(scheduler,worker.id,120)).task).toBeNull();expect(Date.now()-waited,"announced once, then the poll waits").toBeGreaterThanOrEqual(90);
+ advance(6);await Bun.sleep(20);
+ expect(scheduler.status()).toMatchObject({counters:{cancelled:1},running:0});
+ expect(scheduler.heartbeat(worker.id,[]).cancel).toEqual([]);
+ const again=Date.now();expect((await polled(scheduler,worker.id,120)).task).toBeNull();expect(Date.now()-again).toBeGreaterThanOrEqual(90);
+});
+
+test("a heartbeat that was sent before the task reached the worker does not make the scheduler forget the task: when the worker is lost the action is still rescheduled",async()=>{
+ const {memory,scheduler,advance,events}=harness({maximumAttempts:3}),run=submit(scheduler,memory.action([],"race")),worker=scheduler.register(profile("w"));await Bun.sleep(20);
+ const task=(await polled(scheduler,worker.id)).task!;
+ expect(scheduler.heartbeat(worker.id,[])).toMatchObject({known:true});
+ expect(scheduler.status().workers[0]!.running).toBe(1);
+ advance(11);
+ expect(events.some(event=>event.startsWith("worker-lost"))).toBe(true);expect(events.some(event=>event.startsWith("retried"))).toBe(true);
+ const other=scheduler.register(profile("w2")),retry=(await polled(scheduler,other.id)).task!;
+ expect([retry.attempt,task.attempt]).toEqual([2,1]);
+ expect(scheduler.report(other.id,retry.id,resultOf())).toBe(true);await run.done;
+});
+
+test("a worker that is lost with an offloaded action fails the action back to the waiting client at once when no other machine can take it",async()=>{
+ const {memory,scheduler,advance}=harness({maximumAttempts:3}),platform=[{name:"semio-offload",value:"queue"},{name:"semio-origin",value:"req"}],run=submit(scheduler,memory.action(platform,"lost")),worker=scheduler.register(profile("w"));await Bun.sleep(20);
+ expect((await polled(scheduler,worker.id)).task).not.toBeNull();
+ advance(11);await run.done;
+ expect(run.rows.at(-1)!.outcome!.status).toMatchObject({code:14});expect(run.rows.at(-1)!.outcome!.status.message).toMatch(/no other machine can take the action/u);
+});
+
+test("an operator ends one operation by a prefix of its id or action digest, or every operation that is older than the stuck limit: the clients hear a cancellation, the worker is told to stop, a prefix that is too short matches nothing",async()=>{
+ const {memory,scheduler,advance}=harness({stuckSeconds:100,defaultActionSeconds:600,maximumActionSeconds:600}),one=memory.action([],"one"),two=memory.action([],"two"),a=submit(scheduler,one),b=submit(scheduler,two),worker=scheduler.register(profile("w"));await Bun.sleep(20);
+ const task=(await polled(scheduler,worker.id)).task!;
+ expect(scheduler.abort("short")).toEqual([]);expect(scheduler.abort("all-stuck")).toEqual([]);
+ const ended=scheduler.abort(two.hash.slice(0,8));await b.done;
+ expect(ended.map(row=>row.action)).toEqual([two.hash.slice(0,12)]);expect(b.rows.at(-1)!.outcome!.status.code).toBe(1);expect(b.rows.at(-1)!.outcome!.status.message).toMatch(/operator/u);
+ for(let beat=0;beat<21;beat++){advance(5);scheduler.heartbeat(worker.id,[task.id]);}
+ const stuck=scheduler.abort("all-stuck");await a.done;
+ expect(stuck.map(row=>[row.stage,row.worker])).toEqual([["EXECUTING","w"]]);
+ expect(scheduler.heartbeat(worker.id,[task.id]).cancel).toEqual([task.id]);
+ expect(scheduler.report(worker.id,task.id,{version:1,outcome:"cancelled",status:{code:1,message:"Cancelled"},actionResult:null})).toBe(false);
+ expect(scheduler.abort("all-stuck")).toEqual([]);
+});

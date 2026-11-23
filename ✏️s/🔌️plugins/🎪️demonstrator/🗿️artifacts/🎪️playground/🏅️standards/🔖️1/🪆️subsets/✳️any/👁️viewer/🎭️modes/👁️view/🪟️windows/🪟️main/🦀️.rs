@@ -25,8 +25,8 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `PlaygroundSnapshot -> UiNode` read, always `read_only: true` — a viewer never emits a
 /// `replace-text` command.
-pub fn render(document: &PlaygroundSnapshot) -> UiAssemblyResult<BuiltNode> {
-    TextWindowKit::render(&TextView { text: document.schema.clone(), language: Some("playground".into()) })
+pub fn render(document: &PlaygroundSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
+    TextWindowKit::render(&TextView { text: document.schema.clone(), language: Some("playground".into()) }, locale)
 }
 //#endregion 🔖️Render
 

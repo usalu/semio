@@ -4,6 +4,15 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "dependsOn": [
+        "@semio-tech/s-dev-composition:generate"
+      ],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🪵️sourcing/**/*",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🪵️sourcing/**/*",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🪵️sourcing/🧩️component/📦️packages/🦀️rust/Cargo.toml"
+      ],
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript",

@@ -113,7 +113,7 @@ pub mod app {
     pub use semio_plugin_decl_views::{NoConfigGenesisOwner,NoDraftGenesisOwner};
     pub use crate::{MountedOwnerPhaseV1, MountedOwnerTurnV1};
     pub use super::child_emit_preparation::{ChildEmitPreparation,ChildEmitPreparationStep,OwnedChildEmit};
-    pub use semio_plugin_ownership::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
+    pub use semio_plugin_ownership::transient_publication::{bounded_transient_preparation_factory, cold_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
     pub use super::window_config::{
         WindowConfigNativePairReceiving,window_config_native_pair_demands,admit_window_config_native_pair,bounded_window_config_preparation_source_birth, bounded_window_config_preparation_factory, bounded_window_config_store_disposer,bounded_window_config_store_disposer_birth, bounded_window_config_store_owners, RejectedWindowConfigEmission, WindowConfigAuthorityIdentity, WindowConfigBorrow, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack,
         WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep, WindowConfigApplyCursor, WindowConfigApplyEdit, WindowConfigApplyMutation, WindowConfigReplaceCursor, WindowConfigReplaceEdit, WindowConfigReplaceMutation, WindowConfigSnapshot,
@@ -268,6 +268,7 @@ pub use app::{
     bounded_document_store_initialization_job,
     bounded_document_store_owners,
     bounded_transient_preparation_factory,
+    cold_transient_preparation_factory,
     bounded_transient_root_retirement_factory,
     bounded_transient_store_disposer,
     WindowConfigNativePairReceiving,window_config_native_pair_demands,admit_window_config_native_pair,bounded_window_config_preparation_source_birth,
@@ -294,6 +295,7 @@ pub use app::{
     register_artifact_inference_service,
 
     scene_surface,
+    surface_name,
     section_component_tree,
     selection_count_phrase,
     selection_domains_from_surface,
@@ -383,6 +385,7 @@ pub use app::{
     ArtifactMime,
     ArtifactOutputChunks,
     ArtifactOwnedDisposer,
+    ArtifactColdClose,
     ArtifactOwnedToolJobFactory,
     ArtifactOwnedToolJobInputs, ArtifactOwnedToolJobRequest,
     ArtifactOriginalToolCommand,

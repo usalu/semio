@@ -36,7 +36,7 @@ pub fn render_file_source_editor(
         path_label: labels.path.into(),
         line_label: labels.line.into(),
         column_label: labels.column.into(),
-    })?;
+    }, locale)?;
     ui::column().try_id(format!("{surface_id}-layout")).map_err(|_| error("ui.file-source.layout-id"))?.try_children(vec![source, body]).map_err(|_| error("ui.file-source.layout-children"))?.try_build().map_err(|_| error("ui.file-source.layout"))
 }
 
@@ -98,7 +98,7 @@ fn scalar_control(
             }
             control_group(&format!("{id}-null"), controls.into_iter().map(Ok))
         }
-        SnapshotDetailValue::Bytes { len } => read_only_value(&format!("{id}-octets"), SnapshotDetailValue::Bytes { len }),
+        SnapshotDetailValue::Bytes { len } => read_only_value(&format!("{id}-octets"), SnapshotDetailValue::Bytes { len }, labels.locale),
         SnapshotDetailValue::Array | SnapshotDetailValue::Object => Err(error("ui.snapshot-details.scalar-kind")),
     }
 }
@@ -211,7 +211,7 @@ fn item_controls(
         controls.push(if capabilities.edit {
             scalar_control(id, path, value, template, enum_values, allows_untyped_creation, labels, controller_id, publication_revision)
         } else {
-            read_only_value(&format!("{id}-read-only"), value)
+            read_only_value(&format!("{id}-read-only"), value, labels.locale)
         });
     }
     if capabilities.reorder {

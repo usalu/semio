@@ -244,10 +244,7 @@ impl MountedLayoutJob {
                     UiNode::Field(_) => LayoutNodeKind::Field { top: 0.0, bottom: 0.0 },
                     UiNode::Section(_) => LayoutNodeKind::Section { gap: 0.0, top: 0.0, bottom: 0.0 },
                     UiNode::CardStack(_) => LayoutNodeKind::Section { gap: 0.0, top: 0.0, bottom: 0.0 },
-                    UiNode::OverviewCard(card) => {
-                        let shares_footer = tree.node(id).and_then(|node| node.next_sibling).and_then(|next| tree.node(next)).is_some_and(|next| matches!(next.spec.0, UiNode::OverviewCard(_)));
-                        LayoutNodeKind::Section { gap: 0.0, top: self.theme.control_height, bottom: if card.footer.is_some() && !shares_footer { self.theme.control_height } else { 0.0 } }
-                    }
+                    UiNode::OverviewCard(card) => LayoutNodeKind::Section { gap: 0.0, top: self.theme.control_height, bottom: if card.footer.is_some() { self.theme.control_height } else { 0.0 } },
                     UiNode::Button(_) if self.icons_only => LayoutNodeKind::IconControl { height: self.theme.control_height, width: self.theme.control_height },
                     UiNode::Select(select) if self.icons_only && select.appearance == ui_contract::SelectAppearance::Segmented => LayoutNodeKind::IconControl { height: self.theme.control_height, width: self.theme.control_height * select.items.len().max(1) as f32 },
                     UiNode::Button(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: Some(self.theme.padding_standard) },

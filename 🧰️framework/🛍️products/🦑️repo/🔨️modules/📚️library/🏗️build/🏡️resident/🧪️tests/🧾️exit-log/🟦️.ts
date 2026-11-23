@@ -10,7 +10,7 @@ test("a launchd start is one row that is completed with the pid of its service, 
  try{
   appendServiceExitRowV1(root,{event:"start",at:Date.now(),via:"launchd",label:"semio.graph",placed:false});
   expect(explainServiceLossV1(root,{alive:dead})).toBe("the service is still starting under launchd");
-  expect(explainServiceLossV1(root,{alive:dead,now:Date.now()+3600000})).toBe("the service was killed without an exit record (its cgroup is gone)");
+  expect(explainServiceLossV1(root,{alive:dead,now:Date.now()+3600000})).toContain("the service ended without an exit record (it was not placed in a cgroup");
   expect(completeServiceStartRowV1(root,{pid:4300,tag:"t"})).toBe(true);
   expect(readServiceExitRowsV1(root)).toHaveLength(1);
   expect(readServiceExitRowsV1(root)[0]).toMatchObject({event:"start",pid:4300,via:"launchd",tag:"t"});

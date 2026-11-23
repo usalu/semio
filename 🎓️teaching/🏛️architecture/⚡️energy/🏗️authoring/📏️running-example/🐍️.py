@@ -67,6 +67,7 @@ THETA_HG_C = float(_DATA["season"]["heatingLimitC"])
 THETA_E_SEASON_MEAN_C = THETA_I_WINTER_C - GT_K_D_PER_A / SEASON_DAYS
 Q_SOL_KWH_PER_A = float(_DATA["gains"]["solarKWhPerA"])
 Q_INT_KWH_PER_A = float(_DATA["gains"]["internalKWhPerA"])
+ETA_UTILISATION = float(_DATA["gains"]["utilisationFactor"])
 
 PHI_T_W = round(sum(area * u * delta for _name, area, u, delta in ENVELOPE), -2)
 PHI_V_W = round(V_DOT_M3_H * C_LUFT_WH_M3_K * D_THETA_WINTER_K, -2)
@@ -78,6 +79,9 @@ Q_H_DESIGN_W = (H_T_W_K + H_V_W_K) * D_THETA_DESIGN_K
 G_PERP_SPLIT = G_SHARE_DIRECT + G_SHARE_SECONDARY_IN
 F_SOLAR_WINTER = G_PERP * F_S_WINTER * F_C_NONE * F_F * F_W
 Q_LOSS_KWH_PER_A = (H_T_W_K + H_V_W_K) * GT_K_D_PER_A * 24.0 / 1000.0
+Q_LOSS_SHOWN_KWH_PER_A = round(Q_LOSS_KWH_PER_A, -2)
+Q_USE_KWH_PER_A = ETA_UTILISATION * (Q_SOL_KWH_PER_A + Q_INT_KWH_PER_A)
+Q_H_KWH_PER_A = Q_LOSS_SHOWN_KWH_PER_A - Q_USE_KWH_PER_A
 
 Q_SENS_WINTER_W = V_DOT_M3_H * C_LUFT_WH_M3_K * D_THETA_WINTER_K
 Q_SENS_SUMMER_W = V_DOT_M3_H * C_LUFT_WH_M3_K * D_THETA_SUMMER_K

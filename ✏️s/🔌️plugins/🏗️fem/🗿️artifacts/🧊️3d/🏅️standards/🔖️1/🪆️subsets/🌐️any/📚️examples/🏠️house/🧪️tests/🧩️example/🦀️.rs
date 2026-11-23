@@ -13,7 +13,7 @@ use semio_s_fem_model::Dof;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::print_dsl;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotRetiring;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -23,26 +23,38 @@ fn on_module(value: f64) -> bool {
     (value / super::MODULE - (value / super::MODULE).round()).abs() < 1e-9
 }
 
-fn committed() -> Fem3dSnapshot {
+fn built() -> Fem3dSnapshotRetiring {
+    Fem3dSnapshotRetiring::new(super::build().unwrap())
+}
+
+fn parsed(text: &str) -> Fem3dSnapshotRetiring {
+    Fem3dSnapshotRetiring::new(parse_dsl(text).expect("house example dsl parses"))
+}
+
+fn source(kind: &str, id: &str) -> String {
+    semio_s_fem_analyses_model::encode_result_source_parts(kind, id).unwrap()
+}
+
+fn committed() -> Fem3dSnapshotRetiring {
     if std::env::var("SEMIO_FEM3D_WRITE_HOUSE_ASSET").as_deref() == Ok("1") {
-        std::fs::write(ASSET_PATH, print_dsl(&super::build().unwrap())).expect("the house asset is writable");
+        std::fs::write(ASSET_PATH, print_dsl(&built())).expect("the house asset is writable");
     }
-    parse_dsl(&std::fs::read_to_string(ASSET_PATH).expect("the house asset is readable")).expect("house example dsl parses")
+    parsed(&std::fs::read_to_string(ASSET_PATH).expect("the house asset is readable"))
 }
 
 #[test]
 fn primary_asset_is_the_generated_house() {
     let doc = committed();
-    assert_eq!(doc, super::build().unwrap(), "the committed asset must be exactly print_dsl(&build()) — set SEMIO_FEM3D_WRITE_HOUSE_ASSET=1 to regenerate it");
-    let embedded = parse_dsl(super::PRIMARY_TEXT).expect("embedded house dsl parses");
-    assert_eq!(embedded, doc, "the embedded PRIMARY_TEXT is the committed asset");
-    let reparsed = parse_dsl(&print_dsl(&doc)).expect("printed dsl reparses");
-    assert_eq!(reparsed, doc, "print → parse must be the identity");
+    assert_eq!(*doc, *built(), "the committed asset must be exactly print_dsl(&build()) — set SEMIO_FEM3D_WRITE_HOUSE_ASSET=1 to regenerate it");
+    let embedded = parsed(super::PRIMARY_TEXT);
+    assert_eq!(*embedded, *doc, "the embedded PRIMARY_TEXT is the committed asset");
+    let reparsed = parsed(&print_dsl(&doc));
+    assert_eq!(*reparsed, *doc, "print → parse must be the identity");
 }
 
 #[test]
 fn every_solid_is_drawn_on_the_module_with_openings_and_a_gable() {
-    let doc = super::build().unwrap();
+    let doc = built();
     assert_eq!(doc.solids.len(), 8, "raft, two slabs, four walls, roof");
     assert!(doc.elements.is_empty() && doc.sections.is_empty(), "a masonry house is solids only");
     for solid in &doc.solids {
@@ -70,7 +82,7 @@ fn every_solid_is_drawn_on_the_module_with_openings_and_a_gable() {
 
 #[test]
 fn meshed_solids_share_their_interface_nodes_as_one_structure() {
-    let doc = super::build().unwrap();
+    let doc = built();
     let (nodes, meshes) = mesh_solids(&doc).expect("the house meshes");
     let ids_of = |solid_id: &str| -> HashSet<&str> { meshes.iter().find(|mesh| mesh.solid_id == solid_id).expect(solid_id).node_ids.iter().map(String::as_str).collect() };
     let shared = |a: &str, b: &str| ids_of(a).intersection(&ids_of(b)).count();
@@ -122,10 +134,10 @@ fn meshed_solids_share_their_interface_nodes_as_one_structure() {
 
 #[test]
 fn deformation_solves_balanced_and_sags_under_gravity() {
-    let doc = super::build().unwrap();
+    let doc = built();
     let results = fem3d_solve_all(&doc).expect("the house solves");
-    for case_id in ["dead", "live", "snow", "uls", "sls"] {
-        assert!(results.contains_key(case_id), "result for {case_id}");
+    for (kind, id) in [("loadCase", "dead"), ("loadCase", "live"), ("loadCase", "snow"), ("combination", "uls"), ("combination", "sls")] {
+        assert!(results.contains_key(&source(kind, id)), "result for {id}");
     }
     let (_, meshes) = mesh_solids(&doc).expect("the house meshes");
     let gravity = 9.81;
@@ -134,7 +146,7 @@ fn deformation_solves_balanced_and_sags_under_gravity() {
         assert!(result.checks.residual_norm < 1e-6, "{case_id}: residual {}", result.checks.residual_norm);
     }
     let footprint_area = |solid_id: &str| semio_s_artifact_fem_3d_engine::fem3d_engine::meshing::footprint_area(meshes.iter().find(|mesh| mesh.solid_id == solid_id).expect(solid_id));
-    let dead = &results["dead"];
+    let dead = &results[&source("loadCase", "dead")];
     let reaction_z: f64 = dead.reactions.iter().filter(|reaction| reaction.dof == Dof::Tz).map(|reaction| reaction.value).sum();
     let self_weight: f64 = doc
         .solids
@@ -162,14 +174,14 @@ fn deformation_solves_balanced_and_sags_under_gravity() {
         let (index, _) = mesh.points.iter().enumerate().find(|(_, point)| predicate(**point)).unwrap_or_else(|| panic!("{solid_id}: no node matches"));
         mesh.node_ids[index].clone()
     };
-    let tz = |case_id: &str, node: &str| results[case_id].displacements.iter().find(|row| row.node_id == node).unwrap_or_else(|| panic!("displacement {node}")).values[2];
+    let tz = |case_id: &str, node: &str| results[&source(if matches!(case_id, "uls" | "sls") { "combination" } else { "loadCase" }, case_id)].displacements.iter().find(|row| row.node_id == node).unwrap_or_else(|| panic!("displacement {node}")).values[2];
     let attic_mid = node_id("attic_slab", &|point| (point[0] - 3.0).abs() < 1e-9 && (point[1] - 4.0).abs() < 1e-9 && (point[2] - 3.0).abs() < 1e-9);
     let attic_edge = node_id("attic_slab", &|point| (point[0] - 0.5).abs() < 1e-9 && (point[1] - 4.0).abs() < 1e-9 && (point[2] - 3.0).abs() < 1e-9);
     let ridge_mid = node_id("roof", &|point| (point[0] - 3.0).abs() < 1e-9 && (point[1] - 4.0).abs() < 1e-9 && (point[2] - super::RIDGE).abs() < 1e-9);
     let ridge_gable = node_id("roof", &|point| (point[0] - 3.0).abs() < 1e-9 && point[1].abs() < 1e-9 && (point[2] - super::RIDGE).abs() < 1e-9);
     assert!(tz("sls", &attic_mid) < tz("sls", &attic_edge) && tz("sls", &attic_edge) < 0.0, "the attic slab sags at mid-span below its supported edge under SLS");
     assert!(tz("snow", &ridge_mid) < tz("snow", &ridge_gable), "the ridge sags at mid-length under snow, held up at the gables");
-    let peak = results["sls"].displacements.iter().map(|row| row.values[2].abs()).fold(0.0, f64::max);
+    let peak = results[&source("combination", "sls")].displacements.iter().map(|row| row.values[2].abs()).fold(0.0, f64::max);
     assert!(peak > 1e-5 && peak < 0.05, "SLS peak vertical deflection {peak} m is millimetres, not noise and not a mechanism");
     let expected = 1.35 * tz("dead", &attic_mid) + 1.5 * tz("live", &attic_mid) + 0.75 * tz("snow", &attic_mid);
     assert!((tz("uls", &attic_mid) - expected).abs() < 1e-12, "ULS superposes the solved cases linearly");

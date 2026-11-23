@@ -1,0 +1,62 @@
+[
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=head-skin",
+   "areaM2"
+  ],
+  "value": 0.14,
+  "was": 0.0935,
+  "measuredAt": 50
+ },
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=arm-clothing",
+   "areaM2"
+  ],
+  "value": 0.36,
+  "was": 0.2669,
+  "measuredAt": 50
+ },
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=instrument",
+   "areaM2"
+  ],
+  "value": 0.293,
+  "was": 0.2,
+  "measuredAt": 50
+ },
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=tripod",
+   "areaM2"
+  ],
+  "value": 0.506,
+  "was": 0.36,
+  "measuredAt": 50
+ },
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=gloves",
+   "areaM2"
+  ],
+  "value": 0.13,
+  "was": 0.0935,
+  "measuredAt": 50
+ }
+]

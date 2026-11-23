@@ -1,7 +1,7 @@
 //! 🌋️ Lateral pile and seismic wall verifications of the snapshot entities: the transversely loaded pile on a Winkler foundation (PILE-04) with its buckling interface (PILE-07, EN 1997-1 §7.7, §7.8) and the pseudo-static Mononobe-Okabe thrust on a retaining wall (RW-08, EN 1998-5 §7.3) with the seismic sliding of the base. Each reference is one catalogue case of the entity; the lateral and seismic checks are the judges, with remedies on the snapshot fields.
 
 use super::*;
-use crate::catalogue::{earth_pressure as ep, evaluate_outcomes, outcomes_to_results, piles, Mode, Outcome, R};
+use crate::catalogue::{earth_pressure as ep, evaluate_standalone, outcomes_to_results, piles, Mode, Outcome, R};
 use crate::geo_entities::{case, retarget};
 use semio_s_artifact_norm_en1997_model::{Pile, RetainingWall};
 use semio_s_plugin_norm_mechanics::geotechnics::earth_pressure::{critical_wedge, thrust, Acceleration, Interface, Side, Thrust, Water};
@@ -61,7 +61,7 @@ pub fn check_pile(doc: &En1997Snapshot, pile: &Pile, approach: DesignApproach, a
     if let Some(state) = lateral_pile(pile) {
         let limit = lateral_deflection_limit(annex);
         let lateral = case(doc, &pile.id).with_n("d", pile.diameter).with_n("h_d", pile.lateral_head_load).with_n("k_s", pile.horizontal_subgrade_modulus).with_n("ei", pile.bending_stiffness_ei).with_n("y_lim", limit);
-        let mut results = retarget(outcomes_to_results("PILE-04", &lateral, evaluate_outcomes("PILE-04", &lateral)), "piles", &pile.id, &en, &de);
+        let mut results = retarget(outcomes_to_results("PILE-04", &lateral, evaluate_standalone("PILE-04", &lateral)), "piles", &pile.id, &en, &de);
         for result in results.iter_mut().filter(|r| r.id.starts_with("en1997.pile-04.deflection.") && r.utilization > 1.0) {
             let required = pile.bending_stiffness_ei * (state.head_deflection / limit).powi(4);
             result.remedies.push(Remedy::at_least(
@@ -77,7 +77,7 @@ pub fn check_pile(doc: &En1997Snapshot, pile: &Pile, approach: DesignApproach, a
         let n_ed = buckling_force(pile, approach, annex, doc.design_situation.as_str());
         if n_ed > 0.0 {
             let buckling = case(doc, &pile.id).with_n("ei", pile.bending_stiffness_ei).with_n("l_eff", l_eff).with_n("n_ed", n_ed);
-            let mut results = retarget(outcomes_to_results("PILE-07", &buckling, evaluate_outcomes("PILE-07", &buckling)), "piles", &pile.id, &en, &de);
+            let mut results = retarget(outcomes_to_results("PILE-07", &buckling, evaluate_standalone("PILE-07", &buckling)), "piles", &pile.id, &en, &de);
             for result in results.iter_mut().filter(|r| r.id.starts_with("en1997.pile-07.buckling.") && r.utilization > 1.0) {
                 result.remedies.push(Remedy::at_least(
                     ei_subject(),
@@ -133,7 +133,7 @@ pub fn check_wall(doc: &En1997Snapshot, wall: &RetainingWall, annex: AnnexChoice
     };
     let (phi, delta) = (wall.backfill_phi_deg.clamp(0.0, 50.0), wall.wall_friction_deg.clamp(0.0, wall.backfill_phi_deg.clamp(0.0, 50.0)));
     let reference = case(doc, &wall.id).with_n("gamma", wall.backfill_gamma).with_n("h", wall.height).with_n("phi_deg", phi).with_n("delta_deg", delta).with_n("kh", wall.seismic_kh).with_n("kv", wall.seismic_kv);
-    report.extend(retarget(outcomes_to_results("RW-08", &reference, informative(evaluate_outcomes("RW-08", &reference))), "retainingWalls", &wall.id, &en, &de));
+    report.extend(retarget(outcomes_to_results("RW-08", &reference, informative(evaluate_standalone("RW-08", &reference))), "retainingWalls", &wall.id, &en, &de));
     let factor = seismic_sliding_factor(annex);
     let resistance = state.resistance / factor;
     let path = id_path("retainingWalls", &wall.id, "baseWidth");

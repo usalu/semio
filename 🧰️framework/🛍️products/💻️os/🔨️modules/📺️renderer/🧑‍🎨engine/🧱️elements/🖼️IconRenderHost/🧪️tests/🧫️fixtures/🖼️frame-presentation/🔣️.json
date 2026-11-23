@@ -342,8 +342,8 @@
     },
     {
       "id": "large-shot",
-      "width": 262144,
-      "height": 131072,
+      "width": 16384,
+      "height": 8192,
       "container": [
         240,
         180
@@ -368,9 +368,9 @@
         "border": 2,
         "badge": {
           "bounds": [
-            91,
+            107.1875,
             129,
-            143,
+            126.8125,
             15
           ],
           "fontSize": 10,
@@ -409,7 +409,7 @@
             }
           ],
           "lines": [
-            "262144×131072 · rectangle"
+            "16384×8192 · rectangle"
           ]
         },
         "contentProbes": [

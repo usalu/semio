@@ -4,7 +4,7 @@ name = "semio-s-artifact-draw-drawing-model-tests"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Companion test crate of semio-s-artifact-draw-drawing-model: the unit laws of the drawing model's fill, shape, affine, inference and snapshot-codec modules"
+description = "Companion test crate of semio-s-artifact-draw-drawing-model: the unit laws of the drawing model's fill, shape, affine, inference, snapshot-codec, validation, receive, vector, fill-sampling and snapshot-lookup modules"
 
 [package.metadata.semio]
 role = "library"
@@ -41,3 +41,9 @@ semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
+
+semio-framework-io-ports = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+tiny-skia = { workspace = true }

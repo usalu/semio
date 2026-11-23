@@ -4,7 +4,8 @@ pub(super) struct RefusingCopyDemand { pub(super) owner: Option<u64> }
 
 impl crate::ErasedSnapshotRetirement for RefusingCopyDemand {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"copy demand has no authority"))}
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();if grant.maximum_items==0{return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}let items=usize::from(self.owner.take().is_some());crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:items,..Default::default()})),work:items as u128})}
+    fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();if grant.maximum_items==0{return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}let items=usize::from(self.owner.take().is_some());crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:items,..Default::default()})),work:items as u128})}
+    fn native_header_release(&self)->Option<semio_framework_value_retirement::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value_retirement::RetirementHeaderRelease::native(self,0,0)})}
     fn terminal_is_empty(&self)->bool{self.owner.is_none()}
     fn next_copy_byte_demand(&self)->Result<usize,crate::ValueError>{Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"copy demand has no authority"))}
     fn next_capacity_byte_demand(&self,_:usize)->Result<usize,crate::ValueError>{Ok(0)}

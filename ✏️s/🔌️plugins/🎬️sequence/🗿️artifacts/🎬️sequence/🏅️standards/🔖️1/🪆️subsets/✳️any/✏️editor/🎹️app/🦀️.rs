@@ -371,9 +371,9 @@ impl ArtifactEditor for SequencePlayApp {
         let transient = SequenceScriptWindowTransient::default();
         let labels = sequence_play_labels(view_state);
         match body_key {
-            SEQUENCE_PLAY_BODY_MAIN => main::render(&live, &config),
-            SEQUENCE_PLAY_BODY_SCRIPT => script::render(&live, &transient),
-            SEQUENCE_PLAY_BODY_COMPILED => compiled::render(&live),
+            SEQUENCE_PLAY_BODY_MAIN => main::render(&live, &config, view_state.locale),
+            SEQUENCE_PLAY_BODY_SCRIPT => script::render(&live, &transient, view_state.locale),
+            SEQUENCE_PLAY_BODY_COMPILED => compiled::render(&live, view_state.locale),
             SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels, &semio_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_ARTIFACT)),
             SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels, &semio_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_CATALOGUE)),
             SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(&live, &[], labels),
@@ -403,9 +403,9 @@ impl ArtifactEditor for SequencePlayApp {
         let transient = script::transient::current(transient);
         let labels = sequence_play_labels(view_state);
         match body_key {
-            SEQUENCE_PLAY_BODY_MAIN => main::render(&live, &config),
-            SEQUENCE_PLAY_BODY_SCRIPT => script::render(&live, &transient),
-            SEQUENCE_PLAY_BODY_COMPILED => compiled::render(&live),
+            SEQUENCE_PLAY_BODY_MAIN => main::render(&live, &config, view_state.locale),
+            SEQUENCE_PLAY_BODY_SCRIPT => script::render(&live, &transient, view_state.locale),
+            SEQUENCE_PLAY_BODY_COMPILED => compiled::render(&live, view_state.locale),
             SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels, &semio_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_ARTIFACT)),
             SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels, &semio_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_CATALOGUE)),
             SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(&live, &[], labels),

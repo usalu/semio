@@ -43,21 +43,21 @@ async fn patch_combination_reweights_adds_and_removes_terms_3d() {
 /// 👥️ Keyed term changes and combination name commands preserve independently authored intent.
 #[test]
 fn combination_name_and_terms_preserve_independent_intent(){
-    let base=semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base=crate::context::Retiring::new(semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let name=emit(&base,PatchCombination{id:"c1".into(),field:"name".into(),value:"Independent".into()}).unwrap().artifact_mutations.remove(0);
     let first=emit(&base,PatchCombination{id:"c1".into(),field:format!("{TERM_FIELD_PREFIX}lc1"),value:"2".into()}).unwrap().artifact_mutations.remove(0);
     let second=emit(&base,PatchCombination{id:"c1".into(),field:format!("{TERM_FIELD_PREFIX}lc2"),value:"3".into()}).unwrap().artifact_mutations.remove(0);
-    let after_first=vcs::apply_mutation(&base,&first).unwrap().0;
-    let after_second=vcs::apply_mutation(&base,&second).unwrap().0;
-    let terms=vcs::apply_mutation(&after_first,&second).unwrap().0;
-    assert_eq!(terms,vcs::apply_mutation(&after_second,&first).unwrap().0);
-    let combined=vcs::apply_mutation(&terms,&name).unwrap().0;
-    let mut opposite=vcs::apply_mutation(&base,&name).unwrap().0;opposite=vcs::apply_mutation(&opposite,&second).unwrap().0;opposite=vcs::apply_mutation(&opposite,&first).unwrap().0;
+    let after_first=crate::context::applied(&base,&first);
+    let after_second=crate::context::applied(&base,&second);
+    let terms=crate::context::applied(&after_first,&second);
+    assert_eq!(terms,crate::context::applied(&after_second,&first));
+    let combined=crate::context::applied(&terms,&name);
+    let mut opposite=crate::context::applied(&base,&name);opposite=crate::context::applied(&opposite,&second);opposite=crate::context::applied(&opposite,&first);
     assert_eq!(combined,opposite);assert_eq!(combined.combinations[0].name,"Independent");
     assert_eq!(combined.combinations[0].terms.get("lc1"),Some(&2.0));assert_eq!(combined.combinations[0].terms.get("lc2"),Some(&3.0));
-    let mut undone=combined.clone();for inverse in protocol::ColdMutation::inverse(&first,&base).unwrap().iter().rev(){undone=vcs::apply_mutation(&undone,inverse).unwrap().0;}
-    assert_eq!(undone,vcs::apply_mutation(&after_second,&name).unwrap().0);
-    let mut sum=protocol::ColdMutation::diff(&first,&base).into_parts().0;protocol::ColdMutationDiff::absorb(&mut sum,protocol::ColdMutation::diff(&second,&base).into_parts().0);protocol::ColdMutationDiff::absorb(&mut sum,protocol::ColdMutation::diff(&name,&base).into_parts().0);
-    assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);
-    assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
+    let mut undone=crate::context::Retiring::new(combined.clone());for inverse in protocol::ColdMutation::inverse(&first,&*base).unwrap().iter().rev(){undone=crate::context::applied(&undone,inverse);}
+    assert_eq!(undone,crate::context::applied(&after_second,&name));
+    let mut sum=protocol::ColdMutation::diff(&first,&*base).into_parts().0;protocol::ColdMutationDiff::<Fem3dSnapshot>::absorb(&mut sum,protocol::ColdMutation::diff(&second,&*base).into_parts().0);protocol::ColdMutationDiff::<Fem3dSnapshot>::absorb(&mut sum,protocol::ColdMutation::diff(&name,&*base).into_parts().0);
+    assert_eq!(crate::context::Retiring::new(protocol::apply_diff_cold(&sum,&*base).unwrap()),combined);
+    assert_eq!(crate::context::Retiring::new(protocol::apply_diff_cold(&protocol::ColdDiffAlgebra::inverse(&sum,&*base),&*combined).unwrap()),base);
 }

@@ -236,7 +236,7 @@ pub const TYPED_OPERATION_MAXIMUM_RETRIES: u8 = 2;
 pub const INTERACTIVE_TURN_WORKER_PUMPS: usize = 256;
 
 /// ⏱️ Wall-clock slice one reactor turn spends driving one mounted worker session (half the interactive lane ceiling).
-pub const INTERACTIVE_TURN_WORKER_WALL_US: u64 = 4_000;
+pub const INTERACTIVE_TURN_WORKER_WALL_US: u64 = 50_000;
 
 /// 🏃️ Publication units one continuation unit may run before it hands its turn back, the exact twin of
 /// [`INTERACTIVE_TURN_WORKER_PUMPS`] for the publication ladder.

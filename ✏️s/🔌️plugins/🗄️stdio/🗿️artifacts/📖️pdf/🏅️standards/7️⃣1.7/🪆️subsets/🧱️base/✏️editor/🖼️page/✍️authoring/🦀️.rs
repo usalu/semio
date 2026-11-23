@@ -2,7 +2,7 @@
 
 use semio_framework_io_base64::{base64_standard_decode_controlled, base64_standard_encode_controlled, Base64Control};
 use semio_plugin::Fault;
-use semio_s_artifact_stdio_pdf_editor_document::{fault, none_if_empty};
+use semio_s_artifact_stdio_pdf_editor_document::{cancelled, fault, none_if_empty, refuse};
 use semio_s_artifact_stdio_pdf_io_export::standards::v1_7::subsets::base::io::{export::encode_pdf, import::decode_pdf, mutation_bridge::apply_pdf_mutation};
 use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::schema::mutations::{InsertAnnotation, InsertPage, PdfMutation, RemoveCatalogEntry, RemoveTrailerEntry, SetCatalogEntry, SetInfo, SetTrailerEntry, SetViewerPreferences, RemoveNamedDestination, ReplacePage, SetNamedDestination, SetOutlines, SetAcroForm, SetAnnotation, SetColorSpace, SetExtGState, SetFont, SetForm, SetImage, SetPattern, SetProperties, SetShading};
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{
@@ -34,7 +34,7 @@ pub fn deadline_control(limit: Duration) -> impl FnMut(Progress) -> bool {
 }
 
 fn step(control: &mut dyn FnMut(Progress) -> bool, phase: &'static str, done: usize, total: usize) -> Result<(), Fault> {
-    if control(Progress { phase, done, total }) { Ok(()) } else { Err(fault(format!("the {phase} step was cancelled"))) }
+    if control(Progress { phase, done, total }) { Ok(()) } else { Err(refuse(cancelled(phase), format!("the {phase} step was cancelled"))) }
 }
 const FLAG_READ_ONLY: u32 = 1;
 const FLAG_RADIO: u32 = 1 << 15;

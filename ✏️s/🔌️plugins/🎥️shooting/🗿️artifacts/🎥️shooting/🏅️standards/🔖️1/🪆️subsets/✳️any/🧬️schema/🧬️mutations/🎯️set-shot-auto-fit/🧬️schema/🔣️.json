@@ -38,7 +38,20 @@
         "boolean",
         "null"
       ],
-      "description": "Null removes the override so the shot inherits the scene setting."
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Auto fit",
+          "de": "Automatische Einpassung"
+        },
+        "description": {
+          "en": "Null removes the override so the shot inherits the scene setting.",
+          "de": "Null entfernt die Überschreibung, damit die Aufnahme die Szeneneinstellung erbt."
+        },
+        "group": "framing",
+        "order": 20
+      }
     }
   }
 }

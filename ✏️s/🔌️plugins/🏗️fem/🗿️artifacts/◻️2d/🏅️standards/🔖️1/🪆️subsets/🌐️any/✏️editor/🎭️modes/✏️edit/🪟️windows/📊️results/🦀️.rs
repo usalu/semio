@@ -265,16 +265,17 @@ pub fn render(
     authority: Option<semio_plugin::WindowConfigAuthorityIdentity>,
     active_utility: &str,
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
+    locale: semio_plugin::Locale,
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let animation = &window.animation;
     if let Some(operation) = operation {
-        return render_mounted(doc, display, camera, interaction, animation, operation, window_instance_id, authority, active_utility, labels);
+        return render_mounted(doc, display, camera, interaction, animation, operation, window_instance_id, authority, active_utility, labels, locale);
     }
     let key = results_cache_key(operation);
     match display.mode {
-        DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera, interaction, animation, key, window_instance_id, active_utility, labels),
-        DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera, interaction, animation, key, window_instance_id, active_utility, labels),
-        DisplayMode::Buckling(mode_index) => render_buckling(doc, display.source_id.as_deref(), mode_index, camera, interaction, animation, key, window_instance_id, active_utility, labels),
+        DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera, interaction, animation, key, window_instance_id, active_utility, labels, locale),
+        DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera, interaction, animation, key, window_instance_id, active_utility, labels, locale),
+        DisplayMode::Buckling(mode_index) => render_buckling(doc, display.source_id.as_deref(), mode_index, camera, interaction, animation, key, window_instance_id, active_utility, labels, locale),
     }
 }
 
@@ -321,6 +322,7 @@ fn render_mounted(
     authority: Option<semio_plugin::WindowConfigAuthorityIdentity>,
     active_utility: &str,
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
+    locale: semio_plugin::Locale,
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let layers = semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::with_live_fields(operation, authority, |visual| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
@@ -366,7 +368,7 @@ fn render_mounted(
         layers
     });
     let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
-    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Results view", "Ergebnisansicht"))
 }
 
 /// 🎵️ The scale one mode-shape frame is drawn at: the unit-normalized shape lifted to
@@ -491,6 +493,7 @@ fn render_static(
     window_instance_id: Option<&str>,
     active_utility: &str,
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
+    locale: semio_plugin::Locale,
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let case_id = source_id.map(str::to_string).or_else(|| doc.load_cases.first().and_then(|case| semio_s_fem_analyses_model::encode_result_source_parts("loadCase", &case.id).ok()));
     let Some(case_id) = case_id else {
@@ -509,7 +512,7 @@ fn render_static(
         Err(error) => return placeholder(Label::data(format!("{}: {error}", labels.analysis_error.as_str()))),
     };
     let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
-    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Results view", "Ergebnisansicht"))
 }
 
 /// 📊️ Every layer one static frame paints. `amplitude` is the waveform read of the playback phase:
@@ -613,6 +616,7 @@ fn render_modal(
     window_instance_id: Option<&str>,
     active_utility: &str,
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
+    locale: semio_plugin::Locale,
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let scale = mode_shape_scale(doc, animation.amplitude());
     let mode = with_mode_values(doc, key, ModeKey::Modal(mode_index), |(freq_hz, disp_map)| {
@@ -627,7 +631,7 @@ fn render_modal(
         Err(error) => return placeholder(Label::data(format!("{}: {error}", labels.modal_error.as_str()))),
     };
     let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
-    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Results view", "Ergebnisansicht"))
 }
 
 /// 📊️ Buckling mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
@@ -645,6 +649,7 @@ fn render_buckling(
     window_instance_id: Option<&str>,
     active_utility: &str,
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
+    locale: semio_plugin::Locale,
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let source = source_id.map(semio_s_fem_analyses_model::decode_result_source_identity).transpose().map_err(|_| semio_plugin::PluginAssemblyError::new("fem2d.result-source", "invalid buckling result source identity"))?;
     let case_id = match source {
@@ -668,7 +673,7 @@ fn render_buckling(
         Err(error) => return placeholder(Label::data(format!("{}: {error}", labels.buckling_error.as_str()))),
     };
     let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
-    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Results view", "Ergebnisansicht"))
 }
 //#endregion 🔖️Render
 

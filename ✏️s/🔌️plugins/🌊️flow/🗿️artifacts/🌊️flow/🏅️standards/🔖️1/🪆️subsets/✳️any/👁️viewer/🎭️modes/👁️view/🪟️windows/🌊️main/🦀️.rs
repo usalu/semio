@@ -86,7 +86,7 @@ fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<NodeGr
 }
 
 /// 👁️ Projects the original composed scene with the viewer canvas defaults.
-pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &FlowSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let live=document.read_source().map_err(|error|semio_plugin::PluginAssemblyError::new("flow.source",error.into_message()))?;
     let (nodes,edges)=dag_host_snapshot_to_workflow(&flow::FlowHost::project_dag_snapshot(&live,&flow::flow_neuron_kind_info_map()));
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
@@ -104,7 +104,7 @@ pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
         preview_off_json: None,
         ..NodeGraphScene::base(nodes, edges, viewport)
     };
-    scene_surface(SURFACE_ID, ContractSurfaceKind::NodeGraph, &scene)
+    scene_surface(SURFACE_ID, ContractSurfaceKind::NodeGraph, &scene, semio_plugin::surface_name(locale, "Flow graph", "Flussgraph"), None)
 }
 //#endregion 🔖️Render
 

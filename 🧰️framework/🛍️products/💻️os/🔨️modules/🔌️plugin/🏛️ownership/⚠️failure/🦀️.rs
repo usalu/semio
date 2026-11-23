@@ -50,7 +50,7 @@ pub fn original_lifecycle_net_after(after:RetainedCloneProgress,reserved_before:
 
 /// 🧮️ Subtracts already posted child effects from the same original producer's full receipt.
 pub fn original_lifecycle_unposted(progress:RetainedCloneProgress,before:RetainedCloneProgress,after:RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{
- let difference=|whole:usize,earlier:usize,later:usize|later.checked_sub(earlier).and_then(|posted|whole.checked_sub(posted)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle child receipt differs from its whole producer receipt").with_retained_progress(progress));
+ let difference=|whole:usize,earlier:usize,later:usize|later.checked_sub(earlier).and_then(|posted|whole.checked_sub(posted)).ok_or_else(||{eprintln!("[DEBUG] unposted-origin whole={whole} earlier={earlier} later={later} progress={progress:?}\n{}",std::backtrace::Backtrace::force_capture());ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle child receipt differs from its whole producer receipt").with_retained_progress(progress)});
  Ok(RetainedCloneProgress{copied_items:difference(progress.copied_items,before.copied_items,after.copied_items)?,copied_bytes:difference(progress.copied_bytes,before.copied_bytes,after.copied_bytes)?,retained_capacity_bytes:difference(progress.retained_capacity_bytes,before.retained_capacity_bytes,after.retained_capacity_bytes)?,released_bytes:difference(progress.released_bytes,before.released_bytes,after.released_bytes)?})
 }
 
@@ -66,7 +66,7 @@ fn debit_unposted(mut failure: PluginLifecycleFailure, before: RetainedCloneProg
         let after = original_lifecycle_net_after(cx.retained_progress(), reserved_before, cx.reserved_return_progress());
         failure.receipt_refusal = match original_lifecycle_unposted(failure.retained_progress(), before, after) {
             Ok(progress) => cx.consume_retained(progress).err(),
-            Err(error) => Some(error),
+            Err(error) => { eprintln!("[DEBUG] unposted mismatch whole={:?} before={:?} after={:?} primary={:?}\n{}", failure.retained_progress(), before, after, failure.primary, std::backtrace::Backtrace::force_capture()); Some(error) }
         };
     }
     failure

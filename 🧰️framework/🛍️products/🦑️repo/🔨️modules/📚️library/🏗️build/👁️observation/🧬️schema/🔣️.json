@@ -263,7 +263,7 @@
         "maximumAggregatePackedBytes": 67108864,
         "maximumAggregateOutputBytes": 268435456,
         "maximumAggregateRows": 4194304,
-        "maximumAggregateNodes": 4194304,
+        "maximumAggregateNodes": 268435456,
         "maximumParentSets": 16
       }
     },

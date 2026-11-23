@@ -441,6 +441,11 @@ export type UiTranslationSchema = {
       readonly somethingWentWrong: UiLabelValue;
       readonly editExactValue: UiLabelValue;
       readonly importFile: UiLabelValue;
+      readonly chooseFile: UiLabelValue;
+      readonly previousMonth: UiLabelValue;
+      readonly nextMonth: UiLabelValue;
+      readonly colours: UiLabelValue;
+      readonly noFileChosen: UiLabelValue;
       readonly clear: UiLabelValue;
       readonly collapse: UiLabelValue;
       readonly expand: UiLabelValue;

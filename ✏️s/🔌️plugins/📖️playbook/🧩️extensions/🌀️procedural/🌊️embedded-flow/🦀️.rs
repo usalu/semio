@@ -73,7 +73,7 @@ pub(super) fn render_flow_params(payload: &ModuleRenderPayload, labels: &ModuleL
             "editArguments": { "questionIds": [payload.question_id], "field": "param", "paramKey": "__flow", "key": payload.question_id },
             "label": labels.flow_document.as_str()
         })));
-        let editor = scene_surface("embedded-flow.source", SurfaceKind::TextEditor, &scene)?;
+        let editor = scene_surface("embedded-flow.source", SurfaceKind::TextEditor, &scene, labels.flow_document.as_str(), None)?;
         let wrapper = ui_admit(field(ui_label(labels.flow_document.as_str())?).try_id("embedded-flow.source.field"))?;
         body = ui_admit(body.try_child(ui_admit(ui_admit(wrapper.try_child(editor))?.try_build())?))?;
     }

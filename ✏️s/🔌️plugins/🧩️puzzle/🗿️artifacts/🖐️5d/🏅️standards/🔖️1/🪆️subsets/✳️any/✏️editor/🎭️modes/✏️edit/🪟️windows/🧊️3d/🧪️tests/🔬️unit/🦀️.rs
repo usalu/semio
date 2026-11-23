@@ -103,7 +103,7 @@ fn grip_markers_follow_the_show_mode_and_the_live_marks() {
     assert!(idle.is_empty(), "selected mode emits no markers for an untouched part");
     let touched: Vec<serde_json::Value> = serde_json::from_str(&world_grips_json(&document, &selected_mode, &part_selection(), "select")).expect("vorticesJson");
     assert_eq!(touched.len(), 1);
-    assert_eq!(touched[0]["displayDirection"], semio_framework_pack_json::json!(crate::editor::puzzle5d::entities::PUZZLE5D_GRIP_DIRECTION_OUTWARDS));
+    assert_eq!(touched[0]["displayDirection"], serde_json::json!(crate::editor::puzzle5d::entities::PUZZLE5D_GRIP_DIRECTION_OUTWARDS));
     let always = Puzzle5dRuntime { grip_show: PUZZLE5D_GRIP_SHOW_ALWAYS.into(), ..Puzzle5dRuntime::default() };
     let shown: Vec<serde_json::Value> = serde_json::from_str(&world_grips_json(&document, &always, &Puzzle5dInteractionSnapshot::default(), "select")).expect("vorticesJson");
     assert_eq!(shown.len(), 1);
@@ -332,7 +332,7 @@ fn the_interaction_lane_carries_the_hovered_grip_and_the_open_suggestion_menu() 
     let open: serde_json::Value = serde_json::from_str(&world_interaction_json(&scene_with(hovered, runtime, "select"), labels, None)).expect("interactionJson");
     assert_eq!(
         open["suggestionMenu"],
-        semio_framework_pack_json::json!({ "open": true, "x": 4.0, "y": 5.0, "windowId": WINDOW_KIND_ID, "vortexFullId": "teil-ä:g1", "submenu": true, "pending": true, "candidates": [] }),
+        serde_json::json!({ "open": true, "x": 4.0, "y": 5.0, "windowId": WINDOW_KIND_ID, "vortexFullId": "teil-ä:g1", "submenu": true, "pending": true, "candidates": [] }),
         "a menu whose search has not published yet is pending"
     );
 }

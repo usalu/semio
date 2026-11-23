@@ -60,7 +60,7 @@ fn authored_assignments(document:&Grid3dSnapshot)->BTreeMap<(u32,u32,u32),String
     document.pinned.iter().filter(|pin|pin.x<document.width&&pin.y<document.height&&pin.z<document.depth&&tiles.contains(pin.tile_id.as_str())&&!masked.contains(&(pin.x,pin.y,pin.z))).map(|pin|((pin.x,pin.y,pin.z),pin.tile_id.clone())).collect()
 }
 
-pub fn render(document: &Grid3dSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Grid3dSnapshot, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
     let assignments = authored_assignments(document).into_iter().map(|((x, y, z), tile_id)| semio_s_artifact_wfc_grid3d_inferences::schema::inferences::Grid3dAssignment { x, y, z, tile_id }).collect::<Vec<_>>();
     let (position, target) = framed_camera(document);
     let scene = world3d_scene(
@@ -70,7 +70,7 @@ pub fn render(document: &Grid3dSnapshot) -> UiAssemblyResult<BuiltNode> {
         world3d_selection_json("interactionSelect", &[], None),
         &WorldSunConfig::default(),
     );
-    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene, semio_plugin::surface_name(locale, "Preview", "Vorschau"), None)
 }
 //#endregion 🔖️Render
 

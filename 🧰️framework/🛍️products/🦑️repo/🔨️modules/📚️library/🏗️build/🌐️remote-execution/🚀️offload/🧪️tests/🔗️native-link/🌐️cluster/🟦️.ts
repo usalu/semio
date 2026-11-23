@@ -1,3 +1,4 @@
+import{stretchedBudgetMillisecondsV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {afterAll,beforeAll,expect,test} from "bun:test";
 import {spawn,spawnSync,type ChildProcess} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
@@ -29,7 +30,7 @@ beforeAll(async()=>{
  for(const name of ["wA","wB"])startWorker(name);
  await eventuallyV1(async()=>{const status=await (await fetch(cluster.server.workerUrl+"/status")).json() as {workers?:unknown[]};return(status.workers?.length??0)>=2;},60000,"both worker processes join");
  await eventuallyV1(async()=>{const response=await fetch(cluster.server.workerUrl+"/v1/fleet/load");if(!response.ok)return false;const table=await response.json() as {machines?:{origin:string;headroom?:boolean}[]};return["wA","wB"].every(name=>table.machines?.some(row=>row.origin===name&&row.headroom===true)===true);},60000,"both machines report their load");
-},120000);
+},stretchedBudgetMillisecondsV1(120000));
 afterAll(async()=>{
  for(const child of children)child.kill("SIGKILL");
  await cluster?.stop().catch(()=>{});
@@ -64,4 +65,4 @@ test.skipIf(!toolsPresent)("a native cdylib with a static library of the checkou
  const offloaded=readFileSync(join(remote.out,name)),local=readFileSync(join(plain.out,name));
  expect(Buffer.compare(offloaded,local),"offloaded and local library have the same bytes").toBe(0);
  expect(offloaded.includes(Buffer.from(remote.base))).toBe(false);
-},240000);
+},stretchedBudgetMillisecondsV1(240000));

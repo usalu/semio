@@ -1,4 +1,4 @@
-//! 🧪️ Relative transform scratch folds equal original central operations under the unchanged one-fuel caller.
+//! 🧪️ Relative transform scratch folds equal original central operations under the bounded scratch caller (`TURN_FUEL` work units per call, at most `MAXIMUM_CALLS` calls).
 use super::Generation3dMutation;
 use super::retained_provisional_transform::ProvisionalTransformWork;
 use super::retained_native_provisional_fold::{NativeProvisionalFold,NativeProvisionalFolds};
@@ -22,7 +22,7 @@ fn close(work:&mut ProvisionalTransformWork,caller:&mut ScratchCaller){
  work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let body=same.retained_grant().maximum_copy_bytes;let d=work.next_close_demands(body)?;close_original_effect_step(same,d,|effect|work.close_step(body,effect))?;Ok(())}));}panic!("transform did not close its original owners")
 }
 #[test]
-fn provisional_transforms_equal_original_central_operations_with_one_fuel_and_physical_cleanup(){
+fn provisional_transforms_equal_original_central_operations_within_the_bounded_work_loan_and_physical_cleanup(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("📁️cases.json")).unwrap();
  let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
  for case in fixture["cases"].as_array().unwrap(){for items in [1,512]{for cut in [None,Some(0),Some(1),Some(2),Some(7)]{

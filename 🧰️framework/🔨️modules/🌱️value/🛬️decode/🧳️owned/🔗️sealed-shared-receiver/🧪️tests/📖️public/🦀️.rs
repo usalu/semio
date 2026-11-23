@@ -68,9 +68,9 @@ fn native_flattened_original_record_preserves_source_schema_and_all_partial_cust
 }
 #[path="../🫙️empty/🦀️.rs"]mod empty_record;
 #[test]
-fn native_flattened_ordinals_refuse_ambiguous_declared_ids(){
+fn native_flattened_ordinals_address_the_flatten_field_itself(){
  use crate::native_decoding::owned::{NativeRecordFields,NativeRecordMatcher,NativeSchemaKeySource,NativeFieldMatch};
- for(input,key,expected)in [(DslValue::String("name".into()),NativeSchemaKeySource::Text,NativeFieldMatch::Field(0)),(DslValue::String("volume".into()),NativeSchemaKeySource::Text,NativeFieldMatch::Field(1)),(DslValue::Number(crate::Number::UInt(0)),NativeSchemaKeySource::EnumOrdinal,NativeFieldMatch::Ambiguous),(DslValue::Number(crate::Number::UInt(1)),NativeSchemaKeySource::EnumOrdinal,NativeFieldMatch::Missing)]{
+ for(input,key,expected)in [(DslValue::String("name".into()),NativeSchemaKeySource::Text,NativeFieldMatch::Field(0)),(DslValue::String("volume".into()),NativeSchemaKeySource::Text,NativeFieldMatch::Field(1)),(DslValue::Number(crate::Number::UInt(0)),NativeSchemaKeySource::EnumOrdinal,NativeFieldMatch::Field(0)),(DslValue::Number(crate::Number::UInt(1)),NativeSchemaKeySource::EnumOrdinal,NativeFieldMatch::Field(1)),(DslValue::Number(crate::Number::UInt(2)),NativeSchemaKeySource::EnumOrdinal,NativeFieldMatch::Missing)]{
   let mut bank=bank();let original=driver::admit(&mut bank,input);let mut matcher=MatcherReceiver::new(NativeRecordMatcher::new(FlattenedRecord::native_schema_fields(),FlattenedRecord::native_schema_count(),key));let mut trace=driver::Trace::default();
   while !matcher.output_ready(){driver::none(driver::receive_traced(&mut matcher,original.borrow(),&mut bank,BODY,Some(1),None,&mut trace)).unwrap();}
   assert_eq!(matcher.inner.result(),Some(expected));assert!(trace.advance.iter().any(|work|*work>1));

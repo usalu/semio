@@ -2,7 +2,7 @@
 use semio_os_flow::neural::ColdRetire as _;
 use semio_framework_value::FromValue as _;
 use super::*;
-use super::super::retained_scratch_testing::ScratchCaller;
+use super::super::retained_scratch_testing::{MAXIMUM_CALLS,ScratchCaller};
 use semio_framework_artifact_flow_flow::neural::Atom;
 use semio_framework_value::RetainedCloneGrant;
 use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
@@ -10,7 +10,7 @@ fn policy()->serde_json::Value{serde_json::from_str(include_str!("../../../../..
 fn stamp(value:&Value)->(u8,u64,usize){match value{Value::Dictionary(value)=>(0,value.original_root_identity().unwrap_or(0)as u64,value.len()),Value::Atom(Atom::String(value))=>(1,value.as_ptr()as u64,value.len()),Value::Atom(Atom::Decimal(value))=>(2,value.to_bits(),0),Value::Atom(Atom::Integer(value))=>(3,*value as u64,0),Value::Atom(Atom::Boolean(value))=>(4,u64::from(*value),0),Value::Atom(Atom::Null)=>(5,0,0)}}
 fn close(work:&mut NativeParamPatchWork,caller:&mut ScratchCaller){work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let body=same.retained_grant().maximum_copy_bytes;let d=work.next_close_demands(body)?;semio_framework_job::close_original_effect_step(same,d,|effect|work.close_step(body,effect))?;Ok(())}));}panic!("original native patch did not physically close")}
 #[test]
-fn original_native_param_patch_matches_cold_upsert_with_one_fuel_and_full_prefix_close(){
+fn original_native_param_patch_matches_cold_upsert_within_the_bounded_work_loan_and_full_prefix_close(){
  let corpus:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let policy=policy();let stock:RetainedCloneGrant=serde_json::from_value(policy["grant"].clone()).unwrap();
  for row in corpus["cases"].as_array().unwrap(){for items in [1,512]{for cut in [None,Some(0),Some(1),Some(2),Some(7)]{
   let base_wire=row["base"].to_string();let value_wire=row["value"].to_string();
@@ -28,7 +28,7 @@ fn original_native_param_patch_matches_cold_upsert_with_one_fuel_and_full_prefix
    let original=semio_framework_pack_json::from_json_str::<Dictionary>(&base_wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let original_value=semio_framework_pack_json::from_json_str::<Value>(&value_wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let expected=original.insert(row["key"].as_str().unwrap(),original_value);
    let actual_wire=semio_framework_pack_json::to_json_string(&params);let expected_wire=semio_framework_pack_json::to_json_string(&expected);let same=params==expected&&actual_wire==expected_wire&&serde_json::from_str::<serde_json::Value>(&actual_wire).unwrap()==row["expected"]&&params.get(&key).is_some_and(|value|stamp(value)==identity)&&work.applied();expected.retire_cold();same
   }else{true};
-  close(&mut work,&mut caller);caller.close(params);caller.close(key);let calls=caller.finish();assert!(matched,"{}",row["name"]);assert!(calls<=200);
+  close(&mut work,&mut caller);caller.close(params);caller.close(key);let calls=caller.finish();assert!(matched,"{}",row["name"]);assert!(calls<=MAXIMUM_CALLS);
  }}}
 }
 #[test]

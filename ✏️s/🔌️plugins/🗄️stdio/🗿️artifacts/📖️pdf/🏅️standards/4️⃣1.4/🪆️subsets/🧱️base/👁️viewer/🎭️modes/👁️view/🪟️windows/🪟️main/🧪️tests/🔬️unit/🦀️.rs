@@ -28,11 +28,20 @@ fn definition_declares_a_document_window() {
 fn render_lists_each_own_page_with_exact_dimensions_and_text() {
     let document = fixture();
     assert_eq!(document.pages.len(), 2);
-    assert_eq!(page_summary(0, &document.pages[0]), "1 | 200 × 300\nSemio page one");
-    assert_eq!(page_summary(1, &document.pages[1]), "2 | 400 × 500\nSeite zwei");
-    let node = render(&document).unwrap();
+    assert_eq!(page_summary(0, &document.pages[0], semio_ui_locale::Locale::En), "1 | 200 × 300\nSemio page one");
+    assert_eq!(page_summary(1, &document.pages[1], semio_ui_locale::Locale::En), "2 | 400 × 500\nSeite zwei");
+    let node = render(&document, semio_ui_locale::Locale::En).unwrap();
     let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
     let scene: semio_ui_scene::TextEditorScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).unwrap();
-    assert_eq!(scene.buffer, page_summary(0, &document.pages[0]));
+    assert_eq!(scene.buffer, page_summary(0, &document.pages[0], semio_ui_locale::Locale::En));
     assert_eq!(scene.settings_json.as_deref(), Some("{\"readOnly\":true}"));
+}
+
+#[test]
+fn page_dimensions_use_the_locale_decimal_mark_and_the_unknown_body_speaks_both_languages() {
+    use semio_ui_locale::Locale;
+    assert_eq!(dimension_text(200.5, Locale::En), "200.5");
+    assert_eq!(dimension_text(200.5, Locale::De), "200,5");
+    assert_eq!(pdf_viewer_labels(Locale::En).unknown_body.fill(&[("body", "x")]).to_string(), "Unknown body: x");
+    assert_eq!(pdf_viewer_labels(Locale::De).unknown_body.fill(&[("body", "x")]).to_string(), "Unbekannter Bereich: x");
 }

@@ -3,8 +3,7 @@
 //! Milestones reached (see `📓️terra-backend-metal-report.md` for the authoritative statement):
 //! device + `CAMetalLayer` + swapchain (resize incl. zero-size park/restore, `nextDrawable`, present,
 //! clear-colour frame); UI quads + vector pipelines with glyph/icon atlas + raster texture upload and
-//! per-batch scissor; stencil silhouette clip (mask/content pass pair, `mask_range` replayed
-//! verbatim); offscreen scene target → mip blur → glass composite → blit; world3d mesh/lines (see
+//! per-batch rectangular scissor; offscreen scene target → mip blur → glass composite → blit; world3d mesh/lines (see
 //! `🌐️world3d.rs`'s header for the one documented interleaving limitation — textured mesh skipped, it
 //! is unwired dead surface in the reference too); device loss bookkeeping + `backend-testing`
 //! (`debug_force_device_loss`/`recover`/`read_back`).
@@ -34,7 +33,7 @@ use objc2_metal::{MTLLoadAction, MTLOrigin, MTLPixelFormat, MTLPrimitiveType, MT
 use raw_window_handle::{RawWindowHandle, WindowHandle};
 use ui_render::{
     BackendError, DeviceCapabilities, DeviceStatus, DrawBatch, FrameStats, GpuTier, GraphicsBackend, LossReason, MemoryClass, PhysicalSize, PipelineKind, RecoveredResources, RenderPacket, RenderReport, ResourceKind, ResourceOp, SurfaceFormat,
-    TextureId,
+    TextureId, viewport_scissor,
 };
 
 #[cfg(feature = "backend-testing")]
@@ -295,7 +294,7 @@ impl MetalBackend {
     /// 🪞️ Pass 2 — mirrors `composite_to_swapchain`: blur the scene's mip chain, blit it to the real
     /// swapchain drawable, composite every glass region on top, then paint glass-foreground 2D content
     /// (normal then overlay) directly onto the drawable, reusing `depth_texture` with `Load` ops so it
-    /// still clips against the same stencil silhouettes the offscreen pass wrote.
+    /// still tests against the same stencil buffer the offscreen pass used.
     fn encode_composite_pass(&mut self, command_buffer: &CommandBuffer, drawable_texture: &MetalTexture, packet: &RenderPacket) {
         let width = self.size.width as f32;
         let height = self.size.height as f32;
@@ -472,10 +471,9 @@ fn encode_2d_batches<'a>(
     let quad_stride = size_of::<ui_render::QuadInstance>();
     let vector_stride = size_of::<ui_render::VectorVertex>();
     for batch in batches {
-        match batch.mask_range {
-            Some((start, count)) => draw_silhouette_mask(encoder, pipelines, quad_vertex_buffer, ui_globals_buffer, quad_buffer, start, count, quad_stride, width, height),
-            None => encoder.setStencilReferenceValue(1),
-        }
+        let Some(scissor) = viewport_scissor(batch.layer_state.scissor, width, height) else { continue };
+        encoder.setScissorRect(objc2_metal::MTLScissorRect { x: scissor.x as usize, y: scissor.y as usize, width: scissor.w as usize, height: scissor.h as usize });
+        encoder.setStencilReferenceValue(1);
         match batch.pipeline {
             PipelineKind::UiQuad | PipelineKind::UiRasterTextured => {
                 let Some(quad_buffer) = quad_buffer else { continue };
@@ -509,40 +507,6 @@ fn encode_2d_batches<'a>(
         }
     }
     encoder.setScissorRect(objc2_metal::MTLScissorRect { x: 0, y: 0, width: width as usize, height: height as usize });
-}
-
-/// 🩹️ Ports `draw_silhouette_mask` verbatim: stamps `reset_bounds` (the first instance in the range)
-/// with stencil ref `0`, then every remaining "piece" instance with ref `1`, leaving ref `1` set for
-/// the content draw that follows.
-#[allow(clippy::too_many_arguments)]
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn draw_silhouette_mask(encoder: &Encoder, pipelines: &Pipelines, quad_vertex_buffer: &MetalBuffer, ui_globals_buffer: &MetalBuffer, quad_buffer: Option<&MetalBuffer>, start: u32, count: u32, quad_stride: usize, width: f32, height: f32) {
-    let Some(quad_buffer) = quad_buffer else {
-        encoder.setStencilReferenceValue(1);
-        return;
-    };
-    encoder.setScissorRect(objc2_metal::MTLScissorRect { x: 0, y: 0, width: width as usize, height: height as usize });
-    encoder.setRenderPipelineState(&pipelines.ui_mask);
-    encoder.setDepthStencilState(Some(&pipelines.mask_depth_stencil));
-    // 🔓️ SAFETY: `start`/`count` are a `mask_range` `Scene::finish` produced into the same
-    // `quad_instances` array `quad_buffer` was uploaded from — always in bounds.
-    unsafe {
-        encoder.setVertexBuffer_offset_atIndex(Some(quad_vertex_buffer), 0, 0);
-        encoder.setVertexBuffer_offset_atIndex(Some(ui_globals_buffer), 0, 2);
-        encoder.setFragmentBuffer_offset_atIndex(Some(ui_globals_buffer), 0, 2);
-        encoder.setStencilReferenceValue(0);
-        encoder.setVertexBuffer_offset_atIndex(Some(quad_buffer), (start as usize) * quad_stride, 1);
-        encoder.drawPrimitives_vertexStart_vertexCount_instanceCount(MTLPrimitiveType::Triangle, 0, 6, 1);
-    }
-    if count > 1 {
-        unsafe {
-            encoder.setStencilReferenceValue(1);
-            encoder.setVertexBuffer_offset_atIndex(Some(quad_buffer), ((start + 1) as usize) * quad_stride, 1);
-            encoder.drawPrimitives_vertexStart_vertexCount_instanceCount(MTLPrimitiveType::Triangle, 0, 6, (count - 1) as usize);
-        }
-    } else {
-        encoder.setStencilReferenceValue(1);
-    }
 }
 
 /// 🪢️ `texture(0)`/`sampler(0)` are always the shared glyph atlas; `texture(1)`/`sampler(1)` are the

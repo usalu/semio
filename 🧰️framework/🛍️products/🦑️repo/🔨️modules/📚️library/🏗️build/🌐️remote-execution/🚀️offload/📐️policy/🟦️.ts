@@ -60,6 +60,13 @@ export const offloadTargetOfV1=(args:readonly string[]):string|undefined=>args.f
 /** ⏳️ How long the action of a unit may run on a worker: the long limit of a wasm linked unit (a component final runs 10 to 31 minutes), the ordinary one for every other. */
 export const offloadActionSecondsV1=(types:readonly string[],target:string|undefined):number=>offloadPeakMegabytesV1(types,target)>0?OFFLOAD_POLICY_V1.wasm.actionSeconds:OFFLOAD_POLICY_V1.timeouts.actionSeconds;
 
+/** ⏰️ How long an offloaded action may execute on the fleet before the unit compiles here instead: `factor` times the unit's recorded local cost (`predictedMilliseconds`), at least the floor and at most the cap; a unit without a record takes the unknown value. A linked wasm unit and a command (`linked`) have their own unknown value and cap, a component final runs 10 to 31 minutes. */
+export function offloadDeadlineMillisecondsV1(predictedMilliseconds:number|undefined,linked:boolean):number{
+ const deadline=OFFLOAD_POLICY_V1.deadline,cap=linked?deadline.linkedCapMilliseconds:deadline.capMilliseconds,unknown=linked?deadline.linkedUnknownMilliseconds:deadline.unknownMilliseconds;
+ if(predictedMilliseconds===undefined||!Number.isFinite(predictedMilliseconds)||predictedMilliseconds<0)return Math.min(cap,unknown);
+ return Math.min(cap,Math.max(deadline.floorMilliseconds,Math.ceil(predictedMilliseconds*deadline.factor)));
+}
+
 /** 💾️ The megabytes that placement reserves for a unit: the predicted peak of a wasm linked unit (the measured peaks of the release are 1.2 to 4.7 GiB, the cold bound of the admission broker 6 GiB), 0 for every other unit, which keeps the machine's own admission as the only memory check. */
 export const offloadPeakMegabytesV1=(types:readonly string[],target:string|undefined):number=>offloadWasmTargetV1(target)&&types.some(type=>OFFLOAD_POLICY_V1.wasm.crateTypes.includes(type))?OFFLOAD_POLICY_V1.wasm.peakMegabytes:0;
 

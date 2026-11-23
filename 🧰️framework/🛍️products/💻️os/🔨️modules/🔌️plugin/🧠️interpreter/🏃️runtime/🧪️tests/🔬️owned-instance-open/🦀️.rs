@@ -7,10 +7,7 @@ const FIXTURE_DOCUMENT_SCHEMA: &str = "fixture.neutral-host-fixture.counter";
 const MINTED_DOCUMENT_ID: &str = "artifact-0123456789abcdef0123456789abcdef";
 
 fn fixture_component() -> std::path::PathBuf {
-    let root = semio_framework_test_fixtures::repo_root!();
-    let path = root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/dist/components/semio_plugin_host_test_component.wasm");
-    assert!(path.is_file(), "neutral fixture producer prerequisite did not deliver {}", path.display());
-    path
+    semio_framework_test_fixtures::wasm_component!("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/Cargo.toml", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/dist/components/semio_plugin_host_test_component.wasm")
 }
 
 fn open_budget() -> Budget {

@@ -84,6 +84,24 @@
           "items": {
             "$ref": "#/definitions/AvailabilityCase"
           }
+        },
+        "refresh": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RefreshCase"
+          }
+        },
+        "ladder": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LadderCase"
+          }
+        },
+        "floor": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FloorCase"
+          }
         }
       }
     },
@@ -163,6 +181,131 @@
         "effectiveBytes": {
           "type": "integer",
           "minimum": 0
+        }
+      }
+    },
+    "RefreshCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "volumeAvailableBytes",
+        "hostFreeBytes",
+        "probeDue",
+        "due"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "volumeAvailableBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "containerFreeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hostFreeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "probeDue": {
+          "type": "boolean"
+        },
+        "due": {
+          "type": "boolean"
+        }
+      }
+    },
+    "LadderCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "quiescent",
+        "latched",
+        "failures",
+        "goneAfter",
+        "expected",
+        "throws"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "quiescent": {
+          "type": "boolean"
+        },
+        "latched": {
+          "type": "boolean"
+        },
+        "failures": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Error message of a command, keyed by its arguments joined by one space; a `#n` suffix fails only the n-th run of that command."
+        },
+        "goneAfter": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The command after which the image no longer appears in `hdiutil info`."
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The commands run in order after the first inventory, each its arguments joined by one space."
+        },
+        "throws": {
+          "type": "boolean"
+        }
+      }
+    },
+    "FloorCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "volumeAvailableBytes",
+        "hostFreeBytes",
+        "reserveBytes",
+        "realBytes",
+        "stop"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "volumeAvailableBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "containerFreeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hostFreeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reserveBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "realBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stop": {
+          "type": "boolean"
         }
       }
     }

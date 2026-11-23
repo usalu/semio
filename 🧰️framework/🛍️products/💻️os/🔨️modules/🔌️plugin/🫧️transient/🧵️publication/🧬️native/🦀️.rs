@@ -139,6 +139,12 @@ where P:semio_framework_value_snapshot_projection::SnapshotProjection<Output=P>+
  Arc::new(Factory{snapshots:Arc::new(semio_framework_value_factory::OwnedValueRetirementFactory::<P>::default()),mutations:Arc::new(semio_framework_value_factory::OwnedValueRetirementFactory::<M>::default()),semantics:Arc::new(store::PagedOneItemPreparationFactory::<P,M,store::MutationApplyEdit<P,M>>::default())})
 }
 
+/// ❄️ Uses the cold reference semantics of a family whose root is a whole owned value (a derived read model): the preparation applies the mutation's cold diff to a clone of the captured base instead of an original retained projection.
+pub fn cold_transient_preparation_factory<P,M>()->Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<P,M>>
+where P:Clone+semio_framework_value::retirement::RetireOwned+Send+Sync+'static,M:protocol::Mutation<P>+protocol::ColdMutation<P>+store::ArtifactCanonicalJsonTree+semio_framework_value::retirement::RetireOwned+::semio_os_kernel::StoreMutationFor<P>+Send+Sync+'static{
+ Arc::new(Factory{snapshots:Arc::new(semio_framework_value_factory::OwnedValueRetirementFactory::<P>::default()),mutations:Arc::new(semio_framework_value_factory::OwnedValueRetirementFactory::<M>::default()),semantics:Arc::new(store::ColdMutationApplyFactory::<P,M>::default())})
+}
+
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

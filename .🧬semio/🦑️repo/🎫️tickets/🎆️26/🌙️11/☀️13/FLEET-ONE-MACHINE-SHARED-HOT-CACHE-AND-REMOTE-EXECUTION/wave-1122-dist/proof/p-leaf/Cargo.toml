@@ -1,0 +1,9 @@
+[package]
+name = "p-leaf"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+itoa = "=1.0.18"
+smallvec = "=1.16.3"

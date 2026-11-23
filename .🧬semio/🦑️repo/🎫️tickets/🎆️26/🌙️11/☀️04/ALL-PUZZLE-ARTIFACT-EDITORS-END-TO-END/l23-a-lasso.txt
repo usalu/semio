@@ -1,0 +1,1 @@
+-p semio-os-infinite-board-normal-host --features testkit --test board_normal_host_board_host

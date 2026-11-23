@@ -65,6 +65,8 @@ pub async fn render(projection: &WorkflowSnapshot, view_state: &ViewModel) -> se
             empty_message: Some(labels.media_vfs_empty_message.into()),
             drag_drop_enabled: Some(true),
         },
+        semio_plugin::surface_name(view_state.locale, "Media files", "Mediendateien"),
+        None,
     )
 }
 //#endregion 🔖️Render

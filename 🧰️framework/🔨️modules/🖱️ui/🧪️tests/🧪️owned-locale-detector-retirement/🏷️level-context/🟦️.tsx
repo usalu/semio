@@ -52,7 +52,7 @@ export async function registerLevelContextTests(vitest: Tests1Vitest, dependenci
       const stack = container.querySelector('[data-slot="level-dialog-stack"]') as HTMLElement;
       expect(stack.getAttribute("data-level")).toBe("dialog");
       const body = container.querySelector('[data-slot="window-chrome-body"]') as HTMLElement;
-      expect(body.hasAttribute("data-window-silhouette-content")).toBe(true);
+      expect(body.hasAttribute("data-window-frame-content")).toBe(true);
       expect(body.className).not.toContain("ui-glass");
       const chip = container.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
       expect(chip.className).toContain("ui-glass");

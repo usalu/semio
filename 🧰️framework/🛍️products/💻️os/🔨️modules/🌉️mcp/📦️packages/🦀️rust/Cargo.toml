@@ -80,6 +80,8 @@ semio-plugin-guest-contract = { path = "../../../🔌️plugin/🧬️guest-cont
 framework_hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
+serde = { workspace = true }
+semio-os-spr = { path = "../../../📡️spr/📦️packages/🦀️rust", features = ["protocol-laws"] }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

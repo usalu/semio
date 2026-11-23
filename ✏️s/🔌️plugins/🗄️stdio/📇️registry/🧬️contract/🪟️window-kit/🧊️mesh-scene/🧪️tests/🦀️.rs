@@ -14,7 +14,7 @@ fn the_frame_is_the_bounding_box_centre_and_diagonal() {
 #[test]
 fn a_scene_renders_for_geometry_points_and_nothing() {
     let positions = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
-    assert!(mesh_scene("tri", &positions, &[0, 1, 2, 0, 1, 9], &[]).is_ok());
-    assert!(mesh_scene("cloud", &[], &[], &vec![[0.5, 0.5, 0.5]; MESH_SCENE_MAXIMUM_MARKERS * 3]).is_ok());
-    assert!(mesh_scene("empty", &[], &[], &[]).is_ok());
+    assert!(mesh_scene("tri", &positions, &[0, 1, 2, 0, 1, 9], &[], semio_ui_locale::Locale::En).is_ok());
+    assert!(mesh_scene("cloud", &[], &[], &vec![[0.5, 0.5, 0.5]; MESH_SCENE_MAXIMUM_MARKERS * 3], semio_ui_locale::Locale::En).is_ok());
+    assert!(mesh_scene("empty", &[], &[], &[], semio_ui_locale::Locale::En).is_ok());
 }

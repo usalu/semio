@@ -213,7 +213,7 @@ impl ArtifactMutationRouter {
             MutationOwnership::Contributed { plugin_id } | MutationOwnership::Owner { plugin_id } => plugin_id,
         };
         let registration = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router runtimes"))?.get(&plugin_id).cloned().ok_or_else(|| PluginHostError::Plugin(format!("mutation plan owner `{plugin_id}` is not loaded")))?;
-        call_plugin(&registration, JOB_KIND_MUTATION_PLAN, request_bytes, drivers().map_err(PluginHostError::NativeIo)?).await
+        call_plugin(&registration, JOB_KIND_MUTATION_PLAN, request_bytes, drivers().map_err(|error|PluginHostError::NativeIo(error))?).await
     }
 
     /// ✂️ Drops every route reported by `plugin_id` (owner rows keyed under its own id, contributed

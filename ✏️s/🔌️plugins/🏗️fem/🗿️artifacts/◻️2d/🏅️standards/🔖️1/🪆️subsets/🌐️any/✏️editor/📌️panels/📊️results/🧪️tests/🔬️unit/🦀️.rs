@@ -16,6 +16,7 @@ fn panel_json(window: &Fem2dResultsWindowConfig) -> String {
 /// field it changes — a transport whose buttons name no action is a dead panel.
 #[semio_framework_async_macros::async_test]
 async fn results_panel_binds_every_transport_control_to_its_owning_command() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = panel_json(&Fem2dResultsWindowConfig::default());
     for id in ["fem2d-play-results.display", "fem2d-play-results.playback", "fem2d-play-results.analysis", "fem2d-play-results.phase", "fem2d-play-results.speed", "fem2d-play-results.transport.play"] {
         assert!(json.contains(id), "missing {id}: {json}");
@@ -32,6 +33,7 @@ async fn results_panel_binds_every_transport_control_to_its_owning_command() {
 /// retune the pane the user is not looking at.
 #[semio_framework_async_macros::async_test]
 async fn results_panel_tags_every_control_with_its_window() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = panel_json(&Fem2dResultsWindowConfig::default());
     assert!(json.contains("windowId"), "{json}");
     assert!(json.contains("results-left"), "{json}");
@@ -40,6 +42,7 @@ async fn results_panel_tags_every_control_with_its_window() {
 /// ⏯️ LAW: the play button flips to a pause button while the window runs.
 #[semio_framework_async_macros::async_test]
 async fn results_panel_play_button_switches_to_pause_while_running() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let stopped = panel_json(&Fem2dResultsWindowConfig::default());
     assert!(stopped.contains(labels().play.as_str()), "{stopped}");
     let running = Fem2dResultsWindowConfig { animation: FemResultsAnimation { playing: true, ..FemResultsAnimation::default() }, ..Fem2dResultsWindowConfig::default() };
@@ -50,6 +53,7 @@ async fn results_panel_play_button_switches_to_pause_while_running() {
 /// 📚️ LAW: the source select offers every load case AND every combination of the live document.
 #[semio_framework_async_macros::async_test]
 async fn results_panel_source_select_offers_cases_and_combinations() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("bundled demo loads"));
     let json = panel_json(&Fem2dResultsWindowConfig::default());
     for case in &doc.load_cases {
@@ -64,6 +68,7 @@ async fn results_panel_source_select_offers_cases_and_combinations() {
 /// panel that tags one pane while the command writes another is the split-layout bug this closes.
 #[semio_framework_async_macros::async_test]
 async fn results_panel_tag_resolves_to_the_partition_the_command_writes() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let config = semio_plugin::NoConfig::default();
     let cfg = semio_plugin::ConfigView { snapshot: &config, window: None };
     let split = semio_plugin::ViewModel {
@@ -86,6 +91,7 @@ async fn results_panel_tag_resolves_to_the_partition_the_command_writes() {
 /// play/pause toggle naming only the window — and says which pane to focus for live readouts.
 #[semio_framework_async_macros::async_test]
 async fn results_panel_without_a_captured_window_offers_a_toggle_and_a_focus_hint() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("bundled demo loads"));
     let node = render(&doc, None, None, "results-left", labels()).expect("results panel admission");
     let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("fixture projection");

@@ -242,7 +242,7 @@ mod tests {
                 seen.insert(format!("{interface_name}.{}", function.name));
             }
         }
-        let expected = ["reactor.stage-command-page", "reactor.stage-cold-pair-page", "reactor.poll", "jobs.start-job", "jobs.step-job", "jobs.cancel-job", "jobs.take-segmented-download-chunk", "checkpoint.checkpoint", "checkpoint.restore", "describe.describe", "codec.pack-schema-hash", "codec.genesis", "codec.print-mirror", "codec.apply-ops", "codec.replay-envelopes"].into_iter().map(String::from).collect();
+        let expected = ["checkpoint.checkpoint", "checkpoint.restore", "codec.apply-ops", "codec.genesis", "codec.pack-schema-hash", "codec.print-mirror", "codec.replay-envelopes", "codec.sqlite-close", "codec.sqlite-export", "codec.sqlite-import", "codec.sqlite-retirement", "codec.sqlite-schema", "codec.sqlite-take-file", "codec.sqlite-take-payload", "describe.describe", "jobs.acknowledge-actor-failure", "jobs.acknowledge-job-output", "jobs.cancel-job", "jobs.close-jobs", "jobs.publish-actor-failure", "jobs.read-actor-failure", "jobs.read-job-output", "jobs.start-job", "jobs.step-job", "jobs.take-segmented-download-chunk", "reactor.admit-actor-context", "reactor.admit-actor-input", "reactor.channel-version", "reactor.close-actor-context", "reactor.close-actor-output", "reactor.poll", "reactor.stage-cold-pair-page", "reactor.stage-command-page"].into_iter().map(String::from).collect();
         assert_eq!(seen, expected);
         let pure = functions(named_block(&source, "interface", "pure"));
         for name in ["log", "now-ms", "trace-span"] {

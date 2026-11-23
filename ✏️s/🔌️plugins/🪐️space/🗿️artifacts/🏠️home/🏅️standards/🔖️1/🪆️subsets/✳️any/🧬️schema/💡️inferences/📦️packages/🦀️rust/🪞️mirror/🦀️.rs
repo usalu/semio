@@ -43,6 +43,8 @@ pub mod standards {
                         pub mod snapshot;
                         #[path = "../../../../../🚪️io/💾️binary/💡️inferences/🦀️.rs"]
                         pub mod inferences;
+                        #[path = "../../../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+                        pub mod diff;
                         #[path = "."]
                         pub mod mutations {
                             #[path = "../../../../../🚪️io/💾️binary/🧬️mutations/🔢️change-catalog-generation/🦀️.rs"]
@@ -55,6 +57,8 @@ pub mod standards {
                         pub mod snapshot;
                         #[path = "../../../../../🚪️io/📝️text/💡️inferences/🦀️.rs"]
                         pub mod inferences;
+                        #[path = "../../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+                        pub mod diff;
                         #[path = "."]
                         pub mod mutations {
                             #[path = "../../../../../🚪️io/📝️text/🧬️mutations/🔢️change-catalog-generation/🦀️.rs"]

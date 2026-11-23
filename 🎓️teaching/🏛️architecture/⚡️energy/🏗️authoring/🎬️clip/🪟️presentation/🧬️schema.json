@@ -64,13 +64,13 @@
       ],
       "properties": {
         "navbarHeight": {
-          "const": 28.8
+          "const": 29
         },
         "footerHeight": {
-          "const": 28.8
+          "const": 29
         },
         "titleHeight": {
-          "const": 22.4
+          "const": 24
         },
         "inset": {
           "const": 3.2

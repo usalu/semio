@@ -8,5 +8,7 @@
 {"op":"set","path":["poses",{"id":"passing-left"},"thermal","regions","satchel","exposedFraction"],"value":0.5215},
 {"op":"set","path":["poses",{"id":"contact-right"},"thermal","regions","satchel","exposedFraction"],"value":0.5215},
 {"op":"set","path":["poses",{"id":"loading-right"},"thermal","regions","satchel","exposedFraction"],"value":0.5215},
-{"op":"set","path":["poses",{"id":"passing-right"},"thermal","regions","satchel","exposedFraction"],"value":0.5215}
+{"op":"set","path":["poses",{"id":"passing-right"},"thermal","regions","satchel","exposedFraction"],"value":0.5215},
+{"op":"shape-add","scale":"50","view":"plan","after":"sleeve-r","shape":{"kind":"poly","points":[[0.127,-0.222],[0.2479,-0.222],[0.2479,-0.2196],[0.127,-0.2196]],"closed":true,"id":"letter-sil","bone":"arm-r","role":"body","z":1.4,"filled":true,"tone":0.15,"region":"shoes","material":"leather-shoe"}},
+{"op":"shape-add","scale":"50","view":"front","after":"forearm-r","shape":{"kind":"poly","points":[[-0.222,0.8937],[-0.2196,0.8937],[-0.2196,0.5355],[-0.222,0.5355]],"closed":true,"id":"letter-sil","bone":"forearm-r","role":"body","z":1,"filled":true,"tone":0.42,"region":"service-trousers","material":"service-trouser"}}
 ]

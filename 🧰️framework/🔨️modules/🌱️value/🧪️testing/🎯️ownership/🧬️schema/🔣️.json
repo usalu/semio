@@ -41,8 +41,8 @@
     "expected": {
       "const": {
         "productionFiles": 28,
-        "libraryTestFiles": 30,
-        "individualTests": 15,
+        "libraryTestFiles": 17,
+        "individualTests": 19,
         "integrationTargets": 7
       }
     },

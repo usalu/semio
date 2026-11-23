@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Box Outline Cases",
+  "type": "array",
+  "items": {
+    "type": "object", "additionalProperties": false,
+    "required": ["name", "boxes", "expected"],
+    "properties": {
+      "name": { "type": "string", "minLength": 1 },
+      "boxes": { "type": "array", "items": { "$ref": "#/$defs/box" } },
+      "expected": { "type": "array", "items": { "$ref": "#/$defs/resolved" } }
+    }
+  },
+  "$defs": {
+    "state": { "enum": ["normal", "active", "invalid", "waiting", "loading", "introduced", "celebrated", "focus", "hover"] },
+    "side": { "enum": ["top", "right", "bottom", "left"] },
+    "point": { "type": "object", "required": ["x", "y"], "additionalProperties": false, "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+    "box": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "parent", "owner", "rect", "edges", "state"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "parent": { "type": ["string", "null"] },
+        "owner": { "type": "string", "minLength": 1 },
+        "rect": { "type": "object", "additionalProperties": false, "required": ["left", "top", "right", "bottom"], "properties": { "left": { "type": "number" }, "top": { "type": "number" }, "right": { "type": "number" }, "bottom": { "type": "number" } } },
+        "edges": { "type": "array", "items": { "$ref": "#/$defs/side" } },
+        "state": { "$ref": "#/$defs/state" }
+      }
+    },
+    "resolved": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "owner", "from", "to", "state", "contributors"],
+      "properties": {
+        "id": { "type": "string" }, "owner": { "type": "string" },
+        "from": { "$ref": "#/$defs/point" }, "to": { "$ref": "#/$defs/point" },
+        "state": { "$ref": "#/$defs/state" },
+        "contributors": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

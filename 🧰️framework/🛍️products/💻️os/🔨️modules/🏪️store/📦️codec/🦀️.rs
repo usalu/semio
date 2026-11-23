@@ -454,3 +454,6 @@ pub fn commit_artifact_assembly_store_registry_guards(guards: &mut ArtifactAssem
     }
 }
 
+#[cfg(test)]
+#[path="../📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🪙️close/🦀️.rs"]
+pub(crate) mod original_close;

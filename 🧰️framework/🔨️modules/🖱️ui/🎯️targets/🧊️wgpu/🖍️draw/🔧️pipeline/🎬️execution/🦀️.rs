@@ -24,8 +24,8 @@ pub use pipeline_state_and_world_passes::{
 };
 #[cfg(test)]
 use pipeline_state_and_world_passes::{
-    build_batch_masks, build_layer_batches, build_overlay_layer_batches, layer_matches_filter,
-    mask_instances, LayerBatch, LayerBatchFilter, PreparedWorldPass, WorldDrawRange,
+    build_layer_batches, build_overlay_layer_batches, layer_matches_filter,
+    LayerBatch, LayerBatchFilter, PreparedWorldPass, WorldDrawRange,
 };
 use pipeline_state_and_world_passes::{set_pass_scissor, stencil_attachment};
 

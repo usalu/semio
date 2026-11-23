@@ -216,6 +216,10 @@
               "minLength": 1
             }
           },
+          "devContribution": {
+            "type": "string",
+            "pattern": "^[^\\\\]+/🧬️schema/🔣️\\.json$"
+          },
           "ports": {
             "type": "object",
             "additionalProperties": false,

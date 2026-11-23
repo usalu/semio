@@ -20,7 +20,7 @@ describe("text-selection context menu rows (shared schema)", () => {
   });
   it("carries the shell's en and de label texts equal to the i18n configuration", () => {
     for (const row of schema.rows) {
-      if (!("labelKey" in row)) continue;
+      if (!row.labelKey || !row.label) continue;
       const path = row.labelKey.replace(/^ui\./u, "").split(".");
       const read = (tree: unknown): string => path.reduce<any>((node, key) => node[key], tree).label.normal;
       expect(row.label.en).toBe(read(configurationEn));

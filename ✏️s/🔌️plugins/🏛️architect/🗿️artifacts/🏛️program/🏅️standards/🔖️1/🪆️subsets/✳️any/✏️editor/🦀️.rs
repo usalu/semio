@@ -678,10 +678,10 @@ impl ArtifactEditor for ArchitectPlayApp {
         let program = doc.snapshot;
         match body_key {
             adjacency_window::ARCHITECT_BODY_ADJACENCY => adjacency_window::render(program, &adjacency_window::config::current(cfg), &semio_plugin::TreeWindows::for_body(view_state, adjacency_window::ARCHITECT_BODY_ADJACENCY)),
-            graph_window::ARCHITECT_BODY_GRAPH => graph_window::render(program, &graph_window::config::current(cfg)),
-            register_window::ARCHITECT_BODY_REGISTER => register_window::render(program, &register_window::config::current(cfg)),
+            graph_window::ARCHITECT_BODY_GRAPH => graph_window::render(program, &graph_window::config::current(cfg), view_state.locale),
+            register_window::ARCHITECT_BODY_REGISTER => register_window::render(program, &register_window::config::current(cfg), view_state.locale),
             report_window::ARCHITECT_BODY_REPORT => report_window::render(program, &report_window::config::current(cfg), view_state, &semio_plugin::TreeWindows::for_body(view_state, report_window::ARCHITECT_BODY_REPORT)),
-            trace_window::ARCHITECT_BODY_TRACE => trace_window::render(program, &semio_plugin::TreeWindows::for_body(view_state, trace_window::ARCHITECT_BODY_TRACE)),
+            trace_window::ARCHITECT_BODY_TRACE => trace_window::render(program, &semio_plugin::TreeWindows::for_body(view_state, trace_window::ARCHITECT_BODY_TRACE), view_state.locale),
             document_panel::ARCHITECT_BODY_ARTIFACT => document_panel::render(program, &semio_plugin::TreeWindows::for_body(view_state, document_panel::ARCHITECT_BODY_ARTIFACT)),
             catalogue_panel::ARCHITECT_BODY_CATALOGUE => catalogue_panel::render(&semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::ARCHITECT_BODY_CATALOGUE)),
             inspection_panel::ARCHITECT_BODY_INSPECTION => inspection_panel::render(program),

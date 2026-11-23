@@ -14,7 +14,7 @@ afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true})
 type Scenario=typeof fixtures.scenarios[number];
 const label=(verdict:StalenessVerdictV1):string=>verdict.state==="stale"?`stale:${verdict.reason}`:verdict.state;
 const write=(root:string,files:Readonly<Record<string,string>>)=>{for(const [path,text] of Object.entries(files)){const full=join(root,path);mkdirSync(dirname(full),{recursive:true});writeFileSync(full,text);}};
-const entriesOf=(scenario:Scenario):StalenessEntryV1[]=>scenario.entries.map(row=>({key:row.key,storedAt:row.storedAt,refs:row.refs.map(sha),declaration:row.declared?declareV1({kind:"rust-unit",toolchain:sha(row.toolchain!),sources:Object.entries(row.sources!).sort(([a],[b])=>a<b?-1:1).map(([path,text])=>({path,sha256:sha(text)})),externs:row.externs!.map(sha)}):undefined}));
+const entriesOf=(scenario:Scenario):StalenessEntryV1[]=>scenario.entries.map(row=>({key:row.key,storedAt:row.storedAt,refs:row.refs.map(sha),declaration:row.declared?{...declareV1({kind:(row.kind??"rust-unit") as "rust-unit",toolchain:sha(row.toolchain!),sources:Object.entries(row.sources!).sort(([a],[b])=>a<b?-1:1).map(([path,text])=>({path,sha256:sha(text)})),externs:row.externs!.map(sha),self:row.self===undefined?undefined:sha(row.self),units:(row.units??[]).map(sha)}),...row.version===undefined?{}:{version:row.version as 2}}:undefined}));
 
 test("the verdicts equal the expectation of every scenario of the shared fixture and the independent Python model",async()=>{
  for(const scenario of fixtures.scenarios){

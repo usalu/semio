@@ -64,7 +64,8 @@ impl XrefFileOrderCursor {
                     }
                 }
                 Phase::Scan => {
-                    let (work, done, row) = self.rows.advance(source, grant.work - receipt.work);
+                    let budget = grant.work.saturating_sub(receipt.work);
+                    let (work, done, row) = self.rows.advance(source, budget);
                     receipt.work += work;
                     if let Some(XrefRow { number, entry: Some(_) }) = row {
                         if self.numbers.len() == self.numbers.capacity() {
@@ -76,6 +77,9 @@ impl XrefFileOrderCursor {
                     if done {
                         self.next_parent = self.numbers.len() / 2;
                         self.phase = Phase::Heapify;
+                    } else if work == 0 {
+                        receipt.event = Ok(Event::More);
+                        return receipt;
                     }
                     continue;
                 }

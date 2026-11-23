@@ -1,4 +1,4 @@
-//! 🔲️ Rect, quad, glass and stencil primitives: the layout, scissor and clip rects, the quad instance kinds, the vector vertex, the glass style, region and instance and the stencil policy. See [`super`].
+//! 🔲️ Rect, quad, glass and stencil primitives: the layout and scissor rects, the quad instance kinds, the vector vertex, the glass style, region and instance and the stencil policy. See [`super`].
 
 use super::*;
 
@@ -50,28 +50,6 @@ impl ScissorRect {
     }
 }
 
-/// ✂️ An exact union of non-overlapping scissor rects — the silhouette clip. Ported verbatim.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ClipRegion {
-    pub scissors: Vec<ScissorRect>,
-}
-
-impl ClipRegion {
-    pub fn from_rects(rects: &[LayoutRect]) -> Self {
-        let scissors = rects.iter().map(|rect| ScissorRect::from_rect(*rect)).filter(|rect| rect.w > 0 && rect.h > 0).collect();
-        Self { scissors }
-    }
-
-    pub fn intersect(&self, other: &Self) -> Self {
-        let scissors = self.scissors.iter().flat_map(|left| other.scissors.iter().map(move |right| left.intersect(right))).filter(|rect| rect.w > 0 && rect.h > 0).collect();
-        Self { scissors }
-    }
-
-    pub fn effective_scissors(&self, scissor: Option<ScissorRect>, width: f32, height: f32) -> Vec<ScissorRect> {
-        let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
-        self.scissors.iter().map(|clip| clip.intersect(&viewport)).map(|clip| scissor.map_or(clip, |parent| clip.intersect(&parent))).filter(|clip| clip.w > 0 && clip.h > 0).collect()
-    }
-}
 //#endregion Rect
 
 //#region QuadInstance
@@ -208,16 +186,16 @@ impl From<GlassRegion> for GlassInstance {
 //#endregion Glass
 
 //#region Stencil
-/// 🎭️ A plain description of the two stencil policies the wgpu target's `mask_stencil_state`/
+/// 🎭️ A plain description of the two stencil policies the wgpu target's world viewport mask and
 /// `content_stencil_state` compiled into `wgpu::StencilState`. A backend maps these onto its own
 /// pipeline description; this crate makes the *decision* (which policy a batch needs), never the
 /// device-level encoding of it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StencilPolicy {
-    /// ✏️ Always passes and replaces the stencil value — painting a silhouette mask.
+    /// ✏️ Always passes and replaces the stencil value — painting a world pass's viewport mask.
     WriteMask,
     /// 🔒 Passes only where the stencil equals the reference value, and never writes — painting
-    /// content that must stay inside a previously written silhouette mask.
+    /// content that must stay inside a previously written world pass viewport mask.
     RequireMaskEquality,
 }
 //#endregion Stencil

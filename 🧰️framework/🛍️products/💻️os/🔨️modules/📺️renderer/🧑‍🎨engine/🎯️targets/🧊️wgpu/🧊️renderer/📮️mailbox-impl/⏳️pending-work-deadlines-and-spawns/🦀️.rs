@@ -97,7 +97,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     /// [`Self::has_pending_applies`] already owes the frame.
     #[cfg(target_arch = "wasm32")]
     pub fn has_pending_settle(&self) -> bool {
-        self.try_lock().ok().and_then(|runtime| runtime.interaction().map(|interaction| semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_pending())).unwrap_or(false)
+        self.try_lock().ok().and_then(|mut runtime| runtime.interaction_mut().map(|interaction| semio_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_pending())).unwrap_or(false)
     }
 
     #[cfg(target_arch = "wasm32")]

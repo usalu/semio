@@ -63,3 +63,21 @@ export async function readOps(file: string): Promise<Op[]> {
 export async function writeOps(file: string, ops: readonly Op[]): Promise<void> {
   await Bun.write(file, `[\n${ops.map((o) => JSON.stringify(o)).join(",\n")}\n]\n`);
 }
+
+/** 🧷️ Applies a list of ops in order and returns what it skipped: a removal whose target is gone and a shape op whose target a later op of the same list removes are skipped when the list runs a second time on its own result (the list stays idempotent); every other missing target throws. */
+export function applyOps(asset: any, ops: readonly Op[]): string[] {
+  const skipped: string[] = [];
+  const removedLater = (index: number, id: string | undefined, o: Op): boolean => ops.slice(index + 1).some((x) => x.op === "shape-remove" && x.scale === o.scale && x.view === o.view && x.id === id);
+  ops.forEach((o, index) => {
+    if (o.op.startsWith("shape")) {
+      const list = asset.representations[o.scale!].geometry[o.view!] as any[];
+      const has = (id: string | undefined): boolean => list.some((x) => x.id === id);
+      if ((o.op === "shape" || o.op === "shape-set") && !has(o.id) && removedLater(index, o.id, o)) { skipped.push(`${o.op} ${o.scale} ${o.view} ${o.id}`); return; }
+      if (o.op === "shape-remove" && !has(o.id)) { skipped.push(`${o.op} ${o.scale} ${o.view} ${o.id}`); return; }
+      if (o.op === "shape-add" && !has(o.shape.id) && o.after !== undefined && !has(o.after)) { list.push(o.shape); skipped.push(`${o.op} ${o.scale} ${o.view} ${o.shape.id} (appended)`); return; }
+      if (o.op === "shape-add" && !has(o.shape.id) && o.after === undefined) { list.unshift(o.shape); return; }
+    }
+    applyOp(asset, o);
+  });
+  return skipped;
+}

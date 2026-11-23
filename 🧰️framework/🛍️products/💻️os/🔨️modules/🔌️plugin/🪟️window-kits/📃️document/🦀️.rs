@@ -22,7 +22,7 @@ use crate::tree_kit::tree_window_item;
 use crate::tree_kit::tree_window_section;
 use semio_plugin_window_kits::WindowKit;
 use semio_plugin_interaction::UiAssemblyResult;
-use semio_plugin_window_transient::scene_surface;
+use semio_plugin_window_transient::{scene_surface, surface_name};
 use semio_plugin_interaction::ui_assembly_error;
 use semio_plugin_window_transient::ui_label;
 use semio_plugin_window_transient::window_kind_definition;
@@ -69,7 +69,6 @@ impl EditableDocumentPage {
 pub struct DocumentWindowKit;
 
 impl WindowKit for DocumentWindowKit {
-    type ViewModel = DocumentView;
     const KIND_ID: &'static str = "framework.window.document";
 
     fn window_kind() -> WindowKindDefinition {
@@ -83,13 +82,13 @@ impl WindowKit for DocumentWindowKit {
             ActionArgDef::target_revision("revision", LocalizedLabel::native("Revision", "Revision")).required(),
         ])
     }
-
-    fn render(view: &DocumentView) -> UiAssemblyResult<BuiltNode> {
-        Self::render_windowed(view, &TreeWindows::unhosted())
-    }
 }
 
 impl DocumentWindowKit {
+    pub fn render(view: &DocumentView, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+        Self::render_windowed(view, &TreeWindows::unhosted(), locale)
+    }
+
     /// 🧭️ Declares the document edit action with an artifact-owned stable address contract.
     pub fn editable_window_kind_with_args(mut arguments: Vec<ActionArgDef>) -> WindowKindDefinition {
         arguments.push(ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).min_length(0).required());
@@ -176,7 +175,7 @@ impl DocumentWindowKit {
                     path_label: path_label.into(),
                     line_label: line_label.into(),
                     column_label: column_label.into(),
-                })?;
+                }, locale)?;
                 let Some(accessory) = accessory(*ordinal, page)? else { return Ok(draft) };
                 column()
                     .try_id("document-page-content")
@@ -190,7 +189,7 @@ impl DocumentWindowKit {
     }
 
     /// 📄️ Pages are expandable and windowed; each complete page buffer uses the text scene carrier.
-    pub fn render_windowed(view: &DocumentView, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    pub fn render_windowed(view: &DocumentView, windows: &TreeWindows<'_>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
         let pages: Vec<_> = view.pages.iter().enumerate().collect();
         tree_window_section(windows, Self::KIND_ID, Label::default(), true, &pages, |(index, page)| {
             let id = format!("page-{index}");
@@ -198,7 +197,7 @@ impl DocumentWindowKit {
             tree_window_item(windows, item, &id, *index == 0, &[*page], |page| {
                 let mut scene = semio_ui_scene::TextEditorScene::base(page.text.clone(), None, None);
                 scene.settings_json = Some("{\"readOnly\":true}".into());
-                scene_surface("content", SurfaceKind::TextEditor, &scene)
+                scene_surface("content", SurfaceKind::TextEditor, &scene, surface_name(locale, "Document page", "Dokumentseite"), None)
             })
         })
     }

@@ -1,0 +1,21 @@
+
+test("Shooting drawing fields share one order and every document facet owns emblem", async () => {
+  const artifact = await Bun.file(new URL("../../../../\u{1f9ec}\u{fe0f}schema/\u{1f527}.json", import.meta.url)).json();
+  const drawing = Object.keys(artifact.$defs.ShootingDrawing.properties);
+  const facets = ["../../../../\u{1f9ec}\u{fe0f}schema", "../../../../\u{1f9ec}\u{fe0f}schema/\u{1f4f8}\u{fe0f}snapshot", "../../../../\u{1f9ec}\u{fe0f}schema/\u{1f9ec}\u{fe0f}mutations", "../../../../\u{1f9ec}\u{fe0f}schema/\u{1f53a}diff"];
+  for (const facet of facets) {
+    const document = parse(await Bun.file(new URL(`${facet}/\u{1f534}.graphql`, import.meta.url)).text());
+    const type = document.definitions.find(definition => definition.kind === Kind.OBJECT_TYPE_DEFINITION && definition.name.value === "ShootingDrawing");
+    expect(type?.kind).toBe(Kind.OBJECT_TYPE_DEFINITION);
+    if (type?.kind === Kind.OBJECT_TYPE_DEFINITION) expect(type.fields?.map(field => field.name.value)).toEqual(drawing);
+  }
+  const roots = [["../../../../\u{1f9ec}\u{fe0f}schema", "ShootingArtifact"], ["../../../../\u{1f9ec}\u{fe0f}schema/\u{1f4f8}\u{fe0f}snapshot", "ShootingSnapshot"], ["../../../../\u{1f9ec}\u{fe0f}schema/\u{1f53a}diff", "ShootingDiff"], ["../../../../\u{1f9ec}\u{fe0f}schema/\u{1f9ec}\u{fe0f}mutations", "ShootingMutation"]] as const;
+  for (const [facet, name] of roots) {
+    const document = parse(await Bun.file(new URL(`${facet}/\u{1f534}.graphql`, import.meta.url)).text());
+    const type = document.definitions.find(definition => definition.kind === Kind.OBJECT_TYPE_DEFINITION && definition.name.value === name);
+    expect(type?.kind).toBe(Kind.OBJECT_TYPE_DEFINITION);
+    if (type?.kind === Kind.OBJECT_TYPE_DEFINITION) expect(type.fields?.some(field => field.name.value === "emblem")).toBe(true);
+    const proto = await Bun.file(new URL(`${facet}/\u{1f6f0}\u{fe0f}.proto`, import.meta.url)).text();
+    expect(proto).toContain("emblem");
+  }
+});

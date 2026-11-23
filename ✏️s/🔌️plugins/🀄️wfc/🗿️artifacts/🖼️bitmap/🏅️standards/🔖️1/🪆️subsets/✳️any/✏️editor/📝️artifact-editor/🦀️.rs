@@ -213,8 +213,8 @@ impl ArtifactEditor for BitmapEditor {
         Self::dispatch(command, doc, cfg, view_state)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-        Self::render_bodies(body_key, doc, cfg, &BitmapTransient::default(), None)
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+        Self::render_bodies(body_key, doc, cfg, &BitmapTransient::default(), None, view_state.locale)
     }
 
     /// 🧮️ The real render path: the same bodies, but reading the solve cache the `Solve` command published on the
@@ -224,13 +224,13 @@ impl ArtifactEditor for BitmapEditor {
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &semio_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         transient: &TransientView<'_, Self::Transient>,
         _interaction: &semio_plugin::app::InteractionView<'_>,
         cx:&mut semio_plugin::StepContext<'_>,
     ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
-        Self::render_bodies(body_key, doc, cfg, transient.snapshot, doc.tool_run())
+        Self::render_bodies(body_key, doc, cfg, transient.snapshot, doc.tool_run(), view_state.locale)
 
         })();
         rendered.map(Some).map_err(Into::into)
@@ -312,10 +312,10 @@ impl BitmapEditor {
         })
     }
 
-    fn render_bodies(body_key: &str, doc: &ArtifactView<'_, BitmapSnapshot>, cfg: &ConfigView<'_, NoConfig>, transient: &BitmapTransient, tool_run: Option<&semio_plugin::ToolRunView>) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+    fn render_bodies(body_key: &str, doc: &ArtifactView<'_, BitmapSnapshot>, cfg: &ConfigView<'_, NoConfig>, transient: &BitmapTransient, tool_run: Option<&semio_plugin::ToolRunView>, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            input::BODY_KEY => input::render(doc.snapshot, &input::config::current(cfg)).map(semio_plugin::built_to_component_tree),
-            output::BODY_KEY => output::render(doc.snapshot, transient, &output::config::current(cfg), tool_run, doc.render_operation_ref().map(|operation| operation.canonical_base_revision)).map(semio_plugin::built_to_component_tree),
+            input::BODY_KEY => input::render(doc.snapshot, &input::config::current(cfg), locale).map(semio_plugin::built_to_component_tree),
+            output::BODY_KEY => output::render(doc.snapshot, transient, &output::config::current(cfg), tool_run, doc.render_operation_ref().map(|operation| operation.canonical_base_revision), locale).map(semio_plugin::built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

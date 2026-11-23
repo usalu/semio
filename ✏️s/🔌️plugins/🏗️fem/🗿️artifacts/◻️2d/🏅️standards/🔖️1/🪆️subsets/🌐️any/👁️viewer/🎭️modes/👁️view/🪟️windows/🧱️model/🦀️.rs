@@ -94,7 +94,7 @@ fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])>
 /// overlay, hardcoded `Viewport2d::default()` (a viewer has no persisted per-session camera —
 /// `Config = NoConfig`). No results overlay, no selection, no gumball — a viewer has no utilities
 /// that edit and emits no mutations by construction (`ViewEmit`).
-pub fn render(doc: &Fem2dSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(doc: &Fem2dSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let camera = Viewport2d::default();
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
@@ -107,7 +107,7 @@ pub fn render(doc: &Fem2dSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> 
         }));
     }
     let layers_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(layers));
-    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }, semio_plugin::surface_name(locale, "Structure view", "Tragwerksansicht"))
 }
 //#endregion 🔖️Render
 

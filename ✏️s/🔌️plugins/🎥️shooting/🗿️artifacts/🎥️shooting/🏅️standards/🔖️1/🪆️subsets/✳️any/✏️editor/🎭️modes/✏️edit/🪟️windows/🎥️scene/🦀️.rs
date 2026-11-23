@@ -224,7 +224,7 @@ fn shooting_fit_json(cfg: &ShootingConfig) -> String {
     json!({ "enabled": cfg.center_model, "revision": cfg.fit_revision, "padding": 1.25 }).to_string()
 }
 
-pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, active_utility: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, active_utility: &str, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     semio_plugin::scene_surface(
         SHOOTING_PLAY_SURFACE_SCENE,
         semio_ui_contract::SurfaceKind::World3d,
@@ -234,6 +234,8 @@ pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, active_utility:
             fit_json: Some(shooting_fit_json(cfg)),
             ..world3d_scene(camera_json(&cfg.camera), world_meshes_json(snapshot), world_instances_json(snapshot), world_selection_json(snapshot, active_utility), &WorldSunConfig::default())
         },
+        semio_plugin::surface_name(locale, "Scene", "Szene"),
+        None,
     )
 }
 //#endregion 🔖️Render

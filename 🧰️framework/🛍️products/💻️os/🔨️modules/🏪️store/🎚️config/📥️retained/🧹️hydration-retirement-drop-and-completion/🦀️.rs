@@ -69,6 +69,7 @@ where
     P: semio_os_spr::StoreState,
     M: semio_os_spr::StoreMutationFor<P>,
 {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.retirement_demands(0).map(|demand| demand.copy_bytes) }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.retirement_demands(copy).map(|demand| demand.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.retirement_demands(0).map(|demand| demand.release_bytes) }

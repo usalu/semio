@@ -74,12 +74,12 @@ pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Windo
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let (request_json, footer) = match (crate::active_shot(snapshot), crate::active_asset(snapshot)) {
         (Some(shot), Some(asset)) => (shooting_icon_render_request_json(snapshot, shot, asset, &cfg.camera, cfg.center_model), Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase()))),
         _ => ("null".into(), None),
     };
-    semio_plugin::scene_surface(SHOOTING_PLAY_SURFACE_ICON, semio_ui_contract::SurfaceKind::IconRender, &IconRenderScene { request_json, footer, frame_json: None })
+    semio_plugin::scene_surface(SHOOTING_PLAY_SURFACE_ICON, semio_ui_contract::SurfaceKind::IconRender, &IconRenderScene { request_json, footer, frame_json: None }, semio_plugin::surface_name(locale, "Icon", "Symbol"), None)
 }
 //#endregion 🔖️Render
 

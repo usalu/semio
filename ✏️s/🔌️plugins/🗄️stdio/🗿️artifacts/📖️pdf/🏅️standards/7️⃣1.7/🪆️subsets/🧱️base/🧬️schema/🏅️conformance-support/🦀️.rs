@@ -9,7 +9,9 @@
 //! @see ../../../🗄️a/🧬️schema/🧬️mutations/🦀️.rs — the first of the six vocabularies built on this.
 
 //#region 🏅️ConformanceSupport
-use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDictAdded, PdfDictDiff, PdfDictModified, PdfDiff, PdfObjectAdded, PdfObjectsDiff};
+use crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
+use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfStreamRoleValue};
+use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfIndexedDiff, PdfIndexedItem, PdfDictAdded, PdfDictDiff, PdfDictModified, PdfDiff, PdfObjectAdded, PdfObjectsDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject, PdfSnapshot};
 
 //#region 🔖️Objects
@@ -452,7 +454,9 @@ pub fn owned_objects(base: &PdfSnapshot, entry: &PdfObject) -> Vec<ObjRef> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn remove_catalog_entry_owned_rows(base: &PdfSnapshot, key: &str) -> PdfDiff {
     let Some(entry) = catalog_entry(base, key) else { return PdfDiff::default() };
-    owned_objects(base, entry).into_iter().fold(remove_catalog_entry_rows(base, key), |rows, id| diff::sequence(rows, diff::diff_remove_object(id)))
+    let owned = owned_objects(base, entry);
+    let rows = owned.iter().fold(remove_catalog_entry_rows(base, key), |rows, id| diff::sequence(rows, diff::diff_remove_object(*id)));
+    diff::sequence(rows, role_rows(base, &owned, Vec::new()))
 }
 //#endregion 🔖️GraphRows
 
@@ -460,10 +464,31 @@ pub fn remove_catalog_entry_owned_rows(base: &PdfSnapshot, key: &str) -> PdfDiff
 /// ➖️ The rows dropping what the catalog entry `key` exclusively owns, and how many objects that is — the part of replacing an
 /// installed entry that makes the old install leave the document instead of lingering orphaned.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn drop_owned_rows(base: &PdfSnapshot, key: &str) -> (PdfDiff, usize) {
+fn drop_owned_rows(base: &PdfSnapshot, key: &str) -> (PdfDiff, Vec<ObjRef>) {
     let owned = catalog_entry(base, key).map(|entry| owned_objects(base, entry)).unwrap_or_default();
-    let count = owned.len();
-    (owned.into_iter().fold(PdfDiff::default(), |rows, id| diff::sequence(rows, diff::diff_remove_object(id))), count)
+    let rows = owned.iter().fold(PdfDiff::default(), |rows, id| diff::sequence(rows, diff::diff_remove_object(*id)));
+    (rows, owned)
+}
+
+/// 🪪️ The rows retiring every admitted stream role owned by one of `dropped` and admitting `added` after the survivors.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn role_rows(base: &PdfSnapshot, dropped: &[ObjRef], added: Vec<PdfAdmittedStreamRole>) -> PdfDiff {
+    let removed: Vec<usize> = base.admitted_stream_roles.iter().enumerate().filter(|(_, role)| dropped.contains(&role.identity.owner)).map(|(index, _)| index).collect();
+    if removed.is_empty() && added.is_empty() {
+        return PdfDiff::default();
+    }
+    let first = base.admitted_stream_roles.len() - removed.len();
+    let added = added.into_iter().enumerate().map(|(offset, value)| PdfIndexedItem { index: first + offset, value }).collect();
+    PdfDiff { admitted_stream_roles: Some(PdfIndexedDiff { removed, modified: Vec::new(), added }), ..Default::default() }
+}
+
+/// 🪪️ The admitted `ReferenceBody` role of the native stream object `body`, as a reference to its independent resource of `kind`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn reference_body_role(body: ObjRef, kind: &str, stream: PdfObject) -> Result<PdfAdmittedStreamRole, String> {
+    use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort;
+    let reference = NativePdfArtifactResources::default().admit(kind, stream).map_err(|error| format!("{error:?}"))?;
+    let identity = PdfGraphIdentity { owner: body, path: Vec::new() };
+    Ok(PdfAdmittedStreamRole { dependencies: vec![identity.clone()], identity, value: PdfStreamRoleValue::ReferenceBody { reference } })
 }
 
 /// ✍️ The rows rewriting `/Root/AcroForm` around `fields`, dropping the key entirely when nothing is left — so inserting the
@@ -499,15 +524,18 @@ pub fn remove_signature_field_rows(base: &PdfSnapshot, title: &str) -> PdfDiff {
 /// a real ICC destination-profile stream ISO 15930-7 requires alongside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn output_intent_rows(base: &PdfSnapshot, subtype: &str, identifier: &str, dest_profile: bool, placements: &[ObjectPlacement], entry_index: Option<usize>) -> PdfDiff {
-    let (dropped, count) = drop_owned_rows(base, "OutputIntents");
-    let mut insertion = Insertion::after(base, placements).dropping(count);
+    let (dropped, owned) = drop_owned_rows(base, "OutputIntents");
+    let mut insertion = Insertion::after(base, placements).dropping(owned.len());
+    let mut profile = None;
     let mut entries = vec![("Type", PdfObject::Name("OutputIntent".to_string())), ("S", PdfObject::Name(subtype.to_string())), ("OutputConditionIdentifier", literal(identifier)), ("Info", literal(identifier))];
     if dest_profile {
         let stream = PdfObject::Stream { dict: vec![PdfDictEntry { key: "N".to_string(), value: PdfObject::Int(3) }], data: format!("ICC destination output profile for {identifier}").into_bytes(), filters: Vec::new() };
-        entries.push(("DestOutputProfile", PdfObject::Ref(insertion.push(stream))));
+        profile = Some((insertion.push(stream.clone()), stream));
+        entries.push(("DestOutputProfile", PdfObject::Ref(profile.as_ref().map_or(ObjRef { num: 0, gen: 0 }, |(id, _)| *id))));
     }
     let intent = insertion.push(dict(entries));
-    diff::sequence(diff::sequence(dropped, insertion.rows()), set_catalog_entry_rows(base, "OutputIntents", PdfObject::Array(vec![PdfObject::Ref(intent)]), entry_index))
+    let roles = profile.into_iter().filter_map(|(body, stream)| reference_body_role(body, "s.stdio.icc", stream).ok()).collect();
+    diff::sequence(diff::sequence(diff::sequence(dropped, insertion.rows()), role_rows(base, &owned, roles)), set_catalog_entry_rows(base, "OutputIntents", PdfObject::Array(vec![PdfObject::Ref(intent)]), entry_index))
 }
 
 /// 📎️ The rows adding a `/Type /Filespec` with a real `/EF` attached-file stream and NO `/AFRelationship` — the exact shape
@@ -532,8 +560,9 @@ pub fn remove_file_spec_rows(base: &PdfSnapshot, id: ObjRef) -> PdfDiff {
 /// ISO 16612-2's variable-data partitioning in its minimal legitimate form.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn dpart_root_rows(base: &PdfSnapshot, job: &str, placements: &[ObjectPlacement], entry_index: Option<usize>) -> PdfDiff {
-    let (dropped, count) = drop_owned_rows(base, "DPartRoot");
-    let mut insertion = Insertion::after(base, placements).dropping(count);
+    let (dropped, owned) = drop_owned_rows(base, "DPartRoot");
+    let dropped = diff::sequence(dropped, role_rows(base, &owned, Vec::new()));
+    let mut insertion = Insertion::after(base, placements).dropping(owned.len());
     let mut node = vec![("Type", PdfObject::Name("DPart".to_string()))];
     if !job.is_empty() {
         node.push(("DPM", single_entry_dict("Job", literal(job))));
@@ -574,8 +603,9 @@ pub fn embed_font_file_rows(base: &PdfSnapshot, descriptor: ObjRef, key: &str, p
 /// 🌲️ The rows installing `/Root/StructTreeRoot` over one empty structure tree root.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn struct_tree_root_rows(base: &PdfSnapshot, placements: &[ObjectPlacement], entry_index: Option<usize>) -> PdfDiff {
-    let (dropped, count) = drop_owned_rows(base, "StructTreeRoot");
-    let mut insertion = Insertion::after(base, placements).dropping(count);
+    let (dropped, owned) = drop_owned_rows(base, "StructTreeRoot");
+    let dropped = diff::sequence(dropped, role_rows(base, &owned, Vec::new()));
+    let mut insertion = Insertion::after(base, placements).dropping(owned.len());
     let root = insertion.push(struct_tree_root_object());
     diff::sequence(diff::sequence(dropped, insertion.rows()), set_catalog_entry_rows(base, "StructTreeRoot", PdfObject::Ref(root), entry_index))
 }

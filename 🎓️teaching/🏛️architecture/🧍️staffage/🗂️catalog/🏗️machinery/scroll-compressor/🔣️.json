@@ -2568,7 +2568,7 @@
           "kind": "exhaust",
           "model": "operating",
           "material": "copper",
-          "areaM2": 0.0044,
+          "areaM2": 0.004,
           "characteristicLengthM": 0.03,
           "geometry": "cylinder",
           "skyViewFactor": 0.5,
@@ -2675,7 +2675,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "steel-shell",
-          "areaM2": 0.106,
+          "areaM2": 0.072,
           "characteristicLengthM": 0.28,
           "geometry": "horizontal-plate-up",
           "skyViewFactor": 0.5,
@@ -4665,7 +4665,7 @@
               [-0.05718, 0.08687]
             ],
             "plane": "zx",
-            "from": 0.022,
+            "from": 0.0145,
             "to": 0.0295,
             "holes": [
               [
@@ -4807,23 +4807,6 @@
             ]
           },
           {
-            "id": "mount-sleeves",
-            "kind": "revolve",
-            "bone": "shell",
-            "material": "steel-shell",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [[0, 0.0049], [0, 0.00645], [0.034, 0.00645], [0.034, 0.0049], [0, 0.0049]],
-            "axis": [0, 1, 0],
-            "origin": [0.09525, 0, 0.09525],
-            "repeat": {
-              "count": 4,
-              "rotationRad": 1.5708,
-              "rotationAxis": [0, 1, 0],
-              "origin": [0, 0, 0]
-            }
-          },
-          {
             "id": "mount-bolts",
             "kind": "revolve",
             "bone": "shell",
@@ -4871,7 +4854,8 @@
             "tone": 0.55,
             "profile": [[0.2445, 0.082], [0.2445, 0.09], [0.252, 0.09], [0.252, 0.082], [0.2445, 0.082]],
             "axis": [0, 1, 0],
-            "origin": [0, 0, 0]
+            "origin": [0, 0, 0],
+            "slender": true
           },
           {
             "id": "fixed-scroll-plate",
@@ -4981,7 +4965,7 @@
             "material": "steel-shell",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.2915, 0], [0.2915, 0.014], [0.299, 0.014], [0.299, 0]],
+            "profile": [[0.2915, 0], [0.2915, 0.014], [0.3065, 0.014], [0.3065, 0]],
             "axis": [0, 1, 0],
             "origin": [0, 0, 0]
           },
@@ -4992,7 +4976,7 @@
             "material": "cast-aluminium",
             "role": "body",
             "tone": 0.65,
-            "profile": [[0, 0], [0, 0.075], [0.012, 0.075], [0.012, 0]],
+            "profile": [[-0.003, 0], [-0.003, 0.075], [0.012, 0.075], [0.012, 0]],
             "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           },
@@ -5260,11 +5244,6 @@
             "region": "feet"
           },
           {
-            "id": "th-mount-sleeves",
-            "of": "mount-sleeves",
-            "region": "feet"
-          },
-          {
             "id": "th-mount-bolts",
             "of": "mount-bolts",
             "region": "feet"
@@ -5296,7 +5275,8 @@
             "profile": [[0.2445, 0.082], [0.2445, 0.09], [0.252, 0.09], [0.252, 0.082], [0.2445, 0.082]],
             "axis": [0, 1, 0],
             "origin": [0, 0, 0],
-            "region": "scroll"
+            "region": "scroll",
+            "slender": true
           },
           {
             "id": "th-fixed-scroll-plate",
@@ -5409,7 +5389,7 @@
             "material": "steel-shell",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[0.2915, 0], [0.2915, 0.014], [0.299, 0.014], [0.299, 0]],
+            "profile": [[0.2915, 0], [0.2915, 0.014], [0.3065, 0.014], [0.3065, 0]],
             "axis": [0, 1, 0],
             "origin": [0, 0, 0],
             "region": "scroll"
@@ -5421,7 +5401,7 @@
             "material": "cast-aluminium",
             "role": "body",
             "tone": 0.65,
-            "profile": [[0, 0], [0, 0.075], [0.012, 0.075], [0.012, 0]],
+            "profile": [[-0.003, 0], [-0.003, 0.075], [0.012, 0.075], [0.012, 0]],
             "axis": [1, 0, 0],
             "origin": [0, 0, 0],
             "region": "scroll"
@@ -5809,12 +5789,6 @@
             "part": "member"
           },
           {
-            "id": "mount-sleeve-joints",
-            "of": "mount-sleeves",
-            "member": "shell",
-            "part": "joint"
-          },
-          {
             "id": "mount-bolt-joints",
             "of": "mount-bolts",
             "member": "shell",
@@ -5833,6 +5807,10 @@
           {
             "en": "Thermal regions and structure as at 1:50.",
             "de": "Thermische Regionen und Tragwerk wie bei 1:50."
+          },
+          {
+            "en": "Modelled for 15 mm: foot plate 15 mm thick, reed valve and stop as one 15 mm disc, orbiting plate 15 mm, the Oldham ring as a slender hoop at its true section; the spacer sleeves inside the grommets are left to 1:50.",
+            "de": "Für 15 mm modelliert: Fußplatte 15 mm dick, Zungenventil und Anschlag als eine 15-mm-Scheibe, Orbiterplatte 15 mm, der Oldham-Ring als schlanker Reif mit wahrem Querschnitt; die Distanzhülsen in den Gummipuffern bleiben dem Maßstab 1:50."
           }
         ]
       },
@@ -6016,7 +5994,7 @@
               [-0.05718, 0.08687]
             ],
             "plane": "zx",
-            "from": 0.022,
+            "from": 0.0,
             "to": 0.0295,
             "holes": [
               [
@@ -6158,40 +6136,6 @@
             ]
           },
           {
-            "id": "mount-sleeves",
-            "kind": "revolve",
-            "bone": "shell",
-            "material": "steel-shell",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [[0, 0.0049], [0, 0.00645], [0.034, 0.00645], [0.034, 0.0049], [0, 0.0049]],
-            "axis": [0, 1, 0],
-            "origin": [0.09525, 0, 0.09525],
-            "repeat": {
-              "count": 4,
-              "rotationRad": 1.5708,
-              "rotationAxis": [0, 1, 0],
-              "origin": [0, 0, 0]
-            }
-          },
-          {
-            "id": "mount-bolts",
-            "kind": "revolve",
-            "bone": "shell",
-            "material": "steel-shell",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [[0, 0], [0, 0.0048], [0.034, 0.0048], [0.034, 0.012], [0.036, 0.012], [0.036, 0.0075], [0.041, 0.0075], [0.041, 0]],
-            "axis": [0, 1, 0],
-            "origin": [0.09525, 0, 0.09525],
-            "repeat": {
-              "count": 4,
-              "rotationRad": 1.5708,
-              "rotationAxis": [0, 1, 0],
-              "origin": [0, 0, 0]
-            }
-          },
-          {
             "id": "window",
             "kind": "revolve",
             "bone": "shell",
@@ -6303,16 +6247,6 @@
           {
             "id": "th-base-plate",
             "of": "base-plate",
-            "region": "feet"
-          },
-          {
-            "id": "th-mount-sleeves",
-            "of": "mount-sleeves",
-            "region": "feet"
-          },
-          {
-            "id": "th-mount-bolts",
-            "of": "mount-bolts",
             "region": "feet"
           },
           {
@@ -6515,18 +6449,6 @@
             "of": "base-plate",
             "member": "shell",
             "part": "member"
-          },
-          {
-            "id": "mount-sleeve-joints",
-            "of": "mount-sleeves",
-            "member": "shell",
-            "part": "joint"
-          },
-          {
-            "id": "mount-bolt-joints",
-            "of": "mount-bolts",
-            "member": "shell",
-            "part": "joint"
           }
         ],
         "decisions": [
@@ -6537,6 +6459,10 @@
           {
             "en": "Thermal regions and structure follow 1:50 with the parts that remain.",
             "de": "Thermische Regionen und Tragwerk folgen 1:50 mit den verbleibenden Teilen."
+          },
+          {
+            "en": "Modelled for 30 mm: the feet are one foot block from the ground to the shell with the outline of the plate and its four lugs, the grommets stand in its corners; sleeves and bolts are merged into it.",
+            "de": "Für 30 mm modelliert: Die Füße sind ein Fußblock vom Boden bis zum Gehäuse mit dem Umriss der Platte und ihrer vier Laschen, die Gummipuffer stehen in seinen Ecken; Hülsen und Schrauben gehen in ihm auf."
           }
         ]
       },
@@ -6707,7 +6633,7 @@
               [-0.05718, 0.08687]
             ],
             "plane": "zx",
-            "from": 0.022,
+            "from": 0.0,
             "to": 0.0295,
             "holes": [
               [
@@ -6849,40 +6775,6 @@
             ]
           },
           {
-            "id": "mount-sleeves",
-            "kind": "revolve",
-            "bone": "shell",
-            "material": "steel-shell",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [[0, 0.0049], [0, 0.00645], [0.034, 0.00645], [0.034, 0.0049], [0, 0.0049]],
-            "axis": [0, 1, 0],
-            "origin": [0.09525, 0, 0.09525],
-            "repeat": {
-              "count": 4,
-              "rotationRad": 1.5708,
-              "rotationAxis": [0, 1, 0],
-              "origin": [0, 0, 0]
-            }
-          },
-          {
-            "id": "mount-bolts",
-            "kind": "revolve",
-            "bone": "shell",
-            "material": "steel-shell",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [[0, 0], [0, 0.0048], [0.034, 0.0048], [0.034, 0.012], [0.036, 0.012], [0.036, 0.0075], [0.041, 0.0075], [0.041, 0]],
-            "axis": [0, 1, 0],
-            "origin": [0.09525, 0, 0.09525],
-            "repeat": {
-              "count": 4,
-              "rotationRad": 1.5708,
-              "rotationAxis": [0, 1, 0],
-              "origin": [0, 0, 0]
-            }
-          },
-          {
             "id": "sight-glass",
             "kind": "revolve",
             "bone": "shell",
@@ -6983,16 +6875,6 @@
           {
             "id": "th-base-plate",
             "of": "base-plate",
-            "region": "feet"
-          },
-          {
-            "id": "th-mount-sleeves",
-            "of": "mount-sleeves",
-            "region": "feet"
-          },
-          {
-            "id": "th-mount-bolts",
-            "of": "mount-bolts",
             "region": "feet"
           },
           {
@@ -7161,18 +7043,6 @@
             "of": "base-plate",
             "member": "shell",
             "part": "member"
-          },
-          {
-            "id": "mount-sleeve-joints",
-            "of": "mount-sleeves",
-            "member": "shell",
-            "part": "joint"
-          },
-          {
-            "id": "mount-bolt-joints",
-            "of": "mount-bolts",
-            "member": "shell",
-            "part": "joint"
           }
         ],
         "decisions": [
@@ -7183,6 +7053,10 @@
           {
             "en": "Thermal regions and structure follow 1:50 with the parts that remain.",
             "de": "Thermische Regionen und Tragwerk folgen 1:50 mit den verbleibenden Teilen."
+          },
+          {
+            "en": "The feet are one foot block from the ground to the shell with the four grommets in its corners; sleeves and bolts are merged into it.",
+            "de": "Die Füße sind ein Fußblock vom Boden bis zum Gehäuse mit den vier Gummipuffern in seinen Ecken; Hülsen und Schrauben gehen in ihm auf."
           }
         ]
       }

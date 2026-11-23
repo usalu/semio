@@ -10,9 +10,18 @@ def effective(volume,container,host):
     return max(volume,container if host is None else min(container,host))
 def real(volume,container,host):
     return min(host,effective(volume,container,host))
+def tolerance(container):
+    return max(268435456,container//16)
+def refresh_due(volume,container,host):
+    return container is not None and effective(volume,container,host)-volume>tolerance(container)
+def probe_due(volume,host):
+    return volume<17179869184 and host-volume>tolerance(host)
 if sys.argv[1]=="floor":
     corpus=json.load(open(sys.argv[2]))
     print(json.dumps([[real(a["volumeAvailableBytes"],a.get("containerFreeBytes"),a["hostFreeBytes"]),real(a["volumeAvailableBytes"],a.get("containerFreeBytes"),a["hostFreeBytes"])<a["reserveBytes"]] for a in corpus["floor"]]))
+elif sys.argv[1]=="refresh":
+    corpus=json.load(open(sys.argv[2]))
+    print(json.dumps([[probe_due(a["volumeAvailableBytes"],a["hostFreeBytes"]),refresh_due(a["volumeAvailableBytes"],a.get("containerFreeBytes"),a["hostFreeBytes"])] for a in corpus["refresh"]]))
 elif sys.argv[1]=="effective":
     corpus=json.load(open(sys.argv[2]))
     print(json.dumps([effective(a["volumeAvailableBytes"],a.get("containerFreeBytes"),a.get("hostFreeBytes")) for a in corpus["availability"]]))

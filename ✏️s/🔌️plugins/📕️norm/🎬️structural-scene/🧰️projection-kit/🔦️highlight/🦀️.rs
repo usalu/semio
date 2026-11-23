@@ -121,7 +121,7 @@ pub fn global_badge(report: &CheckReport) -> Option<Annotation> {
     })
 }
 
-/// 🧪️ The outcome of [`ownership_audit`]: the checks without a valid owner, the failing checks whose entity is not coloured, the documented document-level checks and whether their badge and their owner, the project site, stand in the scene.
+/// 🧪️ The outcome of [`ownership_audit`]: the checks without a valid owner, the failing checks whose entity is not coloured, the documented document-level checks the badge counts (a not-applicable one stays out, like in [`global_badge`]) and whether their badge and their owner, the project site, stand in the scene.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct OwnershipAudit {
     pub orphans: Vec<String>,
@@ -152,7 +152,9 @@ pub fn ownership_audit(report: &CheckReport, scene: &StructuralScene, owners: &B
     for check in &report.checks {
         let owner = check.subject.entity_id.as_str();
         if owner.is_empty() && document_level(&check.id) {
-            audit.global.push(check.id.clone());
+            if check.status != norm::CheckStatus::NotApplicable {
+                audit.global.push(check.id.clone());
+            }
             if check.status == norm::CheckStatus::Fail && audit.site && !lit(SITE_ENTITY) {
                 audit.unlit.push(check.id.clone());
             }

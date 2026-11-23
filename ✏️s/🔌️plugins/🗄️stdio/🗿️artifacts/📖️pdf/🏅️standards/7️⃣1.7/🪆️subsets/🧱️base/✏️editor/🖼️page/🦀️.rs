@@ -19,7 +19,6 @@ use semio_plugin::Buildable;
 use semio_plugin::Canvas2dScene;
 use semio_plugin::Fault;
 use semio_plugin::FaultCode;
-use semio_plugin::FaultOrigin;
 use semio_plugin::HasBase;
 use semio_plugin::HasChildren;
 use semio_ui_locale::Locale;
@@ -68,6 +67,12 @@ pub mod inspector;
 pub use self::inspector::*;
 
 pub use semio_s_artifact_stdio_pdf_page_editor_view::*;
+
+#[path = "🗣️labels/🦀️.rs"]
+mod labels;
+pub use self::labels::*;
+
+pub use semio_s_artifact_stdio_pdf_editor_document::{cancelled, pdf_fault_notices, refuse, PdfFault};
 
 #[path = "♿️text-layer/🦀️.rs"]
 mod text_layer;

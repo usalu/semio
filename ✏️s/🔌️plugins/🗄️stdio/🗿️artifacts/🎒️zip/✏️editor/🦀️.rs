@@ -156,7 +156,7 @@ pub fn draft(surface_id: &str, node_id: &str, value: &str, locale: Locale, publi
         path_label: path.into(),
         line_label: line.into(),
         column_label: column.into(),
-    })
+    }, locale)
 }
 
 /// 🪟️ Presents prefilled comment and entry-name drafts only for the visible archive rows.

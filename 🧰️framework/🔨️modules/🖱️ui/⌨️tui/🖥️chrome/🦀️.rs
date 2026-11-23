@@ -8,7 +8,7 @@ use crate::scene::{AxisState, Node, NodeContent, NodeId, Scene};
 use semio_ui_tui_core::text::{display_width, elide_end};
 use semio_ui_tui_core::theme::{GlyphSet, Role, Status, Surface, Theme};
 use semio_ui_tui_core::signal::WidgetSignal;
-use crate::window::paint_window;
+use crate::window::{paint_window_chips, paint_window_frame};
 
 #[derive(Clone)]
 pub struct NavItem {
@@ -174,13 +174,41 @@ impl ChromeState {
 
     /// 🪄️ Paints transient pointer ancestry without changing the chrome's selected or focused state.
     pub fn paint_emphasized(&self, theme: &Theme, rect: Rect, buf: &mut CellBuffer, emphasized: bool) {
+        self.paint_frame_emphasized(theme, rect, buf, emphasized);
+        self.paint_chips_emphasized(theme, rect, buf, emphasized);
+    }
+
+    /// 🔲️ Paints the one-box frame: surface and outline, below the content.
+    pub fn paint_frame_emphasized(&self, theme: &Theme, rect: Rect, buf: &mut CellBuffer, emphasized: bool) {
         match self {
             ChromeState::Navbar(n) => paint_navbar(n, theme, rect, buf, emphasized),
             ChromeState::Footer(f) => paint_footer(f, theme, rect, buf, emphasized),
             ChromeState::Canvas => {
                 buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), theme.surface(Surface::Base)));
             }
-            ChromeState::Window(w) => paint_window(w, theme, rect, buf, emphasized),
+            ChromeState::Window(w) => paint_window_frame(w, theme, rect, buf, emphasized),
+        }
+    }
+
+    /// 🪙️ Paints the window chips above the content, inside the frame; no other chrome has chips.
+    pub fn paint_chips_emphasized(&self, theme: &Theme, rect: Rect, buf: &mut CellBuffer, emphasized: bool) {
+        if let ChromeState::Window(w) = self {
+            paint_window_chips(w, theme, rect, buf, emphasized);
+        }
+    }
+
+    /// 🧲️ Whether `pos` lies on a chip cell of the window; every other cell of the box belongs to the content.
+    pub fn chip_at(&self, rect: Rect, pos: Pos) -> bool {
+        let ChromeState::Window(w) = self else { return false };
+        let layout = window_chip_layout(w, rect);
+        layout.groups.iter().any(|group| group.tabs.iter().any(|tab| layout.chip_rect(group.corner, tab, rect).contains(pos)))
+    }
+
+    /// 🛟️ The chip rows the window reserves as safe clearance for document content, as `[top, right, bottom, left]` cells.
+    pub fn safe_clearances(&self, rect: Rect) -> [u16; 4] {
+        match self {
+            ChromeState::Window(w) => window_safe_clearances(w, rect),
+            _ => [0; 4],
         }
     }
 
@@ -192,12 +220,8 @@ impl ChromeState {
             return None;
         }
         for group in &layout.groups {
-            if pos.y != layout.text_y(group.corner, rect) {
-                continue;
-            }
             for tab in &group.tabs {
-                let right = tab.x.saturating_add(tab.interior_width.saturating_add(1));
-                if pos.x <= tab.x || pos.x >= right {
+                if !layout.chip_rect(group.corner, tab, rect).contains(pos) {
                     continue;
                 }
                 return match tab.kind {
@@ -294,9 +318,7 @@ impl ChromeState {
         let ChromeState::Window(w) = self else { return None };
         let layout = window_chip_layout(w, rect);
         for group in &layout.groups {
-            let text_y = layout.text_y(group.corner, rect);
-            let cap_y = if group.corner.is_top() { text_y.saturating_sub(1) } else { text_y.saturating_add(1) };
-            let in_strip = pos.y == text_y || (layout.mode == ChromeMode::Full && pos.y == cap_y);
+            let in_strip = pos.y == layout.text_y(group.corner, rect);
             let span = group.tabs.iter().map(|tab| (tab.x, tab.x + tab.interior_width + 1)).reduce(|(left, right), (next_left, next_right)| (left.min(next_left), right.max(next_right)));
             if in_strip && span.is_some_and(|(left, right)| pos.x >= left && pos.x <= right) {
                 return Some(group.corner);
@@ -337,36 +359,7 @@ pub const TAB_CHIP_CELLS: u16 = 24;
 /// 🔤 The widest a tab label shows before it is elided (chip minus walls, padding and the close glyph).
 pub const TAB_LABEL_CELLS: u16 = TAB_CHIP_CELLS - 6;
 const MIN_FULL_ROWS_ONE_ROW: u16 = 4;
-const MIN_FULL_ROWS_TWO_ROWS: u16 = 6;
-
-/// 📐️ Pixels one terminal cell stands for when the chip-gap rule of the pixel UIs (`CARD_BAND_MIN_GAP`) is applied to cells.
-pub const CELL_WIDTH_PX: u16 = 8;
-/// 🫸️ The widest open gap in cells that still reads as two lines with a small gap; mirrors `chipGapReadsAsSliver` (`bands.cases.json`) at [CELL_WIDTH_PX] px per cell.
-pub const CHIP_SLIVER_MAX_CELLS: u16 = 4;
-
-/// 🫸️ Whether `cells` columns between the right wall of one chip and the left wall of the next (0 is one shared wall) read as a small gap: at least one and fewer than 40 px.
-pub fn chip_gap_cells_read_as_sliver(cells: u16) -> bool {
-    (1..=CHIP_SLIVER_MAX_CELLS).contains(&cells)
-}
-
-/// 🫸️ Stretches `prev` over a sliver gap to the chip whose left wall is at `next_x`, so both share one wall; wider gaps stay open.
-fn abut_chip_sliver(prev: Option<&mut WindowCornerTab>, next_x: u16) {
-    let Some(prev) = prev else { return };
-    let wall = prev.x + prev.interior_width + 1;
-    let gap = next_x.saturating_sub(wall);
-    if next_x <= wall || !chip_gap_cells_read_as_sliver(gap) {
-        return;
-    }
-    prev.interior.push_str(&" ".repeat(usize::from(gap)));
-    prev.interior_width += gap;
-}
-
-/// 🔩 One chip's seam geometry: `x` is its left-wall column, the interior of `interior_width` cells sits between walls.
-/// `pub(crate)`: shared with `crate::tui::window`'s `paint_window`/`paint_tab_seam`.
-pub(crate) struct WindowTab {
-    pub(crate) x: u16,
-    pub(crate) interior_width: u16,
-}
+const MIN_FULL_ROWS_TWO_ROWS: u16 = 5;
 
 /// 🪪 What a chip stands for.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -391,12 +384,6 @@ pub struct WindowCornerTab {
     pub drag_x: Option<u16>,
 }
 
-impl WindowCornerTab {
-    pub(crate) fn as_window_tab(&self) -> WindowTab {
-        WindowTab { x: self.x, interior_width: self.interior_width }
-    }
-}
-
 /// 🗂️ Tabs docked into one stack corner.
 pub struct WindowCornerChipGroup {
     pub corner: WindowStackCorner,
@@ -415,22 +402,23 @@ pub enum ChromeMode {
 pub struct WindowChipLayout {
     pub mode: ChromeMode,
     pub groups: Vec<WindowCornerChipGroup>,
-    pub top_body_y: u16,
-    pub bottom_body_y: Option<u16>,
+    pub top_clearance: u16,
+    pub bottom_clearance: u16,
 }
 
 impl WindowChipLayout {
-    fn flat(rect: Rect) -> Self {
-        Self { mode: ChromeMode::Flat, groups: Vec::new(), top_body_y: rect.y, bottom_body_y: None }
+    fn flat() -> Self {
+        Self { mode: ChromeMode::Flat, groups: Vec::new(), top_clearance: 0, bottom_clearance: 0 }
     }
 
-    /// 🪧 The row that carries a corner group's text.
+    /// 🪧 The interior row that carries a corner group's chips: the first interior row on top, the last at the bottom.
     pub fn text_y(&self, corner: WindowStackCorner, rect: Rect) -> u16 {
-        match (self.mode, corner.is_top()) {
-            (ChromeMode::Compact, _) => rect.y,
-            (_, true) => rect.y + 1,
-            (_, false) => rect.y + rect.height.saturating_sub(2),
-        }
+        if corner.is_top() { rect.y + 1 } else { rect.y + rect.height.saturating_sub(2) }
+    }
+
+    /// 🧲️ The cells one chip covers, walls included: a single row inside the box.
+    pub fn chip_rect(&self, corner: WindowStackCorner, tab: &WindowCornerTab, rect: Rect) -> Rect {
+        Rect::new(tab.x, self.text_y(corner, rect), tab.interior_width + 2, 1)
     }
 }
 
@@ -443,9 +431,7 @@ pub(crate) fn window_drag_glyph(set: GlyphSet) -> &'static str {
 pub fn window_tab_rect(w: &WindowState, rect: Rect, index: usize) -> Option<Rect> {
     let layout = window_chip_layout(w, rect);
     layout.groups.iter().find_map(|group| group.tabs.iter().find(|tab| tab.kind == TabKind::Tab && tab.index == index).map(|tab| {
-        let compact = layout.mode == ChromeMode::Compact;
-        let y = if compact || group.corner.is_top() { rect.y } else { rect.y + rect.height.saturating_sub(3) };
-        Rect::new(tab.x, y, tab.interior_width + 2, if compact { 1 } else { 3 })
+        layout.chip_rect(group.corner, tab, rect)
     }))
 }
 
@@ -613,7 +599,7 @@ fn controls_chip(w: &WindowState, x: u16) -> Option<WindowCornerTab> {
 /// `pub(crate)`: called from `crate::tui::window`'s `paint_window`.
 pub fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
     if rect.width < 4 || rect.height < 3 {
-        return WindowChipLayout::flat(rect);
+        return WindowChipLayout::flat();
     }
     let effective = effective_stack_tabs(w);
     let mut by_corner: [Vec<(usize, String)>; 4] = Default::default();
@@ -631,7 +617,7 @@ pub fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
     let min_rows = match (has_top, has_bottom) {
         (true, true) => MIN_FULL_ROWS_TWO_ROWS,
         (true, false) | (false, true) => MIN_FULL_ROWS_ONE_ROW,
-        (false, false) => return WindowChipLayout::flat(rect),
+        (false, false) => return WindowChipLayout::flat(),
     };
     if w.compact || rect.height < min_rows {
         return compact_layout(w, rect, &effective);
@@ -679,13 +665,7 @@ pub fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
         }
     }
     if groups.is_empty() {
-        return WindowChipLayout::flat(rect);
-    }
-    for (left, right) in [(WindowStackCorner::TopLeft, WindowStackCorner::TopRight), (WindowStackCorner::BottomLeft, WindowStackCorner::BottomRight)] {
-        let next_x = groups.iter().find(|group| group.corner == right).and_then(|group| group.tabs.first()).map(|tab| tab.x);
-        if let Some(next_x) = next_x {
-            abut_chip_sliver(groups.iter_mut().find(|group| group.corner == left).and_then(|group| group.tabs.last_mut()), next_x);
-        }
+        return WindowChipLayout::flat();
     }
     groups.sort_by_key(|group| match group.corner {
         WindowStackCorner::TopLeft => 0,
@@ -698,12 +678,12 @@ pub fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
     WindowChipLayout {
         mode: ChromeMode::Full,
         groups,
-        top_body_y: if has_top { rect.y + 2 } else { rect.y },
-        bottom_body_y: if has_bottom { Some(rect.y + rect.height.saturating_sub(3)) } else { None },
+        top_clearance: u16::from(has_top),
+        bottom_clearance: u16::from(has_bottom),
     }
 }
 
-/// 📱️ One-row chrome: every tab sits on the top border, `┌ ◐ dev ✕ │ ✓ Tasks ✕ ──── ⤢ ┐`.
+/// 📱️ One-row chrome: every tab sits in the first interior row, one chip strip under the top border.
 fn compact_layout(w: &WindowState, rect: Rect, effective: &[(usize, String, WindowStackCorner)]) -> WindowChipLayout {
     let entries: Vec<(usize, String)> = effective.iter().map(|(index, label, _)| (*index, label.clone())).collect();
     let controls = controls_chip(w, 0);
@@ -713,35 +693,33 @@ fn compact_layout(w: &WindowState, rect: Rect, effective: &[(usize, String, Wind
     let strip = build_strip(&entries, w, x0, x1.saturating_sub(1), true, 1);
     let mut tabs = strip.chips;
     if tabs.is_empty() && controls.is_none() {
-        return WindowChipLayout::flat(rect);
+        return WindowChipLayout::flat();
     }
     if let Some(mut chip) = controls {
         let x = rect.x + rect.width - 1 - controls_width;
         chip.x = x;
         chip.maximize_x = chip.maximize_x.map(|o| x + o);
         chip.new_x = chip.new_x.map(|o| x + o);
-        abut_chip_sliver(tabs.last_mut(), chip.x);
         tabs.push(chip);
     }
-    WindowChipLayout { mode: ChromeMode::Compact, groups: vec![WindowCornerChipGroup { corner: WindowStackCorner::TopLeft, tabs }], top_body_y: rect.y, bottom_body_y: None }
+    WindowChipLayout { mode: ChromeMode::Compact, groups: vec![WindowCornerChipGroup { corner: WindowStackCorner::TopLeft, tabs }], top_clearance: 1, bottom_clearance: 0 }
 }
 
-/// 🚪 Content inset that keeps children inside the closed outline, under the hairline a chip bends into.
-pub fn window_content_padding(w: &WindowState, rect: Rect) -> [u16; 4] {
+/// 🛟️ The chip rows a window reserves as safe clearance for document content, as `[top, right, bottom, left]` cells.
+pub fn window_safe_clearances(w: &WindowState, rect: Rect) -> [u16; 4] {
     let layout = window_chip_layout(w, rect);
-    if layout.mode != ChromeMode::Full {
-        return [1, 1, 1, 1];
-    }
-    let has_top = layout.groups.iter().any(|group| group.corner.is_top());
-    let has_bottom = layout.groups.iter().any(|group| !group.corner.is_top());
-    let top = if has_top { layout.top_body_y.saturating_sub(rect.y).saturating_add(1) } else { 1 };
-    let bottom = if has_bottom {
-        let bottom_y = rect.y + rect.height - 1;
-        bottom_y.saturating_sub(layout.bottom_body_y.unwrap_or(bottom_y)).saturating_add(1)
-    } else {
-        1
-    };
-    [top, 1, bottom, 1]
+    [layout.top_clearance, 0, layout.bottom_clearance, 0]
+}
+
+/// 🔲️ The content rect of a window: the whole interior of its box, chips overlay it.
+pub fn window_content_rect(rect: Rect) -> Rect {
+    rect.inset_sides(1, 1, 1, 1)
+}
+
+/// 🚪 Content inset of the children, inside the box border and clear of the chip rows.
+pub fn window_content_padding(w: &WindowState, rect: Rect) -> [u16; 4] {
+    let [top, right, bottom, left] = window_safe_clearances(w, rect);
+    [1 + top, 1 + right, 1 + bottom, 1 + left]
 }
 
 /// 🏗️ The three fixed shell regions plus one Window node per resolved `WindowMeasure`.

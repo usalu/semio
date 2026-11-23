@@ -45,7 +45,7 @@ pub fn settlements_with_interaction(doc: &En1997Snapshot, placed: &[(&SpreadFoun
 /// 📐️ Angular distortion of a pair from the catalogue entry SLS-04 (`tan ω = |s_a − s_b| / L`) against the limit `1/limit_den`.
 fn pair_distortion(annex: AnnexChoice, s_a: f64, s_b: f64, length: f64, limit: f64) -> f64 {
     let case = Case::new("pair", annex).with_n("s_a", s_a).with_n("s_b", s_b).with_n("l", length).with_n("limit_den", 1.0 / limit);
-    evaluate_outcomes("SLS-04", &case).ok().and_then(|outcomes| outcomes.into_iter().find(|o| o.key == "tan_omega")).map_or(f64::INFINITY, |o| o.value())
+    semio_s_plugin_norm_compliance::record_ndp_reads(|| evaluate_outcomes("SLS-04", &case)).0.ok().and_then(|outcomes| outcomes.into_iter().find(|o| o.key == "tan_omega")).map_or(f64::INFINITY, |o| o.value())
 }
 
 /// 📐️ Least-squares plane `s = a + b·x + c·y` through settlement points; `None` for fewer than three points or collinear positions.

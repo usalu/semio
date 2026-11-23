@@ -28,7 +28,7 @@ import {readNativeMountPathsV1} from "../../../../../../../../../../🔨️modul
 import {requireNativeInactiveCapsuleReadersV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/📋️contract/🟦️.ts";
 import {callerRepositoryRootV1} from "../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {openRepositoryCachePartitionAttemptV1,repositoryLeaseDirectoryV1,repositoryCachePartitionNativeImageV1} from "../🟦️.ts";
-import {repositoryCacheBudgetV1,repositoryPartitionGrowthRecordV1,repositoryPartitionReclaimDueV1,repositoryRustReclaimWaitDueV1,repositoryPartitionRegrowDueV1,type RepositoryCachePartitionIdV1} from "../../🟦️.ts";
+import {repositoryCacheBudgetV1,repositoryPartitionGrowthRecordV1,repositoryPartitionReclaimDueV1,repositoryRustReclaimWaitDueV1,repositoryPartitionRegrowDueV1,requireRepositoryPartitionFitsHostV1,type RepositoryCachePartitionIdV1} from "../../🟦️.ts";
 import {createNativeImageReclaimPortV1,nativeImageReclaimMechanismV1,reclaimNativeImageV1,type NativeImageReclaimOutcomeV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";
 import {existsSync,lstatSync,statfsSync,statSync,readdirSync} from "node:fs";
 import {dirname,basename,join,resolve,sep} from "node:path";
@@ -157,9 +157,9 @@ export function observeInactivePublicationV1(workspace:string,partition:Reposito
 /** ⏱️ Funds reset preparation from the same issued Original without extending any caller deadline. */
 export function resetInactiveCachePartitionWithinBudgetV1(control:ResourceLeaseControl,workspace:string,partition:RepositoryCachePartitionIdV1,expected?:InactiveRecoveryReasonV1):Promise<InactivePartitionResetOutcomeV1>{return withRequestedIssuedResourceControlV1(control,protocol.maximumMilliseconds,phase=>resetInactiveCachePartitionControlV1(workspace,partition,phase,expected));}
 
-/** 🎟️ Opens the authored finite backing under original caller custody, recovering an inactive publication first on the qualified platform; unsupported enforcement remains a refusal. Opening and recovery recurse into each other (a reset opens the lease image through this very opener), so they live in this one module. */
+/** 🎟️ Opens the authored finite backing under original caller custody (an image that is not born yet is refused up front when the host cannot hold its declared need), recovering an inactive publication first on the qualified platform; unsupported enforcement remains a refusal. Opening and recovery recurse into each other (a reset opens the lease image through this very opener), so they live in this one module. */
 export async function openRepositoryCachePartitionV1(workspace:string,id:RepositoryCachePartitionIdV1,control:ResourceLeaseControl):Promise<NativeImageStorageV1>{
- checkResourceLeaseControl(control);const attempt=()=>openRepositoryCachePartitionAttemptV1(workspace,id,control,()=>openRepositoryCachePartitionV1(workspace,"leases",control));
+ checkResourceLeaseControl(control);requireRepositoryPartitionFitsHostV1(workspace,id);const attempt=()=>openRepositoryCachePartitionAttemptV1(workspace,id,control,()=>openRepositoryCachePartitionV1(workspace,"leases",control));
  if(process.platform!=="darwin")return attempt();
  const directory=repositoryCacheBudgetV1(workspace).partitions[id].directory;
  if(!nativeStorageMountedAtV1(directory))return attempt();

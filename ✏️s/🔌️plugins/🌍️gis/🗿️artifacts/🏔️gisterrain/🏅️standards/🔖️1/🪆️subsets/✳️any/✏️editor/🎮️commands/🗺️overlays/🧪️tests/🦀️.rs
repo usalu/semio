@@ -3,7 +3,6 @@ use crate::editor::gis3d::{Gis3dPlayApp, unit_tests::context};
 use semio_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView, Media, MediaClass, MediaForm, MediaPayload, MediaType, MountedOwnerPolicyV1, artifact_app_laws};
 use serde_json::Value;
 
-const HISTORY: &str = include_str!("../../../🧪️tests/🧫️fixtures/🗺️overlay-history/🔣️.json");
 const ROLES: [&str; 3] = ["positions", "routes", "regions"];
 
 fn intrinsic(json: &Value) -> DslValue {
@@ -24,7 +23,7 @@ fn feature_ids(map: &Value) -> Value {
 
 #[semio_framework_async_macros::async_test]
 async fn registered_overlay_edits_preserve_grid_and_replay_history() {
-    let law: Value = serde_json::from_str(HISTORY).unwrap();
+    let law: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../🧪️tests/🧫️fixtures/🗺️overlay-history/🔣️.json")).unwrap();
     let app_manifest = context::gis3d_app_manifest_for_tests();
     for id in ["addOverlayPosition", "moveOverlayPosition"] {
         let action = app_manifest.definition.actions.iter().find(|action| action.id == id).unwrap();

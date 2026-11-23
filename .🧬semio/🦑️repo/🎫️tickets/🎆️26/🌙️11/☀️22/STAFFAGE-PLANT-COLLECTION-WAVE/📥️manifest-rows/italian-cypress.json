@@ -1,0 +1,55 @@
+{
+  "id": "italian-cypress",
+  "category": "vegetation",
+  "title": {
+    "en": "Italian Cypress",
+    "de": "Säulenzypresse"
+  },
+  "heightM": 18,
+  "widthM": 2.636,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "wet-snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "italian-cypress-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A slim 18 m column of fastigiate scale-leaf sprays only 2.6 m across, clothed almost to the ground, the narrowest evergreen of the archive next to the deciduous Lombardy poplar.",
+    "de": "Eine schlanke, 18 m hohe Säule aus aufrechten Schuppenblattzweigen von nur 2,6 m Breite, fast bis zum Boden belaubt, der schmalste Immergrüne des Archivs neben der laubabwerfenden Pyramidenpappel."
+  },
+  "completion": "authored"
+}

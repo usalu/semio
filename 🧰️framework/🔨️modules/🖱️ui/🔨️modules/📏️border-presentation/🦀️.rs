@@ -7,9 +7,9 @@ use ordered::Ordered;
 #[path = "states.rs"]
 mod states;
 pub use states::*;
-#[path = "silhouettes.rs"]
-mod silhouettes;
-pub use silhouettes::*;
+#[path = "outlines.rs"]
+mod outlines;
+pub use outlines::*;
 
 /// 🎚️ Paint precedence shared by native and browser renderers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -353,5 +353,5 @@ mod tests;
 mod states_tests;
 
 #[cfg(test)]
-#[path = "silhouettes.test.rs"]
-mod silhouettes_tests;
+#[path = "outlines.test.rs"]
+mod outlines_tests;

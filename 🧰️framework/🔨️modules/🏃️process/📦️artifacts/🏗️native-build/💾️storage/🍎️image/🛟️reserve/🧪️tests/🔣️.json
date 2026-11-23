@@ -1,0 +1,10 @@
+{
+  "creation": [
+    {"name": "an image with room creates the reserve", "availableBytes": 1073741824, "bytes": 33554432, "multiplier": 4, "existing": 0, "expected": "created"},
+    {"name": "exactly the creation threshold still creates", "availableBytes": 134217728, "bytes": 33554432, "multiplier": 4, "existing": 0, "expected": "created"},
+    {"name": "one byte under the threshold never takes the last bytes", "availableBytes": 134217727, "bytes": 33554432, "multiplier": 4, "existing": 0, "expected": "skipped"},
+    {"name": "a latched volume at zero skips", "availableBytes": 0, "bytes": 33554432, "multiplier": 4, "existing": 0, "expected": "skipped"},
+    {"name": "a whole reserve is present whatever the room", "availableBytes": 0, "bytes": 33554432, "multiplier": 4, "existing": 33554432, "expected": "present"},
+    {"name": "a short reserve is made whole again when there is room", "availableBytes": 1073741824, "bytes": 33554432, "multiplier": 4, "existing": 1048576, "expected": "created"}
+  ]
+}

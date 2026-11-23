@@ -18,7 +18,7 @@ use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 
 /// 🏋️ Resolves a named case exactly, or seeds one case from the admitted command authority.
-pub(super) fn add_load_mutation(doc: &ArtifactView<'_, Fem3dSnapshot>, case_id: Option<&str>, load: FemLoad) -> Result<Fem3dMutation, Fault> {
+pub fn add_load_mutation(doc: &ArtifactView<'_, Fem3dSnapshot>, case_id: Option<&str>, load: FemLoad) -> Result<Fem3dMutation, Fault> {
     let target = case_id.or_else(|| doc.snapshot.load_cases.first().map(|case| case.id.as_str()));
     Ok(match target {
         Some(id) => Fem3dMutation::AddLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad { case_id: id.into(), load: Box::new(load), index: None }),

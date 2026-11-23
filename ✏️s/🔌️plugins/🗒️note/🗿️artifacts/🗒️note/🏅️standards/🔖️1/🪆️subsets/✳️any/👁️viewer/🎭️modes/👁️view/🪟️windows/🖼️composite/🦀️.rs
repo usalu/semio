@@ -48,10 +48,10 @@ pub fn definition() -> WindowKindDefinition {
 /// any live pan/zoom the editor's composite-window config carries; the same intentional
 /// simplification the cad pilot's viewer documented for its own camera/environment defaults), no
 /// active drawing utility (nothing is drawable), `InkCanvasScene.interactive: false`.
-pub fn render(document: &NoteSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &NoteSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let camera = crate::NoteCamera::default();
     let document_json = crate::note_canvas_document_json(document, &camera);
-    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, String::new(), "composite".into(), false))
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, String::new(), "composite".into(), false), semio_plugin::surface_name(locale, "Note canvas", "Notizfläche"), None)
 }
 //#endregion 🔖️Render
 

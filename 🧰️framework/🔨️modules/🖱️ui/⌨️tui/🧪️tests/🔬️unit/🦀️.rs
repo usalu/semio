@@ -5,7 +5,7 @@
 
 use semio_ui_tui_terminal::ansi::{AnsiParser, AnsiPatch, emit_runs, setup_sequence, teardown_sequence};
 use semio_ui_tui_core::cell::{Cell, CellBuffer, DiffRun, attr, diff};
-use semio_ui_tui_frame::chrome::{ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState, mount_window_layout, shell, window_chip_layout, window_content_padding};
+use semio_ui_tui_frame::chrome::{ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState, mount_window_layout, shell, window_chip_layout, window_content_padding, window_content_rect, window_safe_clearances};
 use semio_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Rect, Size};
 use semio_ui_tui_frame::layout::{Constraint, Dimension, Direction, WindowLayout, Axis, stack_node, window_node, create_default_layout, even_window_layout, solve, solve_window_layout};
@@ -22,5 +22,5 @@ include!("📊️tui-table-diff-parser-and-theme-laws/🦀️.rs");
 include!("📐️tui-geometry-text-cell-and-ansi-laws/🦀️.rs");
 include!("📟️tui-vt-scene-and-layout-laws/🦀️.rs");
 include!("⌨️tui-widget-key-handling-laws/🦀️.rs");
-include!("🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs");
+include!("🎨️tui-widget-paint-and-window-frame-laws/🦀️.rs");
 include!("🚦️tui-chrome-engine-wasm-clipboard-and-pty-laws/🦀️.rs");

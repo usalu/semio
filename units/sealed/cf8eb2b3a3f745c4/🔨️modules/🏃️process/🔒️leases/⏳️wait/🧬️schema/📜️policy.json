@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://framework.process/ResourceLeaseWaitPolicyV1",
+  "definitions": {
+    "WaitPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "pollInitialMilliseconds",
+        "pollMaximumMilliseconds",
+        "pollGrowthNumerator",
+        "pollGrowthDenominator",
+        "sweepIntervalMilliseconds",
+        "progressIntervalMilliseconds",
+        "maximumReportedResourceCharacters",
+        "continuationDrainMilliseconds",
+        "reapSliceTickets",
+        "reapSliceMilliseconds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "pollInitialMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
+        },
+        "pollMaximumMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
+        },
+        "pollGrowthNumerator": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "pollGrowthDenominator": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "sweepIntervalMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600000
+        },
+        "progressIntervalMilliseconds": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 600000
+        },
+        "maximumReportedResourceCharacters": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 512
+        },
+        "continuationDrainMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
+        },
+        "reapSliceTickets": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "reapSliceMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000
+        }
+      }
+    },
+    "Policy": {
+      "const": {
+        "version": 1,
+        "pollInitialMilliseconds": 250,
+        "pollMaximumMilliseconds": 1000,
+        "pollGrowthNumerator": 3,
+        "pollGrowthDenominator": 2,
+        "sweepIntervalMilliseconds": 1000,
+        "progressIntervalMilliseconds": 15000,
+        "maximumReportedResourceCharacters": 400,
+        "continuationDrainMilliseconds": 300,
+        "reapSliceTickets": 256,
+        "reapSliceMilliseconds": 150
+      }
+    },
+    "Messages": {
+      "const": {
+        "drainAbandoned": {
+          "en": "Lease wait for {resource}: the accepted continuation did not settle within {milliseconds} ms after the wait ended ({reason}); it is abandoned and its late outcome is ignored.",
+          "de": "Lease-Wartevorgang für {resource}: die angenommene Fortsetzung wurde {milliseconds} ms nach dem Ende des Wartens nicht fertig ({reason}); sie wird aufgegeben und ihr spätes Ergebnis ignoriert."
+        }
+      }
+    }
+  }
+}

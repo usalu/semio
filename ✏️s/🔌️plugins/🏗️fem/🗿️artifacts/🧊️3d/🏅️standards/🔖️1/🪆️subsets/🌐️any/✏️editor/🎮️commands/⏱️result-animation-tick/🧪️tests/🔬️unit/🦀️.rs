@@ -82,11 +82,12 @@ async fn tick(app: &mut Fem3dApp) -> usize {
 async fn result_animation_tick_advances_the_clock_and_rearms_while_playing() {
     let mut app = fem3d_app();
     play(&mut app, SetResultAnimation { phase: Some(0.0), playing: Some(true), speed: Some(1.0), ..blank() }).await;
-    let before = app.snapshot().expect("snapshot");
+    let before = crate::context::Retiring::new(app.snapshot().expect("snapshot"));
     let config_generation = app.window_config_generation(&results_view()).await.expect("config generation");
     assert_eq!(clock(&mut app), None, "the clock only exists once a frame landed");
     assert_eq!(tick(&mut app).await, 1, "a playing tick owes the next frame");
-    assert_eq!(app.snapshot().expect("snapshot"), before, "the playback clock never touches the document");
+    let after = crate::context::Retiring::new(app.snapshot().expect("snapshot"));
+    assert_eq!(*after, *before, "the playback clock never touches the document");
     let running = clock(&mut app).expect("a frame landed in the transient");
     assert!((running.phase - ANIMATION_TICK_SECONDS).abs() < 1e-9, "{running:?}");
     let state = published(&mut app).await;
@@ -190,9 +191,9 @@ async fn history_rows(app: &mut Fem3dApp) -> usize {
 /// nothing; no playback edit is ever a history row; and the batch route refuses a tick it has no transient for.
 #[semio_framework_async_macros::async_test]
 async fn playback_presses_are_one_config_edit_and_never_a_history_row() {
-    let doc = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot");
+    let doc = crate::context::Retiring::new(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot"));
     let history = semio_plugin::HistoryView::empty();
-    let view = ArtifactView::new(&doc, &history);
+    let view = ArtifactView::new(&*doc, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     assert!(handle_window(&ResultAnimationTick { window_id: WINDOW.into() }, &view, &cfg, &results_view()).is_err(), "the batch route has no transient to land a frame in");

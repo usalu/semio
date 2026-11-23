@@ -129,9 +129,10 @@ pub mod owned_abi {
         pub ops: Vec<u8>,
     }
 
-    /// 📥️ One explicit actor input owns its original typed payload across the borrowed wire admission.
+    /// 📥️ One explicit actor input owns its original typed payload across the borrowed wire admission; `Job` arrives only as a compact `SJS1` frame, never as tagged JSON.
     #[derive(Deserialize, Serialize, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
     pub enum ActorInput {
+        #[serde(skip_deserializing)]
         Job(semio_framework::kernel::OriginalJobSource),
         Poll(PollInput),
         Codec(CodecInput),

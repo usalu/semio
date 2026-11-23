@@ -22,9 +22,9 @@ async fn definition_declares_a_world3d_window() {
 #[semio_framework_async_macros::async_test]
 async fn a_stored_camera_replaces_the_model_derived_one_and_changes_nothing_else() {
     let model = crate::examples::bestest_600::model();
-    let bare = scene_of(&render(&model).expect("the default render assembles"));
+    let bare = scene_of(&render(&model, semio_plugin::Locale::En).expect("the default render assembles"));
     let pose = config::EnergyModelViewerCameraPose { position: [12.0, -9.0, 7.5], target: [4.0, 3.0, 1.35], zoom: 1.0 };
-    let stored = scene_of(&render_with_camera(&model, Some(&config::EnergyModelViewerWindowConfig { camera: pose })).expect("the stored render assembles"));
+    let stored = scene_of(&render_with_camera(&model, Some(&config::EnergyModelViewerWindowConfig { camera: pose }), semio_plugin::Locale::En).expect("the stored render assembles"));
 
     assert_ne!(bare.camera_json, stored.camera_json, "a retained pose really replaces the model-derived camera");
     assert_eq!(stored.camera_json, pose.scene_camera_json());
@@ -37,7 +37,7 @@ async fn a_stored_camera_replaces_the_model_derived_one_and_changes_nothing_else
 #[semio_framework_async_macros::async_test]
 async fn render_shows_the_same_geometry_as_the_editor_twin_without_a_domain() {
     let model = crate::examples::bestest_600::model();
-    let node = render(&model).expect("the world surface assembles");
+    let node = render(&model, semio_plugin::Locale::En).expect("the world surface assembles");
     let scene = scene_of(&node);
     assert!(scene.domain_id.is_none(), "a read-only viewer never binds a picking domain");
     assert!(scene.domain_granularity_id.is_none());
@@ -55,7 +55,7 @@ async fn render_shows_the_same_geometry_as_the_editor_twin_without_a_domain() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_empty_model_renders_without_faulting() {
-    let scene = scene_of(&render(&crate::model::Model::default()).expect("an empty model still assembles a surface"));
+    let scene = scene_of(&render(&crate::model::Model::default(), semio_plugin::Locale::En).expect("an empty model still assembles a surface"));
     assert_eq!(scene.meshes_json, "[]");
     assert_eq!(scene.instances_json, "[]");
 }

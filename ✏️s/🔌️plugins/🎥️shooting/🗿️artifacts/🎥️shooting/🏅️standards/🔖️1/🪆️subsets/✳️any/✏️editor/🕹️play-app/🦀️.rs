@@ -248,8 +248,8 @@ impl ArtifactEditor for ShootingPlayApp {
         let snapshot = doc.snapshot;
         let labels = shooting_play_labels(view_state);
         match body_key {
-            SHOOTING_PLAY_BODY_SCENE => scene_window::render(snapshot, cfg.snapshot, view_state.active_utility_id.as_deref().unwrap_or("move")),
-            SHOOTING_PLAY_BODY_ICON => icon_window::render(snapshot, cfg.snapshot),
+            SHOOTING_PLAY_BODY_SCENE => scene_window::render(snapshot, cfg.snapshot, view_state.active_utility_id.as_deref().unwrap_or("move"), view_state.locale),
+            SHOOTING_PLAY_BODY_ICON => icon_window::render(snapshot, cfg.snapshot, view_state.locale),
             SHOOTING_PLAY_BODY_ARTIFACT => document_panel::render(snapshot, labels, &semio_plugin::TreeWindows::for_body(view_state, SHOOTING_PLAY_BODY_ARTIFACT)),
             SHOOTING_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, SHOOTING_PLAY_BODY_CATALOGUE)),
             SHOOTING_PLAY_BODY_INSPECTION => inspection_panel::render(snapshot, cfg.snapshot, labels),

@@ -34,6 +34,20 @@ it("uses the language-neutral byte corpus and independent Buffer comparison orac
     expect(probe).toHaveBeenCalledTimes(2);
   }
 });
+it("acknowledges a persisted folder write from a fresh read of the same bytes, without an archive echo", async () => {
+  const expected = new Uint8Array([37, 80, 68, 70]);
+  let listener!: VerifiedReadbackListenerV1<Uint8Array>;
+  const probe = vi.fn();
+  const result = awaitVerifiedReadbackV1<Uint8Array>({
+    signal: new AbortController().signal, current: () => true, timeoutMs: 1000,
+    subscribe: (next) => { listener = next; return () => undefined; }, submit: () => undefined, probe,
+    accepts: (actual) => actual.length === expected.length && actual.every((byte, index) => byte === expected[index]),
+    read: async () => expected.slice(),
+  });
+  listener.status(true);
+  expect(Buffer.compare(Buffer.from(await result ?? new Uint8Array()), Buffer.from(expected))).toBe(0);
+  expect(probe).toHaveBeenCalledTimes(1);
+});
 for (const reason of ["abort", "retired", "timeout", "submit", "probe"] as const) it("cleans up byte verification after " + reason, async () => {
   vi.useFakeTimers();
   const abort = new AbortController(), unsubscribe = vi.fn();

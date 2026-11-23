@@ -197,7 +197,7 @@ impl ArtifactEditor for VcsPlayApp {
         let labels = vcs_play_labels(view_state);
         match body_key {
             VCS_PLAY_BODY_EDITOR => editor::render(doc.snapshot, labels).map(semio_plugin::built_to_component_tree),
-            VCS_PLAY_BODY_HISTORY => history::render(doc.history).map(semio_plugin::built_to_component_tree),
+            VCS_PLAY_BODY_HISTORY => history::render(doc.history, view_state.locale).map(semio_plugin::built_to_component_tree),
             VCS_PLAY_BODY_ARTIFACT => document_panel::render(doc.history, labels, &semio_plugin::TreeWindows::for_body(view_state, VCS_PLAY_BODY_ARTIFACT)).map(semio_plugin::built_to_component_tree),
             VCS_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, labels).map(semio_plugin::built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

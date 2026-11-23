@@ -515,6 +515,7 @@ pub fn render(
     instances_delta_json: Option<String>,
     interaction: &Puzzle3dInteractionSnapshot,
     suggestions: Option<&BrushSuggestionsFound>,
+    labels: &Puzzle3dLabels,
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let vortices = world_vortices_json(&envelope.scene_snapshot, &envelope.runtime, interaction, envelope.active_utility.as_str());
     let mut scene = World3dScene::base(camera_json(&envelope.runtime), meshes_json, instances_json, world_selection_json(envelope, interaction));
@@ -530,7 +531,7 @@ pub fn render(
     scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.scene_snapshot), PUZZLE3D_FIT_PADDING, None));
     scene.domain_id = Some(PUZZLE3D_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT.into());
-    semio_plugin::scene_surface(SURFACE_VIEWPORT, semio_ui_contract::SurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(SURFACE_VIEWPORT, semio_ui_contract::SurfaceKind::World3d, &scene, labels.window_main.as_str(), None)
 }
 
 /// 🤝️ The engagement HUD for this window: the select/brush/fill switcher lives in the framework

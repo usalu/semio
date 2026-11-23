@@ -25,20 +25,49 @@ pub fn definition() -> WindowKindDefinition {
 }
 //#endregion 🔖️Definition
 
+//#region 🔖️Labels
+semio_ui_locale::app_labels! {
+    /// 🗣️ Complete multilingual label set of the PDF viewer surfaces: the page summary words and the unknown-body fallback resolve here instead of being picked by locale match.
+    pub struct PdfViewerLabels {
+        unknown_body: native_en "Unknown body: {body}", native_de "Unbekannter Bereich: {body}", reuse_en "Unknown body: {body}", reuse_de "Unbekannter Bereich: {body}";
+        summary: native_en "Page {page} -- MediaBox [{media}]{crop}", native_de "Seite {page} -- Medienrahmen [{media}]{crop}", reuse_en "Page {page} -- MediaBox [{media}]{crop}", reuse_de "Seite {page} -- Medienrahmen [{media}]{crop}";
+        crop: native_en ", CropBox [{crop}]", native_de ", Beschnittrahmen [{crop}]", reuse_en ", CropBox [{crop}]", reuse_de ", Beschnittrahmen [{crop}]";
+        no_text: native_en "(no extracted or authored text)", native_de "(kein extrahierter oder verfasster Text)", reuse_en "(no extracted or authored text)", reuse_de "(kein extrahierter oder verfasster Text)";
+    }
+}
+
+/// 🗣️ Resolves the viewer label set for the session locale in the native terminology.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pdf_viewer_labels(locale: semio_ui_locale::Locale) -> &'static PdfViewerLabels {
+    <PdfViewerLabels as semio_ui_locale::AppLabels>::labels(locale, semio_ui_locale::Terminology::Native)
+}
+//#endregion 🔖️Labels
+
 //#region 🔖️Render
+/// 🔢️ Displays one coordinate with one fraction digit and the locale's decimal separator.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn box_text(rect: [f64; 4], locale: semio_ui_locale::Locale) -> String {
+    let (decimal, list) = match locale {
+        semio_ui_locale::Locale::De => (",", "; "),
+        semio_ui_locale::Locale::En => (".", ", "),
+    };
+    rect.map(|value| format!("{value:.1}").replace('.', decimal)).join(list)
+}
+
 /// 👁️ Pure `PdfSnapshot -> BuiltNode` read: one summary line per page, no mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn page_summary(index: usize, page: &PdfPage) -> String {
-    let media = page.media_box;
-    let crop = page.crop_box.map(|c| format!(", CropBox [{:.1}, {:.1}, {:.1}, {:.1}]", c[0], c[1], c[2], c[3])).unwrap_or_default();
-    let text = if page.text().is_empty() { "(no extracted or authored text)".to_string() } else { page.text() };
-    format!("Page {} -- MediaBox [{:.1}, {:.1}, {:.1}, {:.1}]{}\n{}", index + 1, media[0], media[1], media[2], media[3], crop, text)
+pub fn page_summary(index: usize, page: &PdfPage, locale: semio_ui_locale::Locale) -> String {
+    let labels = pdf_viewer_labels(locale);
+    let crop = page.crop_box.map(|crop| labels.crop.fill(&[("crop", &box_text(crop, locale))]).to_string()).unwrap_or_default();
+    let text = if page.text().is_empty() { labels.no_text.as_str().to_string() } else { page.text() };
+    let head = labels.summary.fill(&[("page", &(index + 1).to_string()), ("media", &box_text(page.media_box, locale)), ("crop", &crop)]);
+    format!("{head}\n{text}")
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &PdfSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    let pages = document.pages.iter().enumerate().map(|(index, page)| DocumentPage { text: page_summary(index, page) }).collect();
-    DocumentWindowKit::render(&DocumentView { pages })
+pub fn render(document: &PdfSnapshot, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    let pages = document.pages.iter().enumerate().map(|(index, page)| DocumentPage { text: page_summary(index, page, locale) }).collect();
+    DocumentWindowKit::render(&DocumentView { pages }, locale)
 }
 //#endregion 🔖️Render
 

@@ -1,0 +1,627 @@
+diff --git "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpnqmp7kfi\\b.lf" "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpnqmp7kfi\\o.lf"
+index 72a206e..fd41036 100644
+--- "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpnqmp7kfi\\b.lf"
++++ "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpnqmp7kfi\\o.lf"
+@@ -28,4 +28,5 @@ _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡
+ room_metre = _manim_module.room_metre
+ P_PRIMARY = _manim_module.P_PRIMARY
++reference_chip = _manim_module.reference_chip
+ window_card = _manim_module.window_card
+ P_DEEP_DARK = _manim_module.P_DEEP_DARK
+@@ -66,9 +67,8 @@ swap_caption = _manim_module.swap_caption
+ hold_for = _manim_module.hold_for
+ subtitle_text = _manim_module.subtitle_text
+-set_vo_language = _manim_module.set_vo_language
+ tr = _manim_module.tr
++_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
+ load_vo_timing = _manim_module.load_vo_timing
+ 
+-set_vo_language("de")
+ _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+ TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
+@@ -77,5 +77,5 @@ if _VO_TIMING.is_file():
+     load_vo_timing(_VO_TIMING)
+ 
+-TITLE_DE = "Primärenergie & das GEG"
++TITLE_DE = "Primärenergie & das GModG"
+ 
+ NUTZ_BLUE = semio_color("secondary")
+@@ -91,9 +91,9 @@ WOOD_BROWN = semio_color("info")
+ # puts on screen, not a separately typed number.
+ Q_NUTZ = 100
+-E_P_GAS = 1.04 * 1.08 * 1.06 * 1.18   # ≈ 1,40
+-E_P_WP = 1.04 * 1.08 * 1.06 * 0.26    # ≈ 0,31
+-Q_END_GAS = round(Q_NUTZ * E_P_GAS)   # 140 kWh/(m²·a)
+-Q_END_WP = round(Q_NUTZ * E_P_WP)     #  31 kWh/(m²·a)
+-F_P_GAS, F_P_STROM = 1.1, 1.8          # GEG Anlage 4, nicht erneuerbarer Anteil
++E_E_GAS = 1.04 * 1.08 * 1.06 * 1.18   # ≈ 1,40
++E_E_WP = 1.04 * 1.08 * 1.06 * 0.26    # ≈ 0,31
++Q_END_GAS = round(Q_NUTZ * E_E_GAS)   # 140 kWh/(m²·a)
++Q_END_WP = round(Q_NUTZ * E_E_WP)     #  31 kWh/(m²·a)
++F_P_GAS, F_P_STROM = 1.1, 1.8          # GModG Anlage 4, nicht erneuerbarer Anteil
+ F_P_HOLZ, F_P_UMWELT = 0.2, 0.0
+ # From the *displayed* final energy, so the multiplication on screen checks out
+@@ -101,6 +101,10 @@ F_P_HOLZ, F_P_UMWELT = 0.2, 0.0
+ Q_PRIM_GAS = int(Q_END_GAS * F_P_GAS + 0.5)    # 154 kWh/(m²·a)
+ Q_PRIM_WP = int(Q_END_WP * F_P_STROM + 0.5)    #  56 kWh/(m²·a)
++E_P_GAS = Q_PRIM_GAS / Q_NUTZ                  # 1,54
++E_P_WP = Q_PRIM_WP / Q_NUTZ                    # 0,56
+ Q_LOSS_GAS = Q_END_GAS - Q_NUTZ                #  40 kWh/(m²·a) Anlagenverluste
+-Q_AMBIENT_WP = Q_NUTZ - Q_END_WP               #  69 kWh/(m²·a) Umweltwärme
++WP_GEN_OUT = Q_NUTZ * 1.04 * 1.08 * 1.06       # 119 kWh/(m²·a) Erzeugerabgabe
++Q_AMBIENT_WP = round(Q_NUTZ * (1.0 - Q_END_WP * 1.0 / WP_GEN_OUT))  #  74 kWh/(m²·a) Umweltwärme-Anteil der Nutzenergie
++Q_POWER_SHARE = Q_NUTZ - Q_AMBIENT_WP          #  26 kWh/(m²·a) Strom-Anteil der Nutzenergie
+ Q_CHAIN_GAS = Q_PRIM_GAS - Q_END_GAS           #  14 kWh/(m²·a) Vorkette
+ Q_CHAIN_WP = Q_PRIM_WP - Q_END_WP              #  25 kWh/(m²·a) Vorkette
+@@ -111,5 +115,9 @@ Q_LIMIT = int(Q_REF * REF_SHARE + 0.5)          #  66 kWh/(m²·a)
+ EE_SHARE = 0.65
+ 
+-UNIT = r"\mathrm{kWh/(m^{2}\,a)}"
++UNIT = r"\frac{\mathrm{kWh}}{\mathrm{m^{2}\,a}}"
++
++def _de(value: float, digits: int = 2) -> str:
++    """🔢 Decimal comma in braces for narration TeX."""
++    return f"{value:.{digits}f}".replace(".", "{,}")
+ 
+ 
+@@ -119,11 +127,7 @@ def _eq(product: float) -> str:
+ 
+ 
+-#region DIN citation
+-def _din_ref(text: str):
+-    """📖 Standards citation for the beat, pinned to the empty top-right corner."""
+-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+-    ref.set_opacity(0.72)
+-    ref.to_corner(UR, buff=0.30)
+-    return ref
++def _math_note(tex: str, color: str = P_PRIMARY):
++    """💭 One-line aside with typeset symbols on the reserved band under the beat subtitle."""
++    return math_label(tex, np.array([0.0, _manim_module.NOTE_BAND_Y, 0.0]), size=LABEL_FONT_SIZE, color=color)
+ #endregion
+ 
+@@ -252,5 +256,5 @@ def _supply_flow(y, x0, x1, x_loss, kept, lost, counted, color_counted, color_ot
+     """⛓️ One carrier's supply chain — ``kept`` particles reach the meter, ``lost`` ones dissipate at ``x_loss``.
+ 
+-    The upstream density is ``(kept + lost) / kept`` times the delivered density — exactly the factor ``f_p``
++    The upstream density is ``(kept + lost) / kept`` times the delivered density — exactly the factor ``f_P``
+     for non-renewable carriers; ``counted`` of the ``kept`` particles are the non-renewable share.
+     """
+@@ -292,7 +296,7 @@ def _pipes(*paths):
+ 
+ 
+-def _count(tracker, at, color, *, digits=0, size=None, edge="center", prefix=""):
+-    """🔢 Live number that counts up from its tracker."""
+-    return math_readout(lambda: prefix + label_number(tracker.get_value(), digits), at, size=size or LABEL_FONT_SIZE,
++def _count(tracker, at, color, *, digits=0, size=None, edge="center", prefix="", suffix=""):
++    """🔢 Live number that counts up from its tracker, with its unit as ``suffix``."""
++    return math_readout(lambda: prefix + label_number(tracker.get_value(), digits) + suffix, at, size=size or LABEL_FONT_SIZE,
+                         color=color, edge=edge)
+ 
+@@ -372,18 +376,18 @@ class Beat1_DreiBilanzgrenzen(Scene):
+          "Alles in dieser Serie hing an einer Entscheidung: wo wir die Bilanzgrenze ziehen."),
+         ("raum",
+-         "Draw it around the room and you count useful energy.",
+-         "Zieht man sie um den Raum, zählt man Nutzenergie."),
++         r"Draw it around the room and you count useful energy, $Q_{h}$.",
++         r"Zieht man sie um den Raum, zählt man Nutzenergie, $Q_{h}$."),
+         ("heizwaerme",
+          "That is the heat the balance said the room needs.",
+          "Das ist die Wärme, die die Bilanz für den Raum verlangt."),
+         ("gebaeude",
+-         "Draw it around the building at the meter and you count final energy.",
+-         "Zieht man sie am Zähler um das Gebäude, zählt man Endenergie."),
++         r"Draw it around the building at the meter and you count final energy, $Q_{E}$.",
++         r"Zieht man sie am Zähler um das Gebäude, zählt man Endenergie, $Q_{E}$."),
+         ("verluste",
+          "That includes the plant losses: the waste heat of the boiler counts as well.",
+          "Dazu zählen die Anlagenverluste: Auch die Abwärme des Kessels wird mitgezählt."),
+         ("quelle",
+-         "Draw it all the way back to the source and you count primary energy.",
+-         "Zieht man sie bis zur Quelle, zählt man Primärenergie."),
++         r"Draw it all the way back to the source and you count primary energy, $Q_{P}$.",
++         r"Zieht man sie bis zur Quelle, zählt man Primärenergie, $Q_{P}$."),
+         ("gewinnung",
+          "First comes extraction: the fuel has to be taken out of the ground.",
+@@ -396,9 +400,9 @@ class Beat1_DreiBilanzgrenzen(Scene):
+          "Zuletzt der Transport — bis zum Zähler."),
+         ("geg",
+-         "That is why the GEG caps primary energy demand.",
+-         "Deshalb begrenzt das GEG den Primärenergiebedarf."),
++         r"That is why the Building Modernisation Act caps the primary energy demand $Q_{P} = Q_{E} \cdot f_{P}$.",
++         r"Deshalb begrenzt das Gebäudemodernisierungsgesetz den Primärenergiebedarf $Q_{P} = Q_{E} \cdot f_{P}$."),
+         ("vergleich",
+-         "Because it puts different energy carriers on one common scale.",
+-         "Denn er bringt verschiedene Energieträger auf einen gemeinsamen Maßstab."),
++         "Because the primary energy factor puts different energy carriers on one common scale.",
++         "Denn der Primärenergiefaktor bringt verschiedene Energieträger auf einen gemeinsamen Maßstab."),
+     ]
+ 
+@@ -408,10 +412,15 @@ class Beat1_DreiBilanzgrenzen(Scene):
+ 
+         subtitle = section_heading(tr("Three system boundaries", "Drei Bilanzgrenzen"))
+-        din = _din_ref("DIN V 18599-1:2018-09 · GEG § 20")
++        din = reference_chip(_references.cite(("din-ts-18599-1", "energiearten")), subtitle)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+         revision_note = note_line(
+-            tr("Updated in 2025 as DIN/TS 18599-1:2025-10 — GEG § 20 still uses 2018", "Seit 2025 als DIN/TS 18599-1:2025-10 fortgeschrieben — GEG § 20 nutzt weiterhin 2018"),
++            tr(f"Since 10/2025 {_references.designation('din-ts-18599-1')} · GModG § 20 still cites {_references.designation('din-v-18599-1')}",
++               f"Seit 10/2025 {_references.designation('din-ts-18599-1')} · GModG § 20 nennt noch {_references.designation('din-v-18599-1')}"),
++            color=P_PRIMARY,
++        )
++        law_note = note_line(
++            tr("GModG since 29 July 2026, formerly GEG (Building Energy Act)", "GModG seit 29.07.2026, vormals GEG (Gebäudeenergiegesetz)"),
+             color=P_PRIMARY,
+         )
+@@ -529,11 +538,11 @@ class Beat1_DreiBilanzgrenzen(Scene):
+         ]
+         hop_names = VGroup(
+-            body_text(tr("System", "Anlage"), font_size=LABEL_FONT_SIZE - 2, color=P_PRIMARY).move_to(np.array([-2.0, 1.05, 0.0])),
+-            math_label(r"f_{p}", np.array([2.0, 1.1, 0.0]), size=LABEL_FONT_SIZE, color=P_YELLOW),
++            math_label(tr(r"\text{Plant}\;e_{E}", r"\text{Anlage}\;e_{E}"), np.array([-2.05, 1.22, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY),
++            math_label(r"f_{P}", np.array([2.0, 1.1, 0.0]), size=LABEL_FONT_SIZE, color=P_YELLOW),
+         )
+         row, box, items = math_panel([
+             ("qp", r"Q_{P}", PRIM_VIOLET), ("eq", "=", P_WHITE),
+             ("qe", r"Q_{E}", END_RED), ("dot", r"\cdot", P_WHITE),
+-            ("fp", r"f_{p}", P_YELLOW), ("cap", tr(r"\;\text{← limited by the GEG}", r"\;\text{← vom GEG begrenzt}"), P_PRIMARY),
++            ("fp", r"f_{P}", P_YELLOW), ("cap", tr(r"\;\text{← limited by the GModG}", r"\;\text{← vom GModG begrenzt}"), P_PRIMARY),
+         ])
+         rings = {}
+@@ -542,5 +551,5 @@ class Beat1_DreiBilanzgrenzen(Scene):
+         say("geg",
+             (1.0, [FadeOut(m) for m in scenery]),
+-            (1.6, [FadeIn(rc["card"]) for rc in row_cards] + [GrowArrow(h) for h in hops] + [FadeIn(hop_names)]),
++            (1.6, [FadeIn(rc["card"]) for rc in row_cards] + [GrowArrow(h) for h in hops] + [FadeIn(hop_names), FadeIn(law_note)]),
+             (1.4, [Create(box), FadeIn(items["eq"]), FadeIn(items["dot"]), FadeIn(items["cap"]),
+                    stage.transition("demand.primary-energy.boundaries.symbol-qp-into-formula", source=row_cards[2]["sym"], target=items["qp"]),
+@@ -558,5 +567,5 @@ class Beat1_DreiBilanzgrenzen(Scene):
+             (1.0, [Indicate(items["fp"], color=P_YELLOW, scale_factor=1.15)]))
+ 
+-        self.play(FadeOut(caption), FadeOut(box), FadeOut(row), *[FadeOut(c) for c in carriers], run_time=0.6)
++        self.play(FadeOut(caption), FadeOut(box), FadeOut(row), FadeOut(law_note), *[FadeOut(c) for c in carriers], run_time=0.6)
+         self.wait(0.4)
+ 
+@@ -569,36 +578,36 @@ class Beat2_Primaerenergiefaktor(Scene):
+     NARRATION = [
+         ("intro",
+-         "The step from final to primary energy is one multiplication.",
+-         "Der Schritt von End- zu Primärenergie ist eine Multiplikation."),
++         r"The step from final energy $Q_{E}$ to primary energy $Q_{P}$ is one multiplication.",
++         r"Der Schritt von der Endenergie $Q_{E}$ zur Primärenergie $Q_{P}$ ist eine Multiplikation."),
+         ("zahl",
+-         "The multiplier is one number for each energy carrier.",
+-         "Der Faktor ist eine Zahl je Energieträger."),
++         r"The multiplier, the primary energy factor $f_{P}$, is one number for each energy carrier.",
++         r"Der Faktor, der Primärenergiefaktor $f_{P}$, ist eine Zahl je Energieträger."),
+         ("bezug",
+-         "It says how much primary energy one kilowatt-hour of final energy needs.",
+-         "Er sagt, wie viel Primärenergie eine Kilowattstunde Endenergie braucht."),
++         "It says how many kilowatt-hours of primary energy one kilowatt-hour of final energy needs, so it is dimensionless.",
++         "Er sagt, wie viele Kilowattstunden Primärenergie eine Kilowattstunde Endenergie braucht, und ist deshalb dimensionslos."),
+         ("strom",
+-         "Grid electricity carries a high factor among household carriers.",
+-         "Netzstrom trägt unter den Haushalts-Energieträgern einen hohen Faktor."),
++         r"Grid electricity carries the highest factor among household carriers: $f_{P} = 1.8$.",
++         r"Netzstrom trägt unter den Haushalts-Energieträgern den höchsten Faktor: $f_{P} = 1{,}8$."),
+         ("strom_mix",
+          "Its generation mix still has a large fossil share.",
+          "Sein Erzeugungsmix hat noch einen großen fossilen Anteil."),
+         ("strom_geg",
+-         "The value is fixed in the GEG.",
+-         "Der Wert ist im GEG festgelegt."),
++         "The value is fixed by law: Annex 4 of the Building Modernisation Act.",
++         "Der Wert ist gesetzlich festgelegt: Anlage 4 des Gebäudemodernisierungsgesetzes."),
+         ("gas",
+-         "Gas and oil sit just above one.",
+-         "Gas und Öl liegen knapp über eins."),
++         r"Gas and oil sit just above one: $f_{P} = 1.1$.",
++         r"Gas und Öl liegen knapp über eins: $f_{P} = 1{,}1$."),
+         ("gas_kette",
+          "The fuel itself is fossil, plus a small share for the supply chain.",
+          "Der Brennstoff selbst ist fossil, dazu kommt ein kleiner Anteil für die Vorkette."),
+         ("holz",
+-         "Wood is counted at a fifth.",
+-         "Holz wird mit einem Fünftel angesetzt."),
++         r"Wood is counted at a fifth: $f_{P} = 0.2$.",
++         r"Holz wird mit einem Fünftel angesetzt: $f_{P} = 0{,}2$."),
+         ("holz_rest",
+          "The remaining four fifths are renewable and do not count.",
+          "Die übrigen vier Fünftel sind erneuerbar und zählen nicht."),
+         ("umwelt",
+-         "Ambient heat from air or ground counts as zero.",
+-         "Umweltwärme aus Luft oder Erdreich zählt als null."),
++         r"Ambient heat from air or ground counts as zero: $f_{P} = 0$.",
++         r"Umweltwärme aus Luft oder Erdreich zählt als null: $f_{P} = 0$."),
+         ("erneuerbar",
+          "These are the non-renewable shares.",
+@@ -614,5 +623,5 @@ class Beat2_Primaerenergiefaktor(Scene):
+ 
+         subtitle = section_heading(tr("The non-renewable primary energy factor", "Der nicht erneuerbare Primärenergiefaktor"))
+-        din = _din_ref(tr("GEG Annex 4", "GEG Anlage 4"))
++        din = reference_chip(_references.cite(("gmodg", "p22")), subtitle)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -623,8 +632,8 @@ class Beat2_Primaerenergiefaktor(Scene):
+         X_LOSS, V, BIG = -1.9, 1.5, 1.7
+         rows = [
+-            ("strom", tr("Grid electricity", "Netzstrom"), F_P_STROM, P_YELLOW, 1.45),
++            ("strom", tr("Grid electricity", "Strom, netzbezogen"), F_P_STROM, P_YELLOW, 1.45),
+             ("gas", tr("Natural gas / fuel oil", "Erdgas / Heizöl"), F_P_GAS, GAS_AMBER, 0.62),
+-            ("holz", tr("Wood (biomass)", "Holz (Biomasse)"), F_P_HOLZ, WOOD_BROWN, -0.21),
+-            ("umwelt", tr("Ambient heat, solar", "Umweltwärme, Solar"), F_P_UMWELT, AMBIENT_GREEN, -1.04),
++            ("holz", tr("Wood", "Holz"), F_P_HOLZ, WOOD_BROWN, -0.21),
++            ("umwelt", tr("Ambient heat", "Umgebungswärme"), F_P_UMWELT, AMBIENT_GREEN, -1.04),
+         ]
+         FP = {k: f for k, n, f, c, y in rows}
+@@ -663,5 +672,5 @@ class Beat2_Primaerenergiefaktor(Scene):
+             return VGroup(box, tag)
+ 
+-        fixed_tag = body_text(tr("defined in the GEG (Annex 4)", "im GEG festgelegt (Anlage 4)"), font_size=LABEL_FONT_SIZE - 2, color=P_PRIMARY)
++        fixed_tag = body_text(tr("set by law (Annex 4)", "gesetzlich festgelegt (Anlage 4)"), font_size=LABEL_FONT_SIZE - 2, color=P_PRIMARY)
+         fixed_tag.move_to(np.array([X_NAME + 0.35, YS["strom"] - 0.4, 0.0]))
+ 
+@@ -685,5 +694,5 @@ class Beat2_Primaerenergiefaktor(Scene):
+         reads = {
+             k: math_readout(
+-                lambda t=trackers[k]: rf"f_{{p}}={label_number(t.get_value(), 1)}",
++                lambda t=trackers[k]: rf"f_{{P}}={label_number(t.get_value(), 1)}",
+                 lambda t=trackers[k], y=y: np.array([X_BAR + max(t.get_value(), 1.0) * UNIT_LEN + 0.22, y - 0.1, 0.0]),
+                 size=BODY_FONT_SIZE, color=c, edge="left")
+@@ -728,5 +737,5 @@ class Beat2_Primaerenergiefaktor(Scene):
+             ("qp", r"Q_{P}", PRIM_VIOLET), ("eq", "=", P_WHITE),
+             ("qe", r"Q_{E}", END_RED), ("dot", r"\cdot", P_WHITE),
+-            ("fp", r"f_{p}", P_YELLOW),
++            ("fp", r"f_{P}", P_YELLOW),
+         ], font_size=BODY_FONT_SIZE + 4)
+         top = np.array([0.0, 2.32, 0.0])
+@@ -782,5 +791,5 @@ class Beat2_Primaerenergiefaktor(Scene):
+             ("qp", r"Q_{P}", PRIM_VIOLET), ("eq", "=", P_WHITE),
+             ("qe", r"Q_{E}", END_RED), ("dot", r"\cdot", P_WHITE),
+-            ("fp", tr(r"f_{p,\mathrm{n.\,ren.}}", r"f_{p,\mathrm{n.\,ern.}}"), P_YELLOW), ("unit", rf"\;[{UNIT}]", P_PRIMARY),
++            ("fp", r"f_{P,\mathrm{nren}}", P_YELLOW), ("unit", tr(rf"\quad\text{{with}}\;Q\;\text{{in}}\;{UNIT}", rf"\quad\text{{mit}}\;Q\;\text{{in}}\;{UNIT}"), P_PRIMARY),
+         ])
+         say("erneuerbar",
+@@ -789,5 +798,5 @@ class Beat2_Primaerenergiefaktor(Scene):
+                    FadeIn(items2["unit"]), Indicate(VGroup(*reads.values()), color=P_YELLOW, scale_factor=1.06)]))
+ 
+-        note = note_line(tr("f_p per GEG Annex 4: non-renewable share — defined calculation value", "f_p nach GEG Anlage 4: nicht erneuerbarer Anteil — festgelegter Rechenwert"), color=P_PRIMARY)
++        note = _math_note(tr(r"f_{P}\;\text{per Annex 4: non-renewable share, dimensionless — a defined calculation value}", r"f_{P}\;\text{nach Anlage 4: nicht erneuerbarer Anteil, dimensionslos — festgelegter Rechenwert}"))
+         ring = highlight_param(items2, "fp", color=P_YELLOW)
+         say("rechenwert", (1.2, [FadeIn(note), Create(ring)]))
+@@ -811,5 +820,5 @@ G3, S3, U3 = -0.75, 0.55, 0.0100
+ 
+ def _plant_panel(px, kind):
+-    """🏗️ One house on one plant: bars at the three boundaries, the plant between them, and the ``f_p`` gauge.
++    """🏗️ One house on one plant: bars at the three boundaries, the plant between them, and the ``f_P`` gauge.
+ 
+     Everything sits on the same ground line, so the two panels read as columns that can be compared by eye.
+@@ -841,9 +850,10 @@ def _plant_panel(px, kind):
+     trackers = {k: ValueTracker(0.0) for k in ("h", "e", "q")}
+     plain = [(Q_NUTZ, NUTZ_BLUE)]
+-    split = [(Q_END_WP, NUTZ_BLUE), (Q_AMBIENT_WP, AMBIENT_GREEN)]
++    split = [(Q_POWER_SHARE, P_YELLOW), (Q_AMBIENT_WP, AMBIENT_GREEN)]
++    wp_end = [(Q_POWER_SHARE, P_YELLOW), (Q_END_WP - Q_POWER_SHARE, P_ORANGE)]
+     stacks = {
+-        "e": [(Q_NUTZ, NUTZ_BLUE), (Q_LOSS_GAS, P_ORANGE)] if gas else [(Q_END_WP, NUTZ_BLUE)],
++        "e": [(Q_NUTZ, NUTZ_BLUE), (Q_LOSS_GAS, P_ORANGE)] if gas else wp_end,
+         "q": [(Q_NUTZ, NUTZ_BLUE), (Q_LOSS_GAS, P_ORANGE), (Q_CHAIN_GAS, PRIM_VIOLET)] if gas
+-        else [(Q_END_WP, NUTZ_BLUE), (Q_CHAIN_WP, PRIM_VIOLET)],
++        else [*wp_end, (Q_CHAIN_WP, PRIM_VIOLET)],
+     }
+     bars = {"h": _bar_mob(trackers["h"], plain, xs["h"], G3, unit=U3),
+@@ -865,4 +875,7 @@ def _plant_panel(px, kind):
+         }
+ 
++    kinds = {key: body_text(word, font_size=LABEL_FONT_SIZE - 5, color=stage[key][1]).move_to(np.array([xs[key] + dx, G3 - 0.67, 0.0]))
++             for key, word, dx in (("h", tr("Useful energy", "Nutzenergie"), 0.0), ("e", tr("Final energy", "Endenergie"), -0.18),
++                                   ("q", tr("Primary energy", "Primärenergie"), 0.1))}
+     gauge = meter("f", length=1.6, thickness=0.26, color=P_YELLOW, vertical=False)
+     gauge["group"].remove(gauge["label"])
+@@ -872,5 +885,5 @@ def _plant_panel(px, kind):
+     tick = Line(gauge["track"].get_top() + DOWN * 0.04, gauge["track"].get_bottom() + UP * 0.04,
+                 color=P_WHITE, stroke_width=1.6, stroke_opacity=0.7)
+-    gauge_read = math_readout(lambda: rf"f_{{p}}={label_number(2.0 * share.get_value(), 1)}",
++    gauge_read = math_readout(lambda: rf"f_{{P}}={label_number(2.0 * share.get_value(), 1)}",
+                               np.array([px + 4.75, 1.78, 0.0]), size=LABEL_FONT_SIZE, color=P_YELLOW, edge="right")
+     return {
+@@ -880,5 +893,5 @@ def _plant_panel(px, kind):
+         "trackers": trackers, "bars": bars, "reads": reads, "split": split, "plain": plain, "stacks": stacks,
+         "gauge": gauge, "tick": tick, "share": share, "gauge_read": gauge_read, "colour": colour,
+-        "static": {},
++        "kinds": kinds, "static": {},
+     }
+ 
+@@ -890,36 +903,42 @@ class Beat3_Rechenbeispiel(Scene):
+          "Jetzt die ganze Kette an einem Gebäude."),
+         ("nutz",
+-         "The same hundred kilowatt-hours of useful heat as in the last chapter.",
+-         "Dieselben hundert Kilowattstunden Nutzwärme wie im letzten Kapitel."),
++         rf"The same ${Q_NUTZ}\,\mathrm{{kWh/(m^2\,a)}}$ of useful energy $Q_{{h}}$ as in the last chapter.",
++         rf"Dieselben ${Q_NUTZ}\,\mathrm{{kWh/(m^2\,a)}}$ Nutzenergie $Q_{{h}}$ wie im letzten Kapitel."),
+         ("anlage",
+-         "The plant turns that useful heat into final energy.",
+-         "Die Anlage macht aus dieser Nutzwärme Endenergie."),
++         r"The plant turns that useful energy into final energy $Q_{E}$.",
++         r"Die Anlage macht aus dieser Nutzenergie Endenergie $Q_{E}$."),
+         ("end_gas",
+-         "The gas boiler draws a hundred and forty.",
+-         "Der Gaskessel nimmt hundertvierzig auf."),
++         rf"The gas boiler draws ${Q_END_GAS}\,\mathrm{{kWh/(m^2\,a)}}$.",
++         rf"Der Gaskessel nimmt ${Q_END_GAS}\,\mathrm{{kWh/(m^2\,a)}}$ auf."),
+         ("end_wp",
+-         "The heat pump needs only thirty-one of electricity.",
+-         "Die Wärmepumpe braucht nur einunddreißig Strom."),
++         rf"The heat pump needs only ${Q_END_WP}\,\mathrm{{kWh/(m^2\,a)}}$ of electricity, its final energy.",
++         rf"Die Wärmepumpe braucht nur ${Q_END_WP}\,\mathrm{{kWh/(m^2\,a)}}$ Strom als Endenergie."),
+         ("end_umwelt",
+-         "The rest comes free as ambient heat from the air.",
+-         "Den Rest liefert kostenlos die Umweltwärme aus der Luft."),
++         rf"Of the useful energy, ${Q_AMBIENT_WP}\,\mathrm{{kWh/(m^2\,a)}}$ come free from the ambient air, and only ${Q_POWER_SHARE}\,\mathrm{{kWh/(m^2\,a)}}$ are driven by electricity.",
++         rf"Von der Nutzenergie liefert die Umweltwärme der Luft ${Q_AMBIENT_WP}\,\mathrm{{kWh/(m^2\,a)}}$ kostenlos, nur ${Q_POWER_SHARE}\,\mathrm{{kWh/(m^2\,a)}}$ gehen auf den Strom zurück."),
++        ("end_rest",
++         r"The remaining $5\,\mathrm{kWh/(m^2\,a)}$ of electricity cover the losses of emission, distribution and storage.",
++         r"Die übrigen $5\,\mathrm{kWh/(m^2\,a)}$ Strom decken die Verluste von Übergabe, Verteilung und Speicherung."),
+         ("prim",
+-         "Now apply the factors.",
+-         "Jetzt kommen die Faktoren."),
++         r"Now apply the primary energy factors $f_{P}$.",
++         r"Jetzt kommen die Primärenergiefaktoren $f_{P}$."),
+         ("prim_gas",
+-         "Gas is multiplied by one point one.",
+-         "Gas wird mit eins Komma eins multipliziert."),
++         r"Gas is multiplied by $f_{P} = 1.1$.",
++         r"Gas wird mit $f_{P} = 1{,}1$ multipliziert."),
+         ("prim_wp",
+-         "Electricity is multiplied by one point eight.",
+-         "Strom wird mit eins Komma acht multipliziert."),
++         r"Electricity is multiplied by $f_{P} = 1.8$.",
++         r"Strom wird mit $f_{P} = 1{,}8$ multipliziert."),
+         ("ergebnis",
+-         "A hundred and fifty-four against fifty-six.",
+-         "Hundertvierundfünfzig gegen sechsundfünfzig."),
++         rf"${Q_PRIM_GAS}\,\mathrm{{kWh/(m^2\,a)}}$ against ${Q_PRIM_WP}\,\mathrm{{kWh/(m^2\,a)}}$ of primary energy $Q_{{P}}$.",
++         rf"${Q_PRIM_GAS}\,\mathrm{{kWh/(m^2\,a)}}$ gegen ${Q_PRIM_WP}\,\mathrm{{kWh/(m^2\,a)}}$ Primärenergie $Q_{{P}}$."),
+         ("hoeher",
+          "The electricity factor is higher, yet the heat pump ends up far lower.",
+          "Der Stromfaktor ist höher — und die Wärmepumpe liegt trotzdem weit darunter."),
+         ("warum",
+-         "Because the factor is applied to a number that was already more than three quarters smaller.",
+-         "Weil der Faktor auf eine Zahl trifft, die schon gut drei Viertel kleiner war."),
++         "Because the factor is applied to a final energy that was already more than three quarters smaller.",
++         "Weil der Faktor auf eine Endenergie trifft, die schon gut drei Viertel kleiner war."),
++        ("anlagenzahl",
++         rf"Primary over useful energy is the primary-energy expenditure figure $e_{{P}} = e_{{E}}\cdot f_{{P}} = Q_{{P}}/Q_{{h}}$: ${E_P_GAS:.2f}$ against ${E_P_WP:.2f}$.",
++         rf"Primärenergie durch Nutzenergie ist die primärenergetische Aufwandszahl $e_{{P}} = e_{{E}}\cdot f_{{P}} = Q_{{P}}/Q_{{h}}$: ${_de(E_P_GAS)}$ gegen ${_de(E_P_WP)}$."),
+         ("effizienz",
+          "Efficiency beats the factor.",
+@@ -932,9 +951,9 @@ class Beat3_Rechenbeispiel(Scene):
+ 
+         subtitle = section_heading(tr("One building, two systems", "Ein Gebäude, zwei Anlagen"))
+-        din = _din_ref("GEG § 20 · DIN V 18599:2018-09")
++        din = reference_chip(_references.cite(("gmodg", "p20-22"), ("din-ts-18599-1", "primaerenergie")), subtitle)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+-        schematic_note = note_line(tr("Simplified worked example — not a full DIN/GEG calculation", "Vereinfachtes Rechenbeispiel — keine vollständige DIN/GEG-Berechnung"), color=P_PRIMARY)
++        schematic_note = note_line(tr("Simplified worked example — not a full DIN/TS 18599:2025-10 / GModG calculation", "Vereinfachtes Rechenbeispiel — keine vollständige Berechnung nach DIN/TS 18599:2025-10 / GModG"), color=P_PRIMARY)
+         self.play(FadeIn(caption), FadeIn(schematic_note), run_time=0.3)
+ 
+@@ -942,7 +961,8 @@ class Beat3_Rechenbeispiel(Scene):
+         panels = (gas, wp)
+ 
+-        legend_unit = math_label(rf"[{UNIT}]", size=LABEL_FONT_SIZE, color=P_PRIMARY)
+-        words = {key: body_text(text, font_size=LABEL_FONT_SIZE, color=colour)
+-                 for key, text, colour in (("nutz", tr("Useful heat", "Nutzwärme"), NUTZ_BLUE), ("loss", tr("System loss", "Anlagenverlust"), P_ORANGE),
++        legend_unit = math_label(rf"Q\;\text{{in}}\;{UNIT}", size=LABEL_FONT_SIZE, color=P_PRIMARY)
++        words = {key: body_text(text, font_size=LABEL_FONT_SIZE - 2, color=colour)
++                 for key, text, colour in (("nutz", tr("Useful energy", "Nutzenergie"), NUTZ_BLUE), ("loss", tr("System loss", "Anlagenverlust"), P_ORANGE),
++                                           ("power", tr("Electricity", "Strom"), P_YELLOW),
+                                            ("env", tr("Ambient heat", "Umweltwärme"), AMBIENT_GREEN), ("chain", tr("Upstream chain", "Vorkette"), PRIM_VIOLET))}
+         VGroup(legend_unit, *words.values()).arrange(RIGHT, buff=0.45).move_to(np.array([0.0, 2.3, 0.0]))
+@@ -996,5 +1016,6 @@ class Beat3_Rechenbeispiel(Scene):
+ 
+         say("nutz",
+-            (1.0, [stage.transition("demand.primary-energy.worked-example.note-to-unit-legend", source=schematic_note, target=legend_unit), FadeIn(words["nutz"])]),
++            (1.0, [stage.transition("demand.primary-energy.worked-example.note-to-unit-legend", source=schematic_note, target=legend_unit), FadeIn(words["nutz"]),
++                   *[FadeIn(p["kinds"]["h"]) for p in panels]]),
+             (1.6, lambda: shown(*[m for p in panels for m in (p["bars"]["h"], p["reads"]["h"]["num"],
+                                                               p["reads"]["h"]["sym"])],
+@@ -1014,5 +1035,5 @@ class Beat3_Rechenbeispiel(Scene):
+         say("end_gas",
+             (2.0, lambda: shown(gas["bars"]["e"], gas["reads"]["e"]["num"], gas["reads"]["e"]["sym"],
+-                                anims=[FadeIn(words["loss"]), gas["trackers"]["e"].animate.set_value(Q_END_GAS)])))
++                                anims=[FadeIn(words["loss"]), FadeIn(gas["kinds"]["e"]), gas["trackers"]["e"].animate.set_value(Q_END_GAS)])))
+         freeze(gas, "e", base_src=r"Q_{E}", color=END_RED)
+ 
+@@ -1020,5 +1041,5 @@ class Beat3_Rechenbeispiel(Scene):
+         say("end_wp",
+             (1.6, lambda: shown(wp["bars"]["e"], wp["reads"]["e"]["num"], wp["reads"]["e"]["sym"],
+-                                anims=[wp["trackers"]["e"].animate.set_value(Q_END_WP)])))
++                                anims=[FadeIn(wp["kinds"]["e"]), wp["trackers"]["e"].animate.set_value(Q_END_WP)])))
+         freeze(wp, "e", base_src=r"Q_{E}", color=END_RED)
+ 
+@@ -1026,8 +1047,10 @@ class Beat3_Rechenbeispiel(Scene):
+         split_bar = _bar_rects(Q_NUTZ, wp["split"], wp["xs"]["h"], G3, unit=U3)
+         say("end_umwelt",
+-            (1.2, [FadeIn(wp["sun"]), FadeIn(words["env"])]),
++            (1.2, [FadeIn(wp["sun"]), FadeIn(words["env"]), FadeIn(words["power"])]),
+             (1.6, [stage.transition("demand.primary-energy.worked-example.heat-bar-splits-ambient", source=wp["rect_h"], target=split_bar)]))
+         wp["rect_h"] = split_bar
+ 
++        say("end_rest", (1.2, [Indicate(wp["static"]["e"]["num"], color=P_YELLOW, scale_factor=1.15)]))
++
+         streams.clear()
+         houses_on[0] = False
+@@ -1048,5 +1071,5 @@ class Beat3_Rechenbeispiel(Scene):
+                                     p["gauge"]["track"], p["gauge"]["fill"], p["gauge_read"],
+                                     anims=[FadeIn(p["gauge"]["track"]), FadeIn(p["tick"]), FadeIn(p["gauge_read"]),
+-                                           FadeIn(p["pipes"]["up"])])),
++                                           FadeIn(p["pipes"]["up"]), FadeIn(p["kinds"]["q"])])),
+                 (2.0, [p["share"].animate.set_value(factor / 2.0), p["trackers"]["q"].animate.set_value(prim)]),
+             ]
+@@ -1054,10 +1077,10 @@ class Beat3_Rechenbeispiel(Scene):
+         say("prim_gas", *factor_step(gas))
+         freeze(gas, "q", base_src=r"Q_{P}", color=PRIM_VIOLET)
+-        gas["static"]["f"] = _freeze(self, gas["gauge_read"], rf"f_{{p}}={label_number(F_P_GAS, 1)}",
++        gas["static"]["f"] = _freeze(self, gas["gauge_read"], rf"f_{{P}}={label_number(F_P_GAS, 1)}",
+                                      (gas["xs"]["e"] - 0.25, 1.78), P_YELLOW, edge="right")
+ 
+         say("prim_wp", *factor_step(wp))
+         freeze(wp, "q", base_src=r"Q_{P}", color=PRIM_VIOLET)
+-        wp["static"]["f"] = _freeze(self, wp["gauge_read"], rf"f_{{p}}={label_number(F_P_STROM, 1)}",
++        wp["static"]["f"] = _freeze(self, wp["gauge_read"], rf"f_{{P}}={label_number(F_P_STROM, 1)}",
+                                     (wp["xs"]["e"] - 0.25, 1.78), P_YELLOW, edge="right")
+         streams.clear()
+@@ -1079,13 +1102,16 @@ class Beat3_Rechenbeispiel(Scene):
+         say("warum", (1.4, [FadeOut(rings), FadeIn(ghost_e)]))
+ 
++        unit_tail = rf"\,{UNIT}"
+         parts = [
+-            ("g_qe", label_number(Q_END_GAS), END_RED), ("g_dot", r"\cdot", P_WHITE),
++            ("g_qe", label_number(Q_END_GAS) + unit_tail, END_RED), ("g_dot", r"\cdot", P_WHITE),
+             ("g_fp", label_number(F_P_GAS, 1), P_YELLOW), ("g_eq", _eq(Q_END_GAS * F_P_GAS), P_WHITE),
+-            ("g_qp", label_number(Q_PRIM_GAS), PRIM_VIOLET), (None, r"\quad", P_WHITE),
+-            ("w_qe", label_number(Q_END_WP), END_RED), ("w_dot", r"\cdot", P_WHITE),
++            ("g_qp", label_number(Q_PRIM_GAS) + unit_tail, PRIM_VIOLET), (None, r"\quad", P_WHITE),
++            ("w_qe", label_number(Q_END_WP) + unit_tail, END_RED), ("w_dot", r"\cdot", P_WHITE),
+             ("w_fp", label_number(F_P_STROM, 1), P_YELLOW), ("w_eq", _eq(Q_END_WP * F_P_STROM), P_WHITE),
+-            ("w_qp", label_number(Q_PRIM_WP), PRIM_VIOLET), ("unit", rf"\;{UNIT}", P_PRIMARY),
++            ("w_qp", label_number(Q_PRIM_WP) + unit_tail, PRIM_VIOLET),
+         ]
+         row, box, items = math_panel(parts)
++        ep_note = _math_note(tr(rf"e_{{P}}=Q_{{P}}/Q_{{h}}:\;{E_P_GAS:.2f}\;\text{{(gas)}},\;{E_P_WP:.2f}\;\text{{(heat pump)}}\;\cdot\;e_{{P}}\;\text{{and}}\;f_{{P}}\;\text{{are dimensionless}}", rf"e_{{P}}=Q_{{P}}/Q_{{h}}:\;{_de(E_P_GAS)}\;\text{{(Gas)}},\;{_de(E_P_WP)}\;\text{{(Wärmepumpe)}}\;\cdot\;e_{{P}}\;\text{{und}}\;f_{{P}}\;\text{{sind dimensionslos}}"))
++        say("anlagenzahl", (0.6, [FadeOut(legend_unit), *[FadeOut(w) for w in words.values()], *[FadeOut(m) for p in panels for m in p["kinds"].values()]]), (1.2, [FadeIn(ep_note)]))
+         copies = []
+         for p, tag, name in ((gas, "g", "gas"), (wp, "w", "heat-pump")):
+@@ -1097,13 +1123,14 @@ class Beat3_Rechenbeispiel(Scene):
+             ]
+         say("effizienz",
+-            (1.8, [Create(box), FadeIn(items["unit"]), *copies]),
+-            (1.0, [Indicate(VGroup(items["g_qp"], items["w_qp"]), color=P_YELLOW, scale_factor=1.15)]))
++            (1.8, [Create(box), *copies]),
++            (1.0, [Indicate(VGroup(items["g_qp"], items["w_qp"]), color=P_YELLOW, scale_factor=1.04)]))
+ 
++        moved = {id(m) for p in panels for m in (p["static"]["e"]["num"], p["static"]["f"], p["static"]["q"]["num"])}
+         everything = [
+-            caption, box, row, ghost_q, ghost_e, legend_unit, *words.values(),
++            caption, box, row, ghost_q, ghost_e, ep_note,
+             *[m for p in panels for m in (
+                 p["ground"], p["meter"], p["head"], p["pipes"]["up"],
+                 p["rect_h"], p["bars"]["e"], p["bars"]["q"], p["gauge"]["track"], p["gauge"]["fill"], p["tick"],
+-                *[m for tag in p["static"].values() for m in (tag.values() if isinstance(tag, dict) else [tag])],
++                *[m for tag in p["static"].values() for m in (tag.values() if isinstance(tag, dict) else [tag]) if id(m) not in moved],
+             )],
+         ]
+@@ -1134,21 +1161,21 @@ class Beat4_Referenzgebaeude(Scene):
+          "Und es füllt sie mit der technischen Referenzausführung nach Anlage 1: das Referenzgebäude."),
+         ("grenze",
+-         "Its calculated primary energy sets the benchmark.",
+-         "Dessen Primärenergiebedarf setzt den Maßstab."),
++         rf"Its calculated primary energy $Q_{{P}}$ sets the benchmark: ${Q_REF}\,\mathrm{{kWh/(m^2\,a)}}$ in this schematic example.",
++         rf"Dessen Primärenergiebedarf $Q_{{P}}$ setzt den Maßstab: im schematischen Beispiel ${Q_REF}\,\mathrm{{kWh/(m^2\,a)}}$."),
+         ("anteil",
+-         "A new residential building may reach at most fifty-five percent of it.",
+-         "Ein neues Wohngebäude darf höchstens fünfundfünfzig Prozent davon erreichen."),
++         rf"A new residential building may reach at most ${REF_SHARE:.2f}$ of it, that is ${Q_LIMIT}\,\mathrm{{kWh/(m^2\,a)}}$.",
++         rf"Ein neues Wohngebäude darf höchstens das ${_de(REF_SHARE)}$-Fache davon erreichen, also ${Q_LIMIT}\,\mathrm{{kWh/(m^2\,a)}}$."),
+         ("waermepumpe",
+-         "In this example the heat pump clears the line.",
+-         "Im Beispiel unterschreitet die Wärmepumpe die Linie."),
++         rf"In this example the heat pump, ${Q_PRIM_WP}\,\mathrm{{kWh/(m^2\,a)}}$, clears the line.",
++         rf"Im Beispiel unterschreitet die Wärmepumpe mit ${Q_PRIM_WP}\,\mathrm{{kWh/(m^2\,a)}}$ die Linie."),
+         ("gaskessel",
+-         "The gas boiler misses it by more than a factor of two.",
+-         "Der Gaskessel verfehlt sie um mehr als das Doppelte."),
++         rf"The gas boiler, ${Q_PRIM_GAS}\,\mathrm{{kWh/(m^2\,a)}}$, misses it by more than a factor of two.",
++         rf"Der Gaskessel verfehlt sie mit ${Q_PRIM_GAS}\,\mathrm{{kWh/(m^2\,a)}}$ um mehr als das Doppelte."),
+         ("huelle",
+-         "The GEG also demands thermal protection of the envelope.",
+-         "Daneben verlangt das GEG baulichen Wärmeschutz."),
++         r"The law also demands thermal protection of the envelope: a limit on the transmission heat loss per envelope area.",
++         r"Daneben verlangt das Gesetz baulichen Wärmeschutz: eine Grenze für den Transmissionswärmeverlust je Hüllfläche."),
+         ("erneuerbar",
+-         "New heating systems must run on 65 percent renewable energy, with transition periods.",
+-         "Für neue Heizungen gilt — mit Übergangsfristen — ein Anteil von 65 Prozent erneuerbarer Energie."),
++         "The 65 percent renewable rule for new heating systems, formerly paragraph 71, was dropped with the 2026 reform.",
++         "Die frühere 65-Prozent-Regel für neue Heizungen, Paragraf 71, ist mit der Reform 2026 entfallen."),
+     ]
+ 
+@@ -1158,5 +1185,5 @@ class Beat4_Referenzgebaeude(Scene):
+ 
+         subtitle = section_heading(tr("The limit: the reference building", "Der Grenzwert: das Referenzgebäude"))
+-        din = _din_ref("GEG §§ 15–17 · § 71 · Anlage 1")
++        din = reference_chip(_references.cite(("gmodg", "p71")), subtitle)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -1198,5 +1225,5 @@ class Beat4_Referenzgebaeude(Scene):
+             color=P_RED, stroke_width=2.6))
+         share_read = math_readout(
+-            lambda: rf"{label_number(t_share.get_value(), 2)}\cdot {Q_REF}",
++            lambda: rf"{label_number(t_share.get_value(), 2)}\cdot {Q_REF}\,{UNIT}",
+             lambda: np.array([x_ref + ox.get_value(), G4 + Q_REF * U4 + 0.28, 0.0]),
+             size=LABEL_FONT_SIZE, color=P_RED, edge="center")
+@@ -1214,5 +1241,6 @@ class Beat4_Referenzgebaeude(Scene):
+         def caption_under(name, colour, tracker, x):
+             label = body_text(name, font_size=LABEL_FONT_SIZE, color=colour).move_to(np.array([x - 0.3, -0.95, 0.0]))
+-            number = _count(tracker, lambda: np.array([label.get_right()[0] + 0.1, -1.01, 0.0]), colour, edge="left")
++            number = _count(tracker, lambda: np.array([label.get_center()[0], -1.36, 0.0]), colour, edge="center",
++                            suffix=rf"\,{UNIT}")
+             return label, number
+ 
+@@ -1229,4 +1257,6 @@ class Beat4_Referenzgebaeude(Scene):
+         pipe_ref = _pipes(path_ref)
+         verdict = note_line(tr("in the example only the heat pump falls below the limit", "im Beispiel unterschreitet nur die Wärmepumpe den Grenzwert"), color=AMBIENT_GREEN)
++        axis_label = math_label(tr(r"\text{Primary energy}\;Q_{P}\;\text{in}\;", r"\text{Primärenergie}\;Q_{P}\;\text{in}\;") + UNIT,
++                                np.array([-6.7, 1.85, 0.0]), size=LABEL_FONT_SIZE, color=PRIM_VIOLET, edge="left")
+ 
+         share_gauge = meter("e", length=1.0, thickness=0.2, color=AMBIENT_GREEN, vertical=False)
+@@ -1235,5 +1265,5 @@ class Beat4_Referenzgebaeude(Scene):
+         t_ee = ValueTracker(0.0)
+         bind_meter(share_gauge, t_ee)
+-        ee_name = body_text(tr("renewable", "erneuerbar"), font_size=LABEL_FONT_SIZE - 2, color=AMBIENT_GREEN).move_to(
++        ee_name = body_text(tr("renewable (until 2026)", "erneuerbar (bis 2026)"), font_size=LABEL_FONT_SIZE - 2, color=AMBIENT_GREEN).move_to(
+             np.array([3.0, 0.8, 0.0]))
+         ee_read = math_readout(lambda: rf"{label_number(100.0 * t_ee.get_value())}\,\%", np.array([3.65, 0.44, 0.0]),
+@@ -1275,5 +1305,5 @@ class Beat4_Referenzgebaeude(Scene):
+         say("grenze",
+             (1.2, [FadeOut(m) for m in (design["group"], design_in["group"], dims_d, dims_r, tag_d, spec, envelope_r)]),
+-            (1.8, lambda: shown(bar_ref, num_ref, anims=[FadeIn(pipe_ref), FadeIn(name_ref),
++            (1.8, lambda: shown(bar_ref, num_ref, anims=[FadeIn(pipe_ref), FadeIn(name_ref), FadeIn(axis_label),
+                                                          t_ref.animate.set_value(Q_REF)])))
+ 
+@@ -1295,8 +1325,10 @@ class Beat4_Referenzgebaeude(Scene):
+ 
+         chart = (bar_ref, fill, limit_line, share_read, limit_card, limit_leader, bar_gas, bar_wp, name_ref, name_gas,
+-                 name_wp, num_ref, num_gas, num_wp, double_line, double_tag, verdict)
++                 name_wp, num_ref, num_gas, num_wp, double_line, double_tag, verdict, axis_label)
+         house_d = VGroup(design["group"], design_in["group"], envelope_d)
+         house_d.shift(RIGHT * 5.25)
+-        row, box, items = math_panel([("ht", r"H′_{T}", P_CYAN), ("ht_ref", r"\text{(§ 16)}", P_PRIMARY)])
++        row, box, items = math_panel([
++            ("ht", r"H_{T}", P_CYAN),
++            ("ht_ref", tr(r"\text{per envelope area in}\;\frac{\mathrm{W}}{\mathrm{m^{2}\,K}}\;\text{at most that of the reference building (§ 16)}", r"\text{je Hüllfläche in}\;\frac{\mathrm{W}}{\mathrm{m^{2}\,K}}\;\text{höchstens wie beim Referenzgebäude (§ 16)}"), P_PRIMARY)])
+         ring_ht = highlight_param(items, "ht", color=P_CYAN)
+         say("huelle",
+@@ -1309,6 +1341,7 @@ class Beat4_Referenzgebaeude(Scene):
+ 
+         row2, box2, items2 = math_panel([
+-            ("ee", r"65\,\%", AMBIENT_GREEN), ("ee_text", tr(r"\text{renewable for new heating systems (§ 71)}", r"\text{erneuerbar für neue Heizungen (§ 71)}"), P_PRIMARY),
++            ("ee", r"65\,\%", AMBIENT_GREEN), ("ee_text", tr(r"\text{renewable for new heating systems (§ 71, until 2026) — repealed on 29 July 2026}", r"\text{erneuerbar für neue Heizungen (§ 71, bis 2026) — entfallen seit 29.07.2026}"), P_PRIMARY),
+         ])
++        strike = Line(items2["ee"].get_corner(DL), items2["ee"].get_corner(UR), color=P_RED, stroke_width=4)
+         frozen = {}
+ 
+@@ -1322,8 +1355,9 @@ class Beat4_Referenzgebaeude(Scene):
+             (1.6, lambda: shown(ee_read, anims=[FadeIn(share_gauge["track"]), FadeIn(share_gauge["fill"]),
+                                                 FadeIn(ee_name), t_ee.animate.set_value(EE_SHARE)])),
+-            (1.2, freeze_ee))
++            (1.2, freeze_ee),
++            (0.8, [Create(strike)]))
+ 
+         self.play(
+-            FadeOut(caption), FadeOut(box2), FadeOut(row2),
++            FadeOut(caption), FadeOut(box2), FadeOut(row2), FadeOut(strike),
+             *[FadeOut(m) for m in (design["group"], design_in["group"], ground, envelope_d,
+                                    share_gauge["track"], share_gauge["fill"], ee_name, frozen["ee"])],

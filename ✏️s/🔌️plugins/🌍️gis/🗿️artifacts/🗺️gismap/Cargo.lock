@@ -13545,10 +13545,15 @@ dependencies = [
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-jpg-inferences",
+ "semio-s-artifact-stdio-pdf-image-route",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-snapshot-2",
 ]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-editor-kit"
+version = "0.1.0"
 
 [[package]]
 name = "semio-s-artifact-stdio-pdf-filters"
@@ -13638,6 +13643,14 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-image-route"
+version = "0.1.0"
+dependencies = [
+ "semio-plugin",
+ "semio-s-artifact-stdio-pdf-inferences",
 ]
 
 [[package]]
@@ -15035,6 +15048,7 @@ dependencies = [
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-conformance-support",
  "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-editor-kit",
  "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-base",
@@ -15048,6 +15062,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-family-14",
  "semio-s-artifact-stdio-pdf-mut-family-15",
  "semio-s-artifact-stdio-pdf-mut-family-8",
+ "semio-s-artifact-stdio-pdf-presence-lane",
  "semio-s-artifact-stdio-pdf-schema-2",
  "semio-s-artifact-stdio-pdf-schema-3",
  "semio-s-artifact-stdio-pdf-schema-4",
@@ -15057,6 +15072,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-testkit",
  "semio-s-artifact-stdio-pdf-tests",
  "semio-s-artifact-stdio-pdf-tests-2",
+ "semio-s-artifact-stdio-pdf-view-lane",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -15269,6 +15285,7 @@ dependencies = [
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-editor-document",
+ "semio-s-artifact-stdio-pdf-editor-kit",
  "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-base",
@@ -15617,6 +15634,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-base",
  "semio-s-artifact-stdio-pdf-mut-family-11",
  "semio-s-artifact-stdio-pdf-page-editor",
+ "semio-s-artifact-stdio-pdf-presence-lane",
  "semio-s-artifact-stdio-pdf-snapshot",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-s-artifact-stdio-pdf-view-lane",

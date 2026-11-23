@@ -2,6 +2,7 @@
 import { test, expect } from "bun:test";
 import Ajv from "ajv";
 import { Database } from "bun:sqlite";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { readFileSync } from "node:fs";
 
 test("supplied pages preserve bounded return slots and the same source until actual close", async () => {
@@ -44,16 +45,16 @@ test("supplied pages preserve bounded return slots and the same source until act
  } finally {db.close();}
  const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");
  expect(source.includes("OriginalCallerSourceLoan")).toBe(true);
- expect(source.includes("admit_loan(cx)")).toBe(true);
- expect(source.includes("source.close_step(cx.original_source_parent()?,cx)")).toBe(true);
+ expect(source.includes("parent.admit_loan(&mut checked.owners().source,cx)")).toBe(true);
+ expect(source.includes("source.close_step(parent,cx)")).toBe(true);
  expect(source.includes("Box::new")).toBe(false);
  expect(source.includes("to_vec()")).toBe(false);
  expect(source.includes("impl Drop for OriginalSuppliedJobPage")).toBe(true);
- const native=readFileSync(new URL("../../../../../🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs",import.meta.url),"utf8");
+ const native=readModuleTreeSource(new URL("../../../../../🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs",import.meta.url));
  expect(native.includes("NativeIoStreamRefusal")).toBe(true);
  expect(native.includes("original_total_retained_grant()")).toBe(true);
  expect(native.includes("validate_original_stream_extent(length,cx)")).toBe(true);
- expect(native.includes("pub fn restart_read_page(")).toBe(true);expect(native.includes("pub fn close_result_step(")).toBe(true);expect(native.includes("reservation.publish_last(bytes,cx)")).toBe(true);
+ expect(native.includes("pub fn restart_read_page(")).toBe(true);expect(native.includes("pub fn close_result_step(")).toBe(true);expect(native.includes("reservation.publish_last(bytes,output,cx)")).toBe(true);
  const world=readFileSync(new URL("../../../../../🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/📡️asset-io/🦀️.rs",import.meta.url),"utf8");
  expect(world.includes("WorldAssetResponseBacking::Original(page)=>page.bytes()")).toBe(true);
  const receiver=world.slice(world.indexOf("pub fn try_from_original("),world.indexOf("pub fn bytes(&self)",world.indexOf("pub fn try_from_original(")));

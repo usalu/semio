@@ -55,7 +55,7 @@ for (const locale of fixture.locales as ("en" | "de")[]) {
     expect(mounted.container.querySelector(`[id="${expanded.sections[0].items?.[0]?.id}.disclosureLabel"]`)?.textContent).toBe(entry.definition.args[0].label);
     const header = () => mounted.container.querySelector(`[id="${expanded.sections[0].id}"]`)!;
     expect(header().getAttribute("aria-expanded")).toBe(String(fixture.formDefaultOpen));
-    const arg = () => mounted.container.querySelector(`[id="${entry.definition.args[0].id}"]`)!;
+    const arg = () => mounted.container.querySelector(`[id="${expanded.sections[0].items?.[0]?.id}.input"]`)!;
     expect(arg().closest('[data-slot="collapsible-content"]')?.hasAttribute("hidden")).toBe(true);
     fireEvent.click(header());
     expect(arg().closest('[data-slot="collapsible-content"]')?.hasAttribute("hidden")).toBe(false);

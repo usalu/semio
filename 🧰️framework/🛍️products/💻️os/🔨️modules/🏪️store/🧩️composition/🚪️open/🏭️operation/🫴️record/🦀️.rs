@@ -37,7 +37,7 @@ fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn progress(copy_bytes:usize)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,..Default::default()}}
 fn spent(work:u128)->u64{u64::try_from(work).unwrap_or(u64::MAX)}
-fn refused(failure:OriginalTurnFailure)->ValueError{eprintln!("[DEBUG] refused {failure:?}");let progress=failure.retained_progress();ValueError::literal(ValueRefusalKind::InvalidValue,"original member snapshot receiving turn refused").with_retained_progress(progress)}
+fn refused(failure:OriginalTurnFailure)->ValueError{let progress=failure.retained_progress();let kind=failure.primary_value().map_or(ValueRefusalKind::InvalidValue,|error|error.kind);ValueError::new(kind,failure.primary.message()).with_retained_progress(progress)}
 /// 🪙️ Runs one effect-shaped owner action in the turn's own effect and charges its performed work; `None` means the turn could not fund it.
 fn funded<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<T,E>)->Result<Option<Result<T,E>>,ValueError>{
  let Some((turn,performed))=cx.with_original_effect(grant,|_,effect|run(effect))? else{return Ok(None)};cx.consume_fuel(spent(performed.max(turn.work)));Ok(Some(turn.result))
@@ -45,6 +45,11 @@ fn funded<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,run:impl FnOnce(
 /// ♻️ Runs one effect-shaped close poll; a pending poll keeps its owner state and reports no progress.
 fn closed(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll)->Result<RetainedCloneProgress,ValueError>{
  let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|run(effect))? else{return Ok(Default::default())};
+ match poll{semio_framework_value::RetainedWorkPoll::Pending{work}=>{cx.consume_fuel(spent(work.max(performed)));Ok(Default::default())},semio_framework_value::RetainedWorkPoll::Complete(turn)=>{cx.consume_fuel(spent(turn.work.max(performed)));turn.result.map(|step|step.progress()).map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)}}
+}
+/// ♻️ Runs one effect-shaped receiver close poll in an effect carrying the resident Source's own turn, which a resident schema matcher requires to close.
+fn closed_on_source(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll)->Result<RetainedCloneProgress,ValueError>{
+ let Some((poll,performed))=cx.with_original_source_effect(grant,|_,effect|run(effect))? else{return Ok(Default::default())};
  match poll{semio_framework_value::RetainedWorkPoll::Pending{work}=>{cx.consume_fuel(spent(work.max(performed)));Ok(Default::default())},semio_framework_value::RetainedWorkPoll::Complete(turn)=>{cx.consume_fuel(spent(turn.work.max(performed)));turn.result.map(|step|step.progress()).map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)}}
 }
 /// 🫴️ Runs one receiving step in a local scope; `None` means the turn could not fund it.
@@ -127,7 +132,9 @@ impl<S:NativeReceive<RecordValue>+BorrowedDslRecord+pack::snapshot::ArtifactDsl+
   let Some(issued_turn)=received(cx,floor,|native,offered,work|{
    let available=child.restricted_by(offered);
    let (grant,units)=request.unwrap_or((available,work));
-   if grant.restricted_by(available)!=grant||units>work
+   let resuming=request.is_some();
+   let funded=available.maximum_items>0&&available.maximum_copy_bytes>0&&available.maximum_depth>0&&work>0;
+   if (!resuming&&(grant.restricted_by(available)!=grant||units>work))||(resuming&&!funded)
      ||grant.maximum_items<receiver.minimum_advance_items(grant.maximum_copy_bytes,units)?
    {return Ok::<_,ValueError>(None)}
    let poll=match native.source_witness(){
@@ -138,7 +145,7 @@ impl<S:NativeReceive<RecordValue>+BorrowedDslRecord+pack::snapshot::ArtifactDsl+
   })? else{return Ok(Default::default())};
   let Some((poll,issued))=issued_turn? else{return Ok(Default::default())};
   let turn=match poll{semio_framework_value::RetainedWorkPoll::Pending{work}=>{self.receive_request=Some(issued);cx.consume_fuel(spent(work));return Ok(Default::default())},semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn};
-  let pending=receiver.advance_pending();eprintln!("[DEBUG] recv turn work={} err={} pending={} progress={:?}",turn.work,turn.result.is_err(),pending,turn.result.as_ref().ok().map(|s|s.progress()));
+  let pending=receiver.advance_pending();
   self.receive_request=pending.then_some(issued);
   cx.consume_fuel(spent(turn.work));let p=turn.result.map_err(flat)?.progress();
   if !pending&&receiver.output_ready(){self.phase=Phase::TakeSnapshot;}Ok(p)
@@ -202,7 +209,7 @@ impl<S:NativeReceive<RecordValue>+BorrowedDslRecord+pack::snapshot::ArtifactDsl+
    },
    Phase::Receive=>self.receive_step(cx,child)?,
    Phase::TakeSnapshot=>self.take_step(cx,child)?,
-   Phase::CloseReceiving=>{let receiving=self.receiving.as_mut().ok_or_else(invalid)?;let p=closed(cx,child,|effect|receiver_close(receiving,child.maximum_copy_bytes,effect))?;if self.receiving.as_ref().is_some_and(|r|r.terminal_is_empty()){self.phase=Phase::CloseParser;}p},
+   Phase::CloseReceiving=>{let receiving=self.receiving.as_mut().ok_or_else(invalid)?;let p=closed_on_source(cx,child,|effect|receiver_close(receiving,child.maximum_copy_bytes,effect))?;if self.receiving.as_ref().is_some_and(|r|r.terminal_is_empty()){self.phase=Phase::CloseParser;}p},
    Phase::CloseParser=>{let parser=self.parser.as_mut().ok_or_else(invalid)?;let p=closed(cx,child,|effect|parser.close_step(child.maximum_copy_bytes,effect))?;if self.parser.as_ref().is_some_and(|r|r.terminal_is_empty()){self.phase=Phase::Ready;}p},Phase::Ready=>Default::default(),
   })})();match result{Ok(mut p)=>{p.copied_bytes=p.copied_bytes.checked_add(metadata).ok_or_else(invalid)?;Ok(p)},Err(error)=>{let mut p=error.retained_progress();p.copied_items=p.copied_items.max(1);p.copied_bytes=p.copied_bytes.saturating_add(metadata);Err(error.with_retained_progress(p))}}
  }
@@ -231,6 +238,7 @@ impl<S:NativeReceive<RecordValue>+BorrowedDslRecord+pack::snapshot::ArtifactDsl+
 
 }
 impl<S:NativeReceive<RecordValue>+Send> ErasedSnapshotRetirement for OriginalRecordMemberSnapshotOpen<S>{
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(0)?.copy_bytes)}
  fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demand(body)?.capacity_bytes)}

@@ -1,51 +1,51 @@
 {
- "id": "person-hanging-laundry",
- "category": "humans",
- "title": {
-  "en": "Person Hanging Laundry",
-  "de": "Person beim Wäscheaufhängen"
- },
- "heightM": 1.89,
- "widthM": 0.857,
- "powerW": 259.6,
- "poses": [
-  "pegging-shirt",
-  "shaking-out",
-  "lifting-from-basket"
- ],
- "clips": [
-  "hang-shirt",
-  "idle-breathing"
- ],
- "representations": {
-  "50": "authored",
-  "100": "authored",
-  "200": "authored",
-  "500": "authored"
- },
- "symbols": [],
- "analytics": [
-  "thermal",
-  "transport",
-  "structural"
- ],
- "exports": [
-  "svg",
-  "pdf",
-  "dxf",
-  "dwg",
-  "png-sequence",
-  "mp4",
-  "webm",
-  "component",
-  "glb",
-  "fbx",
-  "model",
-  "model-zip"
- ],
- "distinction": {
-  "en": "A 1.75 m man in softshell jacket and cap hanging a wet T-shirt on a clothesline at 1.80 m with two wooden pegs, the laundry basket at his feet: lifting from the basket, shaking out and pegging, 2.3 to 2.8 met, in spring sun and breeze.",
-  "de": "Ein Mann von 1,75 m in Softshelljacke und Mütze, der ein nasses T-Shirt mit zwei Holzklammern an eine Wäscheleine in 1,80 m Höhe hängt, der Wäschekorb zu seinen Füßen: Herausheben aus dem Korb, Ausschütteln und Anklammern, 2,3 bis 2,8 met, in Frühlingssonne und Wind."
- },
- "completion": "authored"
+  "id": "person-hanging-laundry",
+  "category": "humans",
+  "title": {
+    "en": "Person Hanging Laundry",
+    "de": "Person beim Wäscheaufhängen"
+  },
+  "heightM": 1.89,
+  "widthM": 0.869,
+  "powerW": 259.6,
+  "poses": [
+    "pegging-shirt",
+    "shaking-out",
+    "lifting-from-basket"
+  ],
+  "clips": [
+    "hang-shirt",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A 1.75 m man in softshell jacket and cap hanging a wet T-shirt on a clothesline at 1.80 m with two wooden pegs, the laundry basket at his feet: lifting from the basket, shaking out and pegging, 2.3 to 2.8 met, in spring sun and breeze.",
+    "de": "Ein Mann von 1,75 m in Softshelljacke und Mütze, der ein nasses T-Shirt mit zwei Holzklammern an eine Wäscheleine in 1,80 m Höhe hängt, der Wäschekorb zu seinen Füßen: Herausheben aus dem Korb, Ausschütteln und Anklammern, 2,3 bis 2,8 met, in Frühlingssonne und Wind."
+  },
+  "completion": "authored"
 }

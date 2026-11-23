@@ -13,7 +13,7 @@
 #   /renderer-modules/wgpu  ← 📦️packages/🦀️rust/dist/wasm-dev   (nx run @semio-tech/framework-renderer-wgpu:wasm)
 #   /🚀️boot.js             ← 🚀️browser-boot/🤖️generated        (…:generate-browser-boot)
 #   /🎞️frame-worker.js      ← 🎞️frame-worker/🤖️generated        (…:generate-frame-worker)
-#   <plugin module routes>  ← 🧑‍💻dev/🔌️plugin-modules            (…:activate-generation3d-wgpu-dev)
+#   <plugin module routes>  ← .cache/b/p/m/browser/<profile>/modules  (…:activate-generation3d-wgpu-dev)
 #
 # so it refuses to boot when any of them is missing rather than serving a stale page. Rebuild the
 # renderer wasm with `bunx nx run @semio-tech/framework-renderer-wgpu:wasm` and simply RELOAD the page;
@@ -22,7 +22,7 @@
 # The registered equivalent is the `🎮️serve🧩️generation3d🧊️wgpu dev` launch row
 # (`@semio-tech/framework-os-dev:serve-generation3d-wgpu-dev`), which additionally runs
 # `activate-generation3d-wgpu-dev` first. This script deliberately does NOT: the procedural guest is
-# the component already staged under `🧑‍💻dev/🔌️plugin-modules` and this lane must not restage it.
+# the component already staged under `.cache/b/p/m/browser/<profile>/modules` and this lane must not restage it.
 LOG="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️09/PROCEDURAL-3D-END-TO-END/🗑️generated/wgpu-serve.txt"
 exec > "$LOG" 2>&1
 export NX_DAEMON=false SEMIO_RENDERER=wgpu SEMIO_PLUGIN=generation3d S_OS_PORT=6118 CARGO_PROFILE_WASM_DEV_DEBUG=false

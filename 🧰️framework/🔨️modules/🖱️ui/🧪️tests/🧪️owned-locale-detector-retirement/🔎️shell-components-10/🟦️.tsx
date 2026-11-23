@@ -47,7 +47,6 @@ describe("Shell components", () => {
         );
         const pane = container.querySelector('[data-slot="pane"]') as HTMLElement;
         expect(pane.style.width).toBe("300px");
-        expect(container.querySelector('[data-slot="window-chrome-gap"]')).toBeTruthy();
       });
 
       it("Pane shares its host frame via zero-inset anchorPositionStyle and folds to a chip", () => {
@@ -88,7 +87,7 @@ describe("Shell components", () => {
         const chip = container.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
         expect(chip.className).toContain("ui-glass");
         const body = container.querySelector('[data-slot="pane-body"]') as HTMLElement;
-        expect(body.hasAttribute("data-window-silhouette-content")).toBe(true);
+        expect(body.hasAttribute("data-window-frame-content")).toBe(true);
         expect(body.className).not.toContain("ui-glass");
       });
 

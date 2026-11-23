@@ -16,6 +16,14 @@
           "en": "Owner round {round} settled while {count} path(s) changed between owners (first: {first}); every owner keeps its own consistent snapshot and a later read re-checks only the owners of the newer state.",
           "de": "Eigentümerrunde {round} wurde stabil, obwohl sich {count} Pfad(e) zwischen Eigentümern änderten (zuerst: {first}); jeder Eigentümer behält seinen eigenen konsistenten Stand und ein späteres Lesen prüft nur die Eigentümer des neueren Zustands neu."
         },
+        "dirty": {
+          "en": "Inventory round {round}: {paths} path(s) changed (first: {first}); {owners} dirty owner(s) are observed again ({names}), all others stay trusted; the same owners were dirty {streak} round(s) in a row.",
+          "de": "Verzeichnisrunde {round}: {paths} Pfad(e) änderten sich (zuerst: {first}); {owners} veraltete Eigentümer werden neu beobachtet ({names}), alle anderen bleiben vertraut; dieselben Eigentümer waren {streak} Runde(n) in Folge veraltet."
+        },
+        "volatile": {
+          "en": "Inventory sealed with {owners} volatile owner(s) ({names}) because {paths} path(s) kept changing (first: {first}); they leave the membership hash and the next read observes them again.",
+          "de": "Verzeichnis mit {owners} flüchtigen Eigentümern versiegelt ({names}), weil sich {paths} Pfad(e) weiter änderten (zuerst: {first}); sie verlassen den Mitgliedschafts-Hash und das nächste Lesen beobachtet sie neu."
+        },
         "settled": {
           "en": "The file inventory settled in round {round} after {seconds} s: {memo} owner(s) from memory, {checkpoint} from the checkpoint, {discovery} observed anew in the last attempt.",
           "de": "Das Dateiverzeichnis wurde in Runde {round} nach {seconds} s stabil: {memo} Eigentümer aus dem Gedächtnis, {checkpoint} aus dem Prüfpunkt, {discovery} im letzten Versuch neu beobachtet."

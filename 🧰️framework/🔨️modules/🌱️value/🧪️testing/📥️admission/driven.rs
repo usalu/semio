@@ -114,6 +114,8 @@ fn with_session<R>(bank:&EffectBank,operation:impl FnOnce(&mut Session)->R)->R{
         operation(slot.as_mut().expect("decoder session open"))
     })
 }
+/// 🧾️ Reads the physical progress the session's resident construction recipient has accepted so far.
+pub fn session_submitted(bank:&EffectBank)->RetainedCloneProgress{with_session(bank,|session|session.payer.submitted())}
 /// 🪪️ Opens the decoder session of this bank before any heap-observed turn.
 pub fn session_open(bank:&EffectBank){with_session(bank,|_|())}
 /// ✂️ Sets the cancellation flag the session's checkpoints read.

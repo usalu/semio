@@ -18,6 +18,7 @@
     "nested",
     "cases",
     "originalLifetime",
+    "issuedArchiveClose",
     "freshRootPerTurn",
     "readOnlyCallbackWork",
     "genuineCaller"
@@ -135,6 +136,42 @@
         "depth": 128,
         "fuel": 100000,
         "maximumTurns": 100000
+      }
+    },
+    "issuedArchiveClose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyBytesAvailable",
+        "copyBytesRequired",
+        "capacityBytesRequired",
+        "depthRequired",
+        "expectedWhenSourceCanFund",
+        "expectedWhenSourceCannotFund"
+      ],
+      "properties": {
+        "copyBytesAvailable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copyBytesRequired": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytesRequired": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depthRequired": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedWhenSourceCanFund": {
+          "const": "pending"
+        },
+        "expectedWhenSourceCannotFund": {
+          "const": "refused"
+        }
       }
     },
     "freshRootPerTurn": {

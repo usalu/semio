@@ -21,7 +21,7 @@ async fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
     let mut app = fem3d_app();
     crate::context::dispatch(&mut app, semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand::SetActiveExample(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
-    let node = render(&snapshot, &semio_s_artifact_fem_3d_scene::viewport::INITIAL).expect("fixture surface admission");
+    let node = render(&snapshot, &semio_s_artifact_fem_3d_scene::viewport::INITIAL, semio_plugin::Locale::En).expect("fixture surface admission");
     let scene: semio_ui_scene::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world scene");
     assert!(scene.meshes_json.contains("solid-sol1"), "expected a solid mesh for the example fixture: {}", scene.meshes_json);
     assert!(scene.instances_json.contains("\"id\":\"e1\""), "expected a single oriented box instance per member keyed by the member id: {}", scene.instances_json);

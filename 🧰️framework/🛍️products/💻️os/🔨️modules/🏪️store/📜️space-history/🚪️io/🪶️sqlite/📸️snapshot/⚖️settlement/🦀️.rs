@@ -7,9 +7,21 @@ pub struct TypedFileSettlement<'a,'b>{pub control:std::cell::RefCell<semio_frame
 impl<'a,'b> TypedFileSettlement<'a,'b>{
     pub fn new(control:&'a mut SqliteSnapshotControl<'b>,before:usize,phase:SqliteSnapshotPhase)->Self{let remaining=control.allocation_remaining_bytes();Self{control:std::cell::RefCell::new(control.receiving_scope()),before,remaining,phase,post_body:std::cell::Cell::new(false),cause:std::cell::RefCell::new(None)}}
     pub fn settle(&self,owned:usize)->Result<(),ValueError>{semio_framework_io_sqlite_snapshot::artifact::receiving::settle(&mut self.control.borrow_mut(),self.remaining,self.before,owned)}
-    pub fn finish_body(&self,owned:usize)->Result<(),ValueError>{self.settle(owned)?;self.post_body.set(true);Ok(())}
-    pub fn observe(&self,owned:usize,completed:usize,total:usize)->bool{if !self.post_body.get(){return true}let result=self.settle(owned).and_then(|_|self.control.borrow_mut().checkpoint(self.phase,completed,total));match result{Ok(())=>true,Err(error)=>{*self.cause.borrow_mut()=Some(error);false}}}
+    pub fn finish_body(&self,owned:usize)->Result<(),ValueError>{self.settle(owned)?;self.post_body.set(true);if let Some(cause)=self.cause.borrow_mut().take(){return Err(cause)}Ok(())}
+    pub fn observe(&self,owned:usize,completed:usize,total:usize)->bool{if self.cause.borrow().is_some(){return false}if !self.post_body.get(){return self.observe_body(completed,total)}let result=self.settle(owned).and_then(|_|self.control.borrow_mut().checkpoint(self.phase,completed,total));match result{Ok(())=>true,Err(error)=>{*self.cause.borrow_mut()=Some(error);false}}}
+    /// 🔭️ Forwards a native body stage event to the caller's progress and cancellation without settling allocation effects, which the body adopts once at its end; the first refusal fails the body at `finish_body`.
+    fn observe_body(&self,completed:usize,total:usize)->bool{match self.control.try_borrow_mut(){Ok(mut control)=>match control.checkpoint(self.phase,completed,total){Ok(())=>true,Err(error)=>{*self.cause.borrow_mut()=Some(error);false}},Err(_)=>true}}
     pub fn refused(&self,owned:usize,error:ValueError)->ValueError{match self.settle(owned){Err(cause)=>cause,Ok(())=>self.cause.borrow_mut().take().unwrap_or(error)}}
+}
+
+/// 🧾️ Stamps the published original failure with the owner's final cumulative receipts, which include the frame's own in-turn retirement after its body failed.
+pub fn stamp_published_failure<T>(output:&mut Option<crate::lifted_serialization::SnapshotReceivingOutput<T>>,progress:semio_framework_value::RetainedCloneProgress){
+    use semio_framework_io_sqlite_snapshot::SqliteStageFailure as Stage;
+    match output.take(){
+        Some(Err(Stage::Operation(failure)))=>*output=Some(Err(Stage::Operation(failure.with_retained_progress(progress)))),
+        Some(Err(Stage::Settlement{operation:Err(failure),refusal,receipt}))=>*output=Some(Err(Stage::Settlement{operation:Err(failure.with_retained_progress(progress)),refusal,receipt})),
+        other=>*output=other,
+    }
 }
 
 /// 🫴️ Receives one typed original snapshot built by a cumulative native decoder, settling the SQL allocation ceiling against the owned bytes and keeping the first refusal.
@@ -39,6 +51,7 @@ pub fn decode_typed<T:semio_framework_value::retirement::RetireOwned>(control:&m
         *published=Some(match settled{Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
         RetainedWorkOutcome{result:Ok(()),work:native.actual_work().checked_sub(before_work).expect("original native work is monotone")}
     }));
+    stamp_published_failure(output,native_owner.progress());
     let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal,receipt:None}),None=>turn.result.map_err(Stage::Operation)};
     RetainedWorkOutcome{result,work:turn.work}
 }
@@ -71,6 +84,7 @@ pub fn encode_typed(control:&mut SqliteSnapshotControl<'_>,native_owner:&mut sem
         *published=Some(match settled{Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
         RetainedWorkOutcome{result:Ok(()),work:native.actual_work().checked_sub(before_work).expect("original native work is monotone")}
     }));
+    stamp_published_failure(output,native_owner.progress());
     let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal,receipt:None}),None=>turn.result.map_err(Stage::Operation)};
     RetainedWorkOutcome{result,work:turn.work}
 }

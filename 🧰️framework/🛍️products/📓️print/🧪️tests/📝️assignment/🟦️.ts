@@ -93,8 +93,8 @@ test("transposed matrices put type icons in the header and retain eight writable
 });
 
 
-test("unnamed assignment matrices retain connected frames and automatic right chips", () => {
-  const contract = fixture.silhouette;
+test("unnamed assignment matrices retain one connected frame and automatic right chips", () => {
+  const contract = fixture.frame;
   const validate = new Ajv({ strict: true }).compile({
     type: "object",
     properties: {

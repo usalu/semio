@@ -15,40 +15,62 @@ use semio_plugin_time_travel::TimeTravelLedger;
 use semio_plugin_tool_machine::ToolMachineRuntime;
 use semio_plugin_tool_run::ToolRunLedger;
 
+/// 🎮️ The original typed command source one mounted instance retains for each of its two command lanes.
+pub type OriginalTypedCommand<A> = semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>;
+
 pub struct VcsArtifactApp<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory = NoMembers> {
     pub app: A,
     pub mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1,
     pub original_controller_close:Option<semio_plugin_instance_initialization::services::OriginalControllerClose<A>>,
-    pub constructor: ConstructorState<A>,
-    pub stores: InstanceStores<A>,
+    pub constructor: Box<ConstructorState<A>>,
+    pub stores: Box<InstanceStores<A>>,
     pub roster: PeerRoster<A>,
     /// 🪙️ Parser slots retain unused original arguments and faults until paid close.
     pub ingress: ActionIngress,
-    pub original_typing:OriginalTypingDispatch<A>,
-    pub original_emission:OriginalEmissionSource<A>,
-    pub original_typed_command:semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,
-pub original_host_event_command:semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,
+    pub original_typing:Box<OriginalTypingDispatch<A>>,
+    pub original_emission:Box<OriginalEmissionSource<A>>,
+    pub original_typed_command:Box<OriginalTypedCommand<A>>,
+pub original_host_event_command:Box<OriginalTypedCommand<A>>,
 pub original_command_scope:semio_plugin_instance_dispatch::host_event_routing::CommandLease,
 pub original_host_event_scope:Option<(semio_framework_job::OriginalSourceBinding,(semio_framework_value::retained_clone::NativeAllocationIdentity,u64))>,
     pub original_typed_tag:std::mem::ManuallyDrop<Option<semio_plugin_tool_machine::ToolTag>>,
     pub original_typed_tag_close:semio_framework_value::retained_clone::RetainedCloneClose,
     pub interaction: LocalInteraction<A>,
     pub history: CommandHistory<A>,
-    pub host_events: HostEvents,
+    pub host_events: Box<HostEvents>,
     pub txn: Transactions<A>,
-    pub child_composition: ChildComposition<M>,
-    pub pending: PendingReserved<A>,
-    pub tools: ToolOperations<A>,
-    pub media: MediaTransfers<A>,
+    pub child_composition: Box<ChildComposition<M>>,
+    pub pending: Box<PendingReserved<A>>,
+    pub tools: Box<ToolOperations<A>>,
+    pub media: Box<MediaTransfers<A>>,
     pub ingest: EnvelopeJobs<A, M>,
     pub maintenance: MaintenanceCursors,
     pub close: CloseCursors<A, M>,
     /// ⏯️ Local tool runs render provisional operations and write one final edit.
     pub tool_runs: ToolRunLedger<A>,
     /// ⏪️ Local history edits preview draft replays and write one final commit.
-    pub time_travel: TimeTravelLedger<A>,
+    pub time_travel: Box<TimeTravelLedger<A>>,
     /// 🎚️ Window controls render provisional values and publish one transaction on release.
-    pub tool_machines: ToolMachineRuntime<A::Snapshot, A::Mutation, A::Config, A::ConfigMutation>,
+    pub tool_machines: Box<ToolMachineRuntime<A::Snapshot, A::Mutation, A::Config, A::ConfigMutation>>,
+}
+
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory> VcsArtifactApp<A, M> {
+    /// 📏️ The inline handle plus every boxed owner: the bytes one mounted instance retains on the heap. The handle itself stays small enough for any thread stack and any future.
+    pub const fn heap_bytes() -> usize {
+        std::mem::size_of::<Self>()
+            + std::mem::size_of::<ConstructorState<A>>()
+            + std::mem::size_of::<InstanceStores<A>>()
+            + std::mem::size_of::<OriginalTypingDispatch<A>>()
+            + std::mem::size_of::<OriginalEmissionSource<A>>()
+            + std::mem::size_of::<ChildComposition<M>>()
+            + std::mem::size_of::<PendingReserved<A>>()
+            + std::mem::size_of::<ToolOperations<A>>()
+            + 2 * std::mem::size_of::<OriginalTypedCommand<A>>()
+            + std::mem::size_of::<HostEvents>()
+            + std::mem::size_of::<MediaTransfers<A>>()
+            + std::mem::size_of::<TimeTravelLedger<A>>()
+            + std::mem::size_of::<ToolMachineRuntime<A::Snapshot, A::Mutation, A::Config, A::ConfigMutation>>()
+    }
 }
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {

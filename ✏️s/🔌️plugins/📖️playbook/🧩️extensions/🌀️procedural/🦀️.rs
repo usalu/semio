@@ -140,6 +140,7 @@ app_labels! {
     /// 🗣️ Complete UI label set for the procedural module; one field per label makes every locale×terminology combination compile-checked.
     struct ModuleLabels {
         flow_inputs_limit: native_en "Flow inputs exceed the controls or answer size limit. Reduce the inputs in Design.", native_de "Die Flow-Eingaben überschreiten die Grenzen für Steuerelemente oder Antwortgröße. Eingaben im Entwurf reduzieren.", reuse_en "Flow inputs exceed the controls or answer size limit. Reduce the inputs in Design.", reuse_de "Die Flow-Eingaben überschreiten die Grenzen für Steuerelemente oder Antwortgröße. Eingaben im Entwurf reduzieren.";
+        preview_surface: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
         evaluating_flow: native_en "Evaluating Flow", native_de "Flow wird ausgewertet", reuse_en "Evaluating Flow", reuse_de "Flow wird ausgewertet";
         tessellating_flow: native_en "Preparing Geometry", native_de "Geometrie wird vorbereitet", reuse_en "Preparing Geometry", reuse_de "Geometrie wird vorbereitet";
         flow_ready: native_en "Flow Complete", native_de "Flow abgeschlossen", reuse_en "Flow Complete", reuse_de "Flow abgeschlossen";

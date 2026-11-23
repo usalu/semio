@@ -12,7 +12,7 @@ async fn definition_declares_the_shared_mesh_window_kit() {
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_scene_node_for_the_default_document() {
     let document = SemioBrepSnapshot::default();
-    let _node = render(&document);
+    let _node = render(&document, semio_plugin::Locale::En);
 }
 
 /// 👁️ The empty document (no solids) must render zero triangles, not a fabricated box —
@@ -36,5 +36,5 @@ async fn a_real_box_solid_renders_a_non_empty_mesh() {
     assert!(!mesh.positions.is_empty());
     assert!(!mesh.indices.is_empty());
     assert!(!mesh.face_ids.is_empty());
-    let _node = render(&document).expect("render succeeds for a real solid");
+    let _node = render(&document, semio_plugin::Locale::En).expect("render succeeds for a real solid");
 }

@@ -97,12 +97,15 @@ impl Drop for Puzzle5dTestApp {
     }
 }
 
+/// 🪪️ The instance id every fixture app is bound to; tests that address the app's instance read it from here.
+pub const FIXTURE_INSTANCE_ID: u32 = 1;
+
 /// 🧰️ A registry-backed app so kind discipline (View actions must emit no operations) and the
 /// utility contract are enforced exactly as in production.
 pub fn app_with_registry() -> Puzzle5dTestApp {
     let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut identity)));
-    ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(1));
+    ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(FIXTURE_INSTANCE_ID));
     Puzzle5dTestApp(app, scope)
 }
 

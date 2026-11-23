@@ -254,7 +254,7 @@ async fn cancelled_clipboard_mount_at_phase(phase: u8) {
     let selected = crate::context::first_object_id(&app);
     select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &selected).await.expect("select the object to cut");
     let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
-    let mut meta = Some(semio_plugin::ActionMeta { view_state: Some(std::sync::Arc::new(view)), ..app.meta("local") });
+    let mut meta = Some(semio_plugin::ActionMeta { view_state: Some(std::sync::Arc::new(view.into_inner())), ..app.meta("local") });
     let mut args = None;
     let mut identity = artifact_app_laws::fixture_identity();
     let (raw, cx) = app.parts();

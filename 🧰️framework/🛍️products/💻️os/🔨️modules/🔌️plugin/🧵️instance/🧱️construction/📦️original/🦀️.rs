@@ -16,7 +16,7 @@ impl<A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static> OriginalVc
  pub fn get(&self)->Option<&VcsArtifactApp<A,M>>{self.original.as_deref()}
  /// 🕳️ Terminal custody includes physical release of the original mounted allocation.
  pub fn custody_is_closed(&self)->bool{self.original.is_none()}
- fn frame_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Box<VcsArtifactApp<A,M>>>>(),release_bytes:size_of::<VcsArtifactApp<A,M>>(),depth:1,..Default::default()}}
+ fn frame_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Box<VcsArtifactApp<A,M>>>>(),release_bytes:VcsArtifactApp::<A,M>::heap_bytes(),depth:1,..Default::default()}}
  fn release_frame(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{if self.original.is_none(){return Ok(PluginLifecycleStep::Complete(Default::default()))}let demand=Self::frame_demands();original_lifecycle_step(cx,loan,demand,|_,_|{self.original.take();Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}),true))})}
  fn closed()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"closed original App cannot continue its close ladder")}
  fn finish_step(&self,first:PluginLifecycleStep,last:PluginLifecycleStep)->Result<PluginLifecycleStep,PluginLifecycleFailure>{let progress=first.progress().unwrap_or_default().checked_add(last.progress().unwrap_or_default())?;Ok(if self.custody_is_closed(){PluginLifecycleStep::Complete(progress)}else{PluginLifecycleStep::Progress(progress)})}

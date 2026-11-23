@@ -1,0 +1,8 @@
+[workspace]
+resolver = "3"
+members = ["p-leaf", "p-mid", "p-top", "p-side"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+publish = false

@@ -31,7 +31,7 @@ pub struct PresentedInputGeometry {
     pub dock_drop_bodies: Vec<(Vec<usize>, Rect, String)>,
     pub dock_window_plan: Vec<(String, Rect)>,
     pub window_content_rects: HashMap<String, Rect>,
-    pub window_silhouettes: HashMap<String, WindowSilhouette>,
+    pub window_frames: HashMap<String, WindowFrame>,
     pub modal: bool,
     pub panel_rects: Vec<Rect>,
 }
@@ -49,7 +49,7 @@ impl Default for PresentedInputGeometry {
             dock_drop_bodies: Vec::new(),
             dock_window_plan: Vec::new(),
             window_content_rects: HashMap::new(),
-            window_silhouettes: HashMap::new(),
+            window_frames: HashMap::new(),
             modal: false,
             panel_rects: Vec::new(),
         }

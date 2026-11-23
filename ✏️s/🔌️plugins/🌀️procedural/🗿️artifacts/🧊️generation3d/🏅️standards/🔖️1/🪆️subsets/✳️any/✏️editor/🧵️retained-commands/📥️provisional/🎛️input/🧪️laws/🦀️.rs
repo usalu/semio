@@ -1,4 +1,4 @@
-//! 🧪️ Provisional typed inputs equal the genuine central operation under one-fuel original callers.
+//! 🧪️ Provisional typed inputs equal the genuine central operation under bounded original callers (`TURN_FUEL` work units per call, at most `MAXIMUM_CALLS` calls).
 use super::Generation3dMutation;
 use super::retained_native_provisional_fold::{NativeProvisionalFold,NativeProvisionalFolds};
 use super::retained_typed_input::{P3ProvisionalFold,ProvisionalTypedInputWork};
@@ -9,7 +9,7 @@ fn close(work:&mut ProvisionalTypedInputWork,caller:&mut ScratchCaller){
  work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let body=same.retained_grant().maximum_copy_bytes;let d=work.next_close_demands(body)?;close_original_effect_step(same,d,|effect|work.close_step(body,effect))?;Ok(())}));}panic!("typed landing did not close original owners")
 }
 #[test]
-fn provisional_typed_input_lands_like_the_original_central_operation_with_one_fuel(){
+fn provisional_typed_input_lands_like_the_original_central_operation_within_the_bounded_work_loan(){
  let cases:serde_json::Value=serde_json::from_str(include_str!("📁️cases.json")).unwrap();
  let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
  for case in cases.as_array().unwrap(){for items in [1,512]{for cut in [None,Some(0),Some(1),Some(2),Some(7)]{

@@ -161,6 +161,15 @@ impl CoreInstance {
         self.machine.as_ref()?.pending_host.as_ref().map(|pending| &pending.call)
     }
 
+    /// 🎲 Stores the fixed `wasi:random/insecure-seed` preparation bytes.
+    pub(crate) fn write_preparation_seed(&mut self, address: i32) -> Result<(), CoreError> {
+        let bytes = &mut self.memories[0].bytes;
+        let start = usize::try_from(address).map_err(|_| CoreError::State("bad seed".into()))?;
+        let end = start.checked_add(16).ok_or_else(|| CoreError::State("bad seed".into()))?;
+        bytes.get_mut(start..end).ok_or_else(|| CoreError::State("bad seed".into()))?.copy_from_slice(b"semio-prepare-se");
+        Ok(())
+    }
+
     pub fn resume_host(&mut self, call_id: u64, result: Result<Vec<Value>, String>) -> Result<(), CoreError> {
         let machine = self.machine.as_mut().ok_or_else(|| CoreError::State("no invocation is active".into()))?;
         let pending = machine.pending_host.take().ok_or_else(|| CoreError::State("no host call is pending".into()))?;

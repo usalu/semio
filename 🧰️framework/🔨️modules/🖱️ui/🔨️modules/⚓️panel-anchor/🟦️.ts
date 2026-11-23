@@ -59,24 +59,22 @@ export function anchorPositionStyle(anchor: Anchor, inset = "0px"): React.CSSPro
 }
 
 /**
- * 🔓️ Open chrome-hosted {@link Panel} position — pulls the window-chrome cap into the navbar/footer
+ * 🔓️ Open chrome-hosted {@link Panel} position — a top panel pulls the window-chrome cap into the navbar
  * band where {@link PanelChromeTabBar} parked the folded toggles, so opening unfolds in place instead of
- * jumping the chips into the canvas. The cap is exactly as tall as the navbar/footer band (`--panel-header-height`
+ * jumping the chips into the canvas. The cap is exactly as tall as the band (`--panel-header-height`
  * is set to the band height) and starts on the band's outer edge, so its tab frame shares the band's lines. Max height
- * grows by the same overhang so the body still fills the canvas region.
+ * grows by the same overhang so the body still fills the canvas region. A bottom panel has no band to overhang: its
+ * folded toggles are glass chips inside the canvas frame's bottom edge (`Canvas` `bottomChips`), so the open cap lands
+ * on the same row inside the canvas rectangle.
  * @see {@link anchorPositionStyle}
  */
 export function chromeHostedOpenPanelPositionStyle(anchor: Anchor): React.CSSProperties {
   const style: Record<string, unknown> = { ...anchorPositionStyle(anchor) };
   const vertical = anchorVertical(anchor);
-  const shellHeight = vertical === "bottom" ? "var(--footer-band-height)" : "var(--navbar-band-height)";
-  style["--panel-header-height"] = shellHeight;
+  style["--panel-header-height"] = vertical === "bottom" ? "var(--footer-band-height)" : "var(--navbar-band-height)";
   if (vertical === "top") {
-    style.top = `calc(-1 * ${shellHeight})`;
-    style.maxHeight = `calc(100% + ${shellHeight})`;
-  } else if (vertical === "bottom") {
-    style.bottom = `calc(-1 * ${shellHeight})`;
-    style.maxHeight = `calc(100% + ${shellHeight})`;
+    style.top = "calc(-1 * var(--navbar-band-height))";
+    style.maxHeight = "calc(100% + var(--navbar-band-height))";
   }
   return style as React.CSSProperties;
 }

@@ -122,6 +122,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         self.tools.tool_operations.insert_admitted(operation_id, mounted);
         driver_result?;
+        self.tools.fault_refused_typed_operation_publication(operation_id)?;
         if streak >= TYPED_OPERATION_STALL_FAULT_CEILING {
             self.tools.fault_stalled_typed_operation_publication(operation_id, streak)?;
         }

@@ -1,0 +1,108 @@
+[profile.prototype]
+codegen-units = 256
+debug = 0
+debug-assertions = true
+incremental = true
+inherits = "dev"
+lto = "off"
+opt-level = 0
+overflow-checks = true
+strip = "none"
+trim-paths = "object"
+
+[profile.prototype.build-override]
+codegen-units = 256
+debug = 0
+incremental = false
+opt-level = 0
+
+[profile.prototype.package."cranelift-assembler-x64"]
+opt-level = 3
+
+[profile.prototype.package."cranelift-bforest"]
+opt-level = 3
+
+[profile.prototype.package."cranelift-bitset"]
+opt-level = 3
+
+[profile.prototype.package."cranelift-codegen"]
+opt-level = 3
+
+[profile.prototype.package."cranelift-codegen-shared"]
+opt-level = 3
+
+[profile.prototype.package."cranelift-control"]
+opt-level = 3
+
+[profile.prototype.package."cranelift-entity"]
+opt-level = 3
+
+[profile.prototype.package."cranelift-frontend"]
+opt-level = 3
+
+[profile.prototype.package."cranelift-native"]
+opt-level = 3
+
+[profile.prototype.package."gimli"]
+opt-level = 3
+
+[profile.prototype.package."object"]
+opt-level = 3
+
+[profile.prototype.package."pulley-interpreter"]
+opt-level = 3
+
+[profile.prototype.package."regalloc2"]
+opt-level = 3
+
+[profile.prototype.package."semio-framework-hash"]
+opt-level = 3
+
+[profile.prototype.package."semio-plugin-interpreter"]
+opt-level = 3
+
+[profile.prototype.package."semio-plugin-interpreter-numeric"]
+opt-level = 3
+
+[profile.prototype.package."wasmparser"]
+opt-level = 3
+
+[profile.prototype.package."wasmtime"]
+opt-level = 3
+
+[profile.prototype.package."wasmtime-environ"]
+opt-level = 3
+
+[profile.prototype.package."wasmtime-internal-cache"]
+opt-level = 3
+
+[profile.prototype.package."wasmtime-internal-component-util"]
+opt-level = 3
+
+[profile.prototype.package."wasmtime-internal-core"]
+opt-level = 3
+
+[profile.prototype.package."wasmtime-internal-cranelift"]
+opt-level = 3
+
+[profile.prototype.package."wasmtime-internal-fiber"]
+opt-level = 3
+
+[profile.prototype.package."wasmtime-internal-jit-debug"]
+opt-level = 3
+
+[profile.prototype.package."wasmtime-internal-jit-icache-coherence"]
+opt-level = 3
+
+[profile.prototype.package."wasmtime-internal-unwinder"]
+opt-level = 3
+
+[profile.prototype.package."wasmtime-wasi"]
+opt-level = 3
+
+[profile.prototype.package."wasmtime-wasi-io"]
+opt-level = 3
+
+[profile.prototype.package."wit-parser"]
+opt-level = 3
+

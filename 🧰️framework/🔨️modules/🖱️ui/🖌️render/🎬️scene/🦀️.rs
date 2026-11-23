@@ -1,4 +1,4 @@
-//! 🎬️ Scene primitives, the stacked-scissor/silhouette-clip/glass-region/overlay-stream
+//! 🎬️ Scene primitives, the stacked-scissor/glass-region/overlay-stream
 //! builder model, `Scene::finish` (validate → snap → order → batch → hash) and `RenderPacket`.
 //!
 //! This is the backend-neutral half of the wgpu target's fused `draw.rs`: the display-list model and
@@ -18,7 +18,7 @@ use std::collections::{HashMap, HashSet};
 #[path = "🔲️rect-quad-glass-and-stencil-primitives/🦀️.rs"]
 mod rect_quad_glass_and_stencil_primitives;
 pub use rect_quad_glass_and_stencil_primitives::{
-    ClipRegion, GlassInstance, GlassRegion, GlassStyle, LayoutRect, QuadInstance, ScissorRect,
+    GlassInstance, GlassRegion, GlassStyle, LayoutRect, QuadInstance, ScissorRect,
     StencilPolicy, VectorVertex, KIND_FINISHED_BORDER, KIND_GLYPH, KIND_INTRODUCING_BORDER,
     KIND_LOADING_BORDER, KIND_RASTER, KIND_ROUNDED, KIND_SOLID, KIND_TEXTURED, KIND_WAITING_BORDER,
 };

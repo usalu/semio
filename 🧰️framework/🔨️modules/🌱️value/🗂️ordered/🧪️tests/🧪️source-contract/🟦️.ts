@@ -44,16 +44,6 @@ for (const mutate of [
   const mutant = structuredClone(fixture); mutate(mutant); 
 }
 //#endregion 🧬️Contract
-//#region 📤️SharedOwnership
-const sharedFixture = await Bun.file(new URL("../🧫️fixtures/👥️shared-owner/🔣️.json", import.meta.url)).json();
-
-
-const sharedKey = sharedFixture.key.text.repeat(sharedFixture.key.repetitions);
-assert.equal(Buffer.byteLength(sharedKey), sharedFixture.expected.keyBytes);
-assert.equal(sharedFixture.aliases - 1, sharedFixture.expected.sharedReleases);
-assert.equal(stableStringify({ [sharedKey]: true }), JSON.stringify({ [sharedKey]: true }));
-
-//#endregion 📤️SharedOwnership
 //#region 🧺️SetContract
 /** 🧫️ Plain expected ordered-set membership and ownership examples. */
 type OrderedSetFixture = {

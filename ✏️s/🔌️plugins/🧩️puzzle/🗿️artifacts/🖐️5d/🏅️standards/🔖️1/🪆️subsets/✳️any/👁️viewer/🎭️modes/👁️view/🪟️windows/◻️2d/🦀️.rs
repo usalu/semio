@@ -175,8 +175,8 @@ pub fn board_scene(document: &Puzzle5dSnapshot) -> Board2dScene {
 
 //#region 🔖️Render
 /// 👁️ Pure `Puzzle5dSnapshot -> UiNode` read of the flat projection.
-pub fn render(document: &Puzzle5dSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Board2d, &board_scene(document))
+pub fn render(document: &Puzzle5dSnapshot, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Board2d, &board_scene(document), semio_plugin::surface_name(locale, "Puzzle 2D", "Puzzle 2D"), None)
 }
 //#endregion 🔖️Render
 

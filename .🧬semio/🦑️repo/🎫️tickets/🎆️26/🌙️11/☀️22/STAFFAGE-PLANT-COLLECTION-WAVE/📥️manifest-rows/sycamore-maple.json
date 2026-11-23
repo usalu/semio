@@ -1,0 +1,57 @@
+{
+  "id": "sycamore-maple",
+  "category": "vegetation",
+  "title": {
+    "en": "Sycamore Maple",
+    "de": "Bergahorn"
+  },
+  "heightM": 25.1,
+  "widthM": 20.795,
+  "powerW": 0,
+  "poses": [
+    "summer-calm",
+    "summer-breeze",
+    "storm",
+    "samara-laden",
+    "midsummer-drought"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "sycamore-maple-plan-crown",
+    "tree-sign"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A mature sycamore maple (Acer pseudoplatanus) of about 25 m: a massive stem with four whorls of heavy, wide-spreading limbs under a broad, billowing dome; grey bark flaking in plates, hanging clusters of right-angled samaras.",
+    "de": "Ein ausgewachsener Bergahorn (Acer pseudoplatanus) von etwa 25 m: ein mächtiger Stamm mit vier Quirlen schwerer, weit ausladender Äste unter einer breiten, wolkigen Kuppel; graue, in Platten schuppende Borke, hängende Trauben rechtwinkliger Flügelfrüchte."
+  },
+  "completion": "authored"
+}

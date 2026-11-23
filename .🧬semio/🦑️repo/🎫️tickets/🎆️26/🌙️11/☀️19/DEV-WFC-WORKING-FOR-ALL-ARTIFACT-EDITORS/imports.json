@@ -1,0 +1,367 @@
+[
+{
+"module": "wasi:random/random@0.2.9",
+"name": "get-random-u64",
+"kind": 0
+},
+{
+"module": "wasi:random/insecure-seed@0.2.9",
+"name": "insecure-seed",
+"kind": 0
+},
+{
+"module": "[export]$root",
+"name": "[task-cancel]",
+"kind": 0
+},
+{
+"module": "$root",
+"name": "[context-get-0]",
+"kind": 0
+},
+{
+"module": "$root",
+"name": "[context-set-0]",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/checkpoint@1.0.0",
+"name": "[task-return]restore",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/checkpoint@1.0.0",
+"name": "[task-return]checkpoint",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/jobs@1.0.0",
+"name": "[task-return]step-job",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/jobs@1.0.0",
+"name": "[task-return]start-job",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/jobs@1.0.0",
+"name": "[task-return]cancel-job",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/jobs@1.0.0",
+"name": "[task-return]close-jobs",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/jobs@1.0.0",
+"name": "[task-return]read-job-output",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/jobs@1.0.0",
+"name": "[task-return]read-actor-failure",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/jobs@1.0.0",
+"name": "[task-return]publish-actor-failure",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/jobs@1.0.0",
+"name": "[task-return]acknowledge-job-output",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/jobs@1.0.0",
+"name": "[task-return]acknowledge-actor-failure",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/jobs@1.0.0",
+"name": "[task-return]take-segmented-download-chunk",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/codec@1.0.0",
+"name": "[task-return]genesis",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/codec@1.0.0",
+"name": "[task-return]apply-ops",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/codec@1.0.0",
+"name": "[task-return]print-mirror",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/codec@1.0.0",
+"name": "[task-return]sqlite-close",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/codec@1.0.0",
+"name": "[task-return]sqlite-export",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/codec@1.0.0",
+"name": "[task-return]sqlite-import",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/codec@1.0.0",
+"name": "[task-return]sqlite-schema",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/codec@1.0.0",
+"name": "[task-return]pack-schema-hash",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/codec@1.0.0",
+"name": "[task-return]replay-envelopes",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/codec@1.0.0",
+"name": "[task-return]sqlite-take-file",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/codec@1.0.0",
+"name": "[task-return]sqlite-retirement",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/codec@1.0.0",
+"name": "[task-return]sqlite-take-payload",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/reactor@1.0.0",
+"name": "[task-return]poll",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/reactor@1.0.0",
+"name": "[task-return]channel-version",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/reactor@1.0.0",
+"name": "[task-return]admit-actor-input",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/reactor@1.0.0",
+"name": "[task-return]close-actor-output",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/reactor@1.0.0",
+"name": "[task-return]stage-command-page",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/reactor@1.0.0",
+"name": "[task-return]admit-actor-context",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/reactor@1.0.0",
+"name": "[task-return]close-actor-context",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/reactor@1.0.0",
+"name": "[task-return]stage-cold-pair-page",
+"kind": 0
+},
+{
+"module": "[export]semio:framework/describe@1.0.0",
+"name": "[task-return]describe",
+"kind": 0
+},
+{
+"module": "semio:framework/pure@1.0.0",
+"name": "operation-finish",
+"kind": 0
+},
+{
+"module": "semio:framework/pure@1.0.0",
+"name": "operation-progress",
+"kind": 0
+},
+{
+"module": "semio:framework/pure@1.0.0",
+"name": "operation-reserve-return",
+"kind": 0
+},
+{
+"module": "semio:framework/pure@1.0.0",
+"name": "now-ms",
+"kind": 0
+},
+{
+"module": "semio:framework/pure@1.0.0",
+"name": "operation-allocation",
+"kind": 0
+},
+{
+"module": "semio:framework/pure@1.0.0",
+"name": "operation-begin",
+"kind": 0
+},
+{
+"module": "semio:framework/pure@1.0.0",
+"name": "operation-clock-us",
+"kind": 0
+},
+{
+"module": "semio:framework/pure@1.0.0",
+"name": "log",
+"kind": 0
+},
+{
+"module": "$root",
+"name": "[waitable-join]",
+"kind": 0
+},
+{
+"module": "$root",
+"name": "[waitable-set-poll]",
+"kind": 0
+},
+{
+"module": "$root",
+"name": "[waitable-set-new]",
+"kind": 0
+},
+{
+"module": "$root",
+"name": "[waitable-set-drop]",
+"kind": 0
+},
+{
+"module": "wasi:io/error@0.2.0",
+"name": "[resource-drop]error",
+"kind": 0
+},
+{
+"module": "wasi:io/poll@0.2.0",
+"name": "[resource-drop]pollable",
+"kind": 0
+},
+{
+"module": "wasi:io/streams@0.2.0",
+"name": "[resource-drop]input-stream",
+"kind": 0
+},
+{
+"module": "wasi:io/streams@0.2.0",
+"name": "[resource-drop]output-stream",
+"kind": 0
+},
+{
+"module": "wasi:cli/terminal-input@0.2.0",
+"name": "[resource-drop]terminal-input",
+"kind": 0
+},
+{
+"module": "wasi:cli/terminal-output@0.2.0",
+"name": "[resource-drop]terminal-output",
+"kind": 0
+},
+{
+"module": "wasi:cli/environment@0.2.0",
+"name": "get-environment",
+"kind": 0
+},
+{
+"module": "wasi:cli/exit@0.2.0",
+"name": "exit",
+"kind": 0
+},
+{
+"module": "wasi:io/poll@0.2.0",
+"name": "[method]pollable.block",
+"kind": 0
+},
+{
+"module": "wasi:io/poll@0.2.0",
+"name": "poll",
+"kind": 0
+},
+{
+"module": "wasi:io/streams@0.2.0",
+"name": "[method]output-stream.check-write",
+"kind": 0
+},
+{
+"module": "wasi:io/streams@0.2.0",
+"name": "[method]output-stream.write",
+"kind": 0
+},
+{
+"module": "wasi:io/streams@0.2.0",
+"name": "[method]output-stream.blocking-flush",
+"kind": 0
+},
+{
+"module": "wasi:io/streams@0.2.0",
+"name": "[method]output-stream.subscribe",
+"kind": 0
+},
+{
+"module": "wasi:cli/stdin@0.2.0",
+"name": "get-stdin",
+"kind": 0
+},
+{
+"module": "wasi:cli/stdout@0.2.0",
+"name": "get-stdout",
+"kind": 0
+},
+{
+"module": "wasi:cli/stderr@0.2.0",
+"name": "get-stderr",
+"kind": 0
+},
+{
+"module": "wasi:cli/terminal-stdin@0.2.0",
+"name": "get-terminal-stdin",
+"kind": 0
+},
+{
+"module": "wasi:cli/terminal-stdout@0.2.0",
+"name": "get-terminal-stdout",
+"kind": 0
+},
+{
+"module": "wasi:cli/terminal-stderr@0.2.0",
+"name": "get-terminal-stderr",
+"kind": 0
+},
+{
+"module": "wasi:clocks/monotonic-clock@0.2.0",
+"name": "now",
+"kind": 0
+},
+{
+"module": "wasi:clocks/monotonic-clock@0.2.0",
+"name": "subscribe-duration",
+"kind": 0
+},
+{
+"module": "wasi:clocks/wall-clock@0.2.0",
+"name": "now",
+"kind": 0
+}
+]

@@ -14,7 +14,8 @@ unsafe impl GlobalAlloc for Heap {
 fn observe<T>(run:impl FnOnce()->T)->(T,usize,usize){ALLOCATED.store(0,Ordering::Relaxed);RELEASED.store(0,Ordering::Relaxed);OBSERVING.store(true,Ordering::Relaxed);let result=run();OBSERVING.store(false,Ordering::Relaxed);(result,ALLOCATED.load(Ordering::Relaxed),RELEASED.load(Ordering::Relaxed))}
 pub(crate) struct ArtifactGroupVisibility{state:AtomicU8}
 impl ArtifactGroupVisibility{fn pending(&self)->bool{self.state.load(Ordering::Acquire)==0}fn committed(&self)->bool{self.state.load(Ordering::Acquire)==1}}
-mod os_vcs{pub(crate) use crate::ArtifactGroupVisibility;}
+extern crate self as semio_os_vcs;
+extern crate self as semio_os_store_one_item;
 #[derive(Clone,Copy)]struct ArtifactStoreOneItemGrant{maximum_items:usize,maximum_copy_bytes:usize,maximum_capacity_bytes:usize,maximum_release_bytes:usize,maximum_depth:usize}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]pub struct RetirementDemand{pub copy_bytes:usize,pub capacity_bytes:usize,pub release_bytes:usize,pub depth:usize}
 extern crate self as semio_framework_value;
@@ -30,7 +31,7 @@ pub mod retained_clone {
 }
 use retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 mod test_allocation {pub fn observe_backing<T>(run:impl FnOnce()->T)->(T,usize,usize){crate::observe(run)}}
-const OWNED_DOCUMENT_MAXIMUM_MEMBERS:usize=1024;
+mod owned_document_closure{pub const OWNED_DOCUMENT_MAXIMUM_MEMBERS:usize=1024;}
 #[path = @MODULE@]
 mod composition_group;
 #[path = @LINK_MODULE@]

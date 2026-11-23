@@ -75,6 +75,14 @@ fn compose_shared_borders(scene: &Scene, focus: Option<NodeId>, theme: &Theme, w
     }
 }
 
+/// 🧩️ Which layer of a chrome node one paint step draws: the frame below the children, the chips above them, or both for a node without children.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ChromePart {
+    Frame,
+    Chips,
+    Both,
+}
+
 /// 🫟️ The read-only inputs of one paint pass; `projected` paints a canvas with the windows a dock release would mount instead of its children.
 #[derive(Clone, Copy)]
 struct PaintPass<'a> {
@@ -86,10 +94,12 @@ struct PaintPass<'a> {
 }
 
 impl PaintPass<'_> {
-    fn chrome(&self, id: NodeId, chrome: &ChromeState, rect: Rect, buf: &mut CellBuffer, borders: &mut Vec<BorderCapture>) {
+    fn chrome(&self, id: NodeId, chrome: &ChromeState, rect: Rect, buf: &mut CellBuffer, borders: &mut Vec<BorderCapture>, part: ChromePart) {
         let outlined = matches!(chrome, ChromeState::Window(_) | ChromeState::Navbar(_) | ChromeState::Footer(_));
         if outlined { buf.begin_borders(rect); }
-        chrome.paint_emphasized(self.theme, rect, buf, self.hovered_chrome.contains(&id));
+        let emphasized = self.hovered_chrome.contains(&id);
+        if part != ChromePart::Chips { chrome.paint_frame_emphasized(self.theme, rect, buf, emphasized); }
+        if part != ChromePart::Frame { chrome.paint_chips_emphasized(self.theme, rect, buf, emphasized); }
         if outlined { let (outline, writes) = buf.take_borders(); borders.push((rect, outline, writes)); }
     }
 
@@ -100,7 +110,7 @@ impl PaintPass<'_> {
         }
         let rect = node.rect;
         match &node.content {
-            NodeContent::Chrome(c) => self.chrome(id, c, rect, buf, borders),
+            NodeContent::Chrome(c) => self.chrome(id, c, rect, buf, borders, ChromePart::Frame),
             NodeContent::Widget(w) => w.paint(self.theme, rect, buf, Some(id) == self.focus),
             NodeContent::Text(s) => {
                 let bg = buf.get(rect.x, rect.y).map_or(self.theme.surface(semio_ui_tui_core::theme::Surface::Base), |c| c.bg);
@@ -111,12 +121,15 @@ impl PaintPass<'_> {
         }
         if let Some((_, windows)) = self.projected.filter(|(canvas, _)| *canvas == id) {
             for (window, rect, state) in windows {
-                self.chrome(*window, &ChromeState::Window(Box::new(state.clone())), *rect, buf, borders);
+                self.chrome(*window, &ChromeState::Window(Box::new(state.clone())), *rect, buf, borders, ChromePart::Both);
             }
             return;
         }
         for &child in node.children() {
             self.walk(child, buf, borders);
+        }
+        if let NodeContent::Chrome(c) = &node.content {
+            self.chrome(id, c, rect, buf, borders, ChromePart::Chips);
         }
     }
 }

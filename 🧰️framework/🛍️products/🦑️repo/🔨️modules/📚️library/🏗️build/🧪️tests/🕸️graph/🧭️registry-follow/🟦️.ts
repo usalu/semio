@@ -126,3 +126,21 @@ test("unexpected, unsettled and cancelled custody are never promoted into regist
   }finally{rmSync(l.root,{recursive:true,force:true});}
  }
 });
+
+test("the taken memo of the read is carried through every registry follow and is the read's own, never another read's",async()=>{
+ const l=lab([row("@t/a","a/rust")]);
+ try{
+  const memos:object[]=[],sizes:number[]=[];let calls=0;
+  const read=()=>settleOwnerRegistryV1(l.root,async carried=>completedCustody(async()=>{
+   memos.push(carried.takenMemo);sizes.push(carried.takenMemo.size);
+   if(++calls<3){carried.takenMemo.remember("owner-"+calls,{key:"k"+calls,project:{},rows:[{kind:"file",path:"/x",fact:"{}"}]});l.put([row("@t/a","a/rust"),row("@t/n"+calls,"m"+calls+"/rust")]);throw ownerFault("m"+calls+"/rust");}
+   return "sealed";
+  })());
+  expect(await read()).toBe("sealed");
+  expect(new Set(memos).size).toBe(1);
+  expect(sizes).toEqual([0,1,2]);
+  const other:object[]=[];calls=3;
+  await settleOwnerRegistryV1(l.root,async carried=>{other.push(carried.takenMemo);return "ok";});
+  expect(other[0]).not.toBe(memos[0]);
+ }finally{rmSync(l.root,{recursive:true,force:true});}
+});

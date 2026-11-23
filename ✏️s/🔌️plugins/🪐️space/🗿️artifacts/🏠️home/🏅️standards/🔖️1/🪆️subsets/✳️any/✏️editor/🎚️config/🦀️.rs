@@ -182,6 +182,7 @@ impl protocol::ColdDiffAlgebra<HomeConfig> for HomeConfigDiff {
 /// `HomeTombstoneDelta` and whose inverse is the opposite verb on the same studio id.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub enum HomeConfigMutation {
     /// 🪦️ Retires one local-only studio from Home — a tombstone event; the studio's catalog document is never erased.
     #[dsl(key = "retire-local-studio")]
@@ -195,6 +196,7 @@ pub enum HomeConfigMutation {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "retire-local-studio")]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct RetireLocalStudio {
     pub space_id: String,
 }
@@ -203,6 +205,7 @@ pub struct RetireLocalStudio {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "list-local-studio")]
+#[derive(semio_framework_value::RetainedClone,semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct ListLocalStudio {
     pub space_id: String,
 }
@@ -423,6 +426,11 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
 
     fn begin_demand(&self, _mutation: &HomeConfigMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<HomeConfigPreparation>(), depth: 1 })
+    }
+
+    fn begin_copy_byte_demand(&self, mutation: &HomeConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<usize, semio_framework_value::ValueError> {
+        self.begin_demand(mutation, lane)?;
+        size_of::<store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation, HomeConfigMutation>>().checked_add(size_of::<HomeConfigPreparation>()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original preparation header quote overflow"))
     }
 
     fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation, HomeConfigMutation>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation, HomeConfigMutation>)> {

@@ -275,7 +275,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         let deck = doc.snapshot;
         let labels = animate_presentation_labels(view_state);
         (match body_key {
-            PRESENTATION_PLAY_BODY_MAIN => tile_editor::render(deck),
+            PRESENTATION_PLAY_BODY_MAIN => tile_editor::render(deck, view_state.locale),
             PRESENTATION_PLAY_BODY_ARTIFACT => artifact::render(deck, labels, &semio_plugin::TreeWindows::for_body(view_state, PRESENTATION_PLAY_BODY_ARTIFACT)),
             PRESENTATION_PLAY_BODY_CATALOGUE => catalogue::render(deck, labels),
             PRESENTATION_PLAY_BODY_DETAILS => inspection::render(deck, labels),

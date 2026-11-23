@@ -1,7 +1,51 @@
 use semio_s_artifact_procedural_3d_editor::*;
+use semio_framework_job::InteractiveJobCloseStep;
+use semio_framework_value::{RetainedCloneGrant, RetainedWorkOutcome, RetainedWorkPoll};
+use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+use semio_os_flow::FlowEvalSession;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::{ArtifactEditor, ArtifactToolPublicationLane, Effect, Emit, Fault, HierarchyProvider};
+use semio_s_artifact_procedural_3d_add_widget as add_widget;
+use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
+use semio_s_artifact_procedural_3d_editor_commands::{add_generation, cycle_lod_mode, cycle_show_mode, edit_mesh_selection, import_document_request, knife_mesh_selection, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, select_generation, set_active_example, set_camera, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection, update_generation_values};
+use semio_s_artifact_procedural_3d_editor_config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_selection as selection;
+use semio_s_artifact_procedural_3d_export_document as export_document;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_import_document as import_document;
+use semio_s_artifact_procedural_3d_import_document::GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_navigate_graph::{activate_selection, select_downstream_node, select_next_node, select_previous_node, select_upstream_node};
+use semio_s_artifact_procedural_3d_node_graph_edit as node_graph_edit;
+use semio_s_artifact_procedural_3d_rotate_selection as rotate_selection;
+use semio_s_artifact_procedural_3d_scale_selection as scale_selection;
+use semio_s_artifact_procedural_3d_set_contributions as set_contributions;
+use semio_s_artifact_procedural_3d_set_widget_input as set_widget_input;
+use semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app;
 use crate::app_fixture::{self as context, app_with_registry};
 use semio_framework_artifact_flow_flow::Widget;
 use semio_plugin::{EditorApp, PluginApp};
+
+/// 🪙️ Runs one closure inside one original effect funded by a fresh generous fixture wallet.
+fn cold<R>(run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> R {
+    let grant = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 4_096 };
+    semio_framework_value::AuthoringWallet::new(grant, 1 << 20).run_invoked(grant, 1 << 16, run).expect("the fixture wallet funds its own grant").expect("the fixture work quote is admitted").output
+}
+
+/// 🧹️ One close turn under an empty grant makes no progress and stays pending; then the work retires under its exact quoted grants.
+fn close_after_an_empty_grant_pends(work: &mut Generation3dDocumentIoWork, label: &str) {
+    work.begin_close();
+    let mut sequence = 0;
+    let mut receipt = RetainedCloneProgress::default();
+    let empty = RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 };
+    let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, empty), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
+    assert_eq!(work.close_step(&mut cx).expect("an empty grant is a pending close, never a failure"), InteractiveJobCloseStep::Pending { progress: Default::default() });
+    drop(cx);
+    semio_s_artifact_procedural_3d_testkit::retirement_driver::close_work::<EditorApp<Generation3dPlayApp>, _>(work, label);
+}
 
 const GENERATION3D_MEASURED_CONTRIBUTIONS_PACK_CHARS: usize = 272_089;
 
@@ -51,21 +95,21 @@ async fn document_io_outer_text_resumes_parity_cancel_and_stale_source_without_p
     let inputs=ArtifactCommandInputs{ snapshot_owner: None,command:&command,snapshot:&snapshot,config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
     let expected=semio_s_artifact_procedural_3d_io::document_io::export_document(&snapshot).unwrap();
     assert!(expected.data.len()>fixture["documentContinuation"]["capacity"]["wireBytes"].as_u64().unwrap()as usize,"an admitted document must exceed the single reply wire limit");
-    let close=|work:&mut Generation3dDocumentIoWork|{work.begin_close();assert_eq!(work.close_step(Default::default()),semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});semio_s_artifact_procedural_3d_testkit::retirement_driver::close_work::<EditorApp<Generation3dPlayApp>,_>(work,"document candidate retirement did not finish")};
+    let close=|work:&mut Generation3dDocumentIoWork|close_after_an_empty_grant_pends(work,"document candidate retirement did not finish");
     for budget in fixture["documentContinuation"]["budgets"].as_array().unwrap(){
         let mut work=Generation3dDocumentIoWork::new("exportDocument",owner.clone());let mut turns=0;
         let mut observed_measurement=false;
-        let mut emit=loop{turns+=1;assert!(turns<1000000);let mut spent=0;let mut cx_receipt=semio_framework_value::retained_clone::RetainedCloneProgress::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(budget.as_u64().unwrap(),u64::MAX,semio_s_artifact_procedural_3d_testkit::retirement_driver::STEP_GRANT),semio_framework_job::root_cancel_token(),||Some(0),&mut spent,&mut cx_receipt);match work.step(&inputs,&mut cx).unwrap(){ArtifactCommandWorkStep::Progress{..}=>{if work.source_demand.is_none(){assert!(work.projected.is_none()&&work.writer.is_none()&&work.text.is_none()&&work.envelope.is_none()&&work.candidate.is_none());}else if budget.as_u64()==Some(1)&&!observed_measurement&&work.phase==1{assert!(work.projected.is_none()&&work.writer.is_none());let mut accept=|_|true;let control=semio_framework_value::NativeEncodeControl::resume(work.encoding.take().unwrap(),&mut accept).unwrap();assert_eq!(control.owned_bytes(),0,"the source measurement creates no owned candidate");assert_eq!(control.maximum_bytes(),work.source_demand.unwrap()*GENERATION3D_DOCUMENT_OWNERSHIP_SOURCE_MULTIPLES+GENERATION3D_DOCUMENT_SCAFFOLD_BYTES);work.encoding=Some(control.pause().unwrap());observed_measurement=true;}},ArtifactCommandWorkStep::Complete(emit)=>break emit,_=>panic!("unexpected document replay")}};
+        let mut emit=loop{turns+=1;assert!(turns<1000000);let mut spent=0;let mut cx_receipt=semio_framework_value::retained_clone::RetainedCloneProgress::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(budget.as_u64().unwrap(),u64::MAX,semio_s_artifact_procedural_3d_testkit::retirement_driver::STEP_GRANT),semio_framework_job::root_cancel_token(),||Some(0),&mut spent,&mut cx_receipt);match work.step(&inputs,&mut cx).unwrap(){ArtifactCommandWorkStep::Progress{..}=>{let stages=work.stages();if stages.source_demand.is_none(){assert!(!stages.projected&&!stages.writer&&!stages.text&&!stages.envelope&&!stages.candidate);}else if budget.as_u64()==Some(1)&&!observed_measurement&&stages.phase==1{assert!(!stages.projected&&!stages.writer);let mut accept=|_|true;let control=semio_framework_value::NativeEncodeControl::resume(work.encoding_mut().take().unwrap(),&mut accept).unwrap();assert_eq!(control.owned_bytes(),0,"the source measurement creates no owned candidate");assert_eq!(control.maximum_bytes(),stages.source_demand.unwrap()*GENERATION3D_DOCUMENT_OWNERSHIP_SOURCE_MULTIPLES+GENERATION3D_DOCUMENT_SCAFFOLD_BYTES);*work.encoding_mut()=Some(control.pause().unwrap());observed_measurement=true;}},ArtifactCommandWorkStep::Complete(emit)=>break emit,_=>panic!("unexpected document replay")}};
         assert!(budget.as_u64()!=Some(1)||observed_measurement,"one-unit grants expose completed borrowed measurement before candidate allocation");
         assert!(turns>1);assert!(emit.artifact_mutations.is_empty());assert!(emit.config_mutations.is_empty());assert_eq!(emit.effects.len(),fixture["documentContinuation"]["downloads"].as_u64().unwrap()as usize);
         let Effect::DownloadMediaExport{filename,mime_type,data,encoding}=emit.effects.pop().unwrap()else{panic!("expected download")};assert_eq!(filename,expected.filename);assert_eq!(mime_type,expected.mime_type);assert_eq!(data,expected.data);assert_eq!(encoding,expected.encoding);{let mut release=semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_owned_for_test(((filename,mime_type,data,encoding)),"document value");semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released(release.as_mut(),"document value");}close(&mut work);
     }
-    let mut limited=Generation3dDocumentIoWork::new("exportDocument",owner.clone());let mut accept=|_|true;limited.encoding=Some(semio_framework_value::NativeEncodeControl::new(fixture["documentContinuation"]["capacity"]["overOwnershipBytes"].as_u64().unwrap()as usize,&mut accept).pause().unwrap());
+    let mut limited=Generation3dDocumentIoWork::new("exportDocument",owner.clone());let mut accept=|_|true;*limited.encoding_mut()=Some(semio_framework_value::NativeEncodeControl::new(fixture["documentContinuation"]["capacity"]["overOwnershipBytes"].as_u64().unwrap()as usize,&mut accept).pause().unwrap());
     let fault=loop{let mut spent=0;let mut cx_receipt=semio_framework_value::retained_clone::RetainedCloneProgress::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX,semio_s_artifact_procedural_3d_testkit::retirement_driver::STEP_GRANT),semio_framework_job::root_cancel_token(),||Some(0),&mut spent,&mut cx_receipt);match limited.step(&inputs,&mut cx){Err(fault)=>break fault,Ok(ArtifactCommandWorkStep::Progress{..})=>{},_=>panic!("over-cap document cannot publish")}};
     let code=fault.code.0.clone();close(&mut limited);assert_eq!(code,semio_framework_value::ValueRefusalKind::OwnershipLimit.as_str(),"outer refusal preserves the exact admitted owner category");
     for target in 1..=5{
         let mut work=Generation3dDocumentIoWork::new("exportDocument",owner.clone());let token=semio_framework_job::root_cancel_token();let mut observed=false;
-        for _ in 0..1000000{if work.phase==target{observed=true;break}let mut spent=0;let mut cx_receipt=semio_framework_value::retained_clone::RetainedCloneProgress::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX,semio_s_artifact_procedural_3d_testkit::retirement_driver::STEP_GRANT),token.clone(),||Some(0),&mut spent,&mut cx_receipt);assert!(matches!(work.step(&inputs,&mut cx).unwrap(),ArtifactCommandWorkStep::Progress{..}));}
+        for _ in 0..1000000{if work.stages().phase==target{observed=true;break}let mut spent=0;let mut cx_receipt=semio_framework_value::retained_clone::RetainedCloneProgress::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX,semio_s_artifact_procedural_3d_testkit::retirement_driver::STEP_GRANT),token.clone(),||Some(0),&mut spent,&mut cx_receipt);assert!(matches!(work.step(&inputs,&mut cx).unwrap(),ArtifactCommandWorkStep::Progress{..}));}
         assert!(observed);token.cancel_now();let mut spent=0;let mut cx_receipt=semio_framework_value::retained_clone::RetainedCloneProgress::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(8,u64::MAX,semio_s_artifact_procedural_3d_testkit::retirement_driver::STEP_GRANT),token,||Some(0),&mut spent,&mut cx_receipt);assert!(work.step(&inputs,&mut cx).is_err());close(&mut work);
     }
     let other=<Generation3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");let stale=ArtifactCommandInputs{snapshot:&other,..inputs};let mut work=Generation3dDocumentIoWork::new("exportDocument",owner.clone());let mut spent=0;let mut cx_receipt=semio_framework_value::retained_clone::RetainedCloneProgress::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX,semio_s_artifact_procedural_3d_testkit::retirement_driver::STEP_GRANT),semio_framework_job::root_cancel_token(),||Some(0),&mut spent,&mut cx_receipt);assert!(matches!(work.step(&inputs,&mut cx).unwrap(),ArtifactCommandWorkStep::Progress{..}));let mut spent=0;let mut cx_receipt=semio_framework_value::retained_clone::RetainedCloneProgress::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(8,u64::MAX,semio_s_artifact_procedural_3d_testkit::retirement_driver::STEP_GRANT),semio_framework_job::root_cancel_token(),||Some(0),&mut spent,&mut cx_receipt);assert!(work.step(&stale,&mut cx).is_err());close(&mut work);
@@ -113,7 +157,7 @@ fn document_io_eval_source_lease_preserves_owner_identity_and_stale_refusal() {
     let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let law=&fixture["documentContinuation"];assert_eq!(law["sourceReleases"],1);
     let mut session=FlowEvalSession::new();let text="Mesh 😀 source ".repeat(512);let pointer=text.as_ptr();session.set_eval_json(text);let source=session.lease_eval_json().unwrap();assert_eq!(source.as_ptr(),pointer);assert!(session.owns_eval_json(&source));let same=session.lease_eval_json().unwrap();assert!(Arc::ptr_eq(&source,&same));
     let mut alias=semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_shared_for_test(same,"eval source alias");semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released(alias.as_mut(),"eval source alias");
-    session.set_eval_json("replacement".into());assert!(!session.owns_eval_json(&source));let mut retirement=semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_shared_for_test(source,"eval source");assert!(matches!(retirement.close_step(Default::default()).unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress==Default::default()));semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released(retirement.as_mut(),"eval source");session.retire_cold();
+    session.set_eval_json("replacement".into());assert!(!session.owns_eval_json(&source));let mut retirement=semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_shared_for_test(source,"eval source");assert!(matches!(cold(|effect|retirement.close_step(0,effect)),RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),..}) if progress==Default::default()));semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released(retirement.as_mut(),"eval source");session.retire_cold();
 }
 
 #[test]
@@ -314,7 +358,10 @@ fn production_initial_snapshot(label: &str) -> Generation3dSnapshot {
 }
 
 fn production_mutations() -> Vec<Generation3dMutation> {
-    use semio_s_artifact_procedural_3d_mutations::*;
+    use semio_s_artifact_procedural_3d_mut_document::{change_schema, update_camera};
+    use semio_s_artifact_procedural_3d_mut_generations::{change_generation_value, create_generation, delete_generation, rename_generation};
+    use semio_s_artifact_procedural_3d_mut_synapses::{connect_synapse, disconnect_synapse, update_synapse};
+    use semio_s_artifact_procedural_3d_mut_widgets::{create_widget, delete_widget, delete_widget_position, move_widget, update_widget};
     let params = semio_framework_artifact_flow_flow::neural::Dictionary::new().insert("integer", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(7))).insert(
         "nested",
         semio_framework_artifact_flow_flow::neural::Value::Dictionary(
@@ -503,7 +550,7 @@ fn mesh_component_action_rejects_malformed_explicit_parameters() {
         semio_plugin::dsl_value!({"cuts":1.5}),
         semio_plugin::dsl_value!({"segments":65}),
         semio_plugin::dsl_value!({"center":[0.0,0.0]}),
-    ] { assert!(Generation3dPlayApp::command_from_action("editMeshSelection", Some((args).clone()), None).is_err()); }
+    ] { assert!(Generation3dPlayApp::command_from_action("editMeshSelection", &mut Some((args).clone()), &mut None).is_err()); }
 }
 
 semio_plugin::history_edit_acceptance_law!("procedural", semio_s_artifact_procedural_3d_editor::Generation3dPlayApp, || semio_plugin::App { definition: semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
@@ -517,7 +564,7 @@ fn document_io_import_state_values_agree_with_serde_json(){
     for budget in fixture["documentContinuation"]["budgets"].as_array().unwrap(){
         let mut parser=semio_framework_pack_json::JsonParseCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject);let mut accepted=|_|true;
         let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(fixture["documentContinuation"]["capacity"]["sourceAllocationBytes"].as_u64().unwrap()as usize,&mut accepted);
-        let value=loop{if let Some(value)=parser.step(&source,budget.as_u64().unwrap()as usize,&mut control).unwrap(){break value}};
+        let value=loop{if let Some(value)=cold(|effect|parser.step(&source,budget.as_u64().unwrap()as usize,&mut control,effect)).unwrap(){break value}};
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_string(&value)).unwrap(),oracle);
         {let mut release=semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_owned_for_test(((parser,value)),"document value");semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released(release.as_mut(),"document value");}
     }
@@ -545,7 +592,7 @@ async fn document_io_import_continuation_restores_original_generation_selection_
     let operation=semio_plugin::app::AppOperationContext{ retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 },app_instance_id:1,parent_document_id:"original-import-state".into(),operation_id:1,generation:1,canonical_base_revision:[1;32],authoring_seed:"original-import-state".into()};
     let owner=semio_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as ArtifactEditor>::build_instance_operation_owner());
     let inputs=ArtifactCommandInputs{ snapshot_owner: None,command:&command,snapshot:&*snapshot,config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
-    let close=|work:&mut Generation3dDocumentIoWork|{work.begin_close();assert_eq!(work.close_step(Default::default()),semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});semio_s_artifact_procedural_3d_testkit::retirement_driver::close_work::<EditorApp<Generation3dPlayApp>,_>(work,"original import continuation must retire")};
+    let close=|work:&mut Generation3dDocumentIoWork|close_after_an_empty_grant_pends(work,"original import continuation must retire");
     let discard=|mut emit:Emit<semio_s_artifact_procedural_3d_mutations::Generation3dMutation,semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation>|{for mutation in std::mem::take(&mut emit.artifact_mutations){mutation.retire_cold();}};
     let mut checks=Vec::new();
     for budget in fixture["documentContinuation"]["budgets"].as_array().unwrap(){

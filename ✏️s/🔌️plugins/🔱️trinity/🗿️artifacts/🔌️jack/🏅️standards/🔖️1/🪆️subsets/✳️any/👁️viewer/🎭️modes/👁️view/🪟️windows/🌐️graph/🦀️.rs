@@ -51,7 +51,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 👁️ Renders the original rich published child through its visual behavior.
-pub fn render(document:&JackSnapshot,child:&dyn semio_s_artifact_trinity_jack_graph_query::JackContentVisual)->semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode>{
+pub fn render(document:&JackSnapshot,child:&dyn semio_s_artifact_trinity_jack_graph_query::JackContentVisual,locale:semio_plugin::Locale)->semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode>{
  let(count_nodes,count_edges)=child.visual_counts();
  let nodes=(0..count_nodes).filter_map(|index|{
   let node=child.node_view(index)?;
@@ -63,7 +63,7 @@ pub fn render(document:&JackSnapshot,child:&dyn semio_s_artifact_trinity_jack_gr
     let viewport = Viewport2d { x: document.camera.x, y: document.camera.y, zoom: document.camera.zoom };
     let mut scene = NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) };
     scene.controls_json = Some(semio_framework_pack_json::json!({ "controllerId": TRINITY_JACK_VIEW_CONTROLLER_ID }).to_string());
-    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::NodeGraph, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::NodeGraph, &scene, semio_plugin::surface_name(locale, "Nakagin graph", "Nakagin-Graph"), None)
 }
 //#endregion 🔖️Render
 

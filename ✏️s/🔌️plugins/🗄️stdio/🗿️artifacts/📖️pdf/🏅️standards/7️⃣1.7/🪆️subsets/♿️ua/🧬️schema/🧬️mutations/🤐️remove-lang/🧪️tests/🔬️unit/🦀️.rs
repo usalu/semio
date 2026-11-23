@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::ua::schema::mutations::set_lang::SetLang;
 use crate::standards::v1_7::subsets::ua::schema::mutations::PdfUaMutation;
 #[allow(unused_imports)]
@@ -19,7 +19,7 @@ fn changes_the_owned_catalog_axis_and_plans_its_inverse() {
     let mutation = RemoveLang {};
     let next = applied(&base, &PdfUaMutation::RemoveLang(mutation.clone()));
     assert!(support::catalog_entry(&next, "Lang").is_none());
-    assert_eq!(<RemoveLang as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::SetLang(SetLang { lang: "de-DE".to_string(), entry_index: None })]);
+    assert_eq!(<RemoveLang as ColdMutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::SetLang(SetLang { lang: "de-DE".to_string(), entry_index: Some(1) })]);
 }
 
 #[semio_framework_async_macros::async_test]

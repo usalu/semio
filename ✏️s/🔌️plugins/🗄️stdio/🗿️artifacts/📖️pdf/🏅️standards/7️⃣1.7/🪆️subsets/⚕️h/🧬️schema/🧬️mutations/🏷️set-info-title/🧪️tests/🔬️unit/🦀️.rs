@@ -1,5 +1,5 @@
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::h::schema::mutations::PdfHMutation;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::diff::{PdfDiff, PdfInfoDiff, PdfSet};
@@ -16,7 +16,7 @@ fn sets_and_can_restore_the_document_title() {
     let mutation = SetInfoTitle { title: "after".to_string() };
     let next = applied(&base, &PdfHMutation::SetInfoTitle(mutation.clone()));
     assert_eq!(next.info.title.as_deref(), Some("after"));
-    assert_eq!(<SetInfoTitle as MutationKind<PdfSnapshot, PdfHMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfHMutation::SetInfoTitle(SetInfoTitle { title: "before".to_string() })]);
+    assert_eq!(<SetInfoTitle as ColdMutationKind<PdfSnapshot, PdfHMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfHMutation::SetInfoTitle(SetInfoTitle { title: "before".to_string() })]);
 }
 
 #[semio_framework_async_macros::async_test]

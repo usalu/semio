@@ -51,8 +51,8 @@ impl LayoutPlayApp {
         }
         let labels = layout_labels(view_state);
         match body_key {
-            LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(document, &config, transient, interaction),
-            LAYOUT_PLAY_BODY_PREVIEW => preview::render(document, &config, transient, interaction),
+            LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(document, &config, transient, interaction, view_state.locale),
+            LAYOUT_PLAY_BODY_PREVIEW => preview::render(document, &config, transient, interaction, view_state.locale),
             LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels, &semio_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_ARTIFACT)),
             LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.links, doc.parent_document_id(), labels, &semio_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
             LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, interaction, labels, &semio_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_INSPECTION)),
@@ -326,7 +326,7 @@ impl ArtifactEditor for LayoutPlayApp {
                 if !work.advance(doc,&config,cx)? { return Ok(None); }
                 work.render(doc.snapshot,&config,&LayoutInteractionSnapshot::from_interaction(interaction),layout_labels(view_state),&semio_plugin::TreeWindows::for_body(view_state,LAYOUT_PLAY_BODY_INSPECTION)).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into)
             }
-            LayoutPanelRenderWork::Canvas(work) => {if cx.should_yield()||cx.is_cancelled(){return Ok(None);}if work.needs_inputs(){let mut config=blueprint::config::current(cfg);if body_key==LAYOUT_PLAY_BODY_BLUEPRINT{if let Some(utility)=view_state.active_utility_id.as_deref().filter(|utility|!utility.is_empty()){config.active_utility=utility.to_string();}}work.prepare(doc.snapshot,&config,&blueprint::transient::current(transient),&LayoutInteractionSnapshot::from_interaction(interaction),body_key==LAYOUT_PLAY_BODY_BLUEPRINT).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"layout original render preparation failed"))?;cx.consume_fuel(1);return Ok(None);}if !work.advance(doc.snapshot,Some(doc),cx)?{return Ok(None);}work.take_tree().map(Some).map_err(Into::into)}
+            LayoutPanelRenderWork::Canvas(work) => {if cx.should_yield()||cx.is_cancelled(){return Ok(None);}if work.needs_inputs(){let mut config=blueprint::config::current(cfg);if body_key==LAYOUT_PLAY_BODY_BLUEPRINT{if let Some(utility)=view_state.active_utility_id.as_deref().filter(|utility|!utility.is_empty()){config.active_utility=utility.to_string();}}work.prepare(doc.snapshot,&config,&blueprint::transient::current(transient),&LayoutInteractionSnapshot::from_interaction(interaction),body_key==LAYOUT_PLAY_BODY_BLUEPRINT).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"layout original render preparation failed"))?;cx.consume_fuel(1);return Ok(None);}if !work.advance(doc.snapshot,Some(doc),cx)?{return Ok(None);}work.take_tree(view_state.locale).map(Some).map_err(Into::into)}
         }
     }
 

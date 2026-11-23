@@ -1,0 +1,52 @@
+{
+ "version": 1,
+ "scenarios": [
+  {
+   "name": "every recorded child fact that still holds",
+   "entries": {"a.ts": "file", "src": "directory", "b.json": "file"},
+   "rows": [
+    {"kind": "lstat", "name": "a.ts", "fact": "file"},
+    {"kind": "lstat", "name": "src", "fact": "directory"},
+    {"kind": "lstat", "name": "gone", "fact": "!ENOENT"},
+    {"kind": "exists", "name": "b.json", "fact": true},
+    {"kind": "exists", "name": "gone", "fact": false},
+    {"kind": "fileExists", "name": "a.ts", "fact": true},
+    {"kind": "fileExists", "name": "src", "fact": false},
+    {"kind": "fileExists", "name": "gone", "fact": false},
+    {"kind": "directoryExists", "name": "src", "fact": true},
+    {"kind": "directoryExists", "name": "a.ts", "fact": false},
+    {"kind": "directoryExists", "name": "gone", "fact": false}
+   ]
+  },
+  {
+   "name": "a child that changed type or appeared or vanished since it was recorded",
+   "entries": {"a.ts": "file", "src": "directory", "fresh": "file"},
+   "rows": [
+    {"kind": "lstat", "name": "a.ts", "fact": "directory"},
+    {"kind": "lstat", "name": "src", "fact": "file"},
+    {"kind": "lstat", "name": "fresh", "fact": "!ENOENT"},
+    {"kind": "lstat", "name": "vanished", "fact": "file"},
+    {"kind": "exists", "name": "fresh", "fact": false},
+    {"kind": "exists", "name": "vanished", "fact": true},
+    {"kind": "fileExists", "name": "src", "fact": true},
+    {"kind": "fileExists", "name": "fresh", "fact": false},
+    {"kind": "directoryExists", "name": "a.ts", "fact": true},
+    {"kind": "directoryExists", "name": "vanished", "fact": true}
+   ]
+  },
+  {
+   "name": "a directory with more entries than the index threshold",
+   "entries": {"n000": "file", "n001": "file", "n002": "file", "n003": "file", "n004": "file", "n005": "file", "n006": "file", "n007": "file", "n008": "file", "n009": "file", "n010": "file", "n011": "file", "n012": "file", "n013": "file", "n014": "file", "n015": "file", "n016": "file", "n017": "file", "n018": "file", "n019": "file", "n020": "file", "n021": "file", "n022": "file", "n023": "file", "n024": "file", "n025": "file", "n026": "file", "n027": "file", "n028": "file", "n029": "file", "n030": "file", "n031": "file", "n032": "file", "n033": "file", "n034": "file", "n035": "file", "n036": "file", "n037": "file", "n038": "file", "n039": "file", "n040": "file", "n041": "file", "n042": "file", "n043": "file", "n044": "file", "n045": "file", "n046": "file", "n047": "file", "n048": "file", "n049": "file", "n050": "file", "n051": "file", "n052": "file", "n053": "file", "n054": "file", "n055": "file", "n056": "file", "n057": "file", "n058": "file", "n059": "file", "n060": "file", "n061": "file", "n062": "file", "n063": "file", "n064": "file", "d065": "directory"},
+   "rows": [
+    {"kind": "lstat", "name": "n000", "fact": "file"},
+    {"kind": "lstat", "name": "n064", "fact": "file"},
+    {"kind": "lstat", "name": "d065", "fact": "directory"},
+    {"kind": "lstat", "name": "n065", "fact": "!ENOENT"},
+    {"kind": "fileExists", "name": "n032", "fact": true},
+    {"kind": "directoryExists", "name": "d065", "fact": true},
+    {"kind": "directoryExists", "name": "n032", "fact": true},
+    {"kind": "exists", "name": "n099", "fact": true}
+   ]
+  }
+ ]
+}

@@ -183,6 +183,7 @@ impl<P, M: Mutation<P>> EditReplay<P, M> {
 }
 
 impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> ErasedSnapshotRetirement for EditReplay<P, M> {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.retirement_work_demand(body)}
     fn requires_original_control(&self)->bool{EditReplay::requires_original_control(self)}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
@@ -258,6 +259,7 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplayResult<P, M> {
 }
 
 impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> ErasedSnapshotRetirement for EditReplayResult<P, M> {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.retirement_work_demand(body)}
     fn requires_original_control(&self)->bool{EditReplayResult::requires_original_control(self)}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }

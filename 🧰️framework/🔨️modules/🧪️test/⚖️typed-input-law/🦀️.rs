@@ -8,6 +8,7 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::{
     retained_clone::{admit_retained_clone_close, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep},
     retirement::RetireOwned,
+    AuthoringWallet,
 };
 
 /// 📜️ What one owner cost to retire through the typed-command input lane.
@@ -26,7 +27,7 @@ pub fn typed_input_retirement_law<T: RetireOwned>(label: &str, value: T) -> Type
     let mut active: Option<Box<dyn store::ErasedSnapshotRetirement>> = None;
     let demand = store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&pending).unwrap_or_else(|error| panic!("{label}: the typed lane quotes the owner: {error}"));
     let admit = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: 1 << 20, maximum_depth: demand.depth };
-    let (admitted, heap) = observe(|| store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut pending, &mut active, admit));
+    let (admitted, heap) = AuthoringWallet::new(admit, 1 << 20).run_invoked(admit, 1 << 10, |effect| observe(|| store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut pending, &mut active, effect))).expect("authoring admission effect").expect("admission work quote admitted").output;
     let admitted = admitted.result.unwrap_or_else(|error| panic!("{label}: the typed lane admits the owner: {error}"));
     let RetainedCloneStep::Progress(progress) = admitted else { panic!("{label}: admission reports its birth as progress") };
     assert!(pending.is_none(), "{label}: admission takes the original owner");
@@ -43,7 +44,9 @@ pub fn typed_input_retirement_law<T: RetireOwned>(label: &str, value: T) -> Type
             maximum_release_bytes: owner.next_release_byte_demand().unwrap_or_else(|error| panic!("{label}: release demand: {error}")),
             maximum_depth: owner.next_depth_demand().unwrap_or_else(|error| panic!("{label}: depth demand: {error}")).max(1),
         };
-        let (step, heap) = observe(|| owner.close_step(grant));
+        let mut observed = None;
+        let (step, _) = AuthoringWallet::new(grant, 1 << 20).run_settled(grant, 1 << 10, |effect| { let (poll, heap) = observe(|| owner.close_step(grant.maximum_copy_bytes, effect)); observed = Some(heap); poll }).expect("authoring close effect").expect("close work quote admitted");
+        let heap = observed.expect("the close effect ran");
         let step = step.result.unwrap_or_else(|error| panic!("{label}: a fully quoted turn closes: {error}"));
         admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "typed input law").unwrap_or_else(|error| panic!("{label}: the receipt fits its quoted grant: {error}"));
         let progress: RetainedCloneProgress = step.progress();

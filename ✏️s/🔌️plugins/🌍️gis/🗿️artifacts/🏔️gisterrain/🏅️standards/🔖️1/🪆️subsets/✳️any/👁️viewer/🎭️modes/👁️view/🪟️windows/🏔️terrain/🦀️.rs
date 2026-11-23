@@ -65,7 +65,7 @@ pub fn render(document: &GisTerrainSnapshot, view: &semio_plugin::ViewModel) -> 
     scene.domain_id = Some("features".into());
     scene.domain_granularity_id = Some("pin".into());
     scene.terrain_json = Some(terrain_json);
-    scene_surface(SURFACE_ID, ContractSurfaceKind::World3d, &scene)
+    scene_surface(SURFACE_ID, ContractSurfaceKind::World3d, &scene, semio_plugin::surface_name(view.locale, "Terrain view", "Geländeansicht"), None)
 }
 //#endregion 🔖️Render
 

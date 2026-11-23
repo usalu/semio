@@ -343,6 +343,11 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         Puzzle3dCommand::from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 3D action '{action}'")))
     }
 
+    /// 📥️ The reassembled import uses the declared Puzzle file wire budget.
+    fn original_action_command_producer() -> Option<&'static dyn semio_plugin::ArtifactOriginalCommandProducerFactory<Self::Command>> {
+        Some(&semio_plugin::OriginalActionCommandBridge(Self::command_from_action, |command| if command.action_id() == "importSnapshot" { PUZZLE3D_IMPORT_RAW_BYTES } else { semio_plugin::RUNTIME_COMMAND_WIRE_MAXIMUM }))
+    }
+
     /// 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle3dCommand`.
     fn handle(
@@ -615,7 +620,7 @@ impl Puzzle3dPlayApp {
                     let (instances_json, meshes_json, instances_delta_json) = app.geometry_jsons(&envelope.scene_snapshot, provisional, &interaction.referenced);
                     let menu_target = envelope.runtime.suggestion_menu.as_ref().map(|menu| menu.vortex_full_id.as_str());
                     let suggestions = menu_target.and_then(|target| owner?.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(owner.brush_suggestions.found(target).cloned())).ok().flatten());
-                    main::render(&envelope, &precompute, instances_json, meshes_json, instances_delta_json, interaction, suggestions.as_ref())
+                    main::render(&envelope, &precompute, instances_json, meshes_json, instances_delta_json, interaction, suggestions.as_ref(), labels)
                 }
                 artifact::BODY_KEY => artifact::render(&envelope.scene_snapshot, labels, &semio_plugin::TreeWindows::for_body(view_state, artifact::BODY_KEY)),
                 catalogue::BODY_KEY => catalogue::render(&envelope, labels, &semio_plugin::TreeWindows::for_body(view_state, catalogue::BODY_KEY)),

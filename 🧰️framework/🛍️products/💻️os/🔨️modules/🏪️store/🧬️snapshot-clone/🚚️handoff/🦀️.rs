@@ -22,6 +22,7 @@ impl<T: RetainedClone> RetainedCloneCursorHandoff<T> {
 }
 
 impl<T: RetainedClone> ErasedSnapshotRetirement for RetainedCloneCursorHandoff<T> {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{
         let Some(cursor)=self.cursor.as_ref()else{return Ok(0)};
         if cursor.terminal_is_empty()&&!self.close_reply.pending(){return Ok(1)}

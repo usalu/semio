@@ -90,6 +90,7 @@ impl ArtifactStoreBackboneRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { if let Some(outbox)=self.outbox.as_ref().filter(|owner|!owner.terminal_is_empty()){outbox.close_demands(body)}else if let Some(paged)=self.paged.as_ref().filter(|owner|!owner.terminal_is_empty()){paged.next_demand(body)}else{self.demands()} }
     fn close_step(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
         let grant = effect.grant();

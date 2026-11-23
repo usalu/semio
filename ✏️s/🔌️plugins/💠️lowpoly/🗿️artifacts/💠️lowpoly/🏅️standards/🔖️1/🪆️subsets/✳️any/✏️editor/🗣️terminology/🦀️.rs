@@ -7,6 +7,8 @@ semio_ui_locale::app_labels! {
     pub struct LowpolyLabels {
         failed_model: native_en "Failed to load lowpoly document", native_de "Lowpoly-Dokument konnte nicht geladen werden", reuse_en "Failed to load lowpoly document", reuse_de "Lowpoly-Dokument konnte nicht geladen werden";
         failed_uv: native_en "Failed to load UV canvas", native_de "UV-Leinwand konnte nicht geladen werden", reuse_en "Failed to load UV canvas", reuse_de "UV-Leinwand konnte nicht geladen werden";
+        surface_main: native_en "Model view", native_de "Modellansicht", reuse_en "Model view", reuse_de "Modellansicht";
+        surface_uv: native_en "UV canvas", native_de "UV-Leinwand", reuse_en "UV canvas", reuse_de "UV-Leinwand";
         command_placeholder: native_en "Enter a mesh command", native_de "Netzbefehl eingeben", reuse_en "Enter a mesh command", reuse_de "Netzbefehl eingeben";
         eraser: native_en "Eraser", native_de "Radierer", reuse_en "Eraser", reuse_de "Radierer";
         fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";

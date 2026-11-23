@@ -1,0 +1,38 @@
+[
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=shorts",
+   "areaM2"
+  ],
+  "value": 0.061,
+  "was": 0.1095,
+  "measuredAt": 50
+ },
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=socks",
+   "areaM2"
+  ],
+  "value": 0.008,
+  "was": 0.0166,
+  "measuredAt": 50
+ },
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=shoes",
+   "areaM2"
+  ],
+  "value": 0.032,
+  "was": 0.0463,
+  "measuredAt": 100
+ }
+]

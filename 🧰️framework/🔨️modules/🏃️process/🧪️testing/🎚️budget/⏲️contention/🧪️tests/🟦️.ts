@@ -5,9 +5,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Ajv from "ajv";
 import { runBudgetedTestCommand } from "../../../🎛️execution/🟦️.ts";
-import { budgetStretchV1, admitContentionPolicyV1, CONTENTION_POLICY_V1, createBudgetClockV1, describeTestBudgetV1, hostContentionV1, spinSlowdownV1, watchTestBudgetV1, wallClockContentionV1, type ContentionSampleV1 } from "../🟦️.ts";
+import { budgetStretchV1, describeClampedBudgetV1, STRETCHED_BUDGET_CEILING_MILLISECONDS_V1, stretchedBudgetV1, admitContentionPolicyV1, CONTENTION_POLICY_V1, createBudgetClockV1, describeTestBudgetV1, hostContentionV1, spinSlowdownV1, watchTestBudgetV1, wallClockContentionV1, type ContentionSampleV1 } from "../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
+import bunFilesSchema from "../../../🟨️bun/📁️files/🧬️schema/🔣️.json";
+import { OWNED_BUN_TIMEOUT_CEILING_MILLISECONDS_V1 } from "../../../🟨️bun/📁️files/🟦️.ts";
 
 /** ⏲️ Laws of the load-aware test budget clock: a budget counts work, so a run that fits it on an idle host survives any load up to the stretch bound and a run that never ends is stopped after at most that bound; an independent Python integration of the same traces agrees to the millisecond. */
 const policy = CONTENTION_POLICY_V1;
@@ -17,8 +19,8 @@ const artifactParent = process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
 type Trace = readonly (readonly [number, number])[];
 type ClockCase = Readonly<{ budget: number; work: number; cores: number; trace: Trace }>;
 
-const oracle = (clocks: readonly ClockCase[], probes: readonly unknown[] = []): { clocks: { expiry: number; finish: number; survives: boolean }[]; probes: number[][] } => {
-  const run = spawnSync("python3", ["-I", join(import.meta.dir, "🐍️oracle", "🐍️.py")], { input: JSON.stringify({ policy, clocks, probes }), encoding: "utf8" });
+const oracle = (clocks: readonly ClockCase[], probes: readonly unknown[] = [], funding: readonly unknown[] = []): { clocks: { expiry: number; finish: number; survives: boolean }[]; probes: number[][]; funding: { funded: number; needed: number; clamped: boolean }[] } => {
+  const run = spawnSync("python3", ["-I", join(import.meta.dir, "🐍️oracle", "🐍️.py")], { input: JSON.stringify({ policy, clocks, probes, funding, ceiling: fixture.ceilingMilliseconds }), encoding: "utf8" });
   expect(run.status, run.stderr).toBe(0);
   return JSON.parse(run.stdout);
 };
@@ -244,3 +246,28 @@ test("a hung process on a busy host is still killed, after its budget times the 
     rmSync(directory, { recursive: true, force: true });
   }
 }, 120000);
+
+test("a stretch that would overflow the schema ceiling is clamped to it, the run is admitted and says the budget was clamped, agreeing with the Python oracle", () => {
+  expect(STRETCHED_BUDGET_CEILING_MILLISECONDS_V1).toBe(fixture.ceilingMilliseconds);
+  const expected = oracle([], [], fixture.funding);
+  fixture.funding.forEach((row, position) => {
+    const funded = stretchedBudgetV1(row.budget, row.ratio), model = expected.funding[position]!;
+    expect({ funded: funded.milliseconds, needed: funded.neededMilliseconds, clamped: funded.clamped }, row.name).toEqual({ funded: row.funded, needed: row.needed, clamped: row.clamped });
+    expect(model, row.name).toEqual({ funded: row.funded, needed: row.needed, clamped: row.clamped });
+    expect(funded.milliseconds, row.name).toBeLessThanOrEqual(STRETCHED_BUDGET_CEILING_MILLISECONDS_V1);
+    const words = describeClampedBudgetV1(row.budget, funded);
+    if (row.clamped) { expect(words).toContain("budget clamped"); expect(words).toContain("Budget begrenzt"); } else expect(words).toBeUndefined();
+  });
+});
+
+test("a funded budget at a load that overflows every schema validates as the owned Bun selection timeout, and the ceiling is the one every schema admits", () => {
+  const selection = new Ajv({ strict: false }).compile({ ...bunFilesSchema, $ref: "#/definitions/Selection" });
+  expect(OWNED_BUN_TIMEOUT_CEILING_MILLISECONDS_V1).toBe(bunFilesSchema.definitions.Selection.properties.timeoutMilliseconds.maximum);
+  expect(STRETCHED_BUDGET_CEILING_MILLISECONDS_V1).toBeLessThanOrEqual(OWNED_BUN_TIMEOUT_CEILING_MILLISECONDS_V1);
+  for (const [budget, ratio] of [[300000, 7.5], [300000, 80], [1800000, 1], [1800000, 80], [1000, 80]] as const) {
+    const funded = stretchedBudgetV1(budget, ratio);
+    const row = { version: 1, cwd: "/tmp", files: ["/tmp/a.ts"], arguments: [], timeoutMilliseconds: funded.milliseconds };
+    expect(selection(row), `${budget}x${ratio}`).toBe(true);
+    expect(funded.clamped).toBe(funded.neededMilliseconds > STRETCHED_BUDGET_CEILING_MILLISECONDS_V1);
+  }
+});

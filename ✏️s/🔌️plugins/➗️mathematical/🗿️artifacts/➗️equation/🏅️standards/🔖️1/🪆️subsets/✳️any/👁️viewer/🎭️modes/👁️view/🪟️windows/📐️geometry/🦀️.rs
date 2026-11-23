@@ -30,10 +30,10 @@ pub fn definition() -> semio_plugin::WindowKindDefinition {
 /// 👁️ Pure `EquationSnapshot -> UiNode` read: one row per point, in document order — the same
 /// artifact-level `equation_geometry` helper the editor's own Geometry window reads, since that
 /// function lives at the ARTIFACT level (outside both surfaces), not behind the editor module.
-pub fn render(document: &EquationSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &EquationSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let geometry = document.geometry.clone();
     let view = TableView { columns: vec!["#".into(), "x".into(), "y".into()], rows: geometry.points.iter().enumerate().map(|(index, point)| vec![index.to_string(), format!("{}", point.x), format!("{}", point.y)]).collect() };
-    TableWindowKit::render(&view)
+    TableWindowKit::render(&view, locale)
 }
 //#endregion 🔖️Render
 

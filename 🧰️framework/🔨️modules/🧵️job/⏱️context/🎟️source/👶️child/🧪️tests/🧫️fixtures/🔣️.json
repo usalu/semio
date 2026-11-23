@@ -39,6 +39,7 @@
   "admission": [
     {
       "phase": "parent-strong-lease",
+      "quote": "loan",
       "spent": [
         1,
         0,
@@ -48,6 +49,7 @@
     },
     {
       "phase": "original-cancellation-alias",
+      "quote": "none",
       "spent": [
         1,
         0,
@@ -57,6 +59,7 @@
     },
     {
       "phase": "initial-child-ledger",
+      "quote": "ledger",
       "spent": [
         1,
         0,
@@ -65,18 +68,40 @@
       ]
     },
     {
-      "phase": "child-parent-wrapper",
+      "phase": "child-source-roots",
+      "quote": "prepare",
       "spent": [
         1,
         0,
-        40,
+        0,
+        0
+      ]
+    },
+    {
+      "phase": "child-sealed-backing",
+      "quote": "backing",
+      "spent": [
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "phase": "child-parent-publication",
+      "quote": "publish",
+      "spent": [
+        1,
+        0,
+        0,
         0
       ]
     },
     {
       "phase": "ready",
+      "quote": "ready",
       "spent": [
-        0,
+        1,
         0,
         0,
         0
@@ -124,7 +149,10 @@
     1,
     2,
     3,
-    4
+    4,
+    5,
+    6,
+    7
   ],
   "initialStock": [
     512,

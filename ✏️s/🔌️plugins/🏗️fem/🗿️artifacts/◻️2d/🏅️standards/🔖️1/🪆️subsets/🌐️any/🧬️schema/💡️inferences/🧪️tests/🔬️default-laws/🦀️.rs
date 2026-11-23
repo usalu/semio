@@ -7,10 +7,16 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot
 
 #[test]
 fn inference_default_law() {
-    assert_eq!(Fem2dInference::infer(&Fem2dSnapshot::default()).expect("valid materialized inference fixture"), Fem2dInference::default());
+    let snapshot = Fem2dSnapshot::default();
+    let inferred = Fem2dInference::infer(&snapshot).expect("valid materialized inference fixture");
+    semio_framework_value::FromValue::retire_decoded(snapshot);
+    assert_eq!(inferred, Fem2dInference::default());
 }
 
 #[test]
 fn bounds_default_law() {
-    assert_eq!(compute_fem2d_bounds(&Fem2dSnapshot::default()), Fem2dBounds::default());
+    let snapshot = Fem2dSnapshot::default();
+    let bounds = compute_fem2d_bounds(&snapshot);
+    semio_framework_value::FromValue::retire_decoded(snapshot);
+    assert_eq!(bounds, Fem2dBounds::default());
 }

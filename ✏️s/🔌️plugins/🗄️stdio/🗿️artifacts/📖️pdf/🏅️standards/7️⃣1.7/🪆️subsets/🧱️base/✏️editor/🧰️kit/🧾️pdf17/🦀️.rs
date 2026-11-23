@@ -81,7 +81,7 @@ impl protocol::OpBinary for $command {
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
-semio_s_artifact_stdio_contract::snapshot_editing_command_roster!($command, ["set-page", "set-text", "move", "resize", "delete", "set-fill", "set-stroke", "insert-text", "insert-rectangle", "insert-line", "insert-image", "insert-page", "remove-page", "move-page", "set-page-size", "set-info", "set-annotation", "set-image", "set-font", "set-font-size", "set-outline", "set-page-rotation", "set-page-box", "set-page-user-unit", "set-language", "set-page-layout", "set-page-mode", "set-optional-content", "set-embedded-file", "remove-embedded-file", "set-named-destination", "remove-named-destination", "set-page-label", "set-mark-info", "set-metadata", "set-viewer-preferences", "set-encryption", "set-output-intent", "set-form-field", "set-open-action", "set-document-id", "set-font-reference", "set-graphics-state", "set-pattern", "set-color-space", "set-properties", "set-font-metrics", "set-image-mask", "set-form-content", "set-page-transition", "set-catalog-entry", "set-trailer-entry", "set-annotation-appearance", "set-glyph", "set-indirect-object", "set-mesh-reference", "set-info-field", "set-page-extra", "set-annotation-style", "set-annotation-border", "set-annotation-markup", "set-form-settings", "set-extra-entry", "set-annotation-kind", "set-field-data", "set-resource-detail", "set-entry", "create-annotation", "fill-form-field", "replace-page", "replace-page-pick", "merge-document", "merge-pick", "extract-pages", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "presence-pointer", "presence-pointer-leave", "presence-caret", "presence-caret-clear"]);
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!($command, ["zoom-in", "zoom-out", "fit-page", "fit-width", "actual-size", "go-to-page", "set-query", "toggle-match-case", "next-hit", "previous-hit", "set-page", "set-text", "move", "resize", "delete", "set-fill", "set-stroke", "insert-text", "insert-rectangle", "insert-line", "insert-image", "insert-page", "remove-page", "move-page", "set-page-size", "set-info", "set-annotation", "set-image", "set-font", "set-font-size", "set-outline", "set-page-rotation", "set-page-box", "set-page-user-unit", "set-language", "set-page-layout", "set-page-mode", "set-optional-content", "set-embedded-file", "remove-embedded-file", "set-named-destination", "remove-named-destination", "set-page-label", "set-mark-info", "set-metadata", "set-viewer-preferences", "set-encryption", "set-output-intent", "set-form-field", "set-open-action", "set-document-id", "set-font-reference", "set-graphics-state", "set-pattern", "set-color-space", "set-properties", "set-font-metrics", "set-image-mask", "set-form-content", "set-page-transition", "set-catalog-entry", "set-trailer-entry", "set-annotation-appearance", "set-glyph", "set-indirect-object", "set-mesh-reference", "set-info-field", "set-page-extra", "set-annotation-style", "set-annotation-border", "set-annotation-markup", "set-form-settings", "set-extra-entry", "set-annotation-kind", "set-field-data", "set-resource-detail", "set-entry", "create-annotation", "fill-form-field", "replace-page", "replace-page-pick", "merge-document", "merge-pick", "extract-pages", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "presence-pointer", "presence-pointer-leave", "presence-caret", "presence-caret-clear"]);
 
 semio_s_artifact_stdio_pdf_view_lane::view_native!($command);
 
@@ -107,6 +107,10 @@ impl ArtifactEditor for $editor {
     semio_s_artifact_stdio_pdf_presence_lane::presence_lane_stores!();
 
     const SINGLE_TURN_NATURAL_DECODE: bool = true;
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_plugin::__kernel::semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
+        semio_plugin::__kernel::semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.pdf.child-projection"), error.to_string()))
+    }
 
     fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
         semio_plugin::cold_replay_document_store_owners_source_demands::<PdfSnapshot, PdfMutation>()
@@ -137,6 +141,10 @@ impl ArtifactEditor for $editor {
         bounded_native: true
     }
 
+    fn fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
+        crate::editor::page::pdf_fault_notices()
+    }
+
     fn command_id(command: &Self::Command) -> &'static str {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |native| match native {
             $command::SetPage { .. } => "set-page",
@@ -159,7 +167,7 @@ impl ArtifactEditor for $editor {
                 let edit = crate::editor::page::edit_from_action(other, args)?;
                 Ok($command::PageEdit { action: edit.action, payload: edit.payload })
             }
-            other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.pdf.unhandled-action"), format!("unknown pdf editor action '{other}'"))),
+            other => Err(crate::editor::page::refuse(crate::editor::page::PdfFault::UnhandledAction, format!("unknown pdf editor action '{other}'")).with_param("action", other)),
         })
     }
 
@@ -200,7 +208,7 @@ impl ArtifactEditor for $editor {
                 &semio_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
             .map(built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_plugin::built_text_to_component_tree(crate::editor::page::pdf_editor_labels(view_state.locale).unknown_body.fill(&[("body", body_key)])),
         }
     }
 

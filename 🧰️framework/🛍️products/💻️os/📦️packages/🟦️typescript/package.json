@@ -103,6 +103,7 @@
     "./modules/renderer/engine/elements/InkCanvasHost/ink-geometry": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/📐️ink-geometry/🟦️.ts",
     "./modules/renderer/engine/elements/InkCanvasHost/ink-model": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🧾️ink-model/🟦️.ts",
     "./modules/renderer/engine/elements/Interpreter": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx",
+    "./modules/renderer/engine/elements/Interpreter/intent-descriptor": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎬️intent-descriptor/🟦️.ts",
     "./modules/renderer/engine/elements/Interpreter/interpreter-context": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧷️interpreter-context/🟦️.ts",
     "./modules/renderer/engine/elements/Interpreter/node-tree": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx",
     "./modules/renderer/engine/elements/Interpreter/presence-overlay": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/👥️presence-overlay/🟦️.ts",

@@ -94,7 +94,8 @@
             "elapsedMilliseconds": {"type":"integer", "minimum": 0}
           }
         },
-        "completed": {"type":"array", "maxItems": 8, "items":{"$ref":"#/definitions/InventoryAwaitPhase"}}
+        "completed": {"type":"array", "maxItems": 8, "items":{"$ref":"#/definitions/InventoryAwaitPhase"}},
+        "note": {"type":"object", "additionalProperties": false, "required": ["en","de"], "properties": {"en":{"type":"string","maxLength":480},"de":{"type":"string","maxLength":480}}}
       }
     },
     "Report": {

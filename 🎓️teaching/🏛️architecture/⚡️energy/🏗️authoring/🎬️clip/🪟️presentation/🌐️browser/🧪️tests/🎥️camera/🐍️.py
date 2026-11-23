@@ -1,4 +1,4 @@
-"""🎥 Verify paused camera frames use committed real silhouette geometry."""
+"""🎥 Verify paused camera frames use committed real window frame geometry."""
 import importlib
 import json
 import os

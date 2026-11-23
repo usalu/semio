@@ -8,7 +8,7 @@
 fn every_transient_notice_is_a_polite_status_named_by_its_message_and_described_by_its_code() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧯️wgpu-transient-notice/🔣️.json")).expect("the transient notice fixture parses");
     let expected = &fixture["node"];
-    let notice_node = |mut shell: &ShellState| PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == expected["key"].as_str().expect("key")).collect::<Vec<_>>();
+    let notice_node = |shell: &mut ShellState| PanelsViewCtx::of(shell).chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == expected["key"].as_str().expect("key")).collect::<Vec<_>>();
     for notice in fixture["notices"].as_array().expect("notices") {
         let mut shell = session_shell();
         shell.prefs.locale_id = notice["locale"].as_str().expect("locale").into();
@@ -18,9 +18,9 @@ fn every_transient_notice_is_a_polite_status_named_by_its_message_and_described_
             _ => semio_framework::Severity::Error,
         };
         let message = notice["message"].as_str().expect("message");
-        assert!(notice_node(&shell).is_empty(), "no notice, no node");
+        assert!(notice_node(&mut shell).is_empty(), "no notice, no node");
         shell.chrome.show_transient_notice(message, severity, notice["code"].as_str());
-        let nodes = notice_node(&shell);
+        let nodes = notice_node(&mut shell);
         assert_eq!(nodes.len(), 1, "{message}: one status node");
         let node = &nodes[0];
         assert_eq!((node.role.as_str(), node.live.as_str(), node.focusable, node.actionable), (expected["role"].as_str().expect("role"), expected["live"].as_str().expect("live"), false, false), "{message}");
@@ -28,9 +28,9 @@ fn every_transient_notice_is_a_polite_status_named_by_its_message_and_described_
         shell.docs.session.as_mut().expect("session").app.dialogs.push(finalize_dialog());
         SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("the finalize prompt can go back")));
         open_finalize_prompt(&mut shell, "Alternative");
-        assert_eq!(notice_node(&shell).len(), 1, "{message}: still told while a modal dialog is open");
+        assert_eq!(notice_node(&mut shell).len(), 1, "{message}: still told while a modal dialog is open");
         shell.chrome.chrome_build.transient_notice.as_mut().expect("showing").shown_at_ms -= 5_000.0;
-        assert!(notice_node(&shell).is_empty(), "{message}: nothing past the 4 s deadline");
+        assert!(notice_node(&mut shell).is_empty(), "{message}: nothing past the 4 s deadline");
     }
 }
 //#endregion 🧯️NoticeProjection

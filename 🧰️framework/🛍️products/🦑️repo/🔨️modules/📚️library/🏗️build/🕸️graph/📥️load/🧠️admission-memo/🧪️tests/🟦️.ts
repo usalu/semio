@@ -122,10 +122,51 @@ test("only a cold owner with integer row positions borrows the corresponding obs
  }finally{db.close();}
 });
 
-test("packing serializes each captured occurrence once when constructing its row index",()=>{
+test("packing serializes a row at most once and not at all while the owners hold the instances of the capture",()=>{
  let encodings=0;
- const observations=[{toJSON(){encodings++;return {kind:"exists",path:"a",fact:true};}}];
- const memo=packAdmissionMemoV1({...record(),observations,owners:[]});
- expect(memo.observations).toEqual(observations);
- expect(encodings).toBe(1);
+ const make=(path:string)=>({toJSON(){encodings++;return {kind:"exists",path,fact:true};}}),rows=[make("a"),make("b")];
+ const shared=packAdmissionMemoV1({...record(),observations:rows,owners:[{suffix:"x",facts:1,rows:[rows[1]!,rows[0]!]},{suffix:"y",facts:2,rows:[rows[0]!]}]});
+ expect(shared.owners.map(owner=>owner.rows)).toEqual([[1,0],[0]]);expect(encodings).toBe(0);
+ const other=packAdmissionMemoV1({...record(),observations:rows,owners:[{suffix:"x",facts:1,rows:[make("b"),make("c"),make("b")]}]});
+ expect(other.owners[0]!.rows).toEqual([1,2,1]);expect(other.observations.length).toBe(3);expect(encodings).toBe(2+3);
+});
+
+test("the row index of a pack equals an independent index by text, for shared instances, equal copies and new rows",()=>{
+ const universe=Array.from({length:60},(_,at)=>row("/w/f"+(at%45)+".ts",at%3)),texts=universe.map(each=>JSON.stringify(each));
+ let seed=7;const next=(limit:number)=>(seed=(seed*1103515245+12345)%2147483648)%limit;
+ const observations=universe.slice(0,40),owners=Array.from({length:30},(_,owner)=>({suffix:"o"+owner,facts:owner,rows:Array.from({length:25},()=>{const pick=next(universe.length);return next(3)===0?JSON.parse(JSON.stringify(universe[pick])):universe[pick]!;})}));
+ const memo=packAdmissionMemoV1({...record(),observations,owners});
+ const oracle=observations.map(each=>JSON.stringify(each)),index=new Map<string,number>();oracle.forEach((text,at)=>{if(!index.has(text))index.set(text,at);});
+ const expected=owners.map(owner=>owner.rows.map(each=>{const text=JSON.stringify(each);let found=index.get(text);if(found===undefined){found=oracle.push(text)-1;index.set(text,found);}return found;}));
+ expect(memo.owners.map(owner=>owner.rows)).toEqual(expected);expect(memo.observations.map(each=>JSON.stringify(each))).toEqual(oracle);
+ for(const owner of memo.owners)for(const at of owner.rows)expect(at).toBeLessThan(memo.observations.length);
+ expect(texts.length).toBe(universe.length);
+});
+
+test("a memo is written in chunks to the exact bytes of its JSON, and a memo above the limit stops writing at once",async()=>{
+ const root=directory();try{
+  const path=join(root,"big.admission.json"),rows=Array.from({length:4000},(_,at)=>row("/w/"+"x".repeat(900)+at,at)),memo=packAdmissionMemoV1({...record(),observations:rows,owners:[{suffix:"o",facts:{closure:"🧬".repeat(10)},rows:rows.slice(0,3000)},{suffix:"p",facts:null,rows:[]}]});
+  const text=JSON.stringify(memo);expect(text.length).toBeGreaterThan(3*(1<<20));
+  expect(await writeAdmissionMemoV1(path,memo,Buffer.byteLength(text))).toBe(true);
+  expect(readFileSync(path,"utf8")).toBe(text);expect(JSON.parse(readFileSync(path,"utf8"))).toEqual(JSON.parse(text));
+  rmSync(path);
+  expect(await writeAdmissionMemoV1(path,memo,Buffer.byteLength(text)-1)).toBe(false);expect(readdirSync(root)).toEqual([]);
+  expect(await writeAdmissionMemoV1(path,memo,1<<20)).toBe(false);expect(readdirSync(root)).toEqual([]);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("the owner facts a process remembers share one row instance per distinct row, so retention follows the distinct rows and not the owners",async()=>{
+ const universe=Array.from({length:4000},(_,at)=>row("/w/dir/"+at+".ts",at)),owners=Array.from({length:200},(_,owner)=>"owner-"+owner);
+ const memoOf=new Map<string,{facts:unknown;rows:readonly unknown[]}>(),limits={ownerFactsMemoEntries:100};
+ const ask=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1","observeOwnerWithRetryV1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(memoOf,limits,observeOwnerWithRetryV1) as (input:unknown)=>Promise<unknown>;
+ const{shareObservationRowsV1}=await import("../../../../👁️observation/🟨️.mjs");
+ const observation={captureObservedSourceInputsV1:async(observe:()=>Promise<unknown>)=>({value:await observe(),observations:[]}),retainObservedRowsV1:()=>{},shareObservationRowsV1};
+ const fresh=(owner:number)=>JSON.parse(JSON.stringify(Array.from({length:500},(_,at)=>universe[(owner*37+at)%universe.length])));
+ for(const [owner,name] of owners.entries()){
+  await ask({key:"scope\0f\0"+name,hold:async()=>true,observation,observe:async()=>({name}),recover:async()=>({facts:{name},rows:fresh(owner)})});
+ }
+ expect(memoOf.size).toBe(limits.ownerFactsMemoEntries);
+ const rows=[...memoOf.values()].flatMap(entry=>entry.rows),distinct=new Set(rows);
+ expect(rows.length).toBe(100*500);expect(distinct.size).toBeLessThanOrEqual(universe.length);
+ const byText=new Map<string,unknown>();for(const each of rows){const text=JSON.stringify(each);expect(byText.get(text)??each).toBe(each);byText.set(text,each);}
 });

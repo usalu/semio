@@ -996,6 +996,665 @@
     "r2": "live",
     "lonely": "unreached"
    }
+  },
+  {
+   "name": "proof workspace: the edit of the leaf makes exactly the pre-edit leaf, mid and top stale; proc-macro (name edge only, its bytes differ after the restore), build script run and host chains stay live, nothing is unreached",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": null,
+   "retired": [],
+   "tree": {
+    "proof/p-leaf/src/lib.rs": "leaf v2",
+    "proof/p-side/src/lib.rs": "side v1",
+    "proof/p-mid/src/lib.rs": "mid v1",
+    "proof/p-top/src/lib.rs": "top v1"
+   },
+   "entries": [
+    {
+     "key": "unicode_ident",
+     "storedAt": 0,
+     "refs": [
+      "blob:unicode_ident"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [],
+     "self": "self:unicode_ident"
+    },
+    {
+     "key": "bsb_proc_macro2",
+     "storedAt": 0,
+     "refs": [
+      "blob:bsb_proc_macro2"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [],
+     "self": "self:bsb_proc_macro2"
+    },
+    {
+     "key": "run_proc_macro2",
+     "storedAt": 0,
+     "refs": [
+      "blob:run_proc_macro2"
+     ],
+     "declared": true,
+     "kind": "build-script-run",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [
+      "blob:bsb_proc_macro2"
+     ],
+     "self": "self:run_proc_macro2",
+     "units": [
+      "self:bsb_proc_macro2"
+     ]
+    },
+    {
+     "key": "proc_macro2",
+     "storedAt": 0,
+     "refs": [
+      "blob:proc_macro2"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [
+      "blob:unicode_ident"
+     ],
+     "self": "self:proc_macro2",
+     "units": [
+      "self:unicode_ident",
+      "self:run_proc_macro2"
+     ]
+    },
+    {
+     "key": "bsb_quote",
+     "storedAt": 0,
+     "refs": [
+      "blob:bsb_quote"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [],
+     "self": "self:bsb_quote"
+    },
+    {
+     "key": "run_quote",
+     "storedAt": 0,
+     "refs": [
+      "blob:run_quote"
+     ],
+     "declared": true,
+     "kind": "build-script-run",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [
+      "blob:bsb_quote"
+     ],
+     "self": "self:run_quote",
+     "units": [
+      "self:bsb_quote"
+     ]
+    },
+    {
+     "key": "quote",
+     "storedAt": 0,
+     "refs": [
+      "blob:quote"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [
+      "blob:proc_macro2"
+     ],
+     "self": "self:quote",
+     "units": [
+      "self:proc_macro2",
+      "self:run_quote"
+     ]
+    },
+    {
+     "key": "syn",
+     "storedAt": 0,
+     "refs": [
+      "blob:syn"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [
+      "blob:proc_macro2",
+      "blob:quote",
+      "blob:unicode_ident"
+     ],
+     "self": "self:syn",
+     "units": [
+      "self:proc_macro2",
+      "self:quote",
+      "self:unicode_ident"
+     ]
+    },
+    {
+     "key": "serde_derive",
+     "storedAt": 0,
+     "refs": [
+      "blob:serde_derive.dylib"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [
+      "blob:syn",
+      "blob:quote",
+      "blob:proc_macro2"
+     ],
+     "self": "self:serde_derive",
+     "units": [
+      "self:syn",
+      "self:quote",
+      "self:proc_macro2"
+     ]
+    },
+    {
+     "key": "bsb_serde_core",
+     "storedAt": 0,
+     "refs": [
+      "blob:bsb_serde_core"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [],
+     "self": "self:bsb_serde_core"
+    },
+    {
+     "key": "run_serde_core",
+     "storedAt": 0,
+     "refs": [
+      "blob:run_serde_core"
+     ],
+     "declared": true,
+     "kind": "build-script-run",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [
+      "blob:bsb_serde_core"
+     ],
+     "self": "self:run_serde_core",
+     "units": [
+      "self:bsb_serde_core"
+     ]
+    },
+    {
+     "key": "serde_core",
+     "storedAt": 0,
+     "refs": [
+      "blob:serde_core"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [],
+     "self": "self:serde_core",
+     "units": [
+      "self:run_serde_core"
+     ]
+    },
+    {
+     "key": "bsb_serde",
+     "storedAt": 0,
+     "refs": [
+      "blob:bsb_serde"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [],
+     "self": "self:bsb_serde"
+    },
+    {
+     "key": "run_serde",
+     "storedAt": 0,
+     "refs": [
+      "blob:run_serde"
+     ],
+     "declared": true,
+     "kind": "build-script-run",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [
+      "blob:bsb_serde"
+     ],
+     "self": "self:run_serde",
+     "units": [
+      "self:bsb_serde"
+     ]
+    },
+    {
+     "key": "serde",
+     "storedAt": 0,
+     "refs": [
+      "blob:serde"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [
+      "blob:serde_core",
+      "blob:serde_derive.codesigned"
+     ],
+     "self": "self:serde",
+     "units": [
+      "self:serde_core",
+      "self:serde_derive",
+      "self:run_serde"
+     ]
+    },
+    {
+     "key": "itoa",
+     "storedAt": 0,
+     "refs": [
+      "blob:itoa"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [],
+     "self": "self:itoa"
+    },
+    {
+     "key": "smallvec",
+     "storedAt": 0,
+     "refs": [
+      "blob:smallvec"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [],
+     "self": "self:smallvec"
+    },
+    {
+     "key": "p_leaf_a",
+     "storedAt": 0,
+     "refs": [
+      "blob:p_leaf_a"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "proof/p-leaf/src/lib.rs": "leaf v1"
+     },
+     "externs": [
+      "blob:smallvec"
+     ],
+     "self": "self:p_leaf_a",
+     "units": [
+      "self:smallvec"
+     ]
+    },
+    {
+     "key": "p_side",
+     "storedAt": 0,
+     "refs": [
+      "blob:p_side"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "proof/p-side/src/lib.rs": "side v1"
+     },
+     "externs": [
+      "blob:serde"
+     ],
+     "self": "self:p_side",
+     "units": [
+      "self:serde"
+     ]
+    },
+    {
+     "key": "p_mid_a",
+     "storedAt": 0,
+     "refs": [
+      "blob:p_mid_a"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "proof/p-mid/src/lib.rs": "mid v1"
+     },
+     "externs": [
+      "blob:p_leaf_a",
+      "blob:itoa"
+     ],
+     "self": "self:p_mid_a",
+     "units": [
+      "self:p_leaf_a",
+      "self:itoa"
+     ]
+    },
+    {
+     "key": "p_top_a",
+     "storedAt": 0,
+     "refs": [
+      "blob:p_top_a"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "proof/p-top/src/lib.rs": "top v1"
+     },
+     "externs": [
+      "blob:p_mid_a",
+      "blob:p_side",
+      "blob:serde"
+     ],
+     "self": "self:p_top_a",
+     "units": [
+      "self:p_mid_a",
+      "self:p_side",
+      "self:serde"
+     ]
+    },
+    {
+     "key": "p_leaf_c",
+     "storedAt": 0,
+     "refs": [
+      "blob:p_leaf_c"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "proof/p-leaf/src/lib.rs": "leaf v2"
+     },
+     "externs": [
+      "blob:smallvec"
+     ],
+     "self": "self:p_leaf_c",
+     "units": [
+      "self:smallvec"
+     ]
+    },
+    {
+     "key": "p_mid_c",
+     "storedAt": 0,
+     "refs": [
+      "blob:p_mid_c"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "proof/p-mid/src/lib.rs": "mid v1"
+     },
+     "externs": [
+      "blob:p_leaf_c",
+      "blob:itoa"
+     ],
+     "self": "self:p_mid_c",
+     "units": [
+      "self:p_leaf_c",
+      "self:itoa"
+     ]
+    },
+    {
+     "key": "p_top_c",
+     "storedAt": 0,
+     "refs": [
+      "blob:p_top_c"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "proof/p-top/src/lib.rs": "top v1"
+     },
+     "externs": [
+      "blob:p_mid_c",
+      "blob:p_side",
+      "blob:serde"
+     ],
+     "self": "self:p_top_c",
+     "units": [
+      "self:p_mid_c",
+      "self:p_side",
+      "self:serde"
+     ]
+    }
+   ],
+   "expected": {
+    "unicode_ident": "live",
+    "bsb_proc_macro2": "live",
+    "run_proc_macro2": "live",
+    "proc_macro2": "live",
+    "bsb_quote": "live",
+    "run_quote": "live",
+    "quote": "live",
+    "syn": "live",
+    "serde_derive": "live",
+    "bsb_serde_core": "live",
+    "run_serde_core": "live",
+    "serde_core": "live",
+    "bsb_serde": "live",
+    "run_serde": "live",
+    "serde": "live",
+    "itoa": "live",
+    "smallvec": "live",
+    "p_leaf_a": "stale:edited",
+    "p_side": "live",
+    "p_mid_a": "stale:extern",
+    "p_top_a": "stale:extern",
+    "p_leaf_c": "live",
+    "p_mid_c": "live",
+    "p_top_c": "live"
+   }
+  },
+  {
+   "name": "a build script edited: its executable is stale, the run that consumed it and the library that reads its OUT_DIR follow, a run nobody reads is unreached",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": null,
+   "retired": [],
+   "tree": {
+    "w/build.rs": "build v2",
+    "w/src/lib.rs": "lib v1",
+    "o/lib.rs": "other v1"
+   },
+   "entries": [
+    {
+     "key": "bs_build",
+     "storedAt": 0,
+     "refs": [
+      "blob:bs_build"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "w/build.rs": "build v1"
+     },
+     "externs": [],
+     "self": "self:bs_build"
+    },
+    {
+     "key": "bs_run",
+     "storedAt": 0,
+     "refs": [
+      "blob:bs_run"
+     ],
+     "declared": true,
+     "kind": "build-script-run",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [
+      "blob:bs_build"
+     ],
+     "self": "self:bs_run",
+     "units": [
+      "self:bs_build"
+     ]
+    },
+    {
+     "key": "bs_lib",
+     "storedAt": 0,
+     "refs": [
+      "blob:bs_lib"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "w/src/lib.rs": "lib v1"
+     },
+     "externs": [],
+     "self": "self:bs_lib",
+     "units": [
+      "self:bs_run"
+     ]
+    },
+    {
+     "key": "bs_other",
+     "storedAt": 0,
+     "refs": [
+      "blob:bs_other"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "o/lib.rs": "other v1"
+     },
+     "externs": [],
+     "self": "self:bs_other"
+    },
+    {
+     "key": "orphan_run",
+     "storedAt": 0,
+     "refs": [
+      "blob:orphan_run"
+     ],
+     "declared": true,
+     "kind": "build-script-run",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [],
+     "self": "self:orphan_run"
+    },
+    {
+     "key": "orphan_bsb",
+     "storedAt": 0,
+     "refs": [
+      "blob:orphan_bsb"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [],
+     "self": "self:orphan_bsb"
+    }
+   ],
+   "expected": {
+    "bs_build": "stale:edited",
+    "bs_run": "stale:extern",
+    "bs_lib": "stale:extern",
+    "bs_other": "live",
+    "orphan_run": "unreached",
+    "orphan_bsb": "unreached"
+   }
+  },
+  {
+   "name": "entries that declared nothing, or declared with an older edge model, are never judged: a consumer is not stale while an undeclared entry holds its blob, a deleted source of an older declaration retires nothing",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": null,
+   "retired": [],
+   "tree": {
+    "c/lib.rs": "c v1"
+   },
+   "entries": [
+    {
+     "key": "held_by_old",
+     "storedAt": 0,
+     "refs": [
+      "blob:held_by_old"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "c/lib.rs": "c v1"
+     },
+     "externs": [
+      "blob:legacy"
+     ],
+     "self": "self:held_by_old",
+     "units": [
+      "self:legacy_self"
+     ]
+    },
+    {
+     "key": "legacy",
+     "storedAt": 0,
+     "refs": [
+      "blob:legacy"
+     ],
+     "declared": false
+    },
+    {
+     "key": "partial",
+     "storedAt": 0,
+     "refs": [
+      "blob:partial"
+     ],
+     "declared": true,
+     "version": 1,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "gone/lib.rs": "x"
+     },
+     "externs": [],
+     "self": "self:partial"
+    },
+    {
+     "key": "nx",
+     "storedAt": 0,
+     "refs": [
+      "blob:nx"
+     ],
+     "declared": false
+    }
+   ],
+   "expected": {
+    "held_by_old": "live",
+    "legacy": "undeclared",
+    "partial": "undeclared",
+    "nx": "undeclared"
+   }
   }
  ]
 }

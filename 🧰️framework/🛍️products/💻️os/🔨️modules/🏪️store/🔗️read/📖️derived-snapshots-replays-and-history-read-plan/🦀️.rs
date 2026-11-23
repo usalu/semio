@@ -388,6 +388,7 @@ if !preview.drafts.terminal_is_empty() {let drafts=std::mem::take(&mut preview.d
 
 impl<P, Mu> ErasedSnapshotRetirement for ArtifactHistoryReadRetirement<P, Mu>
 where P: Send + Sync + 'static, Mu: Mutation<P> + Send + 'static {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{
         if self.terminal_is_empty(){return Ok(0)}
         if let Some(owner)=self.active.as_ref(){return if owner.terminal_is_empty(){Ok(1)}else{owner.next_computational_work(body)}}

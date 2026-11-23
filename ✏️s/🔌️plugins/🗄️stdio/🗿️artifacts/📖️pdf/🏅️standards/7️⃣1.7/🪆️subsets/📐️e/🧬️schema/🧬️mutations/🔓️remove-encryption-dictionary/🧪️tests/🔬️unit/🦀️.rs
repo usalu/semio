@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::e::schema::mutations::insert_encryption_dictionary::InsertEncryptionDictionary;
 use crate::standards::v1_7::subsets::e::schema::mutations::PdfEMutation;
 #[allow(unused_imports)]
@@ -18,7 +18,7 @@ fn removes_only_a_present_security_handler() {
     let mutation = RemoveEncryptionDictionary { version: 2, revision: 3 };
     let next = applied(&base, &PdfEMutation::RemoveEncryptionDictionary(mutation.clone()));
     assert!(support::encryption_dictionary_with(&next, 2, 3).is_none());
-    assert_eq!(<RemoveEncryptionDictionary as MutationKind<PdfSnapshot, PdfEMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
+    assert_eq!(<RemoveEncryptionDictionary as ColdMutationKind<PdfSnapshot, PdfEMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]

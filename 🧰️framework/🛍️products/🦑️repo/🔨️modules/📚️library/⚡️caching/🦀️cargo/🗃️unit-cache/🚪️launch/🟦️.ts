@@ -100,20 +100,17 @@ export function fleetRemoteEnvironmentV1(environment:Readonly<Record<string,stri
  }catch{return{};}
 }
 
-/** 🧩️ The environment block that routes every compiler call of one Cargo process through the unit cache: Cargo runs the stand-in as `<wrapper> <rustc> <arguments>`, the wrapper script serves a unit from the cache or falls back to the memory-admitting scheduler for every miss. `RUSTC` stays the real compiler, so build scripts that exec it work whatever the file mode of the script or `PATH`. A launcher adds this after its storage admission and never before; without a `scheduler` a miss runs the compiler directly. */
-export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:string;laneRoot:string;scheduler?:string;compiler:string;toolchain:string;focus:readonly string[];slots?:number;lightSlots?:number;workspaceRoot?:string;environment?:Readonly<Record<string,string|undefined>>;runtime?:string;platform?:NodeJS.Platform;build?:UnitCacheNativeBuildV1;features?:Readonly<{buildScripts?:boolean;brokerReplay?:boolean}>}>):Record<string,string>{
+/** 🧩️ The one assembly of the environment block that routes every compiler call of a Cargo process through the unit cache, whoever launches it (`repo cargo` through {@link unitCacheEnvironmentV1}, the native-build driver for its passes): the wrapper, the cache and lane, the compiler chain (`inner`), the slots and the fleet tier ({@link fleetRemoteEnvironmentV1}, empty when `SEMIO_UNIT_CACHE_REMOTE=off`). Nothing else builds these variables, so no entry point can leave the fleet out. */
+export function unitCacheChainEnvironmentV1(input:Readonly<{wrapper:string;cacheRoot:string;lane:string;laneRoot:string;inner:readonly string[];toolchain?:string;focus:readonly string[];slots:number;lightSlots?:number;workspaceRoot?:string;environment?:Readonly<Record<string,string|undefined>>;features?:Readonly<{buildScripts?:boolean;brokerReplay?:boolean}>}>):Record<string,string>{
  const workspace=input.workspaceRoot??fleetCacheRootV1(input.environment??process.env);
- let wrapper:string;
- try{wrapper=ensureUnitCacheShimV1(input.cacheRoot,input.runtime,undefined,input.platform,input.build);}
- catch(error){return{RUSTC_WRAPPER:"",SEMIO_UNIT_CACHE:"off",SEMIO_UNIT_CACHE_REFUSAL:unitCacheWrapperRefusalV1(String((error as Error)?.message??error).split("\n")[0]!)};}
  return{
-  RUSTC_WRAPPER:wrapper,
+  RUSTC_WRAPPER:input.wrapper,
   SEMIO_UNIT_CACHE_ROOT:input.cacheRoot,
   SEMIO_UNIT_CACHE_LANE:input.lane,
   SEMIO_UNIT_CACHE_LANE_ROOT:input.laneRoot,
-  SEMIO_UNIT_CACHE_INNER:JSON.stringify(input.scheduler===undefined?[input.compiler]:[input.scheduler,input.compiler]),
-  SEMIO_UNIT_CACHE_TOOLCHAIN:input.toolchain,
-  SEMIO_UNIT_CACHE_SLOTS:String(input.slots??(Number((input.environment??process.env).SEMIO_UNIT_CACHE_SLOTS)||availableParallelism())),
+  SEMIO_UNIT_CACHE_INNER:JSON.stringify(input.inner),
+  ...(input.toolchain===undefined?{}:{SEMIO_UNIT_CACHE_TOOLCHAIN:input.toolchain}),
+  SEMIO_UNIT_CACHE_SLOTS:String(input.slots),
   SEMIO_UNIT_CACHE_FOCUS:input.focus.join(","),
   ...(input.lightSlots?{SEMIO_UNIT_CACHE_LIGHT_SLOTS:String(input.lightSlots)}:{}),
   ...(input.features?.buildScripts?{SEMIO_UNIT_CACHE_BUILD_SCRIPTS:"on"}:{}),
@@ -121,6 +118,14 @@ export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:str
   ...(workspace?{SEMIO_UNIT_CACHE_WORKSPACE_ROOT:workspace}:{}),
   ...fleetRemoteEnvironmentV1(input.environment,workspace),
  };
+}
+
+/** 🧩️ The environment block of a launcher that makes its own wrapper: it ensures the sealed stand-in, then {@link unitCacheChainEnvironmentV1} assembles the block. Cargo runs the stand-in as `<wrapper> <rustc> <arguments>`, which serves a unit from the cache or falls back to the memory-admitting scheduler for every miss. `RUSTC` stays the real compiler, so build scripts that exec it work whatever the file mode of the script or `PATH`. A launcher adds this after its storage admission and never before; without a `scheduler` a miss runs the compiler directly. */
+export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:string;laneRoot:string;scheduler?:string;compiler:string;toolchain:string;focus:readonly string[];slots?:number;lightSlots?:number;workspaceRoot?:string;environment?:Readonly<Record<string,string|undefined>>;runtime?:string;platform?:NodeJS.Platform;build?:UnitCacheNativeBuildV1;features?:Readonly<{buildScripts?:boolean;brokerReplay?:boolean}>}>):Record<string,string>{
+ let wrapper:string;
+ try{wrapper=ensureUnitCacheShimV1(input.cacheRoot,input.runtime,undefined,input.platform,input.build);}
+ catch(error){return{RUSTC_WRAPPER:"",SEMIO_UNIT_CACHE:"off",SEMIO_UNIT_CACHE_REFUSAL:unitCacheWrapperRefusalV1(String((error as Error)?.message??error).split("\n")[0]!)};}
+ return unitCacheChainEnvironmentV1({wrapper,cacheRoot:input.cacheRoot,lane:input.lane,laneRoot:input.laneRoot,inner:input.scheduler===undefined?[input.compiler]:[input.scheduler,input.compiler],toolchain:input.toolchain,focus:input.focus,slots:input.slots??(Number((input.environment??process.env).SEMIO_UNIT_CACHE_SLOTS)||availableParallelism()),...(input.lightSlots?{lightSlots:input.lightSlots}:{}),...(input.workspaceRoot===undefined?{}:{workspaceRoot:input.workspaceRoot}),...(input.environment===undefined?{}:{environment:input.environment}),...(input.features===undefined?{}:{features:input.features})});
 }
 
 /** 🧮️ The unit cache may fill the image only up to what the compiler workspace leaves free, so a cold writer is always admitted. */

@@ -125,7 +125,7 @@ class ClipScene(_room.RoomVisuals, _engine.Scene):
 
     def present(self, topic: str) -> None:
         """🧭 Apply the shared style before presenting one independently renderable topic."""
-        _art.set_vo_language(self.language())
+        self.language()
         _fonts.apply_scene_style(self)
         self._caption = None
         document = Path(inspect.getfile(type(self))).parent / "🔀️transitions" / "🔣️.json"

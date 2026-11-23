@@ -51,8 +51,25 @@ pub fn close_cursor(cursor:&mut impl retirement::RetirementCursor,effect:&mut Re
  drop(cursor.close_into(65536,effect,reply).unwrap());
  output.expect("fixture cursor returned without recording its reply").unwrap_or_else(|failure|RetirementStep::Failure(failure,0))
 }
+/// 📨️ Reads a reply-shaped retirement close and the original work it performed inside the actual invocation.
+pub fn close_reply(effect:&mut RetainedAllocationEffect<'_>,call:impl FnOnce(usize,&mut RetainedAllocationEffect<'_>,semio_framework_value_control_contract::OriginalEffectReply<'_,RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>)->Result<(),ValueError>)->RetainedWorkOutcome<RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>{
+ let body=effect.grant().maximum_copy_bytes;let before=effect.performed_work();let mut output=None;
+ let reply=semio_framework_value_control_contract::OriginalEffectReply::borrow(&mut output).unwrap();
+ call(body,effect,reply).unwrap();
+ RetainedWorkOutcome{result:output.expect("fixture close recorded its reply"),work:effect.performed_work()-before}
+}
 /// 🔎️ Names the one cause that a native call failure retains.
 pub fn cause<T>(failure:semio_framework_value_call::NativeCallFailure<T,ValueError>)->ValueError{failure.operation.or(failure.context).expect("native call failure retains its cause")}
+/// ♻️ Runs one selected retirement call under the original invocation with the grant's copy bytes as its body hint.
+pub fn close_with(effect:&mut RetainedAllocationEffect<'_>,call:impl FnOnce(usize,&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>)->RetainedWorkOutcome<RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>{
+ let body=effect.grant().maximum_copy_bytes;let mut call=Some(call);let mut result=None;
+ with_original_invocation(None,effect,&mut |effect|result=Some(call.take().expect("fixture close ran once")(body,effect))).unwrap();
+ result.expect("fixture close ran")
+}
+/// 📥️ Closes the encoder's selected recipient into a local reply slot.
+pub fn close_encode(native:&mut NativeEncodeControl<'_>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>{
+ close_with(effect,|body,effect|{let mut slot=None;{let reply=OriginalEffectReply::borrow(&mut slot).unwrap();drop(native.close_retirement_recipient_into(body,effect,reply).unwrap());}RetainedWorkOutcome{result:slot.expect("fixture close recorded its reply"),work:effect.performed_work()}})
+}
 /// 🧾️ Generous per-turn stock for closing fixture-owned results.
 pub fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}}
 /// ♻️ Closes one typed owner through controlled retirement turns inside original effects.

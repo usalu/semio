@@ -1,0 +1,219 @@
+diff --git "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmphlwdw93t\\b.lf" "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmphlwdw93t\\o.lf"
+index ca622bc..8b74e5f 100644
+--- "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmphlwdw93t\\b.lf"
++++ "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmphlwdw93t\\o.lf"
+@@ -42,6 +42,6 @@
+       "key": "compare2",
+       "maximum_lines": 2,
+-      "en": "Electric heater: exactly one at the house. Fuels lose the rest with flue gas; electricity may cause flue gas elsewhere.",
+-      "de": "Elektroheizstab: am Haus genau 1. Brennstoffe verlieren den Rest mit dem Abgas; Strom kann anderswo Abgas verursachen.",
++      "en": "Electric heater: exactly one kilowatt-hour of heat at the house. Fuels lose the rest in flue gas; electricity may do so elsewhere.",
++      "de": "Elektroheizstab: am Haus genau 1 kWh Nutzwärme. Brennstoffe verlieren den Rest mit dem Abgas; Strom kann anderswo Abgas verursachen.",
+       "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+       "previous": {
+@@ -54,6 +54,6 @@
+       "key": "dx",
+       "maximum_lines": 2,
+-      "en": "Outdoor air at 32 °C and 50% holds 15 g/kg; the room at 26 °C and 50% holds 10.5 g/kg. Thus Δx = 4.5 g/kg.",
+-      "de": "Bei 32 °C und 50 % enthält die Außenluft 15 g Wasser je kg, die Raumluft bei 26 °C und 50 % nur 10,5 g — Delta-x beträgt 4,5 g/kg.",
++      "en": "Outdoor air at $32\\,°\\mathrm{C}$ and $50\\,\\%$ holds $15\\,\\mathrm{g/kg}$; the room at $26\\,°\\mathrm{C}$ and $50\\,\\%$ holds $10.5\\,\\mathrm{g/kg}$. Thus $\\Delta x = 4.5\\,\\mathrm{g/kg}$.",
++      "de": "Bei $32\\,°\\mathrm{C}$ und $50\\,\\%$ hat die Außenluft $15\\,\\mathrm{g/kg}$, die Raumluft bei $26\\,°\\mathrm{C}$ nur $10{,}5\\,\\mathrm{g/kg}$: $\\Delta x = 4{,}5\\,\\mathrm{g/kg}$.",
+       "previous": {
+         "en": "At 32 degrees and 50 percent, outdoor air holds 15 grams of water per kilogram, the room at 26 degrees and 50 percent only 10.5 — delta x is 4.5 grams per kilogram."
+@@ -65,6 +65,6 @@
+       "key": "r",
+       "maximum_lines": 2,
+-      "en": "Changing phase involves energy: r is about 2450 kilojoules per kilogram — condensing releases it, and it must be removed again.",
+-      "de": "Der Phasenwechsel benötigt r ≈ 2450 kJ/kg. Kondensation setzt diese Energie frei; sie muss abgeführt werden.",
++      "en": "Changing phase involves energy: $r$ is about $2450\\,\\mathrm{kJ/kg}$ — condensing releases it, and it must be removed again.",
++      "de": "Der Phasenwechsel benötigt $r \\approx 2450\\,\\mathrm{kJ/kg}$. Kondensation setzt diese Energie frei; sie muss abgeführt werden.",
+       "previous": {
+         "de": "Der Phasenwechsel braucht Energie: r beträgt etwa 2450 Kilojoule je Kilogramm — beim Kondensieren wird sie frei und muss abgeführt werden."
+@@ -98,6 +98,6 @@
+       "key": "summer",
+       "maximum_lines": 2,
+-      "en": "Summer: ≈100 Wh of air heat at 6 K, no radiator or reveal. Tilt moves little air: open wide, briefly, in cool hours.",
+-      "de": "Im Sommer entfallen Heizkörper und Laibung: nur etwa 100 Wh bei 6 K.\nGekippt tauscht kaum Luft — weit und kurz, in den kühlen Stunden.",
++      "en": "Summer: $\\Delta\\theta = 6\\,\\mathrm{K}$ gives only about $100\\,\\mathrm{Wh}$ of air heat, no radiator or reveal. Tilt moves little air: open wide, briefly, in cool hours.",
++      "de": "Im Sommer entfallen Heizkörper und Laibung: bei $\\Delta\\theta = 6\\,\\mathrm{K}$ nur etwa $100\\,\\mathrm{Wh}$.\nGekippt tauscht kaum Luft — weit und kurz, in den kühlen Stunden.",
+       "previous": {
+         "en": "In summer radiator and reveal drop out: at six kelvin the air alone is only about 100 watt-hours, yet a tilted window still exchanges little air. The rule stays: wide and short, in the cool hours."
+@@ -129,8 +129,8 @@
+       "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+       "scene": "Beat4_Auftrieb",
+-      "key": "rho",
++      "key": "density",
+       "maximum_lines": 2,
+-      "en": "Summer night: 18 °C outside, 26 °C inside. Warmer indoor air is less dense, so it rises more strongly.",
+-      "de": "Der Dichteunterschied folgt aus der Temperaturdifferenz: 18 °C außen,\n26 °C innen — je wärmer die Raumluft, desto stärker der Auftrieb.",
++      "en": "Why does it rise? Warm air is lighter: the density $\\rho(\\theta)$ falls as the temperature $\\theta$ rises.",
++      "de": "Warum steigt sie? Warme Luft ist leichter: die Dichte $\\rho(\\theta)$ sinkt mit steigender Temperatur $\\theta$.",
+       "previous": {
+         "en": "The density difference comes straight out of the temperature difference: on a summer night 18 outside against 26 inside. The warmer the room air, the lighter it is, and the harder it is pushed up."
+@@ -142,6 +142,6 @@
+       "key": "winter",
+       "maximum_lines": 2,
+-      "en": "Winter: 20 K instead of 8 K gives the same shaft almost three times the pressure. Buoyancy is strongest in cold weather.",
+-      "de": "Im Winter: 20 statt 8 K, im selben Schacht fast dreifacher Druck. Bei Kälte wirkt der Auftrieb am stärksten.",
++      "en": "Winter: $\\Delta\\theta = 20\\,\\mathrm{K}$ instead of $8\\,\\mathrm{K}$ gives the same shaft $3.8\\,\\mathrm{Pa}$, about $2.7$ times the pressure. Buoyancy is strongest in the cold.",
++      "de": "Im Winter: $\\Delta\\theta = 20\\,\\mathrm{K}$ statt $8\\,\\mathrm{K}$ ergibt im selben Schacht $3{,}8\\,\\mathrm{Pa}$, das $2{,}7$-fache. Bei Kälte wirkt der Auftrieb am stärksten.",
+       "previous": {
+         "en": "In winter the temperature difference is 20 instead of 8 kelvin. The same shaft now builds almost three times the pressure: the stack effect is strongest when it is cold.",
+@@ -198,6 +198,6 @@
+       "key": "recovery",
+       "maximum_lines": 2,
+-      "en": "At η = 0, exhaust energy escapes through the opening. No heat is recovered: winter ventilation loses all 1500 W.",
+-      "de": "Bei η = 0 entweicht die Abluftenergie durch die Öffnung. Keine Rückgewinnung: im Winter gehen volle 1500 W verloren.",
++      "en": "At $\\eta = 0$, exhaust energy escapes through the opening. No heat is recovered: winter ventilation loses all $1500\\,\\mathrm{W}$.",
++      "de": "Bei $\\eta = 0$ entweicht die Abluftenergie durch die Öffnung. Keine Rückgewinnung: im Winter gehen volle $1500\\,\\mathrm{W}$ verloren.",
+       "previous": {
+         "en": "Finally, all the energy in the air leaving the room simply disappears through the opening. With η equal to zero nothing is recovered: in winter the full 1500 watts of ventilation heat loss.",
+@@ -210,6 +210,6 @@
+       "key": "handover",
+       "maximum_lines": 2,
+-      "en": "Fan-assisted ventilation with heat recovery closes these four gaps. The next chapter underpins Heating and Cooling.",
+-      "de": "Mechanische Lüftung mit WRG schließt diese vier Lücken. Das nächste Kapitel legt die Basis für Heizung und Kühlung.",
++      "en": "Fan-assisted ventilation with heat recovery closes these four gaps. The next chapter underpins heating and cooling technology.",
++      "de": "Mechanische Lüftung mit WRG schließt diese vier Lücken. Das nächste Kapitel legt die Basis für Heizung und Kühltechnik.",
+       "previous": {
+         "en": "Closing those four gaps is exactly what fan-assisted ventilation is for, with heat recovery: the next chapter. Heating and Cooling will build on both.",
+@@ -222,6 +222,6 @@
+       "key": "exhaust",
+       "maximum_lines": 2,
+-      "en": "Exhaust-only: a fan extracts air; fresh air enters unfiltered through passive wall vents, with slight room suction.",
+-      "de": "Die Abluftanlage saugt mechanisch ab — die Zuluft kommt\nungefiltert nach, im Raum herrscht leichter Unterdruck.",
++      "en": "Exhaust-only: a fan high up extracts air; fresh air enters unfiltered through a passive vent low on the opposite wall, with slight room suction.",
++      "de": "Die Abluftanlage saugt oben mechanisch ab — die Zuluft strömt\nungefiltert unten gegenüber nach, im Raum herrscht leichter Unterdruck.",
+       "previous": {
+         "en": "The exhaust-only system extracts air mechanically. Fresh air seeps in unfiltered through passive wall vents, and the room sits at a slight negative pressure."
+@@ -244,6 +244,6 @@
+       "key": "formula",
+       "maximum_lines": 2,
+-      "en": "η divides the achieved supply-air warming by the available exhaust-to-outdoor temperature difference.",
+-      "de": "Der Temperaturänderungsgrad η: erreichte Erwärmung der Zuluft,\ngeteilt durch die verfügbare Differenz Abluft − Außenluft.",
++      "en": "The temperature change ratio $\\eta$ divides the achieved supply-air warming by the available exhaust-to-outdoor temperature difference.",
++      "de": "Der Temperaturänderungsgrad $\\eta$: erreichte Erwärmung der Zuluft, geteilt durch die verfügbare Differenz Abluft − Außenluft.",
+       "previous": {
+         "en": "The temperature change ratio eta is the warming the supply air actually gained, divided by the difference that was available between exhaust and outdoor air."
+@@ -255,6 +255,6 @@
+       "key": "summer",
+       "maximum_lines": 2,
+-      "en": "Summer: 32 °C outdoors, 26 °C exhaust; about 5 of 6 K recovered. The same ratio turns heat recovery into cold recovery.",
+-      "de": "Im Sommer gilt dieselbe Definition: Außenluft 32 °C, Abluft 26 °C —\nfast fünf von sechs Kelvin, die WRG wird zur Kälterückgewinnung.",
++      "en": "Summer: $32\\,\\mathrm{°C}$ outdoors, $26\\,\\mathrm{°C}$ exhaust; about $5\\,\\mathrm{K}$ of $6\\,\\mathrm{K}$ recovered. The same ratio turns heat recovery into cold recovery.",
++      "de": "Im Sommer gilt dieselbe Definition: Außenluft $32\\,\\mathrm{°C}$, Abluft $26\\,\\mathrm{°C}$ — fast $5\\,\\mathrm{K}$ von $6\\,\\mathrm{K}$, die WRG wird zur Kälterückgewinnung.",
+       "previous": {
+         "en": "In summer the same definition holds: outdoor air at thirty-two degrees, exhaust at twenty-six. About five of six kelvin are gained, so heat recovery becomes cold recovery."
+@@ -266,9 +266,9 @@
+       "key": "outro",
+       "maximum_lines": 2,
+-      "en": "DIN 1946-6: recovery cuts winter ventilation heat loss by up to 90%. In summer the same unit recovers cold.",
+-      "de": "DIN 1946-6: WRG senkt den Winter-Lüftungswärmeverlust um bis zu 90 %. Im Sommer gewinnt dieselbe Technik Kälte zurück.",
++      "en": "Recovery leaves only the share $1-\\eta$ of the winter loss: at $\\eta = 0.9$ just $10\\,\\%$. In summer it recovers cold.",
++      "de": "Die WRG lässt nur den Anteil $1-\\eta$ des Winterverlusts übrig: bei $\\eta = 0{,}9$ nur $10\\,\\%$. Im Sommer gewinnt sie Kälte zurück.",
+       "previous": {
+-        "en": "DIN 1946-6: mechanical recovery can cut the ventilation heat loss by up to ninety percent in winter, and in summer the same technology recovers cold.",
+-        "de": "DIN 1946-6: mechanische WRG senkt den Lüftungswärmeverlust im Winter\num bis zu 90 % — im Sommer gewinnt sie dieselbe Kälte zurück."
++        "en": "DIN 1946-6:2019-12: mechanical recovery can cut the ventilation heat loss by up to ninety percent in winter, and in summer the same technology recovers cold.",
++        "de": "DIN 1946-6:2019-12: mechanische WRG senkt den Lüftungswärmeverlust im Winter\num bis zu 90 % — im Sommer gewinnt sie dieselbe Kälte zurück."
+       }
+     },
+@@ -289,6 +289,6 @@
+       "key": "area",
+       "maximum_lines": 2,
+-      "en": "For the same flow, more area means less speed. At 2.5 m/s, area = flow ÷ speed ≈ 0.0244 m².",
+-      "de": "Mehr Fläche bremst denselben Strom: bei 2,5 m/s ist A gleich\nVolumenstrom durch Geschwindigkeit — rund 0,0244 m².",
++      "en": "For the same flow, more area means less speed. At $2.5\\,\\mathrm{m/s}$: $A = q_{v,R} / v_m \\approx 0.0244\\,\\mathrm{m^2}$.",
++      "de": "Mehr Fläche bremst denselben Strom: bei $2{,}5\\,\\mathrm{m/s}$ ist $A = q_{v,R} / v_m \\approx 0{,}0244\\,\\mathrm{m^2}$.",
+       "previous": {
+         "en": "A larger area slows the same flow down. At two point five metres per second the area is the flow divided by the velocity: about 0.0244 square metres."
+@@ -300,6 +300,6 @@
+       "key": "gradient",
+       "maximum_lines": 2,
+-      "en": "For one layer, the drop from 20 to 0 is unchanged. Poorer insulation passes more heat through that same drop.",
+-      "de": "Über eine Schicht fällt die Temperatur von zwanzig auf null. Ein schlecht dämmendes Material lässt dabei mehr Wärme durch.",
++      "en": "For one layer, the drop from 20 °C to 0 °C is unchanged. Poorer insulation passes more heat through that same drop.",
++      "de": "Über eine Schicht fällt die Temperatur von 20 °C auf 0 °C. Ein schlecht dämmendes Material lässt dabei mehr Wärme durch.",
+       "previous": {
+         "en": "For a single layer the drop from twenty to zero is always the same distance. A poorly insulating material lets more heat through that same drop."
+@@ -311,6 +311,6 @@
+       "key": "power",
+       "maximum_lines": 2,
+-      "en": "U is the main construction lever. Compactness and the indoor setpoint also matter — but insulation is the factor you choose in the wall itself.",
+-      "de": "U ist der Haupthebel im Aufbau. Auch Kompaktheit und Raumtemperatur zählen; Dämmung wählt man in der Wand.",
++      "en": "$U$ is the main construction lever. Compactness and the indoor setpoint also matter — but insulation is the factor you choose in the wall itself.",
++      "de": "$U$ ist der Haupthebel im Aufbau. Auch Kompaktheit und Raumtemperatur zählen; Dämmung wählt man in der Wand.",
+       "previous": {
+         "de": "U ist der Haupt-Hebel am Aufbau. Kompaktheit und Innentemperatur zählen auch — aber Dämmung ist der Faktor, den man in der Wand selbst wählt."
+@@ -322,6 +322,6 @@
+       "key": "intro",
+       "maximum_lines": 2,
+-      "en": "Opaque envelope: 68 W/K × 10 K ≈ 680 W. Summer airflow adds another load, covered in the ventilation video.",
+-      "de": "Die opake Hülle liefert hier rund 680 W (68 W/K mal 10 K).\nIm Sommer kommt die Luft als zweite Last hinzu.",
++      "en": "Opaque envelope: $68\\,\\mathrm{W/K}\\cdot 10\\,\\mathrm{K}\\approx 680\\,\\mathrm{W}$. Summer airflow adds another load, covered in the ventilation video.",
++      "de": "Die opake Hülle liefert hier rund $680\\,\\mathrm{W}$ ($68\\,\\mathrm{W/K}\\cdot 10\\,\\mathrm{K}$). Im Sommer kommt die Luft als zweite Last hinzu.",
+       "previous": {
+         "en": "The opaque envelope delivers about 680 watts here: 68 watts per kelvin times 10 kelvin. In summer the air adds a second load, explained in the ventilation video."
+@@ -333,6 +333,6 @@
+       "key": "sens",
+       "maximum_lines": 2,
+-      "en": "From ventilation: 220 m³/h at 6 K adds about 450 W of sensible heat through the now-reversed openings.",
+-      "de": "Kurz zur Erinnerung aus dem Lüftungsvideo: 220 m³/h bei 6 K\nbringen rund 450 W sensible Wärme herein.",
++      "en": "From ventilation: $220\\,\\mathrm{m^3/h}\\cdot 0.34\\,\\mathrm{Wh/(m^3K)}\\cdot 6\\,\\mathrm{K}$ adds about $450\\,\\mathrm{W}$ of sensible heat through the now-reversed openings.",
++      "de": "Kurz zur Erinnerung aus dem Lüftungsvideo: $220\\,\\mathrm{m^3/h}\\cdot 0{,}34\\,\\mathrm{Wh/(m^3K)}\\cdot 6\\,\\mathrm{K}$ bringen rund $450\\,\\mathrm{W}$ sensible Wärme herein.",
+       "previous": {
+         "en": "A short reminder from the ventilation video: 220 cubic metres per hour at 6 kelvin bring about 450 watts of sensible heat in through the reversed openings."
+@@ -355,6 +355,6 @@
+       "key": "intro",
+       "maximum_lines": 2,
+-      "en": "Solar load: irradiance × gross area × three dimensionless factors—frame, shading, glass transmittance.",
+-      "de": "Mit dem Fenster aus dem Heizvideo: Bestrahlungsstärke mal Fläche, Glasanteil, Verschattung und g-Wert.",
++      "en": "Solar load: irradiance times area, times glazed fraction $F_{\\mathrm{F}}$, sun protection $F_{\\mathrm{C}}$ and solar energy transmittance $g_\\perp$.",
++      "de": "Mit dem Fenster aus dem Heizvideo: Bestrahlungsstärke mal Fläche, mal Glasanteil $F_{\\mathrm{F}}$, Sonnenschutz $F_{\\mathrm{C}}$ und Gesamtenergiedurchlassgrad $g_\\perp$.",
+       "previous": {
+         "en": "By multiplying the raw solar irradiance by our building's gross area, and then applying our three dimensionless reduction filters, the frame factor, the shading factor, and the glass transmittance, we arrive at our answer."
+@@ -366,6 +366,6 @@
+       "key": "formula",
+       "maximum_lines": 2,
+-      "en": "Q-dot V = air density × specific heat capacity × Δθ (room − supply) × required airflow q v R.",
+-      "de": "Q Punkt V ist gleich Rho a mal c p a mal Delta Theta mal q v R.",
++      "en": "The sensible heat flow of the supply air is $\\dot{Q}_{\\mathrm{V,sens}}=\\rho_{\\mathrm{a}}\\cdot c_{p,\\mathrm{a}}\\cdot\\Delta\\theta\\cdot q_{v,\\mathrm{R}}$: density, specific heat capacity, temperature lift and the required airflow.",
++      "de": "Der sensible Wärmestrom der Zuluft ist $\\dot{Q}_{\\mathrm{V,sens}}=\\rho_{\\mathrm{a}}\\cdot c_{p,\\mathrm{a}}\\cdot\\Delta\\theta\\cdot q_{v,\\mathrm{R}}$: Dichte, Wärmekapazität, Temperaturhub, Luftstrom.",
+       "previous": {
+         "en": "Q-dot V equals air density times specific heat capacity times the temperature difference between cool supply air and the warm room, times q v R—the required room airflow volume."
+@@ -377,6 +377,6 @@
+       "key": "substitute",
+       "maximum_lines": 2,
+-      "en": "Divide the sensible load by air density, specific heat capacity and the temperature difference to find the required airflow.",
+-      "de": "Weil Q Punkt V gleich Q Punkt S t r ist, stellen wir um: q v R nach links, die Last geteilt durch Rho a mal c p a mal Delta Theta.",
++      "en": "Because $\\dot{Q}_{\\mathrm{V,sens}}=\\dot{Q}_{\\mathrm{S}}$, we solve for the airflow: the load divided by density, specific heat capacity and temperature lift.",
++      "de": "Weil $\\dot{Q}_{\\mathrm{V,sens}}=\\dot{Q}_{\\mathrm{S}}$ gilt, stellen wir um: $q_{v,\\mathrm{R}}$ nach links, die Last geteilt durch Dichte, Wärmekapazität und Temperaturhub.",
+       "previous": {
+         "en": "Because Q-dot V equals Q-dot S,tr, we replace the left side and rearrange: q v R moves alone to the left, and the load sits over density, heat capacity and Delta theta."
+@@ -388,6 +388,6 @@
+       "key": "qvr",
+       "maximum_lines": 2,
+-      "en": "The unknown on the left is required airflow q v R in m³/s, previously on the first equation’s right side.",
+-      "de": "Links steht die gesuchte Größe q v R — dieselbe wie rechts in der ersten Formel.",
++      "en": "The unknown on the left is the required airflow $q_{v,\\mathrm{R}}$ in $\\mathrm{m^3/s}$, previously on the first equation’s right side.",
++      "de": "Links steht die gesuchte Größe $q_{v,\\mathrm{R}}$ in $\\mathrm{m^3/s}$ — dieselbe wie rechts in der ersten Formel.",
+       "previous": {
+         "en": "On the left stands the unknown we are solving for: the required volume flow, in cubic metres per second — the same q v R that sat on the right of the first equation."
+@@ -399,6 +399,6 @@
+       "key": "load",
+       "maximum_lines": 2,
+-      "en": "Part 4: 30 m² of glazing × 0.49 × 0.15 × 0.60 × 800 W/m² ≈ 1060 W.",
+-      "de": "Aus Teil 4 kennen wir die Last: 30 m² Verglasung mal 0,49 mal 0,15\nmal 0,60 mal 800 W/m² ergeben rund 1060 W.",
++      "en": "From part 4, for all windows of the house: $30\\,\\mathrm{m^2}\\cdot 0.70\\cdot 0.15\\cdot 0.60\\cdot 800\\,\\mathrm{W/m^2}$ gives about $1510\\,\\mathrm{W}$.",
++      "de": "Aus Teil 4, für alle Fenster des Hauses: $30\\,\\mathrm{m^2}\\cdot 0{,}70\\cdot 0{,}15\\cdot 0{,}60\\cdot 800\\,\\mathrm{W/m^2}$ ergeben rund $1510\\,\\mathrm{W}$.",
+       "previous": {
+         "en": "From part 4 we know the load: 30 square metres of glazing times 0.49 times 0.15 times 0.60 times 800 watts per square metre give about 1060 watts."
+@@ -410,6 +410,6 @@
+       "key": "compare",
+       "maximum_lines": 2,
+-      "en": "That needs 0.126 cubic metres per second, about twice the hygiene airflow of 0.061 cubic metres per second from the ventilation video.",
+-      "de": "Nötig sind 0,126 m³/s: gut doppelt so viel wie 0,061 m³/s Hygieneluftstrom aus dem Lüftungsvideo.",
++      "en": "That needs $0.157\\,\\mathrm{m^3/s}$, about two and a half times the hygiene airflow of $0.061\\,\\mathrm{m^3/s}$ from the ventilation video.",
++      "de": "Nötig sind $0{,}157\\,\\mathrm{m^3/s}$: gut zweieinhalbmal so viel wie die $0{,}061\\,\\mathrm{m^3/s}$ Hygieneluftstrom aus dem Lüftungsvideo.",
+       "previous": {
+         "de": "Dafür braucht es 0,126 m³/s — gut doppelt so viel wie der Hygieneluftstrom\nvon 0,061 m³/s aus dem Lüftungsvideo."

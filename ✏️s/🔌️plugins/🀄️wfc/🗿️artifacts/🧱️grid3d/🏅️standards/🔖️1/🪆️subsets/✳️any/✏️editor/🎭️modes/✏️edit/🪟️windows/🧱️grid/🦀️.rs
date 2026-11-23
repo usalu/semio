@@ -241,8 +241,8 @@ pub fn framed_camera(document: &Grid3dSnapshot, config: &Grid3dWindowConfig) -> 
 /// `worldSelect {ids:[<cell key>]}`, which this app bridges onto `pickCell`. The granularity has to be
 /// spelled for that fallback — `World3dHost` reads `mesh`/`object` as "address the hit by ARRAY INDEX"
 /// and dispatches `worldPick` instead, which would hand the app a number in place of a cell key.
-pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, selected: &[String], hovered: Option<&str>, utility: &str) -> UiAssemblyResult<BuiltNode> {
-    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene(document, config, selected, hovered, utility))
+pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, selected: &[String], hovered: Option<&str>, utility: &str, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
+    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene(document, config, selected, hovered, utility), semio_plugin::surface_name(locale, "Grid", "Raster"), None)
 }
 
 /// 🧱️ The scene `render` paints, minted separately so the pick-lane law can be asserted on the real

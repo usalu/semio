@@ -36,6 +36,8 @@ UI_SPACING = _theme.UI_SPACING
 UI_PIXEL = _theme.UI_PIXEL
 CHROME_BORDER = _theme.CHROME_BORDER
 CHROME_FILL = _theme.CHROME_FILL
+CHROME_CHIP_FILL = color("dark-6-7")
+CHROME_CHIP_OPACITY = 0.76
 CHROME_FOREGROUND = _theme.CHROME_FOREGROUND
 
 _staffage = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧍️staffage.🐍️")
@@ -76,105 +78,72 @@ PASTEL_PURPLE = color("info")
 PASTEL_PINK = color("primary")
 PASTEL_GREY = color("gray")
 
-def window_silhouette_outline(
-    width: float, height: float, *, top_depth: float = 0, bottom_depth: float = 0,
-    top_chips=(), bottom_chips=(), inset: float = 1,
-) -> list[tuple[float, float]]:
-    """🖼️ Match WindowSilhouette's canonical pixel outline and fused chip boundaries."""
+def window_frame_outline(width: float, height: float, *, inset: float = 1) -> list[tuple[float, float]]:
+    """🖼️ Match WindowFrame's canonical pixel outline: the four corners of one rectangle, chips never change it.
+    @see 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔲️WindowFrame/frame.cases.json
+    """
+    from math import isfinite
+
+    width, height = (max(0.0, value) if isfinite(value) else 0.0 for value in (width, height))
+    inset = min(max(0.0, inset) if isfinite(inset) else 0.0, width * 0.5, height * 0.5)
+    left, top, right, bottom = inset, inset, width - inset, height - inset
+    return [(left, top), (right, top), (right, bottom), (left, bottom)]
+
+
+def window_frame_chip_regions(
+    width: float, height: float, *, top_depth: float = 0, bottom_depth: float = 0, top_chips=(), bottom_chips=(),
+) -> list[dict]:
+    """🧊 Match WindowFrame's glass chip overlays: clamped, merged spans of the rows that lie inside the frame."""
     from math import isfinite
 
     epsilon = 0.5
+    width, height = (max(0.0, value) if isfinite(value) else 0.0 for value in (width, height))
+    top_depth = min(max(0.0, top_depth), height)
+    bottom_depth = min(max(0.0, bottom_depth), max(0.0, height - top_depth))
 
-    def finite(value):
-        return max(0.0, value) if isfinite(value) else 0.0
-
-    def chips_in(chips, left, right):
+    def spans(chips):
         merged = []
-        intervals = []
-        for chip in chips:
-            start, end = (chip["left"], chip["right"]) if isinstance(chip, dict) else chip
-            if isfinite(start) and isfinite(end) and end > start:
-                start, end = max(left, min(start, right)), max(left, min(end, right))
-                if end - start > epsilon:
-                    intervals.append((start, end))
-        for start, end in sorted(intervals):
-            if not merged or start > merged[-1][1] + epsilon:
-                merged.append((start, end))
-            else:
+        for chip in sorted(tuple(chip) for chip in chips if isfinite(chip[0]) and isfinite(chip[1]) and chip[1] > chip[0]):
+            start, end = max(0.0, min(chip[0], width)), max(0.0, min(chip[1], width))
+            if end - start <= epsilon:
+                continue
+            if merged and start <= merged[-1][1] + epsilon:
                 merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+            else:
+                merged.append((start, end))
         return merged
 
-    def edge(depth, chips, left, right, outer, inner):
-        intervals = chips_in(chips, left, right)
-        if depth <= epsilon:
-            return [(left, outer), (right, outer)]
-        if not intervals:
-            return [(left, inner), (right, inner)]
-        points = [(left, outer if intervals[0][0] <= left + epsilon else inner)]
-
-        def push(x, y):
-            if abs(x - points[-1][0]) > epsilon or abs(y - points[-1][1]) > epsilon:
-                points.append((x, y))
-
-        if intervals[0][0] > left + epsilon:
-            push(intervals[0][0], inner)
-            push(intervals[0][0], outer)
-        for index, (_, end) in enumerate(intervals):
-            push(end, outer)
-            if index + 1 < len(intervals):
-                start = intervals[index + 1][0]
-                push(end, inner)
-                if end < start - epsilon:
-                    push(start, inner)
-                push(start, outer)
-            elif end < right - epsilon:
-                push(end, inner)
-                push(right, inner)
-        return points
-
-    width, height = finite(width), finite(height)
-    top_depth = min(finite(top_depth), height)
-    bottom_depth = min(finite(bottom_depth), max(0.0, height - top_depth))
-    top_chips = chips_in(top_chips, 0, width)
-    bottom_chips = chips_in(bottom_chips, 0, width)
-    inset = min(finite(inset), width * 0.5, height * 0.5)
-    left, top, right, bottom = inset, inset, width - inset, height - inset
-    top_inner = max(top, min(top + top_depth, bottom))
-    bottom_inner = max(top, min(bottom - bottom_depth, bottom))
-    outline = edge(top_depth, top_chips, left, right, top, top_inner)
-    outline += list(reversed(edge(bottom_depth, bottom_chips, left, right, bottom, bottom_inner)))
-    deduped = []
-    for point in outline:
-        if not deduped or any(abs(a - b) > epsilon for a, b in zip(point, deduped[-1])):
-            deduped.append(point)
-    if len(deduped) <= 2:
-        return deduped
-    simplified = []
-    for index, point in enumerate(deduped):
-        previous, following = deduped[index - 1], deduped[(index + 1) % len(deduped)]
-        horizontal = abs(previous[1] - point[1]) <= epsilon and abs(point[1] - following[1]) <= epsilon
-        vertical = abs(previous[0] - point[0]) <= epsilon and abs(point[0] - following[0]) <= epsilon
-        if not horizontal and not vertical:
-            simplified.append(point)
-    return simplified or deduped
+    regions = []
+    if top_depth > epsilon:
+        regions += [{"x": start, "y": 0, "width": end - start, "height": top_depth, "dock": "top"} for start, end in spans(top_chips)]
+    if bottom_depth > epsilon:
+        regions += [{"x": start, "y": height - bottom_depth, "width": end - start, "height": bottom_depth, "dock": "bottom"} for start, end in spans(bottom_chips)]
+    return regions
 
 
 def window_frame(
     width: float, height: float, *, title_width: float | None = None, title_depth: float = 0,
     color: str = P_PRIMARY, fill_opacity: float = 0.88,
 ):
-    """🔲 Build one square chrome polygon with an optional fused top-left title chip."""
-    from manim import Polygon
+    """🔲 Build one rectangular chrome polygon; a title chip is a translucent glass overlay inside its top-left corner."""
+    from manim import Line, Polygon
 
-    depth = title_depth if title_width is not None else 0
-    outline = window_silhouette_outline(
-        width / UI_PIXEL, height / UI_PIXEL, top_depth=depth / UI_PIXEL,
-        top_chips=() if title_width is None else ((0, title_width / UI_PIXEL),), inset=0,
-    )
-    return Polygon(
-        *[np.array([x * UI_PIXEL - width / 2, height / 2 - y * UI_PIXEL, 0.0]) for x, y in outline],
+    def corners(points, ox, oy):
+        return [np.array([ox + x * UI_PIXEL - width / 2, oy + height / 2 - y * UI_PIXEL, 0.0]) for x, y in points]
+
+    frame = Polygon(
+        *corners(window_frame_outline(width / UI_PIXEL, height / UI_PIXEL, inset=0), 0, 0),
         color=color, stroke_width=CHROME_BORDER, fill_color=CHROME_FILL, fill_opacity=fill_opacity,
     )
+    if title_width is None or title_depth <= 0:
+        return frame
+    for region in window_frame_chip_regions(width / UI_PIXEL, height / UI_PIXEL, top_depth=title_depth / UI_PIXEL, top_chips=((0, title_width / UI_PIXEL),)):
+        left, top, right, bottom = region["x"], region["y"], region["x"] + region["width"], region["y"] + region["height"]
+        chip = Polygon(*corners([(left, top), (right, top), (right, bottom), (left, bottom)], 0, 0),
+                       stroke_width=0, fill_color=CHROME_CHIP_FILL, fill_opacity=CHROME_CHIP_OPACITY)
+        inner = [corners([(left, bottom), (right, bottom)], 0, 0)] + ([corners([(right, top), (right, bottom)], 0, 0)] if right < width / UI_PIXEL - 0.5 else [])
+        frame.add(chip, *[Line(a, b, color=color, stroke_width=CHROME_BORDER) for a, b in inner])
+    return frame
 
 
 #region Layout zones
@@ -638,6 +607,29 @@ def chip(text: str, color: str = P_PRIMARY, *, font_size: int | None = None):
     fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
     label = fonts.body_text(text, font_size=font_size or fonts.BODY_FONT_SIZE, color=color)
     return window_chip(label, color=color)
+
+
+def reference_chip(text: str, title=None, *, lower: float = 0.0):
+    """📖 Standards citation in the top-right corner: one line when it fits, else flowed at ``" · "`` and scaled into the room right of ``title`` (9 units without one)."""
+    from manim import DOWN, RIGHT, UR, VGroup, config
+
+    fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
+
+    def line(content: str):
+        return fonts.body_text(content, font_size=fonts.LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+
+    lines = []
+    for part in text.replace("\n", " · ").split(" · "):
+        if lines and line(f"{lines[-1]} · {part}").width <= room:
+            lines[-1] += f" · {part}"
+        else:
+            lines.append(part)
+    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
+    if ref.width > room:
+        ref.scale_to_fit_width(room)
+    ref.set_opacity(0.72)
+    return ref.to_corner(UR, buff=0.30).shift(DOWN * lower)
 
 
 def dim_chip(boxed, opacity: float) -> list:

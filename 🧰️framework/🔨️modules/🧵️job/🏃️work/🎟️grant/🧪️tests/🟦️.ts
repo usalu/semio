@@ -4,7 +4,7 @@ import Decimal from "decimal.js";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {RetainedWorkBudget} from "../🟦️.ts";
-import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import {readModuleTreeSource,readSourceFamilySource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 const validate=new Ajv2020({strict:true}).compile(schema);
 test("retained work funding matches shared independent decimal oracle",()=>{
  for(const row of fixture.cases){expect(validate(row.grant)).toBe(true);const oracle=new Decimal(row.grant.maximumItems).greaterThan(0)&&new Decimal(row.grant.maximumCopyBytes).greaterThanOrEqualTo(row.demand.copyBytes)&&new Decimal(row.grant.maximumCapacityBytes).greaterThanOrEqualTo(row.demand.capacityBytes)&&new Decimal(row.grant.maximumReleaseBytes).greaterThanOrEqualTo(row.demand.releaseBytes)&&new Decimal(row.grant.maximumDepth).greaterThanOrEqualTo(row.demand.depth);expect(oracle).toBe(row.accepted);const budget=new RetainedWorkBudget(row.grant);expect(budget.canEnter(row.demand)).toBe(oracle);expect(budget.remaining()).toEqual(row.grant);}
@@ -25,9 +25,9 @@ test("retained command host validates original work demand before calling produc
 test("worker normal funding stays independent of CPU fuel",async()=>{
  const demand={copyBytes:24,capacityBytes:17,releaseBytes:0,depth:1};
  for(const row of fixture.contexts){const budget=new RetainedWorkBudget(row.grant);expect(budget.canEnter(demand)).toBe(row.accepted);expect(budget.remaining()).toEqual(row.grant);expect(new Decimal(row.grant.maximumCapacityBytes).gte(demand.capacityBytes)&&new Decimal(row.grant.maximumCopyBytes).gte(demand.copyBytes)).toBe(row.accepted);}
- const source=readModuleTreeSource(new URL("../../../🦀️.rs",import.meta.url));
+ const source=readSourceFamilySource(new URL("../../../",import.meta.url));
  expect(source.includes("pub fn retained_work_can_enter(&self,demand:RetirementDemand)->bool{retained_work::RetainedWorkBudget::new(self.retained_grant()).can_enter(demand)}")).toBe(true);
  expect(source.includes("pub fn retained_grant(&self)->RetainedCloneGrant")).toBe(true);
  expect(source.includes("pub fn consume_retained(&mut self,progress:RetainedCloneProgress)")).toBe(true);
- expect(/work_grant|NO_RETAINED_WORK|retained_work:\s*retained_work::/.test(source)).toBe(false);
+ expect(/\bwork_grant\b|NO_RETAINED_WORK|retained_work:\s*retained_work::/.test(source)).toBe(false);
 });

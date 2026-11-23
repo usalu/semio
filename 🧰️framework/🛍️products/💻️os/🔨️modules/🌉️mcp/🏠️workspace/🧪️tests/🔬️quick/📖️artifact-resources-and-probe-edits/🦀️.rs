@@ -82,7 +82,7 @@ async fn canonical_pair_validation_matches_independent_json_oracle() {
         let pack = case["pack"].as_str().unwrap();
         let expected = case["valid"].as_bool().unwrap();
         assert_eq!(serde_json::from_str::<serde_json::Value>(pack).is_ok(), expected, "independent JSON decoder: {}", case["id"]);
-        let decoded = <ProbeSnapshot as semio_framework_pack::snapshot::ArtifactPack>::decode_pack_with(pack.as_bytes(), &store::PackDecodeOptions::default());
+        let decoded = <ProbeSnapshot as pack::snapshot::ArtifactPack>::decode_pack_with(pack.as_bytes(), &store::PackDecodeOptions::default());
         assert_eq!(decoded.is_ok(), expected, "owned snapshot decoder: {}", case["id"]);
         if !expected {
             let codec = store::os_store::codec_registry::document_kind_codec(law["schema"].as_str().unwrap()).await.unwrap().expect("registered owner codec");

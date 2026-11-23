@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-renderer-wgpu-contracts/testkit", "semio-renderer-wgpu-engine-registry/testkit", "semio-renderer-wgpu-frame-actions/testkit", "semio-renderer-wgpu-runtime-mailbox/testkit", "semio-renderer-wgpu-scene-state/testkit", "dep:semio-renderer-wgpu-shell-input", "semio-renderer-wgpu-shell-input/testkit", "dep:semio-ui-declaration", "dep:semio-ui-locale", "semio-renderer-wgpu-shell-state/testkit", "semio-renderer-wgpu-shell-window-actions/testkit"]
+testkit = ["semio-renderer-wgpu-contracts/testkit", "semio-renderer-wgpu-engine-registry/testkit", "semio-renderer-wgpu-frame-actions/testkit", "semio-renderer-wgpu-runtime-mailbox/testkit", "semio-renderer-wgpu-scene-state/testkit", "dep:semio-renderer-wgpu-shell-input", "semio-renderer-wgpu-shell-input/testkit", "dep:semio-ui-contract-values", "semio-ui-contract-values/testkit", "dep:semio-ui-declaration", "dep:semio-ui-locale", "semio-renderer-wgpu-shell-state/testkit", "semio-renderer-wgpu-shell-window-actions/testkit"]
 
 [dependencies]
 semio-renderer-wgpu-app-runtime = { path = "../../../🏃️app-runtime/📦️packages/🦀️rust" }
@@ -46,6 +46,7 @@ semio-framework-canvas = { path = "../../../../../../../../../../🔨️modules/
 semio-framework-job = { workspace = true }
 semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
+semio-ui-contract-values = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", optional = true }
 semio-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust", optional = true }
 semio-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", optional = true }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

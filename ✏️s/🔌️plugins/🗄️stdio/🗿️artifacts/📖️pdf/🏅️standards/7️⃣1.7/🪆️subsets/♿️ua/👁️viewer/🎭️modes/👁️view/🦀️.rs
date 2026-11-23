@@ -23,7 +23,7 @@ pub fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutNode::Stack { size: None,
             active_window_id: None,
-            children: vec![WindowLayoutNode::Window { window_kind_id: main::WINDOW_KIND_ID.into(), title: Some("Pages".into()), instance_id: None, template_id: None, corner: None }],
+            children: vec![WindowLayoutNode::Window { window_kind_id: main::WINDOW_KIND_ID.into(), title: None, instance_id: None, template_id: None, corner: None }],
         },
     }
 }

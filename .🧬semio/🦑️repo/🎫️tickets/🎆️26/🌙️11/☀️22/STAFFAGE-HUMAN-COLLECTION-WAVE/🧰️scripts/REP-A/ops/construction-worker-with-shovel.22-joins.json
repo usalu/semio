@@ -1,0 +1,107 @@
+[
+ {
+  "op": "solid-set",
+  "scale": "200",
+  "list": "structure",
+  "id": "scapula-r",
+  "set": {
+   "transform": {
+    "rotation": [
+     0.13266,
+     0.92079,
+     0.03314,
+     -0.3653
+    ],
+    "translation": [
+     0.1133,
+     -0.0622,
+     -0.09338
+    ]
+   }
+  }
+ },
+ {
+  "op": "solid-set",
+  "scale": "200",
+  "list": "structure",
+  "id": "scapula-l",
+  "set": {
+   "transform": {
+    "rotation": [
+     0.13266,
+     0.92079,
+     -0.03314,
+     0.3653
+    ],
+    "translation": [
+     0.11331,
+     -0.06222,
+     0.09339
+    ]
+   }
+  }
+ },
+ {
+  "op": "solid-set",
+  "scale": "100",
+  "list": "structure",
+  "id": "patella-l",
+  "set": {
+   "transform": {
+    "translation": [
+     -0.00986,
+     0.0368,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0.70711,
+     0.70711
+    ]
+   }
+  }
+ },
+ {
+  "op": "solid-set",
+  "scale": "50",
+  "list": "structure",
+  "id": "patella-l",
+  "set": {
+   "transform": {
+    "translation": [
+     -0.00981,
+     0.03755,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0.70711,
+     0.70711
+    ]
+   }
+  }
+ },
+ {
+  "op": "solid-set",
+  "scale": "50",
+  "list": "structure",
+  "id": "patella-r",
+  "set": {
+   "transform": {
+    "translation": [
+     -0.00948,
+     0.04255,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0.70711,
+     0.70711
+    ]
+   }
+  }
+ }
+]

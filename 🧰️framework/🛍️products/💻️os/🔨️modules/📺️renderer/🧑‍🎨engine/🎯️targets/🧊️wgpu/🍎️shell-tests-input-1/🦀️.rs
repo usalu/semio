@@ -10,7 +10,7 @@ use semio_framework::kernel::UiDirtyScope;
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_renderer_wgpu_canvas2d_host::begin;
 use semio_renderer_wgpu_contracts::{AdmittedSurfaceMap, SCENE_SURFACE_CAPACITY, ui_document_close_pending, ui_document_close_pending_for};
-use semio_renderer_wgpu_dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockNode, DockStackTab, DockState, WindowSilhouette};
+use semio_renderer_wgpu_dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockNode, DockStackTab, DockState, WindowFrame};
 use semio_renderer_wgpu_fixtures::shell::{
     boot_manifest, host_test_shell, mouse_pointer, paint_component_pointer_documents, paint_tree_pointer_documents, pointer_interaction, retained_world_sequence_probe, tree_pointer_record, world3d_pointer_record,
 };

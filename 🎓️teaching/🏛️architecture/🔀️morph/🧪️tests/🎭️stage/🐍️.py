@@ -63,7 +63,7 @@ def points_of(mobjects):
     return np.unique(np.round(pts, 6), axis=0)
 
 
-def run(profile, definitions, transition="demo.blocks-to-tiles", duration_frames=True):
+def run(profile, definitions, transition="demo.blocks-to-tiles", duration_frames=True, individually=False):
     """▶ Play one transition in a fresh scene under `profile`; return everything the assertions need."""
     os.environ["SEMIO_TEACHING_PROFILE"] = profile
     profile_module.reset()
@@ -75,7 +75,7 @@ def run(profile, definitions, transition="demo.blocks-to-tiles", duration_frames
         stage.bind("demo.blocks", definitions.blocks)
         stage.bind("demo.tiles", definitions.tiles, bounds=definitions.tile_bounds, part_bounds=definitions.tile_part_bounds)
         group = stage.mobject("demo.blocks")
-        scene.add(group)
+        scene.add(*group.submobjects) if individually else scene.add(group)
         target = stage.mobject("demo.tiles")
         source_ids = {id(m) for m in group.get_family()}
         target_ids = {id(m) for m in target.get_family()}
@@ -205,6 +205,15 @@ class StageEndToEndTests(unittest.TestCase):
                 counts = result["work"]["counts"]
                 self.assertEqual(counts.get("full.prepare", 0) + counts.get("full.evaluate", 0), 0)
                 self.assertEqual(counts.get("preview.swap", 0), 1 if profile == "preview" else 0)
+
+    def test_source_group_added_part_by_part_is_fully_gone_after_transition_and_cut(self):
+        for profile in ("preview", "final"):
+            for transition in ("demo.blocks-to-tiles", "demo.blocks-cut-to-tiles"):
+                with self.subTest(profile=profile, transition=transition):
+                    result = run(profile, Definitions(), transition, individually=True)
+                    self.assertGreater(len(result["group"].submobjects), 1)
+                    self.assertEqual(list(result["scene"].mobjects), [result["target"]])
+                    self.assertFalse(visible_ids(result["scene"]) & {id(m) for m in result["group"].get_family()})
 
     def test_stage_never_builds_the_final_lod_in_preview(self):
         definitions = Definitions()

@@ -29,3 +29,4 @@ semio-framework-value-retirement = { path="../../../../📦️packages/🦀️ru
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-value-testing-admission = { path = "../../../../../🧪️testing/📥️admission/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }

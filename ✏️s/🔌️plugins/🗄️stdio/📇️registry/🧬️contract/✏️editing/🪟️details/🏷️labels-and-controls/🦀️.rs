@@ -248,7 +248,7 @@ pub(super) fn path_is_bindable(path: &str) -> bool {
     true
 }
 
-pub(super) fn read_only_value(id: &str, value: SnapshotDetailValue) -> UiAssemblyResult<BuiltNode> {
+pub(super) fn read_only_value(id: &str, value: SnapshotDetailValue, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let value = match value {
         SnapshotDetailValue::Null => "null".to_string(),
         SnapshotDetailValue::Bool(value) => value.to_string(),
@@ -264,7 +264,7 @@ pub(super) fn read_only_value(id: &str, value: SnapshotDetailValue) -> UiAssembl
         return ui_contract::text(label(&value)?).try_id(id).map_err(|_| error("ui.snapshot-details.read-only-id"))?
             .try_build().map_err(|_| error("ui.snapshot-details.read-only-value"));
     }
-    readonly_long_text(id, value)
+    readonly_long_text(id, value, locale)
 }
 
 pub(super) fn input_draft_target(controller_id: &str, action_id: &str, address: &str) -> Option<UiText> {
@@ -283,8 +283,8 @@ pub(super) fn set_input(id: &str, path: &str, kind: ui::InputKind, value: &str, 
     bind(builder, ui::Trigger::Commit, controller_id, SET_SNAPSHOT_VALUE_ACTION_ID, args)?.try_build().map_err(|_| error("ui.snapshot-details.input"))
 }
 
-fn readonly_long_text(id: &str, value: String) -> UiAssemblyResult<BuiltNode> {
-    let surface = TextWindowKit::render_read_only(id, &TextView { text: value, language: None })?;
+fn readonly_long_text(id: &str, value: String, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+    let surface = TextWindowKit::render_read_only(id, &TextView { text: value, language: None }, locale)?;
     ui::column().try_id(id).map_err(|_| error("ui.snapshot-details.long-value-id"))?.try_child(surface).map_err(|_| error("ui.snapshot-details.long-value"))?.try_build().map_err(|_| error("ui.snapshot-details.long-value"))
 }
 
@@ -318,7 +318,7 @@ pub(super) fn action_text_draft(id: &str, value: String, language: Option<String
         path_label: labels.path.into(),
         line_label: labels.line.into(),
         column_label: labels.column.into(),
-    })?;
+    }, labels.locale)?;
     ui::column().grow(true).try_id(id).map_err(|_| error("ui.snapshot-details.draft-id"))?.try_child(surface).map_err(|_| error("ui.snapshot-details.draft"))?.try_build().map_err(|_| error("ui.snapshot-details.draft"))
 }
 

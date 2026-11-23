@@ -10,6 +10,8 @@ use std::{mem::size_of,sync::Arc};
 /// 🧳️ The original input row, native decoder ledger and retirement recipient remain bound through cancellation.
 pub struct OriginalReplacementReceiving<M:Sync>{admission:Option<RetainedCloneSourceAdmission<Vec<u8>,Vec<u8>>>,source:Option<RetainedCloneSource<Vec<u8>>>,wire:Option<RetainedOwnedProjection<Vec<u8>>>,receiver:Option<Box<dyn ArtifactOriginalOperationReceiving<M>>>,input:Option<RetainedOwnedProjection<M>>,binding:Option<(NativeAllocationIdentity,u64,usize)>,closing:bool,pending_work:Option<u128>,returned:Option<Vec<u8>>,take_reply:Option<Result<RetainedCloneStep,OriginalRetirementFailure>>,take_pending:bool}
 impl<M:Sync> Default for OriginalReplacementReceiving<M>{fn default()->Self{Self{admission:None,source:None,wire:None,receiver:None,input:None,binding:None,closing:false,pending_work:None,returned:None,take_reply:None,take_pending:false}}}
+/// 📦️ The largest body one native replacement step receives, which the turn's quote prices.
+const STEP_BODY_BYTES:usize=4096;
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"replacement receiving requires its original input row, decoder and retirement recipient")}
 fn header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
 fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand)}
@@ -35,12 +37,12 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
  /// 🪡️ Every native birth uses the same decoder and independent grant inside one original effect; the source Vec is never copied or replaced.
  pub fn advance_native(&mut self,row:&mut InputReplacement,codec:&ArtifactOperationWire<M>,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,control:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant,maximum_work:u64)->Result<RetainedCloneProgress,ValueError>{
   let identity=self.validate(row,control.ledger_identity(),control.retirement_recipient_identity())?;if self.closing{return Err(invalid())}if self.ready(){return Ok(Default::default())}
-  let d=self.demands(codec,grant.maximum_copy_bytes)?;if maximum_work==0||!permits(grant,d){return Ok(Default::default())}
+  let body=grant.maximum_copy_bytes.min(STEP_BODY_BYTES);let d=self.demands(codec,body)?;if maximum_work==0||!permits(grant,d){return Ok(Default::default())}
   control.checkpoint()?;if d.capacity_bytes!=0{control.admit_turn_capacity(grant.maximum_capacity_bytes)?;}
   if self.source.is_some()&&self.wire.is_some()&&self.receiver.is_none(){return (codec.original_receiving.as_ref().ok_or_else(invalid)?.admit)(&mut self.wire,&mut self.receiver,factory,control,grant)}
   if let Some(receiver)=self.receiver.as_mut(){
    if receiver.ready(){let turn=receiver.take(grant);return match turn.result?{Some((input,p))=>{self.input=Some(input);Ok(p)},None=>Ok(Default::default())}}
-   let poll=receiver.advance(control,grant.maximum_copy_bytes,maximum_work,grant);return self.settle_receive(poll);
+   let poll=receiver.advance(control,body,maximum_work,grant);return self.settle_receive(poll);
   }
   let child=RetainedCloneGrant{maximum_items:1,..grant};
   let Some(result)=control.with_allocated_effect(d,maximum_work,|_,effect|{
@@ -128,7 +130,7 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
  pub fn advance(&mut self,row:&mut InputReplacement,codec:&ArtifactOperationWire<M>,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
   if cx.should_yield(){return Ok(false)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
    let mut outcome=None;let mut stepped=None;
-   if !cx.with_native_receiving_work(&mut outcome, Default::default(), |control,grant,work|{stepped=Some(self.advance_native(row,codec,factory,control,grant,work.saturating_sub(semio_framework_value::ORIGINAL_INVOCATION_WORK)));Ok(())})?{return Ok(false)}
+   let floor=self.demands(codec,grant.maximum_copy_bytes.min(STEP_BODY_BYTES))?;if !cx.with_native_receiving_work(&mut outcome, floor, |control,grant,work|{stepped=Some(self.advance_native(row,codec,factory,control,grant,work.saturating_sub(semio_framework_value::ORIGINAL_INVOCATION_WORK)));Ok(())})?{return Ok(false)}
    Self::settled(cx,outcome,stepped)?;if self.pending_work.is_some(){return Ok(false)}Ok(self.ready())
  }
  /// 🤝️ Transfers the already authenticated original typed projection under the same Job receiving continuation.

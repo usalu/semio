@@ -13,11 +13,13 @@ use semio_plugin::NoConfig;
 use semio_plugin::{scene_surface, BuiltNode, TextEditorScene, UiAssemblyResult};
 use semio_ui_contract::SurfaceKind;
 
-pub fn render(state: &RewritingSnapshot, _cfg: &NoConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(state: &RewritingSnapshot, _cfg: &NoConfig, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let query = crate::editor::rewriting::document::compiled_jack_query(state);
     scene_surface(
         crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_SURFACE_JACK,
         SurfaceKind::TextEditor,
         &TextEditorScene { tokens_json: Some(semio_framework_pack_json::to_json_string(&semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::language_service::semantic_tokens(&query))), ..TextEditorScene::base(query, Some("jack".into()), None) },
+        semio_plugin::surface_name(locale, "Jack query", "Jack-Abfrage"),
+        None,
     )
 }

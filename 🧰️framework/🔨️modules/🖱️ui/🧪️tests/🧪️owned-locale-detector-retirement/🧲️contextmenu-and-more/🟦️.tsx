@@ -105,7 +105,7 @@ export async function registerContextmenuAndMoreTests(vitest: Tests1Vitest, depe
       );
       fireEvent.contextMenu(screen.getByRole("button", { name: "Target" }), { clientX: 123, clientY: 87 });
       const menu = await waitFor(() => screen.getByRole("menu"));
-      const chrome = menu.closest<HTMLElement>('[data-window-silhouette][data-slot="context-menu-content"]');
+      const chrome = menu.closest<HTMLElement>('[data-window-frame][data-slot="context-menu-content"]');
       expect(chrome?.parentElement).toBe(document.body);
       expect(chrome?.style.position).toBe("fixed");
       expect(chrome?.style.left).toBe("123px");
@@ -124,19 +124,13 @@ export async function registerContextmenuAndMoreTests(vitest: Tests1Vitest, depe
         expect(document.querySelector('[data-slot="context-menu-content"]')).toBeTruthy();
         expect(document.querySelector('[data-slot="context-menu-title-chip"]')?.textContent).toContain("Actions");
         expect(document.querySelector('[data-slot="context-menu-title-chip"] [data-icon="list"]')).toBeTruthy();
-        expect(document.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+        expect(document.querySelector('[data-slot="window-chrome-frame-border"]')).toBeTruthy();
         expect(document.querySelector('[data-slot="mode-dock-maximize"]')).toBeNull();
         expect(document.querySelector('[data-slot="window-chrome-controls"]')).toBeNull();
       });
     });
 
-    it("keeps the U-gap transparent so the cutout shows the background instead of a filled rectangle", async () => {
-      const { readFileSync } = await import("node:fs");
-      const { fileURLToPath } = await import("node:url");
-      const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
-      expect(css).toContain("[data-window-silhouette-gap]");
-      expect(css).toMatch(/\[data-window-silhouette-gap\][\s\S]*backdrop-filter:\s*none/);
+    it("paints the menu title chip as an in-frame glass overlay", async () => {
       render(
         <ContextMenu items={[{ id: "demo", label: uiDataLabel("Demo action") }]} title={uiDataLabel("Actions")}>
           <button type="button">Target</button>
@@ -145,16 +139,39 @@ export async function registerContextmenuAndMoreTests(vitest: Tests1Vitest, depe
       fireEvent.contextMenu(screen.getByRole("button", { name: "Target" }));
       await waitFor(() => {
         const stack = document.querySelector('[data-slot="context-menu-content"]') as HTMLElement;
-        const gap = stack?.querySelector('[data-slot="window-chrome-gap"]') as HTMLElement;
         const chip = stack?.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
-        expect(gap).toBeTruthy();
-        expect(gap.className).toContain("bg-transparent");
-        expect(gap.className).not.toContain("ui-glass");
-        expect(stack.querySelector('[class*="ui-glass"][class*="absolute"][class*="inset-0"]')).toBeNull();
+        expect(stack.hasAttribute("data-window-frame")).toBe(true);
+        expect(stack.querySelector('[data-slot="window-chrome-body-surface"]')?.className).toMatch(/(?:^|\s)inset-0(?:\s|$)/u);
         expect(chip?.className).toContain("ui-glass");
+        expect(chip?.hasAttribute("data-window-frame-chip")).toBe(true);
+        expect(stack.querySelector("[data-window-frame-content]")?.outerHTML).not.toContain("clip-path");
         const titleChip = stack?.querySelector('[data-slot="context-menu-title-chip"]') as HTMLElement;
         expect(titleChip?.className).not.toContain("ui-surface");
       });
+    });
+
+    it("renders a submenu wing as its own rectangular frame abutting the primary menu frame instead of one stepped outline", async () => {
+      render(<ContextMenuController title={uiDataLabel("Menu")} open position={{ x: 4, y: 4 }} items={[{ id: "transform", label: uiDataLabel("Transform"), children: [{ id: "move", label: uiDataLabel("Move") }] }]} onOpenChange={vi.fn()} />);
+      const parent = await waitFor(() => screen.getByRole("menuitem", { name: "Transform" }));
+      expect(document.querySelectorAll("[data-window-frame]")).toHaveLength(1);
+      fireEvent.click(parent);
+      const move = await waitFor(() => screen.getByRole("menuitem", { name: "Move" }));
+      const frames = [...document.querySelectorAll<HTMLElement>("[data-window-frame]")];
+      expect(frames).toHaveLength(2);
+      expect(frames[0]!.contains(frames[1]!)).toBe(false);
+      expect(frames[1]!.getAttribute("data-slot")).toBe("context-menu-submenu");
+      expect(frames[1]!.hasAttribute("data-context-menu-submenu-of")).toBe(true);
+      expect(frames[1]!.querySelector("[data-window-frame-chip]")).toBeNull();
+      expect(frames[1]!.contains(move)).toBe(true);
+      expect(frames[0]!.contains(move)).toBe(false);
+      for (const frame of frames) {
+        expect(frame.outerHTML).not.toContain("clip-path");
+        expect(frame.outerHTML).not.toContain("polygon(");
+        const d = frame.querySelector("[data-window-frame-border] path")?.getAttribute("d");
+        if (d) expect(d).toMatch(/^M[\d.]+,[\d.]+ H[\d.]+ V[\d.]+ H[\d.]+ Z$/u);
+      }
+      fireEvent.click(parent);
+      await waitFor(() => expect(document.querySelectorAll("[data-window-frame]")).toHaveLength(1));
     });
 
     it("renders catalog and shortcode menu icons instead of raw labels", async () => {
@@ -436,12 +453,14 @@ export async function registerContextmenuAndMoreTests(vitest: Tests1Vitest, depe
       expect(parent.textContent).toContain("⌘️T");
     });
 
-    it("caps menu content while keeping the silhouette host unclipped", async () => {
+    it("caps menu content inside one rectangular frame clipped only by its own rectangle", async () => {
       render(<ContextMenuController title={uiDataLabel("Menu")} open position={{ x: 4, y: 4 }} items={[{ id: "a", label: uiDataLabel("Alpha") }]} onOpenChange={vi.fn()} />);
       const menu = await waitFor(() => screen.getByRole("menu"));
       const chrome = menu.closest<HTMLElement>('[data-slot="context-menu-content"]');
-      expect(chrome?.className).toContain("overflow-visible");
-      const scroller = chrome?.querySelector<HTMLElement>('[data-slot="context-menu-fusion-body"]');
+      expect(chrome?.hasAttribute("data-window-frame")).toBe(true);
+      expect(chrome?.className).toContain("overflow-clip");
+      expect(chrome?.className).not.toContain("overflow-visible");
+      const scroller = chrome?.querySelector<HTMLElement>('[data-slot="context-menu-primary"]');
       expect(scroller?.className).toContain("overflow-auto");
       expect(scroller?.style.maxHeight).toBe("calc(100dvh - var(--chip-row-height) - 2px)");
     });

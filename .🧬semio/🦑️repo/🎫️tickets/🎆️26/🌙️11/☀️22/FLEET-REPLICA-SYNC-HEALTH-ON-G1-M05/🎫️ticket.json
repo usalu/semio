@@ -1,0 +1,86 @@
+{
+  "title": "Fleet Replica Sync Health on G1-M05",
+  "emoji": "🔁",
+  "status": "closed",
+  "description": "Verify and restore the fleet replica sync of the shared worktree C:\\semio on Windows workstation g1-m05: scheduled task semio-fleet-replica, beat.json/health.json freshness, head.json publication, inbound changes from other origins, errors/backlog in C:\\semio\\.cache\\f. Fix root-cause defects. Report with timestamps.",
+  "summary": "g1-m05 replica caught up fully (0 origins behind). The daemon runs at AboveNormal. Before anything inbound was applied, a sha-manifested backup of the 1,321 locally differing files went to C:\\b\\semio-local-20261123. Lost copies were reconciled with three-way merges against the frozen-view base (last fleet put before min(mtime, 2026-11-22T11:15:43Z)). An earlier nearest-ancestor merge had reverted fleet work in 13 files; each was restored to the exact fleet bytes and merged again correctly. All 31 merged or restored files are published fleet-wide (published-check.mjs). Local work superseded by the fleet stays in .cache/f/lost and is listed in the report. Own fixes (sidecar priority, journal replaceFile) were re-merged onto the newer fleet versions; pass-reuse went back to the fleet design.",
+  "goal": "🎯runningrepo",
+  "sessions": [
+    "08ed676a-7d47-42d0-b206-b29155371f2f",
+    "f54745f4-93e4-458e-9f79-3b228751b51f"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 23:37:47",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Verify and restore the fleet replica sync of the shared worktree C:\\semio on Windows workstation g1-m05: scheduled task semio-fleet-replica, beat.json/health.json freshness, head.json publication, inbound changes from other origins, errors/backlog in C:\\semio\\.cache\\f. Fix root-cause defects. Report with timestamps.",
+      "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 00:36:00",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "b4927d2c311c372f9d5c7bb46b28a67fe36bb421",
+      "summary": "Replica on g1-m05 was down ~15 h (head unpublished since 08:53, inbound stopped ~12:15). The watchdog killed the daemon in a loop: CPU starvation at Task Scheduler priority 7. Fixed: the replica now applies its declared interactive class itself (verified AboveNormal live, lag 15 s → \u003c200 ms). The own-origin writer moves aside a file that refuses replacement (the attest.json EPERM on NFS for 19 h, unstuck). Tests added. Still broken at close: host memory thrash from 3×10–11 GB link.exe (FEM build) stalls the daemon. It should recover once the linkers finish. Report: fleet-replica-sync-health-report.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️📒️journal🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🛟️supervisor💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️📒️journal💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-23 01:46:22",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Fix everything and get this worker in sync again, without losing local changes and without overwriting other agents' changes.",
+      "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 05:55:37",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "508f457ff1e1b2e344827fe80c57ec46a04af505",
+      "summary": "g1-m05 replica caught up fully (0 origins behind). The daemon runs at AboveNormal. Before anything inbound was applied, a sha-manifested backup of the 1,321 locally differing files went to C:\\b\\semio-local-20261123. Lost copies were reconciled with three-way merges against the frozen-view base (last fleet put before min(mtime, 2026-11-22T11:15:43Z)). An earlier nearest-ancestor merge had reverted fleet work in 13 files; each was restored to the exact fleet bytes and merged again correctly. All 31 merged or restored files are published fleet-wide (published-check.mjs). Local work superseded by the fleet stays in .cache/f/lost and is listed in the report. Own fixes (sidecar priority, journal replaceFile) were re-merged onto the newer fleet versions; pass-reuse went back to the fleet design.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🛟️supervisor💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🖨️describe🗃️🛠️emitter🗃️🥾️prerequisite🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🧱️construction🗃️📦️original💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🛰️sidecar🗃️🧪️tests🗃️🪜️priority💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🛰️sidecar🗃️🪜️priority💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️📒️journal💻🟦️"
+        }
+      ]
+    }
+  ]
+}

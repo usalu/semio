@@ -15,7 +15,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 👁️ One page per story part.
-pub fn render(snapshot: &IdmlSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &IdmlSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let pages = story_pages(snapshot).into_iter().map(|runs| DocumentPage { text: runs.into_iter().map(|run| run.text).collect::<Vec<_>>().join("\n") }).collect();
-    DocumentWindowKit::render(&DocumentView { pages })
+    DocumentWindowKit::render(&DocumentView { pages }, locale)
 }

@@ -235,7 +235,7 @@ where
     view_work::<E>(tool_id, bounded_native_edit_work::<E>)
 }
 /// 🔌️ The page window painter an editor's main window supplies: snapshot, selected object, view, viewport, highlights.
-pub type MainRender = fn(&PdfSnapshot, Option<&str>, &ViewState, (f64, f64), Vec<OverlayLayer>) -> UiAssemblyResult<semio_ui_contract::BuiltNode>;
+pub type MainRender = fn(&PdfSnapshot, Option<&str>, &ViewState, (f64, f64), Vec<OverlayLayer>, Locale) -> UiAssemblyResult<semio_ui_contract::BuiltNode>;
 
 /// 🖼️ Renders the bodies every PDF editor shares (page window through the view, thumbnails, text layer, inspector); `None` for any other body.
 pub fn render_page_body(body_key: &str, doc: &ArtifactView<'_, PdfSnapshot>, controller: &str, interaction: Option<&semio_plugin::app::InteractionView<'_>>, transient: Option<&PdfViewTransient>, locale: Locale, main: MainRender) -> Option<UiAssemblyResult<ComponentTree>> {
@@ -259,7 +259,7 @@ pub fn render_page_body_peers(body_key: &str, snapshot: &PdfSnapshot, revision: 
             let hits = if view.query.is_empty() { Vec::new() } else { search(snapshot, &view.query, view.match_case, &mut SearchControl { cancelled: &|| false, progress: &mut |_, _| {} }).hits };
             let mut layers = hit_layers(snapshot, &hits, view.active);
             layers.extend(page::peer_overlay_layers(snapshot, &peers().overlay(0, view.page as u32)));
-            main(snapshot, selected, &view, NOMINAL_VIEWPORT, layers)
+            main(snapshot, selected, &view, NOMINAL_VIEWPORT, layers, locale)
         }
         page::THUMBNAILS_BODY_KEY => {
             let overlay = peers().overlay(0, 0);

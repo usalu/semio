@@ -50,10 +50,10 @@ async fn the_map_window_declares_the_hosts_camera_verb() {
 #[semio_framework_async_macros::async_test]
 async fn render_publishes_the_default_camera_until_the_window_retains_one() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    let unpanned = semio_plugin::artifact_app_laws::built_surface_scene::<TiledMapScene>(&render(&document, None).expect("render")).expect("tiled map scene");
+    let unpanned = semio_plugin::artifact_app_laws::built_surface_scene::<TiledMapScene>(&render(&document, None, semio_plugin::Locale::En).expect("render")).expect("tiled map scene");
     assert_eq!(unpanned.camera_json, GIS_MAP_VIEW_DEFAULT_CAMERA_JSON);
     let window = config::GisMapViewerWindowConfig { camera: config::GisMapViewerCamera { x: 12.0, y: -4.5, zoom: 2.0 } };
-    let panned = semio_plugin::artifact_app_laws::built_surface_scene::<TiledMapScene>(&render(&document, Some(&window)).expect("render")).expect("tiled map scene");
+    let panned = semio_plugin::artifact_app_laws::built_surface_scene::<TiledMapScene>(&render(&document, Some(&window), semio_plugin::Locale::En).expect("render")).expect("tiled map scene");
     assert_eq!(panned.camera_json, window.camera.scene_camera_json());
 }
 
@@ -65,7 +65,7 @@ async fn the_viewer_map_scene_selects_and_hovers_nothing_and_declares_no_interac
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let window = config::GisMapViewerWindowConfig { camera: config::GisMapViewerCamera { x: 1.0, y: 2.0, zoom: 3.0 } };
     for retained in [None, Some(&window)] {
-        let scene = semio_plugin::artifact_app_laws::built_surface_scene::<TiledMapScene>(&render(&document, retained).expect("render")).expect("tiled map scene");
+        let scene = semio_plugin::artifact_app_laws::built_surface_scene::<TiledMapScene>(&render(&document, retained, semio_plugin::Locale::En).expect("render")).expect("tiled map scene");
         let defaults = TiledMapScene::base(String::new(), String::new());
         assert_eq!(scene.selection_json, defaults.selection_json);
         assert_eq!(scene.hover_json, defaults.hover_json);

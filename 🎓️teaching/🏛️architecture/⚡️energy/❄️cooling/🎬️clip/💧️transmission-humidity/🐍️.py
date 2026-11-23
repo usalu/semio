@@ -27,6 +27,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 window_chip = _manim_module.window_chip
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -72,22 +73,6 @@ TITLE_LAST_DE = "Lüftungslast im Sommer"
 
 # Mid-screen anchor for house/diagram content (clear of title + formula/caption).
 CONTENT_CENTER = DOWN * 0.1
-
-
-#region DIN citation
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
-
-    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
-    that never competes with the diagram. The formula panel sits on the
-    bottom edge, so this corner is clear in every beat.
-    """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-#endregion
 
 
 #region Running example
@@ -230,7 +215,7 @@ class Beat1_TransmissionOpaque(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Opaque components under summer radiation", "Opake Bauteile unter Sommerstrahlung"))
-        din = _din_ref(_references.cite(("vdi-2078", "opak")))
+        din = reference_chip(_references.cite(("vdi-2078", "opak")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -381,7 +366,7 @@ class Beat3_LueftungslastImSommer(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Air as the second load", "Die Luft als zweite Last"))
-        din = _din_ref(_references.cite(("vdi-2078", "aussenluft")))
+        din = reference_chip(_references.cite(("vdi-2078", "aussenluft")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))

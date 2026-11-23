@@ -32,15 +32,15 @@ pub const MODE_SHAPE_AMPLITUDE_RATIO: f64 = 0.1;
 //#region 🔖️Shared
 /// 🎬️ Encodes one Canvas2d scene into the semantic UI contract — its spine inside the fixed surface
 /// doc and every declared payload lane beside it as a paged carrier (`scene_surface`).
-pub fn canvas_2d_surface(id: impl Into<String>, scene: &semio_ui_scene::Canvas2dScene) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    semio_plugin::scene_surface(&id.into(), semio_ui_contract::SurfaceKind::Canvas2d, scene)
+pub fn canvas_2d_surface(id: impl Into<String>, scene: &semio_ui_scene::Canvas2dScene, name: &str) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    semio_plugin::scene_surface(&id.into(), semio_ui_contract::SurfaceKind::Canvas2d, scene, name, None)
 }
 
 /// 🌍️ Encodes one World3d scene into the semantic UI contract: the meshes/instances lanes ride as
 /// paged carriers, so a meshed solid with per-vertex stress is bounded by carrier pages rather than
 /// refused by the 32 KiB surface doc (`ui.scene.encode: World3d scene admission failed`).
-pub fn world_3d_surface(id: impl Into<String>, scene: &semio_ui_scene::World3dScene) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    semio_plugin::scene_surface(&id.into(), semio_ui_contract::SurfaceKind::World3d, scene)
+pub fn world_3d_surface(id: impl Into<String>, scene: &semio_ui_scene::World3dScene, name: &str) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    semio_plugin::scene_surface(&id.into(), semio_ui_contract::SurfaceKind::World3d, scene, name, None)
 }
 
 /// 🎨️ Projects the shared color-input parser into Canvas2d RGB, using black for refused input.

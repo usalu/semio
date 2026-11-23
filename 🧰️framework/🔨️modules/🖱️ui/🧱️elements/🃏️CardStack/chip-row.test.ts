@@ -1,4 +1,4 @@
-/** 📏️ Title-chip rows and footer-chip rows of a card derive from one height token, so the band two stacked cards share has the same pitch on both lines.
+/** 📏️ Title chips and footer chips of a card derive their height from one token, which is also the clearance document content keeps below and above them.
  *
  * @see ./chip-row.cases.json
  * @see ./bands.ts */

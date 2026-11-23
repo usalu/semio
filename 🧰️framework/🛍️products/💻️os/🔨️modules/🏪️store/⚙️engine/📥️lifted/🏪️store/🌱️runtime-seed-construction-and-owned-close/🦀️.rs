@@ -426,7 +426,11 @@ where
 
     /// 🧊️ Retires displaced owners outside any Job turn under one explicit authoring wallet whose stock is `grant`; callers inside a turn pass their own effect to [`Self::maintenance_retirements_step`].
     pub fn maintenance_retirements_step_cold(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let mut wallet = semio_framework_value::AuthoringWallet::new(grant, u128::from(ARTIFACT_STORE_COLD_CLOSE_STEP_WORK));
+        self.maintenance_retirements_step_resident(&mut semio_framework_value::AuthoringWallet::new(grant, u128::from(ARTIFACT_STORE_COLD_CLOSE_STEP_WORK)), grant)
+    }
+
+    /// 🧊️ One cold disposal turn under a resident wallet, so every turn of one close keeps its captured Work binding.
+    fn maintenance_retirements_step_resident(&mut self, wallet: &mut semio_framework_value::AuthoringWallet, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         match wallet.run_settled(grant, ARTIFACT_STORE_COLD_CLOSE_STEP_WORK, |effect| self.maintenance_retirements_step(effect))? {
             Some((turn, _)) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
             None => Ok(RetainedCloneStep::Progress(Default::default())),
@@ -435,7 +439,11 @@ where
 
     /// 🧊️ Advances owned-store disposal outside any Job turn under one explicit authoring wallet whose stock is `grant`; callers inside a turn pass their own effect to [`Self::close_owned_step`].
     pub fn close_owned_step_cold(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let mut wallet = semio_framework_value::AuthoringWallet::new(grant, u128::from(ARTIFACT_STORE_COLD_CLOSE_STEP_WORK));
+        self.close_owned_step_resident(&mut semio_framework_value::AuthoringWallet::new(grant, u128::from(ARTIFACT_STORE_COLD_CLOSE_STEP_WORK)), grant)
+    }
+
+    /// 🧊️ One cold disposal turn under a resident wallet, so every turn of one close keeps its captured Work binding.
+    fn close_owned_step_resident(&mut self, wallet: &mut semio_framework_value::AuthoringWallet, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         match wallet.run_settled(grant, ARTIFACT_STORE_COLD_CLOSE_STEP_WORK, |effect| self.close_owned_store_step(effect))? {
             Some((turn, _)) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
             None => Ok(RetainedCloneStep::Progress(Default::default())),
@@ -449,11 +457,12 @@ where
 
     /// 🧹️ Drives owned-store disposal to its terminal witness from the store's own quoted demands for callers no scheduler grants.
     pub fn close_owned_unscheduled(&mut self) -> Result<(), ValueError> {
+        let mut wallet = semio_framework_value::AuthoringWallet::self_funded();
         for _ in 0..ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS {
             if self.close_owned_terminal_is_empty() { return Ok(()); }
             let demand = self.close_owned_demands(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)?;
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            if let RetainedCloneStep::Complete(_) = self.close_owned_step_cold(grant)? { return if self.close_owned_terminal_is_empty() { Ok(()) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "store close completed without its terminal-empty witness")) }; }
+            if let RetainedCloneStep::Complete(_) = self.close_owned_step_resident(&mut wallet, grant)? { return if self.close_owned_terminal_is_empty() { Ok(()) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "store close completed without its terminal-empty witness")) }; }
         }
         Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "store close did not reach its terminal-empty witness within its bounded steps"))
     }

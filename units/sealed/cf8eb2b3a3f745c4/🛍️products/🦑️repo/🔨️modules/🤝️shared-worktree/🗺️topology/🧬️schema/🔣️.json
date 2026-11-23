@@ -1,0 +1,245 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/topology/v1",
+ "title": "Shared worktree fleet topology: groups, NFS stores, cache servers, peers and per-OS canonical paths",
+ "definitions": {
+  "Host": {
+   "description": "A lowercase DNS host name.",
+   "type": "string",
+   "pattern": "^[a-z0-9][a-z0-9.-]{0,251}[a-z0-9]$"
+  },
+  "GroupId": {
+   "description": "A group identifier.",
+   "type": "string",
+   "pattern": "^[a-z][a-z0-9]{0,15}$"
+  },
+  "UnixPath": {
+   "description": "An absolute POSIX path of plain ASCII segments.",
+   "type": "string",
+   "pattern": "^/[A-Za-z0-9._/-]{1,200}$"
+  },
+  "WindowsPath": {
+   "description": "An absolute Windows path of plain ASCII segments below a drive letter.",
+   "type": "string",
+   "pattern": "^[A-Za-z]:\\\\[A-Za-z0-9._\\\\-]{1,200}$"
+  },
+  "HomeRoot": {
+   "description": "A worktree below the home folder of the account that edits: a tilde, then up to four plain ASCII segments of at most 32 characters (~/semio, ~/Documents/semio). The provisioning resolves the tilde against the real home folder of that account.",
+   "type": "string",
+   "pattern": "^~(/[A-Za-z0-9][A-Za-z0-9._-]{0,31}){1,4}$"
+  },
+  "WindowsRoot": {
+   "description": "A short Windows worktree root: a drive letter and one directory of at most twelve characters (C:\\semio), so that the deep emoji paths of the tree stay far from the 260-character limit.",
+   "type": "string",
+   "pattern": "^[A-Za-z]:\\\\[A-Za-z0-9._-]{1,12}$"
+  },
+  "Cidr": {
+   "description": "An IPv4 network in CIDR notation: the machines of the group that the server exports to.",
+   "type": "string",
+   "pattern": "^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[12]?[0-9])$"
+  },
+  "WindowsDrive": {
+   "description": "A bare Windows drive root such as S:\\.",
+   "type": "string",
+   "pattern": "^[A-Za-z]:\\\\$"
+  },
+  "Worktree": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["linux", "macos", "windows"],
+   "properties": {
+    "linux": {"$ref": "#/definitions/HomeRoot"},
+    "macos": {"$ref": "#/definitions/HomeRoot"},
+    "windows": {"$ref": "#/definitions/WindowsRoot"}
+   }
+  },
+  "StoreMount": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["linux", "macos", "windows"],
+   "properties": {
+    "linux": {"$ref": "#/definitions/UnixPath"},
+    "macos": {"$ref": "#/definitions/UnixPath"},
+    "windows": {"$ref": "#/definitions/WindowsDrive"}
+   }
+  },
+  "Nfs": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["host", "export"],
+   "properties": {
+    "host": {"$ref": "#/definitions/Host"},
+    "export": {"$ref": "#/definitions/UnixPath"}
+   }
+  },
+  "Server": {
+   "description": "The group server: its operating system, the protocol it shares the store with and the network of its workers. On a windows server `nfs.export` is the single-segment share name (/semio-store) and `directory` the local folder; on linux and macos the export is the local folder and `directory` is absent. A smb server is windows only and serves windows workers only.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["platform", "protocol", "network"],
+   "properties": {
+    "platform": {"type": "string", "enum": ["linux", "macos", "windows"]},
+    "protocol": {"type": "string", "enum": ["nfs", "smb"]},
+    "network": {"$ref": "#/definitions/Cidr"},
+    "advertise": {"description": "Host names or addresses by which the group server is reachable from other networks, published beside the interface addresses in the fleet facts so that a peer group finds a routable endpoint without any address in the code.", "type": "array", "maxItems": 4, "uniqueItems": true, "items": {"$ref": "#/definitions/Host"}},
+    "machines": {"description": "The addresses of the fleet machines that may mount the store. When present the export names exactly these instead of the whole network; they come from SEMIO_FLEET_MACHINES, never from the committed file.", "type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "pattern": "^(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])(\\.(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])){3}$"}},
+    "directory": {"$ref": "#/definitions/WindowsPath"}
+   }
+  },
+  "Cache": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["endpoint", "instance"],
+   "properties": {
+    "endpoint": {
+     "type": "string",
+     "pattern": "^https?://[a-z0-9][a-z0-9.-]{0,251}[a-z0-9](:[0-9]{1,5})?$"
+    },
+    "instance": {
+     "type": "string",
+     "pattern": "^[A-Za-z0-9._-]{1,64}$"
+    }
+   }
+  },
+  "Port": {"description": "A TCP port of a service of the group server.", "type": "integer", "minimum": 1, "maximum": 65535},
+  "Ports": {
+   "description": "The ports of the services that the replica daemon of the group server supervises: the cache server of the fleet, the gRPC scheduler and its worker API. They are facts of the group, announced to the machines through the fleet facts, never constants of the code.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["cache", "scheduler", "worker"],
+   "properties": {"cache": {"$ref": "#/definitions/Port"}, "scheduler": {"$ref": "#/definitions/Port"}, "worker": {"$ref": "#/definitions/Port"}}
+  },
+  "Access": {
+   "description": "Who may talk to the servers of the group. Access is decided by the signed fleet identity of the caller (the origin registered in a store of the fleet, with the role of its key), never by an address. `enforceNetwork` adds the CIDR network of the server as a second, optional condition for the machines of the own group. `transport` says how the cache server of the group is spoken to: requests of other groups are always `sealed` (authenticated, encrypted and replay-protected with keys derived from the fleet identity: see the sealed exchange of the remote cache) and `inGroup` chooses for the machines of the group between `sealed` (the default when the value is absent) and `trusted-lan` (signed plain HTTP on a LAN the operator trusts).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["enforceNetwork"],
+   "properties": {
+    "enforceNetwork": {"type": "boolean"},
+    "transport": {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {"crossGroup": {"const": "sealed"}, "inGroup": {"enum": ["sealed", "trusted-lan"]}}
+    }
+   }
+  },
+  "Link": {
+   "description": "How this group reaches one peer group. `direct`: authenticated HTTP to a routable endpoint (the attested facts of the peer, plus the listed `endpoints`). `relayed`: store-and-forward through the stores that the group servers mount of each other (the `peers` folder), for content-addressed reads only. `serverKey` pins the origin key of the peer's group server (base64url SPKI) instead of trusting its first registration.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["transport"],
+   "properties": {
+    "transport": {"type": "string", "enum": ["direct", "relayed"]},
+    "endpoints": {"type": "array", "maxItems": 8, "uniqueItems": true, "items": {"type": "string", "pattern": "^https?://[a-z0-9][a-z0-9.-]{0,251}[a-z0-9](:[0-9]{1,5})?$"}},
+    "serverKey": {"type": "string", "pattern": "^[A-Za-z0-9_-]{40,200}$"}
+   }
+  },
+  "Group": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["id", "nfs", "server", "cache", "peers"],
+   "properties": {
+    "ports": {"$ref": "#/definitions/Ports"},
+    "access": {"$ref": "#/definitions/Access"},
+    "links": {
+     "description": "The link to each peer group, by id; a peer without an entry is reached `direct` through its attested facts.",
+     "type": "object",
+     "additionalProperties": false,
+     "patternProperties": {"^[a-z][a-z0-9]{0,15}$": {"$ref": "#/definitions/Link"}}
+    },
+    "id": {"$ref": "#/definitions/GroupId"},
+    "nfs": {"$ref": "#/definitions/Nfs"},
+    "server": {"$ref": "#/definitions/Server"},
+    "cache": {"$ref": "#/definitions/Cache"},
+    "peers": {
+     "description": "The other groups by id, each mounted read-only at this path on a linux group server (a macos server mounts them at /Volumes/semio-peers/<id>, a windows server reads their UNC paths).",
+     "type": "object",
+     "additionalProperties": false,
+     "patternProperties": {
+      "^[a-z][a-z0-9]{0,15}$": {"$ref": "#/definitions/UnixPath"}
+     }
+    }
+   }
+  },
+  "Compaction": {
+   "description": "Off by default. `automatic` switches on the periodic snapshot, the removal of journal segments and unreferenced blobs on the group server and the jump of a far-behind replica to the newest snapshot; the other fields are its thresholds (see the compaction member).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["automatic", "snapshotEvents", "safetyHours", "staleHours", "catchUpEvents"],
+   "properties": {
+    "automatic": {"type": "boolean"},
+    "snapshotEvents": {"type": "integer", "minimum": 1000, "maximum": 100000000},
+    "safetyHours": {"type": "integer", "minimum": 1, "maximum": 8760},
+    "staleHours": {"type": "integer", "minimum": 1, "maximum": 8760},
+    "catchUpEvents": {"type": "integer", "minimum": 1000, "maximum": 100000000}
+   }
+  },
+  "Replica": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["pollMilliseconds", "scanSeconds", "debounceMilliseconds", "retentionDays", "bootstrapMinutes", "compaction"],
+   "properties": {
+    "pollMilliseconds": {"type": "integer", "minimum": 50, "maximum": 60000},
+    "scanSeconds": {"type": "integer", "minimum": 1, "maximum": 3600},
+    "debounceMilliseconds": {"type": "integer", "minimum": 10, "maximum": 10000},
+    "retentionDays": {"type": "integer", "minimum": 1, "maximum": 3650},
+    "bootstrapMinutes": {"type": "integer", "minimum": 1, "maximum": 10080},
+    "compaction": {"$ref": "#/definitions/Compaction"}
+   }
+  },
+  "SidecarChild": {
+   "description": "One child the replica daemon supervises beside itself: a script below the worktree with its arguments, the machines it runs on (`member`: every machine, `server`: the group server) and what it needs (`platform-peer`: another machine of the same platform has attested within ten minutes).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["name", "script", "arguments", "roles", "requires", "enabled"],
+   "properties": {
+    "name": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$"},
+    "script": {"type": "string", "minLength": 1, "maxLength": 240},
+    "arguments": {"type": "array", "maxItems": 16, "items": {"type": "string", "maxLength": 128}},
+    "roles": {"type": "array", "minItems": 1, "maxItems": 2, "uniqueItems": true, "items": {"enum": ["member", "server"]}},
+    "requires": {"enum": ["none", "platform-peer"]},
+    "enabled": {"type": "boolean"}
+   }
+  },
+  "Sidecars": {
+   "description": "The supervised sidecars: the master switch, how long a healthy daemon waits before it starts them, the restart back-off (first delay, ceiling, the run time after which the count of failures starts again), the grace a stopping child gets before it is killed, and the children.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["enabled", "startAfterSeconds", "graceSeconds", "restart", "children"],
+   "properties": {
+    "enabled": {"type": "boolean"},
+    "startAfterSeconds": {"type": "integer", "minimum": 0, "maximum": 3600},
+    "graceSeconds": {"type": "integer", "minimum": 1, "maximum": 300},
+    "restart": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["initialMilliseconds", "maximumMilliseconds", "stableMilliseconds"],
+     "properties": {
+      "initialMilliseconds": {"type": "integer", "minimum": 10, "maximum": 600000},
+      "maximumMilliseconds": {"type": "integer", "minimum": 10, "maximum": 3600000},
+      "stableMilliseconds": {"type": "integer", "minimum": 10, "maximum": 86400000}
+     }
+    },
+    "children": {"type": "array", "maxItems": 8, "items": {"$ref": "#/definitions/SidecarChild"}}
+   }
+  },
+  "Topology": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "worktree", "storeMount", "groups", "replica"],
+   "properties": {
+    "version": {"type": "integer", "const": 1},
+    "worktree": {"$ref": "#/definitions/Worktree"},
+    "storeMount": {"$ref": "#/definitions/StoreMount"},
+    "groups": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 64,
+     "items": {"$ref": "#/definitions/Group"}
+    },
+    "replica": {"$ref": "#/definitions/Replica"},
+    "sidecars": {"$ref": "#/definitions/Sidecars"}
+   }
+  }
+ }
+}

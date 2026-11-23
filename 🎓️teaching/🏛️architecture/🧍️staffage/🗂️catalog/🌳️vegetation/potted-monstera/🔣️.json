@@ -12901,8 +12901,8 @@
       "de": "Körper bei 1:100: die Spreiten mit Schlitzen auf gröberem Rand und ohne Löcher, Stiele wie bei 1:50 (Blattstiele schlank), die Topfschale auf weniger Umrisspunkten ihres Untersetzers."
      },
      {
-      "en": "Thermal and structure at 1:100 as at 1:50 on the coarser solids.",
-      "de": "Thermik und Tragwerk bei 1:100 wie bei 1:50 auf den gröberen Körpern."
+      "en": "Minimal: thermal and structure at 1:100 are those of 1:50 on the coarser solids; the structure is one member per bone, and leaving one out would leave a leaf or a stalk without its load path.",
+      "de": "Minimal: Thermik und Tragwerk bei 1:100 sind die von 1:50 auf den gröberen Körpern; das Tragwerk ist ein Stab je Knochen, und einen wegzulassen ließe ein Blatt oder einen Stiel ohne Lastpfad."
      }
     ]
    },
@@ -18868,10 +18868,11 @@
        "id": "blade-06",
        "bone": "blade-06",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.549,
        "region": "leaves-upper",
        "material": "monstera-leaf",
+       "penMm": 0.1,
        "z": 1.003,
        "kind": "poly",
        "points": [
@@ -19526,6 +19527,7 @@
        "tone": 0.596,
        "region": "leaves-upper",
        "material": "monstera-leaf",
+       "penMm": 0.1,
        "z": 1.006,
        "kind": "poly",
        "points": [
@@ -29168,6 +29170,7 @@
        "tone": 0.549,
        "region": "leaves-upper",
        "material": "monstera-leaf",
+       "penMm": 0.1,
        "z": 1.003,
        "kind": "poly",
        "points": [
@@ -29474,6 +29477,7 @@
        "tone": 0.596,
        "region": "leaves-upper",
        "material": "monstera-leaf",
+       "penMm": 0.1,
        "z": 1.006,
        "kind": "poly",
        "points": [
@@ -37448,6 +37452,7 @@
        "tone": 0.547,
        "region": "leaves-upper",
        "material": "monstera-leaf",
+       "penMm": 0.1,
        "z": 1.002,
        "kind": "poly",
        "points": [
@@ -37588,6 +37593,7 @@
        "tone": 0.549,
        "region": "leaves-upper",
        "material": "monstera-leaf",
+       "penMm": 0.1,
        "z": 1.003,
        "kind": "poly",
        "points": [
@@ -37774,6 +37780,7 @@
        "tone": 0.596,
        "region": "leaves-upper",
        "material": "monstera-leaf",
+       "penMm": 0.1,
        "z": 1.006,
        "kind": "poly",
        "points": [
@@ -39081,10 +39088,11 @@
        "id": "blade-07",
        "bone": "blade-07",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.589,
        "region": "leaves-upper",
        "material": "monstera-leaf",
+       "penMm": 0.1,
        "z": 1.002,
        "kind": "poly",
        "points": [
@@ -39225,6 +39233,7 @@
        "tone": 0.47,
        "region": "leaves-upper",
        "material": "monstera-leaf",
+       "penMm": 0.1,
        "z": 1.003,
        "kind": "poly",
        "points": [
@@ -39804,6 +39813,7 @@
        "tone": 0.547,
        "region": "leaves-upper",
        "material": "monstera-leaf",
+       "penMm": 0.1,
        "z": 1.018,
        "kind": "poly",
        "points": [
@@ -46251,7 +46261,7 @@
      "kind": "surface",
      "model": "passive",
      "material": "glazed-stoneware",
-     "areaM2": 0.48,
+     "areaM2": 0.41,
      "characteristicLengthM": 0.33,
      "geometry": "vertical-plate",
      "skyViewFactor": 0.45,
@@ -46269,7 +46279,7 @@
      "kind": "surface",
      "model": "passive",
      "material": "glazed-stoneware",
-     "areaM2": 0.27,
+     "areaM2": 0.23,
      "characteristicLengthM": 0.4,
      "geometry": "horizontal-plate-up",
      "skyViewFactor": 0.25,

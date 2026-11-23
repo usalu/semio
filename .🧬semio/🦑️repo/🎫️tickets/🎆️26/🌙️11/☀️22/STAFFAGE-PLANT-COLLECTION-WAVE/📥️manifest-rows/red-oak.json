@@ -1,0 +1,56 @@
+{
+ "id": "red-oak",
+ "category": "vegetation",
+ "title": {
+  "en": "Red Oak",
+  "de": "Roteiche"
+ },
+ "heightM": 21.098,
+ "widthM": 18.394,
+ "powerW": 0,
+ "poses": [
+  "calm",
+  "windy",
+  "storm",
+  "wet-snow"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "red-oak-symbol",
+  "tree-sign"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A 22 m northern red oak (Quercus rubra) with a short, stout bole of flat-ridged bark that divides into big spreading limbs from 3 m on, and a broad, round crown of large bristle-lobed leaves about 19 m wide.",
+  "de": "Eine 22 m hohe Roteiche (Quercus rubra) mit kurzem, kräftigem Stamm aus flachrippiger Borke, der sich ab 3 m in große, ausladende Äste teilt, und einer breiten, runden Krone aus großen, grannig gelappten Blättern von etwa 19 m Breite."
+ },
+ "completion": "authored"
+}

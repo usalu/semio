@@ -31,7 +31,7 @@ async fn definition_declares_the_node_graph_surface_and_body_key() {
 async fn render_produces_a_read_only_scene_for_the_default_document() {
     let document = crate::snapshot::schema::default_persisted_snapshot();
     let scene = crate::sequence_derivable_scene(&document).expect("the genesis content is derivable");
-    let node = render(&scene).expect("viewer graph");
+    let node = render(&scene, semio_plugin::Locale::En).expect("viewer graph");
     let semio_plugin::Component::Surface(props) = &node.component else { panic!("semantic graph") };
     let scene: NodeGraphScene = semio_ui_scene::decode(props).expect("packed viewer scene");
     assert_eq!(scene.editable, Some(false));

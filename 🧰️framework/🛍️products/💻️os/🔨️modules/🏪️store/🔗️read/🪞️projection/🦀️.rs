@@ -8,6 +8,8 @@ impl<T:Send+Sync+'static> SnapshotReadProjection<T>{
  pub fn new(projection:Arc<T>)->Self{Self{projection:ManuallyDrop::new(Some(projection)),read:ManuallyDrop::new(None)}}
  pub fn bind(&mut self,read:crate::SnapshotRead<T>)->Result<(),crate::SnapshotRead<T>>{if self.read.is_some()||!self.projection.as_ref().is_some_and(|value|std::ptr::eq(value.as_ref(),read.get())){return Err(read);}*self.read=Some(read.into_erased());Ok(())}
  pub fn get(&self)->&T{self.projection.as_deref().expect("original context projection transferred")}
+ /// 🧪️ Surrenders a projection no Store ever issued, the way a fixture-only context ends; a bound root refuses and keeps its issuer.
+ pub fn forfeit_unissued(&mut self)->bool{if self.read.is_some(){return false;}drop(self.projection.take());true}
  pub fn has_original_issuer(&self)->bool{self.projection.as_ref().zip(self.read.as_ref()).is_some_and(|(value,read)|read.get::<T>().is_some_and(|original|std::ptr::eq(value.as_ref(),original)))}
 }
 impl<T:Send+Sync+'static> std::ops::Deref for SnapshotReadProjection<T>{type Target=T;fn deref(&self)->&T{self.get()}}

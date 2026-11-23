@@ -43,7 +43,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(config: &config::Generation2dGeneratePreviewWindowConfig, preview_text: Option<&str>, labels: &Generation2dLabels) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(config: &config::Generation2dGeneratePreviewWindowConfig, preview_text: Option<&str>, labels: &Generation2dLabels, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = preview_text.filter(|value| !value.is_empty()).unwrap_or("");
     if eval_json.is_empty() {
         return built_text_node(semio_ui_locale::Label::data(labels.preview_hint.as_str())).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.generate-preview.hint", "fixed UI hint admission failed"));
@@ -54,6 +54,8 @@ pub fn render(config: &config::Generation2dGeneratePreviewWindowConfig, preview_
         GENERATION2D_PLAY_SURFACE_GENERATE_PREVIEW,
         semio_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
         &Canvas2dScene { framing: None, camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: layers, snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        semio_plugin::surface_name(locale, "Preview", "Vorschau"),
+        None,
     )
 }
 //#endregion 🔖️Render

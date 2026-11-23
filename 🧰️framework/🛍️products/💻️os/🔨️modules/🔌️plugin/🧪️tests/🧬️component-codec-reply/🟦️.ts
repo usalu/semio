@@ -126,12 +126,13 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
         writeFileSync(join(directory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component", "fixture.wasm"));
         writeFileSync(join(directory, "🟨️.js"), hostShimSource());
         writeFileSync(join(directory, "fixture_component.js"), `
+          const shim = await import("./🟨️.js" + new URL(import.meta.url).search);
           const receipt = (budget) => ({ input: budget.input, spent: { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n }, workUnitsSpent: 0n });
           export const reactor = {
             channelVersion: async () => ${APP_CHANNEL_VERSION},
             admitActorContext: async (budget) => ({ ...receipt(budget), ready: true }),
             admitActorInput: async (_wire, budget) => ({ ...receipt(budget), ready: true, disposition: "admitted" }),
-            poll: async (budget) => { throw Object.assign(Error("[object Object] (see error.payload)"), {
+            poll: async (budget) => { shim.log("error", "original-turn.semantic " + ${JSON.stringify(law.expectedDetail)}); throw Object.assign(Error("[object Object] (see error.payload)"), {
               payload: { ...receipt(budget), failure: { tag: ${JSON.stringify(law.failure)} } },
             }); },
           };
@@ -149,8 +150,8 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
           },
         });
         const poll = () => api.poll([], undefined, undefined, { maxEffects: 1, maxPatchBytes: 1, maxFrames: 1 });
-        await expect(poll()).rejects.toThrow(law.expectedMessage);
-        await expect(poll()).rejects.toThrow(law.expectedMessage);
+        await expect(poll()).rejects.toThrow(law.expectedFullMessage);
+        await expect(poll()).rejects.toThrow(law.expectedFullMessage);
         await expect(api.closeOriginal()).rejects.toThrow(law.expectedCloseMessage);
         expect(received).toEqual(law.expectedReceiptEpochs);
         expect(held).toHaveLength(law.expectedHeldCount);

@@ -23,6 +23,11 @@ Feature: The polygon union never silently returns nothing
     When their union is built
     Then it is one ring of the area polygon-clipping finds
 
+  Scenario: Overlapping edges a few nanometres apart that are not exactly parallel
+    Given the prism faces of an extruded sleeve of a kneeling gardener and of an extruded shape of a parent with a stroller seen along their profile, whose overlapping long edges lie 2 to 65 nanometres apart at an angle above a billionth
+    When their union is built
+    Then the edges are cut where the other edge ends instead of at a crossing far outside both, and the union is one ring of the area polygon-clipping finds
+
   Scenario: Duplicate points do not matter
     Given a square with a doubled corner and a closing point
     Then its union is the square

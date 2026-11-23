@@ -2,8 +2,8 @@
 import React from "react";
 import {createRoot} from "react-dom/client";
 import {flushSync,createPortal} from "react-dom";
-import {WindowChrome,windowChromeTitleChipClass,measureWindowSilhouetteMetrics} from "@presentation/window";
-import {createWindowSilhouetteGeometry} from "@presentation/silhouette";
+import {WindowChrome,windowChromeTitleChipClass,measureWindowFrameMetrics} from "@presentation/window";
+import {createWindowFrameGeometry} from "@presentation/frame";
 import {LayeredOverview} from "@presentation/layered";
 import {OverviewCard,OverviewCardOpenChip} from "@presentation/card";
 import {Navbar,SemioLogo,navbarFillItem} from "@presentation/navbar";
@@ -28,12 +28,13 @@ function Poster({entry}:{entry:any}) {
   if(!source)throw Error("Missing poster image for "+entry.id+" ("+entry.poster+")");
   return <img data-presentation-poster={entry.poster} src={source} alt="" draggable={false} style={{display:"block",width:"100%",height:"100%",objectFit:"contain"}}/>;
 }
-const posterMaxHeight=(rows:number)=>Math.max(96,842.4/rows-114);
+const band=()=>{const {navbarHeight,footerHeight}=config.contract.chrome;return {top:navbarHeight,height:900-navbarHeight-footerHeight,footerTop:900-footerHeight}};
+const posterMaxHeight=(rows:number)=>Math.max(96,band().height/rows-114);
 function VideoPane({entry,frame,onClose}:{entry:any;frame:any;onClose:()=>void}) {
   const [pressed,setPressed]=React.useState(false),active=Boolean(frame.cursor?.pressed&&pressed),media=frame.media.find((value:any)=>value.id===entry.id),rect=config.contract.focus.rect;
   return <WindowChrome level="window" active stackDataAttrs={{"id":entry.id,"data-presentation-window":entry.id}} style={{position:"absolute",left:rect.x,top:rect.y-config.contract.chrome.navbarHeight,width:rect.width,height:rect.height}}
     titleChips={<div data-presentation-title-chip={entry.id} className={windowChromeTitleChipClass+(active?" "+interactiveActiveFillClass:"")} style={{paddingBlock:0}}><span id={entry.id+":tab"} className="min-w-0 truncate" title={title(entry)}>{title(entry)}</span><button id={entry.id+":fullscreen"} data-slot="fullscreen" type="button" aria-label={text().restore} data-shared-border-frame="" data-shared-border-edges="" className={windowChromeControlButtonClass+" shrink-0 outline-none"} onClick={onClose} onPointerDown={()=>setPressed(true)} onPointerUp={()=>setPressed(false)} onPointerCancel={()=>setPressed(false)}><Icon name="minimize-2"/></button></div>}
-    body={<div data-presentation-body={entry.id} style={{position:"absolute",left:3.2,right:3.2,top:"calc(var(--window-silhouette-top-clearance) + 3.2px)",bottom:3.2,pointerEvents:"none"}}>{media?.body_image?<img src={media.body_image} alt="" style={{width:"100%",height:"100%",objectFit:"contain",opacity:media.body_opacity??1,background:"var(--base)"}}/>:<Poster entry={entry}/>}</div>}/>;
+    body={<div data-presentation-body={entry.id} style={{position:"absolute",left:3.2,right:3.2,top:"calc(var(--window-frame-top-clearance) + 3.2px)",bottom:3.2,pointerEvents:"none"}}>{media?.body_image?<img src={media.body_image} alt="" style={{width:"100%",height:"100%",objectFit:"contain",opacity:media.body_opacity??1,background:"var(--base)"}}/>:<Poster entry={entry}/>}</div>}/>;
 }
 function Overview({entries,level,gridLabel,opened,revealed,pressed,interactive,camera,onCamera,onOpen,onReveal,renderPane}:any) {
   const cells=Object.fromEntries(entries.map((entry:any)=>[entry.id,entry.cell])),panes=entries.map((entry:any)=>({id:entry.id,label:title(entry),render:(state:any)=>renderPane(entry,state)}));
@@ -62,10 +63,10 @@ function App({frame}:{frame:any}) {
   for(const [depth,id] of navigation.opened_path.entries()){const entry=entries.find((value:any)=>value.id===id);if(!entry)throw Error("Unknown hierarchy path "+navigation.opened_path.join("/"));ancestors.push(entry);entries=depth<3?entry[["topics","videos","chapters"][depth]]:[]}
   return <div id="app" className="course-app" data-presentation-scene data-presentation-opened-path={JSON.stringify(navigation.opened_path)} data-presentation-revealed-path={JSON.stringify(navigation.revealed_path)} data-presentation-pressed={navigation.pressed===true?"":undefined} style={{position:"absolute",left:0,top:0,width:1600,height:900,background:"var(--base)",color:"var(--foreground)",overflow:"hidden"}}>
     <div style={{position:"absolute",left:0,top:0,width:1600}}><Navbar label="semio" showFullscreenToggle={false} items={[item(<SemioLogo className="size-medium"/>),item(<Navigation frame={frame} navigation={navigation} onNavigate={navigate}/>),navbarFillItem(),{content:label(section),centered:true}]}/></div>
-    <main id="canvas" data-slot="overview-canvas" style={{position:"absolute",left:0,top:28.8,width:1600,height:842.4,background:"var(--base)"}}>
+    <main id="canvas" data-slot="overview-canvas" style={{position:"absolute",left:0,top:band().top,width:1600,height:band().height,background:"var(--base)"}}>
       <Hierarchy entries={config.contract.courses} path={[]} frame={frame} navigation={navigation} change={change}/>
     </main>
-    <div style={{position:"absolute",left:0,top:871.2,width:1600}}><Footer items={[item(<button id="footer:root" className={windowChromeTitleChipClass} onClick={()=>navigate([])}>{text().courses}</button>),...ancestors.map((entry,index)=>item(<button id={"footer:path:"+entry.id} className={windowChromeTitleChipClass} onClick={()=>navigate(navigation.opened_path.slice(0,index+1))}>{title(entry)}</button>)),navbarFillItem(),item(<button id="footer:range" className={windowChromeTitleChipClass} onClick={()=>navigate(navigation.opened_path.slice(0,-1))}>{text()[["courses","topics","clips","chapters","chapters"][navigation.opened_path.length]]}</button>)]}/></div>
+    <div style={{position:"absolute",left:0,top:band().footerTop,width:1600}}><Footer items={[item(<button id="footer:root" className={windowChromeTitleChipClass} onClick={()=>navigate([])}>{text().courses}</button>),...ancestors.map((entry,index)=>item(<button id={"footer:path:"+entry.id} className={windowChromeTitleChipClass} onClick={()=>navigate(navigation.opened_path.slice(0,index+1))}>{title(entry)}</button>)),navbarFillItem(),item(<button id="footer:range" className={windowChromeTitleChipClass} onClick={()=>navigate(navigation.opened_path.slice(0,-1))}>{text()[["courses","topics","clips","chapters","chapters"][navigation.opened_path.length]]}</button>)]}/></div>
     {frame.cursor?.point&&frame.cursor.visible!==false?createPortal(<img data-presentation-cursor src={config.cursors[frame.cursor.kind??"arrow"]} style={{position:"fixed",left:frame.cursor.point[0],top:frame.cursor.point[1],width:config.cursorSizes[frame.cursor.kind??"arrow"][0],height:config.cursorSizes[frame.cursor.kind??"arrow"][1],pointerEvents:"none",zIndex:2147483647}}/>,document.body):null}
   </div>;
 }
@@ -87,6 +88,6 @@ function App({frame}:{frame:any}) {
     requestCameraRemeasure(document);
     return {progress,scale,translation,target};
   },
-  debugGeometry(){return [...document.querySelectorAll("[data-presentation-window]")].map(stack=>{const measured=measureWindowSilhouetteMetrics(stack as HTMLElement),expected=createWindowSilhouetteGeometry(measured);return{id:stack.id,measured,expectedBorder:expected.borderPath,actualBorders:[...stack.querySelectorAll("[data-window-silhouette-border] path")].filter(path=>path.getAttribute("d")).map(path=>({path:path.getAttribute("d"),state:path.getAttribute("data-shared-border-state")??path.closest("[data-window-silhouette-border]")?.getAttribute("data-kind")})),expectedClip:expected.contentClipPath,actualClip:(stack.querySelector("[data-window-silhouette-content]") as HTMLElement)?.style.clipPath}})},
-  settled(){return presentationBordersSettled(document)&&[...document.querySelectorAll("[data-presentation-window]")].every(stack=>{const measured=measureWindowSilhouetteMetrics(stack as HTMLElement);return Boolean(measured&&presentationWindowSettled(stack,createWindowSilhouetteGeometry(measured).contentClipPath))})}
+  debugGeometry(){return [...document.querySelectorAll("[data-presentation-window]")].map(stack=>{const measured=measureWindowFrameMetrics(stack as HTMLElement),expected=createWindowFrameGeometry(measured);return{id:stack.id,measured,expectedBorder:expected.borderPath,actualBorders:[...stack.querySelectorAll("[data-window-frame-border] path")].filter(path=>path.getAttribute("d")).map(path=>({path:path.getAttribute("d"),state:path.getAttribute("data-shared-border-state")??path.closest("[data-window-frame-border]")?.getAttribute("data-kind")})),expectedClearances:expected.safeClearances,expectedChips:expected.chipRegions,actualState:stack.querySelector("[data-window-frame-content]")?.getAttribute("data-frame-state")}})},
+  settled(){return presentationBordersSettled(document)&&[...document.querySelectorAll("[data-presentation-window]")].every(stack=>{const measured=measureWindowFrameMetrics(stack as HTMLElement);return Boolean(measured&&presentationWindowSettled(stack))})}
 };

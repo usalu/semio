@@ -187,7 +187,7 @@ def finish(doc, sol):
     contacts = FEET + ["chisel-tip"]
     regs = {"gloves": {"contact": {"fraction": 0.5, "tempC": 30}}, "shoes": {"contact": {"fraction": 0.3, "tempC": 35}}, "breaker-grips": {"contact": {"fraction": 0.4, "tempC": 33}}, "breaker-chisel": {"contact": {"fraction": 0.05, "tempC": 35}}, "head-skin": {"wettedness": 0.25}}
     spec = {"breaking": (6.3, "breaking", 1, 120), "pressing-down": (6.5, "breaking", 1, 120), "rocking-out": (6.0, "straining", 0.3, 60), "standing-ready": (1.8, "rest", 0.3, 0)}
-    a["poses"] = [lib.make_pose(a, pid, X.POSES[pid][0], X.POSES[pid][1], sol[pid]["bones"], contacts, met, br, regs, {"plume": 0.8}, {"breaker": op}, external=ext, sun=0.5) for pid, (met, br, op, ext) in spec.items()]
+    a["poses"] = [lib.make_pose(a, pid, X.POSES[pid][0], X.POSES[pid][1], sol[pid]["bones"], contacts, met, br, {**regs, "head-skin": {"wettedness": 0.75 if met >= 6 else 0.25}}, {"plume": 0.8}, {"breaker": op}, external=ext, sun=0.5) for pid, (met, br, op, ext) in spec.items()]
     a["clips"] = X.clips(lib, contacts, {k: {"bones": p["bones"]} for k, p in ((p["id"], p) for p in a["poses"])})
 
 

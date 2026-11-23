@@ -1,5 +1,4 @@
 #!/usr/bin/env repo
-import { chmodSync, copyFileSync, mkdirSync, renameSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import { withCapturedCargoArtifactsTaskV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
@@ -9,7 +8,8 @@ import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️proces
 import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { isMainModuleV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 import { requireHostPlatformBuildArgumentsV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
-import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
+import { withRepositoryCacheStoreV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { readNativeCallerAuthorityV1, stageRepositoryArtifacts, withArtifactDestinationTaskV1, withArtifactScratchV1, withRepositoryArtifactDestinationV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import { nativeTranspileBinaryNameV1, nativeTranspileBinaryV1, nativeTranspilePublicationPathV1, nativeTranspileRequiresBuildV1 } from "./🟦️.ts";
 
 async function buildNativeTranspileV1(workspace: string, invocation: ScriptInvocation, platform: string, control: CompilerAdmissionControl = scriptCompilerAdmissionControlV1(invocation, "cargo:build", buildBudgetMs())): Promise<void> {
@@ -26,12 +26,11 @@ async function buildNativeTranspileV1(workspace: string, invocation: ScriptInvoc
       if (observation.status !== 0 || observation.cancelled) throw new Error("Completed native-transpile Cargo observation required");
       const executable = view.files.get(name);
       if (!executable) throw new Error(`cargo built no ${name} executable`);
-      await view.recheck();
-      mkdirSync(dirname(destination), { recursive: true });
-      const staging = `${destination}.${process.pid}.tmp`;
-      copyFileSync(executable, staging);
-      chmodSync(staging, 0o755);
-      renameSync(staging, destination);
+      const mode = authority.original.buildMode;
+      await withRepositoryCacheStoreV1(workspace, "products", invocation, view.control, (store, storePhase) => withArtifactScratchV1({ workspace, invocation, storage: store.storage, control: store.control, phaseControl: storePhase, request: { version: 1, mode, owner: "browser/tools/native-transpile" } }, scratch => withArtifactDestinationTaskV1(scratch, invocation, async sink => {
+        await view.recheck();
+        await withRepositoryArtifactDestinationV1({ workspace, invocation, storage: store.storage, control: store.control, phaseControl: sink.control, directory: dirname(destination) }, target => stageRepositoryArtifacts(target, "native-transpile", new Map([[name, executable]])));
+      })));
       console.log(destination);
     }),
   });

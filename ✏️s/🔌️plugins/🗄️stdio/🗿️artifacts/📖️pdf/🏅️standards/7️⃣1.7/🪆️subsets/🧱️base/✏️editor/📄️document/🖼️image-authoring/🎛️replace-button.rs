@@ -6,7 +6,7 @@ use semio_plugin::{
 };
 
 /// 📂 Builds a localized picker action for one selected image placement.
-pub fn image_replacement_button(controller: &str, page: usize, at: usize, revision: u64, german: bool) -> UiAssemblyResult<BuiltNode> {
+pub fn image_replacement_button(controller: &str, page: usize, at: usize, revision: u64, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
     let fail = || PluginAssemblyError::new("pdf.object.image-action", "PDF image picker control admission failed");
     let guard = UiText::try_from_str(&format!("{revision:016x}")).ok_or_else(fail)?;
     let mut args = UiMapBuilder::try_new().ok_or_else(fail)?;
@@ -14,7 +14,10 @@ pub fn image_replacement_button(controller: &str, page: usize, at: usize, revisi
         args.try_insert(key.into(), value).map_err(|_| fail())?;
     }
     let action = ActionId::try_v1(controller, "replace-image").ok_or_else(fail)?;
-    let label = if german { "Bild durch PNG ersetzen" } else { "Replace Image with PNG" };
+    let label = match locale {
+        semio_ui_locale::Locale::De => "Bild durch PNG ersetzen",
+        semio_ui_locale::Locale::En => "Replace Image with PNG",
+    };
     ui::button(ui::Label(UiText::clipped(label))).try_id("pdf-replace-image").map_err(|_| fail())?
         .try_on_with(ui::Trigger::Activate, action, UiValue::Map(args.finish())).map_err(|_| fail())?
         .try_build().map_err(|_| fail())

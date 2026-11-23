@@ -1,0 +1,262 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/native-image-cleanup-state/v1",
+  "definitions": {
+    "FundingRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "acceptedAtMilliseconds",
+        "wholeDeadlineMilliseconds",
+        "reserveMilliseconds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "acceptedAtMilliseconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "wholeDeadlineMilliseconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "reserveMilliseconds": {
+          "const": 10000
+        }
+      }
+    },
+    "Funding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "acceptedAtMilliseconds",
+        "wholeDeadlineMilliseconds",
+        "bodyDeadlineMilliseconds",
+        "reserveMilliseconds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "acceptedAtMilliseconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "wholeDeadlineMilliseconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "bodyDeadlineMilliseconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "reserveMilliseconds": {
+          "const": 10000
+        }
+      }
+    },
+    "Preparation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "failed",
+        "pendingCommands",
+        "pendingOperations",
+        "acknowledged",
+        "bodyOpen"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "failed": {
+          "type": "boolean"
+        },
+        "pendingCommands": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pendingOperations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "acknowledged": {
+          "type": "boolean"
+        },
+        "bodyOpen": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SuccessfulChildRetirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "known",
+        "committed",
+        "parentRetained",
+        "childExclusive",
+        "readersClosed",
+        "requestBound",
+        "physicalRemoved",
+        "claimRemoved",
+        "metadataSynced",
+        "kernelClosed",
+        "phase"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "known": {
+          "type": "boolean"
+        },
+        "committed": {
+          "type": "boolean"
+        },
+        "parentRetained": {
+          "type": "boolean"
+        },
+        "childExclusive": {
+          "type": "boolean"
+        },
+        "readersClosed": {
+          "type": "boolean"
+        },
+        "requestBound": {
+          "type": "boolean"
+        },
+        "physicalRemoved": {
+          "type": "boolean"
+        },
+        "claimRemoved": {
+          "type": "boolean"
+        },
+        "metadataSynced": {
+          "type": "boolean"
+        },
+        "kernelClosed": {
+          "type": "boolean"
+        },
+        "phase": {
+          "enum": [
+            "body",
+            "cleanup"
+          ]
+        }
+      }
+    },
+    "SuccessfulChildRetirementCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "evidence",
+        "release"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "$ref": "#/definitions/SuccessfulChildRetirement"
+        },
+        "release": {
+          "type": "boolean"
+        }
+      }
+    },
+    "TerminalCloseCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "body",
+        "close",
+        "primary"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "body": {
+          "enum": [
+            "value",
+            "error",
+            "undefined"
+          ]
+        },
+        "close": {
+          "enum": [
+            "ok",
+            "error",
+            "undefined"
+          ]
+        },
+        "primary": {
+          "enum": [
+            "value",
+            "body-error",
+            "body-undefined",
+            "close-error",
+            "close-undefined"
+          ]
+        }
+      }
+    },
+    "ChildJournalBoundaryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "cut",
+        "replay",
+        "settled"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cut": {
+          "enum": [
+            "before-append",
+            "retiring-written",
+            "partial-retired",
+            "retired-written",
+            "journal-synced",
+            "reread",
+            "directory-synced",
+            "parent-close-report"
+          ]
+        },
+        "replay": {
+          "enum": [
+            "charged",
+            "retired",
+            "unknown"
+          ]
+        },
+        "settled": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$ref": "#/definitions/FundingRequest"
+}

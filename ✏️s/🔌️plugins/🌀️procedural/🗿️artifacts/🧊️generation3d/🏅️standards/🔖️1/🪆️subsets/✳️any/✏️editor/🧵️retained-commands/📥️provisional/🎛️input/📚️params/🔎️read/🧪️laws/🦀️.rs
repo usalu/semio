@@ -1,11 +1,11 @@
-//! 🧪️ Native parameter reads preserve original fallbacks under one genuine one-fuel caller.
+//! 🧪️ Native parameter reads preserve original fallbacks under one genuine bounded caller (`TURN_FUEL` work units per call, at most `MAXIMUM_CALLS` calls).
 use super::retained_native_param_read::{NativeParamReadWork,ParamReadKind};
 use super::retained_scratch_testing::ScratchCaller;
 use semio_framework_artifact_flow_flow::neural::{Dictionary,Value,Atom};
 use semio_framework_job::{OriginalSourceBinding,close_original_effect_step};
 fn close(work:&mut NativeParamReadWork,caller:&mut ScratchCaller){work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let body=same.retained_grant().maximum_copy_bytes;let d=work.next_close_demands(body)?;close_original_effect_step(same,d,|effect|work.close_step(body,effect))?;Ok(())}));}panic!("native parameter reader retains source cursors")}
 #[test]
-fn native_parameter_reads_match_neutral_fallbacks_with_original_one_fuel_and_prefix_close(){
+fn native_parameter_reads_match_neutral_fallbacks_within_the_bounded_work_loan_and_prefix_close(){
  let cases:serde_json::Value=serde_json::from_str(include_str!("📁️cases.json")).unwrap();let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
  for case in cases.as_array().unwrap(){for items in [1,512]{for cut in [None,Some(0),Some(1),Some(7)]{
   let wire=case["params"].to_string();let(source,seed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_pack_json::from_json_str::<Dictionary>(&wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());assert!(!seed.overflowed);

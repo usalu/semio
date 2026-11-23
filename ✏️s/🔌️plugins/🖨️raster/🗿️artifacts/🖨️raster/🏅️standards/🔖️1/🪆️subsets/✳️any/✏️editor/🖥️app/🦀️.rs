@@ -461,8 +461,8 @@ pub(super) fn render_raster_body(body_key: &str, doc: &ArtifactView<'_, RasterSn
         let labels = raster_play_labels(view_state);
         let windows = semio_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
-            composite::RASTER_PLAY_BODY_COMPOSITE => composite::render(document, config, active_utility, selected_ids, hovered_id, selection_cancellation(doc.operations(),view_state.window_id.as_deref()))?,
-            navigator::RASTER_PLAY_BODY_NAVIGATOR => navigator::render(document, config, active_utility, selected_ids, hovered_id)?,
+            composite::RASTER_PLAY_BODY_COMPOSITE => composite::render(document, config, active_utility, selected_ids, hovered_id, selection_cancellation(doc.operations(),view_state.window_id.as_deref()), view_state.locale)?,
+            navigator::RASTER_PLAY_BODY_NAVIGATOR => navigator::render(document, config, active_utility, selected_ids, hovered_id, view_state.locale)?,
             crate::panels::document::RASTER_PLAY_BODY_LAYERS => crate::panels::document::render(document, config, labels, &windows)?,
             crate::panels::masks::RASTER_PLAY_BODY_MASKS => crate::panels::masks::render(document, config, labels, &windows)?,
             crate::panels::catalogue::RASTER_PLAY_BODY_CATALOGUE => crate::panels::catalogue::render(labels, &windows)?,

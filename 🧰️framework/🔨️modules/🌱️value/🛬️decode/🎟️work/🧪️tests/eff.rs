@@ -21,12 +21,22 @@ pub fn settled<T,E>(poll:RetainedWorkPoll<T,E>)->RetainedWorkOutcome<T,E>{match 
 pub fn observed<R>(grant:RetainedCloneGrant,maximum:u64,actual:&mut Option<usize>,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->(R,(usize,usize)){with_effect(grant,maximum,actual,|effect|semio_framework_value_testing_allocator::observe_retirement_allocations(||operation(effect)))}
 /// 🧾️ Generous per-turn stock for closing fixture-owned results.
 pub fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}}
+/// 🚪️ Runs one operation inside the same original invocation selected by native receiving.
+pub fn invoked<R>(effect:&mut RetainedAllocationEffect<'_>,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->R{
+ let mut operation=Some(operation);let mut result=None;
+ semio_framework_value_control_contract::with_original_invocation(None,effect,&mut |effect|result=Some(operation.take().expect("fixture invocation ran once")(effect))).unwrap();
+ result.expect("fixture invocation ran")
+}
 /// 🚪️ Runs a close through the same reply invocation selected by native receiving.
 pub fn close_step<T:retirement::RetireOwned>(owner:&mut retirement::controlled::ControlledRetirement<T>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{
  let body=effect.grant().maximum_copy_bytes;
- let mut result=None;
- semio_framework_value_control_contract::with_original_invocation(None,effect,&mut |effect|result=Some(settled(owner.step(body,effect)))).unwrap();
- result.expect("fixture close invocation ran")
+ invoked(effect,|effect|settled(owner.step(body,effect)))
+}
+/// 📨️ Runs a reply-shaped retirement close through the same reply invocation selected by native receiving.
+pub fn close_reply(effect:&mut RetainedAllocationEffect<'_>,call:impl FnOnce(usize,&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'_,RetainedCloneStep,OriginalRetirementFailure>)->Result<(),ValueError>)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{
+ let body=effect.grant().maximum_copy_bytes;let before=effect.performed_work();let mut output=None;
+ invoked(effect,|effect|{let reply=OriginalEffectReply::borrow(&mut output).unwrap();call(body,effect,reply).unwrap()});
+ RetainedWorkOutcome{result:output.expect("fixture close recorded its reply"),work:effect.performed_work()-before}
 }
 /// ♻️ Closes one typed owner through controlled retirement turns inside original effects.
 pub fn close<T:retirement::RetireOwned>(value:T){

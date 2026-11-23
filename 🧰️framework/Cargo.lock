@@ -6155,6 +6155,7 @@ dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-native-owned",
  "semio-framework-value-testing-admission",
+ "semio-framework-value-testing-allocator",
  "serde_json",
 ]
 
@@ -6184,6 +6185,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-control-contract",
  "semio-framework-value-native-owned",
+ "semio-framework-value-testing-admission",
  "serde_json",
 ]
 
@@ -6221,6 +6223,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-testing-admission",
+ "semio-framework-value-testing-allocator",
  "serde_json",
 ]
 
@@ -6244,6 +6247,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
+ "semio-framework-value-testing-admission",
  "serde_json",
 ]
 
@@ -6704,6 +6708,7 @@ name = "semio-framework-job-worker"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-job-conformance",
  "semio-framework-job-payload",
@@ -8559,6 +8564,7 @@ dependencies = [
  "encoding_rs",
  "semio-framework-io-base64",
  "semio-framework-test-fixtures",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-control-contract",
  "semio-framework-value-derive",
  "semio-framework-value-equality",
@@ -8579,6 +8585,7 @@ dependencies = [
  "semio-framework-value-shared-utf8",
  "semio-framework-value-snapshot-projection",
  "semio-framework-value-sort",
+ "semio-framework-value-testing-admission",
  "semio-framework-value-testing-allocator",
  "semio-framework-value-testing-effect-bank",
  "serde",
@@ -8619,6 +8626,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-test-fixtures",
  "semio-framework-value-clone-source-lease",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-control-contract",
  "semio-framework-value-derive",
  "semio-framework-value-native-clone-engine",
@@ -8817,6 +8825,7 @@ name = "semio-framework-value-factory"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-clone-source",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-control-contract",
  "semio-framework-value-derive",
  "semio-framework-value-receiving",
@@ -9690,6 +9699,7 @@ dependencies = [
 name = "semio-framework-value-shared-issuance"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-control-contract",
  "semio-framework-value-native-storage",
  "semio-framework-value-retirement",
@@ -13671,6 +13681,15 @@ dependencies = [
  "swash",
  "tiny-skia",
  "wgpu",
+]
+
+[[package]]
+name = "semio-ui-window-frame"
+version = "0.1.0"
+dependencies = [
+ "kurbo 0.13.1",
+ "semio-ui-theme",
+ "serde_json",
 ]
 
 [[package]]

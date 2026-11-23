@@ -2,7 +2,7 @@ use semio_ui_tui_core::cell::{Cell, CellBuffer};
 use semio_ui_tui_frame::chrome::{window_chip_layout, ChromeMode, ChromeState, TabKind, WindowStackTabState, WindowState};
 use semio_ui_tui_core::geometry::{Rect, Size};
 use semio_ui_tui_core::docking::WindowStackCorner;
-use semio_ui_tui_core::theme::{Role, Theme};
+use semio_ui_tui_core::theme::{Role, Surface, Theme};
 use semio_framework_pack_json::{parse, JsonMemberPolicy, Value};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use tiny_skia::{Paint, Pixmap, Transform};
@@ -48,6 +48,12 @@ fn mask(ch: char) -> u8 {
     }
 }
 
+fn rank(role: Role) -> u8 { match role { Role::BorderEmphasized => 2, Role::ActiveBase => 1, _ => 0 } }
+
+fn merge(roles: &mut BTreeMap<Point, u8>, at: Point, rank: u8) {
+    roles.entry(at).and_modify(|old| *old = (*old).max(rank)).or_insert(rank);
+}
+
 #[test]
 fn window_contour_fixture_matches_connected_direction_graph_and_independent_raster() {
     assert!(include_str!("🥒️.feature").starts_with("@capability-tui-window-contour"));
@@ -57,8 +63,7 @@ fn window_contour_fixture_matches_connected_direction_graph_and_independent_rast
         for case in fixture.get("cases").unwrap().as_array().unwrap() {
             let name = text(case, "name");
             let size = nums(case, "size");
-            let body = nums(case, "body");
-            let (left, top, right, bottom) = (body[0], body[1], body[0] + body[2] - 1, body[1] + body[3] - 1);
+            let (left, top, right, bottom) = (0, 0, size[0] - 1, size[1] - 1);
             let active = number(case, "active") as usize;
             let focused = case.get("focused").unwrap().as_bool().unwrap();
             let emphasized = case.get("emphasized").unwrap().as_bool().unwrap();
@@ -75,14 +80,18 @@ fn window_contour_fixture_matches_connected_direction_graph_and_independent_rast
             let layout = window_chip_layout(&state, rect);
             assert_eq!(layout.mode, match mode { "full" => ChromeMode::Full, "compact" => ChromeMode::Compact, _ => ChromeMode::Flat }, "{name}");
             if mode != "flat" {
-                for tab in layout.groups.iter().flat_map(|group| &group.tabs) {
-                    let declared = rendered.iter().enumerate().find(|(index, declared)| match tab.kind {
-                        TabKind::Tab => declared.get("index").map(|value| value.as_u64() == Some(tab.index as u64)).unwrap_or(*index == tab.index),
-                        TabKind::OverflowPrev(_) => declared.get("kind").and_then(Value::as_str) == Some("overflow-prev"),
-                        TabKind::OverflowNext(_) => declared.get("kind").and_then(Value::as_str) == Some("overflow-next"),
-                        _ => false,
-                    }).unwrap().1;
-                    assert_eq!((tab.x, tab.interior_width + 2), (number(declared, "x"), number(declared, "width")), "declared geometry {name}");
+                for group in &layout.groups {
+                    for tab in &group.tabs {
+                        let declared = rendered.iter().enumerate().find(|(index, declared)| match tab.kind {
+                            TabKind::Tab => declared.get("index").map(|value| value.as_u64() == Some(tab.index as u64)).unwrap_or(*index == tab.index),
+                            TabKind::OverflowPrev(_) => declared.get("kind").and_then(Value::as_str) == Some("overflow-prev"),
+                            TabKind::OverflowNext(_) => declared.get("kind").and_then(Value::as_str) == Some("overflow-next"),
+                            _ => false,
+                        }).unwrap().1;
+                        assert_eq!((tab.x, tab.interior_width + 2), (number(declared, "x"), number(declared, "width")), "declared geometry {name}");
+                        let chip = layout.chip_rect(group.corner, tab, rect);
+                        assert!(chip.x >= left && chip.x + chip.width <= size[0] && chip.y > top && chip.y < bottom, "chip lies inside the box {name}");
+                    }
                 }
             }
             let sentinel = Cell { ch: '.', fg: [1, 2, 3], bg: [4, 5, 6], attrs: 0, width: 1 };
@@ -93,35 +102,22 @@ fn window_contour_fixture_matches_connected_direction_graph_and_independent_rast
             horizontal(&mut graph, left, right, bottom, false);
             vertical(&mut graph, left, top, bottom);
             vertical(&mut graph, right, top, bottom);
-            let mut roles = BTreeMap::new();
+            let body_rank = rank(body_role);
+            let mut roles: BTreeMap<Point, u8> = BTreeMap::new();
             let mut captions = BTreeSet::new();
             for (position, tab) in rendered.iter().enumerate().filter(|_| mode != "flat") {
                 let index = tab.get("index").map(|value| value.as_u64().map(|n| n as usize)).unwrap_or(Some(position));
                 let x = number(tab, "x");
                 let end = x + number(tab, "width") - 1;
-                let is_top = text(tab, "corner").starts_with("top");
-                let seam = if mode == "compact" || is_top { top } else { bottom };
-                let outer = if mode == "compact" { top } else if is_top { 0 } else { size[1] - 1 };
-                let role = if emphasized { Role::BorderEmphasized } else if index == Some(active) { Role::ActiveBase } else { Role::BorderNormal };
-                if mode == "compact" {
-                    for xx in x + 1..end { captions.insert((xx, top)); }
-                    for xx in [x, end] {
-                        if xx > left && xx < right { *graph.entry((xx, top)).or_default() |= DOWN; }
-                        if role == Role::BorderEmphasized || roles.get(&(xx, top)) != Some(&Role::BorderEmphasized) && (index == Some(active) || roles.get(&(xx, top)) != Some(&Role::ActiveBase)) { roles.insert((xx, top), role); }
-                    }
-                } else {
-                    horizontal(&mut graph, x, end, outer, false);
-                    vertical(&mut graph, x, outer.min(seam), outer.max(seam));
-                    vertical(&mut graph, end, outer.min(seam), outer.max(seam));
-                    let rank = |role: Role| if role == Role::BorderEmphasized { 2 } else if role == Role::ActiveBase { 1 } else { 0 };
-                    if rank(role) > rank(body_role) { for xx in x + 1..end { roles.insert((xx, seam), role); } }
-                    for xx in x..=end { roles.entry((xx, outer)).and_modify(|old| { if rank(role) > rank(*old) { *old = role; } }).or_insert(role); }
-                    for yy in outer.min(seam)..=outer.max(seam) {
-                        for xx in [x, end] {
-                            let candidate = if yy == seam && rank(body_role) > rank(role) { body_role } else { role };
-                            roles.entry((xx, yy)).and_modify(|old| { if rank(candidate) > rank(*old) { *old = candidate; } }).or_insert(candidate);
-                        }
-                    }
+                let is_top = mode == "compact" || text(tab, "corner").starts_with("top");
+                let (edge, row) = if is_top { (top, top + 1) } else { (bottom, bottom - 1) };
+                let chip_rank = if emphasized { 2 } else if index == Some(active) { 1 } else { 0 };
+                for xx in x + 1..end { captions.insert((xx, row)); }
+                for xx in x..=end { merge(&mut roles, (xx, edge), chip_rank.max(body_rank)); }
+                for xx in [x, end] {
+                    vertical(&mut graph, xx, edge.min(row), edge.max(row));
+                    if xx > left && xx < right { *graph.entry((xx, row)).or_default() |= if is_top { DOWN } else { UP }; }
+                    merge(&mut roles, (xx, row), if xx == left || xx == right { chip_rank.max(body_rank) } else { chip_rank });
                 }
             }
             graph.retain(|_, mask| *mask != 0);
@@ -141,7 +137,7 @@ fn window_contour_fixture_matches_connected_direction_graph_and_independent_rast
                 if captions.contains(&(x, y)) { continue; }
                 let cell = actual.get(x, y).unwrap();
                 assert_eq!(mask(cell.ch), directions, "direction union {name} at {x},{y}: {:?}", cell.ch);
-                let rgb = theme.role(*roles.get(&(x, y)).unwrap_or(&body_role));
+                let rgb = theme.role(match roles.get(&(x, y)).copied().unwrap_or(body_rank) { 2 => Role::BorderEmphasized, 1 => Role::ActiveBase, _ => Role::BorderNormal });
                 let mut ink = Paint::default();
                 ink.set_color_rgba8(rgb[0], rgb[1], rgb[2], 255);
                 ink.anti_alias = false;
@@ -155,13 +151,22 @@ fn window_contour_fixture_matches_connected_direction_graph_and_independent_rast
                 let y = (index / (size[0] as usize * 3) / 3) as u16;
                 assert_eq!(actual.get(x, y).unwrap().fg, [pixel.red(), pixel.green(), pixel.blue()], "raster color {name} at {x},{y}");
             }
+            let covers = |x: u16, y: u16| mode != "flat" && rendered.iter().any(|tab| {
+                let top_row = mode == "compact" || text(tab, "corner").starts_with("top");
+                x >= number(tab, "x") && x < number(tab, "x") + number(tab, "width") && y == if top_row { top + 1 } else { bottom - 1 }
+            });
+            let chip_rows: BTreeSet<u16> = rendered.iter().filter(|_| mode != "flat").map(|tab| if mode == "compact" || text(tab, "corner").starts_with("top") { top + 1 } else { bottom - 1 }).collect();
             for y in 0..size[1] {
                 for x in 0..size[0] {
                     let cell = actual.get(x, y).unwrap();
+                    assert_ne!(*cell, sentinel, "the box is one plain rectangle, no notch or gap {name} at {x},{y}");
                     if mask(cell.ch) != 0 { assert!(graph.contains_key(&(x, y)), "unexpected contour {name} at {x},{y}"); }
-                    let in_body = x >= left && x <= right && y >= top && y <= bottom;
-                    let in_tab = mode == "full" && rendered.iter().any(|tab| x >= number(tab, "x") && x < number(tab, "x") + number(tab, "width") && if text(tab, "corner").starts_with("top") { y <= top } else { y >= bottom });
-                    if !in_body && !in_tab { assert_eq!(*cell, sentinel, "parent notch {name} at {x},{y}"); }
+                    let interior = x > left && x < right && y > top && y < bottom;
+                    if interior && covers(x, y) && !graph.contains_key(&(x, y)) {
+                        assert_eq!(cell.bg, theme.surface(Surface::Pane), "chip surface {name} at {x},{y}");
+                    } else if interior && chip_rows.contains(&y) && !captions.contains(&(x, y)) && !graph.contains_key(&(x, y)) {
+                        assert_eq!((cell.ch, cell.bg), (' ', theme.surface(Surface::Window)), "uncovered chip-row cell paints content {name} at {x},{y}");
+                    }
                 }
             }
         }

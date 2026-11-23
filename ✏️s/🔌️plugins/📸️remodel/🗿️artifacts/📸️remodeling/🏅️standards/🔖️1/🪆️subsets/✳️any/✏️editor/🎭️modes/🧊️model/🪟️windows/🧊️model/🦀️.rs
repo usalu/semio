@@ -178,11 +178,11 @@ fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowC
     }
 }
 
-pub fn render(scene: &RemodelingSnapshot, config: &RemodelingModelWindowConfig) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render(scene: &RemodelingSnapshot, config: &RemodelingModelWindowConfig, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let camera_json = semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&config.camera));
     let mut world_scene = world3d_scene(camera_json, world_meshes_json(scene), world_instances_json(config), world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
     world_scene.points_json = world_points_json(scene, config);
-    semio_plugin::scene_surface(REMODELING_PLAY_SURFACE_MAIN, ContractSurfaceKind::World3d, &world_scene)
+    semio_plugin::scene_surface(REMODELING_PLAY_SURFACE_MAIN, ContractSurfaceKind::World3d, &world_scene, semio_plugin::surface_name(locale, "Model view", "Modellansicht"), None)
 }
 //#endregion 🔖️Scene
 

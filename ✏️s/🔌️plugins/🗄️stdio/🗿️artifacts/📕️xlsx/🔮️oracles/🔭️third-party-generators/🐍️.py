@@ -9,8 +9,10 @@ repository's codecs or mutation semantics.
 
 `verify` re-derives every pair and compares it with the committed bytes (byte equality, then part-wise semantic equality), and replays the five openpyxl-written
 grid pairs of the base subset (`insert-sheet`, `remove-sheet`, `rename-sheet`, `set-cell`, `remove-cell`) by rebuilding each package with openpyxl and comparing the
-workbook as openpyxl reads it (their container bytes carry the clock of the original run, so only the read-back is comparable); `generate` rewrites the
-relationship-base fixtures and their `testEvidence` rows. Run from anywhere: the repository root is found from this file's location.
+workbook as openpyxl reads it (their container bytes carry the clock of the original run, so only the read-back is comparable). It also re-derives the base subset's
+unreferenced shared-string package: `lxml` appends one `<si>` that no worksheet cell references, and `openpyxl.reader.strings.read_string_table` (which walks every
+`si`, referenced or not) is the committed pool. `generate` rewrites the relationship-base fixtures and their `testEvidence` rows. Run from anywhere: the repository
+root is found from this file's location.
 """
 
 import hashlib
@@ -195,6 +197,113 @@ def verify_grid_pairs() -> int:
     return failures
 
 
+SST = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+UNREFERENCED_VALUE = "Ökobau Referenzquelle 2024"
+UNREFERENCED_DIR = GRID_FIXTURES / "🕳️unreferenced-shared-string"
+
+
+def shared_string_pool(package: bytes) -> list[str]:
+    """👁 openpyxl's own string-table reader: every `si`, including entries no cell references."""
+    from openpyxl.reader.strings import read_string_table
+
+    with zipfile.ZipFile(io.BytesIO(package)) as archive:
+        xml = archive.read("xl/sharedStrings.xml")
+    return [str(item) for item in read_string_table(io.BytesIO(xml))]
+
+
+def worksheet_references(package: bytes, index: int) -> list[str]:
+    """🔗️ Worksheet cells whose shared-string index is `index` (`<c t="s"><v>index</v></c>`)."""
+    found = []
+    with zipfile.ZipFile(io.BytesIO(package)) as archive:
+        for name in archive.namelist():
+            if not (name.startswith("xl/worksheets/") and name.endswith(".xml")):
+                continue
+            root = etree.fromstring(archive.read(name))
+            for cell in root.iter(f"{{{SST}}}c"):
+                if cell.get("t") != "s":
+                    continue
+                value = cell.find(f"{{{SST}}}v")
+                if value is not None and (value.text or "").strip() == str(index):
+                    found.append(f"{name}:{cell.get('r')}")
+    return found
+
+
+def append_unreferenced(package: bytes, value: str) -> bytes:
+    """✍️ lxml appends one `si` and raises `uniqueCount`. `count` stays: nothing new references it."""
+    rewritten = []
+    for name, data in read_parts(package):
+        if name == "xl/sharedStrings.xml":
+            root = etree.fromstring(data)
+            unique = int(root.get("uniqueCount"))
+            item = etree.SubElement(root, f"{{{SST}}}si")
+            text = etree.SubElement(item, f"{{{SST}}}t")
+            text.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+            text.text = value
+            root.set("uniqueCount", str(unique + 1))
+            data = etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True)
+        rewritten.append((name, data))
+    return repack(rewritten)
+
+
+def unreferenced_witness() -> tuple[bytes, dict]:
+    """🕳️ The real workbook plus one unreferenced pool entry, and the pool openpyxl reads from it."""
+    source = (GRID_FIXTURES / "📕️reuse-marketplaces.xlsx").read_bytes()
+    baseline = shared_string_pool(source)
+    package = append_unreferenced(source, UNREFERENCED_VALUE)
+    pool = shared_string_pool(package)
+    index = len(baseline)
+    assert pool[:index] == baseline, "appending an si must not rewrite the entries already there"
+    assert pool[index:] == [UNREFERENCED_VALUE], pool[index:]
+    assert worksheet_references(package, index) == [], "the appended entry must stay unreferenced"
+    from openpyxl import load_workbook
+
+    visible = {
+        sheet.title: cell.value
+        for sheet in load_workbook(io.BytesIO(package))
+        for row in sheet.iter_rows()
+        for cell in row
+        if cell.value == UNREFERENCED_VALUE
+    }
+    assert visible == {}, f"openpyxl's cell reader must not surface an unreferenced entry: {visible}"
+    witness = {
+        "reader": "openpyxl.reader.strings.read_string_table",
+        "packageVersion": f"openpyxl@{openpyxl.__version__}",
+        "baselineCount": len(baseline),
+        "unreferencedIndex": index,
+        "unreferencedValue": UNREFERENCED_VALUE,
+        "sharedStrings": pool,
+    }
+    return package, witness
+
+
+def verify_unreferenced() -> int:
+    """🔬 The committed package and pool are exactly what openpyxl and lxml re-derive."""
+    package, witness = unreferenced_witness()
+    committed_package = UNREFERENCED_DIR / "📦️package.xlsx"
+    committed_witness = UNREFERENCED_DIR / "🔣️.json"
+    if not committed_package.is_file() or not committed_witness.is_file():
+        print("[base] unreferenced shared string: fixture missing")
+        return 1
+    if committed_package.read_bytes() != package:
+        print("[base] unreferenced shared string: package bytes differ from the lxml rebuild")
+        return 1
+    committed = json.loads(committed_witness.read_text(encoding="utf-8"))
+    if committed != witness:
+        print("[base] unreferenced shared string: openpyxl pool differs from the committed witness")
+        return 1
+    print(f"[base] unreferenced shared string: openpyxl reads index {witness['unreferencedIndex']} and no cell does")
+    return 0
+
+
+def generate_unreferenced() -> None:
+    """📝 Writes the unreferenced-pool package and the openpyxl pool the Rust reader is held to."""
+    package, witness = unreferenced_witness()
+    UNREFERENCED_DIR.mkdir(parents=True, exist_ok=True)
+    (UNREFERENCED_DIR / "📦️package.xlsx").write_bytes(package)
+    (UNREFERENCED_DIR / "🔣️.json").write_text(json.dumps(witness, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"[base] wrote {UNREFERENCED_DIR}")
+
+
 def manifest_path(subset: str) -> Path:
     return SUBSETS / CLASSES[subset] / "🔮️oracles" / "🔣️.json"
 
@@ -224,6 +333,7 @@ def generate() -> int:
             rows[at] = row
         path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         print(f"[{subset}] wrote {directory}")
+    generate_unreferenced()
     return 0
 
 
@@ -249,10 +359,11 @@ def verify() -> int:
             failures += 1
             print(f"[{subset}] the testEvidence row is missing or does not match the committed bytes")
     failures += verify_grid_pairs()
+    failures += verify_unreferenced()
     print("every pair replays" if failures == 0 else f"{failures} failure(s)")
     return 0 if failures == 0 else 1
 
 
 if __name__ == "__main__":
     command = sys.argv[1] if len(sys.argv) > 1 else ""
-    sys.exit({"generate": generate, "verify": verify}.get(command, lambda: print("usage: generate | verify") or 2)())
+    sys.exit({"generate": generate, "verify": verify, "generate-unreferenced": lambda: generate_unreferenced() or 0}.get(command, lambda: print("usage: generate | verify | generate-unreferenced") or 2)())

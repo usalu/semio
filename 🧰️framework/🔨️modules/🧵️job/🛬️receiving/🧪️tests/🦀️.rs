@@ -18,9 +18,18 @@ fn receive_step(cx:&mut StepContext<'_>,operation:impl FnOnce(&mut NativeDecodeC
  if !cx.with_native_receiving(&mut outcome,|control,body_grant|{child=Some(operation(control,body_grant));Ok(())})?{assert!(outcome.is_none()&&child.is_none());return Ok(RetainedCloneStep::Progress(Default::default()))}
  source_received(outcome);child.expect("original child result was retained before Source posting").result.map_err(|primary|native_failure(primary,None))
 }
+fn receive_step_work(cx:&mut StepContext<'_>,operation:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant,u64)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>)->Result<RetainedCloneStep,OriginalTurnFailure>{
+ let mut outcome=None;let mut child=None;
+ if !cx.with_native_receiving_work(&mut outcome,RetirementDemand::default(),|control,body_grant,units|{child=Some(operation(control,body_grant,units));Ok(())})?{assert!(outcome.is_none()&&child.is_none());return Ok(RetainedCloneStep::Progress(Default::default()))}
+ source_received(outcome);child.expect("original child result was retained before Source posting").result.map_err(|primary|native_failure(primary,None))
+}
+fn invoked<R>(effect:&mut RetainedAllocationEffect<'_>,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->R{let mut run=Some(run);let mut out=None;semio_framework_value::retained_clone::with_original_invocation(None,effect,&mut |effect|{out=Some(run.take().expect("invoked once")(effect))}).expect("original invocation");out.expect("invoked ran")}
 fn polled<E>(poll:RetainedWorkPoll<RetainedCloneStep,E>)->RetainedWorkOutcome<RetainedCloneStep,E>{match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}}}
 fn settle<E:From<ValueError>>(effect:&mut RetainedAllocationEffect<'_>,run:impl for<'r> FnOnce(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,RetainedCloneStep,E>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,E>,ValueError>)->RetainedWorkOutcome<RetainedCloneStep,E>{
- let mut slot=None;let ran=OriginalEffectReply::borrow(&mut slot).and_then(|reply|run(&mut *effect,reply).map(|_|()));let work=effect.performed_work();
+ let mut slot=None;let mut run=Some(run);
+ let ran=OriginalEffectReply::borrow(&mut slot).and_then(|reply|{let mut reply=Some(reply);let mut done=None;
+  semio_framework_value::retained_clone::with_original_invocation(None,&mut *effect,&mut |effect|{done=Some(run.take().expect("settle runs once")(effect,reply.take().expect("settle reply once")).map(|_|()))})?;done.unwrap_or(Ok(()))});
+ let work=effect.performed_work();
  match(ran,slot.take()){(Err(error),_)=>RetainedWorkOutcome{result:Err(error.into()),work},(Ok(()),Some(result))=>RetainedWorkOutcome{result,work},(Ok(()),None)=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}}
 }
 fn effect_step<E:NativeReceivingEffectError>(control:&mut NativeDecodeControl<'_>,demand:RetirementDemand,work:u64,frame:&mut NativeReceivingEffect<E>,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,E>)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{
@@ -35,16 +44,16 @@ fn copy_native_text(caller:&mut OriginalJobFixtureCaller,owner:&mut OriginalJobD
  use semio_framework_value::OriginalRetirementFailure;
  let mut admission=RetainedCloneSource::<String>::admission_owned(text.to_owned(),());let mut source=None;let mut effect=NativeReceivingEffect::default();
  for _ in 0..10000{
-  if source.is_some()&&!effect.has_pending_recovery(){break}
-  caller.refreshed_turn_with_decoder(grant,owner,|cx|{receive_step(cx,|control,_|{
-   let turn=if effect.has_pending_recovery(){control.finish_receiving(&mut effect)}else{let demand=admission.next_demand().unwrap();let ready=admission.phase()=="ready";let work=if ready{1}else{admission.advance_work_demand().unwrap()};control.receive_allocation_effect(demand,&mut effect,demand.capacity_bytes!=0,work,|e|if ready{admission.take_output(&mut source,e)}else{admission.advance(e)})};
+  if source.is_some()&&admission.terminal_is_empty()&&!effect.has_pending_recovery(){break}
+  caller.refreshed_turn_with_decoder(grant,owner,|cx|{receive_step(cx,|control,g0|{
+   let turn=if effect.has_pending_recovery(){control.finish_receiving(&mut effect)}else{let projecting=admission.phase()=="projectionStart";let demand=if projecting{admission.owned_projection_demand().unwrap()}else{admission.next_demand().unwrap()};let ready=admission.phase()=="ready";let work=if ready||projecting{1}else{admission.advance_work_demand().unwrap()};control.receive_allocation_effect(demand,&mut effect,demand.capacity_bytes!=0,work,|e|if ready{admission.take_output(&mut source,e)}else if projecting{admission.project_owned(e)}else{admission.advance(e)})};
    RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}
   })?;Ok(())}).unwrap();
  }
  assert!(source.is_some());assert!(admission.terminal_is_empty());assert!(!effect.has_pending_recovery());
  let mut receiver=<String as NativeReceive<String>>::receiver();let mut advance_frame=NativeReceivingEffect::<OriginalReceivingPrimary>::default();
- for _ in 0..10000{if receiver.output_ready(){break}caller.refreshed_turn_with_decoder(grant,owner,|cx|{receive_step(cx,|control,g|{
-  let maximum=match control.available_work_units(){Ok(n)=>n,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};let input=source.as_ref().unwrap().borrow();let body=g.maximum_copy_bytes;
+ for _ in 0..10000{if receiver.output_ready(){break}caller.refreshed_turn_with_decoder(grant,owner,|cx|{receive_step_work(cx,|control,g,maximum|{
+  let input=source.as_ref().unwrap().borrow();let body=g.maximum_copy_bytes;
   let demand=match receiver.demands(input,body,maximum){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};
   let NativeAdvanceSelection::Local{work}=(match receiver.select_advance(input,body,maximum){Ok(s)=>s,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}})else{panic!("a string receiver advances locally")};
   effect_step(control,demand,work.max(1),&mut advance_frame,|effect|settle(effect,|e,r|receiver.advance_local(input,body,e,r)))
@@ -63,7 +72,7 @@ fn copy_native_text(caller:&mut OriginalJobFixtureCaller,owner:&mut OriginalJobD
  assert!(receiver.terminal_is_empty());
  for _ in 0..10000{if source.as_ref().unwrap().terminal_is_empty()&&!close_effect.has_pending_recovery(){break}caller.refreshed_turn_with_decoder(grant,owner,|cx|{receive_step(cx,|control,g|{
   if close_effect.has_pending_recovery(){let turn=control.finish_retirement_receiving(&mut close_effect);return RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}}
-  let body=g.maximum_copy_bytes;let d=source.as_ref().unwrap().next_close_demand(body).unwrap();let q=source.as_ref().unwrap().next_close_work_demand(body).unwrap();effect_step(control,d,q.max(1),&mut close_effect,|effect|polled(source.as_mut().unwrap().close_step(body,effect)))
+  let body=g.maximum_copy_bytes;let d=source.as_ref().unwrap().next_close_demand(body).unwrap();let q=source.as_ref().unwrap().next_close_work_demand(body).unwrap();effect_step(control,d,q.max(1),&mut close_effect,|effect|invoked(effect,|effect|polled(source.as_mut().unwrap().close_step(body,effect))))
  })?;Ok(())}).unwrap();}
  assert!(source.as_ref().unwrap().terminal_is_empty());assert!(!close_effect.has_pending_recovery());drop(source);output.take().unwrap()
 }
@@ -80,7 +89,7 @@ fn original_context_charges_child_construction_and_enclosing_semantic_once(){let
 fn retire_original_text(close:&mut ControlledRetirement<String>,frame:&mut NativeReceivingEffect<semio_framework_value::OriginalRetirementFailure>,control:&mut NativeRetirementDecodeControl<'_,'_>,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{
  let turn=if frame.has_pending_recovery(){control.finish_retirement_receiving(frame)}else{
   let body=grant.maximum_copy_bytes;let d=match close.selected_demand(body){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};let q=match close.next_computational_work(body){Ok(q)=>q,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};
-  return retirement_effect_step(control,d,q.max(1),frame,|effect|polled(close.step(body,effect)))
+  return retirement_effect_step(control,d,q.max(1),frame,|effect|invoked(effect,|effect|polled(close.step(body,effect))))
  };
  RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}
 }
@@ -88,7 +97,7 @@ fn retire_original_text(close:&mut ControlledRetirement<String>,frame:&mut Nativ
 fn original_context_retirement_after_cancel_keeps_ledger_deadline_fuel_and_exact_heap(){
  let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../🛬️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus["retirementCases"].as_array().unwrap(){
-  let stock=bank();let grant=RetainedCloneGrant{maximum_items:4,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64};let mut caller=OriginalJobFixtureCaller::admit(OperationId(75),Generation(4),stock,logical_now_us,u64::MAX,10000);let mut owner=caller.admitted_decoder();warm(&mut caller,&mut owner,stock);let text=copy_native_text(&mut caller,&mut owner,grant,"π 🌿");let identity=owner.receiving_identity();assert_eq!(serde_json::to_value(&text).unwrap(),serde_json::json!("π 🌿"));let mut close=ControlledRetirement::retain(text);
+  let stock=bank();let grant=RetainedCloneGrant{maximum_items:4,maximum_copy_bytes:8192,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64};let mut caller=OriginalJobFixtureCaller::admit(OperationId(75),Generation(4),stock,logical_now_us,u64::MAX,10000);let mut owner=caller.admitted_decoder();warm(&mut caller,&mut owner,stock);let text=copy_native_text(&mut caller,&mut owner,grant,"π 🌿");let identity=owner.receiving_identity();assert_eq!(serde_json::to_value(&text).unwrap(),serde_json::json!("π 🌿"));let mut close=ControlledRetirement::retain(text);
   if case["cancelled"].as_bool().unwrap(){caller.cancel().cancel_now()}
   let mut frame=NativeReceivingEffect::<semio_framework_value::OriginalRetirementFailure>::default();let visited=std::cell::Cell::new(false);let admitted=owner.owned_bytes();let mut initial=Default::default();
   caller.refreshed_turn_with_decoder(grant,&mut owner,|cx|{
@@ -99,7 +108,7 @@ fn original_context_retirement_after_cancel_keeps_ledger_deadline_fuel_and_exact
     match result{Ok(true)=>{source_received(outcome);let turn=child.expect("actual retirement result is retained");let p=turn.result.unwrap().progress();assert_eq!((heap.0,heap.1),(p.retained_capacity_bytes,p.released_bytes));},Ok(false)=>{assert!(outcome.is_none()&&child.is_none());assert_eq!((heap.0,heap.1),(0,0));},Err(failure)=>{assert!(!case["visited"].as_bool().unwrap());assert_eq!(failure.retained_progress(),Default::default());assert!(outcome.is_none()&&child.is_none());assert_eq!((heap.0,heap.1),(0,0));}}Ok(())
    }));
    initial=delta(cx.retained_progress(),before);if let Err(failure)=result{assert!(!case["visited"].as_bool().unwrap());assert_eq!(failure.retained_progress(),Default::default())}Ok(())
-  }).unwrap();assert_eq!(visited.get(),case["visited"].as_bool().unwrap());assert_eq!(owner.owned_bytes()-admitted,initial.retained_capacity_bytes);
+  }).unwrap();assert_eq!(visited.get(),case["visited"].as_bool().unwrap(),"{}",case["name"]);assert_eq!(owner.owned_bytes()-admitted,initial.retained_capacity_bytes);
   for _ in 0..10000{
    if close.terminal_is_empty()&&!frame.has_pending_recovery(){break}
    let admitted=owner.owned_bytes();let mut actual=Default::default();caller.refreshed_turn_with_decoder(grant,&mut owner,|cx|cx.with_original_retirement(|cx|{
@@ -127,7 +136,7 @@ fn native_receiving_uses_the_actual_current_cpu_loan_without_a_second_debit(){
  caller.refreshed_turn_with_decoder(stock,&mut owner,|cx|cx.with_original_work_loan(row["quantum"].as_u64().unwrap(),10000,|cx|{
   let before=cx.original_work_units_spent();let mut outcome=None;let mut child=None;
   let(result,heap)=observe_heap(||cx.with_native_receiving(&mut outcome,|control,_|{
-   let start=control.actual_work();assert_eq!(control.available_work_units()?,row["childQuantum"].as_u64().unwrap());assert!(control.prepare_work(1)?);let valid=std::str::from_utf8(&bytes).is_ok();control.commit_work(1)?;assert_eq!(control.prepare_work(1)?,row["postScopeAdditionalWork"].as_bool().unwrap());child=Some((valid,control.actual_work()-start));Ok(())
+   let start=control.actual_work();let quantum=row["childQuantum"].as_u64().unwrap();assert!(!control.prepare_work(quantum+1)?);assert!(control.prepare_work(quantum)?);assert_eq!(control.available_work_units()?,quantum);let valid=std::str::from_utf8(&bytes).is_ok();control.commit_work(u128::from(row["actualWork"].as_u64().unwrap()))?;assert_eq!(control.prepare_work(quantum-row["actualWork"].as_u64().unwrap()+1)?,row["postScopeAdditionalWork"].as_bool().unwrap());child=Some((valid,control.actual_work()-start));Ok(())
   }));assert!(result?);source_received(outcome);assert_eq!([heap.0,heap.1],[0,0]);let(valid,work)=child.expect("native probe completed inside the actual Source loan");assert_eq!(valid,row["valid"].as_bool().unwrap());assert_eq!(work,u128::from(row["actualWork"].as_u64().unwrap()));assert_eq!(cx.original_work_units_spent()-before,u128::from(row["sourceWork"].as_u64().unwrap()));Ok(())
  })).unwrap();close_decoder(&mut caller,&mut owner,stock);caller.retire(stock);
 }
@@ -146,26 +155,33 @@ fn original_context_accepts_metadata_of_a_wide_loan_without_inventing_allocation
 fn cancelled_source_recovers_actual_pending_child_with_same_construction_issuer(){
  use semio_framework_value_native_owned::native_decoding::{NativeReceivingEffect,NativeReceivingEffectPhase};
  let stock=bank();let mut caller=OriginalJobFixtureCaller::admit(OperationId(7690),Generation(3),stock,||Some(0),10000,10000);let mut owner=caller.admitted_decoder();warm(&mut caller,&mut owner,stock);let mut frame=NativeReceivingEffect::<ValueError>::default();let mut reply=None;
+ let mut denied=None;let mut visited=false;let mut outcome=None;let mut identity=None;
  caller.refreshed_turn_with_decoder(stock,&mut owner,|cx|{
-  let mut outcome=None;assert!(cx.with_native_receiving(&mut outcome,|control,_|{
+  let mut first=None;assert!(cx.with_native_receiving(&mut first,|control,_|{
    let interrupted=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||control.receive_allocation_effect(RetirementDemand{depth:1,..Default::default()},&mut frame,false,1,|effect|{
     assert!(effect.performed(1).unwrap());reply=Some(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1});panic!("retained child boundary")
    })));assert!(interrupted.is_err());Ok(())
-  })?);Ok(())
- }).unwrap();assert_eq!(frame.phase(),NativeReceivingEffectPhase::EffectStarted);let identity=owner.receiving_identity();caller.cancel().cancel_now();
- let mut denied=None;let mut visited=false;let narrow=RetainedCloneGrant{maximum_items:1,..stock};
- caller.refreshed_turn_with_decoder(narrow,&mut owner,|cx|{let quote=(cx.retained_grant(),cx.fuel_remaining());assert!(!cx.with_native_retirement_receiving(&mut denied,quote,|_,_|{visited=true;Ok(())})?);Ok(())}).unwrap();assert!(!visited&&denied.is_none());
- let mut outcome=None;
- caller.refreshed_turn_with_decoder(stock,&mut owner,|cx|cx.with_original_retirement(|cx|{
-  let before=cx.retained_progress();let work=cx.original_work_units_spent();
-  assert!(cx.with_native_retirement_receiving(&mut outcome,StepContext::native_retirement_quote(RetirementDemand{depth:1,..Default::default()},1),|control,body_grant|{
-   assert_eq!(Some((control.ledger_identity(),control.retirement_recipient_identity().unwrap())),identity);
-   control.resolve_unallocated_receiving_child(&mut frame,reply.take().unwrap()).unwrap();
-   let turn=control.finish_receiving(&mut frame);assert_eq!(turn.work,1);assert_eq!(turn.result.unwrap().copied_items,1);Ok(())
   })?);
-  let used=delta(cx.retained_progress(),before);let placement=OriginalNativeReceivingOutcome::<()>::placement();assert_eq!(used.copied_items,placement.copied_items+1);assert_eq!(used.copied_bytes,placement.copied_bytes);assert_eq!(cx.original_work_units_spent()-work,3);
-  assert!(cx.receiving_issued_grant().is_none());assert_eq!(cx.receiving_child_progress(),Default::default());Ok(())
- })).unwrap();
+  assert_eq!(frame.phase(),NativeReceivingEffectPhase::EffectStarted);identity=cx.native_receiving_identity();Ok(())
+ }).unwrap();
+ caller.refreshed_turn_with_decoder(stock,&mut owner,|cx|{
+  cx.original_cancel_token().cancel_now();
+  semio_framework_job_context::testkit::with_retained_receipt_policy(cx,|cx|->Result<(),OriginalTurnFailure>{
+   let narrow=RetainedCloneGrant{maximum_items:1,..cx.retained_grant()};cx.narrow_original_work_budget(StepBudget::new(cx.fuel_remaining(),cx.deadline_us(),narrow))?;
+   let quote=(cx.retained_grant(),cx.fuel_remaining());assert!(!cx.with_native_retirement_receiving(&mut denied,quote,|_,_|{visited=true;Ok(())})?);Ok(())
+  })?;
+  assert!(!visited&&denied.is_none());
+  cx.with_original_retirement(|cx|{
+   let before=cx.retained_progress();let work=cx.original_work_units_spent();
+   assert!(cx.with_native_retirement_receiving(&mut outcome,StepContext::native_retirement_quote(RetirementDemand{depth:1,..Default::default()},1),|control,body_grant|{
+    assert_eq!(Some((control.ledger_identity(),control.retirement_recipient_identity().unwrap())),identity);
+    control.resolve_unallocated_receiving_child(&mut frame,reply.take().unwrap()).unwrap();
+    let turn=control.finish_receiving(&mut frame);assert_eq!(turn.work,1);assert_eq!(turn.result.unwrap().copied_items,1);Ok(())
+   })?);
+   let used=delta(cx.retained_progress(),before);let placement=OriginalNativeReceivingOutcome::<()>::placement();assert_eq!(used.copied_items,placement.copied_items+1);assert_eq!(used.copied_bytes,placement.copied_bytes);assert_eq!(cx.original_work_units_spent()-work,u128::from(placement.copied_items as u64));
+   assert!(cx.receiving_issued_grant().is_none());assert_eq!(cx.receiving_child_progress(),Default::default());Ok(())
+  })
+ }).unwrap();
  assert!(outcome.as_ref().unwrap().call.is_ok());assert!(outcome.as_ref().unwrap().source_refusal.is_none());assert!(reply.is_none());assert_eq!(frame.phase(),NativeReceivingEffectPhase::Empty);assert_eq!(owner.receiving_identity(),identity);
  let typed_fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧳️typed-source.json")).unwrap();
  let expected=typed_fixture["value"].as_u64().unwrap();let mut typed=None;let mut typed_visited=false;

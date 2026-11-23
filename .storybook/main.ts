@@ -149,6 +149,15 @@ const config: StorybookConfig = {
     const requiredEnginePackages=storybookEnginePackagesV1(activeScopes);
     const engineDeliveries = frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRootPath, "products"), { version: 1, mode: buildMode, facet: "distribution" }).filter(row=>requiredEnginePackages.includes(row.packageName));
     config.plugins.unshift(...hostBuildPlugins([managedWasmPackagesVitePluginV1(engineDeliveries.map(({ packageName, root, entry, files, entrypoint }) => ({ packageName, root, entry, files, entrypoint })))]));
+    if (!scopeActive(activeScopeIds, "framework")) {
+      const unbuiltWasmSpecifier = /^@semio-tech\/(framework-[a-z-]+-rs|flow-core)(\/|$)/u;
+      config.plugins.unshift({
+        name: "semio-storybook-unbuilt-wasm-stub",
+        enforce: "pre",
+        resolveId: (id: string) => (unbuiltWasmSpecifier.test(id) ? `\0semio-wasm-stub:${id}` : undefined),
+        load: (id: string) => (id.startsWith("\0semio-wasm-stub:") ? "export default async function init() {}" : undefined),
+      });
+    }
     const hasTailwindPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "@tailwindcss/vite");
     if (!hasTailwindPlugin) {
       config.plugins.push(...hostBuildPlugins(uiTailwindBuildPlugins({ sourceBase: __dirname })));

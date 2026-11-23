@@ -93,6 +93,7 @@ export function describeSliceReadStepV1(now=performance.now()){
    if(Number.isSafeInteger(checks)&&checks>(row.completedOwnerChecks??0))row.completedOwnerChecks=checks;
    const verified=discovery?.verifiedMemoRows;
    if(Number.isSafeInteger(verified)&&verified>(row.verifiedMemoRows??0))row.verifiedMemoRows=verified;
+   const note=sample?.note;if(typeof note?.en==="string"&&typeof note?.de==="string")row.note={en:note.en.slice(0,480),de:note.de.slice(0,480)};
    const admitted=discovery?.admittedOwners;
    if(Number.isSafeInteger(admitted)&&admitted>(row.admittedOwners??0))row.admittedOwners=admitted;
   }catch{}
@@ -106,7 +107,8 @@ export function describeSliceReadStepV1(now=performance.now()){
  const ownerChecks=language=>row.completedOwnerChecks===undefined?"":" ("+fill(STEPS.inventoryOwnerChecks[language],{rows:row.completedOwnerChecks})+")";
  const memoChecks=language=>row.verifiedMemoRows===undefined?"":" ("+fill(STEPS.inventoryMemoChecks[language],{rows:row.verifiedMemoRows})+")";
  const admittedOwners=language=>row.admittedOwners===undefined?"":" ("+fill(STEPS.inventoryAdmittedOwners[language],{rows:row.admittedOwners})+")";
- const text=language=>fill(spec[language],fields)+observations(language)+ownerChecks(language)+memoChecks(language)+admittedOwners(language);
+ const followed=language=>row.note===undefined?"":" ["+row.note[language]+"]";
+ const text=language=>fill(spec[language],fields)+observations(language)+ownerChecks(language)+memoChecks(language)+admittedOwners(language)+followed(language);
  return{id:row.id,phase:text("en")+" / "+text("de"),done:seconds,total:bound};
 }
 

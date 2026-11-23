@@ -14,7 +14,7 @@ Prerequisites (both batteries):
 
 Commands (run from the ticket folder, sequentially, one browser at a time):
 ```
-cd "<ticket>" && bun 🐍️react-battery.mjs                       # all 25 probes
+cd "<ticket>" && bun 🐍️react-battery.mjs                       # all 26 probes
 cd "<ticket>" && bun 🐍️react-battery.mjs --only=interact,keyboard-verbs
 cd "<ticket>" && bun 🐍️react-battery.mjs --list
 cd "<ticket>" && bun 🐍️wgpu-battery.mjs                        # all 16 probes
@@ -30,7 +30,7 @@ Every probe's pass or fail is decided from its own published evidence in its fol
 
 Common to every React probe: "no page errors" (count of `pageerror` lines) and "no shell faults" (FAULT_RE match). Common to every WGPU probe: the same fault and page-error gates are NOT appended centrally (only the probe's own steps, plus `pageerrors`/`faults` in the key).
 
-React (`🐍️react-battery.mjs`, 25 probes):
+React (`🐍️react-battery.mjs`, 26 probes):
 - boot: ≥2 surfaces mount.
 - journey: one row per journey label, `converged`.
 - interact: per example × {payload, selection-reset, hover, select, inspector, orbit, fit}.

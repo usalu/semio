@@ -1,12 +1,15 @@
 import {resolveRemoteExecutionEndpointV1,resolveRemoteExecutionSchedulerV1} from "../🧭️endpoint/🟦️.ts";
 import {readRemoteExecutionPolicyV1,requireRemoteExecutionShapeV1} from "../🟦️.ts";
+import fleetStatusSchema from "../../🚢️fleet-status/🧬️schema/🔣️.json" with {type:"json"};
+import type {FleetRetentionFactV1} from "../../🚢️fleet-status/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readKeyComparisonV1,type KeyComparisonV1,type KeySamplesRefV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/🔑️key-samples/🟦️.ts";
 
 /** 🚢️ One machine of the fleet as `repo fleet status` shows it. */
 export type RemoteExecutionFleetMachineV1=Readonly<{origin:string;platform:string;pressure:"normal"|"warn"|"critical";load:number|null;cores:number;running:number;queued:number;headroom:boolean;ageSeconds:number;worker:"absent"|"idle"|"busy"|"refusing";why?:Readonly<{code:string;en:string;de:string}>;offloadedIn:number;offloadedOut:number;refused:number;cacheHit:number;cacheMiss:number;cacheSkipped?:number;cacheSkipReasons?:Readonly<Record<string,number>>}>;
 
 /** 🌍️ The fleet as the scheduler sees it, plus what the cache server counts: the facts `repo fleet status` aggregates. `cache` and `claims` are absent while the cache server does not answer or does not count them yet. */
-export type RemoteExecutionFleetFactV1=Readonly<{scheduler:string;expireSeconds:number;machines:readonly RemoteExecutionFleetMachineV1[];queued:number;executing:number;offloadRejected:number;refused:number;retried:number;cache?:Readonly<{hits:number;misses:number;puts:number}>;claims?:Readonly<{active:number;waiting:number;oldestSeconds:number}>;keys?:KeyComparisonV1}>;
+export type RemoteExecutionFleetFactV1=Readonly<{scheduler:string;expireSeconds:number;machines:readonly RemoteExecutionFleetMachineV1[];queued:number;executing:number;offloadRejected:number;refused:number;retried:number;cache?:Readonly<{hits:number;misses:number;puts:number}>;claims?:Readonly<{active:number;waiting:number;oldestSeconds:number}>;keys?:KeyComparisonV1;retention?:FleetRetentionFactV1}>;
 
 const whole=(value:unknown):number=>typeof value==="number"&&Number.isFinite(value)&&value>=0?Math.floor(value):0;
 
@@ -23,11 +26,12 @@ export async function readRemoteExecutionFleetFactsV1(context:Readonly<{root:str
  if(!response.ok){await response.body?.cancel();throw Error(`The scheduler answered ${response.status}`);}
  const table=await response.json() as {machines:readonly {origin:string;platform:{key:string};capacity:{cores:number};pressure:RemoteExecutionFleetMachineV1["pressure"];load:number|null;running:number;queued:number;headroom:boolean;ageSeconds:number;worker:{state:RemoteExecutionFleetMachineV1["worker"];why?:{code:string;en:string;de:string}};offloadedIn:number;offloadedOut:number;refused:number;counters:{unit:{localHit:number;remoteHit:number;miss:number;skipped?:number};skipReasons?:Record<string,number>;keySamples?:{blob:string;count:number;atMs:number}}}[];queued:number;executing:number;counters:{offloadRejected:number;refused:number;retried:number}};
  requireRemoteExecutionShapeV1("FleetLoad",table,"Closed fleet load required");
- let cache:RemoteExecutionFleetFactV1["cache"],claims:RemoteExecutionFleetFactV1["claims"];
+ let cache:RemoteExecutionFleetFactV1["cache"],claims:RemoteExecutionFleetFactV1["claims"],retention:FleetRetentionFactV1|undefined;
  if(resolution!==undefined)try{
-  const status=await cacheCall(`${resolution.contract.endpoint.replace(/\/+$/u,"")}/status`,{signal:signal()}),body=status.ok?await status.json() as {counters?:Record<string,{hits?:number;misses?:number;puts?:number}>;claims?:{active?:number;waiting?:number;oldestSeconds?:number}}:undefined;
+  const status=await cacheCall(`${resolution.contract.endpoint.replace(/\/+$/u,"")}/status`,{signal:signal()}),body=status.ok?await status.json() as {counters?:Record<string,{hits?:number;misses?:number;puts?:number}>;claims?:{active?:number;waiting?:number;oldestSeconds?:number};retention?:unknown}:undefined;
   if(!status.ok)await status.body?.cancel();
   if(body?.counters!==undefined){const rows=Object.values(body.counters);cache={hits:rows.reduce((sum,row)=>sum+whole(row.hits),0),misses:rows.reduce((sum,row)=>sum+whole(row.misses),0),puts:rows.reduce((sum,row)=>sum+whole(row.puts),0)};}
+  if(body?.retention!==undefined&&validateJsonSchemaSubset(fleetStatusSchema.definitions.RetentionFact as never,body.retention,fleetStatusSchema as never).length===0)retention=body.retention as FleetRetentionFactV1;
   if(body?.claims!==undefined)claims={active:whole(body.claims.active),waiting:whole(body.claims.waiting),oldestSeconds:whole(body.claims.oldestSeconds)};
  }catch{}
  let keys:KeyComparisonV1|undefined;
@@ -36,5 +40,5 @@ export async function readRemoteExecutionFleetFactsV1(context:Readonly<{root:str
   for(const row of table.machines)if(row.counters.keySamples!==undefined)refs[row.origin]=row.counters.keySamples;
   keys=await readKeyComparisonV1(refs,async blob=>{try{const answer=await cacheCall(base+blob,{signal:signal()});if(!answer.ok){await answer.body?.cancel();return undefined;}return new Uint8Array(await answer.arrayBuffer());}catch{return undefined;}});
  }
- return {scheduler,expireSeconds:whole((table as unknown as {expireSeconds:number}).expireSeconds),machines:table.machines.map(row=>({origin:row.origin,platform:row.platform.key,pressure:row.pressure,load:row.load,cores:row.capacity.cores,running:row.running,queued:row.queued,headroom:row.headroom,ageSeconds:row.ageSeconds,worker:row.worker.state,...row.worker.why===undefined?{}:{why:row.worker.why},offloadedIn:row.offloadedIn,offloadedOut:row.offloadedOut,refused:row.refused,cacheHit:row.counters.unit.localHit+row.counters.unit.remoteHit,cacheMiss:row.counters.unit.miss,cacheSkipped:row.counters.unit.skipped??0,cacheSkipReasons:Object.fromEntries(Object.entries(row.counters.skipReasons??{}).map(([name,value])=>[name,whole(value)]).filter(([,value])=>(value as number)>0))})),queued:table.queued,executing:table.executing,offloadRejected:table.counters.offloadRejected,refused:table.counters.refused,retried:table.counters.retried,...cache===undefined?{}:{cache},...claims===undefined?{}:{claims},...keys===undefined?{}:{keys}};
+ return {scheduler,expireSeconds:whole((table as unknown as {expireSeconds:number}).expireSeconds),machines:table.machines.map(row=>({origin:row.origin,platform:row.platform.key,pressure:row.pressure,load:row.load,cores:row.capacity.cores,running:row.running,queued:row.queued,headroom:row.headroom,ageSeconds:row.ageSeconds,worker:row.worker.state,...row.worker.why===undefined?{}:{why:row.worker.why},offloadedIn:row.offloadedIn,offloadedOut:row.offloadedOut,refused:row.refused,cacheHit:row.counters.unit.localHit+row.counters.unit.remoteHit,cacheMiss:row.counters.unit.miss,cacheSkipped:row.counters.unit.skipped??0,cacheSkipReasons:Object.fromEntries(Object.entries(row.counters.skipReasons??{}).map(([name,value])=>[name,whole(value)]).filter(([,value])=>(value as number)>0))})),queued:table.queued,executing:table.executing,offloadRejected:table.counters.offloadRejected,refused:table.counters.refused,retried:table.counters.retried,...cache===undefined?{}:{cache},...claims===undefined?{}:{claims},...keys===undefined?{}:{keys},...retention===undefined?{}:{retention}};
 }

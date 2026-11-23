@@ -19,3 +19,10 @@ test("every global option of the catalogue, in its equals spelling, reaches the 
  expect(german.status).toBe(0);
  expect(german.stdout).toContain("Verwendung");
 },180_000);
+
+test("the cargo spelling of the host capacity grant, `--parallelism=N`, is a resource and never part of the declared Repo selection",()=>{
+ for(const option of ["--parallelism=2","--parallelism"]){
+  const result=spawnSync(process.execPath,[script,"repo","cargo","--help",option,...option==="--parallelism"?["2"]:[]],{encoding:"utf8",timeout:90_000,env:{...cleanEnvironment,SEMIO_LANGUAGE:"en"}});
+  expect(result.stderr,option).not.toContain("Undeclared original Repo build selection");
+ }
+},180_000);

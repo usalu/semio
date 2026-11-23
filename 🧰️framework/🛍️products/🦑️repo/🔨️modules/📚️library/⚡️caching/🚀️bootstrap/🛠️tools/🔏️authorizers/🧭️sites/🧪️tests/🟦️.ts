@@ -75,3 +75,13 @@ test("actual scanner failures preserve engine identity and surface bounded Sourc
   if(row.invalid){expect(caught).toBe(original);expect(Object.getPrototypeOf(caught)).toBe(Object.getPrototypeOf(original));const error=caught as Error&{sourcePath:string;sourceLoader:string};expect(error.sourcePath).toBe(row.path);expect(error.sourceLoader).toBe(row.loader);expect(error.message).toStartWith(message!);expect(error.message).toContain(JSON.stringify(row.path));expect(error.message).toContain("loader="+row.loader);expect(error.message.split("\n")).toHaveLength(1);}else expect(caught).toBeUndefined();
  }
 });
+
+/** 🪤️ Every specifier the Node type stripper leaves as an import is a site a capture follows, including `import {type A} from "x"`, which the Bun and portable scanners and the TypeScript parser treat as erased; Node keeps the bare `import {} from "x"` and loads it. */
+test("inline type-only import and re-export sites are captured as Node loads them",()=>{
+ const source=["import {type A} from \"./inline-import.ts\";","import {type B, type C} from \"./inline-many.ts\";","export {type D} from \"./inline-export.ts\";","import {\n type E,\n} from \"./inline-multiline.ts\";","import type {F} from \"./erased-import.ts\";","export type {G} from \"./erased-export.ts\";","import {type H, h} from \"./mixed.ts\";"].join("\n");
+ const stripped=spawnSync("node",["--disable-warning=ExperimentalWarning","--input-type=module","-e","import{stripTypeScriptTypes as s}from\"node:module\";process.stdout.write(s(process.argv[1]))","--",source],{encoding:"utf8"}).stdout,loaded=[...stripped.matchAll(/(?:import|export)[^;]*?from\s*"([^"]+)"/gu)].map(match=>match[1]!),found=closureLiteralSitesV1("a.ts",source);
+ expect(loaded).toContain("./inline-import.ts");expect(loaded).not.toContain("./erased-import.ts");
+ for(const specifier of loaded)expect(found.map(site=>site.specifier),specifier).toContain(specifier);
+ for(const specifier of["./erased-import.ts","./erased-export.ts"])expect(found.map(site=>site.specifier)).not.toContain(specifier);
+ for(const site of found.filter(row=>/inline/u.test(row.specifier)))expect([site.kind,site.lenient,site.scanned]).toEqual(["static",true,true]);
+});

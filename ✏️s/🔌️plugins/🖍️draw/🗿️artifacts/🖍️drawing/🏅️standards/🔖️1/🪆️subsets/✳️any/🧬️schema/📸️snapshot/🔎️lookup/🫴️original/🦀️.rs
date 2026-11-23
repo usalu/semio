@@ -24,7 +24,7 @@ pub(super) fn close_result(poll:OriginalRetirementPoll)->Result<RetainedCloneSte
     }
 }
 #[cfg(test)]
-pub(super) fn test_step(
+pub fn test_step(
     grant: semio_framework_value::retained_clone::RetainedCloneGrant,
     mut step: impl FnMut(&mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep,ValueError>,
 ) -> RetainedCloneStep {

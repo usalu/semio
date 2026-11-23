@@ -1,6 +1,43 @@
 /** 📖️ The production source reads and the boundary definitions the mounted frame transaction checks scan. */
 import { interactivityProductionSource } from "../../../🗄️database/🟦️.ts";
+import { INTERACTIVITY_AUDIT_FILE_MARKER } from "../../../🗂️files/🟦️.ts";
+import { toolJobRustBlock } from "../../../../🎯️tool-job-coverage/📋️inventory/🟦️.ts";
 import { interactivityCheckedRustBlockScope } from "../../🧭️checked-rust-block-scope/🟦️.ts";
+
+/** 🧱️ The first item declared at `marker`, from its header through its matching closing brace, with literals and comments kept for needle checks; empty when absent. */
+export function rustItem(source: string, marker: string): string {
+  const start = source.indexOf(marker);
+  const open = start < 0 ? -1 : source.indexOf("{", start);
+  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+  return block === undefined ? "" : source.slice(start, block.end);
+}
+
+/** 🗂️ The whole text of the first source file that holds `marker`, cut at the file markers of the joined tree; empty when absent. */
+export function fileText(source: string, marker: string): string {
+  const at = source.indexOf(marker);
+  if (at < 0) return "";
+  const start = source.lastIndexOf(INTERACTIVITY_AUDIT_FILE_MARKER, at);
+  const end = source.indexOf(INTERACTIVITY_AUDIT_FILE_MARKER, at);
+  return source.slice(start < 0 ? 0 : start, end < 0 ? undefined : end);
+}
+
+/** ✂️ Splits every block opened at `marker` out of `source`: what is left for the field-page law and what was cut for the bounded-document law. */
+export function splitRustBranches(source: string, marker: string): { readonly kept: string; readonly branches: string } {
+  let kept = source;
+  const branches: string[] = [];
+  for (let at = kept.indexOf(marker); at >= 0; at = kept.indexOf(marker)) {
+    const block = toolJobRustBlock(kept, kept.indexOf("{", at));
+    if (block === undefined) break;
+    branches.push(kept.slice(at, block.end));
+    kept = kept.slice(0, at) + kept.slice(block.end);
+  }
+  return { kept, branches: branches.join("\n") };
+}
+
+/** 🧱️ The items declared at each marker, joined in marker order. */
+export function rustItems(source: string, ...markers: readonly string[]): string {
+  return markers.map((marker) => rustItem(source, marker)).join("\n");
+}
 
 /** 📚 Reads the production text of every checked owner source. */
 export function readProductionSources({ glueSource, frameJobSource, hostSource, snapshotSource, uiRuntimeGlueSource, shellSource, engineCanvasSource, world3dSource, preparedSource, gpuSource, drawSource, interpreterSource, uiEngineSource, paintSource, sceneSlotsSource, scenesSource, servicesSource }: {
@@ -50,16 +87,16 @@ export function defineMaintenanceBoundaries({ glue, glueSource }: {
   const failures: string[] = [];
   const scope = (source: string, marker: string, name: string) => interactivityCheckedRustBlockScope(source, marker, name, failures);
   const scopes = (...parts: (string | undefined)[]) => parts.every((part) => part !== undefined) ? parts.join("\n") : undefined;
-  const transaction = glue.slice(glue.indexOf("struct FrameTransaction {"), glue.indexOf("struct AppFramePresentation"));
-  const frameCursors = glue.slice(glue.indexOf("struct FrameBuildCursor"), glue.indexOf("struct FrameWheelCursor"));
+  const transaction = glue.slice(glue.indexOf("pub struct FrameTransaction {"), glue.indexOf("pub async fn boot_runtime("));
+  const frameCursors = rustItems(glue, "pub struct FrameBuildCursor", "pub struct FrameFinishCursor");
   const buildBoundary = glue.slice(glue.indexOf("fn frame_before_input_step"), glue.indexOf("fn frame_after_input_step"));
   const finishBoundary = glue.slice(glue.indexOf("fn frame_after_input_step"), glue.indexOf("//#region 🔖️OsHostDecomposition — SemioApp deletion"));
   const deferredBoundary = glue.slice(glue.indexOf("fn start_frame_deferred"), glue.indexOf("fn apply_step", glue.indexOf("fn start_frame_deferred")));
-  const maintenanceOwnerBoundary = glue.slice(glue.indexOf("struct FrameDeferredCursor"), glue.indexOf("enum RuntimeApply"));
-  const maintenanceNativeOwnerBoundary = glueSource.slice(glueSource.indexOf("struct FrameDeferredCursor"), glueSource.indexOf("enum RuntimeApply"));
+  const maintenanceOwnerBoundary = rustItems(glue, "pub struct FrameDeferredCursor", "impl FrameDeferredCursor", "pub struct FrameMaintenanceOwner", "impl FrameMaintenanceOwner", "pub struct FrameExecutionOwnerCell<T>", "impl<T> FrameExecutionOwnerCell<T>", "pub struct FrameMaintenanceRefusal", "impl FrameMaintenanceRefusal", "pub struct FrameMaintenanceAuthority", "impl FrameMaintenanceAuthority");
+  const maintenanceNativeOwnerBoundary = rustItems(glueSource, "pub struct FrameDeferredCursor", "impl FrameDeferredCursor");
   const maintenanceCloseBoundary = scope(maintenanceNativeOwnerBoundary, "fn begin_close(&mut self)", "native maintenance close");
-  const maintenanceExecutionBoundary = glue.slice(glue.indexOf("struct FrameMaintenanceExecutionRegistry"), glue.indexOf("impl<R: MailboxRuntime> RuntimeMailbox<R> {"));
-  const maintenanceRegistryBoundary = glue.slice(glue.indexOf("struct FrameMaintenanceExecutionRegistry"), glue.indexOf("struct FrameMaintenanceAuthority"));
+  const maintenanceRegistryBoundary = rustItems(glue, "pub struct FrameExecutionRegistry<T>", "impl<T> FrameExecutionRegistry<T>");
+  const maintenanceExecutionBoundary = [maintenanceRegistryBoundary, rustItems(glue, "pub struct FrameMaintenanceExecutionEnvelope<R>", "impl<R> FrameMaintenanceExecutionEnvelope<R>", "impl<R> Drop for FrameMaintenanceExecutionEnvelope<R>", "pub struct FrameMaintenanceExecutionGuard<R>", "impl<R> FrameMaintenanceExecutionGuard<R>", "impl<R> Drop for FrameMaintenanceExecutionGuard<R>"), glue.slice(glue.indexOf("pub frame_maintenance_executions:"), glue.indexOf("pub frame_deferred_executions:"))].join("\n");
   const maintenanceSpawnBoundary = glue.slice(glue.indexOf("fn try_spawn_frame_maintenance_reserved"), glue.indexOf("#[cfg(target_arch = \"wasm32\")]", glue.indexOf("fn try_spawn_frame_maintenance_reserved")));
   const maintenanceTerminalStart = glue.indexOf("fn frame_maintenance_terminal_fault");
   const maintenanceTerminalBoundary = glue.slice(maintenanceTerminalStart, glue.indexOf("pub const WORLD3D_DEADLINE_CAPACITY", maintenanceTerminalStart < 0 ? 0 : maintenanceTerminalStart));
@@ -86,11 +123,13 @@ export function defineChromeAndEngineBoundaries({ scopes, scope, shell, engineCa
     scope(shell, "pub enum ShellChromeFramePhase", "Shell chrome phase"),
     scope(shell, "pub fn render_chrome_step", "Shell chrome step"),
   );
-  const engineBoundary = engineCanvas.slice(engineCanvas.indexOf("const ENGINE_CANVAS_FRAME_PACKET_CAPACITY"), engineCanvas.indexOf("struct EngineGpuSurface"));
-  const worldBoundary = world3d.slice(world3d.indexOf("const WORLD3D_FRAME_RESOURCE_CAPACITY"), world3d.indexOf("//#endregion 📦️PreparedWorldResources"));
-  const atlasBoundary = prepared.slice(prepared.indexOf("pub const PREPARED_ATLAS_PAGE_BYTES"), prepared.indexOf("impl PreparedRasterPages"));
-  const atlasGpuBoundary = gpu.slice(gpu.indexOf("struct PreparedAtlasUploadCursor"), gpu.indexOf("pub fn finish_prepared"));
-  const atlasDrawBoundary = draw.slice(draw.indexOf("upload_glyph_atlas_page"), draw.indexOf("pub fn render_frame"));
+  const engineBoundary = fileText(engineCanvas, "pub const ENGINE_CANVAS_FRAME_PACKET_CAPACITY");
+  const worldBoundary = fileText(world3d, "const WORLD3D_FRAME_RESOURCE_CAPACITY");
+  const atlasPermits = fileText(prepared, "pub const PREPARED_ATLAS_PAGE_BYTES");
+  const atlasPages = fileText(prepared, "impl Drop for PreparedAtlasPages");
+  const atlasBoundary = `${atlasPermits.slice(atlasPermits.indexOf("pub const PREPARED_ATLAS_PAGE_BYTES"))}\n${atlasPages.slice(0, atlasPages.indexOf("impl PreparedRasterPages"))}`;
+  const atlasGpuBoundary = `${rustItem(gpu, "struct PreparedAtlasUploadCursor")}\n${fileText(gpu, "cursor.page.checked_add(1)")}`;
+  const atlasDrawBoundary = fileText(draw, "pub fn upload_glyph_atlas_page");
   const chromeMainBoundary = scope(shell, "pub fn render_main_window_step", "Shell main window");
   const chromePanelBoundary = scope(shell, "pub fn render_panel_step", "Shell panel");
   const chromeNavbarBoundary = scope(shell, "pub fn render_navbar_step", "Shell navbar");
@@ -104,7 +143,7 @@ export function defineChromeAndEngineBoundaries({ scopes, scope, shell, engineCa
   const chromeOverlayBoundary = scopes(chromeOverlayStepBoundary, chromeContextMenuBoundary, chromeTooltipBoundary, chromeDialogBoundary, chromeTourBoundary);
   const shellChildren = scopes(chromeMainBoundary, chromePanelBoundary, chromeNavbarBoundary, chromeTutorialBoundary, chromeFooterBoundary, chromeOverlayBoundary);
   const documentBoundary = interactivityProductionSource(interpreterSource.slice(interpreterSource.indexOf("pub struct UiDocumentFrameCursor"), interpreterSource.indexOf("pub fn render_ui_document(")));
-  const uiFrameBoundary = uiEngine.slice(uiEngine.indexOf("const RETAINED_PAINT_DEPTH_CREDITS"), uiEngine.indexOf("pub fn frame<H"));
+  const uiFrameBoundary = `${fileText(uiEngine, "const RETAINED_PAINT_DEPTH_CREDITS")}\n${fileText(uiEngine, "pub fn frame_into_step")}`;
   return { chromeBoundary, shellChildren, chromeDialogBoundary, chromeTourBoundary, chromeTutorialBoundary, chromeFooterBoundary, chromeOverlayBoundary, chromeNavbarBoundary, documentBoundary, uiFrameBoundary, atlasBoundary, atlasGpuBoundary, atlasDrawBoundary, engineBoundary, worldBoundary };
 }
 
@@ -144,13 +183,13 @@ export function definePaintSceneAndTextBoundaries({ scopes, scope, paint, sceneS
     scope(sceneSlots, "pub trait SceneHost", "scene host contract"),
     scope(sceneSlots, "pub(crate) fn scene_slot_for_node", "scene slot node resolver"),
   );
-  const sceneHostBoundary = interpreter.slice(interpreter.indexOf("impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost"), interpreter.indexOf("fn drive_mounted_layout_text_one"));
-  const retainedImageBoundary = interpreter.slice(interpreter.indexOf("fn render_ui_image_step"), interpreter.indexOf("fn render_ui_image("));
-  const retainedSceneBoundary = scenes.slice(scenes.indexOf("pub fn render_component_scene_step"), scenes.indexOf("pub fn render_component_scene("));
+  const sceneHostBoundary = rustItem(interpreter, "impl semio_ui_wgpu_hosting::scene_slots::SceneHost for FrameworkSceneHost");
+  const retainedImageBoundary = rustItem(interpreter, "pub fn render_ui_image_step");
+  const retainedSceneBoundary = rustItem(scenes, "pub fn render_component_scene_step");
   const findStart = shell.indexOf("pub struct ShellFindItems {");
   const findEnd = shell.indexOf("collector.try_push_at(active.generation, item)", findStart);
   const findBoundary = shell.slice(findStart, findEnd < 0 ? undefined : findEnd + "collector.try_push_at(active.generation, item)".length);
-  const maintenanceBoundary = shell.slice(shell.indexOf("struct ShellChromeMaintenance"), shell.indexOf("fn body_rect"));
+  const maintenanceBoundary = shell;
   return { findBoundary, maintenanceBoundary, interactiveSyncBoundary, paintNodeBoundary, sceneNodeBoundary, sceneHostBoundary, retainedSceneBoundary, retainedImageBoundary };
 }
 
@@ -178,11 +217,13 @@ export function defineGroupPreferenceAndRequireHelpers({ scopes, scope, shell, s
   const fixedFilePageBoundary = services.slice(services.indexOf("//#region 📄️FixedFilePage"), services.indexOf("//#endregion 📄️FixedFilePage"));
   const requireAll = (source: string | undefined, needles: readonly string[], label: string) => {
     if (source === undefined) return;
-    if (needles.some((needle) => !source.includes(needle))) failures.push(label);
+    const present = (needle: string) => source.includes(needle) || (needle.startsWith("pub(crate) ") && source.includes(`pub ${needle.slice("pub(crate) ".length)}`));
+    if (needles.some((needle) => !present(needle))) failures.push(label);
   };
   const requireExactlyOne = (source: string | undefined, needle: string, label: string) => {
     if (source === undefined) return;
     if (source.split(needle).length - 1 !== 1) failures.push(label);
   };
-  return { requireAll, prefsBoundary, fixedFilePageBoundary, nativePrefsBoundary, chromeTextBoundary, chromeGroupBoundary, chromeGroupStepBoundary };
+  const { kept: nativeFieldPageBoundary, branches: nativeConfigDocumentBoundary } = splitRustBranches(nativePrefsBoundary, "if key == OS_SHELL_CONFIG_STORAGE_KEY {");
+  return { requireAll, prefsBoundary, fixedFilePageBoundary, nativePrefsBoundary, nativeFieldPageBoundary, nativeConfigDocumentBoundary, chromeTextBoundary, chromeGroupBoundary, chromeGroupStepBoundary };
 }

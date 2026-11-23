@@ -219,13 +219,15 @@ pub fn graph_records(view: &impl SlotGraphView) -> (Vec<NodeGraphNodeRecord>, Ve
 //#region 🔖️Render
 /// 🕹️ Renders the editable slot graph. `selection` is the ids the shell currently holds picked, so a
 /// `pin-slot`/`delete-slot` invocation has a target without the window owning selection state.
-pub fn render(view: &impl SlotGraphView, camera: GraphCamera, selection: &[String]) -> UiAssemblyResult<BuiltNode> {
+pub fn render(view: &impl SlotGraphView, camera: GraphCamera, selection: &[String], locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges) = graph_records(view);
     let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };
     scene_surface(
         WFC_GRAPH_SURFACE,
         semio_ui_contract::SurfaceKind::NodeGraph,
         &NodeGraphScene { editable: Some(true), selection: selection.to_vec(), ..NodeGraphScene::base(nodes, edges, viewport) },
+        semio_plugin::surface_name(locale, "Slot graph", "Slot-Graph"),
+        None,
     )
 }
 //#endregion 🔖️Render

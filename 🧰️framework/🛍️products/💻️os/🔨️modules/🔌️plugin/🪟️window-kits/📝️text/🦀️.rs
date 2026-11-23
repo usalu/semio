@@ -18,7 +18,7 @@ use semio_ui_locale::Locale;
 use semio_ui_locale::LocalizedLabel;
 use crate::WindowKit;
 use semio_plugin_interaction::UiAssemblyResult;
-use semio_plugin_window_transient::scene_surface;
+use semio_plugin_window_transient::{scene_surface, surface_name};
 use semio_plugin_interaction::ui_assembly_error;
 use semio_plugin_window_transient::window_kind_definition;
 
@@ -94,7 +94,6 @@ struct TextDraftSettings<'a> {
 pub struct TextWindowKit;
 
 impl WindowKit for TextWindowKit {
-    type ViewModel = TextView;
     const KIND_ID: &'static str = "framework.window.text";
 
     fn window_kind() -> WindowKindDefinition {
@@ -117,13 +116,13 @@ impl WindowKit for TextWindowKit {
                 .destructive()],
         )
     }
-
-    fn render(view: &TextView) -> UiAssemblyResult<BuiltNode> {
-        Self::render_read_only(Self::KIND_ID, view)
-    }
 }
 
 impl TextWindowKit {
+    pub fn render(view: &TextView, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+        Self::render_read_only(Self::KIND_ID, view, locale)
+    }
+
     /// ✍️ The kit's whole-text verb (Apply of an editable text window's draft).
     pub const EDIT_ACTION_ID: &'static str = "textEdit";
     /// ✍️ The argument carrying the applied text.
@@ -136,7 +135,7 @@ impl TextWindowKit {
     pub const SPLICES_ARGUMENT: &'static str = "splices";
 
     /// 📖️ Renders read-only text on a caller-owned surface identity.
-    pub fn render_read_only(surface_id: &str, view: &TextView) -> UiAssemblyResult<BuiltNode> {
+    pub fn render_read_only(surface_id: &str, view: &TextView, locale: Locale) -> UiAssemblyResult<BuiltNode> {
         let scene = semio_ui_scene::TextEditorScene {
             buffer: view.text.clone(),
             lanes: Vec::new(),
@@ -156,7 +155,7 @@ impl TextWindowKit {
             newline_gates_json: None,
             rename_json: None,
         };
-        scene_surface(surface_id, SurfaceKind::TextEditor, &scene)
+        scene_surface(surface_id, SurfaceKind::TextEditor, &scene, surface_name(locale, "Text", "Text"), None)
     }
 
     /// ✍️ Renders an editable text window under the explicit-draft policy: the kit's `textEdit` verb, the draft's starting
@@ -205,11 +204,11 @@ impl TextWindowKit {
             path_label: path.into(),
             line_label: line.into(),
             column_label: column.into(),
-        })
+        }, locale)
     }
 
     /// 💾 Renders a prepopulated local draft with explicit, localized apply and discard controls.
-    pub fn render_draft(view: &TextDraftView) -> UiAssemblyResult<BuiltNode> {
+    pub fn render_draft(view: &TextDraftView, locale: Locale) -> UiAssemblyResult<BuiltNode> {
         let settings = TextDraftSettings {
             read_only: false,
             edit_action: &view.action_id,
@@ -232,6 +231,6 @@ impl TextWindowKit {
         let settings_json = serde_json::to_string(&settings).map_err(|_| ui_assembly_error("text-window.draft-settings"))?;
         let mut scene = semio_ui_scene::TextEditorScene::base(view.text.clone(), view.language.clone(), None);
         scene.settings_json = Some(settings_json);
-        scene_surface(&view.surface_id, SurfaceKind::TextEditor, &scene)
+        scene_surface(&view.surface_id, SurfaceKind::TextEditor, &scene, surface_name(locale, "Text editor", "Texteditor"), None)
     }
 }

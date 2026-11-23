@@ -5,12 +5,10 @@
 use super::*;
 
 //#region ShellTypes
-#[cfg(any(test, feature = "testkit"))]
 pub fn context_menu_paths_equal(a: &[usize], b: &[usize]) -> bool {
     a.len() == b.len() && a.iter().zip(b.iter()).all(|(left, right)| left == right)
 }
 
-#[cfg(any(test, feature = "testkit"))]
 pub fn context_menu_submenu_open(active: &[usize], row_path: &[usize], is_active: bool, has_children: bool) -> bool {
     if !has_children {
         return false;

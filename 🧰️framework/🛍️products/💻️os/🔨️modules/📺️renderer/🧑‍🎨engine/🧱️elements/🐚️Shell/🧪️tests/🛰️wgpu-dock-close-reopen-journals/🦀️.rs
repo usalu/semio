@@ -209,7 +209,7 @@ fn an_emptied_dock_never_enters_the_window_plan() {
     plan(&mut shell);
     assert!(shell.dock.dock_window_plan.is_empty(), "🈳️ an empty dock plans no window: {:?}", shell.dock.dock_window_plan);
     assert!(!shell.dock.window_content_rects.contains_key(""), "🈳️ and no content rect is keyed by an empty window id");
-    assert!(shell.dock.window_silhouettes.is_empty(), "🈳️ an empty stack owns no silhouette");
+    assert!(shell.dock.window_frames.is_empty(), "🈳️ an empty stack owns no frame");
     assert!(!shell.dock.dock_drop_bodies.is_empty(), "📥️ …while the emptied stack stays a drop body, so a dragged window can come back");
 }
 

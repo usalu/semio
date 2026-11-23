@@ -79,6 +79,7 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactStoreBat
  fn begin_close(&mut self){if let Some(original)=self.original.as_mut(){original.begin_close();}}
 }
 impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ErasedSnapshotRetirement for NativeBatchDigest<M>{
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{self.close_demand()}
  fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
   let result=(||->Result<RetainedCloneStep,RetirementPollExit>{

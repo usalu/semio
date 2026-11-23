@@ -1,6 +1,7 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use super::*;
+use crate::original_close::CloseOriginal as _;
 use semio_os_store_text_io::ArtifactSqliteSnapshotHost;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_os_io::control::NativeSnapshotDecodeOwner;
@@ -29,7 +30,7 @@ fn close_original_recipient(native:&mut NativeDecodeControl<'_>){
     let fixture:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");
     for _ in 0..fixture["maximumCloseTurns"].as_u64().unwrap(){
         if !native.has_retirement_owner(){return}
-        let step=native.close_retirement_recipient(caller_grant()).result.unwrap();
+        let step=native.close_original(caller_grant()).result.unwrap();
         assert!(step.progress()!=Default::default()||!native.has_retirement_owner(),"original authored close turn must advance actual custody");
     }
     assert!(!native.has_retirement_owner(),"original bounded close supervisor did not finish");

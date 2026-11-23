@@ -98,14 +98,14 @@ fn drawing_canvas_initial_framing_uses_world_bounds_and_respects_restored_naviga
     let(mut close,prepared)=paint.into_retirement();
     semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(close,scene_wallet,4096);
     let plan=prepared.unwrap();
-    let scene = canvas_scene_of_tree(semio_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
+    let scene = canvas_scene_of_tree(semio_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[],semio_plugin::Locale::En).unwrap()));
     assert_eq!(scene.framing.as_ref().unwrap().bounds,[-20.0,-30.0,80.0,70.0]);
     document.artboard = Some(semio_s_artifact_draw_drawing_model::DrawingArtboard { width: 1024.0,height: 1024.0 });
-    let scene = canvas_scene_of_tree(semio_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
+    let scene = canvas_scene_of_tree(semio_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[],semio_plugin::Locale::En).unwrap()));
     assert_eq!(scene.framing.as_ref().unwrap().bounds,[-20.0,-30.0,1024.0,1024.0]);
     config.framed = true;
     config.viewport = store::Viewport2d { x: 777.0,y: -333.0,zoom: 2.0 };
-    let scene = canvas_scene_of_tree(semio_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
+    let scene = canvas_scene_of_tree(semio_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[],semio_plugin::Locale::En).unwrap()));
     assert!(scene.framing.is_none());
     assert_eq!((scene.camera_x,scene.camera_y,scene.zoom),(777.0,-333.0,2.0));
     let mut close=semio_s_artifact_draw_drawing_scene_paint::scene::PreparedSceneCloseJob::new(plan);

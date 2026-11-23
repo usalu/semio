@@ -214,8 +214,8 @@ export async function startRemoteExecutionServerV1(options:RemoteExecutionServer
  const grpc:GrpcServerV1=await startGrpcServerV1({host:options.host,port:options.grpcPort,handlers:remoteExecutionHandlersV1(options.content,scheduler,{maximumBatchBytes:options.maximumBatchBytes}),authorize,tls:options.tls,maximumMessageBytes:options.maximumMessageBytes,...(options.onCall?{onCall:options.onCall}:{})});
  const text=(status:number,message:string)=>new Response(message+"\n",{status,headers:{"content-type":"text/plain"}});
  const owners=new Map<string,string>(),maximumWorkers=options.maximumWorkers??256;
- const allowed=async(request:Request,peer:string|undefined,kind:"worker"|"status"):Promise<Readonly<{denied:Response}>|Readonly<{access:FleetAccessV1|undefined}>>=>{
-  const url=new URL(request.url),verdict=await gate.check({method:request.method,target:url.pathname+url.search,authorization:request.headers.get("authorization"),content:request.headers.get(FLEET_CONTENT_HEADER_V1),peer,roles:kind==="worker"?["worker"]:["worker","submit","admin"],tokens:kind==="worker"?["worker"]:["read","write","worker"]});
+ const allowed=async(request:Request,peer:string|undefined,kind:"worker"|"status"|"operator"):Promise<Readonly<{denied:Response}>|Readonly<{access:FleetAccessV1|undefined}>>=>{
+  const url=new URL(request.url),verdict=await gate.check({method:request.method,target:url.pathname+url.search,authorization:request.headers.get("authorization"),content:request.headers.get(FLEET_CONTENT_HEADER_V1),peer,roles:kind==="worker"?["worker"]:kind==="operator"?["submit","admin"]:["worker","submit","admin"],tokens:kind==="worker"?["worker"]:kind==="operator"?["write","worker"]:["read","write","worker"]});
   return verdict.ok?{access:verdict.access}:{denied:gate.respond(verdict)};
  };
  const mine=(access:FleetAccessV1|undefined,id:string):boolean=>access===undefined||access.role==="static"||owners.get(id)===undefined||owners.get(id)===access.origin;
@@ -240,6 +240,8 @@ export async function startRemoteExecutionServerV1(options:RemoteExecutionServer
     if(path==="/healthz")return Response.json({status:"ok"});
     if(path==="/status"&&method==="GET"){const guard=await allowed(request,peer,"status");return "denied" in guard?guard.denied:Response.json(await status());}
     if(path==="/v1/fleet/idle"&&method==="GET"){const guard=await allowed(request,peer,"status");if("denied" in guard)return guard.denied;const origin=new URL(request.url).searchParams.get("origin");return origin===null||origin===""?new Response("origin required\n",{status:400}):Response.json(scheduler.idleFor(origin));}
+    const cancelling=/^\/v1\/operations\/([A-Za-z0-9-]{1,64})\/cancel$/u.exec(path);
+    if(cancelling&&method==="POST"){const guard=await allowed(request,peer,"operator");return "denied" in guard?guard.denied:Response.json({cancelled:scheduler.abort(cancelling[1]!)});}
     if(path==="/v1/fleet/load"&&method==="GET"){const guard=await allowed(request,peer,"status");if("denied" in guard)return guard.denied;const document=scheduler.fleetLoad();requireRemoteExecutionShapeV1("FleetLoad",document,"Closed fleet load required");return Response.json(document);}
     if(path==="/v1/fleet/load"&&method==="POST"){
      const guard=await allowed(request,peer,"worker");if("denied" in guard)return guard.denied;

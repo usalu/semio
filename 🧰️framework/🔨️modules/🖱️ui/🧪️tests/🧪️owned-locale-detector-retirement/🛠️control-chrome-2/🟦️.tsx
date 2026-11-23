@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { TestSource, Tests2Vitest, Tests2Dependencies } from "../🧰️harness/🟦️.ts";
 
 export async function registerControlChrome2Tests(vitest: Tests2Vitest, dependencies: Tests2Dependencies, testSource: TestSource): Promise<void> {
-  const { applyDockSkeleton, dockSkeletonOf, dockSkeletonsEqual, isPanelTabInSubtree, measureWindowSilhouetteMetrics, Panel, PanelRightIcon, reconcileActivePath, renderToStaticMarkup, Ribbon, RibbonItem, RibbonZone, Search, singleTreeLeaf, Stepper, ToggleGroup, WindowChrome, WINDOW_PANE_MEASURES_ICON, WindowPaneChromeToggle, windowSilhouettePath } = dependencies;
+  const { applyDockSkeleton, dockSkeletonOf, dockSkeletonsEqual, isPanelTabInSubtree, measureWindowFrameMetrics, Panel, PanelRightIcon, reconcileActivePath, renderToStaticMarkup, Ribbon, RibbonItem, RibbonZone, Search, singleTreeLeaf, Stepper, ToggleGroup, WindowChrome, WINDOW_PANE_MEASURES_ICON, WindowPaneChromeToggle, windowFrameBorderPath } = dependencies;
   const { describe, expect, it, vi } = vitest;
 
 describe("control chrome", () => {
@@ -18,12 +18,12 @@ describe("control chrome", () => {
         const body = container.querySelector('[data-slot="panel-content"]') as HTMLElement;
         const controls = container.querySelector('[data-slot="window-chrome-controls"]') as HTMLElement;
         expect(chip.className).toContain("ui-glass");
-        expect(body.hasAttribute("data-window-silhouette-content")).toBe(true);
+        expect(body.hasAttribute("data-window-frame-content")).toBe(true);
         expect(body.className).not.toContain("ui-glass");
         expect(controls).toBeNull();
         expect(chip.className).not.toContain("ui-glass-chrome");
-        expect(chip.hasAttribute("data-window-silhouette-chip")).toBe(true);
-        expect(container.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+        expect(chip.hasAttribute("data-window-frame-chip")).toBe(true);
+        expect(container.querySelector('[data-slot="window-chrome-frame-border"]')).toBeTruthy();
         const inactive = container.querySelector('[data-slot="panel-tab-button"]:not([data-active="true"])') as HTMLElement;
         const active = container.querySelector('[data-slot="panel-tab-button"][data-active="true"]') as HTMLElement;
         expect(inactive.className).toContain("bg-transparent");
@@ -35,39 +35,45 @@ describe("control chrome", () => {
         expect(active.hasAttribute("data-shared-border-cell")).toBe(true);
         expect(active.className).toContain("border-0");
         expect(body.style.zIndex).toBe("1");
-        expect((container.querySelector('[data-slot="window-chrome-cap"]') as HTMLElement).style.zIndex).toBe("2");
+        const row = container.querySelector('[data-slot="window-chrome-cap"]') as HTMLElement;
+        expect(row.style.zIndex).toBe("2");
+        expect(row.style.pointerEvents === "none" || row.className.includes("pointer-events-none")).toBe(true);
+        expect(row.className).toContain("absolute");
+        expect(row.closest("[data-window-frame]")).toBeTruthy();
+        expect(chip.closest("[data-window-frame]")).toBe(body.closest("[data-window-frame]"));
+        expect(body.style.clipPath).toBe("");
+        expect(body.outerHTML).not.toContain("clip-path");
       });
   
-      it("measureWindowSilhouetteMetrics reads RTL top caps from painted chip spans instead of assuming LTR gap order", () => {
+      const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
+        if (!(el instanceof HTMLElement)) return;
+        vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+          x: rect.left ?? 0,
+          y: rect.top ?? 0,
+          top: rect.top ?? 0,
+          left: rect.left ?? 0,
+          bottom: rect.bottom ?? 0,
+          right: rect.right ?? 0,
+          width: rect.width ?? 0,
+          height: rect.height ?? 0,
+          toJSON: () => ({}),
+          ...rect,
+        } as DOMRect);
+      };
+
+      it("measureWindowFrameMetrics reads RTL top chips from painted spans in physical order without any gap element", () => {
         const stack = document.createElement("div");
         stack.innerHTML = `
           <div data-slot="window-chrome-cap">
-            <div data-slot="window-chrome-controls" data-window-silhouette-chip data-dock="top"></div>
-            <div data-slot="window-chrome-gap"></div>
-            <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="top"></div>
+            <div data-slot="window-chrome-controls" data-window-frame-chip data-dock="top"></div>
+            <div data-slot="window-chrome-chip-cap" data-window-frame-chip data-dock="top"></div>
           </div>
         `;
-        const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
-          if (!(el instanceof HTMLElement)) return;
-          vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
-            x: rect.left ?? 0,
-            y: rect.top ?? 0,
-            top: rect.top ?? 0,
-            left: rect.left ?? 0,
-            bottom: rect.bottom ?? 0,
-            right: rect.right ?? 0,
-            width: rect.width ?? 0,
-            height: rect.height ?? 0,
-            toJSON: () => ({}),
-            ...rect,
-          } as DOMRect);
-        };
         mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
         mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 0, right: 40, width: 40, height: 24, top: 0, bottom: 24 });
-        mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 40, right: 140, width: 100, height: 24, top: 0, bottom: 24 });
         mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 140, right: 200, width: 60, height: 24, top: 0, bottom: 24 });
         mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, right: 200, width: 200, height: 24, top: 0, bottom: 24 });
-        expect(measureWindowSilhouetteMetrics(stack)).toEqual({
+        expect(measureWindowFrameMetrics(stack)).toEqual({
           width: 200,
           height: 100,
           top: {
@@ -80,38 +86,21 @@ describe("control chrome", () => {
           bottom: { depth: 0, chips: [] },
         });
       });
-  
-      it("measureWindowSilhouetteMetrics places bottom-docked caps on the bottom silhouette edge", () => {
+
+      it("measureWindowFrameMetrics places bottom-docked chips on the bottom frame edge and keeps the border a rectangle", () => {
         const stack = document.createElement("div");
         stack.innerHTML = `
           <div data-slot="window-chrome-body"></div>
-          <div data-slot="window-chrome-cap">
-            <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="bottom"></div>
-            <div data-slot="window-chrome-gap"></div>
-            <div data-slot="window-chrome-controls" data-window-silhouette-chip data-dock="bottom"></div>
+          <div data-slot="window-chrome-footer">
+            <div data-slot="window-chrome-chip-cap" data-window-frame-chip data-dock="bottom"></div>
+            <div data-slot="window-chrome-controls" data-window-frame-chip data-dock="bottom"></div>
           </div>
         `;
-        const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
-          if (!(el instanceof HTMLElement)) return;
-          vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
-            x: rect.left ?? 0,
-            y: rect.top ?? 0,
-            top: rect.top ?? 0,
-            left: rect.left ?? 0,
-            bottom: rect.bottom ?? 0,
-            right: rect.right ?? 0,
-            width: rect.width ?? 0,
-            height: rect.height ?? 0,
-            toJSON: () => ({}),
-            ...rect,
-          } as DOMRect);
-        };
         mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
         mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 0, right: 60, width: 60, height: 24, top: 76, bottom: 100 });
-        mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 60, right: 160, width: 100, height: 24, top: 76, bottom: 100 });
         mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 160, right: 200, width: 40, height: 24, top: 76, bottom: 100 });
-        mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, right: 200, width: 200, height: 24, top: 76, bottom: 100 });
-        const metrics = measureWindowSilhouetteMetrics(stack);
+        mockRect(stack.querySelector('[data-slot="window-chrome-footer"]'), { left: 0, right: 200, width: 200, height: 24, top: 76, bottom: 100 });
+        const metrics = measureWindowFrameMetrics(stack);
         expect(metrics?.top).toEqual({ depth: 0, chips: [] });
         expect(metrics?.bottom).toEqual({
           depth: 24,
@@ -120,64 +109,32 @@ describe("control chrome", () => {
             { left: 160, right: 200 },
           ],
         });
-        expect(windowSilhouettePath(metrics!)).toBe(
-          windowSilhouettePath({
-            width: 200,
-            height: 100,
-            top: { depth: 0, chips: [] },
-            bottom: {
-              depth: 24,
-              chips: [
-                { left: 0, right: 60 },
-                { left: 160, right: 200 },
-              ],
-            },
-          }),
-        );
+        expect(windowFrameBorderPath(metrics!)).toBe("M1,1 H199 V99 H1 Z");
       });
-  
-      it("measureWindowSilhouetteMetrics ignores nested pane silhouette chips so the window bottom stays rectangular", () => {
+
+      it("measureWindowFrameMetrics ignores chips of a nested frame so the outer frame keeps only its own chip rows", () => {
         const stack = document.createElement("div");
-        stack.setAttribute("data-window-silhouette", "");
+        stack.setAttribute("data-window-frame", "");
         stack.setAttribute("data-slot", "mode-dock-stack");
         stack.innerHTML = `
           <div data-slot="mode-dock-tabbar">
-            <div data-slot="mode-dock-tab-cap" data-window-silhouette-chip data-dock="top"></div>
-            <div data-slot="mode-dock-tab-gap"></div>
-            <div data-slot="mode-dock-controls-cap" data-window-silhouette-chip data-dock="top"></div>
+            <div data-slot="mode-dock-tab-cap" data-window-frame-chip data-dock="top"></div>
+            <div data-slot="mode-dock-controls-cap" data-window-frame-chip data-dock="top"></div>
           </div>
           <div data-slot="mode-dock-stack-body">
-            <div data-window-silhouette data-slot="window-chrome-stack">
-              <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="bottom"></div>
-              <div data-slot="window-chrome-gap"></div>
-              <div data-slot="window-chrome-controls" data-window-silhouette-chip data-dock="bottom"></div>
+            <div data-window-frame data-slot="window-chrome-stack">
+              <div data-slot="window-chrome-chip-cap" data-window-frame-chip data-dock="bottom"></div>
+              <div data-slot="window-chrome-controls" data-window-frame-chip data-dock="bottom"></div>
             </div>
           </div>
         `;
-        const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
-          if (!(el instanceof HTMLElement)) return;
-          vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
-            x: rect.left ?? 0,
-            y: rect.top ?? 0,
-            top: rect.top ?? 0,
-            left: rect.left ?? 0,
-            bottom: rect.bottom ?? 0,
-            right: rect.right ?? 0,
-            width: rect.width ?? 0,
-            height: rect.height ?? 0,
-            toJSON: () => ({}),
-            ...rect,
-          } as DOMRect);
-        };
         mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
         mockRect(stack.querySelector('[data-slot="mode-dock-tab-cap"]'), { left: 0, right: 60, width: 60, height: 24, top: 0, bottom: 24 });
-        mockRect(stack.querySelector('[data-slot="mode-dock-tab-gap"]'), { left: 60, right: 160, width: 100, height: 24, top: 0, bottom: 24 });
         mockRect(stack.querySelector('[data-slot="mode-dock-controls-cap"]'), { left: 160, right: 200, width: 40, height: 24, top: 0, bottom: 24 });
         mockRect(stack.querySelector('[data-slot="mode-dock-tabbar"]'), { left: 0, right: 200, width: 200, height: 24, top: 0, bottom: 24 });
         mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 140, right: 200, width: 60, height: 24, top: 76, bottom: 100 });
-        mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 0, right: 140, width: 140, height: 24, top: 76, bottom: 100 });
         mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 0, right: 0, width: 0, height: 24, top: 76, bottom: 100 });
-        expect(measureWindowSilhouetteMetrics(stack)).toEqual({
+        expect(measureWindowFrameMetrics(stack)).toEqual({
           width: 200,
           height: 100,
           top: {
@@ -190,7 +147,7 @@ describe("control chrome", () => {
           bottom: { depth: 0, chips: [] },
         });
       });
-  
+
       it("bottom-anchored panels stamp capDock=bottom on WindowChrome and keep rtl on the panel root for top-right", () => {
         const StubIcon = (): null => null;
         const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } })];

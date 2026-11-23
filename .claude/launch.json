@@ -20,6 +20,15 @@
       "port": 6072
     },
     {
+      "name": "os-shell-frames-native",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/ueli/Documents/semio && STORYBOOK_SCOPE=ui STORYBOOK_DISABLE_TELEMETRY=1 SEMIO_BUILD_MODE=prototype SEMIO_VITE_CACHE_DIRECTORY=/Users/ueli/Documents/semio/.cache/b/p/m/os-shell-frames-sb-vite exec \"$(ls ~/Library/Caches/semio/runtimes/bun/*/bun | head -1)\" node_modules/storybook/dist/bin/dispatcher.js dev -c .storybook -p 6090 --exact-port --host 127.0.0.1 --no-open --ci"
+      ],
+      "port": 6090
+    },
+    {
       "name": "process3d-react",
       "runtimeExecutable": "repo",
       "runtimeArgs": [
@@ -31,6 +40,47 @@
         "prototype"
       ],
       "port": 6022
+    },
+    {
+      "name": "stdio-pdf-react",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-PDF-ARTIFACT-EDITOR-WORKING-END-TO-END/serve-pdf-native.sh"
+      ],
+      "port": 6260
+    },
+    {
+      "name": "generation3d-react-native",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️09/PROCEDURAL-3D-END-TO-END/serve-generation3d-native.sh"
+      ],
+      "port": 6018
+    },
+    {
+      "name": "generation3d-wgpu-native",
+      "runtimeExecutable": "zsh",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️09/PROCEDURAL-3D-END-TO-END/serve-generation3d-wgpu-native.sh"
+      ],
+      "port": 6118
+    },
+    {
+      "name": "sourcing-react",
+      "runtimeExecutable": "repo",
+      "runtimeArgs": [
+        "run",
+        "@semio-tech/framework-os-dev:serve-sourcing-react-prototype"
+      ],
+      "port": 6081
+    },
+    {
+      "name": "draw-react-native",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/serve-draw-native.sh"
+      ],
+      "port": 6064
     }
   ]
 }

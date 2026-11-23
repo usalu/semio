@@ -160,7 +160,7 @@ fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
 /// 👁️ Pure `RemodelingSnapshot -> BuiltNode` read: hardcoded default camera/sun, no selection overlay,
 /// every point layer unconditionally visible, mesh content real whenever the working-scene cache is
 /// warm.
-pub fn render(scene: &RemodelingSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &RemodelingSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let mut world_scene = world3d_scene(
         semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&REMODELING_VIEW_VIEWPORT)),
         world_meshes_json(scene),
@@ -169,7 +169,7 @@ pub fn render(scene: &RemodelingSnapshot) -> UiAssemblyResult<BuiltNode> {
         &WorldSunConfig::default(),
     );
     world_scene.points_json = world_points_json(scene);
-    semio_plugin::scene_surface(SURFACE_ID, ContractSurfaceKind::World3d, &world_scene)
+    semio_plugin::scene_surface(SURFACE_ID, ContractSurfaceKind::World3d, &world_scene, semio_plugin::surface_name(locale, "Model view", "Modellansicht"), None)
 }
 //#endregion 🔖️Render
 

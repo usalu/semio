@@ -80,9 +80,6 @@ impl LayoutMediaExportJob{
   Ok(RetainedCloneStep::Complete(Default::default()))
  }
 
-}
-
-impl LayoutMediaExportJob {
  fn step_turn<'a>(&'a mut self,cx:&mut StepContext<'_>)->LayoutExportTurn<'a>{
   if !self.slot.settle(cx)?{return Ok(None)}if self.slot.publication.is_some(){return self.slot.advance(cx)}
   if self.pending_result.is_some()||self.result_published{self.completed=self.completion.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media lost its original completion receiver"))?.complete_original(&mut self.pending_result,&mut self.result_published,cx)?;return Ok(None)}

@@ -50,9 +50,9 @@ pub fn receive_cut<I:?Sized,T,R:NativeReceiver<I,T>>(receiver:&mut R,source:Reta
 pub fn receive_faulted<I:?Sized,T,R:NativeReceiver<I,T>>(receiver:&mut R,source:RetainedCloneRef<'_,I>,bank:&mut EffectBank,body:usize,cut:Option<u64>,fault:Option<u128>)->Result<Option<T>,String>{receive_traced(receiver,source,bank,body,cut,fault,&mut Trace::default())}
 struct AdmitReset;
 impl Drop for AdmitReset{fn drop(&mut self){session_admit(None)}}
-/// 🧾️ Records per-turn work and the quote shape of every funded turn; clearing `admit` refuses the next cancellation checkpoint.
+/// 🧾️ Records per-turn work and the quote shape of every funded turn; clearing `admit` refuses the next cancellation checkpoint; `stop_at_capacity` ends the receive with `capacity denied` once the first capacity-demanding turn survived every axis denial.
 #[derive(Debug,Default)]
-pub struct Trace{pub advance:Vec<u128>,pub shapes:Vec<[usize;5]>,pub take:u128,pub admit:Option<std::sync::Arc<std::sync::atomic::AtomicBool>>}
+pub struct Trace{pub advance:Vec<u128>,pub shapes:Vec<[usize;5]>,pub take:u128,pub admit:Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,pub stop_at_capacity:bool}
 /// 🧾️ Like [`receive_faulted`], recording work in `trace`.
 pub fn receive_traced<I:?Sized,T,R:NativeReceiver<I,T>>(receiver:&mut R,source:RetainedCloneRef<'_,I>,bank:&mut EffectBank,body:usize,cut:Option<u64>,fault:Option<u128>,trace:&mut Trace)->Result<Option<T>,String>{
     let pointer=std::ptr::from_ref(source.get());let mut pending_fault=fault;session_open(bank);
@@ -71,6 +71,7 @@ pub fn receive_traced<I:?Sized,T,R:NativeReceiver<I,T>>(receiver:&mut R,source:R
             }
             assert_eq!(receiver.demands(source,body,MAXIMUM).map_err(|error|format!("{error:?}"))?,demand,"denied turn changed quote");assert_eq!(std::ptr::from_ref(source.get()),pointer,"denied turn moved Source");
         }
+        if trace.stop_at_capacity&&demand.capacity_bytes>0{return Err("capacity denied".to_owned())}
         if let(Some(work),true)=(pending_fault,demand.capacity_bytes>0){
             pending_fault=None;
             match selection{

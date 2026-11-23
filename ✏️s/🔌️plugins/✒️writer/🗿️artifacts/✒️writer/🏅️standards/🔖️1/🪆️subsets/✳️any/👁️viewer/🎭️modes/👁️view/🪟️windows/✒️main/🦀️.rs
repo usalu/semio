@@ -23,8 +23,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &WriterSnapshot) -> UiAssemblyResult<BuiltNode> {
-    TextWindowKit::render(&TextView { text: writer_text(document), language: Some(document.language_id.clone()) })
+pub fn render(document: &WriterSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
+    TextWindowKit::render(&TextView { text: writer_text(document), language: Some(document.language_id.clone()) }, locale)
 }
 //#endregion 🔖️Render
 

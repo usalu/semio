@@ -37,7 +37,7 @@ where
     (*a, *b)
 }
 
-/// 📦️ [`paired_registered_apps_with_members`] holding both replicas on the heap, so no future of a law carries a megabyte instance inline.
+/// 📦️ [`paired_registered_apps_with_members`] holding both replicas on the heap, so a law's future carries two pointers.
 pub async fn paired_registered_apps_boxed_with_members<A, M, Manifest, Build>(channel: &str, manifest: Build, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (Box<VcsArtifactApp<A, M>>, Box<VcsArtifactApp<A, M>>)
 where
     A: ArtifactApp + Default,

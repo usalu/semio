@@ -1,4 +1,4 @@
-//! 🌍️ World pass drawing: the world pass upload and draw, the instance, silhouette, raster and vector draws and the interleaved layer rendering. See [`super`].
+//! 🌍️ World pass drawing: the world pass upload and draw, the instance, raster and vector draws and the interleaved layer rendering. See [`super`].
 
 use super::*;
 
@@ -111,26 +111,6 @@ impl UiPipelines {
         pass.draw(0..6, start..start + count);
     }
 
-    #[cfg(test)]
-    pub(super) fn draw_silhouette_mask<'a>(&'a self, pass: &mut gpu_device::RenderPass<'a>, mask_buffer: &gpu_device::BufferSlice<'a>, start: u32, count: u32, width: f32, height: f32) {
-        if count == 0 {
-            pass.set_stencil_reference(1);
-            return;
-        }
-        set_pass_scissor(pass, None, self.resources.surface_scale, width, height);
-        pass.set_pipeline(&self.resources.mask_pipeline);
-        pass.set_bind_group(0, &self.resources.glyph_bind_group, &[]);
-        pass.set_vertex_buffer(0, self.resources.quad_vertex_buffer.slice(..));
-        pass.set_vertex_buffer(1, *mask_buffer);
-        pass.set_stencil_reference(0);
-        pass.draw(0..6, start..start + 1);
-        if count > 1 {
-            pass.set_stencil_reference(1);
-            pass.draw(0..6, start + 1..start + count);
-        }
-        pass.set_stencil_reference(1);
-    }
-
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     #[cfg(test)]
     pub(super) fn draw_raster_layers<'a>(
@@ -147,23 +127,8 @@ impl UiPipelines {
         overlay: bool,
     ) {
         let raster_layers: Vec<&DrawLayer> = draw.layers.iter().filter(|layer| layer_matches_filter(layer, filter) && if overlay { !layer.overlay_raster_instances.is_empty() } else { !layer.raster_instances.is_empty() }).collect();
-        let mut mask_data = Vec::new();
-        let mut mask_ranges = Vec::with_capacity(raster_layers.len());
-        let mut previous_bounds = None;
-        for layer in &raster_layers {
-            let start = mask_data.len() as u32;
-            let (instances, current_bounds) = mask_instances(layer.scissor, layer.clip.as_ref(), previous_bounds, width, height);
-            let count = instances.len() as u32;
-            mask_data.extend(instances);
-            mask_ranges.push((start, count));
-            previous_bounds = current_bounds;
-        }
-        let Some(mask_buffer) = frame_buffers.mask_instances.upload(device, queue, &mask_data, gpu_device::BufferUsages::VERTEX | gpu_device::BufferUsages::COPY_DST, "raster_silhouette_masks") else {
-            return;
-        };
-        for (layer_index, layer) in raster_layers.into_iter().enumerate() {
-            let (mask_start, mask_count) = mask_ranges[layer_index];
-            self.draw_silhouette_mask(pass, &mask_buffer, mask_start, mask_count, width, height);
+        for layer in raster_layers {
+            set_pass_scissor(pass, layer.scissor, self.resources.surface_scale, width, height);
             let mut batch_key: Option<String> = None;
             let mut batch_instances: Vec<UiInstance> = Vec::new();
             let mut flush = |key: &str, instances: &[UiInstance]| {
@@ -218,8 +183,6 @@ impl UiPipelines {
         pass: &mut gpu_device::RenderPass<'a>,
         draw: &DrawList,
         batches: &[LayerBatch],
-        mask_buffer: Option<&gpu_device::BufferSlice<'a>>,
-        mask_ranges: &[(u32, u32)],
         ui_buffer: Option<&gpu_device::BufferSlice<'a>>,
         vector_buffer: Option<&gpu_device::BufferSlice<'a>>,
         world_prepared: Option<&[PreparedWorldPass]>,
@@ -231,14 +194,8 @@ impl UiPipelines {
         height: f32,
         depth_enabled: bool,
     ) {
-        for (batch_index, batch) in batches.iter().enumerate() {
-            if let Some((start, count)) = mask_ranges.get(batch_index).copied() {
-                if let Some(mask_buffer) = mask_buffer {
-                    self.draw_silhouette_mask(pass, mask_buffer, start, count, width, height);
-                } else {
-                    pass.set_stencil_reference(1);
-                }
-            }
+        for batch in batches.iter() {
+            set_pass_scissor(pass, batch.scissor, self.resources.surface_scale, width, height);
             let mut layer_passes: Vec<(usize, usize, usize)> = draw.scene_passes.iter().enumerate().filter(|(_, scene)| scene.layer_index == batch.layer_index).map(|(index, scene)| (index, scene.ui_watermark, scene.vector_watermark)).collect();
             layer_passes.sort_by_key(|(_, ui, vec)| (*ui, *vec));
             if layer_passes.is_empty() {

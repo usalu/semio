@@ -247,6 +247,17 @@ class Stage:
                 self.bind(end.entity, value, revision=end.revision)
         return item
 
+    def _consume(self, source):
+        """🧲 Make the source group the scene's own entry for its parts: parts that were added one by one are removed and the group takes their place, so removing the source removes every part."""
+        if source is None:
+            return
+        group = source.mobject
+        family = {id(m) for m in group.get_family()} - {id(group)}
+        parts = [m for m in self.scene.mobjects if id(m) in family]
+        if parts:
+            self.scene.remove(*parts)
+            self.scene.add(group)
+
     def _report(self, item):
         """🧾 Append `{id, start, duration, f0, f1}` on the scene clock to `transitions.json` beside the work record, so posters and tools resolve the real terminal frame."""
         path = os.environ.get("SEMIO_TEACHING_WORK")
@@ -277,6 +288,7 @@ class Stage:
         if profile.morph not in MORPHS:
             raise ValueError(f"profile morph {profile.morph!r} is not one of {MORPHS}")
         item, source, target = self._subjects(transition_id)
+        self._consume(source)
         self._report(item)
         fps = float(_engine.config.frame_rate)
         animation = (_module(PREVIEW_MODULE).PreviewSwap(source, target, transition=item, fps=fps, frames=self._frames() or None) if profile.morph == "swap"
@@ -291,6 +303,7 @@ class Stage:
         if item.timing.duration != 0:
             self._played.pop()
             raise ValueError(f"transition {transition_id!r} has duration {item.timing.duration}; cut only switches atomically. Fix: use stage.transition({transition_id!r}) or set duration 0")
+        self._consume(source)
         self._report(item)
         if _profile().morph == "swap":
             _module(PREVIEW_MODULE).PreviewSwap(source, target, transition=item, fps=float(_engine.config.frame_rate), frames=self._frames() or None).swap_now(self.scene)

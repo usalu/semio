@@ -144,6 +144,16 @@ fn check_soil_layers(declared: &En1997Snapshot, doc: &En1997Snapshot, report: &m
             let path_cpt = format!("layers[id={}].cptQc", layer.id);
             let path_spt = format!("layers[id={}].sptN", layer.id);
             let label_l = loc(&format!("Layer {}", layer.id), &format!("Schicht {}", layer.id));
+            let phi_derived = geo_entities::phi_is_derived(doc, &layer.id);
+            let phi_remedy = |bound: f64, source_en: &str, source_de: &str| {
+                let target = subject_entity(&layer.id, &path_phi, &label_l.en, &label_l.de);
+                if phi_derived {
+                    Remedy::advisory(target, loc("φ′ follows the investigation readings of its characteristic basis: revise the readings or declare the basis.", "φ′ folgt den Erkundungswerten seiner Grundlage: die Messwerte überarbeiten oder die Grundlage angeben."))
+                } else {
+                    let action = loc(&format!("Reduce stated φ′ to ≤ {bound:.1}° ({source_en}, EN 1997-1 §2.4.5.2)."), &format!("Angegebenen φ′ auf ≤ {bound:.1}° absenken ({source_de}, EN 1997-1 §2.4.5.2)."));
+                    Remedy::at_most(target, Quantity::new(QuantityKind::Dimensionless, layer.phi_prime_deg), Quantity::new(QuantityKind::Dimensionless, bound), action)
+                }
+            };
             if layer.cpt_qc > 0.0 {
                 let phi_cpt = part_2::phi_from_cpt_deg(layer.cpt_qc, overburden.max(50_000.0));
                 let mut cpt_chk = CheckResult::assess(
@@ -163,15 +173,7 @@ fn check_soil_layers(declared: &En1997Snapshot, doc: &En1997Snapshot, report: &m
                     &format!("φ′_angegeben={:.1}° gegen φ′_CPT={:.1}° (qc={:.2} MPa, σ′v0={:.0} kPa).", layer.phi_prime_deg, phi_cpt, layer.cpt_qc/1e6, overburden/1000.0),
                 ));
                 if layer.phi_prime_deg > phi_cpt + 1e-9 {
-                    cpt_chk = cpt_chk.status(CheckStatus::Fail).remedy(Remedy::at_most(
-                        subject_entity(&layer.id, &path_phi, &label_l.en, &label_l.de),
-                        Quantity::new(QuantityKind::Dimensionless, layer.phi_prime_deg),
-                        Quantity::new(QuantityKind::Dimensionless, phi_cpt),
-                        loc(
-                            &format!("Reduce stated φ′ to ≤ {:.1}° (CPT correlation, EN 1997-1 §2.4.5.2).", phi_cpt),
-                            &format!("Angegebenen φ′ auf ≤ {:.1}° absenken (CPT-Korrelation, EN 1997-1 §2.4.5.2).", phi_cpt),
-                        ),
-                    ));
+                    cpt_chk = cpt_chk.status(CheckStatus::Fail).remedy(phi_remedy(phi_cpt, "CPT correlation", "CPT-Korrelation"));
                 }
                 report.push(cpt_chk.build());
             }
@@ -194,15 +196,7 @@ fn check_soil_layers(declared: &En1997Snapshot, doc: &En1997Snapshot, report: &m
                     &format!("φ′_angegeben={:.1}° gegen φ′_SPT={:.1}° (N={:.0}).", layer.phi_prime_deg, phi_spt, layer.spt_n),
                 ));
                 if layer.phi_prime_deg > phi_spt + 1e-9 {
-                    spt_chk = spt_chk.status(CheckStatus::Fail).remedy(Remedy::at_most(
-                        subject_entity(&layer.id, &path_phi, &label_l.en, &label_l.de),
-                        Quantity::new(QuantityKind::Dimensionless, layer.phi_prime_deg),
-                        Quantity::new(QuantityKind::Dimensionless, phi_spt),
-                        loc(
-                            &format!("Reduce stated φ′ to ≤ {:.1}° (SPT correlation, EN 1997-1 §2.4.5.2).", phi_spt),
-                            &format!("Angegebenen φ′ auf ≤ {:.1}° absenken (SPT-Korrelation, EN 1997-1 §2.4.5.2).", phi_spt),
-                        ),
-                    ));
+                    spt_chk = spt_chk.status(CheckStatus::Fail).remedy(phi_remedy(phi_spt, "SPT correlation", "SPT-Korrelation"));
                 }
                 report.push(spt_chk.build());
             }
@@ -225,15 +219,7 @@ fn check_soil_layers(declared: &En1997Snapshot, doc: &En1997Snapshot, report: &m
                 &format!("φ′_angegeben={:.1}° gegen φ′_char={:.1}° aus {phi_src} (EN 1997-2 CPT/SPT; qc={:.0} MPa, N={:.0}).", layer.phi_prime_deg, phi_char, layer.cpt_qc/1e6, layer.spt_n),
             ));
             if layer.phi_prime_deg > phi_char + 1e-9 {
-                phi_chk = phi_chk.status(CheckStatus::Fail).remedy(Remedy::at_most(
-                    subject_entity(&layer.id, &path_phi, &label_l.en, &label_l.de),
-                    Quantity::new(QuantityKind::Dimensionless, layer.phi_prime_deg),
-                    Quantity::new(QuantityKind::Dimensionless, phi_char),
-                    loc(
-                        &format!("Reduce stated φ′ to ≤ {:.1}° (cautious estimate from {phi_src}, EN 1997-1 §2.4.5.2).", phi_char),
-                        &format!("Angegebenen φ′ auf ≤ {:.1}° absenken (vorsichtiger Schätzwert aus {phi_src}, EN 1997-1 §2.4.5.2).", phi_char),
-                    ),
-                ));
+                phi_chk = phi_chk.status(CheckStatus::Fail).remedy(phi_remedy(phi_char, &format!("cautious estimate from {phi_src}"), &format!("vorsichtiger Schätzwert aus {phi_src}")));
             }
             report.push(phi_chk.build());
         }
@@ -580,12 +566,7 @@ fn check_footing_uplift_and_bounds(
             &format!("s_el=p·B·(1−ν²)·I/E = {:.1} mm (ν={:.2}, E_oed={:.0} MPa, Schicht {}).", s_el*1000.0, nu, e_mod/1e6, el_gov.id),
         ));
         if s_el > footing.settlement_limit {
-            el = el.remedy(Remedy::at_most(
-                subject_entity(&el_gov.id, &path_nu, &format!("Layer {}", el_gov.id), &format!("Schicht {}", el_gov.id)),
-                Quantity::new(QuantityKind::Dimensionless, nu),
-                Quantity::new(QuantityKind::Dimensionless, (nu * 0.85).max(0.1)),
-                loc("Reduce Poisson ratio or raise stiffness / widen footing for elastic settlement.", "Poissonzahl senken oder Steifigkeit erhöhen / Fundament verbreitern."),
-            )).remedy(Remedy::at_least(
+            el = el.remedy(Remedy::at_least(
                 subject_entity(&el_gov.id, &format!("layers[id={}].oedometricModulus", el_gov.id), &format!("Layer {}", el_gov.id), &format!("Schicht {}", el_gov.id)),
                 Quantity::new(QuantityKind::Pressure, e_mod),
                 Quantity::new(QuantityKind::Pressure, e_mod * s_el / footing.settlement_limit.max(1e-6)),

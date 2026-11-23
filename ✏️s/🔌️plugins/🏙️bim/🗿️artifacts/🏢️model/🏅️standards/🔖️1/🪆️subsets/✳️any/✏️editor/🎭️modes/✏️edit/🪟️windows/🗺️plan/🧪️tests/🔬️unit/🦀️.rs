@@ -56,7 +56,7 @@ async fn the_plan_paints_the_linework_of_its_view() {
     let painted = records(plan, &[], &[], "select");
     assert_eq!(painted.len(), 1 + plan.regions.len() + plan.polylines.len() + plan.texts.len());
     assert!(plan.regions.iter().any(|region| region.element == "w-south"), "the cut south wall is poché");
-    assert!(render(&snapshot, &inference, &ground(), &[], &[], "select", 1, &BimLabels::NATIVE_EN).is_ok());
+    assert!(render(&snapshot, &inference, &ground(), &[], &[], "select", 1, &BimLabels::NATIVE_EN, semio_plugin::Locale::En).is_ok());
 }
 
 #[semio_framework_async_macros::async_test]

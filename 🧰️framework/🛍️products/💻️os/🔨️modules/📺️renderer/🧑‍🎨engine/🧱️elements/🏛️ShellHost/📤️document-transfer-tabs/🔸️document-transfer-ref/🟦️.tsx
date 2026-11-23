@@ -12,7 +12,8 @@ import { actionRequiresStagedForm } from "../../../🛠️ShellHelpers/🪟️wi
 import { controlOwnsKeyboardEvent, keyboardEventMatchesChord, resolveKeybindingIntent } from "../../../🛠️ShellHelpers/🪟️window-panes/⌨️keyboard-chords/🟦️.ts";
 import { resolveAppLabel, resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { panelAnchorForGroup } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
-import { type BrowserActorPanelHostV1, uiIntentToActionDescriptor } from "../../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import type { BrowserActorPanelHostV1 } from "../../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import { uiIntentToActionDescriptor } from "../../../🗣️Interpreter/🎬️intent-descriptor/🟦️.ts";
 import { pasteActionWithRetainedFragment, type ClipboardActionDescriptor, pasteArgsFragment } from "../../../🛠️ShellHelpers/🪟️window-panes/📋️clipboard-activation/🟦️.ts";
 import { FRAMEWORK_CHAT_PANEL_ID } from "../../../📌️ChromePanels/🆔️panel-ids/🟦️.ts";
 import { focusAgentApprovalV1 } from "../../../🤖️AgentApprovals/🟦️.tsx";

@@ -54,8 +54,20 @@ impl ArtifactEditor for Fem3dPlayApp {
         Some(std::sync::Arc::new(Fem3dArtifactPreparationFactory))
     }
 
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
 
+    fn build_document_store_owners(grant: semio_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = store::ArtifactOperationWire::semantic::<Self::Snapshot>().with_batch_digest().with_original_pack_value_receiving().with_original_target(store::whole_document_target::<Self::Mutation>);
+            (owners, progress)
+        }))
+    }
 
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+        Some(fem3d_envelope_decode_owner_bundle())
+    }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
@@ -313,12 +325,13 @@ impl ArtifactEditor for Fem3dPlayApp {
     fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref();
-        let text = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
-        let number = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64);
-        let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_bool);
-        let list = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_array).map(|items| items.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect::<Vec<_>>());
+        let lookup = |key: &str| args.and_then(|value| value.get(key).or_else(|| value.get(&key.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['_', c.to_ascii_lowercase()] } else { vec![c] }).collect::<String>())));
+        let text = |key: &str| lookup(key).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
+        let number = |key: &str| lookup(key).and_then(semio_framework_value::DslValue::as_f64);
+        let flag = |key: &str| lookup(key).and_then(semio_framework_value::DslValue::as_bool);
+        let list = |key: &str| lookup(key).and_then(semio_framework_value::DslValue::as_array).map(|items| items.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect::<Vec<_>>());
         let scalar_text = |key: &str| {
-            args.and_then(|value| value.get(key)).and_then(|value| match value {
+            lookup(key).and_then(|value| match value {
                 semio_framework_value::DslValue::String(text) => Some(text.clone()),
                 semio_framework_value::DslValue::Bool(flag) => Some(flag.to_string()),
                 other => other.as_f64().map(|number| number.to_string()),
@@ -501,12 +514,15 @@ impl ArtifactEditor for Fem3dPlayApp {
         interaction: &InteractionView<'_>,
         cx:&mut semio_plugin::StepContext<'_>,
     ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
-        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
+        let rendered:(semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>,Option<Fem3dSnapshot>)=(||{
         let clock = transient.window::<window_results::transient::Fem3dResultsWindowTransientOwner>().and_then(|window| window.clock);
         let preview = transient.snapshot.preview::<Fem3dSnapshot, semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue, Fem3dMutation>(doc.snapshot, Fem3dSnapshot::to_reference, |value| Fem3dSnapshot::from_reference(value).ok());
-        Self::render_body(body_key, doc, preview.as_ref(), cfg, view_state, Fem3dInteractionSnapshot::from_interaction(interaction), clock)
+        let tree = Self::render_body(body_key, doc, preview.as_ref(), cfg, view_state, Fem3dInteractionSnapshot::from_interaction(interaction), clock);
+        (tree, preview)
 
         })();
+        let (rendered, preview) = rendered;
+        Self::retire_preview(preview, cx)?;
         rendered.map(Some).map_err(Into::into)
         }
 
@@ -520,6 +536,26 @@ impl ArtifactEditor for Fem3dPlayApp {
 }
 
 impl Fem3dPlayApp {
+    /// ♻️ Pays the retirement of a gumball preview snapshot through the render turn's funded original effect, because its sealed lists refuse a plain drop of their last owner.
+    fn retire_preview(preview: Option<Fem3dSnapshot>, cx: &mut semio_plugin::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        let Some(preview) = preview else { return Ok(()) };
+        let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::retain(preview);
+        cx.with_original_retirement(|cx| {
+            while !owner.terminal_is_empty() {
+                let demand = owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;
+                semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+                    let body = effect.grant().maximum_copy_bytes;
+                    owner.step(body, effect)
+                })?;
+                if cx.retirement_should_yield() {
+                    break;
+                }
+            }
+            Ok(())
+        })?;
+        if owner.terminal_is_empty() { Ok(()) } else { std::mem::forget(owner); Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "fem3d preview retirement exceeds the render turn's grant").into()) }
+    }
+
     /// 🖼️ Body-key routing table shared by both render entry points: two World3d windows and the
     /// three dock panels. While a gumball gesture is open both world windows paint its `preview` (the committed
     /// document with the open transaction applied, never history): the model window from its own meshes rather than
@@ -540,15 +576,15 @@ impl Fem3dPlayApp {
                 let window = window_model::config::current(cfg);
                 let transform_armed = fem3d_transform_armed(view_state);
                 match preview {
-                    Some(preview) => window_model::render_with_progress(preview, &window, &interaction, transform_armed, None),
-                    None => semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(doc.snapshot, &window, &interaction, transform_armed, visual)),
+                    Some(preview) => window_model::render_with_progress(preview, &window, &interaction, transform_armed, None, view_state.locale),
+                    None => semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(doc.snapshot, &window, &interaction, transform_armed, visual, view_state.locale)),
                 }
             }
             window_results::FEM3D_BODY_RESULTS => {
                 let window = window_results::config::effective(&window_results::config::current(cfg), clock.as_ref());
                 match preview {
-                    Some(preview) => window_results::render_pending(preview, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority()), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive, labels),
-                    None => window_results::render(doc.snapshot, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority()), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive, labels),
+                    Some(preview) => window_results::render_pending(preview, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority()), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive, labels, view_state.locale),
+                    None => window_results::render(doc.snapshot, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority()), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive, labels, view_state.locale),
                 }
             }
             artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),

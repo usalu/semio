@@ -23,8 +23,6 @@ pub use gpu_targets_and_pipeline_resources::{
     SceneColorTarget, WorldGlobalsRing, WorldLineGpuVertex, WorldPointGpuInstance, WorldPostprocessGlobals,
     WorldShadowTarget, SCENE_MIP_LEVELS, WORLD_GLOBALS_SLOT_SIZE,
 };
-#[cfg(any(test,feature="testkit"))]
-pub use gpu_targets_and_pipeline_resources::mask_stencil_state;
 
 #[path = "🏗️pipeline-resources-construction/🦀️.rs"]
 mod pipeline_resources_construction;

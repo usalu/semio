@@ -171,6 +171,11 @@ pub fn check_units(doc: &En1999Snapshot, report: &CheckReport) -> Vec<CheckUnit>
     out
 }
 
+/// 🧼️ Starts a row with an empty NDP read log: reads a previous row did not cite must not leak into the first check of this one, so a row yields the same checks alone (as a unit) and inside the whole report.
+fn isolate() {
+    semio_s_plugin_norm_compliance::drain_ndp_reads();
+}
+
 pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
     evaluate_scoped(doc, Scope::All)
 }
@@ -201,10 +206,10 @@ pub fn evaluate_scoped(doc: &En1999Snapshot, scope: Scope<'_>) -> CheckReport {
     push_detail_fails(&mut report, doc);
     }
 
-    for (i, m) in doc.members.iter().enumerate().filter(|(i, _)| scope.admits("memberActions", *i)) { push_action_field_fails(&mut report, annex, "members", &m.id, &m.actions); }
-    for (i, c) in doc.connections.iter().enumerate().filter(|(i, _)| scope.admits("connectionActions", *i)) { push_action_field_fails(&mut report, annex, "connections", &c.id, &c.actions); }
-    for (i, s) in doc.cold_formed.iter().enumerate().filter(|(i, _)| scope.admits("coldFormedActions", *i)) { push_action_field_fails(&mut report, annex, "coldFormed", &s.id, &s.actions); }
-    for (i, s) in doc.shells.iter().enumerate().filter(|(i, _)| scope.admits("shellActions", *i)) { push_action_field_fails(&mut report, annex, "shells", &s.id, &s.actions); }
+    for (i, m) in doc.members.iter().enumerate().filter(|(i, _)| scope.admits("memberActions", *i)).inspect(|_| isolate()) { push_action_field_fails(&mut report, annex, "members", &m.id, &m.actions); }
+    for (i, c) in doc.connections.iter().enumerate().filter(|(i, _)| scope.admits("connectionActions", *i)).inspect(|_| isolate()) { push_action_field_fails(&mut report, annex, "connections", &c.id, &c.actions); }
+    for (i, s) in doc.cold_formed.iter().enumerate().filter(|(i, _)| scope.admits("coldFormedActions", *i)).inspect(|_| isolate()) { push_action_field_fails(&mut report, annex, "coldFormed", &s.id, &s.actions); }
+    for (i, s) in doc.shells.iter().enumerate().filter(|(i, _)| scope.admits("shellActions", *i)).inspect(|_| isolate()) { push_action_field_fails(&mut report, annex, "shells", &s.id, &s.actions); }
 
     if doc.members.is_empty() && scope.part("members-empty") {
         report.push(
@@ -221,7 +226,7 @@ pub fn evaluate_scoped(doc: &En1999Snapshot, scope: Scope<'_>) -> CheckReport {
         );
     }
 
-    for (_, member) in doc.members.iter().enumerate().filter(|(i, _)| scope.admits("members", *i)) {
+    for (_, member) in doc.members.iter().enumerate().filter(|(i, _)| scope.admits("members", *i)).inspect(|_| isolate()) {
         let section = doc.sections.iter().find(|s| s.id == member.section_id);
         let material = doc.materials.iter().find(|m| m.id == member.material_id);
         match (section, material) {
@@ -267,7 +272,7 @@ pub fn evaluate_scoped(doc: &En1999Snapshot, scope: Scope<'_>) -> CheckReport {
             .build(),
         );
     }
-    for (_, conn) in doc.connections.iter().enumerate().filter(|(i, _)| scope.admits("connections", *i)) {
+    for (_, conn) in doc.connections.iter().enumerate().filter(|(i, _)| scope.admits("connections", *i)).inspect(|_| isolate()) {
         match doc.materials.iter().find(|m| m.id == conn.material_id) {
             Some(mat) => {
                 let mem = doc.members.iter().find(|m| m.id == conn.member_id);
@@ -312,7 +317,7 @@ pub fn evaluate_scoped(doc: &En1999Snapshot, scope: Scope<'_>) -> CheckReport {
             .build(),
         );
     }
-    for (_, fire) in doc.fire_scenarios.iter().enumerate().filter(|(i, _)| scope.admits("fireScenarios", *i)) {
+    for (_, fire) in doc.fire_scenarios.iter().enumerate().filter(|(i, _)| scope.admits("fireScenarios", *i)).inspect(|_| isolate()) {
         let member = doc.members.iter().find(|m| m.id == fire.member_id);
         let section = member.and_then(|m| doc.sections.iter().find(|s| s.id == m.section_id));
         let material = member.and_then(|m| doc.materials.iter().find(|mat| mat.id == m.material_id));
@@ -363,7 +368,7 @@ pub fn evaluate_scoped(doc: &En1999Snapshot, scope: Scope<'_>) -> CheckReport {
         );
     }
     let spectra = part_1_3::spectrum_groups(&doc.fatigue_details);
-    for (i, fat) in doc.fatigue_details.iter().enumerate().filter(|(i, _)| scope.admits("fatigueDetails", *i)) {
+    for (i, fat) in doc.fatigue_details.iter().enumerate().filter(|(i, _)| scope.admits("fatigueDetails", *i)).inspect(|_| isolate()) {
         let mem = doc.members.iter().find(|m| m.id == fat.member_id);
         report.extend(check_fatigue(fat, mem, annex));
         if let Some(group) = spectra.iter().filter(|g| !part_1_3::group_has_category(g, &doc.fatigue_details, &doc.fatigue_categories)).find(|g| g[0] == i) {
@@ -371,22 +376,22 @@ pub fn evaluate_scoped(doc: &En1999Snapshot, scope: Scope<'_>) -> CheckReport {
         }
     }
 
-    for (_, category) in doc.fatigue_categories.iter().enumerate().filter(|(i, _)| scope.admits("fatigueCategories", *i)) {
+    for (_, category) in doc.fatigue_categories.iter().enumerate().filter(|(i, _)| scope.admits("fatigueCategories", *i)).inspect(|_| isolate()) {
         report.extend(check_fatigue_category(category, doc, annex));
     }
-    for (_, load) in doc.patch_loads.iter().enumerate().filter(|(i, _)| scope.admits("patchLoads", *i)) {
+    for (_, load) in doc.patch_loads.iter().enumerate().filter(|(i, _)| scope.admits("patchLoads", *i)).inspect(|_| isolate()) {
         report.extend(check_patch_load(load, doc, annex));
     }
-    for (_, insulation) in doc.fire_insulations.iter().enumerate().filter(|(i, _)| scope.admits("fireInsulations", *i)) {
+    for (_, insulation) in doc.fire_insulations.iter().enumerate().filter(|(i, _)| scope.admits("fireInsulations", *i)).inspect(|_| isolate()) {
         report.extend(check_fire_insulation(insulation, doc, annex));
     }
-    for (_, profile) in doc.sheet_profiles.iter().enumerate().filter(|(i, _)| scope.admits("sheetProfiles", *i)) {
+    for (_, profile) in doc.sheet_profiles.iter().enumerate().filter(|(i, _)| scope.admits("sheetProfiles", *i)).inspect(|_| isolate()) {
         report.extend(check_sheet_profile(profile, doc, annex));
     }
-    for (_, ring) in doc.ring_stiffeners.iter().enumerate().filter(|(i, _)| scope.admits("ringStiffeners", *i)) {
+    for (_, ring) in doc.ring_stiffeners.iter().enumerate().filter(|(i, _)| scope.admits("ringStiffeners", *i)).inspect(|_| isolate()) {
         report.extend(check_ring_stiffener(ring, doc, annex, doc.reliability_class));
     }
-    for (_, stiffener) in doc.transverse_stiffeners.iter().enumerate().filter(|(i, _)| scope.admits("transverseStiffeners", *i)) {
+    for (_, stiffener) in doc.transverse_stiffeners.iter().enumerate().filter(|(i, _)| scope.admits("transverseStiffeners", *i)).inspect(|_| isolate()) {
         report.extend(check_transverse_stiffener(stiffener, doc, annex, doc.reliability_class));
     }
 
@@ -404,7 +409,7 @@ pub fn evaluate_scoped(doc: &En1999Snapshot, scope: Scope<'_>) -> CheckReport {
             .build(),
         );
     }
-    for (_, sheet) in doc.cold_formed.iter().enumerate().filter(|(i, _)| scope.admits("coldFormed", *i)) {
+    for (_, sheet) in doc.cold_formed.iter().enumerate().filter(|(i, _)| scope.admits("coldFormed", *i)).inspect(|_| isolate()) {
         if let Some(mat) = doc.materials.iter().find(|m| m.id == sheet.material_id) {
             report.extend(check_cold_formed(sheet, mat, doc.sheet_profiles.iter().find(|p| p.sheet_id == sheet.id), annex, doc.reliability_class));
         } else {
@@ -443,7 +448,7 @@ pub fn evaluate_scoped(doc: &En1999Snapshot, scope: Scope<'_>) -> CheckReport {
             .build(),
         );
     }
-    for (_, shell) in doc.shells.iter().enumerate().filter(|(i, _)| scope.admits("shells", *i)) {
+    for (_, shell) in doc.shells.iter().enumerate().filter(|(i, _)| scope.admits("shells", *i)).inspect(|_| isolate()) {
         if let Some(mat) = doc.materials.iter().find(|m| m.id == shell.material_id) {
             report.extend(check_shell(shell, mat, &doc.ring_stiffeners.iter().filter(|r| r.shell_id == shell.id).map(|r| r.x).collect::<Vec<_>>(), annex, doc.reliability_class));
         } else {
@@ -468,10 +473,10 @@ pub fn evaluate_scoped(doc: &En1999Snapshot, scope: Scope<'_>) -> CheckReport {
         }
     }
 
-    for (_, run) in doc.weld_runs.iter().enumerate().filter(|(i, _)| scope.admits("weldRuns", *i)) {
+    for (_, run) in doc.weld_runs.iter().enumerate().filter(|(i, _)| scope.admits("weldRuns", *i)).inspect(|_| isolate()) {
         report.extend(check_run(doc, run));
     }
-    for (_, section) in doc.sections.iter().enumerate().filter(|(i, _)| scope.admits("sectionOutlines", *i)) {
+    for (_, section) in doc.sections.iter().enumerate().filter(|(i, _)| scope.admits("sectionOutlines", *i)).inspect(|_| isolate()) {
         report.extend(check_outline(section, &doc.outline_vertices, annex));
     }
 

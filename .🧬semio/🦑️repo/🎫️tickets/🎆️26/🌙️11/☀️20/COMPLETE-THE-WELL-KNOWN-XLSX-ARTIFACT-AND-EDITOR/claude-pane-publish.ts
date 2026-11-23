@@ -17,7 +17,7 @@ const { PREVIEW2_VENDOR_RELATIVE } = await import(join(bundle, "🕸️imports/�
 const { PLUGIN_DESCRIPTOR_PROBE_SOURCE, finalizePluginDescriptor } = await import(join(bundle, "🛂️descriptor/🟦️.ts"));
 const { encodeComponentReceiptV1, parseComponentReceiptV1 } = await import(join(plugin, "🖨️describe/🏷️component-receipt/🟦️.ts"));
 const { MODULE_BRIDGE_FILE } = await import("@semio-tech/plugin-registry/deployment");
-const sessionPlugins = JSON.parse(readFileSync(join(root, ".cache/b/p/m/browser/prototype/sessions/stdio-xlsx/🔌️plugins.json"), "utf8")) as { pluginId: string; packageId: string; cratePath: string; packageName: string; wasmOut: string; directoryName: string }[];
+const sessionPlugins = JSON.parse(readFileSync(join(root, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json"), "utf8")) as { pluginId: string; packageId: string; cratePath: string; packageName: string; wasmOut: string; directoryName: string }[];
 const vendor = join(modules, PREVIEW2_VENDOR_RELATIVE);
 
 function walk(directory: string, prefix = ""): string[] {

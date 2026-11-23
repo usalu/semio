@@ -6,7 +6,7 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfObject,
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -16,7 +16,7 @@ pub struct InsertObject {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub index: Option<usize>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub admitted_stream_roles: Option<diff::PdfIndexedDiff<crate::standards::v1_7::subsets::base::schema::stream_roles::PdfAdmittedStreamRole>>,
+    pub admitted_stream_roles: Option<diff::PdfRoleDiff>,
 }
 
 impl<Op> MutationKind<PdfSnapshot, Op> for InsertObject
@@ -42,14 +42,14 @@ where
         if base.objects.iter().any(|object| object.id == self.id) {
             return MutationOutcome::fatal("mutation.duplicate-id", format!("Object {} {} already exists.", self.id.num, self.id.gen), [format!("{} {}", self.id.num, self.id.gen)]);
         }
-        MutationOutcome::new(diff::graph_edit_with_roles(diff::diff_insert_object(self.id, self.index.map_or(base.objects.len(), |at| at.min(base.objects.len())), self.value.clone()), self.admitted_stream_roles.as_ref()))
+        MutationOutcome::new(diff::graph_edit_with_roles(diff::diff_insert_object(self.id, self.index.map_or(base.objects.len(), |at| at.min(base.objects.len())), self.value.clone()), self.admitted_stream_roles.as_ref().map(diff::PdfRoleDiff::to_indexed).as_ref()))
     }
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if base.objects.iter().any(|object| object.id == self.id) {
             Vec::new()
         } else {
-            vec![Op::from(RemoveObject { id: self.id, admitted_stream_roles: self.admitted_stream_roles.as_ref().map(|roles| roles.inverse(&base.admitted_stream_roles)) })]
+            vec![Op::from(RemoveObject { id: self.id, admitted_stream_roles: self.admitted_stream_roles.as_ref().map(|roles| roles.to_indexed().inverse(&base.admitted_stream_roles).into()) })]
         }
     
     })())

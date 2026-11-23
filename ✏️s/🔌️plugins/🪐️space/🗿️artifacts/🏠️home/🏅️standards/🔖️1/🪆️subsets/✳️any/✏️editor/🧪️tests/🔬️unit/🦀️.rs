@@ -81,7 +81,8 @@ fn every_migrated_home_route_has_an_exact_scalar_boundary() {
 //#endregion 🧪️RetainedCommandEnvelope
 
 use semio_framework_artifact_space_space::{S_SPACE_SCHEMA, SpaceKind, SpaceVisibility, empty_space_snapshot};
-use semio_framework_os::{LocalStorageBackbonePort, OsBackbonePorts, OsSpaceDocument, create_backbone_document, load_os_space_document, seed_os_space_catalog_if_empty};
+use semio_os::{LocalStorageBackbonePort, OsBackbonePorts, OsSpaceDocument, create_backbone_document, load_os_space_document, seed_os_space_catalog_if_empty};
+use semio_plugin::ArtifactEditor as _;
 use std::sync::Arc;
 
 fn empty_history() -> semio_plugin::HistoryView {
@@ -348,7 +349,7 @@ async fn a_studio_dsl_export_imports_back_under_its_name() {
     let name = "SH2 round trip law";
     let space_id = semio_s_space_core::create_and_register_ephemeral_studio(name, "u1", "Ada", &mut authoring).await.expect("observed studio fixture");
     let document = semio_s_space_core::resolve_studio_document(&space_id).await.expect("the fresh studio resolves");
-    let exported = semio_framework_os::host::export_os_space_dsl(&document).expect("studio dsl export");
+    let exported = semio_os::host::export_os_space_dsl(&document).expect("studio dsl export");
     let snapshot = catalog_home();
     let history = empty_history();
     let doc = ArtifactView::new(&snapshot, &history);
@@ -376,8 +377,8 @@ async fn the_bind_job_validates_then_writes_the_studio_file_once() {
     let stem = format!("sh1-bind-law-{space_id}");
     let file_path = std::env::temp_dir().join(format!("{stem}.os")).to_string_lossy().into_owned();
     let read_back = || {
-        use semio_framework_os::OsBackbonePort as _;
-        semio_framework_os::open_file_space_backbone(&file_path).and_then(|port| port.read(&format!("file://{file_path}"))).and_then(|payload| semio_framework_os::decode_backbone_payload::<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation>(&payload, S_SPACE_SCHEMA))
+        use semio_os::OsBackbonePort as _;
+        semio_os::open_file_space_backbone(&file_path).and_then(|port| port.read(&format!("file://{file_path}"))).and_then(|payload| semio_os::decode_backbone_payload::<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation>(&payload, S_SPACE_SCHEMA))
     };
     let mut work = HomeCatalogWork::new("bindSpaceFile");
     assert!(matches!(work.advance(&bind(&space_id, &file_path), &doc).expect("validate stage"), ArtifactCommandWorkStep::Progress { .. }));
@@ -385,7 +386,7 @@ async fn the_bind_job_validates_then_writes_the_studio_file_once() {
     let Ok(ArtifactCommandWorkStep::Complete(emit)) = work.advance(&bind(&space_id, &file_path), &doc) else { panic!("the bind job commits") };
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(5)]);
     let bound = read_back().expect("commit writes the studio's document to its file backbone");
-    assert_eq!(semio_framework_os::materialize_backbone_snapshot(&bound, &[]).expect("the bound studio materializes").name, "SH1 bind law", "a fresh file backbone reads the studio back");
+    assert_eq!(semio_os::materialize_backbone_snapshot(&bound, &[]).expect("the bound studio materializes").name, "SH1 bind law", "a fresh file backbone reads the studio back");
     let listed = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::list_all_space_catalog_entries()).into_iter().find(|entry| entry.id == space_id).expect("the bound studio stays listed");
     assert!(!listed.backbone_uri.is_empty(), "the bound studio is a persisted catalog studio, no longer an ephemeral draft");
     assert_eq!(listed.name, "SH1 bind law", "the bound studio keeps its name");
@@ -486,7 +487,7 @@ async fn removing_a_local_studio_is_a_config_tombstone_that_keeps_the_studio() {
 //#region 🗃️LocalCatalogLane
 fn kept_pair(space_id: &str) -> (String, String) {
     let document = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::resolve_studio_document(space_id)).expect("the studio resolves");
-    let files = semio_framework_os::export_backbone_pack(&document).expect("the studio exports its pair");
+    let files = semio_os::export_backbone_pack(&document).expect("the studio exports its pair");
     (protocol::base64_standard_encode(&files.pack), protocol::base64_standard_encode(&files.spr))
 }
 

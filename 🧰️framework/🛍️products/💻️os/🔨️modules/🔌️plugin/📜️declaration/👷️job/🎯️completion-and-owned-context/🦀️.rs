@@ -288,6 +288,8 @@ impl<A: ArtifactApp> ArtifactOwnedToolJobContext<A> {
         match transient.current_read(){Ok(read)=>{if let Err(read)=self.transient.bind(read){self.refused_source_reads[1]=Some(read.into_erased());}},Err(error)=>self.transient_source_fault=Some(error)}
         self
     }
+    /// 🧪️ Ends a fixture-only context whose draft and transient roots were never bound to a Store issuer; false when either root holds an original issuer that must retire instead.
+    pub fn forfeit_unissued(mut self)->bool{let draft=self.draft.forfeit_unissued();let transient=self.transient.forfeit_unissued();draft&&transient}
     /// 🪪️ Reports only successfully captured original source authority.
     pub fn source_issuers_ready(&self)->bool{self.source_capture_started&&self.draft_source_fault.is_none()&&self.transient_source_fault.is_none()&&self.refused_source_reads.iter().all(Option::is_none)&&self.draft.has_original_issuer()&&self.transient.has_original_issuer()}
 

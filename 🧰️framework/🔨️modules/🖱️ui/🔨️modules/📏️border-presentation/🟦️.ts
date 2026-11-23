@@ -84,7 +84,7 @@ export function resolveBorderSegments(segments: readonly BorderSegment[]): Resol
   }
   return output;
 }
-/** 📦 One box of the state model, with an optional silhouette that responds to hover within it. */
+/** 📦 One box of the state model, with an optional outline that responds to hover within it. */
 export interface StateBox {
   readonly id: string;
   readonly parent: string | null;
@@ -119,8 +119,8 @@ export function resolveBoxStates(boxes: readonly StateBox[], pointer: string | n
   }));
 }
 
-/** 🔲 One box of the silhouette model: a rect, the edges it declares and its resolved state. */
-export interface SilhouetteBox {
+/** 🔲 One box of the outline model: a rect, the edges it declares and its resolved state. */
+export interface OutlineBox {
   readonly id: string;
   readonly parent: string | null;
   readonly owner: string;
@@ -133,15 +133,15 @@ export interface SilhouetteBox {
 export type BorderSide = "top" | "right" | "bottom" | "left";
 
 /** 🫧 Sides of `box` that are drawn: a normal box keeps its declared sides except those flush with a side its parent leaves undrawn; a stated box closes all four. */
-export function boxDrawnSides(box: SilhouetteBox, parent: SilhouetteBox | undefined): readonly BorderSide[] {
+export function boxDrawnSides(box: OutlineBox, parent: OutlineBox | undefined): readonly BorderSide[] {
   if (box.state !== "normal") return ["top", "right", "bottom", "left"];
   return box.edges.filter(side => !parent || parent.edges.includes(side) || Math.abs(box.rect[side] - parent.rect[side]) >= 0.5);
 }
 
-/** 🔳 Resolved paint spans of every box silhouette: each drawn side is one `${id}:${side}` edge in the box's owner, resolved by state priority on all collinear overlaps.
+/** 🔳 Resolved paint spans of every box outline: each drawn side is one `${id}:${side}` edge in the box's owner, resolved by state priority on all collinear overlaps.
  *
- * @see ./silhouettes.cases.json */
-export function boxSilhouetteSegments(boxes: readonly SilhouetteBox[]): ResolvedBorderSegment[] {
+ * @see ./outlines.cases.json */
+export function boxOutlineSegments(boxes: readonly OutlineBox[]): ResolvedBorderSegment[] {
   const byId = new Map(boxes.map(box => [box.id, box]));
   return resolveBorderSegments(boxes.flatMap(box => boxDrawnSides(box, box.parent === null ? undefined : byId.get(box.parent)).map((side): BorderSegment => {
     const { left, top, right, bottom } = box.rect;

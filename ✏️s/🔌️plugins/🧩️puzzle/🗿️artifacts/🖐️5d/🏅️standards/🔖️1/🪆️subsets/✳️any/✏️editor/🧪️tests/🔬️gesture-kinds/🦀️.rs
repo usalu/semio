@@ -205,12 +205,12 @@ fn replay(before: &Puzzle5dSnapshot, operations: &[Puzzle5dMutation]) -> (Puzzle
     let mut state = before.clone();
     let mut inverses = Vec::new();
     for operation in operations {
-        inverses.extend(protocol::Mutation::<Puzzle5dSnapshot>::inverse(operation, &state).expect("concrete inverse"));
-        state = protocol::apply_diff_cold(protocol::Mutation::<Puzzle5dSnapshot>::diff(operation, &state).diff(), &state).expect("central apply");
+        inverses.extend(protocol::ColdMutation::<Puzzle5dSnapshot>::inverse(operation, &state).expect("concrete inverse"));
+        state = protocol::apply_diff_cold(protocol::ColdMutation::<Puzzle5dSnapshot>::diff(operation, &state).diff(), &state).expect("central apply");
     }
     let after = state.clone();
     for inverse in inverses.iter().rev() {
-        state = protocol::apply_diff_cold(protocol::Mutation::<Puzzle5dSnapshot>::diff(inverse, &state).diff(), &state).expect("central inverse apply");
+        state = protocol::apply_diff_cold(protocol::ColdMutation::<Puzzle5dSnapshot>::diff(inverse, &state).diff(), &state).expect("central inverse apply");
     }
     (after, state)
 }

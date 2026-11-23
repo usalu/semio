@@ -21,7 +21,7 @@ it("measures actual IconRenderHost frame, content and footer in Chromium", async
   const stylesPath = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css");
   const compiler = await compile(readFileSync(stylesPath, "utf8"), { base: dirname(stylesPath), from: stylesPath, onDependency: () => {} });
   const fonts = [["Anta", "🚀️anta/🏛️latin/📖️regular"], ["Share Tech Mono", "⌨️share-tech-mono/🏛️latin/📖️regular"]].map(([family, path]) => ({ family, data: readFileSync(resolve(dirname(stylesPath), "../../../🖼️assets/🔤️fonts", path, "🔤️outline.ttf")).toString("base64") }));
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, args: ["--font-render-hinting=none"] });
   try {
     const page = await browser.newPage();
     for (const sample of fixture.cases) {

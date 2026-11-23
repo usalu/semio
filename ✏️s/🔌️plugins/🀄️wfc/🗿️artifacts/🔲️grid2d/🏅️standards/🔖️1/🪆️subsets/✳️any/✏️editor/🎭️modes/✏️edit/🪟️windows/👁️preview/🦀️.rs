@@ -283,8 +283,8 @@ pub fn scene(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, tool_run: O
     Canvas2dScene::base(camera_x, camera_y, zoom, layers_json(document, commit.as_ref()))
 }
 
-pub fn render(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, tool_run: Option<&ToolRunView>, current_revision: Option<[u8; 32]>) -> UiAssemblyResult<BuiltNode> {
-    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene(document, config, tool_run, current_revision))
+pub fn render(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, tool_run: Option<&ToolRunView>, current_revision: Option<[u8; 32]>, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene(document, config, tool_run, current_revision), semio_plugin::surface_name(locale, "Preview", "Vorschau"), None)
 }
 //#endregion 🔖️Render
 

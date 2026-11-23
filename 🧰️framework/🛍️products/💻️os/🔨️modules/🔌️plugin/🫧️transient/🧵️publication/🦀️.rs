@@ -379,7 +379,7 @@ where
 
 #[path="🧬️native/🦀️.rs"]
 mod native;
-pub use native::bounded_transient_preparation_factory;
+pub use native::{bounded_transient_preparation_factory, cold_transient_preparation_factory};
 
 pub fn bounded_transient_root_retirement_factory<P>() -> Arc<dyn store::SnapshotRetirementFactory<P>>
 where P: semio_framework_value::retirement::RetireOwned + semio_os_kernel::StoreState + semio_os_kernel::StoreState {

@@ -62,7 +62,7 @@ impl NodeFlags {
     /// control takes focus without painting the accent ring React would only show for the keyboard.
     pub const FOCUS_VISIBLE: NodeFlags = NodeFlags(1 << 13);
     pub const DISCLOSURE_CHANGED: NodeFlags = NodeFlags(1 << 14);
-    /// 🏆️ The innermost enabled control and opted-in silhouettes paint hover. [`NodeFlags::HOVERED`] marks the full pointer path.
+    /// 🏆️ The innermost enabled control and opted-in frames paint hover. [`NodeFlags::HOVERED`] marks the full pointer path.
     pub const HOVER_OWNER: NodeFlags = NodeFlags(1 << 15);
     /// 🗓️ A date or colour popup cell holds the popup's keyboard focus (the focused day, the highlighted swatch): the sync pass stamps it from the picker cell model each frame and paint draws the focus ring from it, as the browser pickers do — no real arena focus moves.
     pub const PICKER_FOCUS: NodeFlags = NodeFlags(1 << 16);

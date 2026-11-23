@@ -1,8 +1,8 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv";
+import Ajv from "ajv/dist/2020";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "./🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/📐️.json";
 test("original shared receive neutral text matches independent SQLite JSON decoding",()=>{
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);
  expect(validate({...fixture,maximumCopyBytes:4097})).toBe(false);

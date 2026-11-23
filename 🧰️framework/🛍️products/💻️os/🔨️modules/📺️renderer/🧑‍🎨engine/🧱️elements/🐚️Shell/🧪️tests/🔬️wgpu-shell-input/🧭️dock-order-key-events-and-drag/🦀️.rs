@@ -1,18 +1,20 @@
-/// 🧭️ Dock order, key events and drag: the silhouette cap gap, dock window order, key action events, the content focus tracker, dock drags and body presses.
+/// 🧭️ Dock order, key events and drag: the frame content plane, dock window order, key action events, the content focus tracker, dock drags and body presses.
 
-//#region SilhouetteContentTests
+//#region FrameContentTests
 
 #[test]
-fn silhouette_hit_intersections_leave_the_cap_gap_empty() {
+fn frame_hit_intersections_cover_the_whole_frame_with_no_cap_gap() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
-    let silhouette = WindowSilhouette::from_measured_top(Rect::new(0.0, 0.0, 300.0, 200.0), 80.0, 60.0, 32.0);
-    let hits: Vec<Rect> = silhouette.content_clip_rects().iter().filter_map(|clip| intersect_content_rect(*clip, silhouette.bounds)).collect();
-    assert_eq!(hits.len(), 3);
-    assert!(!hits.iter().any(|rect| rect.contains(150.0, 16.0)));
-    assert!(hits.iter().any(|rect| rect.contains(150.0, 100.0)));
+    let frame = WindowFrame::from_measured_top(Rect::new(0.0, 0.0, 300.0, 200.0), 80.0, 60.0, 32.0);
+    let hit = intersect_content_rect(frame.content_clip_rect(), frame.bounds).expect("the frame is one content hit rectangle");
+    assert_eq!(hit, frame.bounds);
+    assert!(hit.contains(150.0, 16.0), "the row between the chips is content");
+    assert!(hit.contains(150.0, 100.0));
+    assert_eq!(frame.chip_at(150.0, 16.0), None);
+    assert!(frame.chip_at(40.0, 16.0).is_some(), "a chip wins over the content under it");
 }
 
-//#endregion SilhouetteContentTests
+//#endregion FrameContentTests
 
 /// 🧪️ `dock_window_order` is a `Self`-less associated fn, so it's callable without constructing a
 /// full `ShellState` fixture (impractically large: 90+ fields, several without `Default`).

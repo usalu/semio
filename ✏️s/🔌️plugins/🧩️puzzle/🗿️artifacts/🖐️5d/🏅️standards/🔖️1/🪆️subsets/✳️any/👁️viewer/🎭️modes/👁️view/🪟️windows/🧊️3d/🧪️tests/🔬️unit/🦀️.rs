@@ -20,7 +20,7 @@ fn definition_uses_the_frozen_mesh_window_kit_id() {
 #[test]
 fn render_produces_a_scene_node_for_the_default_document() {
     let document = Puzzle5dSnapshot::default();
-    let _node = render(&document);
+    let _node = render(&document, semio_plugin::Locale::En);
 }
 
 #[test]

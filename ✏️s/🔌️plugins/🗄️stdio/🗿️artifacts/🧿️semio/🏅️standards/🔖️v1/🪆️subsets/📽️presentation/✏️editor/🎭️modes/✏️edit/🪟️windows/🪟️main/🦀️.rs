@@ -54,7 +54,7 @@ fn world_instances_json(document: &SemioPresentationSnapshot) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &SemioPresentationSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &SemioPresentationSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(vec![semio_framework_pack_json::object([
         ("id".to_string(), semio_framework_pack_json::Value::from(SEMIO_PRESENTATION_EDIT_FALLBACK_MESH_KIND)),
         ("data".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&mesh_from_kind(SEMIO_PRESENTATION_EDIT_FALLBACK_MESH_KIND)))),
@@ -65,7 +65,7 @@ pub fn render(document: &SemioPresentationSnapshot) -> semio_plugin::UiAssemblyR
         instances_json: world_instances_json(document),
         selection_json: world3d_selection_json("rectangle", &[], None),
     };
-    MeshWindowKit::render(&view)
+    MeshWindowKit::render(&view, locale)
 }
 //#endregion 🔖️Render
 

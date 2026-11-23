@@ -5,7 +5,7 @@ import {Database} from "bun:sqlite";
 import schema from "../🧬️schema/🔣️.json";
 import policy from "../🔣️policy.json";
 import fixture from "./🧫️fixtures/🔣️.json";
-import {elasticCapacityV1,elasticMinimumV1,hostShareCapacityV1,hostSharePercentV1,pinnedCapacityV1,readRepositoryCacheBudgetV1,repositoryCacheBudgetV1} from "../🟦️.ts";
+import {effectiveCapacityV1,elasticBelowFloorDueV1,elasticCapacityV1,elasticMinimumV1,hostShareCapacityV1,hostSharePercentV1,ImageBelowFloorErrorV1,ImageDoesNotFitHostErrorV1,partitionNeedBytesV1,pinHostFreeBytesForSizingV1,pinnedCapacityV1,readRepositoryCacheBudgetV1,repositoryCacheBudgetV1,repositoryPartitionNeedBytesV1,requireImageAtFloorV1,requireImageFitsHostV1,requireRepositoryPartitionFitsHostV1} from "../🟦️.ts";
 import {mkdtempSync,mkdirSync,writeFileSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {repositoryStrictStorageV1} from "../../🟦️.ts";
@@ -294,26 +294,119 @@ for p in profiles:
         rule=pol.get("elastic",{}).get(pid)
         if rule:
             share=free*(100-rule["hostFreeReservePercent"])//100
-            unit=rule["alignBytes"] if share>=rule["alignBytes"] else 67108864
-            minimum=max(67108864,min(rule["minimumBytes"],share//unit*unit))
+            minimum=max(rule["floorBytes"],min(rule["minimumBytes"],share//rule["alignBytes"]*rule["alignBytes"]))
             wanted=-(-rule["needBytes"]*(100+rule["headroomPercent"])//100)
             ceiling=min(rule["maximumBytes"],share)
             target=min(wanted,max(ceiling,minimum))
             total+=max(minimum,target//rule["alignBytes"]*rule["alignBytes"])
         else:
             share=free*part["hostSharePercent"]//100//1048576*1048576
-            total+=max(min(part["capacityBytes"],67108864),min(part["capacityBytes"],share))
+            need=-(-part.get("needBytes",{}).get("darwin",0)//1048576)*1048576
+            total+=max(min(part["capacityBytes"],67108864),min(part["capacityBytes"],max(share,need)))
     out[p["id"]]=total
 print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(policy),JSON.stringify(profiles)]);
  expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
  for(const profile of profiles){
   let total=0;
   for(const[id,row]of Object.entries(policy.partitions)){
-   const rule=(policy.elastic as Record<string,typeof policy.elastic.rust>)[id],born=rule?elasticCapacityV1(rule,elasticMinimumV1(rule,rule.minimumBytes,profile.free),profile.free):hostShareCapacityV1(row.capacityBytes,(row as {hostSharePercent:number}).hostSharePercent,profile.free);
+   const rule=(policy.elastic as Record<string,typeof policy.elastic.rust>)[id],born=rule?elasticCapacityV1(rule,elasticMinimumV1(rule,rule.minimumBytes,profile.free),profile.free):hostShareCapacityV1(row.capacityBytes,(row as {hostSharePercent:number}).hostSharePercent,profile.free,partitionNeedBytesV1(policy as never,id,"darwin"));
    expect(born%unit,profile.id+" "+id).toBe(0);expect(born,profile.id+" "+id).toBeLessThanOrEqual(rule?rule.maximumBytes:row.capacityBytes);total+=born;
   }
-  expect(total,profile.id).toBe(independent[profile.id]);if(profile.free>=4*GiB)expect(total,profile.id).toBeLessThanOrEqual(profile.free);
+  expect(total,profile.id).toBe(independent[profile.id]);if(profile.free>=40*GiB)expect(total,profile.id).toBeLessThanOrEqual(profile.free);
  }
  expect(elasticMinimumV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,56*GiB)).toBeLessThan(policy.elastic.rust.minimumBytes);
  expect(elasticMinimumV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,186*GiB)).toBe(policy.elastic.rust.minimumBytes);
+});
+
+const GiB=2**30,mib=1048576,pinnedRoot=(prepare:(root:string)=>void=()=>{})=>{const root=mkdtempSync(join(tmpdir(),"budget-fit-"));mkdirSync(join(root,".cache","b"),{recursive:true});prepare(root);return root;};
+const withPinnedHost=<T>(bytes:number,body:()=>T):T=>{pinHostFreeBytesForSizingV1(bytes);try{return body();}finally{pinHostFreeBytesForSizingV1(privateRepositoryHostFreeBytesV1);}};
+
+/** 📏️ A fixed image is born at least at its declared need: on a busy host the share of the free bytes (20 % of 18 GiB is 3.6 GiB) no longer decides below what the writers of the partition need, and the independent Python model agrees on every platform. */
+test("a fixed image is sized from its declared need and never below it by the share of a busy host",()=>{
+ const declared=policy.partitions.dependencies,needs=declared.needBytes as Record<string,number>,hosts=[8*GiB,12*GiB,18*GiB,22*GiB,56*GiB,186*GiB],
+ model=`import json,sys
+d,pct,needs,hosts=json.loads(sys.argv[1]),int(sys.argv[2]),json.loads(sys.argv[3]),json.loads(sys.argv[4])
+out={}
+for platform,need in needs.items():
+    n=-(-need//1048576)*1048576
+    out[platform]=[max(min(d,67108864),min(d,max(free*pct//100//1048576*1048576,n))) for free in hosts]
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,String(declared.capacityBytes),String(declared.hostSharePercent),JSON.stringify(needs),JSON.stringify(hosts)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString()) as Record<string,number[]>;
+ for(const[platform,need]of Object.entries(needs)){
+  const born=hosts.map(free=>hostShareCapacityV1(declared.capacityBytes,declared.hostSharePercent,free,need));
+  expect(born,platform).toEqual(independent[platform]!);for(const bytes of born){expect(bytes,platform).toBeGreaterThanOrEqual(need);expect(bytes%mib,platform).toBe(0);expect(bytes,platform).toBeLessThanOrEqual(declared.capacityBytes);}
+ }
+ expect(hostShareCapacityV1(declared.capacityBytes,declared.hostSharePercent,18.5*GiB)).toBe(Math.floor(18.5*GiB*20/100/mib)*mib);
+ expect(hostShareCapacityV1(declared.capacityBytes,declared.hostSharePercent,18.5*GiB,needs.darwin)).toBeGreaterThanOrEqual(needs.darwin);
+ const need=partitionNeedBytesV1(policy as never,"dependencies"),root=pinnedRoot();
+ try{const born=withPinnedHost(18*GiB,()=>repositoryCacheBudgetV1(root).partitions.dependencies);expect(born.capacityBytes).toBe(hostShareCapacityV1(declared.capacityBytes,declared.hostSharePercent,18*GiB,need));expect(born.capacityBytes).toBeGreaterThanOrEqual(need);expect(born.usableBytes).toBeGreaterThanOrEqual(need*0.9);}
+ finally{rmSync(root,{recursive:true,force:true});}
+});
+
+/** 🛑️ The ledger share is part of the need: what the dependencies store keeps after the nested areas of its partition still holds the install of every platform's backend, and the declared capacity is the smallest that does (compared with an independent Python search over the image overhead). */
+test("the declared dependencies need leaves the store its install after the ledger's nested shares and is the smallest such capacity",async()=>{
+ const {cacheLedgerV1}=await import("../../../🧾️ledger/🟦️.ts"),{concurrentRequiredImageBytesV1}=await import("../../../../🚀️bootstrap/📦️dependencies/🚦️concurrent/🟦️.ts"),{nativeImageUsableBytesV1}=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📏️capacity/🟦️.ts"),
+ shares=cacheLedgerV1().areas.filter(area=>area.partition==="dependencies"&&area.kind==="nested").reduce((sum,area)=>sum+(area.budget&&"basisPoints" in area.budget?area.budget.basisPoints:0),0),needs=policy.partitions.dependencies.needBytes as Record<string,number>,backends={darwin:true,linux:false,win32:false};
+ expect(shares).toBeGreaterThan(0);
+ for(const[platform,sharing]of Object.entries(backends)){
+  const required=concurrentRequiredImageBytesV1(sharing),need=needs[platform]!;
+  expect(need%mib,platform).toBe(0);expect(need,platform).toBeLessThanOrEqual(policy.partitions.dependencies.capacityBytes);
+  expect(nativeImageUsableBytesV1(need-mib)*(10000-shares)/10000,platform).toBeGreaterThanOrEqual(required);
+  expect(nativeImageUsableBytesV1(need-2*mib)*(10000-shares)/10000,platform).toBeLessThan(required);
+  const search=`import json,sys
+required,shares,overhead=int(sys.argv[1]),int(sys.argv[2]),json.loads(sys.argv[3])
+c=-(-required//1048576)*1048576+1048576
+while overhead[str(c)]*(10000-shares)//10000<required:c+=1048576
+print(c)`,first=Math.ceil(required/mib)*mib+mib,table=Object.fromEntries(Array.from({length:(need-first)/mib+1},(_,index)=>[String(first+index*mib),nativeImageUsableBytesV1(first+index*mib-mib)])),run=Bun.spawnSync(["python3","-I","-c",search,String(required),String(shares),JSON.stringify(table)]);
+  expect(run.exitCode,run.stderr.toString()).toBe(0);expect(Number(run.stdout.toString().trim()),platform).toBeLessThanOrEqual(need);
+ }
+});
+
+/** 🚫️ A host that cannot give what an image needs is refused before the image is born, in both languages and with both numbers; a born image is never refused, so the commands that free space still open it. */
+test("an image the host cannot hold is refused up front, a born image or a partition without a need is not",()=>{
+ const rust=policy.elastic.rust.floorBytes,fits=(receipt:Parameters<typeof requireImageFitsHostV1>[1],required:number,free:number|undefined)=>requireImageFitsHostV1("rust",receipt,required,free);
+ expect(()=>fits("missing",rust,rust-1)).toThrow(ImageDoesNotFitHostErrorV1);
+ try{fits("missing",rust,12*GiB);throw Error("not refused");}catch(error){const refusal=error as ImageDoesNotFitHostErrorV1;expect(refusal.code).toBe("image-does-not-fit-host");expect(refusal.en).toContain("16384 MiB");expect(refusal.en).toContain("12288 MiB");expect(refusal.de).toContain("16384 MiB");expect(refusal.de).toContain("12288 MiB");expect(refusal.message).toBe(refusal.en+" | "+refusal.de);expect(refusal.de).toContain("Speicherplatz");}
+ expect(()=>fits("missing",rust,rust,undefined)).not.toThrow();expect(()=>fits("missing",rust,rust,rust)).not.toThrow();expect(()=>fits(4*GiB,rust,GiB)).not.toThrow();expect(()=>fits(null,rust,GiB)).not.toThrow();expect(()=>fits("missing",0,0)).not.toThrow();
+ const rustRoot=pinnedRoot(),bornRoot=pinnedRoot(root=>{mkdirSync(join(root,policy.partitions.rust.directory),{recursive:true});writeFileSync(join(root,policy.partitions.rust.directory,"image.json"),JSON.stringify({maximumPhysicalBytes:4*GiB}));});
+ try{
+  expect(()=>withPinnedHost(12*GiB,()=>requireRepositoryPartitionFitsHostV1(rustRoot,"rust"))).toThrow(ImageDoesNotFitHostErrorV1);
+  expect(()=>withPinnedHost(12*GiB,()=>requireRepositoryPartitionFitsHostV1(bornRoot,"rust"))).not.toThrow();
+  expect(()=>withPinnedHost(40*GiB,()=>requireRepositoryPartitionFitsHostV1(rustRoot,"rust"))).not.toThrow();
+  const need=repositoryPartitionNeedBytesV1("dependencies");expect(need).toBeGreaterThan(0);
+  expect(()=>withPinnedHost(need-mib,()=>requireRepositoryPartitionFitsHostV1(rustRoot,"dependencies"))).toThrow(ImageDoesNotFitHostErrorV1);
+  expect(()=>withPinnedHost(1,()=>requireRepositoryPartitionFitsHostV1(rustRoot,"leases"))).not.toThrow();
+ }finally{rmSync(rustRoot,{recursive:true,force:true});rmSync(bornRoot,{recursive:true,force:true});}
+});
+
+/** 🧱️ The elastic image grows to its floor on every path or is refused: the minimum is cut by the host share only down to the floor (independent Python model), the budget and the strict storage of the compiler answer the same capacity on every host, a rule whose minimum, floor and maximum agree is a fixed size that the host never changes, and a born image below the floor is refused for compiles and due for regrow. */
+test("the elastic image is born at least at its floor, the budget and the compiler agree on every host, and a fixed-size rule stays fixed",()=>{
+ const rule=policy.elastic.rust,hosts=[6*GiB,12*GiB,18*GiB,22*GiB,56*GiB,100*GiB,186*GiB],
+ model=`import json,sys
+r,hosts=json.loads(sys.argv[1]),json.loads(sys.argv[2])
+out=[]
+for free in hosts:
+    share=free*(100-r["hostFreeReservePercent"])//100
+    minimum=max(r["floorBytes"],min(r["minimumBytes"],share//r["alignBytes"]*r["alignBytes"]))
+    wanted=-(-r["needBytes"]*(100+r["headroomPercent"])//100)
+    target=min(wanted,max(min(r["maximumBytes"],share),minimum))
+    out.append(max(minimum,target//r["alignBytes"]*r["alignBytes"]))
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rule),JSON.stringify(hosts)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString()) as number[];
+ for(const[id,row]of Object.entries(policy.elastic))expect(row.floorBytes,id).toBeLessThanOrEqual(row.minimumBytes);
+ const born=hosts.map(free=>elasticCapacityV1(rule,elasticMinimumV1(rule,rule.minimumBytes,free),free));expect(born).toEqual(independent);for(const bytes of born)expect(bytes).toBeGreaterThanOrEqual(rule.floorBytes);
+ for(const free of hosts){
+  const root=pinnedRoot();
+  try{
+   const [budget,envelope]=withPinnedHost(free,()=>[repositoryCacheBudgetV1(root).partitions.rust,repositoryStrictStorageV1(root)]);
+   expect(budget.capacityBytes,String(free)).toBe(envelope.capacityBytes);expect(budget.filesystemBytes,String(free)).toBe(envelope.filesystemBytes);expect(budget.capacityBytes,String(free)).toBe(independent[hosts.indexOf(free)]!);expect(budget.capacityBytes).toBeGreaterThanOrEqual(rule.floorBytes);expect(envelope.maximumWorkspaceBytes*2+envelope.maximumArtifactBytes).toBeLessThanOrEqual(envelope.filesystemBytes);
+  }finally{rmSync(root,{recursive:true,force:true});}
+ }
+ const fixed={...rule,minimumBytes:16*GiB,floorBytes:16*GiB,maximumBytes:16*GiB,needBytes:16*GiB,headroomPercent:0},directory=join(tmpdir(),"fixed-"+Math.random(),".cache","b","r");
+ for(const free of hosts)expect(withPinnedHost(free,()=>effectiveCapacityV1(directory,fixed.minimumBytes,fixed)),String(free)).toBe(16*GiB);
+ expect(()=>requireImageAtFloorV1("rust",4*GiB,rule.floorBytes)).toThrow(ImageBelowFloorErrorV1);
+ try{requireImageAtFloorV1("rust",4*GiB,rule.floorBytes);}catch(error){const refusal=error as ImageBelowFloorErrorV1;expect(refusal.en).toContain("4096 MiB");expect(refusal.en).toContain("16384 MiB");expect(refusal.de).toContain("4096 MiB");expect(refusal.de).toContain("Abbild");expect(refusal.message).toBe(refusal.en+" | "+refusal.de);}
+ expect(()=>requireImageAtFloorV1("rust",rule.floorBytes,rule.floorBytes)).not.toThrow();
+ const compiler=readFileSync(new URL("../../🏗️compiler/🟦️.ts",import.meta.url),"utf8");expect(compiler).toContain('requireImageAtFloorV1("rust",declaration.capacityBytes,repositoryPartitionNeedBytesV1("rust"))');expect(()=>requireImageAtFloorV1("tools",mib,0)).not.toThrow();
+ expect([[4*GiB,12*GiB,0],[4*GiB,12*GiB,4*GiB],[4*GiB,1*GiB,0],[rule.floorBytes,1*GiB,0],["missing",40*GiB,0],[null,40*GiB,0]].map(([receipt,free,held])=>elasticBelowFloorDueV1(receipt as never,rule.floorBytes,free as number,held as number))).toEqual([false,true,false,false,false,false]);
 });

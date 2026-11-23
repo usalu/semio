@@ -25,7 +25,8 @@ pub fn fem3d_mesh_preview(doc: &Fem3dSnapshot) -> Result<Vec<SolidMesh>, Fem3dEr
 /// `fem2d_nodal_von_mises`, feeding `fem-plugin`'s solid stress contour rendering.
 pub fn fem3d_nodal_von_mises(doc: &Fem3dSnapshot, case_id: &str) -> Result<HashMap<String, f64>, Fem3dError> {
     let results = super::fem3d_solve_all(doc)?;
-    let result = results.get(case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
+    let source = semio_s_fem_analyses_model::encode_result_source_parts("loadCase", case_id).map_err(Fem3dError::ResultSource)?;
+    let result = results.get(&source).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
     fem3d_nodal_von_mises_of(doc, result)
 }
 

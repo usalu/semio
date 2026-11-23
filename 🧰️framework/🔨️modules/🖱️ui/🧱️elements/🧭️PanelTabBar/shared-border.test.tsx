@@ -101,7 +101,7 @@ describe("panel tab strip shares one seam with its panel body", () => {
     expect([...cells].every((cell) => !NATIVE_EDGE.test(cell.className))).toBe(true);
   });
 
-  it("registers a collapsed strip without any edge so the chrome silhouette owns every side", () => {
+  it("registers a collapsed strip without any edge so the chrome frame owns every side", () => {
     const { container } = render(<Host><PanelTabBar variant="panel" tabs={tabs} activePath={["tab-a"]} onActivePathChange={() => {}} showActiveColor={false} /></Host>);
     const frame = container.querySelector<HTMLElement>('[data-slot="panel-tab-frame"]')!;
     expect(frame.hasAttribute("data-shared-border-frame")).toBe(false);

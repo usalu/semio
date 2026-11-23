@@ -11,9 +11,10 @@ use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 use semio_framework::kernel::Effect;
 use semio_plugin::ActionKind;
+use crate::context::{retire, Retiring};
 
-fn empty_view() -> (Fem3dSnapshot, semio_plugin::HistoryView) {
-    (Fem3dSnapshot::default(), semio_plugin::HistoryView::empty())
+fn empty_view() -> (Retiring<Fem3dSnapshot>, semio_plugin::HistoryView) {
+    (Retiring::new(Fem3dSnapshot::default()), semio_plugin::HistoryView::empty())
 }
 
 /// 🧬️ Whole-document replace is not an in-history mutation (whole-snapshot replace is banned outright —
@@ -25,7 +26,7 @@ fn empty_view() -> (Fem3dSnapshot, semio_plugin::HistoryView) {
 #[test]
 fn set_active_example_loads_default_fixture_3d() {
     let (snapshot, history) = empty_view();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let doc = ArtifactView::new(&*snapshot, &history);
     let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = handle(&SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
@@ -33,7 +34,9 @@ fn set_active_example_loads_default_fixture_3d() {
         panic!("expected a LoadDocument effect");
     };
     let loaded = <Fem3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-    assert!(!loaded.nodes.is_empty(), "expected the default fixture's nodes");
+    let populated = !loaded.nodes.is_empty();
+    retire(loaded);
+    assert!(populated, "expected the default fixture's nodes");
 }
 
 /// 🧬️ `setActiveExample` replaces document content via a `Effect::LoadDocument`, so it MUST be
@@ -51,7 +54,7 @@ fn set_active_example_is_declared_as_operation_3d() {
 #[test]
 fn set_active_example_does_not_publish_app_or_window_config() {
     let (snapshot, history) = empty_view();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let doc = ArtifactView::new(&*snapshot, &history);
     let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = handle(&SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
@@ -62,7 +65,7 @@ fn set_active_example_does_not_publish_app_or_window_config() {
 #[test]
 fn set_active_example_unknown_id_resets_to_empty_document() {
     let (snapshot, history) = empty_view();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let doc = ArtifactView::new(&*snapshot, &history);
     let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = handle(&SetActiveExample { example_id: "nonsense".into() }, &doc, &cfg).expect("handle");
@@ -70,5 +73,7 @@ fn set_active_example_unknown_id_resets_to_empty_document() {
         panic!("expected a LoadDocument effect");
     };
     let loaded = <Fem3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-    assert!(loaded.nodes.is_empty());
+    let empty = loaded.nodes.is_empty();
+    retire(loaded);
+    assert!(empty);
 }

@@ -82,7 +82,7 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
 }
 
 /// 🎯️ Projects the request-owned selection and the retained gesture preview into shared canvas paths.
-pub fn render(prepared: Option<&semio_s_artifact_draw_drawing_scene_paint::scene::PreparedScene>, revision: u32, document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str, selection: &[String], point_selection: &[String]) -> UiAssemblyResult<BuiltNode> {
+pub fn render(prepared: Option<&semio_s_artifact_draw_drawing_scene_paint::scene::PreparedScene>, revision: u32, document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str, selection: &[String], point_selection: &[String], locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let plan=prepared.map(|scene|&scene.plan);
     let mut scene_nodes=match plan{Some(plan)=>semio_s_artifact_draw_drawing_scene::view::nodes(plan,preview.transformation.as_ref()).map_err(|error|semio_plugin::PluginAssemblyError::new("drawing.geometry.canvas",error.to_string()))?,None=>Vec::new()};
     let selected_bounds=if let Some(scene)=prepared{semio_s_artifact_draw_drawing_scene_paint::scene::query::prepared_selection_bounds(scene,selection).map_err(|error|semio_plugin::PluginAssemblyError::new("drawing.geometry.selection",error.to_string()))?.map(|[x,y,r,b]|[x,y,r-x,b-y])}else{None};
@@ -183,6 +183,8 @@ pub fn render(prepared: Option<&semio_s_artifact_draw_drawing_scene_paint::scene
     scene_surface(
         DRAWING_PLAY_SURFACE_ID,
         semio_ui_contract::SurfaceKind::Canvas2d,
-        &Canvas2dScene { framing: (!config.framed && plan.is_some()).then(|| semio_plugin::Canvas2dFraming { revision,bounds: semio_s_artifact_draw_drawing_scene::view::bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        &Canvas2dScene { framing: (!config.framed).then(|| semio_plugin::Canvas2dFraming { revision,bounds: semio_s_artifact_draw_drawing_scene::view::bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        semio_plugin::surface_name(locale, "Drawing canvas", "Zeichenfläche"),
+        None,
     )
 }

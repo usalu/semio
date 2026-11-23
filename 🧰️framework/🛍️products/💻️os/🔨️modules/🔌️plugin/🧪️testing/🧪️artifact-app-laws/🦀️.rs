@@ -47,14 +47,19 @@ pub use super::{FixtureUiArena, OriginalFixtureCaller, OriginalFixtureScope, Ori
 
     /// 🪙️ Funds one page presentation under the fixture's exact grant.
     pub fn take_fixture_result_turn<P:PluginApp>(app:&mut P,receiver:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Option<semio_plugin_job::TypedOperationResultPage>,semio_framework_value::retained_clone::RetainedCloneProgress),semio_framework::Fault>{
-        run_fixture_result_effect(grant,|effect|app.take_typed_operation_result_page(receiver,effect)).unwrap_or(Ok((None,Default::default())))
+        take_fixture_result_turn_observed(app,receiver,grant).0
+    }
+
+    /// 🔬️ Funds one page presentation and observes only the heap its own production operation moves, never the original pump's turn machinery.
+    fn take_fixture_result_turn_observed<P:PluginApp>(app:&mut P,receiver:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->(Result<(Option<semio_plugin_job::TypedOperationResultPage>,semio_framework_value::retained_clone::RetainedCloneProgress),semio_framework::Fault>,(usize,usize)){
+        run_fixture_result_effect(grant,|effect|{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.take_typed_operation_result_page(receiver,effect));(result,(heap.requested_bytes,heap.released_bytes))}).unwrap_or((Ok((None,Default::default())),(0,0)))
     }
 
     /// 📃️ Observes each production page presentation with the exact original fixture grant.
 
     pub fn take_fixture_result_page<P:PluginApp>(app:&mut P,receiver:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<semio_plugin_job::TypedOperationResultPage>,semio_framework::Fault>{
 
-        assert_heap_witness_installed();loop{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||take_fixture_result_turn(app,receiver,grant));let(page,p)=result?;assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));if page.is_some()||p==Default::default(){return Ok(page);}}
+        assert_heap_witness_installed();loop{let(result,heap)=take_fixture_result_turn_observed(app,receiver,grant);let(page,p)=result?;assert!(p.fits(grant));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));if page.is_some()||p==Default::default(){return Ok(page);}}
 
     }
 
@@ -130,7 +135,7 @@ pub use fixture_dispatch_steps_and_document_loading::{
     dispatch_fixture_action, dispatch_original_fixture_command, ensure_fixture_cancellation_issuer, FixtureOriginalJob, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
     fixture_identity, CallerIdentityWork, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes, fixture_pending_effects,
     fixture_progress, fixture_retained_turn, fixture_step, fixture_step_context,
-    fixture_step_context_for, load_document, load_document_text, settle_document_archive_load, plugin_load_document,
+    fixture_step_context_for, load_document, join_document, load_document_text, settle_document_archive_load, plugin_load_document,
     plugin_load_document_text, plugin_settle_store_constructor, with_document_view,
     FixtureStepOutcome, KeyedCancellationFixture, LAW_DOCUMENT_LOAD_OPERATION,
 };

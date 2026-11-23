@@ -10,7 +10,7 @@ async fn definition_declares_a_world3d_model_window() {
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_scene_node_for_the_default_document() {
     let scene = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene();
-    let _node = render(&scene);
+    let _node = render(&scene, semio_plugin::Locale::En);
 }
 
 #[semio_framework_async_macros::async_test]

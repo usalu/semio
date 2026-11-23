@@ -8,7 +8,7 @@ import { ShellScopeContext, type ShellScope } from "../../../🐚️ShellScope/�
 afterEach(() => vi.restoreAllMocks());
 
 function Fixture({ windowed = false, offset }: { windowed?: boolean; offset?: number }) {
-  return <div data-window-silhouette={windowed ? "" : undefined}><Select id="boundary-select" defaultOpen><SelectTrigger aria-label="Mode"><SelectValue /></SelectTrigger><SelectContent sideOffset={offset}><SelectItem value="alpha">Alpha</SelectItem><SelectItem value="beta">Beta</SelectItem></SelectContent></Select></div>;
+  return <div data-window-frame={windowed ? "" : undefined}><Select id="boundary-select" defaultOpen><SelectTrigger aria-label="Mode"><SelectValue /></SelectTrigger><SelectContent sideOffset={offset}><SelectItem value="alpha">Alpha</SelectItem><SelectItem value="beta">Beta</SelectItem></SelectContent></Select></div>;
 }
 
 describe("select shared boundaries", () => {

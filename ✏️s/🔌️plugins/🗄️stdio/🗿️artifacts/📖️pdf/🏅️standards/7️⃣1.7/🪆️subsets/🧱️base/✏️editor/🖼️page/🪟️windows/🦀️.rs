@@ -132,21 +132,23 @@ pub fn window_definition() -> WindowKindDefinition {
 }
 
 /// 🖼️ Paints every page, stacked top to bottom, with one layer per object.
-pub fn render_window(snapshot: &PdfSnapshot) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
-    render_window_with_selection(snapshot, None)
+pub fn render_window(snapshot: &PdfSnapshot, locale: Locale) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
+    render_window_with_selection(snapshot, None, locale)
 }
 
 /// 🖼️ Paints every page and outlines `selected` when the host has one.
-pub fn render_window_with_selection(snapshot: &PdfSnapshot, selected: Option<&str>) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
-    semio_plugin::scene_surface(BODY_KEY, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, 1.0, canvas_layers(snapshot, selected)))
+pub fn render_window_with_selection(snapshot: &PdfSnapshot, selected: Option<&str>, locale: Locale) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
+    let labels = pdf_editor_labels(locale);
+    semio_plugin::scene_surface(BODY_KEY, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, 1.0, canvas_layers(snapshot, selected)), labels.canvas_name.as_str(), Some(labels.canvas_description.as_str()))
 }
 
 /// 🖼️ Paints the page window from the framework-owned object selection.
-pub fn render_selected(snapshot: &PdfSnapshot, interaction: &semio_plugin::app::InteractionView<'_>) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
-    render_window_with_selection(snapshot, interaction.selection(OBJECT_DOMAIN).ids.first().map(String::as_str))
+pub fn render_selected(snapshot: &PdfSnapshot, interaction: &semio_plugin::app::InteractionView<'_>, locale: Locale) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
+    render_window_with_selection(snapshot, interaction.selection(OBJECT_DOMAIN).ids.first().map(String::as_str), locale)
 }
 
 /// 🪟 Fields for the object selected on the page. The canvas window stays a canvas.
+/// The object window owns the same edit verbs its fields commit, because a commit is addressed to the focused window and a kind that does not declare the verb is refused.
 pub fn inspector_window_definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: None,
@@ -156,7 +158,10 @@ pub fn inspector_window_definition() -> WindowKindDefinition {
         surface_kind: SurfaceKind::BlockList,
         icon_id: "square".into(),
         options: WindowOptions::default(),
-        actions: Vec::new(),
+        actions: {
+            let mut page = window_definition();
+            std::mem::take(&mut page.actions)
+        },
         utilities: Vec::new(),
         interactions: Vec::new(),
         params_schema: None,
@@ -169,15 +174,15 @@ pub fn inspector_window_definition() -> WindowKindDefinition {
 
 /// 🪟 Page, the selected object's fields, and snapshot details side by side.
 pub fn document_layout(main_window_kind_id: &str) -> WindowLayout {
-    let stack = |size: f64, window_kind_id: &str, title: &str| {
+    let stack = |size: f64, window_kind_id: &str| {
         WindowLayoutNode::Stack { size: Some(size),
             active_window_id: None,
-            children: vec![WindowLayoutNode::Window { window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
+            children: vec![WindowLayoutNode::Window { window_kind_id: window_kind_id.into(), title: None, instance_id: None, template_id: None, corner: None }],
         }
     };
     WindowLayout {
         root: WindowLayoutNode::Split { axis: Axis::Horizontal, size: None,
-            children: vec![stack(0.12, THUMBNAILS_WINDOW_KIND_ID, "Pages"), stack(0.34, main_window_kind_id, "Document"), stack(0.18, TEXT_LAYER_WINDOW_KIND_ID, "Text layer"), stack(0.18, INSPECTOR_WINDOW_KIND_ID, "Object"), stack(0.18, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_WINDOW_KIND_ID, "Details")],
+            children: vec![stack(0.12, THUMBNAILS_WINDOW_KIND_ID), stack(0.34, main_window_kind_id), stack(0.18, TEXT_LAYER_WINDOW_KIND_ID), stack(0.18, INSPECTOR_WINDOW_KIND_ID), stack(0.18, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_WINDOW_KIND_ID)],
         },
     }
 }
@@ -201,14 +206,14 @@ pub fn render_inspector(
         let note = ui::text(ui::Label(UiText::clipped(prompt))).try_id("pdf-object-empty").map_err(|_| inspector_error("pdf.object.empty-id"))?.try_build().map_err(|_| inspector_error("pdf.object.empty"))?;
         column = column.try_child(note).map_err(|_| inspector_error("pdf.object.empty"))?;
         let page_index = page_index.unwrap_or(0);
-        let heading = format!("{} {}", match locale { Locale::De => "Seite", Locale::En => "Page" }, page_index + 1);
-        column = column.try_child(ui::text(ui::Label(UiText::clipped(&heading))).try_id("pdf-object-kind").map_err(|_| inspector_error("pdf.object.kind-id"))?.try_build().map_err(|_| inspector_error("pdf.object.kind"))?).map_err(|_| inspector_error("pdf.object.kind"))?;
+        let heading = format!("{} {}", pick(locale, "Page", "Seite"), page_index + 1);
+        column = column.try_child(ui::text(ui::Label(UiText::clipped(&heading))).emphasize(true).try_id("pdf-object-kind").map_err(|_| inspector_error("pdf.object.kind-id"))?.try_build().map_err(|_| inspector_error("pdf.object.kind"))?).map_err(|_| inspector_error("pdf.object.kind"))?;
         for field in page_fields(snapshot, page_index) {
             column = column.try_child(field_input(page_index, "", &field, controller_id, publication_revision, locale)?).map_err(|_| inspector_error("pdf.object.field"))?;
         }
         if let Some(page) = snapshot.pages.get(page_index) {
             let help = match locale {
-                Locale::De => "Seitenrahmen als links unten rechts oben eingeben. Leere optionale Rahmen verwenden den Standardwert.",
+                Locale::De => "Rahmen als Koordinaten in der Reihenfolge links, unten, rechts, oben eingeben, getrennt durch Leerzeichen. Ein leerer optionaler Rahmen verwendet den Standardwert.",
                 Locale::En => "Enter box coordinates in left, bottom, right, top order, separated by spaces. Clear an optional box to use its default.",
             };
             let note = ui::text(ui::Label(UiText::clipped(help))).try_id("pdf-page-boundary-help").map_err(|_| inspector_error("pdf.object.boundary-help-id"))?.try_build().map_err(|_| inspector_error("pdf.object.boundary-help"))?;
@@ -218,7 +223,7 @@ pub fn render_inspector(
             }
         }
         let size = snapshot.pages.get(page_index).map_or((612.0, 792.0), |page| (page.width(), page.height()));
-        let label = |en, de| if locale == Locale::De { de } else { en };
+        let label = |en: &'static str, de: &'static str| pick_label(locale, en, de);
         let mut actions = vec![("insert-page", label("Insert page after", "Seite danach einfügen"), page_index.saturating_add(1).min(snapshot.pages.len()), vec![("width", size.0), ("height", size.1)])];
         if page_index > 0 {
             actions.push(("move-page-earlier", label("Move page earlier", "Seite nach vorne"), page_index, vec![("x", (page_index - 1) as f64)]));
@@ -262,9 +267,9 @@ pub fn render_inspector(
             ObjectKind::Annotation => "Annotation",
         },
     };
-    column = column.try_child(ui::text(ui::Label(UiText::clipped(heading))).try_id("pdf-object-kind").map_err(|_| inspector_error("pdf.object.kind-id"))?.try_build().map_err(|_| inspector_error("pdf.object.kind"))?).map_err(|_| inspector_error("pdf.object.kind"))?;
+    column = column.try_child(ui::text(ui::Label(UiText::clipped(heading))).emphasize(true).try_id("pdf-object-kind").map_err(|_| inspector_error("pdf.object.kind-id"))?.try_build().map_err(|_| inspector_error("pdf.object.kind"))?).map_err(|_| inspector_error("pdf.object.kind"))?;
     if object.kind == ObjectKind::Image && controller_id == "s.stdio.pdf@1.7/*#editor" {
-        let button = image_replacement_button(controller_id, object.page, object.end, publication_revision.0, locale == Locale::De)?;
+        let button = image_replacement_button(controller_id, object.page, object.end, publication_revision.0, locale)?;
         column = column.try_child(button).map_err(|_| inspector_error("pdf.object.image-action"))?;
     }
     for field in inspector_fields(snapshot, &object) {
@@ -281,8 +286,9 @@ pub fn render_inspector(
 
 //#region 🔭️ViewGlue
 /// 🖼️ Paints the page window through the ephemeral local view with `overlay` layers on top.
-pub fn render_view(snapshot: &PdfSnapshot, selected: Option<&str>, view: &ViewState, viewport: (f64, f64), overlay: Vec<OverlayLayer>) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
-    semio_plugin::scene_surface(BODY_KEY, semio_ui_contract::SurfaceKind::Canvas2d, &scene_for_view(snapshot, &canvas_layers(snapshot, selected), view, viewport, overlay))
+pub fn render_view(snapshot: &PdfSnapshot, selected: Option<&str>, view: &ViewState, viewport: (f64, f64), overlay: Vec<OverlayLayer>, locale: Locale) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
+    let labels = pdf_editor_labels(locale);
+    semio_plugin::scene_surface(BODY_KEY, semio_ui_contract::SurfaceKind::Canvas2d, &scene_for_view(snapshot, &canvas_layers(snapshot, selected), view, viewport, overlay), labels.canvas_name.as_str(), Some(labels.canvas_description.as_str()))
 }
 
 /// 🔎 Hits of `query` over the text of every page object.

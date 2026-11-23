@@ -1,4 +1,4 @@
-import{appendFileSync,mkdirSync,readdirSync,readFileSync,statSync}from"node:fs";
+import{appendFileSync,closeSync,mkdirSync,openSync,readdirSync,readFileSync,readSync,statSync}from"node:fs";
 import{join}from"node:path";
 import{AsyncLocalStorage}from"node:async_hooks";
 import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -146,6 +146,26 @@ export function readUnitEventsV1(unitCacheRoot:string):readonly UnitEventRowV1[]
   }
  }catch{}
  return rows;
+}
+
+/** ♻️ Counts the units one lane served from a cache since the tally was created, read incrementally from the end of the lane's event log: restores from this machine (`hit`, `script-hit`) and from the fleet (`remote-hit`). A partial last line waits for its newline; a log that shrank restarts from its beginning. */
+export function createUnitReuseTallyV1(unitCacheRoot:string,lane:string):Readonly<{read:()=>Readonly<{local:number;fleet:number}>}>{
+ const file=join(unitCacheRoot,PHASE_LEDGER_POLICY_V1.eventsDirectory,lane+".jsonl");
+ let offset=0,pending="",local=0,fleet=0;
+ try{offset=statSync(file).size;}catch{}
+ return Object.freeze({read:()=>{
+  try{
+   const size=statSync(file).size;
+   if(size<offset){offset=0;pending="";}
+   if(size>offset){
+    const descriptor=openSync(file,"r");
+    try{const buffer=Buffer.allocUnsafe(Math.min(size-offset,1<<24)),bytes=readSync(descriptor,buffer,0,buffer.length,offset);offset+=bytes;pending+=buffer.toString("utf8",0,bytes);}finally{closeSync(descriptor);}
+    const lines=pending.split("\n");pending=lines.pop()!;
+    for(const line of lines){if(!line)continue;try{const kind=JSON.parse(line).kind;if(kind==="hit"||kind==="script-hit")local++;else if(kind==="remote-hit")fleet++;}catch{}}
+   }
+  }catch{}
+  return{local,fleet};
+ }});
 }
 
 const ledgerDirectory=(workspace:string)=>machinePathV1(workspace,".cache","f",...PHASE_LEDGER_POLICY_V1.directory);

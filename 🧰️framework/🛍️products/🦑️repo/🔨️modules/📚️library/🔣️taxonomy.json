@@ -11504,7 +11504,7 @@
         "🧾️Form",
         "🪜️Stepper",
         "🪟️Window",
-        "🔲️WindowSilhouette",
+        "🔲️WindowFrame",
         "🗂️WindowChrome",
         "🃏️OverviewCard",
         "🥞️LayeredOverview",
@@ -31420,6 +31420,10 @@
               "manifestPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🩺️diagnostics/🟦️.ts"
             },
+            "@semio-tech/framework-actor/page": {
+              "manifestPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts"
+            },
             "@semio-tech/framework-actor/retained-turn/bootstrap": {
               "manifestPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🏛️bootstrap/🟦️.ts"
@@ -31455,6 +31459,10 @@
             "@semio-tech/framework-actor/wire-turn/more-work-drive": {
               "manifestPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn/🚚️more-work-drive/🟦️.ts"
+            },
+            "@semio-tech/framework-async/continuation": {
+              "manifestPath": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/🪃️continuation/🟦️.ts"
             },
             "@semio-tech/framework-canvas-ts/renderer-resident": {
               "manifestPath": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/package.json",
@@ -31492,6 +31500,10 @@
               "manifestPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎛️host/🟦️.ts"
             },
+            "@semio-tech/framework-os/modules/renderer/engine/media/browser/tutorial-video": {
+              "manifestPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎞️tutorial-video/🟦️.ts"
+            },
             "@semio-tech/framework-os/modules/renderer/engine/media/channel": {
               "manifestPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/📡️channel/🟦️.ts"
@@ -31504,6 +31516,14 @@
               "manifestPath": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts"
             },
+            "@semio-tech/framework-trace": {
+              "manifestPath": "🧰️framework/🔨️modules/⏱️trace/package.json",
+              "entryPath": "🧰️framework/🔨️modules/⏱️trace/🟦️.ts"
+            },
+            "@semio-tech/framework/actor/page": {
+              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📃️page/🟦️.ts"
+            },
             "@semio-tech/framework/actor/shard-client": {
               "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📮️shard-client/🟦️.ts"
@@ -31512,9 +31532,41 @@
               "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts"
             },
+            "@semio-tech/framework/actor/shard-client/wire": {
+              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📮️shard-client/📜️wire/🟦️.ts"
+            },
+            "@semio-tech/framework/app-channel": {
+              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🧾️app-channel/🟦️.ts"
+            },
+            "@semio-tech/framework/async/continuation": {
+              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/📦️packages/🟦️typescript/⏳️async/🪃️continuation/🟦️.ts"
+            },
+            "@semio-tech/framework/backbone": {
+              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🟦️.ts"
+            },
             "@semio-tech/framework/backbone/binding": {
               "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🔗️binding/🟦️.ts"
+            },
+            "@semio-tech/framework/backbone/config-lane": {
+              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🪪️config-lane/🟦️.ts"
+            },
+            "@semio-tech/framework/config/mutations": {
+              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🎚️config/🧬️schema/🧬️mutations/🟦️.ts"
+            },
+            "@semio-tech/framework/packs": {
+              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🎁️packs/🟦️.ts"
+            },
+            "@semio-tech/framework/wire-contracts": {
+              "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/📦️packages/🟦️typescript/🪢️wire-contracts/🟦️.ts"
             },
             "@semio-tech/plugin-registry/deployment/routes.json": {
               "manifestPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/package.json",
@@ -31535,6 +31587,10 @@
             "@semio-tech/ui-contract/retained/instance": {
               "manifestPath": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/package.json",
               "entryPath": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts"
+            },
+            "@semio-tech/ui-layout": {
+              "manifestPath": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout/package.json",
+              "entryPath": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout/🟦️.ts"
             },
             "@semio-tech/ui-locale-rs/index": {
               "manifestPath": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/package.json",
@@ -31562,7 +31618,11 @@
             }
           },
           "sourceModulePaths": [
+            "🧰️framework/📦️packages/🟦️typescript/⏳️async/🪃️continuation/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/🎁️packs/🟦️.ts",
+            "🧰️framework/📦️packages/🟦️typescript/🎚️config/🧬️schema/🧬️mutations/🟦️.ts",
+            "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📃️page/🟦️.ts",
+            "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📮️shard-client/📜️wire/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📮️shard-client/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/💡️inference/🔌️service/🟦️.ts",
@@ -31577,6 +31637,7 @@
             "🧰️framework/📦️packages/🟦️typescript/📞️directory-client/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🔗️binding/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🟦️.ts",
+            "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🪪️config-lane/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/🧬️schema/🟦️.ts",
             "🧰️framework/📦️packages/🟦️typescript/🧾️app-channel/🟦️.ts",
@@ -31632,6 +31693,22 @@
             "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧩️members/🟦️.ts",
             "🧰️framework/🔨️modules/🎓️onboarding/🏷️declaration/🟦️.ts",
             "🧰️framework/🔨️modules/🎓️onboarding/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/⚙️apply-diff/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🆔️identity-config-mutation/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📁️local-folders-config-mutation/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📂️opening-config-mutation/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🗃️local-catalog-config-mutation/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🟦️.ts",
+            "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/⏱️runtime-metrics/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts",
@@ -31682,11 +31759,13 @@
             "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧬️schema/🔣️.json",
             "🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/📃️page/🧬️schema/🔣️.json",
             "🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🏛️bootstrap/📮️port/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🏛️bootstrap/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/💓️heartbeat/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/📜️wire/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/🟦️.ts",
@@ -31741,6 +31820,7 @@
             "🧰️framework/🔨️modules/💡️inference/🚪️opening/🟦️.ts",
             "🧰️framework/🔨️modules/📄️document/📌️check-in/🟦️.ts",
             "🧰️framework/🔨️modules/📄️document/🪪️scope/🟦️.ts",
+            "🧰️framework/🔨️modules/📇️directory/🎓️first-run/🔣️.json",
             "🧰️framework/🔨️modules/📇️directory/🎓️first-run/🟦️.ts",
             "🧰️framework/🔨️modules/📇️directory/🏘️spaces/🟦️.ts",
             "🧰️framework/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🔣️.json",
@@ -31808,6 +31888,7 @@
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🔤️text-chunks/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎛️action-arg-facets/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📏️budget/🧬️schema/🔣️.json",
+            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
@@ -31914,6 +31995,7 @@
             "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
             "🧰️framework/🔨️modules/🛰️backbone/🧱️worker-wire/🟦️.ts",
             "🧰️framework/🔨️modules/🛰️backbone/🪟️desktop-window/🟦️.ts",
+            "🧰️framework/🔨️modules/🛰️backbone/🪪️config-lane/🟦️.ts",
             "🧰️framework/🔨️modules/🧩️action-argument-resolution/🟦️.ts",
             "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
             "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
@@ -31954,6 +32036,7 @@
             "🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts",
             "🧰️framework/🔨️modules/🫧️transient/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎛️host/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎞️tutorial-video/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/📡️channel/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
@@ -31961,6 +32044,7 @@
             "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎛️host/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎞️tutorial-video/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/📡️channel/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🚚️lifecycle/🟦️.ts",
@@ -32000,12 +32084,14 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📇️interactive-job-registry/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔌️browser-interactive-job-port/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖼️reference-image-decode/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗂️local-catalog/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/📋️contract/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🖱️dom-events/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🛬️picked-files/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️dynamic-extension/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️plugin-modules/🛂️admission/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️plugin-modules/🟦️.ts",
@@ -32014,9 +32100,13 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⏳️boot-lifecycle/🔣️.json",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧩️plugin-modules/🔣️.json",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/💾️acknowledgment/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛬️natural-file-drop/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📤️SegmentedDownload/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🎞️media-import/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🧬️schema/🔣️.json",
@@ -32039,7 +32129,11 @@
         "package.json",
         "📋️project.json",
         "🧰️framework/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/📦️packages/🟦️typescript/⏳️async/🪃️continuation/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/🎁️packs/🟦️.ts",
+        "🧰️framework/📦️packages/🟦️typescript/🎚️config/🧬️schema/🧬️mutations/🟦️.ts",
+        "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📃️page/🟦️.ts",
+        "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📮️shard-client/📜️wire/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📮️shard-client/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/💡️inference/🔌️service/🟦️.ts",
@@ -32054,6 +32148,7 @@
         "🧰️framework/📦️packages/🟦️typescript/📞️directory-client/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🔗️binding/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🟦️.ts",
+        "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🪪️config-lane/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/🧬️schema/🟦️.ts",
         "🧰️framework/📦️packages/🟦️typescript/🧾️app-channel/🟦️.ts",
@@ -32109,6 +32204,22 @@
         "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧩️members/🟦️.ts",
         "🧰️framework/🔨️modules/🎓️onboarding/🏷️declaration/🟦️.ts",
         "🧰️framework/🔨️modules/🎓️onboarding/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/⚙️apply-diff/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🆔️identity-config-mutation/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📁️local-folders-config-mutation/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📂️opening-config-mutation/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🗃️local-catalog-config-mutation/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🟦️.ts",
+        "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/⏱️runtime-metrics/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts",
@@ -32161,11 +32272,13 @@
         "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧬️schema/🔣️.json",
         "🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/📃️page/🧬️schema/🔣️.json",
         "🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🏛️bootstrap/📮️port/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🏛️bootstrap/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/💓️heartbeat/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/📜️wire/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/🟦️.ts",
@@ -32221,6 +32334,7 @@
         "🧰️framework/🔨️modules/💡️inference/🚪️opening/🟦️.ts",
         "🧰️framework/🔨️modules/📄️document/📌️check-in/🟦️.ts",
         "🧰️framework/🔨️modules/📄️document/🪪️scope/🟦️.ts",
+        "🧰️framework/🔨️modules/📇️directory/🎓️first-run/🔣️.json",
         "🧰️framework/🔨️modules/📇️directory/🎓️first-run/🟦️.ts",
         "🧰️framework/🔨️modules/📇️directory/🏘️spaces/🟦️.ts",
         "🧰️framework/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🔣️.json",
@@ -32290,6 +32404,7 @@
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🔤️text-chunks/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎛️action-arg-facets/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📏️budget/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
@@ -32396,6 +32511,7 @@
         "🧰️framework/🔨️modules/🛰️backbone/🧭️opening-relay/🟦️.ts",
         "🧰️framework/🔨️modules/🛰️backbone/🧱️worker-wire/🟦️.ts",
         "🧰️framework/🔨️modules/🛰️backbone/🪟️desktop-window/🟦️.ts",
+        "🧰️framework/🔨️modules/🛰️backbone/🪪️config-lane/🟦️.ts",
         "🧰️framework/🔨️modules/🧩️action-argument-resolution/🟦️.ts",
         "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
@@ -32442,6 +32558,7 @@
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📋️project.json",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎛️host/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎞️tutorial-video/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/📡️channel/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
@@ -32450,6 +32567,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎛️host/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎞️tutorial-video/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/📡️channel/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🚚️lifecycle/🟦️.ts",
@@ -32509,12 +32627,14 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📽️projection/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔌️browser-interactive-job-port/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖼️reference-image-decode/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗂️local-catalog/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/📋️contract/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🖱️dom-events/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🛬️picked-files/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️dynamic-extension/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️plugin-modules/🛂️admission/🟦️.ts",
@@ -32531,9 +32651,13 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⏳️boot-lifecycle/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧩️plugin-modules/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/💾️acknowledgment/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛬️natural-file-drop/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📤️SegmentedDownload/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🎞️media-import/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts",

@@ -18,7 +18,7 @@ fn document(servable: bool) -> Generation3dSnapshotRead {
         vec![neuron("unserved", "fixture.unserved.import")]
     };
     snapshot.host_snapshot.synapses.clear();
-    snapshot.host_snapshot.layout.clear();
+    std::mem::take(&mut snapshot.host_snapshot.layout).retire_cold();
     snapshot
 }
 

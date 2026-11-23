@@ -1,27 +1,194 @@
 {
   "$comment": "🚦️ Authored admission cases of a write or a build against the cap and the partition watermarks: the policy, what the store holds, the bytes about to be written, the partition and whether a collection already ran within the minimum age, with the expected action and reason. Read by the TypeScript rule and by the independent Python oracle.",
-  "policy": {"capBytes": 1000, "highWatermark": 0.9, "partition": {"highUsedFraction": 0.9, "lowUsedFraction": 0.8, "criticalUsedFraction": 0.97}},
+  "policy": {
+    "capBytes": 1000,
+    "highWatermark": 0.9,
+    "partition": {
+      "highUsedFraction": 0.9,
+      "lowUsedFraction": 0.8,
+      "criticalUsedFraction": 0.97
+    }
+  },
   "cases": [
-    {"name": "everything fits", "storeBytes": 100, "incomingBytes": 10, "partition": {"totalBytes": 1000, "freeBytes": 500}, "collected": false, "action": "allow", "reason": "fits"},
-    {"name": "a partition above its high share collects in the background", "storeBytes": 100, "incomingBytes": 0, "partition": {"totalBytes": 1000, "freeBytes": 80}, "collected": false, "action": "collect-background", "reason": "partition-high"},
-    {"name": "after a collection a high partition goes on", "storeBytes": 100, "incomingBytes": 0, "partition": {"totalBytes": 1000, "freeBytes": 80}, "collected": true, "action": "allow", "reason": "fits"},
-    {"name": "a critical partition waits for a collection", "storeBytes": 100, "incomingBytes": 0, "partition": {"totalBytes": 1000, "freeBytes": 20}, "collected": false, "action": "collect-now", "reason": "partition-critical"},
-    {"name": "a partition still critical after a collection refuses", "storeBytes": 100, "incomingBytes": 0, "partition": {"totalBytes": 1000, "freeBytes": 20}, "collected": true, "action": "refuse", "reason": "partition-critical"},
-    {"name": "the bytes about to be written count toward the share", "storeBytes": 100, "incomingBytes": 25, "partition": {"totalBytes": 1000, "freeBytes": 50}, "collected": false, "action": "collect-now", "reason": "partition-critical"},
-    {"name": "exactly the critical share is critical", "storeBytes": 100, "incomingBytes": 0, "partition": {"totalBytes": 1000, "freeBytes": 30}, "collected": false, "action": "collect-now", "reason": "partition-critical"},
-    {"name": "an unmeasured partition and an unknown store measure the store", "storeBytes": null, "incomingBytes": 0, "partition": null, "collected": false, "action": "measure", "reason": "unknown-usage"},
-    {"name": "a store above its cap waits for a collection", "storeBytes": 1000, "incomingBytes": 1, "partition": null, "collected": false, "action": "collect-now", "reason": "cap-exceeded"},
-    {"name": "a store above its cap on a measured healthy partition collects in the background and the write is not held", "storeBytes": 1000, "incomingBytes": 1, "partition": {"totalBytes": 1000, "freeBytes": 500}, "collected": false, "action": "collect-background", "reason": "cap-exceeded"},
-    {"name": "after a collection a store that stays above its cap goes on because the rest is pinned", "storeBytes": 1000, "incomingBytes": 1, "partition": null, "collected": true, "action": "allow", "reason": "fits"},
-    {"name": "a store above its high watermark collects in the background", "storeBytes": 905, "incomingBytes": 0, "partition": null, "collected": false, "action": "collect-background", "reason": "cap-high"},
-    {"name": "a critical partition is judged before the cap", "storeBytes": 2000, "incomingBytes": 0, "partition": {"totalBytes": 1000, "freeBytes": 10}, "collected": false, "action": "collect-now", "reason": "partition-critical"},
-    {"name": "an unmeasured partition falls back to the cap rules", "storeBytes": 100, "incomingBytes": 0, "partition": null, "collected": false, "action": "allow", "reason": "fits"}
+    {
+      "name": "everything fits",
+      "storeBytes": 100,
+      "incomingBytes": 10,
+      "partition": {
+        "totalBytes": 1000,
+        "freeBytes": 500
+      },
+      "collected": false,
+      "action": "allow",
+      "reason": "fits"
+    },
+    {
+      "name": "a partition above its high share collects in the background",
+      "storeBytes": 100,
+      "incomingBytes": 0,
+      "partition": {
+        "totalBytes": 1000,
+        "freeBytes": 80
+      },
+      "collected": false,
+      "action": "collect-background",
+      "reason": "partition-high"
+    },
+    {
+      "name": "after a collection a high partition goes on",
+      "storeBytes": 100,
+      "incomingBytes": 0,
+      "partition": {
+        "totalBytes": 1000,
+        "freeBytes": 80
+      },
+      "collected": true,
+      "action": "allow",
+      "reason": "fits"
+    },
+    {
+      "name": "a critical partition waits for a collection",
+      "storeBytes": 100,
+      "incomingBytes": 0,
+      "partition": {
+        "totalBytes": 1000,
+        "freeBytes": 20
+      },
+      "collected": false,
+      "action": "collect-now",
+      "reason": "partition-critical"
+    },
+    {
+      "name": "a partition still critical after a collection refuses",
+      "storeBytes": 100,
+      "incomingBytes": 0,
+      "partition": {
+        "totalBytes": 1000,
+        "freeBytes": 20
+      },
+      "collected": true,
+      "action": "refuse",
+      "reason": "partition-critical"
+    },
+    {
+      "name": "the bytes about to be written count toward the share",
+      "storeBytes": 100,
+      "incomingBytes": 25,
+      "partition": {
+        "totalBytes": 1000,
+        "freeBytes": 50
+      },
+      "collected": false,
+      "action": "collect-now",
+      "reason": "partition-critical"
+    },
+    {
+      "name": "exactly the critical share is critical",
+      "storeBytes": 100,
+      "incomingBytes": 0,
+      "partition": {
+        "totalBytes": 1000,
+        "freeBytes": 30
+      },
+      "collected": false,
+      "action": "collect-now",
+      "reason": "partition-critical"
+    },
+    {
+      "name": "an unmeasured partition and an unknown store measure the store",
+      "storeBytes": null,
+      "incomingBytes": 0,
+      "partition": null,
+      "collected": false,
+      "action": "measure",
+      "reason": "unknown-usage"
+    },
+    {
+      "name": "a store above its cap waits for a collection",
+      "storeBytes": 1000,
+      "incomingBytes": 1,
+      "partition": null,
+      "collected": false,
+      "action": "collect-now",
+      "reason": "cap-exceeded"
+    },
+    {
+      "name": "a store above its cap on a measured healthy partition collects in the background and the write is not held",
+      "storeBytes": 1000,
+      "incomingBytes": 1,
+      "partition": {
+        "totalBytes": 1000,
+        "freeBytes": 500
+      },
+      "collected": false,
+      "action": "collect-background",
+      "reason": "cap-exceeded"
+    },
+    {
+      "name": "after a collection a store that stays above its cap goes on because the rest is pinned",
+      "storeBytes": 1000,
+      "incomingBytes": 1,
+      "partition": null,
+      "collected": true,
+      "action": "allow",
+      "reason": "fits"
+    },
+    {
+      "name": "a store above its high watermark collects in the background",
+      "storeBytes": 905,
+      "incomingBytes": 0,
+      "partition": null,
+      "collected": false,
+      "action": "collect-background",
+      "reason": "cap-high"
+    },
+    {
+      "name": "a critical partition is judged before the cap",
+      "storeBytes": 2000,
+      "incomingBytes": 0,
+      "partition": {
+        "totalBytes": 1000,
+        "freeBytes": 10
+      },
+      "collected": false,
+      "action": "collect-now",
+      "reason": "partition-critical"
+    },
+    {
+      "name": "an unmeasured partition falls back to the cap rules",
+      "storeBytes": 100,
+      "incomingBytes": 0,
+      "partition": null,
+      "collected": false,
+      "action": "allow",
+      "reason": "fits"
+    }
   ],
   "needs": [
-    {"name": "below the high share nothing is needed", "totalBytes": 1000, "freeBytes": 150, "need": 0},
-    {"name": "at the high share nothing is needed", "totalBytes": 1000, "freeBytes": 100, "need": 0},
-    {"name": "above the high share the excess over the low share is needed", "totalBytes": 1000, "freeBytes": 50, "need": 150},
-    {"name": "a full partition needs the whole excess over the low share", "totalBytes": 1000, "freeBytes": 0, "need": 200}
+    {
+      "name": "below the high share nothing is needed",
+      "totalBytes": 1000,
+      "freeBytes": 150,
+      "need": 0
+    },
+    {
+      "name": "at the high share nothing is needed",
+      "totalBytes": 1000,
+      "freeBytes": 100,
+      "need": 0
+    },
+    {
+      "name": "above the high share the excess over the low share is needed",
+      "totalBytes": 1000,
+      "freeBytes": 50,
+      "need": 150
+    },
+    {
+      "name": "a full partition needs the whole excess over the low share",
+      "totalBytes": 1000,
+      "freeBytes": 0,
+      "need": 200
+    }
   ],
   "automaticCompletion": {
     "capBytes": 1000,
@@ -119,20 +286,156 @@
         "critical": true,
         "collects": 1
       },
-      {"name":"becomes critical during verification","advance":1200,"cap":1000,"priorBytes":1600,"scope":"same","timestamp":"valid","critical":"transition","collects":1}
+      {
+        "name": "becomes critical during verification",
+        "advance": 1200,
+        "cap": 1000,
+        "priorBytes": 1600,
+        "scope": "same",
+        "timestamp": "valid",
+        "critical": "transition",
+        "collects": 1
+      }
     ]
   },
   "localCompletion": [
-    {"name":"same completed high scope","origin":"high","request":"high","owner":"same","result":"completed","expected":0,"refused":false},
-    {"name":"throw leaves later retry","origin":"high","request":"high","owner":"same","result":"throw","expected":1,"refused":false},
-    {"name":"locked leaves later retry","origin":"high","request":"high","owner":"same","result":"locked","expected":1,"refused":false},
-    {"name":"partial leaves later retry","origin":"high","request":"high","owner":"same","result":"partial","expected":1,"refused":false},
-    {"name":"dry leaves later retry","origin":"high","request":"high","owner":"same","result":"dry","expected":1,"refused":false},
-    {"name":"lockless leaves later retry","origin":"high","request":"high","owner":"same","result":"lockless","expected":1,"refused":false},
-    {"name":"changed critical pressure requires relief","origin":"high","request":"critical","owner":"same","result":"completed","expected":1,"refused":true},
-    {"name":"different policy guard requires relief","origin":"high","request":"high","owner":"other","result":"completed","expected":1,"refused":false},
-    {"name":"same completed critical scope","origin":"critical","request":"critical","owner":"same","result":"completed","expected":0,"refused":true},
-    {"name":"failed critical is finite per call","origin":"critical","request":"critical","owner":"same","result":"throw","expected":1,"refused":true},
-    {"name":"locked critical is finite per call","origin":"critical","request":"critical","owner":"same","result":"locked","expected":1,"refused":true}
-  ]
+    {
+      "name": "same completed high scope",
+      "origin": "high",
+      "request": "high",
+      "owner": "same",
+      "result": "completed",
+      "expected": 0,
+      "refused": false
+    },
+    {
+      "name": "throw leaves later retry",
+      "origin": "high",
+      "request": "high",
+      "owner": "same",
+      "result": "throw",
+      "expected": 1,
+      "refused": false
+    },
+    {
+      "name": "locked leaves later retry",
+      "origin": "high",
+      "request": "high",
+      "owner": "same",
+      "result": "locked",
+      "expected": 1,
+      "refused": false
+    },
+    {
+      "name": "partial leaves later retry",
+      "origin": "high",
+      "request": "high",
+      "owner": "same",
+      "result": "partial",
+      "expected": 1,
+      "refused": false
+    },
+    {
+      "name": "dry leaves later retry",
+      "origin": "high",
+      "request": "high",
+      "owner": "same",
+      "result": "dry",
+      "expected": 1,
+      "refused": false
+    },
+    {
+      "name": "lockless leaves later retry",
+      "origin": "high",
+      "request": "high",
+      "owner": "same",
+      "result": "lockless",
+      "expected": 1,
+      "refused": false
+    },
+    {
+      "name": "changed critical pressure requires relief",
+      "origin": "high",
+      "request": "critical",
+      "owner": "same",
+      "result": "completed",
+      "expected": 1,
+      "refused": true
+    },
+    {
+      "name": "different policy guard requires relief",
+      "origin": "high",
+      "request": "high",
+      "owner": "other",
+      "result": "completed",
+      "expected": 1,
+      "refused": false
+    },
+    {
+      "name": "same completed critical scope",
+      "origin": "critical",
+      "request": "critical",
+      "owner": "same",
+      "result": "completed",
+      "expected": 0,
+      "refused": true
+    },
+    {
+      "name": "failed critical is finite per call",
+      "origin": "critical",
+      "request": "critical",
+      "owner": "same",
+      "result": "throw",
+      "expected": 1,
+      "refused": true
+    },
+    {
+      "name": "locked critical is finite per call",
+      "origin": "critical",
+      "request": "critical",
+      "owner": "same",
+      "result": "locked",
+      "expected": 1,
+      "refused": true
+    }
+  ],
+  "increments": {
+    "$comment": "📈️ Authored need of one collection against the cap: `total` bytes held, an incremental run frees only `increment` bytes below the high watermark (continuous small steps), a manual run frees down to the low watermark; nothing above is needed below the high watermark. Read by the TypeScript planner and the independent Python oracle.",
+    "cap": 1000,
+    "high": 0.9,
+    "low": 0.75,
+    "increment": 50,
+    "rows": [
+      {
+        "name": "below the high watermark nothing is needed",
+        "total": 850,
+        "incremental": true,
+        "need": 0
+      },
+      {
+        "name": "just above it an incremental run frees to the increment below it",
+        "total": 910,
+        "incremental": true,
+        "need": 60
+      },
+      {
+        "name": "far above it an incremental run is still one step to the low watermark at most",
+        "total": 1200,
+        "incremental": true,
+        "need": 350
+      },
+      {
+        "name": "a manual run frees down to the low watermark",
+        "total": 910,
+        "incremental": false,
+        "need": 160
+      },
+      {
+        "name": "a manual run below the high watermark needs nothing",
+        "total": 890,
+        "incremental": false,
+        "need": 0
+      }
+    ]
+  }
 }

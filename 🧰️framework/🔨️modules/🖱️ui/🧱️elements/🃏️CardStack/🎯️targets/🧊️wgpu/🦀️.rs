@@ -1,157 +1,99 @@
-//! 🃏️ Native card stack: cards are placed with [`resolve_card_bands`] (the next card's cap row starts on the previous card's bottom line, sharing one band with its footer row) and every card's silhouette is painted as shared-border segments, so each coincident line is one line.
+//! 🃏️ Native card stack: every card is one rectangular frame and frames abut on shared edges (no card is lifted onto a neighbour). A card's title and footer chips are glass overlays inside the frame; the frame outline and each chip's inner edges are painted as shared-border segments, so every coincident line is one line.
 //! @see `🧱️elements/🃏️CardStack/🟦️.tsx`
-//! @see `🧱️elements/🔲️WindowSilhouette/🟦️.tsx`
+//! @see `🧱️elements/🔲️WindowFrame/🟦️.tsx`
+//! @see `🧱️elements/🃏️CardStack/stack.cases.json`
 
-use crate::card_bands::{resolve_card_bands, CardBandCard, CardBandMode, CardBandSpan};
 use semio_ui_draw_contract::{DrawList, SharedBorderState};
 use semio_ui_theme::geometry::Rect;
-use semio_ui_theme::Rgba;
+use semio_ui_theme::{GlassStyle, Rgba};
 
 const EPSILON: f64 = 1e-6;
 
-/// 📏️ One axis-aligned piece of a card outline in the stack's coordinate space.
-pub type CardStackSegment = ([f64; 2], [f64; 2]);
-
-/// 🪢️ A card's cap or footer row: its natural height and the extents of its chips relative to the card's left edge.
-#[derive(Clone, Debug, PartialEq)]
-pub struct CardStackEdge {
-    pub depth: f64,
-    pub chips: Vec<CardBandSpan>,
-}
-
-/// 🃏️ A card of a stack: its full height and its cap (top) and footer (bottom) rows.
-#[derive(Clone, Debug, PartialEq)]
+/// 🃏️ A card of a stack: its full height, the height of its chip rows and the widths of its title (top, left) and footer (bottom, right) chips; a width of zero means no chip.
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CardStackCard {
     pub height: f64,
-    pub top: CardStackEdge,
-    pub bottom: CardStackEdge,
+    pub row: f64,
+    pub top_chip: f64,
+    pub bottom_chip: f64,
 }
 
-/// 📍️ Where a card sits: its top, and the depths its cap and footer rows end up with after the shared bands grew them.
+/// 📍️ Which frame edge a chip is anchored to.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CardStackDock {
+    Top,
+    Bottom,
+}
+
+/// 💠️ A chip overlay inside a frame as `[x, y, width, height]`; `inner_edges` are its `[top, right, bottom, left]` edges that do not lie on the frame outline.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct CardStackPlacement {
-    pub top: f64,
-    pub height: f64,
-    pub top_depth: f64,
-    pub bottom_depth: f64,
+pub struct CardStackChip {
+    pub rect: [f64; 4],
+    pub dock: CardStackDock,
+    pub inner_edges: [bool; 4],
 }
 
-/// 🧮️ Places `cards` in one column with no gap: card `i + 1` is lifted onto the bottom line of card `i` by its band, and a shared band grows the cap row below and the footer row above to the same height.
-pub fn layout_card_stack(cards: &[CardStackCard]) -> Vec<CardStackPlacement> {
-    let bands = resolve_card_bands(&cards.iter().map(|card| CardBandCard { cap: card.top.depth, footer: card.bottom.depth, cap_chips: card.top.chips.clone(), footer_chips: card.bottom.chips.clone() }).collect::<Vec<_>>(), 0.0);
-    let mut placements: Vec<CardStackPlacement> = Vec::with_capacity(cards.len());
-    for (index, card) in cards.iter().enumerate() {
-        let top = placements.last().zip(bands.get(index.wrapping_sub(1))).map_or(0.0, |(above, band)| above.top + above.height - band.lift);
-        let mut placement = CardStackPlacement { top, height: card.height, top_depth: card.top.depth, bottom_depth: card.bottom.depth };
-        if let (Some(above), Some(band)) = (placements.last_mut(), bands.get(index.wrapping_sub(1))) {
-            if band.mode == CardBandMode::Shared {
-                above.bottom_depth = above.bottom_depth.max(band.footer);
-                placement.top_depth = placement.top_depth.max(band.cap);
-            }
-        }
-        placements.push(placement);
+/// 🔲️ One card as the rectangle `rect` (`[x, y, width, height]`) and the chips inside it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CardStackFrame {
+    pub rect: [f64; 4],
+    pub chips: Vec<CardStackChip>,
+}
+
+fn chip(frame: [f64; 4], dock: CardStackDock, width: f64, row: f64) -> Option<CardStackChip> {
+    let width = width.min(frame[2]);
+    let height = row.min(frame[3]);
+    if width <= EPSILON || height <= EPSILON {
+        return None;
     }
-    placements
+    let (x, y) = match dock {
+        CardStackDock::Top => (frame[0], frame[1]),
+        CardStackDock::Bottom => (frame[0] + frame[2] - width, frame[1] + frame[3] - height),
+    };
+    let touches_right = x + width >= frame[0] + frame[2] - EPSILON;
+    let touches_left = x <= frame[0] + EPSILON;
+    let spans_height = height >= frame[3] - EPSILON;
+    let inner_edges = match dock {
+        CardStackDock::Top => [false, !touches_right, !spans_height, !touches_left],
+        CardStackDock::Bottom => [!spans_height, !touches_right, false, !touches_left],
+    };
+    Some(CardStackChip { rect: [x, y, width, height], dock, inner_edges })
 }
 
-fn normalized(chips: &[CardBandSpan], x0: f64, x1: f64) -> Vec<CardBandSpan> {
-    let mut spans: Vec<CardBandSpan> = chips.iter().map(|chip| CardBandSpan { left: chip.left.max(x0), right: chip.right.min(x1) }).filter(|chip| chip.right - chip.left > EPSILON).collect();
-    spans.sort_by(|a, b| a.left.total_cmp(&b.left));
-    let mut merged: Vec<CardBandSpan> = Vec::with_capacity(spans.len());
-    for span in spans {
-        match merged.last_mut() {
-            Some(last) if span.left <= last.right + EPSILON => last.right = last.right.max(span.right),
-            _ => merged.push(span),
-        }
-    }
-    merged
+/// 🧱️ Lays out `cards` in one column whose first frame sits at `left`/`top` with `width`; frame `i + 1` starts at the bottom edge of frame `i`.
+pub fn card_stack_frames(left: f64, top: f64, width: f64, cards: &[CardStackCard]) -> Vec<CardStackFrame> {
+    let mut y = top;
+    cards
+        .iter()
+        .map(|card| {
+            let rect = [left, y, width, card.height];
+            y += card.height;
+            let chips = [chip(rect, CardStackDock::Top, card.top_chip, card.row), chip(rect, CardStackDock::Bottom, card.bottom_chip, card.row)].into_iter().flatten().collect();
+            CardStackFrame { rect, chips }
+        })
+        .collect()
 }
 
-fn push_point(points: &mut Vec<[f64; 2]>, x: f64, y: f64) {
-    if points.last().is_none_or(|last| (last[0] - x).abs() > EPSILON || (last[1] - y).abs() > EPSILON) {
-        points.push([x, y]);
-    }
+/// 📍️ Whether the point lies inside the frame rectangle; the space beside a chip is content.
+pub fn card_frame_contains(frame: &CardStackFrame, x: f64, y: f64) -> bool {
+    x >= frame.rect[0] && x <= frame.rect[0] + frame.rect[2] && y >= frame.rect[1] && y <= frame.rect[1] + frame.rect[3]
 }
 
-fn edge_points(depth: f64, chips: &[CardBandSpan], x0: f64, x1: f64, outer: f64, inner: f64) -> Vec<[f64; 2]> {
-    let chips = normalized(chips, x0, x1);
-    if depth <= EPSILON {
-        return vec![[x0, outer], [x1, outer]];
-    }
-    if chips.is_empty() {
-        return vec![[x0, inner], [x1, inner]];
-    }
-    let starts_with_chip = chips[0].left <= x0 + EPSILON;
-    let mut points = vec![[x0, if starts_with_chip { outer } else { inner }]];
-    if !starts_with_chip {
-        push_point(&mut points, chips[0].left, inner);
-        push_point(&mut points, chips[0].left, outer);
-    }
-    for (index, chip) in chips.iter().enumerate() {
-        push_point(&mut points, chip.right, outer);
-        if let Some(next) = chips.get(index + 1) {
-            push_point(&mut points, chip.right, inner);
-            push_point(&mut points, next.left, inner);
-            push_point(&mut points, next.left, outer);
-        } else if chip.right < x1 - EPSILON {
-            push_point(&mut points, chip.right, inner);
-            push_point(&mut points, x1, inner);
-        }
-    }
-    points
+/// 🔢️ The retained output items [`paint_card_stack`] records for `frames`: four lines per frame, one per chip inner edge and two per chip glass.
+pub fn card_stack_paint_items(frames: &[CardStackFrame]) -> usize {
+    frames.iter().map(|frame| 4 + frame.chips.iter().map(|chip| chip.inner_edges.iter().filter(|edge| **edge).count() + 2).sum::<usize>()).sum()
 }
 
-/// 🔲️ The stepped outline of one card at `left`/`placement.top`: its top edge dips to the cap depth between chips, its bottom edge rises to the footer depth between chips.
-pub fn card_outline(left: f64, width: f64, placement: CardStackPlacement, card: &CardStackCard) -> Vec<CardStackSegment> {
-    let top_depth = placement.top_depth.min(placement.height);
-    let bottom_depth = placement.bottom_depth.min((placement.height - top_depth).max(0.0));
-    let bottom = placement.height;
-    let mut points = edge_points(top_depth, &card.top.chips, 0.0, width, 0.0, top_depth);
-    let mut lower = edge_points(bottom_depth, &card.bottom.chips, 0.0, width, bottom, bottom - bottom_depth);
-    lower.reverse();
-    points.append(&mut lower);
-    let moved: Vec<[f64; 2]> = points.iter().map(|point| [point[0] + left, point[1] + placement.top]).collect();
-    moved.iter().zip(moved.iter().cycle().skip(1)).filter(|(from, to)| (from[0] - to[0]).abs() > EPSILON || (from[1] - to[1]).abs() > EPSILON).map(|(from, to)| (*from, *to)).collect()
-}
-
-/// 🧱️ Lays out `cards` in a column whose first card sits at `left`/`top` with `width`, one outline per card.
-pub fn card_stack_outlines(left: f64, top: f64, width: f64, cards: &[CardStackCard]) -> Vec<Vec<CardStackSegment>> {
-    layout_card_stack(cards).into_iter().zip(cards).map(|(placement, card)| card_outline(left, width, CardStackPlacement { top: placement.top + top, ..placement }, card)).collect()
-}
-
-fn ordered(from: [f64; 2], to: [f64; 2]) -> ([f64; 2], [f64; 2]) {
-    if from[0] + from[1] <= to[0] + to[1] { (from, to) } else { (to, from) }
-}
-
-/// 📍️ Whether the point lies inside the same stepped polygon used for painting the card.
-pub fn card_outline_contains(outline: &[CardStackSegment], x: f64, y: f64) -> bool {
-    outline.iter().filter(|(from, to)| (from[1] > y) != (to[1] > y) && from[0] > x).count() % 2 == 1
-}
-
-/// 🖌️ Records every outline segment as a shared border: a line lies inside the stack's bounds (its top and left lines on the first pixel row and column, every other on the one before its coordinate), so coincident lines of neighbouring cards resolve to ONE painted line.
-pub fn paint_card_stack(draw: &mut DrawList, outlines: &[Vec<CardStackSegment>], stroke: f32, border: impl Fn(usize) -> (Rgba, SharedBorderState)) {
-    let all = || outlines.iter().flatten().flat_map(|(from, to)| [from, to]);
-    let (top, left) = (all().map(|point| point[1]).fold(f64::INFINITY, f64::min), all().map(|point| point[0]).fold(f64::INFINITY, f64::min));
-    for (from, to, color, state) in outlines.iter().enumerate().flat_map(|(index, outline)| {
+/// 🖌️ Records every frame outline as a shared border (the seam of two abutting frames resolves to ONE painted line), then for every chip its glass surface and its inner edges.
+pub fn paint_card_stack(draw: &mut DrawList, frames: &[CardStackFrame], stroke: f32, chip_glass: GlassStyle, border: impl Fn(usize) -> (Rgba, SharedBorderState)) {
+    for (index, frame) in frames.iter().enumerate() {
         let (color, state) = border(index);
-        outline.iter().map(move |(from, to)| (from, to, color, state))
-    }) {
-        let (from, to) = ordered(*from, *to);
-        let (x, y) = (from[0] as f32, from[1] as f32);
-        if (from[1] - to[1]).abs() <= EPSILON {
-            let width = (to[0] - from[0]) as f32;
-            if from[1] - top <= EPSILON {
-                draw.push_shared_border_edges(Rect::new(x, y, width, stroke), stroke, color, state, [true, false, false, false]);
-            } else {
-                draw.push_shared_border_edges(Rect::new(x, y - stroke, width, stroke), stroke, color, state, [false, false, true, false]);
-            }
-        } else {
-            let height = (to[1] - from[1]) as f32;
-            if from[0] - left <= EPSILON {
-                draw.push_shared_border_edges(Rect::new(x, y, stroke, height), stroke, color, state, [false, false, false, true]);
-            } else {
-                draw.push_shared_border_edges(Rect::new(x - stroke, y, stroke, height), stroke, color, state, [false, true, false, false]);
-            }
+        let [x, y, w, h] = frame.rect.map(|value| value as f32);
+        draw.push_shared_border(Rect::new(x, y, w, h), stroke, color, state);
+        for chip in &frame.chips {
+            let [x, y, w, h] = chip.rect.map(|value| value as f32);
+            draw.push_glass([x, y, w, h], 0.0, chip_glass);
+            draw.push_shared_border_edges(Rect::new(x, y, w, h), stroke, color, state, chip.inner_edges);
         }
     }
 }

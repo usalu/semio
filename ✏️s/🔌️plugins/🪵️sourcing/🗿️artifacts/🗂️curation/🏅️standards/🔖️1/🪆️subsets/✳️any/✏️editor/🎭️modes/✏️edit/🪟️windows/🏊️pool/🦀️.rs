@@ -134,7 +134,7 @@ pub fn filter_bar(cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAs
     ui::row().try_id("sourcing-pool-filters").map_err(|_| filter_error("row-id"))?.try_children(children).map_err(|_| filter_error("row-children"))?.try_build().map_err(|_| filter_error("row-build"))
 }
 
-pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels: &SourcingLabels, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let columns = [
         ("name", labels.col_name.as_str(), true),
         ("module", labels.col_module.as_str(), true),
@@ -143,7 +143,7 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels:
         ("curated", labels.col_curated.as_str(), false),
     ];
     let rows = pool_kinds(document, cfg).iter().map(|kind| pool_row(document, kind, labels)).collect();
-    let table = sourcing_table(SOURCING_CURATION_SURFACE_POOL, &columns, rows, "dropOnPool", cfg.filters.sort.as_ref())?;
+    let table = sourcing_table(SOURCING_CURATION_SURFACE_POOL, &columns, rows, "dropOnPool", cfg.filters.sort.as_ref(), semio_plugin::surface_name(locale, "Pool table", "Pool-Tabelle"))?;
     let mut children = UiFixedList::<BuiltNode>::default();
     children.try_push(filter_bar(cfg, labels)?).map_err(|_| filter_error("children"))?;
     children.try_push(table).map_err(|_| filter_error("children"))?;

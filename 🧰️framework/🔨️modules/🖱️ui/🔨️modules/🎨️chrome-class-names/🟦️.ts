@@ -47,15 +47,15 @@ export const panelTabBarScrollRowClass = "ui-scrollbar-hidden relative z-40 flex
 /** 🪟️ Non-scrolling host of a panel tab row — the shared-border frame whose single content-facing edge is the one seam between tab strip and panel body, so the compositor overlay never rides the scroller. */
 const panelTabFrameClass = "relative flex min-w-0 shrink-0 items-stretch";
 
-/** 🧱️ Panel tab strip frame spanning its host (`w-full` spans chrome/mobile dividers across the row; floating panel caps use {@link panelAnchorTabBarClass} so the U-gap opens after the last tab); its content-facing divider is a compositor edge declared by {@link panelTabBarEdge}, not a native border. */
+/** 🧱️ Panel tab strip frame spanning its host (`w-full` spans chrome/mobile dividers across the row; floating panel caps use {@link panelAnchorTabBarClass} so free row space opens after the last tab); its content-facing divider is a compositor edge declared by {@link panelTabBarEdge}, not a native border. */
 export const panelTabBarClass = cn(panelTabFrameClass, "w-full");
 
 /** 🔘️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
 
 /** 🏷️ Panel tab label beside the icon. */
 
-/** ⏹️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
-/** 🔚️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
+/** ⏹️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome frame. */
+/** 🔚️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome frame. */
 export const panelTabButtonDividerClass = "shared-border-cell";
 
 /** ❗️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
@@ -72,7 +72,7 @@ export const panelTabButtonClass = cn(
 /** ⚓️ Floating panel tab strip frame inside {@link WindowChrome} — sizes the strip; the edge toward the panel body is declared separately by {@link panelTabBarEdge}. */
 export const panelAnchorTabBarClass = cn(panelTabFrameClass, "h-[var(--panel-header-height)]");
 
-/** 🧭️ The one physical edge a tab strip shares with the panel body: collapsed strips defer every edge to the hosting chrome silhouette, expanded ones own only the content-facing side. */
+/** 🧭️ The one physical edge a tab strip shares with the panel body: collapsed strips defer every edge to the hosting chrome frame, expanded ones own only the content-facing side. */
 export function panelTabBarEdge(variant: "panel" | "chrome" | "mobile", direction: "up" | "down", expanded: boolean): "top" | "bottom" | undefined {
   if (variant === "mobile") return "bottom";
   if (!expanded) return undefined;
@@ -89,14 +89,14 @@ export const mobilePanelTabBarClass = cn(panelTabBarClass, "h-large");
 /** 📲️ Mobile panel tab button padding. */
 export const mobilePanelTabButtonClass = cn(panelTabButtonClass, "px-single");
 
-/** 🎞️ Body fill only — outer stroke is the stack silhouette SVG (tabs + cutout + controls + body); base level (mode body / floor windows float on) — host element must also carry `data-level="base"`. */
+/** 🎞️ Body fill only — outer stroke is the stack frame border SVG (frame rectangle + inner chip edges); base level (mode body / floor windows float on) — host element must also carry `data-level="base"`. */
 export const windowBodyFrameClass = cn("relative border-0", surfaceClass);
 
 /** 🌑️ Inactive sibling tab — normal pill resting on the U-frame baseline; transparent so it
  * shows the chip-cell glass beneath it rather than a second opaque fill (matches {@link panelWindowInactiveTabClass}'s rule for the panel variant). */
 export const modeDockInactiveTabClass = cn(`relative z-30 box-border min-h-medium shrink-0`, "bg-transparent");
 
-/** 🕳️ Inactive tab before gap — inner divider only; outer stroke owned by the silhouette SVG. */
+/** 🕳️ Inactive tab before the free row space — inner divider only; outer stroke owned by the frame border SVG. */
 export const modeDockInactiveTabBeforeGapClass = cn(`relative z-30 box-border min-h-medium shrink-0`, "bg-transparent");
 
 /** 💤️ Inactive panel tab inside {@link WindowChrome} — no opaque fill; the chip-cap glass is the panel boundary and must meet the body without a seam. */
@@ -108,7 +108,7 @@ export const modeDockTabLabelClassName = "flex min-w-0 flex-1 items-center gap-s
 /** ⭐️ Globally active dock tab — primary fill + emphasized label. */
 export const modeDockActiveTabFillClass = interactiveActiveFillClass;
 
-/** 🥞️ Stack-active tab fill — outline owned by the stack silhouette SVG; `border-0` must win over {@link interactiveActiveFillClass}'s border color utility. */
+/** 🥞️ Stack-active tab fill — outline owned by the stack frame border SVG; `border-0` must win over {@link interactiveActiveFillClass}'s border color utility. */
 export const modeDockActiveTabClass = cn("relative z-20 box-border min-h-medium shrink-0 border-0", modeDockActiveTabFillClass);
 
 /** 📐️ Merged top-left Actions body beside the engagement chrome toggle: the active engagement's status/control (when present) stacked above the categorized ad-hoc actions tree; scrolls once content exceeds the window body. */

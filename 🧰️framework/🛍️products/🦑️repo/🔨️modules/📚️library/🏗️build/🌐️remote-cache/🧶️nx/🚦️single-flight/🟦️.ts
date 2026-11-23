@@ -16,7 +16,7 @@ const policy=NX_FLIGHT_POLICY_V1,HASH=/^[a-z0-9_-]{1,128}$/u,SLOT=/^[0-9a-f]{64}
 export type NxFlightTimingV1=Readonly<{claimTtlMilliseconds:number;expectedMilliseconds:number;heartbeatMilliseconds:number;awaitSliceMilliseconds:number;waitBudgetMilliseconds:number;maximumHoldMilliseconds:number;claimTimeoutMilliseconds:number;upstreamTimeoutMilliseconds:number;requestTimeoutMilliseconds:number;probeTimeoutMilliseconds:number;failureThreshold:number;breakerMilliseconds:number}>;
 /** 📊️ What one front did.
  * @see ./🧬️schema/🔣️.json */
-export type NxFlightCountersV1=Readonly<{hits:number;misses:number;claimed:number;waited:number;served:number;taken:number;duplicated:number;unclaimed:number;puts:number;released:number;guarded:number}>;
+export type NxFlightCountersV1=Readonly<{hits:number;misses:number;claimed:number;waited:number;served:number;taken:number;duplicated:number;unclaimed:number;puts:number;released:number;guarded:number;dropped:number}>;
 /** 📣️ A noteworthy step of a front; the caller turns it into a bilingual line with `nxFlightTextV1`. */
 export type NxFlightEventV1=Readonly<{kind:"waiting"|"served"|"duplicated"|"unavailable";key?:string;holder?:string;seconds?:number;endpoint?:string}>;
 /** ⚙️ How to start a front: the upstream cache origin, its instance, the real token and optional overrides. */
@@ -47,7 +47,7 @@ type Outcome={state:"granted"}|{state:"held";by:string}|{state:"stored"}|{state:
 export async function startNxFlightV1(options:NxFlightOptionsV1):Promise<NxFlightV1>{
  if(!INSTANCE.test(options.instance))throw Error("Valid cache instance required / Gültige Cache-Instanz erforderlich");
  const timing={...nxFlightTimingV1(),...options.timing},upstream=options.upstream.replace(/\/+$/u,""),base=`${upstream}/${options.instance}`,transport=options.fetch??fetch,owner=options.owner??ownerName(),local=randomBytes(24).toString("hex"),report=options.report??(()=>{});
- const owned=new Map<string,{timer:ReturnType<typeof setInterval>;since:number}>(),slots=new Map<string,string>(),blocked=new Set<string>(),count={hits:0,misses:0,claimed:0,waited:0,served:0,taken:0,duplicated:0,unclaimed:0,puts:0,released:0,guarded:0};
+ const owned=new Map<string,{timer:ReturnType<typeof setInterval>;since:number}>(),slots=new Map<string,string>(),blocked=new Set<string>(),count={hits:0,misses:0,claimed:0,waited:0,served:0,taken:0,duplicated:0,unclaimed:0,puts:0,released:0,guarded:0,dropped:0};
  let failures=0,openUntil=0,tripped=false,recovering:Promise<boolean>|undefined,refused=false,announced=false,stopping=false;
  const authorization=(token:string|undefined):Record<string,string>=>token===undefined||token===""?{}:{authorization:`Bearer ${token}`};
  const note=()=>{if(!announced){announced=true;report({kind:"unavailable",endpoint:upstream});}};
@@ -137,8 +137,8 @@ export async function startNxFlightV1(options:NxFlightOptionsV1):Promise<NxFligh
   let first:Response;
   try{first=await forwardGet(key,request.signal);}catch{count.misses++;return empty();}
   if(first.status===200){count.hits++;await release(key);return first;}
-  if(first.status!==404)return first;
   await first.body?.cancel();count.misses++;
+  if(first.status!==404){count.dropped++;return empty();}
   const served=await wait(key,request.signal);
   return served??empty();
  };
@@ -153,7 +153,8 @@ export async function startNxFlightV1(options:NxFlightOptionsV1):Promise<NxFligh
    if(!await available())throw Error("Fleet cache down");
    response=settled(await guarded(`${base}/v1/cache/${key}`,{method:"PUT",headers,body:bytes} as RequestInit,timing.requestTimeoutMilliseconds+Math.ceil(bytes.length/2097152*1000)));
   }
-  catch(error){if(!stopping&&(error as Error).message!=="Fleet cache down")trip();await release(key);return new Response("Bad gateway\n",{status:502,headers:{"content-type":"text/plain"}});}
+  catch(error){if(!stopping&&(error as Error).message!=="Fleet cache down")trip();count.dropped++;await release(key);return new Response("Stored",{status:200,headers:{"content-type":"text/plain"}});}
+  if(response.status>=500){await response.body?.cancel();count.dropped++;await release(key);return new Response("Stored",{status:200,headers:{"content-type":"text/plain"}});}
   count.puts++;slots.delete(key);await release(key);
   return new Response(response.body,{status:response.status,headers:{"content-type":response.headers.get("content-type")??"text/plain"}});
  };
@@ -165,8 +166,9 @@ export async function startNxFlightV1(options:NxFlightOptionsV1):Promise<NxFligh
    if(!await available())throw Error("Fleet cache down");
    const init={method:request.method,headers,...(request.method==="PUT"?{body:request.body,duplex:"half"}:{})} as RequestInit,response=request.method==="PUT"?await transport(`${base}/cas/${digest}`,{...init,signal:AbortSignal.timeout(timing.upstreamTimeoutMilliseconds*5)}):await guarded(`${base}/cas/${digest}`,init,timing.requestTimeoutMilliseconds);
    if(response.status>=500&&response.status!==507)trip();
+   if(response.status>=500){await response.body?.cancel();count.dropped++;return request.method==="PUT"?new Response("Stored",{status:200,headers:{"content-type":"text/plain"}}):empty();}
    return new Response(request.method==="HEAD"?null:response.body,{status:response.status,headers:{"content-type":response.headers.get("content-type")??"application/octet-stream",...(response.headers.get("content-length")?{"content-length":response.headers.get("content-length")!}:{})}});
-  }catch(error){if(!stopping&&(error as Error).message!=="Fleet cache down")trip();return new Response("Bad gateway\n",{status:502,headers:{"content-type":"text/plain"}});}
+  }catch(error){if(!stopping&&(error as Error).message!=="Fleet cache down")trip();count.dropped++;return request.method==="PUT"?new Response("Stored",{status:200,headers:{"content-type":"text/plain"}}):empty();}
  };
  const finish=async(request:Request):Promise<Response>=>{
   let body:Record<string,unknown>;

@@ -774,8 +774,8 @@ impl ArtifactEditor for DagPlayApp {
         let camera = dag_config_camera(config);
         let labels = dag_play_labels(view_state);
         let node = match body_key {
-            DAG_PLAY_BODY_MAIN => main::render(&scene, &camera, labels),
-            DAG_PLAY_BODY_COMPILED => compiled::render(&scene, &camera),
+            DAG_PLAY_BODY_MAIN => main::render(&scene, &camera, labels, view_state.locale),
+            DAG_PLAY_BODY_COMPILED => compiled::render(&scene, &camera, view_state.locale),
             DAG_PLAY_BODY_ARTIFACT => document_panel::render(&scene, labels, &semio_plugin::TreeWindows::for_body(view_state, DAG_PLAY_BODY_ARTIFACT)),
             DAG_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, DAG_PLAY_BODY_CATALOGUE)),
             DAG_PLAY_BODY_INSPECTOR => inspection_panel::render(&scene, &[], labels),

@@ -94,9 +94,9 @@ fn event_feed_entries(program: &ProgramSnapshot) -> semio_framework_value::DslVa
 
 //#region 🔖️Render
 /// 📰️ Projects the document-wide audit trail as the neutral EventFeed scene used by every renderer.
-pub fn render(program: &ProgramSnapshot, _windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+pub fn render(program: &ProgramSnapshot, _windows: &TreeWindows<'_>, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let scene = EventFeedScene { entries_json: semio_framework_pack_json::to_json_string(&event_feed_entries(program)), follow: Some(true), activate_action: None, domain_id: None };
-    scene_surface(ARCHITECT_SURFACE_TRACE, semio_plugin::plugin_app_close_prelude::SurfaceKind::EventFeed, &scene)
+    scene_surface(ARCHITECT_SURFACE_TRACE, semio_plugin::plugin_app_close_prelude::SurfaceKind::EventFeed, &scene, semio_plugin::surface_name(locale, "Trace", "Ablauf"), None)
 }
 //#endregion 🔖️Render
 

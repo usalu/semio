@@ -261,8 +261,8 @@ pub fn scene(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, _active_uti
     Canvas2dScene::base(camera_x, camera_y, zoom, layers_json(document))
 }
 
-pub fn render(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
-    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene(document, config, active_utility))
+pub fn render(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, active_utility: &str, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &scene(document, config, active_utility), semio_plugin::surface_name(locale, "Grid", "Raster"), None)
 }
 //#endregion 🔖️Render
 

@@ -62,7 +62,7 @@ fn pdf_stream_roles_pure_projection_replaces_operators_and_preserves_inverse() {
     let refused = PdfMutation::SetObjectValue(SetObjectValue { id: dependency.owner, value: object.clone(), index: None, admitted_stream_roles: None }).diff(&base);
     assert!(protocol::apply_diff_cold(refused.diff(), &base).is_err());
     let mut replacement = role.clone(); replacement.value = PdfStreamRoleValue::Operators { content: vec![PdfOp::Save, PdfOp::Restore] };
-    let operation = PdfMutation::SetObjectValue(SetObjectValue { id: dependency.owner, value: object, index: None, admitted_stream_roles: Some(PdfIndexedDiff { modified: vec![PdfIndexedItem { index, value: replacement }], ..PdfIndexedDiff::default() }) });
+    let operation = PdfMutation::SetObjectValue(SetObjectValue { id: dependency.owner, value: object, index: None, admitted_stream_roles: Some((PdfIndexedDiff { modified: vec![PdfIndexedItem { index, value: replacement }], ..PdfIndexedDiff::default() }).into()) });
     let outcome = operation.diff(&base);
     let next = protocol::apply_diff_cold(outcome.diff(), &base).unwrap();
     assert_eq!(next.pages[0].content, vec![PdfOp::Save, PdfOp::Restore]);
@@ -143,7 +143,7 @@ fn pdf_stream_roles_role_only_projection_and_insert_remove_preserve_replay() {
     let owner=ObjRef {num:500,gen:7};
     let identity=PdfGraphIdentity {owner,path:Vec::new()};
     let added=PdfAdmittedStreamRole {identity:identity.clone(),dependencies:vec![identity],value:PdfStreamRoleValue::MetadataText {text:"retained fixture".into()}};
-    let insert=PdfMutation::InsertObject(InsertObject {id:owner,value:PdfObject::Stream {dict:Vec::new(),data:b"retained fixture".to_vec(),filters:Vec::new()},index:None,admitted_stream_roles:Some(PdfIndexedDiff {added:vec![PdfIndexedItem {index:base.admitted_stream_roles.len(),value:added}],..Default::default()})});
+    let insert=PdfMutation::InsertObject(InsertObject {id:owner,value:PdfObject::Stream {dict:Vec::new(),data:b"retained fixture".to_vec(),filters:Vec::new()},index:None,admitted_stream_roles:Some((PdfIndexedDiff {added:vec![PdfIndexedItem {index:base.admitted_stream_roles.len(),value:added}],..Default::default()}).into())});
     let inserted=protocol::apply_diff_cold(insert.diff(&base).diff(),&base).unwrap();
     let mut restored=inserted.clone();
     for inverse in insert.inverse(&base).unwrap() {restored=protocol::apply_diff_cold(inverse.diff(&restored).diff(),&restored).unwrap();}
@@ -238,7 +238,7 @@ fn pdf_stream_roles_multi_object_reorder_delete_and_path_refusal() {
     let refused = special[0].diff(&base);
     assert!(protocol::apply_diff_cold(refused.diff(), &base).is_err());
 
-    let deletion = PdfMutation::RemoveObject(RemoveObject { id: owners[0], admitted_stream_roles:Some(PdfIndexedDiff { removed: vec![first_role], ..PdfIndexedDiff::default() }) });
+    let deletion = PdfMutation::RemoveObject(RemoveObject { id: owners[0], admitted_stream_roles:Some((PdfIndexedDiff { removed: vec![first_role], ..PdfIndexedDiff::default() }).into()) });
     let outcome = deletion.diff(&base);
     let next = protocol::apply_diff_cold(outcome.diff(), &base).unwrap();
     let remaining: Vec<ObjRef> = next.admitted_stream_roles.iter().map(|role| role.identity.owner).filter(|owner| owners.contains(owner)).collect();

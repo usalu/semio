@@ -230,7 +230,14 @@ fn public_json_snapshot_admission_refuses_invalid_owners_and_accepts_distinct_na
         assert!(<Fem2dSnapshotValue as semio_framework_value::FromValue>::from_value_controlled(&value, &mut control).is_err(), "controlled {row}");
     }
     let mut accepted = fixture["before"].clone();
+    let old_material = accepted["materials"][0]["id"].clone();
     accepted["materials"][0]["id"] = accepted["nodes"][0]["id"].clone();
+    let new_material = accepted["materials"][0]["id"].clone();
+    for element in accepted["elements"].as_array_mut().expect("elements") {
+        if element["materialId"] == old_material {
+            element["materialId"] = new_material.clone();
+        }
+    }
     let mut case = accepted["loadCases"][0].clone();
     case["id"] = fixture["collision"]["liveCaseId"].clone();
     accepted["loadCases"].as_array_mut().expect("cases").push(case);

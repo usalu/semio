@@ -337,7 +337,7 @@ fn fit_graph_answers_the_fitted_camera_not_the_scene_camera() {
         .with(|cell| {
             let map = cell.borrow();
             let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
-            Some((host.camera(), [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom], host.dag.camera_content_coverage()))
+            Some((host.camera(), [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom], flow::dag::camera_content_coverage(&host.dag.viewport, &host.dag.graph)))
         })
         .expect("live flow host");
     assert_eq!(fitted, published, "the answer the control persists is the surface's own published camera");

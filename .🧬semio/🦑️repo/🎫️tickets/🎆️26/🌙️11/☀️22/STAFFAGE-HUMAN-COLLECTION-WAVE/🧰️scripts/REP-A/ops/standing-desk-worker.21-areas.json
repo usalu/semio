@@ -1,0 +1,14 @@
+[
+ {
+  "op": "set",
+  "path": [
+   "thermal",
+   "regions",
+   "id=desk-frame",
+   "areaM2"
+  ],
+  "value": 1.184,
+  "was": 0.8869,
+  "measuredAt": 50
+ }
+]

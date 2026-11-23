@@ -1,4 +1,4 @@
-"""🔊 Subtitle voiceover for EnergyBalance Chapter 5 (Primärenergie & das GEG) — synth, align, verify.
+"""🔊 Subtitle voiceover for EnergyBalance Chapter 5 (Primärenergie & das GModG) — synth, align, verify.
 
     synth   → one audio file per clause + the timing manifest (measured lengths)
     trace   → VO_TRACE=1 manim run records when each subtitle appears

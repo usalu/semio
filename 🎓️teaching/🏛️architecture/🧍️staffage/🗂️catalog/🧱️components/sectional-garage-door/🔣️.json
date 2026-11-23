@@ -15818,6 +15818,28 @@
             "profile": [[0.0, 0.0], [0.0, 0.0075], [0.066, 0.0075], [0.066, 0.005], [0.072, 0.005], [0.072, 0.0075], [0.0765, 0.0075], [0.0765, 0.0]],
             "axis": [0.0, 0.0, -1.0],
             "origin": [0.06, 0.01, -1.14]
+          },
+          {
+            "id": "brace-bolt-l",
+            "kind": "revolve",
+            "bone": "track",
+            "material": "steel",
+            "role": "detail",
+            "tone": 0.4,
+            "profile": [[0, 0.004], [0.0375, 0.004]],
+            "axis": [0, 0, 1],
+            "origin": [2.495, 2.59, 1.21]
+          },
+          {
+            "id": "brace-bolt-r",
+            "kind": "revolve",
+            "bone": "track",
+            "material": "steel",
+            "role": "detail",
+            "tone": 0.4,
+            "profile": [[0, 0.004], [0.0375, 0.004]],
+            "axis": [0, 0, 1],
+            "origin": [2.495, 2.59, -1.2475]
           }
         ],
         "thermal": [
@@ -18081,6 +18103,18 @@
             "of": "cable-stud-r",
             "region": "hardware-steel",
             "layer": "hw-plate"
+          },
+          {
+            "region": "track-steel",
+            "layer": "track-wall",
+            "id": "th-brace-bolt-l",
+            "of": "brace-bolt-l"
+          },
+          {
+            "region": "track-steel",
+            "layer": "track-wall",
+            "id": "th-brace-bolt-r",
+            "of": "brace-bolt-r"
           }
         ],
         "structure": [
@@ -18860,6 +18894,18 @@
             "member": "track",
             "part": "support",
             "anchor": "hanger-2"
+          },
+          {
+            "id": "j-brace-bolt-l",
+            "of": "brace-bolt-l",
+            "member": "track",
+            "part": "joint"
+          },
+          {
+            "id": "j-brace-bolt-r",
+            "of": "brace-bolt-r",
+            "member": "track",
+            "part": "joint"
           }
         ],
         "decisions": [
@@ -18878,6 +18924,10 @@
           {
             "en": "The end bearing plates of the spring line stand on wall angles 45 x 30 x 2.5 mm that continue the jamb fixing from the flag brackets upwards, so the shaft load has a drawn path into the jamb and nothing of the balance line hangs free.",
             "de": "Die Endlagerplatten der Federlinie stehen auf Wandwinkeln 45 x 30 x 2,5 mm, die die Zargenbefestigung von den Bogenwinkeln nach oben fortsetzen; die Wellenlast hat so einen gezeichneten Weg in die Zarge und nichts an der Ausgleichslinie hängt frei."
+          },
+          {
+            "en": "Each sway brace is bolted to its rear hanger with one M8 bolt through both angle legs (the legs lay 2.5 mm apart without a fastener).",
+            "de": "Jede Windverstrebung ist mit einer M8-Schraube durch beide Winkelschenkel an ihren hinteren Abhänger geschraubt (die Schenkel lagen 2,5 mm auseinander, ohne Verbindungsmittel)."
           }
         ]
       },
@@ -20140,7 +20190,7 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.006], [0.003, 0.006], [0.003, 0.004], [0.083, 0.004], [0.083, 0.006], [0.086, 0.006], [0.086, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.0075], [0.003, 0.0075], [0.003, 0.005], [0.083, 0.005], [0.083, 0.0075], [0.086, 0.0075], [0.086, 0.0]],
             "axis": [0.0, 0.0, 1.0],
             "origin": [0.0, 0.0, -0.423],
             "repeat": {
@@ -20254,7 +20304,7 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.006], [0.003, 0.006], [0.003, 0.004], [0.083, 0.004], [0.083, 0.006], [0.086, 0.006], [0.086, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.0075], [0.003, 0.0075], [0.003, 0.005], [0.083, 0.005], [0.083, 0.0075], [0.086, 0.0075], [0.086, 0.0]],
             "axis": [0.0, 0.0, 1.0],
             "origin": [0.0, 0.0, -0.423],
             "repeat": {
@@ -20368,7 +20418,7 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.006], [0.003, 0.006], [0.003, 0.004], [0.083, 0.004], [0.083, 0.006], [0.086, 0.006], [0.086, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.0075], [0.003, 0.0075], [0.003, 0.005], [0.083, 0.005], [0.083, 0.0075], [0.086, 0.0075], [0.086, 0.0]],
             "axis": [0.0, 0.0, 1.0],
             "origin": [0.0, 0.0, -0.423],
             "repeat": {
@@ -22439,6 +22489,10 @@
           {
             "en": "The end bearing plates of the spring line stand on wall angles 45 x 30 x 2.5 mm that continue the jamb fixing from the flag brackets upwards, so the shaft load has a drawn path into the jamb and nothing of the balance line hangs free.",
             "de": "Die Endlagerplatten der Federlinie stehen auf Wandwinkeln 45 x 30 x 2,5 mm, die die Zargenbefestigung von den Bogenwinkeln nach oben fortsetzen; die Wellenlast hat so einen gezeichneten Weg in die Zarge und nichts an der Ausgleichslinie hängt frei."
+          },
+          {
+            "en": "The hinge pins are 15 mm, the smallest feature of 1:100.",
+            "de": "Die Scharnierstifte messen 15 mm, das kleinste Merkmal von 1:100."
           }
         ]
       },
@@ -23832,7 +23886,7 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.0075], [0.066, 0.0075], [0.066, 0.005], [0.072, 0.005], [0.072, 0.0075], [0.0765, 0.0075], [0.0765, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.01], [0.066, 0.01], [0.066, 0.00667], [0.072, 0.00667], [0.072, 0.01], [0.0765, 0.01], [0.0765, 0.0]],
             "axis": [0.0, 0.0, 1.0],
             "origin": [0.06, 0.01, 1.14]
           },
@@ -23843,7 +23897,7 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.0075], [0.066, 0.0075], [0.066, 0.005], [0.072, 0.005], [0.072, 0.0075], [0.0765, 0.0075], [0.0765, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.01], [0.066, 0.01], [0.066, 0.00667], [0.072, 0.00667], [0.072, 0.01], [0.0765, 0.01], [0.0765, 0.0]],
             "axis": [0.0, 0.0, -1.0],
             "origin": [0.06, 0.01, -1.14]
           }
@@ -25395,6 +25449,18 @@
             "of": "cable-stud-r",
             "member": "panel-1",
             "part": "joint"
+          },
+          {
+            "id": "m-bearing-plate-l",
+            "of": "bearing-plate-l",
+            "member": "track",
+            "part": "member"
+          },
+          {
+            "id": "m-bearing-plate-r",
+            "of": "bearing-plate-r",
+            "member": "track",
+            "part": "member"
           }
         ],
         "decisions": [
@@ -25405,6 +25471,10 @@
           {
             "en": "The end bearing plates of the spring line stand on wall angles 45 x 30 x 2.5 mm that continue the jamb fixing from the flag brackets upwards, so the shaft load has a drawn path into the jamb and nothing of the balance line hangs free.",
             "de": "Die Endlagerplatten der Federlinie stehen auf Wandwinkeln 45 x 30 x 2,5 mm, die die Zargenbefestigung von den Bogenwinkeln nach oben fortsetzen; die Wellenlast hat so einen gezeichneten Weg in die Zarge und nichts an der Ausgleichslinie hängt frei."
+          },
+          {
+            "en": "The cable studs on the bottom brackets are 20 mm; the end bearing plates are members of the structure, so the spring shaft has its load path into the wall angles.",
+            "de": "Die Seilbolzen an den Bodenkonsolen messen 20 mm; die Endlagerplatten sind Stäbe der Struktur, so hat die Federwelle ihren Lastpfad in die Wandwinkel."
           }
         ]
       },
@@ -25988,32 +26058,8 @@
               [0.028, 0.06]
             ],
             "plane": "xy",
-            "from": -1.2075,
-            "to": 1.2075
-          },
-          {
-            "id": "stile-1-l",
-            "kind": "extrude",
-            "bone": "panel-1",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.45,
-            "profile": [[0.0185, 1.18], [0.0185, 1.21], [0.0615, 1.21], [0.0615, 1.18], [0.06, 1.18], [0.06, 1.2075], [0.02, 1.2075], [0.02, 1.18]],
-            "plane": "yz",
-            "from": 0.045,
-            "to": 0.5
-          },
-          {
-            "id": "stile-1-r",
-            "kind": "extrude",
-            "bone": "panel-1",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.45,
-            "profile": [[0.02, -1.18], [0.02, -1.2075], [0.06, -1.2075], [0.06, -1.18], [0.0615, -1.18], [0.0615, -1.21], [0.0185, -1.21], [0.0185, -1.18]],
-            "plane": "yz",
-            "from": 0.045,
-            "to": 0.5
+            "from": -1.21,
+            "to": 1.21
           },
           {
             "id": "panel-2",
@@ -26047,32 +26093,8 @@
               [0.001, 0.029]
             ],
             "plane": "xy",
-            "from": -1.2075,
-            "to": 1.2075
-          },
-          {
-            "id": "stile-2-l",
-            "kind": "extrude",
-            "bone": "panel-2",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.45,
-            "profile": [[0.0185, 1.18], [0.0185, 1.21], [0.0615, 1.21], [0.0615, 1.18], [0.06, 1.18], [0.06, 1.2075], [0.02, 1.2075], [0.02, 1.18]],
-            "plane": "yz",
-            "from": 0.001,
-            "to": 0.5
-          },
-          {
-            "id": "stile-2-r",
-            "kind": "extrude",
-            "bone": "panel-2",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.45,
-            "profile": [[0.02, -1.18], [0.02, -1.2075], [0.06, -1.2075], [0.06, -1.18], [0.0615, -1.18], [0.0615, -1.21], [0.0185, -1.21], [0.0185, -1.18]],
-            "plane": "yz",
-            "from": 0.001,
-            "to": 0.5
+            "from": -1.21,
+            "to": 1.21
           },
           {
             "id": "panel-3",
@@ -26106,32 +26128,8 @@
               [0.001, 0.029]
             ],
             "plane": "xy",
-            "from": -1.2075,
-            "to": 1.2075
-          },
-          {
-            "id": "stile-3-l",
-            "kind": "extrude",
-            "bone": "panel-3",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.45,
-            "profile": [[0.0185, 1.18], [0.0185, 1.21], [0.0615, 1.21], [0.0615, 1.18], [0.06, 1.18], [0.06, 1.2075], [0.02, 1.2075], [0.02, 1.18]],
-            "plane": "yz",
-            "from": 0.001,
-            "to": 0.5
-          },
-          {
-            "id": "stile-3-r",
-            "kind": "extrude",
-            "bone": "panel-3",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.45,
-            "profile": [[0.02, -1.18], [0.02, -1.2075], [0.06, -1.2075], [0.06, -1.18], [0.0615, -1.18], [0.0615, -1.21], [0.0185, -1.21], [0.0185, -1.18]],
-            "plane": "yz",
-            "from": 0.001,
-            "to": 0.5
+            "from": -1.21,
+            "to": 1.21
           },
           {
             "id": "panel-4",
@@ -26158,32 +26156,8 @@
               [0.001, 0.029]
             ],
             "plane": "xy",
-            "from": -1.2075,
-            "to": 1.2075
-          },
-          {
-            "id": "stile-4-l",
-            "kind": "extrude",
-            "bone": "panel-4",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.45,
-            "profile": [[0.0185, 1.18], [0.0185, 1.21], [0.0615, 1.21], [0.0615, 1.18], [0.06, 1.18], [0.06, 1.2075], [0.02, 1.2075], [0.02, 1.18]],
-            "plane": "yz",
-            "from": 0.001,
-            "to": 0.48
-          },
-          {
-            "id": "stile-4-r",
-            "kind": "extrude",
-            "bone": "panel-4",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.45,
-            "profile": [[0.02, -1.18], [0.02, -1.2075], [0.06, -1.2075], [0.06, -1.18], [0.0615, -1.18], [0.0615, -1.21], [0.0185, -1.21], [0.0185, -1.18]],
-            "plane": "yz",
-            "from": 0.001,
-            "to": 0.48
+            "from": -1.21,
+            "to": 1.21
           },
           {
             "id": "bottom-rail",
@@ -26192,34 +26166,7 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.35,
-            "profile": [[0.022, 0.0185], [0.045, 0.0185], [0.045, 0.02], [0.028, 0.02], [0.028, 0.06], [0.045, 0.06], [0.045, 0.0615], [0.022, 0.0615]],
-            "plane": "xy",
-            "from": -1.2075,
-            "to": 1.2075
-          },
-          {
-            "id": "bottom-seal",
-            "kind": "extrude",
-            "bone": "panel-1",
-            "material": "epdm",
-            "role": "detail",
-            "tone": 0.15,
-            "profile": [[0.022, 0.024], [0.022, 0.056], [0.012, 0.058], [0.004, 0.054], [0.0, 0.046], [0.0, 0.034], [0.004, 0.026], [0.012, 0.022]],
-            "holes": [
-              [[0.019, 0.027], [0.019, 0.053], [0.012, 0.055], [0.006, 0.052], [0.003, 0.045], [0.003, 0.035], [0.006, 0.028], [0.012, 0.025]]
-            ],
-            "plane": "xy",
-            "from": -1.2075,
-            "to": 1.2075
-          },
-          {
-            "id": "top-cap",
-            "kind": "extrude",
-            "bone": "panel-4",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.35,
-            "profile": [[0.5, 0.0185], [0.5, 0.0615], [0.48, 0.0615], [0.48, 0.06], [0.497, 0.06], [0.497, 0.02], [0.48, 0.02], [0.48, 0.0185]],
+            "profile": [[0.0, 0.0185], [0.045, 0.0185], [0.045, 0.0615], [0.0, 0.0615]],
             "plane": "xy",
             "from": -1.2075,
             "to": 1.2075
@@ -26231,110 +26178,12 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [
-              [0.075, 0.02],
-              [0.002, 0.02],
-              [0.002, 0.0175],
-              [-0.003507, 0.00719],
-              [-0.006472, 0.004702],
-              [-0.007922, 0.001113],
-              [-0.007518, -0.002736],
-              [-0.005353, -0.005945],
-              [-0.001935, -0.007762],
-              [0.001935, -0.007762],
-              [0.005353, -0.005945],
-              [0.007518, -0.002736],
-              [0.007922, 0.001113],
-              [0.006472, 0.004702],
-              [0.014, 0.0175],
-              [0.075, 0.0175]
-            ],
-            "plane": "xy",
-            "from": -1.1575,
-            "to": -1.1225,
-            "repeat": {
-              "count": 4,
-              "translation": [0, 0, 0.76]
-            }
-          },
-          {
-            "id": "hinge-leaf-low-a-1",
-            "kind": "extrude",
-            "bone": "panel-1",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [
-              [0.425, 0.0175],
-              [0.486, 0.0175],
-              [0.493528, 0.004702],
-              [0.492078, 0.001113],
-              [0.492482, -0.002736],
-              [0.494647, -0.005945],
-              [0.498065, -0.007762],
-              [0.501935, -0.007762],
-              [0.505353, -0.005945],
-              [0.507518, -0.002736],
-              [0.507922, 0.001113],
-              [0.506472, 0.004702],
-              [0.503507, 0.00719],
-              [0.498, 0.0175],
-              [0.498, 0.02],
-              [0.425, 0.02]
-            ],
+            "profile": [[-0.04, -0.02], [0.04, -0.02], [0.04, 0.02], [-0.04, 0.02]],
             "plane": "xy",
             "from": -1.18,
-            "to": -1.1585,
-            "repeat": {
-              "count": 4,
-              "translation": [0, 0, 0.76]
-            }
-          },
-          {
-            "id": "hinge-leaf-low-b-1",
-            "kind": "extrude",
-            "bone": "panel-1",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [
-              [0.425, 0.0175],
-              [0.486, 0.0175],
-              [0.493528, 0.004702],
-              [0.492078, 0.001113],
-              [0.492482, -0.002736],
-              [0.494647, -0.005945],
-              [0.498065, -0.007762],
-              [0.501935, -0.007762],
-              [0.505353, -0.005945],
-              [0.507518, -0.002736],
-              [0.507922, 0.001113],
-              [0.506472, 0.004702],
-              [0.503507, 0.00719],
-              [0.498, 0.0175],
-              [0.498, 0.02],
-              [0.425, 0.02]
-            ],
-            "plane": "xy",
-            "from": -1.1215,
             "to": -1.1,
             "repeat": {
               "count": 4,
-              "translation": [0, 0, 0.76]
-            }
-          },
-          {
-            "id": "hinge-pin-1",
-            "kind": "revolve",
-            "bone": "panel-2",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.006], [0.003, 0.006], [0.003, 0.004], [0.083, 0.004], [0.083, 0.006], [0.086, 0.006], [0.086, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [0.0, 0.0, -0.423],
-            "repeat": {
-              "count": 2,
               "translation": [0, 0, 0.76]
             }
           },
@@ -26345,110 +26194,12 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [
-              [0.075, 0.02],
-              [0.002, 0.02],
-              [0.002, 0.0175],
-              [-0.003507, 0.00719],
-              [-0.006472, 0.004702],
-              [-0.007922, 0.001113],
-              [-0.007518, -0.002736],
-              [-0.005353, -0.005945],
-              [-0.001935, -0.007762],
-              [0.001935, -0.007762],
-              [0.005353, -0.005945],
-              [0.007518, -0.002736],
-              [0.007922, 0.001113],
-              [0.006472, 0.004702],
-              [0.014, 0.0175],
-              [0.075, 0.0175]
-            ],
-            "plane": "xy",
-            "from": -1.1575,
-            "to": -1.1225,
-            "repeat": {
-              "count": 4,
-              "translation": [0, 0, 0.76]
-            }
-          },
-          {
-            "id": "hinge-leaf-low-a-2",
-            "kind": "extrude",
-            "bone": "panel-2",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [
-              [0.425, 0.0175],
-              [0.486, 0.0175],
-              [0.493528, 0.004702],
-              [0.492078, 0.001113],
-              [0.492482, -0.002736],
-              [0.494647, -0.005945],
-              [0.498065, -0.007762],
-              [0.501935, -0.007762],
-              [0.505353, -0.005945],
-              [0.507518, -0.002736],
-              [0.507922, 0.001113],
-              [0.506472, 0.004702],
-              [0.503507, 0.00719],
-              [0.498, 0.0175],
-              [0.498, 0.02],
-              [0.425, 0.02]
-            ],
+            "profile": [[-0.04, -0.02], [0.04, -0.02], [0.04, 0.02], [-0.04, 0.02]],
             "plane": "xy",
             "from": -1.18,
-            "to": -1.1585,
-            "repeat": {
-              "count": 4,
-              "translation": [0, 0, 0.76]
-            }
-          },
-          {
-            "id": "hinge-leaf-low-b-2",
-            "kind": "extrude",
-            "bone": "panel-2",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [
-              [0.425, 0.0175],
-              [0.486, 0.0175],
-              [0.493528, 0.004702],
-              [0.492078, 0.001113],
-              [0.492482, -0.002736],
-              [0.494647, -0.005945],
-              [0.498065, -0.007762],
-              [0.501935, -0.007762],
-              [0.505353, -0.005945],
-              [0.507518, -0.002736],
-              [0.507922, 0.001113],
-              [0.506472, 0.004702],
-              [0.503507, 0.00719],
-              [0.498, 0.0175],
-              [0.498, 0.02],
-              [0.425, 0.02]
-            ],
-            "plane": "xy",
-            "from": -1.1215,
             "to": -1.1,
             "repeat": {
               "count": 4,
-              "translation": [0, 0, 0.76]
-            }
-          },
-          {
-            "id": "hinge-pin-2",
-            "kind": "revolve",
-            "bone": "panel-3",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.006], [0.003, 0.006], [0.003, 0.004], [0.083, 0.004], [0.083, 0.006], [0.086, 0.006], [0.086, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [0.0, 0.0, -0.423],
-            "repeat": {
-              "count": 2,
               "translation": [0, 0, 0.76]
             }
           },
@@ -26459,110 +26210,12 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [
-              [0.075, 0.02],
-              [0.002, 0.02],
-              [0.002, 0.0175],
-              [-0.003507, 0.00719],
-              [-0.006472, 0.004702],
-              [-0.007922, 0.001113],
-              [-0.007518, -0.002736],
-              [-0.005353, -0.005945],
-              [-0.001935, -0.007762],
-              [0.001935, -0.007762],
-              [0.005353, -0.005945],
-              [0.007518, -0.002736],
-              [0.007922, 0.001113],
-              [0.006472, 0.004702],
-              [0.014, 0.0175],
-              [0.075, 0.0175]
-            ],
-            "plane": "xy",
-            "from": -1.1575,
-            "to": -1.1225,
-            "repeat": {
-              "count": 4,
-              "translation": [0, 0, 0.76]
-            }
-          },
-          {
-            "id": "hinge-leaf-low-a-3",
-            "kind": "extrude",
-            "bone": "panel-3",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [
-              [0.425, 0.0175],
-              [0.486, 0.0175],
-              [0.493528, 0.004702],
-              [0.492078, 0.001113],
-              [0.492482, -0.002736],
-              [0.494647, -0.005945],
-              [0.498065, -0.007762],
-              [0.501935, -0.007762],
-              [0.505353, -0.005945],
-              [0.507518, -0.002736],
-              [0.507922, 0.001113],
-              [0.506472, 0.004702],
-              [0.503507, 0.00719],
-              [0.498, 0.0175],
-              [0.498, 0.02],
-              [0.425, 0.02]
-            ],
+            "profile": [[-0.04, -0.02], [0.04, -0.02], [0.04, 0.02], [-0.04, 0.02]],
             "plane": "xy",
             "from": -1.18,
-            "to": -1.1585,
-            "repeat": {
-              "count": 4,
-              "translation": [0, 0, 0.76]
-            }
-          },
-          {
-            "id": "hinge-leaf-low-b-3",
-            "kind": "extrude",
-            "bone": "panel-3",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [
-              [0.425, 0.0175],
-              [0.486, 0.0175],
-              [0.493528, 0.004702],
-              [0.492078, 0.001113],
-              [0.492482, -0.002736],
-              [0.494647, -0.005945],
-              [0.498065, -0.007762],
-              [0.501935, -0.007762],
-              [0.505353, -0.005945],
-              [0.507518, -0.002736],
-              [0.507922, 0.001113],
-              [0.506472, 0.004702],
-              [0.503507, 0.00719],
-              [0.498, 0.0175],
-              [0.498, 0.02],
-              [0.425, 0.02]
-            ],
-            "plane": "xy",
-            "from": -1.1215,
             "to": -1.1,
             "repeat": {
               "count": 4,
-              "translation": [0, 0, 0.76]
-            }
-          },
-          {
-            "id": "hinge-pin-3",
-            "kind": "revolve",
-            "bone": "panel-4",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.006], [0.003, 0.006], [0.003, 0.004], [0.083, 0.004], [0.083, 0.006], [0.086, 0.006], [0.086, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [0.0, 0.0, -0.423],
-            "repeat": {
-              "count": 2,
               "translation": [0, 0, 0.76]
             }
           },
@@ -26683,25 +26336,7 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [
-              [0.15, 0.02],
-              [0.046, 0.02],
-              [0.046, 0.0175],
-              [0.066, 0.0175],
-              [0.074215, 0.006894],
-              [0.071655, 0.003371],
-              [0.071049, -0.000941],
-              [0.072539, -0.005033],
-              [0.075775, -0.007947],
-              [0.08, -0.009],
-              [0.084225, -0.007947],
-              [0.087461, -0.005033],
-              [0.088951, -0.000941],
-              [0.088345, 0.003371],
-              [0.085785, 0.006894],
-              [0.094, 0.0175],
-              [0.15, 0.0175]
-            ],
+            "profile": [[0.046, -0.02], [0.15, -0.02], [0.15, 0.02], [0.046, 0.02]],
             "plane": "xy",
             "from": 1.11,
             "to": 1.18,
@@ -26717,25 +26352,7 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [
-              [0.478, 0.02],
-              [0.37, 0.02],
-              [0.37, 0.0175],
-              [0.426, 0.0175],
-              [0.434215, 0.006894],
-              [0.431655, 0.003371],
-              [0.431049, -0.000941],
-              [0.432539, -0.005033],
-              [0.435775, -0.007947],
-              [0.44, -0.009],
-              [0.444225, -0.007947],
-              [0.447461, -0.005033],
-              [0.448951, -0.000941],
-              [0.448345, 0.003371],
-              [0.445785, 0.006894],
-              [0.454, 0.0175],
-              [0.478, 0.0175]
-            ],
+            "profile": [[0.37, -0.02], [0.478, -0.02], [0.478, 0.02], [0.37, 0.02]],
             "plane": "xy",
             "from": 1.11,
             "to": 1.18,
@@ -26743,28 +26360,6 @@
               "count": 2,
               "translation": [0, 0, -2.29]
             }
-          },
-          {
-            "id": "cable-stud-l",
-            "kind": "revolve",
-            "bone": "panel-1",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.0075], [0.066, 0.0075], [0.066, 0.005], [0.072, 0.005], [0.072, 0.0075], [0.0765, 0.0075], [0.0765, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [0.06, 0.01, 1.14]
-          },
-          {
-            "id": "cable-stud-r",
-            "kind": "revolve",
-            "bone": "panel-1",
-            "material": "steel",
-            "role": "detail",
-            "tone": 0.2,
-            "profile": [[0.0, 0.0], [0.0, 0.0075], [0.066, 0.0075], [0.066, 0.005], [0.072, 0.005], [0.072, 0.0075], [0.0765, 0.0075], [0.0765, 0.0]],
-            "axis": [0.0, 0.0, -1.0],
-            "origin": [0.06, 0.01, -1.14]
           }
         ],
         "thermal": [
@@ -26955,68 +26550,14 @@
             "layer": "hw-plate"
           },
           {
-            "id": "th-hinge-leaf-low-a-1",
-            "of": "hinge-leaf-low-a-1",
-            "region": "hardware-steel",
-            "layer": "hw-plate"
-          },
-          {
-            "id": "th-hinge-leaf-low-b-1",
-            "of": "hinge-leaf-low-b-1",
-            "region": "hardware-steel",
-            "layer": "hw-plate"
-          },
-          {
-            "id": "th-hinge-pin-1",
-            "of": "hinge-pin-1",
-            "region": "hardware-steel",
-            "layer": "hw-plate"
-          },
-          {
             "id": "th-hinge-leaf-up-2",
             "of": "hinge-leaf-up-2",
             "region": "hardware-steel",
             "layer": "hw-plate"
           },
           {
-            "id": "th-hinge-leaf-low-a-2",
-            "of": "hinge-leaf-low-a-2",
-            "region": "hardware-steel",
-            "layer": "hw-plate"
-          },
-          {
-            "id": "th-hinge-leaf-low-b-2",
-            "of": "hinge-leaf-low-b-2",
-            "region": "hardware-steel",
-            "layer": "hw-plate"
-          },
-          {
-            "id": "th-hinge-pin-2",
-            "of": "hinge-pin-2",
-            "region": "hardware-steel",
-            "layer": "hw-plate"
-          },
-          {
             "id": "th-hinge-leaf-up-3",
             "of": "hinge-leaf-up-3",
-            "region": "hardware-steel",
-            "layer": "hw-plate"
-          },
-          {
-            "id": "th-hinge-leaf-low-a-3",
-            "of": "hinge-leaf-low-a-3",
-            "region": "hardware-steel",
-            "layer": "hw-plate"
-          },
-          {
-            "id": "th-hinge-leaf-low-b-3",
-            "of": "hinge-leaf-low-b-3",
-            "region": "hardware-steel",
-            "layer": "hw-plate"
-          },
-          {
-            "id": "th-hinge-pin-3",
-            "of": "hinge-pin-3",
             "region": "hardware-steel",
             "layer": "hw-plate"
           },
@@ -27089,18 +26630,6 @@
           {
             "id": "th-top-bracket",
             "of": "top-bracket",
-            "region": "hardware-steel",
-            "layer": "hw-plate"
-          },
-          {
-            "id": "th-cable-stud-l",
-            "of": "cable-stud-l",
-            "region": "hardware-steel",
-            "layer": "hw-plate"
-          },
-          {
-            "id": "th-cable-stud-r",
-            "of": "cable-stud-r",
             "region": "hardware-steel",
             "layer": "hw-plate"
           },
@@ -27478,18 +27007,6 @@
             "part": "member"
           },
           {
-            "id": "m-stile-1-l",
-            "of": "stile-1-l",
-            "member": "panel-1",
-            "part": "member"
-          },
-          {
-            "id": "m-stile-1-r",
-            "of": "stile-1-r",
-            "member": "panel-1",
-            "part": "member"
-          },
-          {
             "id": "mass-panel-1",
             "kind": "box",
             "bone": "panel-1",
@@ -27555,18 +27072,6 @@
             "plane": "xy",
             "from": -1.2075,
             "to": 1.2075,
-            "member": "panel-2",
-            "part": "member"
-          },
-          {
-            "id": "m-stile-2-l",
-            "of": "stile-2-l",
-            "member": "panel-2",
-            "part": "member"
-          },
-          {
-            "id": "m-stile-2-r",
-            "of": "stile-2-r",
             "member": "panel-2",
             "part": "member"
           },
@@ -27640,18 +27145,6 @@
             "part": "member"
           },
           {
-            "id": "m-stile-3-l",
-            "of": "stile-3-l",
-            "member": "panel-3",
-            "part": "member"
-          },
-          {
-            "id": "m-stile-3-r",
-            "of": "stile-3-r",
-            "member": "panel-3",
-            "part": "member"
-          },
-          {
             "id": "mass-panel-3",
             "kind": "box",
             "bone": "panel-3",
@@ -27703,18 +27196,6 @@
             "plane": "xy",
             "from": -1.2075,
             "to": 1.2075,
-            "member": "panel-4",
-            "part": "member"
-          },
-          {
-            "id": "m-stile-4-l",
-            "of": "stile-4-l",
-            "member": "panel-4",
-            "part": "member"
-          },
-          {
-            "id": "m-stile-4-r",
-            "of": "stile-4-r",
             "member": "panel-4",
             "part": "member"
           },
@@ -27889,74 +27370,20 @@
             "part": "member"
           },
           {
-            "id": "m-hinge-leaf-up-1",
+            "id": "j-hinge-pin-1",
             "of": "hinge-leaf-up-1",
             "member": "panel-2",
-            "part": "member"
-          },
-          {
-            "id": "m-hinge-leaf-low-a-1",
-            "of": "hinge-leaf-low-a-1",
-            "member": "panel-1",
-            "part": "member"
-          },
-          {
-            "id": "m-hinge-leaf-low-b-1",
-            "of": "hinge-leaf-low-b-1",
-            "member": "panel-1",
-            "part": "member"
-          },
-          {
-            "id": "j-hinge-pin-1",
-            "of": "hinge-pin-1",
-            "member": "panel-2",
             "part": "joint"
-          },
-          {
-            "id": "m-hinge-leaf-up-2",
-            "of": "hinge-leaf-up-2",
-            "member": "panel-3",
-            "part": "member"
-          },
-          {
-            "id": "m-hinge-leaf-low-a-2",
-            "of": "hinge-leaf-low-a-2",
-            "member": "panel-2",
-            "part": "member"
-          },
-          {
-            "id": "m-hinge-leaf-low-b-2",
-            "of": "hinge-leaf-low-b-2",
-            "member": "panel-2",
-            "part": "member"
           },
           {
             "id": "j-hinge-pin-2",
-            "of": "hinge-pin-2",
+            "of": "hinge-leaf-up-2",
             "member": "panel-3",
             "part": "joint"
           },
           {
-            "id": "m-hinge-leaf-up-3",
-            "of": "hinge-leaf-up-3",
-            "member": "panel-4",
-            "part": "member"
-          },
-          {
-            "id": "m-hinge-leaf-low-a-3",
-            "of": "hinge-leaf-low-a-3",
-            "member": "panel-3",
-            "part": "member"
-          },
-          {
-            "id": "m-hinge-leaf-low-b-3",
-            "of": "hinge-leaf-low-b-3",
-            "member": "panel-3",
-            "part": "member"
-          },
-          {
             "id": "j-hinge-pin-3",
-            "of": "hinge-pin-3",
+            "of": "hinge-leaf-up-3",
             "member": "panel-4",
             "part": "joint"
           },
@@ -28031,18 +27458,6 @@
             "of": "top-bracket",
             "member": "panel-4",
             "part": "member"
-          },
-          {
-            "id": "j-cable-stud-l",
-            "of": "cable-stud-l",
-            "member": "panel-1",
-            "part": "joint"
-          },
-          {
-            "id": "j-cable-stud-r",
-            "of": "cable-stud-r",
-            "member": "panel-1",
-            "part": "joint"
           }
         ],
         "decisions": [
@@ -28053,6 +27468,10 @@
           {
             "en": "The end bearing plates of the spring line stand on wall angles 45 x 30 x 2.5 mm that continue the jamb fixing from the flag brackets upwards, so the shaft load has a drawn path into the jamb and nothing of the balance line hangs free.",
             "de": "Die Endlagerplatten der Federlinie stehen auf Wandwinkeln 45 x 30 x 2,5 mm, die die Zargenbefestigung von den Bogenwinkeln nach oben fortsetzen; die Wellenlast hat so einen gezeichneten Weg in die Zarge und nichts an der Ausgleichslinie hängt frei."
+          },
+          {
+            "en": "The leaf for the 40 mm the panel drawing allows: each section is one sandwich body over the full width with its end stiles in it, bottom rail and floor seal are one 45 mm shoe, the top cap belongs to the top section, each hinge is one 80 x 40 x 80 mm block across the joint that carries the roller stem, the roller brackets are 40 mm blocks and the cable studs are left out.",
+            "de": "Das Torblatt für die 40 mm, die die Paneelzeichnung zulässt: jede Sektion ist ein Sandwichkörper über die volle Breite mit ihren Endkappen, Bodenschiene und Bodendichtung sind ein 45-mm-Schuh, die obere Abschlusskappe gehört zur obersten Sektion, jedes Scharnier ist ein Block 80 x 40 x 80 mm über der Fuge, der den Rollenbolzen trägt, die Rollenkonsolen sind 40-mm-Blöcke und die Seilbolzen entfallen."
           }
         ]
       }

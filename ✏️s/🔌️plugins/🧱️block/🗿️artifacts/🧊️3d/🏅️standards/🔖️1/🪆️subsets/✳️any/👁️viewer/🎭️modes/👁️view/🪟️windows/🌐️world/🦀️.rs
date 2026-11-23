@@ -39,7 +39,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `Block3dSnapshot -> BuiltNode` read: real representations become meshes/instances (zero
 /// arrangement offset — a viewer has no persisted per-session window view, `Config = NoConfig`), real
 /// rim-vortex templates render at their document position/color, no brush preview, no selection.
-pub fn render(document: &Block3dSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Block3dSnapshot, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
     let camera = &document.camera3d;
     let camera_json = world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &WorldProjectionConfig::default());
     let meshes_json = meshes_json(&document.representations);
@@ -49,7 +49,7 @@ pub fn render(document: &Block3dSnapshot) -> UiAssemblyResult<BuiltNode> {
     let mut scene = World3dScene::base(camera_json, meshes_json, instances_json, selection_json);
     scene.vortices_json = Some(vortices_json);
     scene.fit_json = Some(world3d_fit_json(semio_s_artifact_block_3d_model::block3d_world_fit_revision(document), semio_s_artifact_block_3d_model::BLOCK3D_FIT_PADDING, None));
-    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene, semio_plugin::surface_name(locale, "3D view", "3D-Ansicht"), None)
 }
 
 /// 👁️ Read-only twin of the editor `🌍️world` facet's `representation_mesh_id` — duplicated on purpose

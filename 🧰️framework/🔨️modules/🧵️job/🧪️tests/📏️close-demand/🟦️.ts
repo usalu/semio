@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { applyPatch } from "fast-json-patch";
 import {Database} from "bun:sqlite";
 import fixture from "../🧫️fixtures/📏️close-demand/🔣️.json" with { type: "json" };
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readModuleTreeSource, readSourceFamilySource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("original job close separates exact independent grants and preserves terminal progress",()=>{
   const demands={maximumItems:fixture.progress.copiedItems,maximumCopyBytes:fixture.progress.copiedBytes,maximumCapacityBytes:fixture.progress.retainedCapacityBytes,maximumReleaseBytes:fixture.progress.releasedBytes,maximumDepth:2};
@@ -32,7 +32,7 @@ test("worker physical demand preserves caller authority and independent allocati
     expect(after.releasedBytes).toBeLessThanOrEqual(row.callerBytes);
     expect(Math.max(fixture.pageBytes, row.physicalBytes)).toBeLessThanOrEqual(fixture.admissionBytes);
   }
-  const worker = readModuleTreeSource(new URL("../../👷️worker/🦀️.rs",import.meta.url)), source = readModuleTreeSource(new URL("../../🦀️.rs",import.meta.url)) + worker + readModuleTreeSource(new URL("../../👷️worker/🎟️authority/🦀️.rs",import.meta.url)) + readModuleTreeSource(new URL("../../👶️scope/🦀️.rs",import.meta.url));
+  const worker = readModuleTreeSource(new URL("../../👷️worker/🦀️.rs",import.meta.url)), source = readSourceFamilySource(new URL("../../",import.meta.url));
   expect(source.includes("fn next_close_copy_byte_demand(&self)")).toBe(true);
   expect(worker.split("pub fn retirement_demands(&self,maximum_copy_bytes:usize) -> Result<RetirementDemand,WorkerJobDemandError>").length-1).toBe(3);
   expect(source.includes("pub fn retirement_demands(&self,maximum_copy_bytes:usize) -> Result<RetirementDemand,ValueError>")).toBe(true);

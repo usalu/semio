@@ -36,6 +36,12 @@ use semio_plugin_job::reserved_jobs::register_framework_reserved_factories;
 use semio_ui_contract::*;
 use semio_plugin_time_travel as time_travel;
 
+/// 📦️ Builds one owner into its heap allocation from a frame of its own, so the owner never joins the constructor's stack frame or its future.
+#[inline(never)]
+fn boxed<T>(build: impl FnOnce() -> T) -> Box<T> {
+    Box::new(build())
+}
+
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 🧬️ Constructs a store-only wrapper with an empty registry. Every action and typed
     /// command fails closed before decoding until a registry-backed wrapper is constructed.
@@ -56,7 +62,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         Ok(*Self::with_registry_boxed(app, registry, actor, mounted_policy, identity).await?)
     }
 
-    /// 📦️ [`Self::with_registry`] built in place on the heap: the instance is about a megabyte inline, so a constructor that must not move it through a stack frame hands out the box.
+    /// 📦️ [`Self::with_registry`] built in place on the heap: the instance handle is small and each large owner is its own heap allocation, so this constructor hands out the box when a caller wants one allocation for the handle too.
     pub async fn with_registry_boxed(app: A, registry: AppActionRegistry, actor: ActorId, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Box<Self>, Fault> {
         Self::with_registry_on_bus_boxed(app, registry, semio_framework::ActionBus::new(), actor, mounted_policy, identity).await
     }
@@ -174,32 +180,32 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
             std::ptr::addr_of_mut!((*target).app).write(app);
             std::ptr::addr_of_mut!((*target).mounted_policy).write(mounted_policy);
             std::ptr::addr_of_mut!((*target).original_controller_close).write(None);
-            std::ptr::addr_of_mut!((*target).constructor).write(ConstructorState::new());
-            std::ptr::addr_of_mut!((*target).stores).write(InstanceStores::new(store, config_store, draft_store, presence_store, window_config_store, window_transient_store, artifact_one_item_factory, config_one_item_factory, draft_one_item_factory, presence_one_item_factory, transient_one_item_factory, presence_local_root_retirement_factory, transient_local_root_retirement_factory, unsupported_publication_contracts, interaction_store));
+            std::ptr::addr_of_mut!((*target).constructor).write(boxed(ConstructorState::new));
+            std::ptr::addr_of_mut!((*target).stores).write(boxed(move || InstanceStores::new(store, config_store, draft_store, presence_store, window_config_store, window_transient_store, artifact_one_item_factory, config_one_item_factory, draft_one_item_factory, presence_one_item_factory, transient_one_item_factory, presence_local_root_retirement_factory, transient_local_root_retirement_factory, unsupported_publication_contracts, interaction_store)));
             std::ptr::addr_of_mut!((*target).roster).write(PeerRoster::new());
             std::ptr::addr_of_mut!((*target).ingress).write(ActionIngress::new());
-            std::ptr::addr_of_mut!((*target).original_typing).write(Default::default());
-            std::ptr::addr_of_mut!((*target).original_emission).write(Default::default());
-            std::ptr::addr_of_mut!((*target).original_typed_command).write(Default::default());
-            std::ptr::addr_of_mut!((*target).original_host_event_command).write(Default::default());
+            std::ptr::addr_of_mut!((*target).original_typing).write(boxed(Default::default));
+            std::ptr::addr_of_mut!((*target).original_emission).write(boxed(Default::default));
+            std::ptr::addr_of_mut!((*target).original_typed_command).write(boxed(Default::default));
+            std::ptr::addr_of_mut!((*target).original_host_event_command).write(boxed(Default::default));
             std::ptr::addr_of_mut!((*target).original_command_scope).write(Default::default());
             std::ptr::addr_of_mut!((*target).original_host_event_scope).write(None);
             std::ptr::addr_of_mut!((*target).original_typed_tag).write(std::mem::ManuallyDrop::new(None));
             std::ptr::addr_of_mut!((*target).original_typed_tag_close).write(Default::default());
             std::ptr::addr_of_mut!((*target).interaction).write(LocalInteraction::new());
             std::ptr::addr_of_mut!((*target).history).write(CommandHistory::new());
-            std::ptr::addr_of_mut!((*target).host_events).write(HostEvents::new());
+            std::ptr::addr_of_mut!((*target).host_events).write(boxed(HostEvents::new));
             std::ptr::addr_of_mut!((*target).txn).write(Transactions::new());
-            std::ptr::addr_of_mut!((*target).child_composition).write(ChildComposition::new(composition));
-            std::ptr::addr_of_mut!((*target).pending).write(PendingReserved::new(dispatch_report));
-            std::ptr::addr_of_mut!((*target).tools).write(ToolOperations::new(registry, tool_job_controller_id, tool_jobs, bounded_tool_proofs, bounded_tool_contracts, framework_tool_registrations, app_tool_registrations, instance_operation_owner));
-            std::ptr::addr_of_mut!((*target).media).write(MediaTransfers::new());
+            std::ptr::addr_of_mut!((*target).child_composition).write(boxed(move || ChildComposition::new(composition)));
+            std::ptr::addr_of_mut!((*target).pending).write(boxed(move || PendingReserved::new(dispatch_report)));
+            std::ptr::addr_of_mut!((*target).tools).write(boxed(move || ToolOperations::new(registry, tool_job_controller_id, tool_jobs, bounded_tool_proofs, bounded_tool_contracts, framework_tool_registrations, app_tool_registrations, instance_operation_owner)));
+            std::ptr::addr_of_mut!((*target).media).write(boxed(MediaTransfers::new));
             std::ptr::addr_of_mut!((*target).ingest).write(EnvelopeJobs::new());
             std::ptr::addr_of_mut!((*target).maintenance).write(MaintenanceCursors::new());
             std::ptr::addr_of_mut!((*target).close).write(CloseCursors::new());
             std::ptr::addr_of_mut!((*target).tool_runs).write(ToolRunLedger::default());
-            std::ptr::addr_of_mut!((*target).time_travel).write(TimeTravelLedger::default());
-            std::ptr::addr_of_mut!((*target).tool_machines).write(ToolMachineRuntime::default());
+            std::ptr::addr_of_mut!((*target).time_travel).write(boxed(TimeTravelLedger::default));
+            std::ptr::addr_of_mut!((*target).tool_machines).write(boxed(ToolMachineRuntime::default));
         }
         let mut this = unsafe { slot.assume_init() };
         this.child_composition.seed_genesis_children(&mut this.stores, identity).await.expect("ArtifactApp::genesis_child_pack members must open cleanly onto a freshly constructed store");

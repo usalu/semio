@@ -12,6 +12,7 @@ impl<P:Send+Sync+'static> DisplacedOwnedRootRetirement<P>{
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(active)=self.active.as_ref(){return artifact_retirement_box_demands(active,body)}if self.root.is_some(){return Ok(ArcRootRetirement::<P>::admission_demand())}Ok(Default::default())}
 }
 impl<P:Send+Sync+'static> ErasedSnapshotRetirement for DisplacedOwnedRootRetirement<P>{
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
  fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   let result=(||->Result<RetainedCloneStep,RetirementPollExit>{
    if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}

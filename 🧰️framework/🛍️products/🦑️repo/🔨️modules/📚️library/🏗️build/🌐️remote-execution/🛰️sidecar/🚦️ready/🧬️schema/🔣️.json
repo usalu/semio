@@ -29,7 +29,7 @@
         "beatByState": {"running": 30000, "backoff": 30000, "waiting": 120000, "observing": 60000, "server": 120000, "ready": 120000},
         "heartbeatNames": ["pool.json", "attest.json"],
         "leaseRenewMilliseconds": 10000,
-        "leaseStaleMilliseconds": 60000, "refreshMaximumAgeMilliseconds": 86400000,
+        "leaseStaleMilliseconds": 60000, "refreshMaximumAgeMilliseconds": 86400000, "refreshKeepingFailureCodes": ["stage-timeout", "stage-stall-exhausted", "store-full", "interrupted", "spawn-failed", "loop-failed"],
         "humanFreshMilliseconds": 90000,
         "humanMaximumMilliseconds": 7200000,
         "graceMilliseconds": 10000,
@@ -69,7 +69,7 @@
         "loopStableMilliseconds": 60000,
         "sqliteOpenPattern": "unable to open database file",
         "diskDefaultRequirement": {"megabytes": 1024, "inodes": 20000},
-        "diskGrowth": {"keptRuns": 5, "floorMegabytes": 1024, "consumerCount": 5, "ceilingPercent": 25},
+        "diskGrowth": {"keptRuns": 5, "floorMegabytes": 1024, "consumerCount": 5, "ceilingPercent": 25, "measuredCeilingMegabytes": 16384},
         "noSpacePatterns": ["No space left on device", "os error 28", "ENOSPC", "There is not enough space on the disk"],
         "diskRequirements": {
           "native": {"megabytes": 1024, "inodes": 20000},

@@ -4,6 +4,7 @@ import {spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,statSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
+import {fileURLToPath} from "node:url";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import contractSchema from "../../../🏃️execution/🧬️schema/🌐️remote-cache.json" with {type:"json"};
 import {fleetCacheFactsPathV1,fleetCacheLocalPathV1,parseFleetCacheFactsV1,readFleetExecutionV1,readLocalFleetCacheFactsV1,refreshFleetCacheFactsV1,remoteCacheFetchV1,requireFleetCacheShapeV1,resolveAuthorisedRemoteCacheV1,resolveRemoteCacheV1,type FleetCacheFactsV1} from "../🟦️.ts";
@@ -306,4 +307,18 @@ test("a healthy verdict of the fleet facts routes Nx at once and the probe runs 
   expect(routed.NX_SELF_HOSTED_REMOTE_CACHE_SERVER).toBe(`${url}/main`);
   const again=performance.now();expect(await nxRemoteCacheEnvironmentV1({SEMIO_WORKSPACE_ROOT:root},{root,probeMilliseconds:5000,retries:1})).toEqual(routed);expect(performance.now()-again).toBeLessThan(400);
  }finally{await hanging.stop(true);}
+});
+
+test("synchronous resolution never opens a stalled store or delays process exit when the local copy is older than the refresh TTL",()=>{
+ if(!posix)return;
+ const store=directory("stalled-store"),root=directory("sync-client");machine(root,store);
+ mkdirSync(join(store,"v1","fleet"),{recursive:true});
+ expect(spawnSync("mkfifo",[fleetCacheFactsPathV1(store)]).status).toBe(0);
+ const now=Date.now();
+ writeFileSync(fleetCacheLocalPathV1(root),JSON.stringify({version:1,fetchedAtMs:now-120000,checkedAtMs:now-120000,selectedEndpoint:"http://10.0.0.5:6090",facts:sample}));
+ const modulePath=fileURLToPath(new URL("../🟦️.ts",import.meta.url));
+ const started=performance.now();
+ const child=spawnSync(process.execPath,["-e",`import {resolveRemoteCacheV1} from ${JSON.stringify(modulePath)}; const r=resolveRemoteCacheV1({SEMIO_WORKSPACE_ROOT:${JSON.stringify(root)}},{root:${JSON.stringify(root)}}); if(r?.contract.endpoint!=="http://10.0.0.5:6090")process.exit(2);`],{timeout:3000,encoding:"utf8"});
+ expect(child.status,child.stderr).toBe(0);
+ expect(performance.now()-started).toBeLessThan(2500);
 });

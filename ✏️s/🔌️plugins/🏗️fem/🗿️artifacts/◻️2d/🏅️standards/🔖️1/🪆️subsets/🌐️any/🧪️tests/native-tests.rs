@@ -32,42 +32,28 @@ fn admitted_receiver(value:Fem2dSnapshotValue,g:RetainedCloneGrant)->(Fem2dRecei
 }
 #[test]
 fn native_owner_receives_actual_persistent_rows_and_closes_every_cancelled_prefix() {
-    for cut in 0..10000 {
-        let (mut rx, p) = admitted_receiver(authoring(),original());
-        assert!(p.fits(original()));
-        let running = std::cell::Cell::new(true);
-        let mut callback = |_| running.get();
-        let mut control = NativeDecodeControl::new(1_000_000, &mut callback);
-    let mut auth=Authorities::new();
-        let mut work_fuel=10_000_000;
-        let mut born = 0;
-        for _ in 0..cut {
-            if rx.ready(){break}
-            let d=rx.demands(original().maximum_copy_bytes).unwrap();
-            assert!(retained_clone_grant_admits(original(),d));
-            let turn=advance(&mut auth,&mut rx,&mut control,original().maximum_copy_bytes,original(),&mut work_fuel);
-            let p=turn.result.unwrap().progress();
-            assert!(p.fits(original()));born+=p.retained_capacity_bytes;assert_eq!(control.owned_bytes(),born);
+    for cut in 0..10000usize {
+        let checkpoints = std::cell::Cell::new(0usize);
+        let mut callback = |_| { let seen = checkpoints.get(); checkpoints.set(seen + 1); seen < cut };
+        let mut value = Some(authoring());
+        let mut published = None;
+        let cancelled = original_owners::with_decoding_granted(wallet(), &mut callback, |owner| match Fem2dSnapshot::receive_authoring(&mut value, &mut published, owner).result {
+            Ok(()) => false,
+            Err(error) => { assert_eq!(failure_kind(error), ValueRefusalKind::Canceled); true }
+        });
+        if let Some(unmoved) = value.take() { retire(unmoved) }
+        if cancelled {
+            assert!(published.is_none());
+            continue;
         }
-        let ready = rx.ready();
-        if !ready {
-            running.set(false);
-            assert_eq!(failure_kind(advance(&mut auth,&mut rx,&mut control,original().maximum_copy_bytes,original(),&mut work_fuel).result.unwrap_err()), ValueRefusalKind::Canceled);
-        }
-        if ready {
-            let turn=rx.take(original());assert!(turn.work<=1);let (value,p)=turn.result.unwrap().unwrap();
-            assert!(p.fits(original()));
-            assert_eq!(value.nodes.len(), 2);
-            assert_eq!(value.nodes.get().get(0).unwrap().id.as_str(), "a");
-            assert_eq!(value.nodes.get().get(1).unwrap().y, 5.);
-            assert_eq!(value.materials.get().get(0).unwrap().name.as_str(), "Steel");
-            retire(value);
-        }
-        close(rx);
-        if ready {
-            assert!(cut > 20);
-            return;
-        }
+        let output = published.take().unwrap();
+        assert_eq!(output.nodes.len(), 2);
+        assert_eq!(output.nodes.get().get(0).unwrap().id.as_str(), "a");
+        assert_eq!(output.nodes.get().get(1).unwrap().y, 5.);
+        assert_eq!(output.materials.get().get(0).unwrap().name.as_str(), "Steel");
+        retire(output);
+        assert!(cut > 20);
+        return;
     }
     panic!("receiving never became ready");
 }

@@ -6,7 +6,7 @@ export type CasAreaPolicyV1=Readonly<{id:string;capBytes:number|null;maxAgeMs:nu
 /** 🌡️ The used shares of the partition that holds the store: a collection starts at `highUsedFraction` and frees least-recently-accessed objects down to `lowUsedFraction`; at `criticalUsedFraction` a write or a build that would add to it first waits for such a collection and is refused when that frees too little. */
 export type CasPartitionPolicyV1=Readonly<{highUsedFraction:number;lowUsedFraction:number;criticalUsedFraction:number}>;
 /** 🗄️ The size cap (the upper bound; the cap in force is `casEffectiveCapBytesV1`: at most `capHostSharePercent` of the partition and at most what the host can give while it keeps its free floor, never below `minimumCapBytes`), watermarks, grace times and cadences of the host-wide store (single source: the sibling schema document, definition `Policy`). */
-export type CasPolicyV1=Readonly<{version:1;capBytes:number;capHostSharePercent:number;minimumCapBytes:number;enforceTickMilliseconds:number;highWatermark:number;lowWatermark:number;partition:CasPartitionPolicyV1;minAgeMs:number;leaseMaxMs:number;touchGranularityMs:number;temporaryMaxAgeMs:number;ledgerQuietMs:number;lockStaleMs:number;progressMs:number;checkEvery:number;fanOutHexLength:number;areas:readonly CasAreaPolicyV1[]}>;
+export type CasPolicyV1=Readonly<{version:1;capBytes:number;capHostSharePercent:number;minimumCapBytes:number;enforceTickMilliseconds:number;incrementBytes:number;transientLeaseMs:number;admissionBudgetMs:number;highWatermark:number;lowWatermark:number;partition:CasPartitionPolicyV1;minAgeMs:number;leaseMaxMs:number;touchGranularityMs:number;temporaryMaxAgeMs:number;ledgerQuietMs:number;lockStaleMs:number;progressMs:number;checkEvery:number;fanOutHexLength:number;areas:readonly CasAreaPolicyV1[]}>;
 /** 🗣️ The EN+DE texts of the store; the schema document is their single source. */
 export const CAS_MESSAGES_V1=Object.freeze(schema.definitions.Messages.const);
 /** 🗄️ The default policy: a 32 GiB object cap, 90 % high and 75 % low watermark. */
@@ -22,10 +22,10 @@ export function casTextV1(key:keyof typeof CAS_MESSAGES_V1,language:"en"|"de",va
 /** ✅️ Rejects a policy whose numbers cannot work together (watermarks out of order, non-finite bounds). */
 export function requireCasPolicyV1(policy:CasPolicyV1):CasPolicyV1{
  const finite=(value:number):boolean=>Number.isFinite(value)&&value>=0;
- if(!(policy.capBytes>0)||!(policy.capHostSharePercent>0&&policy.capHostSharePercent<=100)||!(policy.minimumCapBytes>=0)||!(policy.enforceTickMilliseconds>0)||!(policy.lowWatermark>0)||!(policy.lowWatermark<policy.highWatermark)||!(policy.highWatermark<=1))throw Error("Valid cache store watermarks required / Gültige Cache-Speicher-Marken erforderlich");
+ if(!(policy.capBytes>0)||!(policy.capHostSharePercent>0&&policy.capHostSharePercent<=100)||!(policy.minimumCapBytes>=0)||!(policy.enforceTickMilliseconds>0)||!(policy.incrementBytes>0)||!(policy.transientLeaseMs>0)||!(policy.admissionBudgetMs>=0)||!(policy.lowWatermark>0)||!(policy.lowWatermark<policy.highWatermark)||!(policy.highWatermark<=1))throw Error("Valid cache store watermarks required / Gültige Cache-Speicher-Marken erforderlich");
  const {lowUsedFraction:low,highUsedFraction:high,criticalUsedFraction:critical}=policy.partition;
  if(!(low>0)||!(low<high)||!(high<critical)||!(critical<=1))throw Error("Valid partition watermarks required / Gültige Partitions-Marken erforderlich");
- for(const value of [policy.minAgeMs,policy.leaseMaxMs,policy.touchGranularityMs,policy.temporaryMaxAgeMs,policy.ledgerQuietMs,policy.lockStaleMs,policy.progressMs])if(!finite(value))throw Error("Finite cache store bounds required / Endliche Cache-Speicher-Grenzen erforderlich");
+ for(const value of [policy.minAgeMs,policy.leaseMaxMs,policy.touchGranularityMs,policy.temporaryMaxAgeMs,policy.ledgerQuietMs,policy.lockStaleMs,policy.progressMs,policy.transientLeaseMs])if(!finite(value))throw Error("Finite cache store bounds required / Endliche Cache-Speicher-Grenzen erforderlich");
  if(!Number.isInteger(policy.checkEvery)||policy.checkEvery<1||!Number.isInteger(policy.fanOutHexLength)||policy.fanOutHexLength<1||policy.fanOutHexLength>3)throw Error("Valid cache store cadence required / Gültiger Cache-Speicher-Takt erforderlich");
  return policy;
 }

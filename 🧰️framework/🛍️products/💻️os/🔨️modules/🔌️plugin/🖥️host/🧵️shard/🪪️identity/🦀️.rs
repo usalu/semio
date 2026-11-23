@@ -19,7 +19,9 @@ pub struct ShardIdentityIssueRefused{pub error:ValueError,pub observer:Box<Obser
 impl std::fmt::Debug for ShardIdentityIssueRefused{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("ShardIdentityIssueRefused").field("error",&self.error).finish_non_exhaustive()}}
 
 /// 🧾️ Consuming custody survives actor yields and failures without creating another authority.
-pub struct OriginalShardIdentity{birth:RetainedCloneProgress,policy:ShardIdentityPolicy,receipt:Option<NativeForwardedEncodeReceipt>,pub recipient:Pin<Box<NativeEncodeRetirementRecipient>>,pub observer:Box<Observer<'static>>,allocate:NativeAllocationAuthority<ShardAllocationPort>}
+pub struct OriginalShardIdentity{birth:RetainedCloneProgress,policy:ShardIdentityPolicy,receipt:Option<NativeForwardedEncodeReceipt>,pub recipient:Pin<Box<NativeEncodeRetirementRecipient>>,pub observer:Box<Observer<'static>>,allocate:Option<NativeAllocationAuthority<ShardAllocationPort>>}
+/// 🧹️ A dropped identity returns its settled allocation authority to its owner; an unsettled one stays leaked rather than aborting.
+impl Drop for OriginalShardIdentity{fn drop(&mut self){if let Some(authority)=self.allocate.take(){if let Err(open)=authority.into_port(){std::mem::forget(open)}}}}
 /// 🛂️ The stable original port refuses any physical receiving frontier the independently authored policy cannot fund.
 struct ShardAllocationPort{policy:ShardIdentityPolicy}
 impl ShardAllocationPort{fn admits(&self,event:NativeAllocationEvent)->Result<(),ValueError>{match event{NativeAllocationEvent::Admit(request)|NativeAllocationEvent::Quote(request)=>{let grant=self.policy.grant;if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<NativeAllocationRequest>()||grant.maximum_capacity_bytes<request.bytes||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original caller shard policy refuses physical receiving frontier"))}Ok(())},_=>Ok(())}}}
@@ -47,8 +49,8 @@ impl OriginalShardIdentity{
    Ok(native.detach().unwrap_or_else(|_|panic!("new original shard receiving receipt is valid between stages")))
   }).and_then(|receipt:Result<NativeForwardedEncodeReceipt,ValueError>|receipt);
   match admitted{
-   Ok(receipt)=>Ok(Self{birth:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,released_bytes:0},policy,receipt:Some(receipt),recipient,observer,allocate}),
-   Err(error)=>Err(ShardIdentityIssueRefused{error,observer}),
+   Ok(receipt)=>Ok(Self{birth:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,released_bytes:0},policy,receipt:Some(receipt),recipient,observer,allocate:Some(allocate)}),
+   Err(error)=>{if let Err(open)=allocate.into_port(){std::mem::forget(open)}Err(ShardIdentityIssueRefused{error,observer})},
   }
  }
  /// 🧾️ Reports the actual stable recipient's admitted inline copy and whole physical birth.
@@ -62,7 +64,7 @@ impl OriginalShardIdentity{
   let receipt=self.receipt.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original shard identity is already loaned"))?;
   let Self{allocate,recipient,observer,receipt:returned,..}=self;
   let mut held=Some(receipt);
-  let outcome=allocate.with_send_loan(&mut (),|loan|{
+  let outcome=allocate.as_mut().expect("original shard identity keeps its allocation authority until dropped").with_send_loan(&mut (),|loan|{
    let receipt=held.take().expect("original shard receipt enters its unique loan");
    match receipt.bind(loan,recipient.as_mut().get_mut()){
     Ok(continuation)=>{
@@ -93,11 +95,11 @@ impl OriginalShardIdentity{
  }
  /// 📸️ Resumes the original identity through the entire asynchronous checkpoint callback.
  pub async fn checkpoint(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance)->Result<Vec<u8>,PluginHostError>{
-  self.with_identity(async|identity|runtime.checkpoint(instance,identity).await).map_err(PluginHostError::NativeIo)?
+  self.with_identity(async|identity|runtime.checkpoint(instance,identity).await).map_err(|error|PluginHostError::NativeIo(error))?
  }
  /// ▶️ Restores through the same receiving port, cumulative ledger and cancellation observer.
  pub async fn restore(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,state:&[u8])->Result<(),PluginHostError>{
-  self.with_identity(async|identity|runtime.restore(instance,state,identity).await).map_err(PluginHostError::NativeIo)?
+  self.with_identity(async|identity|runtime.restore(instance,state,identity).await).map_err(|error|PluginHostError::NativeIo(error))?
  }
  /// 🏃️ Retains the same caller admission after successful, yielded and refused actor turns.
  pub async fn execute_turn(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,events:&mut [semio_framework::kernel::Event],budget:semio_framework::kernel::Budget)->Result<semio_framework::kernel::TurnResult,TurnFault>{

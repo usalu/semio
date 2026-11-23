@@ -61,7 +61,7 @@ fn presentation_semantic_panels_match_the_json_oracle() {
         assert_eq!(fields[0]["component"]["description"], "animate.presentation");
         assert_eq!(fields[1]["component"]["description"], tiles.len().to_string());
     }
-    for node in [crate::editor::animate::modes::main::windows::tile_editor::render(&document).expect("editor canvas"), crate::viewer::animate::modes::view::windows::tile_editor::render(&document).expect("viewer canvas")] {
+    for node in [crate::editor::animate::modes::main::windows::tile_editor::render(&document, semio_plugin::Locale::En).expect("editor canvas"), crate::viewer::animate::modes::view::windows::tile_editor::render(&document, semio_plugin::Locale::En).expect("viewer canvas")] {
         let semio_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
         let scene: semio_plugin::Canvas2dScene = semio_ui_scene::decode(props).expect("packed canvas");
         assert_eq!(scene.camera_x, vectors["canvas"]["cameraX"].as_f64().expect("camera x"));

@@ -121,6 +121,12 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
             semio_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(OWNER_FILE, CONTROLLER, "JackRetainedTransientJobFactory", "textSelect", TRINITY_GRAPH_SCHEMA, config_contract)
                 .with_factory_type::<EditorApp<Self>, JackRetainedTransientJobFactory<C>>(),
         );
+        for tool in commands::query::job::graph_edit::JACK_GRAPH_EDIT_TOOL_IDS {
+            proofs.push(
+                semio_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(OWNER_FILE, CONTROLLER, "JackGraphEditJobFactory", tool, TRINITY_GRAPH_SCHEMA, commands::query::job::graph_edit::JACK_GRAPH_EDIT_EXECUTION_CONTRACT)
+                    .with_factory_type::<EditorApp<Self>, commands::query::job::graph_edit::JackGraphEditJobFactory<C>>(),
+            );
+        }
         for tool in commands::query::job::JACK_QUERY_TOOL_IDS {
             proofs.push(
                 semio_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(OWNER_FILE, CONTROLLER, "JackQueryJobFactory", tool, TRINITY_GRAPH_SCHEMA, query_contract)
@@ -135,6 +141,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         registry.register(JackRetainedWindowConfigJobFactory::<C>::new(&controller))?;
         registry.register(JackRetainedTransientJobFactory::<C>::new(&controller))?;
         registry.register(JackRetainedDocumentJobFactory::<C>::new(&controller))?;
+        registry.register(commands::query::job::graph_edit::JackGraphEditJobFactory::<C>::new(&controller))?;
         registry.register(commands::query::job::JackQueryJobFactory::<C>::new(&controller))
     }
 
@@ -142,6 +149,9 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if commands::query::job::JACK_QUERY_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return commands::query::job::build_job::<C>(request, output, cx);
+        }
+        if commands::query::job::graph_edit::JACK_GRAPH_EDIT_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return commands::query::job::graph_edit::build_job::<C>(request, output, cx);
         }
         if JACK_RETAINED_TRANSIENT_TOOL_IDS.contains(&original.tool_id.as_str()) {
             if Self::command_id(&original.command) != original.tool_id {
@@ -185,7 +195,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
 
     fn build_document_store_owners(grant: RetainedCloneGrant) -> Option<Result<(DocumentStoreOwners<Self::Snapshot, Self::Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
         Some(bounded_artifact_store_owners_with_shared_semantic_preparation(grant, JACK_DOCUMENT_PREPARATION_CHILDREN, 0, JackDocumentPreparation::default).map(|(mut owners, progress)| {
-            owners.operation_wire = ArtifactOperationWire::semantic::<Self::Snapshot>().with_batch_digest().with_original_binary_receiving();
+            owners.operation_wire = ArtifactOperationWire::semantic::<Self::Snapshot>().with_batch_digest().with_original_binary_receiving().with_original_target(store::os_store::whole_document_target::<Self::Mutation>);
             (owners, progress)
         }))
     }
@@ -268,7 +278,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         command: &TrinityJackCommand,
         doc: &ArtifactView<'_, JackSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
-        interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>,
         view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
@@ -276,8 +286,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         let snapshot = doc.snapshot;
         Ok(match command {
             TrinityJackCommand::LoadDocumentJson { json } => commands::load_document_json::load_document_json(json),
-            TrinityJackCommand::DeleteSelection => commands::delete_selection::delete_selection::<C>(snapshot, &doc.children, &interaction.selection("ast").ids)?,
-            TrinityJackCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes::patch_nodes::<C>(snapshot, &doc.children, node_ids, &interaction.selection("ast").ids, field, value)?,
+            TrinityJackCommand::DeleteSelection | TrinityJackCommand::PatchNodes { .. } => return Err(Fault::from("graph edits require their retained operation owner")),
             TrinityJackCommand::RunQuery { .. } | TrinityJackCommand::LoadExampleQuery { .. } => return Err(Fault::from("query execution requires its retained operation owner")),
             TrinityJackCommand::SetActiveExample { example_id } => commands::set_active_example::set_active_example::<C>(example_id),
             TrinityJackCommand::SetViewport { viewport, .. } => return commands::set_viewport::set_viewport(viewport, view_state),
@@ -293,9 +302,9 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         let labels = semio_plugin::resolve_labels::<crate::editor::jack::terminology::TrinityJackLabels>(view_state);
         let content = || C::bind(snapshot, &doc.children).map_err(|fault| semio_plugin::PluginAssemblyError::new("trinity.jack.content", fault.message));
         let root = match body_key {
-            TRINITY_JACK_PLAY_BODY_GRAPH => edit::windows::graph::render(TRINITY_JACK_PLAY_SURFACE_GRAPH, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, &content()?, crate::editor::jack::window_config::current(cfg)),
-            TRINITY_JACK_PLAY_BODY_EDITOR => edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, &graph_from_document::<C>(snapshot,&doc.children)?, None),
-            TRINITY_JACK_PLAY_BODY_RESULTS => edit::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, None, None),
+            TRINITY_JACK_PLAY_BODY_GRAPH => edit::windows::graph::render(TRINITY_JACK_PLAY_SURFACE_GRAPH, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, &content()?, crate::editor::jack::window_config::current(cfg), view_state.locale),
+            TRINITY_JACK_PLAY_BODY_EDITOR => edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, &graph_from_document::<C>(snapshot,&doc.children)?, None, view_state.locale),
+            TRINITY_JACK_PLAY_BODY_RESULTS => edit::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, None, None, view_state.locale),
             TRINITY_JACK_PLAY_BODY_ARTIFACT => crate::editor::jack::panels::document::render(&content()?, cfg.snapshot, labels, &semio_plugin::TreeWindows::for_body(view_state, TRINITY_JACK_PLAY_BODY_ARTIFACT)),
             TRINITY_JACK_PLAY_BODY_CATALOGUE => crate::editor::jack::panels::catalogue::render(labels, &semio_plugin::TreeWindows::for_body(view_state, TRINITY_JACK_PLAY_BODY_CATALOGUE)),
             TRINITY_JACK_PLAY_BODY_INSPECTION => crate::editor::jack::panels::inspection::render(),
@@ -317,12 +326,12 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         if body_key == TRINITY_JACK_PLAY_BODY_RESULTS {
             let result = transient.window::<JackResultsWindowTransientOwner>();
-            let root = edit::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, result.and_then(|state| state.result.as_ref()), result.and_then(|state| state.query_error.as_deref()))?;
+            let root = edit::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, result.and_then(|state| state.result.as_ref()), result.and_then(|state| state.query_error.as_deref()), view_state.locale)?;
             return Ok(semio_plugin::built_to_component_tree(root));
         }
         if body_key == TRINITY_JACK_PLAY_BODY_EDITOR {
             let selection = transient.window::<JackEditorWindowTransientOwner>().and_then(|window| window.selection.as_ref());
-            let root = edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, doc.snapshot, &graph_from_document::<C>(doc.snapshot,&doc.children)?, selection)?;
+            let root = edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, doc.snapshot, &graph_from_document::<C>(doc.snapshot,&doc.children)?, selection, view_state.locale)?;
             return Ok(semio_plugin::built_to_component_tree(root));
         }
         Self::render(body_key, doc, cfg, view_state)

@@ -1,7 +1,7 @@
 //! 🧊️ The shared real-geometry scene of the stdio mesh and point-cloud editors and viewers: the document's own triangles and points on the
 //! framework mesh window kit, framed on their bounds. Nothing is fabricated: an empty document renders an empty scene.
 
-use semio_plugin::{mesh_from_indexed_with_face_groups, mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, UiAssemblyResult, WindowKit};
+use semio_plugin::{mesh_from_indexed_with_face_groups, mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, Locale, UiAssemblyResult};
 
 pub const MESH_SCENE_MAXIMUM_MARKERS: usize = 4096;
 const DOCUMENT_MESH_ID: &str = "document";
@@ -27,7 +27,7 @@ pub fn mesh_scene_frame(positions: &[[f64; 3]], markers: &[[f64; 3]]) -> ([f64; 
 
 /// 🧊️ One indexed triangle list (`triangles` holds three position indices per face; out-of-range faces are dropped) plus point markers (at most
 /// [`MESH_SCENE_MAXIMUM_MARKERS`], evenly sampled), rendered through the editable or read-only mesh window kit.
-pub fn mesh_scene(label: &str, positions: &[[f64; 3]], triangles: &[u32], markers: &[[f64; 3]]) -> UiAssemblyResult<BuiltNode> {
+pub fn mesh_scene(label: &str, positions: &[[f64; 3]], triangles: &[u32], markers: &[[f64; 3]], locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let valid: Vec<u32> = triangles.chunks_exact(3).filter(|face| face.iter().all(|index| (*index as usize) < positions.len())).flatten().copied().collect();
     let stride = markers.len().div_ceil(MESH_SCENE_MAXIMUM_MARKERS).max(1);
     let sampled: Vec<[f64; 3]> = markers.iter().step_by(stride).copied().collect();
@@ -53,7 +53,7 @@ pub fn mesh_scene(label: &str, positions: &[[f64; 3]], triangles: &[u32], marker
         meshes_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(meshes)),
         instances_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(instances)),
         selection_json: world3d_selection_json("rectangle", &[], None),
-    })
+    }, locale)
 }
 
 #[cfg(test)]

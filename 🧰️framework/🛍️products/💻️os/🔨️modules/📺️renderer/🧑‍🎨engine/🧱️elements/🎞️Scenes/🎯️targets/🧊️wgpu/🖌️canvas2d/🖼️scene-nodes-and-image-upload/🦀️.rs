@@ -162,7 +162,7 @@ pub(super) fn render_canvas_scene_node(scene: &UiComponentSceneNode, layer: &Can
         }
     }
     if clip_bands.is_some() {
-        ctx.draw.end_silhouette_clip();
+        ctx.draw.end_clip();
     }
     if let Some(clipped) = clipped {
         clipped.close(ctx.draw);

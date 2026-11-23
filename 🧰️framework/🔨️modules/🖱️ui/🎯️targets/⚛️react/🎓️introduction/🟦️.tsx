@@ -116,10 +116,10 @@ function borderLines(selector: string, host: DOMRect, box: HTMLElement | null): 
 }
 
 /** 🧲️ The frames the info box docks onto. */
-const underlyingBorderLines = (host: DOMRect, box: HTMLElement | null) => borderLines("[data-window-silhouette], [data-shared-border-frame]", host, box);
+const underlyingBorderLines = (host: DOMRect, box: HTMLElement | null) => borderLines("[data-window-frame], [data-shared-border-frame]", host, box);
 
 /** 🧲️ Every chip and frame line beneath the box, which the box keeps clear of. */
-const underlyingChipLines = (host: DOMRect, box: HTMLElement | null) => borderLines("[data-window-silhouette], [data-shared-border-frame], [data-window-silhouette-chip], [data-window-silhouette-gap], [data-slot^='demonstrator-pane-card'], [data-overview-card] *", host, box);
+const underlyingChipLines = (host: DOMRect, box: HTMLElement | null) => borderLines("[data-window-frame], [data-shared-border-frame], [data-window-frame-chip], [data-slot^='demonstrator-pane-card'], [data-overview-card] *", host, box);
 
 /** 🧲️ The info box's own chip and edge lines relative to its origin. */
 function ownBorderLines(box: HTMLElement | null): { readonly xs: readonly number[]; readonly ys: readonly number[] } {
@@ -129,7 +129,7 @@ function ownBorderLines(box: HTMLElement | null): { readonly xs: readonly number
   const origin = box.getBoundingClientRect();
   xs.add(origin.width);
   ys.add(origin.height);
-  for (const element of box.querySelectorAll<HTMLElement>("[data-window-silhouette-chip], [data-slot^='window-chrome-']")) {
+  for (const element of box.querySelectorAll<HTMLElement>("[data-window-frame-chip], [data-slot^='window-chrome-']")) {
     const rect = element.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) continue;
     for (const x of [rect.left, rect.right]) xs.add(Math.round((x - origin.left) * 2) / 2);
@@ -142,7 +142,7 @@ function ownBorderLines(box: HTMLElement | null): { readonly xs: readonly number
  * current step's `introduce`/`show` elements elevate above it (see `useIntroductionElevation`) and stay
  * crisp and interactive — `introduce` additionally pulses the introduced border on the precise element —
  * and an info box explains it (header {@link DragHandle} between title and step count repositions the box
- * for the current step; the box silhouette starts with the introduced highlight + thickness pulse, then
+ * for the current step; the box frame outline starts with the introduced highlight + thickness pulse, then
  * follows the shared surface-active lifecycle — click activates (primary stroke), click outside returns
  * to normal and never re-enters the introduced pulse for this step; each blank-line body paragraph
  * emphasizes only while the pointer is on that paragraph — see `[data-slot="introduction-body-paragraph"]:hover`

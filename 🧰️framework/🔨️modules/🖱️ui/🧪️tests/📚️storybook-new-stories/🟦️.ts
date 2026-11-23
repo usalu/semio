@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 💻️ .storybook/ui-new-stories.spec.ts
-// Specs: End-to-end smoke coverage for the "ui" scope's newly authored stories (PanelTabBar/PanelChromeTabBar, Scene, SelectionMarquee, Shell*Panel/Dialog, Skeletons, SortableTreeItems, UIDialog, UIIntroduction, UnifiedGumball, NavbarExampleSelect, ActionDropdown, Providers).
+// Specs: End-to-end smoke coverage for the "ui" scope's newly authored stories (PanelTabBar/PanelChromeTabBar, Scene, SelectionMarquee, Skeletons, SortableTreeItems, UIDialog, UIIntroduction, UnifiedGumball, NavbarExampleSelect, ActionDropdown, Providers).
 // Summary: Drives each story id through the aggregated Storybook static build's `iframe.html` and asserts a mounted root plus zero page/console errors — no visual/pixel assertions, this is boot-health coverage, not per-component behavior testing (each component's own barrel-level unit tests already cover behavior).
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
@@ -9,8 +9,6 @@ import { expect, test, type Page } from "../../../../../.storybook/🧪️tests/
 import dockAxisGeometry from "../🧫️fixtures/📐️dock-axis-geometry/🔣️.json" with { type: "json" };
 
 const NEW_UI_STORY_IDS: readonly string[] = [
-  "🖱️ui⚛️react-mobilepanel--default",
-  "🖱️ui⚛️react-mobilepanel--hidden",
   "🖱️ui⚛️react-paneltabbar--panel-variant",
   "🖱️ui⚛️react-paneltabbar--mobile-variant",
   "🖱️ui⚛️react-paneltabbar--chrome-hosted",
@@ -20,10 +18,6 @@ const NEW_UI_STORY_IDS: readonly string[] = [
   "🖱️ui⚛️react-selectionmarquee--rect-full",
   "🖱️ui⚛️react-selectionmarquee--rect-partial",
   "🖱️ui⚛️react-selectionmarquee--polygon",
-  "🖱️ui⚛️react-shelldisplaypanel--default",
-  "🖱️ui⚛️react-shelldisplaypanel--compact-on",
-  "🖱️ui⚛️react-shellsettingspanel--default",
-  "🖱️ui⚛️react-shellsettingspanel--expert-mode",
   "🖱️ui⚛️react-skeletons--table",
   "🖱️ui⚛️react-skeletons--diagram",
   "🖱️ui⚛️react-skeletons--scene",
@@ -42,12 +36,8 @@ const NEW_UI_STORY_IDS: readonly string[] = [
   "🖱️ui⚛️react-providers--ghost",
   "🖱️ui⚛️react-providers--interaction",
   "🖱️ui⚛️react-providers--panel-dock-story",
-  "🖱️ui⚛️react-providers--transaction",
   "🖱️ui⚛️react-providers--tree-state",
-  "🖱️ui⚛️react-providers--chrome-compact",
-  "🖱️ui⚛️react-providers--chrome-label-policy",
   "🖱️ui⚛️react-providers--flow",
-  "🖱️ui⚛️react-providers--glass-tier",
   "🖱️ui⚛️react-mode--content-through-glass",
   "🖱️ui⚛️react-mode--geometry-oracle",
 ];
@@ -82,7 +72,7 @@ for (const storyId of NEW_UI_STORY_IDS) {
   });
 }
 
-test("Mode reserves themed separators before distributing nested React panel extents", async ({ page }) => {
+test("Mode abuts frames on one shared border line before distributing nested React panel extents", async ({ page }) => {
   await expectStoryMounts(page, "🖱️ui⚛️react-mode--geometry-oracle");
   const geometry = await page.evaluate(() => {
     const oracle = document.querySelector('[data-testid="dock-axis-geometry-oracle"]');
@@ -109,7 +99,7 @@ test("Mode reserves themed separators before distributing nested React panel ext
       return {
         inline: [style.paddingLeft, style.paddingRight].map(Number.parseFloat),
         block: [style.paddingTop, style.paddingBottom].map(Number.parseFloat),
-        clearance: [style.getPropertyValue("--window-silhouette-top-clearance"), style.getPropertyValue("--window-silhouette-bottom-clearance")].map(Number.parseFloat),
+        clearance: [style.getPropertyValue("--window-frame-top-clearance"), style.getPropertyValue("--window-frame-bottom-clearance")].map(Number.parseFloat),
         margin: [style.marginTop, style.marginBottom].map(Number.parseFloat),
       };
     });
@@ -127,25 +117,26 @@ test("Mode reserves themed separators before distributing nested React panel ext
   });
   expect(geometry).not.toBeNull();
   const close = (actual: number, expected: number) => expect(actual).toBeCloseTo(expected, 1);
-  const token = geometry!.rootHandle.width;
+  const token = dockAxisGeometry.oracleSample.separatorPixels;
+  const inset = dockAxisGeometry.canvasInsetPixels;
   const rootWeights = dockAxisGeometry.layout.children.map((child) => child.weight);
   const nested = dockAxisGeometry.layout.children[1]!.node;
   if (nested.kind !== "column" || nested.children === undefined) throw new Error("dock geometry fixture must carry the nested column oracle");
   const nestedWeights = nested.children.map((child) => child.weight);
-  expect(token).toBeGreaterThan(0);
+  close(geometry!.rootHandle.width, token);
   close(geometry!.viewport.width, dockAxisGeometry.viewport.width);
   close(geometry!.viewport.height, dockAxisGeometry.viewport.height);
   close(geometry!.nestedHandle.height, token);
-  geometry!.canvasPadding.forEach((padding) => close(padding, token));
+  geometry!.canvasPadding.forEach((padding) => close(padding, inset));
   for (const padding of geometry!.stackBodyPadding) {
-    padding.inline.forEach((value) => close(value, token));
+    padding.inline.forEach((value) => close(value, dockAxisGeometry.windowBodyInlineInsetPixels));
     padding.block.forEach((value, index) => {
       close(value, padding.clearance[index]!);
-      close(value + padding.margin[index]!, 0);
+      close(padding.margin[index]!, 0);
     });
   }
-  close(geometry!.rootGroup.width + token * 2, geometry!.viewport.width);
-  close(geometry!.rootGroup.height + token * 2, geometry!.viewport.height);
+  close(geometry!.rootGroup.width + inset * 2, geometry!.viewport.width);
+  close(geometry!.rootGroup.height + inset * 2, geometry!.viewport.height);
   close(geometry!.rootPanels[0]!.width + token + geometry!.rootPanels[1]!.width, geometry!.rootGroup.width);
   close(geometry!.nestedPanels[0]!.height + token + geometry!.nestedPanels[1]!.height, geometry!.nestedGroup.height);
   expect(geometry!.rootPanels[0]!.width / (geometry!.rootGroup.width - token)).toBeCloseTo(rootWeights[0]! / rootWeights.reduce((sum, weight) => sum + weight, 0), 3);
@@ -214,50 +205,64 @@ test("celebrated panel tab icons paint conic ink through --icon-mask, not a rect
   expect(paint!.labelWebkitTextFillColor === "rgba(0, 0, 0, 0)" || paint!.labelWebkitTextFillColor === "transparent").toBe(true);
 });
 
-// #region 🪟️SilhouetteAccessibilityFallbacks
-type SilhouetteFallbackPaint = {
+// #region 🪟️FrameAccessibilityFallbacks
+type FrameFallbackPaint = {
   readonly chipBackdrop: string;
   readonly chipBackground: string;
-  readonly gapBackdrop: string;
-  readonly gapBackground: string;
+  readonly chipInsideFrame: boolean;
+  readonly contentClip: string;
+  readonly contentCoversFrame: boolean;
 };
 
-async function readSilhouetteFallbackPaint(page: Page): Promise<SilhouetteFallbackPaint | null> {
+async function readFrameFallbackPaint(page: Page): Promise<FrameFallbackPaint | null> {
   return page.evaluate(() => {
-    const chip = document.querySelector("[data-window-silhouette-chip]");
-    const gap = document.querySelector("[data-window-silhouette-gap]");
-    if (!(chip instanceof HTMLElement) || !(gap instanceof HTMLElement)) return null;
+    const chip = document.querySelector("[data-window-frame-chip]");
+    const frame = chip?.closest("[data-window-frame]");
+    const content = frame?.querySelector("[data-window-frame-content]");
+    if (!(chip instanceof HTMLElement) || !(frame instanceof HTMLElement) || !(content instanceof HTMLElement)) return null;
     const chipStyle = getComputedStyle(chip);
-    const gapStyle = getComputedStyle(gap);
+    const chipRect = chip.getBoundingClientRect();
+    const frameRect = frame.getBoundingClientRect();
+    const contentRect = content.getBoundingClientRect();
     return {
       chipBackdrop: chipStyle.backdropFilter || chipStyle.getPropertyValue("-webkit-backdrop-filter"),
       chipBackground: chipStyle.backgroundColor,
-      gapBackdrop: gapStyle.backdropFilter || gapStyle.getPropertyValue("-webkit-backdrop-filter"),
-      gapBackground: gapStyle.backgroundColor,
+      chipInsideFrame: chipRect.left >= frameRect.left - 0.5 && chipRect.right <= frameRect.right + 0.5 && chipRect.top >= frameRect.top - 0.5 && chipRect.bottom <= frameRect.bottom + 0.5,
+      contentClip: getComputedStyle(content).clipPath,
+      contentCoversFrame: Math.abs(contentRect.left - frameRect.left) <= 1.5 && Math.abs(contentRect.right - frameRect.right) <= 1.5 && Math.abs(contentRect.top - frameRect.top) <= 1.5 && Math.abs(contentRect.bottom - frameRect.bottom) <= 1.5,
     };
   });
 }
 
-test("window silhouette keeps its gap transparent in reduced-transparency mode", async ({ page, context }) => {
+function expectOpaqueFrameChip(paint: FrameFallbackPaint | null): void {
+  expect(paint).not.toBeNull();
+  expect(paint!.chipBackdrop).toBe("none");
+  expect(paint!.chipBackground).not.toBe("rgba(0, 0, 0, 0)");
+  expect(paint!.chipInsideFrame).toBe(true);
+  expect(paint!.contentClip).toBe("none");
+  expect(paint!.contentCoversFrame).toBe(true);
+}
+
+test("window frame falls back to an opaque chip surface in reduced-transparency mode", async ({ page, context }) => {
   const cdp = await context.newCDPSession(page);
   await cdp.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-transparency", value: "reduce" }] });
   await expectStoryMounts(page, "🖱️ui⚛️react-mode--content-through-glass");
-  const paint = await readSilhouetteFallbackPaint(page);
-  expect(paint).not.toBeNull();
-  expect(paint!.chipBackdrop).toBe("none");
-  expect(paint!.chipBackground).not.toBe("rgba(0, 0, 0, 0)");
-  expect(paint!.gapBackdrop).toBe("none");
-  expect(paint!.gapBackground).toBe("rgba(0, 0, 0, 0)");
+  expectOpaqueFrameChip(await readFrameFallbackPaint(page));
 });
 
-test("window silhouette uses system paint without filling its gap in forced-colors mode", async ({ page }) => {
+test("window frame uses system paint for its chip in forced-colors mode", async ({ page }) => {
   await page.emulateMedia({ forcedColors: "active" });
   await expectStoryMounts(page, "🖱️ui⚛️react-mode--content-through-glass");
-  const paint = await readSilhouetteFallbackPaint(page);
-  expect(paint).not.toBeNull();
-  expect(paint!.chipBackdrop).toBe("none");
-  expect(paint!.chipBackground).not.toBe("rgba(0, 0, 0, 0)");
-  expect(paint!.gapBackdrop).toBe("none");
-  expect(paint!.gapBackground).toBe("rgba(0, 0, 0, 0)");
+  expectOpaqueFrameChip(await readFrameFallbackPaint(page));
 });
-// #endregion 🪟️SilhouetteAccessibilityFallbacks
+
+test("window frame chips are translucent glass with backdrop blur over full-frame content by default", async ({ page }) => {
+  await expectStoryMounts(page, "🖱️ui⚛️react-mode--content-through-glass");
+  const paint = await readFrameFallbackPaint(page);
+  expect(paint).not.toBeNull();
+  expect(paint!.chipBackdrop).toContain("blur");
+  expect(paint!.chipInsideFrame).toBe(true);
+  expect(paint!.contentClip).toBe("none");
+  expect(paint!.contentCoversFrame).toBe(true);
+});
+// #endregion 🪟️FrameAccessibilityFallbacks

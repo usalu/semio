@@ -39,3 +39,15 @@ async fn trinity_rewriting_viewer_never_mutates() {
 async fn trinity_rewriting_editor_and_viewer_share_dialect() {
     assert_editor_and_viewer_share_dialect::<semio_s_artifact_trinity_rewriting::editor::rewriting::TrinityRewritingPlayApp, semio_s_artifact_trinity_rewriting::viewer::rewriting::TrinityRewritingViewer>().await;
 }
+
+/// 📏️ The closed app fleet holds its largest variant inline, so it stays within the shared recorded size budget.
+#[test]
+fn trinity_apps_enum_stays_within_the_recorded_size_budget() {
+    use semio_framework_value::serde_json;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/📏️mounted-app-size/🔣️.json")).expect("size budget fixture");
+    let ceiling = fixture["stackCeilingBytes"].as_u64().expect("stack ceiling") as usize;
+    let budget = fixture["budgets"].as_array().expect("budgets").iter().find(|row| row["id"] == "trinityApps").expect("trinityApps has a recorded budget")["maxBytes"].as_u64().expect("budget bytes") as usize;
+    let actual = std::mem::size_of::<super::TrinityApps>();
+    assert!(budget <= ceiling, "trinityApps budget {budget} exceeds the {ceiling} byte stack ceiling");
+    assert!(actual <= budget, "trinityApps grew to {actual} bytes, budget {budget}");
+}

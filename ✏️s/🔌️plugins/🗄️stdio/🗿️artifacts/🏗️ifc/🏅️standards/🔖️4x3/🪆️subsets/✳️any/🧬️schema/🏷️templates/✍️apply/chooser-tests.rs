@@ -17,10 +17,10 @@ fn released_template_action_choices_are_complete_explicit_and_localized() {
     assert_eq!(options.len(), catalog.templates.len());
     assert_eq!(options.iter().map(|option| &option.value).collect::<BTreeSet<_>>().len(), options.len());
     for (locale, key) in [(Locale::En, "en"), (Locale::De, "de")] {
-        assert_eq!(argument.label.resolve(Terminology::default(), locale), contract["labels"][key].as_str().unwrap());
+        assert_eq!(argument.label.resolve(Terminology::Native, locale), contract["labels"][key].as_str().unwrap());
         for (option, template) in options.iter().zip(catalog.templates) {
             assert_eq!(option.value, template.name);
-            assert_eq!(option.label.resolve(Terminology::default(), locale), template.name);
+            assert_eq!(option.label.resolve(Terminology::Native, locale), template.name);
         }
     }
     let ArgSchema::String { options: schema_options, option_source, .. } = &argument.schema else { panic!("a template identifier is a string") };

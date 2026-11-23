@@ -2277,6 +2277,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-test-original-snapshot-owners"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-testing-admission",
+ "semio-os-kernel",
+]
+
+[[package]]
 name = "semio-framework-time-travel"
 version = "0.1.0"
 dependencies = [
@@ -5850,6 +5862,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-value",
  "semio-os-kernel",
+ "semio-plugin-command",
  "semio-plugin-decl-app",
  "semio-plugin-instance-app",
  "semio-plugin-instance-initialization",
@@ -9516,6 +9529,7 @@ dependencies = [
  "semio-framework-action-bus",
  "semio-framework-job",
  "semio-framework-pack",
+ "semio-framework-test-original-snapshot-owners",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-snapshot-read",
@@ -10173,6 +10187,7 @@ dependencies = [
  "semio-s-artifact-stdio-xml-snapshot",
  "semio-s-artifact-stdio-zip",
  "semio-ui-locale",
+ "serde_json",
 ]
 
 [[package]]

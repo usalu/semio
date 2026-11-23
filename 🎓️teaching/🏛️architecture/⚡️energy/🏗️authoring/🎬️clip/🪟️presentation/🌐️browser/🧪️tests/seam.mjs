@@ -32,7 +32,7 @@ try{
   const measure=()=>page.evaluate(()=>{
     const left=document.querySelector('[data-seam-window="left"]'),right=document.querySelector('[data-seam-window="right"]'),a=left.getBoundingClientRect(),b=right.getBoundingClientRect();
     const x=(a.right+b.left)/2,y=(Math.max(a.top,b.top)+Math.min(a.bottom,b.bottom))/2;
-    const owners=[left,right].flatMap(element=>[...element.querySelectorAll('[data-window-silhouette-border] path[data-shared-border-segment]')].filter(path=>{const matrix=path.getScreenCTM();return matrix&&path.isPointInStroke(new DOMPoint(x,y).matrixTransform(matrix.inverse()))}).map(path=>({owner:element.dataset.seamWindow,state:path.dataset.sharedBorderState})));
+    const owners=[left,right].flatMap(element=>[...element.querySelectorAll('[data-window-frame-border] path[data-shared-border-segment]')].filter(path=>{const matrix=path.getScreenCTM();return matrix&&path.isPointInStroke(new DOMPoint(x,y).matrixTransform(matrix.inverse()))}).map(path=>({owner:element.dataset.seamWindow,state:path.dataset.sharedBorderState})));
     return {x,y,gap:Math.abs(a.right-b.left),owners};
   });
   const results=[];

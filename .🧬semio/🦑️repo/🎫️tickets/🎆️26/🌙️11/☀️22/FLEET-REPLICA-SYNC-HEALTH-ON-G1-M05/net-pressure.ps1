@@ -1,0 +1,3 @@
+$c=Get-Counter '\Network Interface(*)\Bytes Received/sec','\Network Interface(*)\Bytes Sent/sec','\Network Interface(*)\Current Bandwidth' -SampleInterval 2 -MaxSamples 2
+$c.CounterSamples | Where-Object { $_.CookedValue -gt 1000 } | ForEach-Object { '{0} {1:N0}' -f $_.Path.Split('\')[-2..-1] -join '/', $_.CookedValue } | Select-Object -Last 8
+Get-NetTCPConnection -RemoteAddress 192.168.178.70 -ErrorAction SilentlyContinue | Group-Object RemotePort,OwningProcess | ForEach-Object { $p=Get-Process -Id ($_.Name.Split(',')[1].Trim()) -ErrorAction SilentlyContinue; '{0} n={1} {2}' -f $_.Name,$_.Count,$p.ProcessName }

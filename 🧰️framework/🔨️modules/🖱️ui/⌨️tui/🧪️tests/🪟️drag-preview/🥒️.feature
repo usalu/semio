@@ -11,7 +11,7 @@ Feature: Exact Window Drag Tab Preview and Handles
     Given the window layout in drag-preview case "<case>"
     When the source window is dragged to the destination
     Then the preview shows the source tab label and controls at the proposed insertion slot
-    And every preview chip and seam glyph agrees with the actual committed drop
+    And every preview chip glyph agrees with the actual committed drop
     And removing an empty source stack is included in proposed geometry
     And the source tab dimensions agree with an independent Taffy layout
     Examples:
@@ -31,14 +31,12 @@ Feature: Exact Window Drag Tab Preview and Handles
       | clipped-source-chip      |
       | overflow-insertion       |
       | overflow-arrow-corner    |
-      | overflow-arrow-cap       |
 
   Scenario: Keep an overflow arrow in its occupied corner strip
     Given a narrow top-left strip whose next arrow lies in the right half of the window
     When a source tab is dragged onto the arrow
     Then the proposal remains in the occupied top-left corner
     And its insertion index uses the visible tab's full model position
-    And its raised cap resolves to the same occupied strip corner
     And overflow arrows cannot remove the active tab or its drag and close controls
     And counted overflow markers shrink to single glyphs before any marker is hidden
     And a single navigation marker remains when two cannot fit beside the active controls

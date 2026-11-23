@@ -344,11 +344,12 @@ def volume_dims(slug, pose, scale=50):
 
 
 def fit_arms(slug, pose, ids):
-    """🎯️ Moves the front (extruded profile w) and plan (revolved axisZ) drawings of the upper arms onto their volume in the default pose, per scale.
+    """🎯️ Moves the front (extruded profile w, or revolved axisZ as `standing-adult` has it since 2026-11-22; the sense of the axis is measured, not assumed) and plan (revolved axisZ) drawings of the upper arms onto their volume in the default pose, per scale.
 
     `ids` maps a scale key to (drawn id pattern with {s}, volume id pattern with {s})."""
     doc = load(slug)
     a = doc["asset"]
+    flips = []
     for key, (did, vid) in ids.items():
         for side in ("l", "r"):
             dfront = fit_lateral(slug, pose, key, "front", did.format(s=side), vid.format(s=side), "x")
@@ -362,10 +363,24 @@ def fit_arms(slug, pose, ids):
                         sh["points"] = [[p[0], rnd(p[1] - delta)] for p in sh["points"]]
                     elif view == "plan" and so["kind"] == "revolved":
                         so["axisZ"] = rnd(so.get("axisZ", 0) - delta)
+                    elif view == "front" and so["kind"] == "revolved":
+                        flips.append((key, did.format(s=side), vid.format(s=side), delta))
+                        so["axisZ"] = rnd(so.get("axisZ", 0) - delta)
                     else:
                         raise ValueError(f"fit_arms: unexpected solid of {sh['id']} in {view}")
             print(f"[DEBUG] fit {slug} 1:{key} {side}: front {dfront * 1000:.1f} mm, plan {dplan * 1000:.1f} mm")
     write(slug, doc)
+    turned = False
+    for key, did, vid, delta in flips:
+        left = fit_lateral(slug, pose, key, "front", did, vid, "x")
+        if abs(left) > abs(delta) + 1e-4:
+            for sh in a["representations"][key]["geometry"]["front"]:
+                if sh["id"] == did:
+                    sh["solid"]["axisZ"] = rnd(sh["solid"]["axisZ"] + 2 * delta)
+                    turned = True
+        print(f"[DEBUG] fit {slug} 1:{key} {did}: front revolved axis moved by {delta * 1000:.1f} mm, {left * 1000:.1f} mm left{' (turned)' if abs(left) > abs(delta) + 1e-4 else ''}")
+    if turned:
+        write(slug, doc)
 
 
 def solve_pose(doc, base_pose, make, residual, x0, h=0.25, iters=8, tol=2e-4):

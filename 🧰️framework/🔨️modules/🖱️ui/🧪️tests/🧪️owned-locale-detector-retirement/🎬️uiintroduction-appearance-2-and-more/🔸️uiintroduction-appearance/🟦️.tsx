@@ -208,7 +208,7 @@ describe("UIIntroduction appearance", () => {
       expect(Number.parseFloat(box.style.left)).toBe(window.innerWidth - box.offsetWidth);
     });
 
-    it("places pressable Back and Next controls outside the transparent side gaps' hit-testing and accessibility suppression", () => {
+    it("places pressable Back and Next chips as pointer-enabled overlays of a pointer-transparent footer row without any gap element", () => {
       const steps: IntroductionStepDefinition[] = [
         { id: "first", title: "First", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
         { id: "second", title: "Second", body: "Step two.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
@@ -217,20 +217,16 @@ describe("UIIntroduction appearance", () => {
       const onStepIndexChange = vi.fn();
       const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={1} onStepIndexChange={onStepIndexChange} onDismiss={vi.fn()} />);
       const footer = container.querySelector('[data-slot="window-chrome-footer"]');
-      const footerGapLeft = container.querySelector('[data-slot="window-chrome-footer-gap-left"]');
-      const footerGapRight = container.querySelector('[data-slot="window-chrome-footer-gap-right"]');
       const footerCenter = container.querySelector('[data-slot="window-chrome-footer-center"]');
       const footerLeft = container.querySelector('[data-slot="window-chrome-footer-left"]');
       const footerRight = container.querySelector('[data-slot="window-chrome-footer-right"]');
       expect(footer).toBeTruthy();
-      expect(footerGapLeft).toBeTruthy();
-      expect(footerGapRight).toBeTruthy();
+      expect(footer?.className).toContain("pointer-events-none");
+      expect(footer?.className).toContain("absolute");
       expect(footerCenter).toBeTruthy();
       expect(footerLeft).toBeTruthy();
       expect(footerRight).toBeTruthy();
-      expect(footerCenter?.querySelector('[data-slot="window-chrome-footer-center-chip"]')?.textContent).toMatch(/2\s*\/\s*3/);
-      expect(footerGapLeft?.getAttribute("aria-hidden")).toBeNull();
-      expect(footerGapRight?.getAttribute("aria-hidden")).toBeNull();
+      expect(footerCenter?.textContent).toMatch(/2\s*\/\s*3/);
       expect(footerLeft?.classList.contains("pointer-events-auto")).toBe(true);
       expect(footerRight?.classList.contains("pointer-events-auto")).toBe(true);
       expect(footer?.className).toContain("grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]");
@@ -248,9 +244,7 @@ describe("UIIntroduction appearance", () => {
     it("centers the step chip when navigation occupies either side alone", () => {
       const rightOnlySteps: IntroductionStepDefinition[] = [{ id: "only", title: "Only", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }];
       const { container, rerender } = render(<UIIntroduction introduction={{ title: "Welcome", steps: rightOnlySteps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
-      expect(container.querySelector('[data-slot="window-chrome-footer-gap-left"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-chrome-footer-gap-right"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-chrome-footer-center-chip"]')?.textContent).toMatch(/1\s*\/\s*1/);
+      expect(container.querySelector('[data-slot="window-chrome-footer-center"]')?.textContent).toMatch(/1\s*\/\s*1/);
       expect(container.querySelector('[data-slot="window-chrome-footer-left"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-chrome-footer-right"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-chrome-footer"]')?.className).toContain("grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]");
@@ -271,7 +265,7 @@ describe("UIIntroduction appearance", () => {
         },
       ];
       rerender(<UIIntroduction introduction={{ title: "Welcome", steps: leftOnlySteps }} stepIndex={1} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
-      expect(container.querySelector('[data-slot="window-chrome-footer-center-chip"]')?.textContent).toMatch(/2\s*\/\s*2/);
+      expect(container.querySelector('[data-slot="window-chrome-footer-center"]')?.textContent).toMatch(/2\s*\/\s*2/);
       expect(container.querySelector('[data-slot="window-chrome-footer-left"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-chrome-footer-right"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-chrome-footer"]')?.className).toContain("grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]");
@@ -293,10 +287,12 @@ describe("UIIntroduction appearance", () => {
         },
       ];
       const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
-      const centerRail = container.querySelector('[data-slot="window-chrome-footer-center"]');
-      const centerChip = container.querySelector('[data-slot="window-chrome-footer-center-chip"]');
-      expect(centerRail?.className).not.toMatch(/ui-glass-chrome/);
+      const footerRow = container.querySelector('[data-slot="window-chrome-footer"]');
+      const centerChip = container.querySelector('[data-slot="window-chrome-footer-center"]');
+      expect(footerRow?.className).not.toMatch(/ui-glass/);
       expect(centerChip?.className).toMatch(/ui-glass/);
+      expect(centerChip?.hasAttribute("data-window-frame-chip")).toBe(true);
+      expect(container.querySelector('[data-slot="window-chrome-footer-center-chip"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-chrome-footer-right"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-chrome-footer"]')?.className).toContain("grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]");
     });

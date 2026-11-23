@@ -7,7 +7,7 @@ let name=["invalidValue","canceled","ownershipLimit","allocationFailed","workLim
 }
 fn data(index:usize)->Option<NativeRecordSchema>{(index<8).then_some(NativeRecordSchema::Skip)}
 impl NativeUnitVariants for ValueRefusalKind{
-fn variant_spec()->NativeVariantSpec{NativeVariantSpec{all:unsafe{NativeSchemaFields::native(variants)},units:unsafe{NativeSchemaFields::native(variants)},data:unsafe{NativeSchemaFields::native(data)},count:8,tag:None}}
+fn variant_spec()->NativeVariantSpec{NativeVariantSpec{all:unsafe{NativeSchemaFields::native(variants)},units:unsafe{NativeSchemaFields::native(variants)},data:unsafe{NativeSchemaFields::native(data)},statements:unsafe{NativeSchemaFields::native(variants)},count:8,tag:None}}
 fn from_variant_index(index:usize)->Result<Self,ValueError>{match index{0=>Ok(Self::InvalidValue),1=>Ok(Self::Canceled),2=>Ok(Self::OwnershipLimit),3=>Ok(Self::AllocationFailed),4=>Ok(Self::WorkLimit),5=>Ok(Self::DepthLimit),6=>Ok(Self::UnsupportedOwner),7=>Ok(Self::InvariantViolated),_=>Err(crate::owned::tree::invalid())}}
 }
 impl<I:NativeValueSource+?Sized> NativeReceive<I> for ValueRefusalKind{

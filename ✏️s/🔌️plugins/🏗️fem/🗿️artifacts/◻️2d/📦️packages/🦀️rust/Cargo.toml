@@ -21,6 +21,7 @@ semio-framework-schema-composition = { path = "../../../../../../../🧰️frame
 semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d-diff-document = { workspace = true }
 semio-s-fem-node = { path = "../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
+semio-s-fem-receiving = { path = "../../../../🧩️receiving/📦️packages/🦀️rust" }
 semio-s-fem-material = { path = "../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
 semio-framework-geometry = { path = "../../../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

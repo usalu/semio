@@ -5,7 +5,7 @@ use semio_plugin_retained_command::typed_operation::pending_result_page::{Public
 
 enum OriginalPublicationAdvanceFailure{Primary(semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary),Domain(store::VcsError)}
 
-/// 🪙️ Runs one effect-taking store step inside the turn's own performed-work effect and settles its actual work once; `None` means the Work quote was not admitted and nothing ran.
+/// 🛠️ Runs one effect-taking store step inside the turn's own performed-work effect and settles its actual work once; `None` means the Work quote was not admitted and nothing ran.
 fn granted_effect<R>(cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->R)->Result<Option<R>,semio_framework_job::OriginalTurnFailure>{
     let Some(((value,work),_))=cx.with_original_effect(grant,|_,effect|{let value=run(effect);(value,effect.performed_work())})?else{return Ok(None)};
     semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result:Ok::<_,semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work})?;
@@ -216,8 +216,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     mounted.note_publication_progress(checkpoint, ownership);
                     Ok(())
                 }
-                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationRefused => Ok(()),
-                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked => Ok(()),
+                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationRefused => {static SEEN:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);if SEEN.fetch_add(1,std::sync::atomic::Ordering::Relaxed)<3{eprintln!("[DEBUG] one-item publication preparation refused: {:?}",pending.preparation_refusal());}Ok(())},
+                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked => {static SEEN:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);if SEEN.fetch_add(1,std::sync::atomic::Ordering::Relaxed)<3{eprintln!("[DEBUG] one-item publication blocked");}Ok(())},
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::AwaitingAck(_) => Ok(()),
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Complete => Err(plugin_sdk_fault("artifact-store publication completed before result ACK").into()),
             };

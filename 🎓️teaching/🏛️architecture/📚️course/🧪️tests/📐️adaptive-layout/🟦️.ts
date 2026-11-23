@@ -69,7 +69,7 @@ async function expectNoSidewaysScroll(page: Page, where: string): Promise<void> 
 async function expectStableResultHover(page: Page): Promise<void> {
   const card = screen(page, "task-result").filter({ has: page.locator(".course-plot-mean") }).first();
   const caption = card.getByText("Was alle geantwortet haben", { exact: true });
-  const border = card.locator('svg[data-window-silhouette-border]').first();
+  const border = card.locator('svg[data-window-frame-border]').first();
   const paint = () => border.evaluate((svg) => {
     const paths = [...svg.querySelectorAll("path[d]")].filter((path) => path.getAttribute("d"));
     const { x, y, width, height } = svg.getBoundingClientRect();

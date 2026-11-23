@@ -51,7 +51,9 @@ export function explainServiceLossV1(directory,{alive=pid=>{try{process.kill(pid
  }
  if(last.event==="start"&&typeof last.pid!=="number"&&last.via==="launchd"&&now-last.at<starting)return"the service is still starting under launchd";
  if(last.event==="start"&&(typeof last.pid!=="number"||!alive(last.pid))){
-  const cgroup=last.cgroup??rows.findLast(row=>row.event==="start"&&row.cgroup!==undefined)?.cgroup,counters=cgroup===undefined?undefined:events(cgroup),oom=counters?.oom_kill;
+  const cgroup=last.cgroup??rows.findLast(row=>row.event==="start"&&row.cgroup!==undefined)?.cgroup;
+  if(cgroup===undefined)return"the service ended without an exit record (it was not placed in a cgroup: it failed before it could write one, e.g. while admitting its sources, or it was ended from outside; its log says which)";
+  const counters=events(cgroup),oom=counters?.oom_kill;
   return"the service was killed without an exit record"+(oom>0?": its cgroup recorded "+oom+" oom kills (memory limit "+(rows.findLast(row=>row.limitMegabytes!==undefined)?.limitMegabytes??"?")+" MB)":counters===undefined?" (its cgroup is gone)":" (no oom kill in its cgroup: an external kill or a crash)");
  }
  return"the service is still recorded as running";

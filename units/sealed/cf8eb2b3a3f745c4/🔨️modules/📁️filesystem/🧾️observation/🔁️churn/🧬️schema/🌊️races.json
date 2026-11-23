@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/filesystem/observation/churn/races",
+  "title": "Filesystem race classes",
+  "description": "One closed table that classifies a raw filesystem error (ENOENT, ENOTDIR, EISDIR, ESTALE, ELOOP, and on Windows the sharing violations EBUSY, EPERM, EACCES) raised by a READ of a path inside the workspace while peers edit the tree. The classification is made once, at the two boundaries of the churn policy (the layer that retries a snapshot and the process that restarts a command) and for the text of a failed child: `transient` (a vanished or stale path is present again, or a path is only busy: read it again), `persistent` (the path is gone, or a directory or symlink took the place of the file, and a directory around it changed since this process started: only a new snapshot or a new process cures it), `none` (not a race: the error stands). A path is only suspected when a witness agrees: the nearest existing directory above it was modified after this process started (minus the slack), so a typo in a stable directory fails at once.",
+  "definitions": {
+    "Kind": {
+      "enum": [
+        "vanished",
+        "shape",
+        "stale",
+        "busy"
+      ]
+    },
+    "Disposition": {
+      "enum": [
+        "transient",
+        "persistent",
+        "none"
+      ]
+    },
+    "Code": {
+      "type": "string",
+      "pattern": "^E[A-Z0-9]{3,10}$"
+    },
+    "Table": {
+      "const": {
+        "version": 1,
+        "codes": {
+          "all": {
+            "ENOENT": "vanished",
+            "ENOTDIR": "vanished",
+            "EISDIR": "shape",
+            "ELOOP": "shape",
+            "ESTALE": "stale",
+            "EMFILE": "busy",
+            "ENFILE": "busy"
+          },
+          "win32": {
+            "EBUSY": "busy",
+            "EPERM": "busy",
+            "EACCES": "busy"
+          }
+        },
+        "readSyscalls": [
+          "open",
+          "lstat",
+          "stat",
+          "fstat",
+          "scandir",
+          "opendir",
+          "readdir",
+          "readlink",
+          "realpath",
+          "access",
+          "read",
+          "readFile"
+        ],
+        "reasons": {
+          "vanished": "vanished",
+          "shape": "identity",
+          "stale": "identity",
+          "busy": "busy"
+        },
+        "persistentReason": "vanished",
+        "witness": {
+          "slackMilliseconds": 2000
+        },
+        "ownedSegments": [
+          ".cache",
+          ".git",
+          "⚡️cache",
+          "bazel-bin",
+          "bazel-out",
+          "bazel-testlogs"
+        ],
+        "rootMarkers": [
+          "AGENTS.md",
+          "package.json"
+        ],
+        "text": {
+          "codePattern": "\\b(E[A-Z0-9]{3,10}):",
+          "syscallPattern": ", ([A-Za-z]{3,12}) '",
+          "pathPatterns": [
+            "'([^'\\n]+)'",
+            "path: \"([^\"\\n]+)\""
+          ],
+          "propertyPatterns": {
+            "code": "code: \"(E[A-Z0-9]{3,10})\"",
+            "syscall": "syscall: \"([A-Za-z]{3,12})\""
+          },
+          "windowCharacters": 4096
+        }
+      }
+    }
+  }
+}

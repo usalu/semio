@@ -135,6 +135,8 @@ struct NaturalPdfDecoder {
     next_release: usize,
     deferred: Option<ControlledLiftBarrier>,
     blocked: Option<(PdfByteGraphEvent, usize)>,
+    stall: u8,
+    stall_at: Option<String>,
 }
 
 impl NaturalPdfDecoder {
@@ -142,7 +144,7 @@ impl NaturalPdfDecoder {
         Self {
             phase: Phase::AllocateFile, source: PdfNaturalSource::Contiguous(Vec::new()), preparing: None, file: None, lifting: None,
             snapshot: None, partial_page: None, snapshot_retirement: None, trailer_retirement: None,
-            graph_retirement: Default::default(), contract, progress: Default::default(), live_bytes: 0, next_release: 0, deferred: None, blocked: None,
+            graph_retirement: Default::default(), contract, progress: Default::default(), live_bytes: 0, next_release: 0, deferred: None, blocked: None, stall: 0, stall_at: None,
         }
     }
 
@@ -336,7 +338,10 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
         use PdfByteGraphEvent as Event;
         let start = self.progress.completed_work_units;
         let max_work = self.contract.max_work_units_per_step;
-        while !context.should_yield() && !context.is_cancelled() && self.progress.completed_work_units - start < max_work {
+        let mut admitted = false;
+        while !context.is_cancelled() && self.progress.completed_work_units - start < max_work {
+            if admitted && context.should_yield() { break; }
+            admitted = true;
             let grant = context.retained_grant();
             let inline_body = self.lifting.as_ref().map_or(0, |owner| owner.next_inline_body_bytes());
             let copy_body = self.copy_body().max(inline_body);
@@ -344,7 +349,23 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
             let empty_output = self.reserves_empty_output();
             let allocation_boundary = if empty_output { grant.maximum_release_bytes } else { grant.maximum_copy_bytes - copy_body };
             let grant = CosGrant { work: 1, allocation_bytes: grant.maximum_capacity_bytes.min(allocation_boundary), release_bytes: grant.maximum_release_bytes };
+            let phase = self.phase;
             let step = self.next(grant)?;
+            let idle = step.work == 0 && matches!(step.event, Ok(Event::More)) && std::mem::discriminant(&self.phase) == std::mem::discriminant(&phase);
+            if idle {
+                let where_ = self.preparing.as_ref().map(|cursor| cursor.trace()).unwrap_or_else(|| "-".to_string());
+                if self.stall_at.as_deref() != Some(where_.as_str()) {
+                    self.stall = 0;
+                    self.stall_at = Some(where_.clone());
+                }
+                self.stall = self.stall.saturating_add(1);
+                if self.stall > 64 {
+                    return Err(failure(&format!("PDF decoder made no progress during {} at {where_}", phase_name(phase))));
+                }
+                continue;
+            }
+            self.stall = 0;
+            self.stall_at = None;
             self.record(&step, copy_body, inline_body != 0, empty_output, context)?;
             if step.work != 0 { self.blocked = None; }
             match step.event {
@@ -451,6 +472,24 @@ fn admit_retirement<T: semio_framework_value::RetireOwned + Send + 'static>(
         None => Default::default(),
     };
     Ok(PluginLifecycleStep::Progress(progress))
+}
+
+
+
+/// 🧭 Names the decoder phase that stopped consuming work.
+fn phase_name(phase: Phase) -> &'static str {
+    match phase {
+        Phase::AllocateFile => "allocate-file",
+        Phase::PrepareFile => "prepare-file",
+        Phase::TransferFile => "transfer-file",
+        Phase::AllocateLift => "allocate-lift",
+        Phase::Lift => "lift",
+        Phase::TransferLift => "transfer-lift",
+        Phase::ClosePositions => "close-positions",
+        Phase::Publish => "publish",
+        Phase::Done => "done",
+        Phase::Closing => "closing",
+    }
 }
 
 fn turn(event: PdfByteGraphEvent, work: usize) -> PdfByteGraphReceipt {

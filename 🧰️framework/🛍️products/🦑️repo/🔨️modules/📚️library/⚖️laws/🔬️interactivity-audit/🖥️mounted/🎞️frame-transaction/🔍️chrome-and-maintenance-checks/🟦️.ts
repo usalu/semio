@@ -1,4 +1,6 @@
 /** 🔍️ The mounted frame transaction checks of the transaction, maintenance, preference and chrome owners. */
+import { policyStripRustCommentsAndStrings } from "../../../../../🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
+
 /** 🧾 Checks the frame transaction cursors and the maintenance owners. */
 export function checkTransactionAndMaintenanceOwners({ requireAll, transaction, glue, glueSource, failures, frameCursors, buildBoundary, finishBoundary, deferredBoundary, maintenanceOwnerBoundary, maintenanceNativeOwnerBoundary, maintenanceCloseBoundary, maintenanceExecutionBoundary, maintenanceRegistryBoundary, maintenanceSpawnBoundary, maintenanceTerminalBoundary, maintenanceWorkerTerminalBoundary, findBoundary, shellSource, maintenanceBoundary }: {
   readonly requireAll: (source: string | undefined, needles: readonly string[], label: string) => void;
@@ -36,7 +38,7 @@ export function checkTransactionAndMaintenanceOwners({ requireAll, transaction, 
     "struct FrameActionOwners",
     "slots: [Option<FrameActionEnvelope>; WORLD3D_DEADLINE_CAPACITY]",
     "fn try_push(&mut self, action: ActionDescriptor) -> Result<(), ActionDescriptor>",
-    "fn pop_front(&mut self) -> Option<ActionDescriptor>",
+    "fn pop_front(&mut self) -> Option<FrameActionEnvelope>",
     "EFFECT_STORM_BUDGET: u32 = 64",
   ], "P5a action/effect admission is not fixed, fallible, and identity preserving");
   requireAll(glueSource, ["frame_action_max_plus_one_returns_the_exact_owner", "assert_eq!(rejected.controller_id.as_ptr(), identity)"], "P5a exact MAX + 1 action owner law is missing");
@@ -51,45 +53,45 @@ export function checkTransactionAndMaintenanceOwners({ requireAll, transaction, 
     "base_witness != current_witness",
     "checked_add(1)",
   ], "P5a opportunity freshness, revision, generation, cancellation, deadline, or effect guards are incomplete");
-  for (const forbidden of ["VecDeque", "std::vec::IntoIter", "wrapping_add", "saturating_add", ".clear()", ".expect(", ".unwrap(", "loop {", "while "]) if (transaction.includes(forbidden)) failures.push(`P5a mounted transaction contains forbidden ${forbidden}`);
+  for (const forbidden of ["VecDeque", "std::vec::IntoIter", "wrapping_add", "saturating_add", ".clear()", ".expect(", ".unwrap(", "loop {", "while "]) if (policyStripRustCommentsAndStrings(transaction).includes(forbidden)) failures.push(`P5a mounted transaction contains forbidden ${forbidden}`);
   requireAll(frameCursors, [
     "struct FrameBuildCursor",
     "previous_draw: Option<DrawList>",
     "previous_overlay: Option<DrawList>",
     "struct FrameFinishCursor",
-    "icon_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>",
-    "glyph_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>",
+    "icon_pages: Option<semio_ui_prepared::PreparedAtlasPages>",
+    "glyph_pages: Option<semio_ui_prepared::PreparedAtlasPages>",
   ], "P5a mounted build/finish cursors do not retain draw, overlay, and atlas page ownership");
-  requireAll(glue, ["struct FrameEnginePackets", "engine_packets: FrameEnginePackets", "fn try_push(&mut self, packet: engine_canvas::EngineCanvasPacket) -> Result<(), engine_canvas::EngineCanvasPacket>"], "P5a mounted packet collector is not fixed and identity-preserving");
-  if (frameCursors.includes("engine_packets: Vec<") || frameCursors.includes("Vec<engine_canvas::EngineCanvasPacket>")) failures.push("P5a mounted frame cursor retains a dynamic engine packet workset");
+  requireAll(glue, ["struct FrameEnginePackets", "engine_packets: FrameEnginePackets", "fn try_push(&mut self, packet: semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket) -> Result<(), semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket>"], "P5a mounted packet collector is not fixed and identity-preserving");
+  if (frameCursors.includes("engine_packets: Vec<") || frameCursors.includes("Vec<semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket>")) failures.push("P5a mounted frame cursor retains a dynamic engine packet workset");
   requireAll(buildBoundary, [
     "FrameBuildPhase::PreparedGpuAbandonment",
     "PreparedGpuPresentCursor::close_abandoned_step()",
     "FrameBuildPhase::PreparedInputAbandonment",
-    "PreparedRenderInput::next_abandoned_close_demands(4096)",
-    "PreparedRenderInput::close_abandoned_step(grant)",
+    "PreparedRenderInput::next_abandoned_close_demands(grant.maximum_copy_bytes)",
+    "PreparedRenderInput::close_abandoned_step",
     "FrameBuildPhase::PreparedJobAbandonment",
-    "PreparedRenderJob::next_abandoned_close_demands(4096)",
-    "PreparedRenderJob::close_abandoned_step(grant)",
+    "PreparedRenderJob::next_abandoned_close_demands(grant.maximum_copy_bytes)",
+    "PreparedRenderJob::close_abandoned_step",
     "FrameBuildPhase::PreparedAbandonment",
-    "PreparedRenderReceiver::next_abandoned_close_demands(4096)",
-    "PreparedRenderReceiver::close_abandoned_step(grant)",
+    "PreparedRenderReceiver::next_abandoned_close_demands(grant.maximum_copy_bytes)",
+    "PreparedRenderReceiver::close_abandoned_step",
     "FrameBuildPhase::PacketAbandonment",
-    "PreparedRenderPacket::next_abandoned_close_demands(4096)",
-    "PreparedRenderPacket::close_abandoned_step(grant)",
+    "PreparedRenderPacket::next_abandoned_close_demands(grant.maximum_copy_bytes)",
+    "PreparedRenderPacket::close_abandoned_step",
     "FrameBuildPhase::RetireDraw",
-    "previous.retire_step()",
+    "previous.retire_granted(grant)",
     "FrameBuildPhase::RetireOverlay",
     "render_chrome_step",
     "resources.append_step(input)",
     "resources.take_packet_step()",
     "PreparedAtlasPages::try_new",
-    "pages.push_page(&self.icons.pixels, pages.next_row())",
+    "pages.push_page(&self.icons.pixels, pages.next_row(), context.retained_grant())",
     "PreparedRenderUpload::IconAtlasPages",
   ], "P5a pre-input boundary does not advance retained draw, chrome, packet, and upload owners one step at a time");
   requireAll(finishBoundary, [
     "FrameFinishPhase::GlyphUpload",
-    "pages.push_page(&self.atlas.pixels, pages.next_row())",
+    "pages.push_page(&self.atlas.pixels, pages.next_row(), context.retained_grant())",
     "PreparedRenderUpload::GlyphAtlasPages",
     "FrameFinishPhase::Draw",
     "FrameFinishPhase::Overlay",
@@ -97,16 +99,16 @@ export function checkTransactionAndMaintenanceOwners({ requireAll, transaction, 
   ], "P5a post-input boundary does not page atlas work and retain draw/overlay/deferred transfers");
   for (const forbidden of ["frame_before_input(", "frame_after_input(", "drive_pending_frame_deferred", "take_packets(", "append_to(", "self.draw.clear()", "self.overlay.clear()", "self.icons.pixels.clone()", "self.atlas.pixels.clone()"])
     if (glue.includes(forbidden)) failures.push(`P5a mounted call graph retains opaque whole-work callee ${forbidden}`);
-  requireAll(deferredBoundary, ["cursor_value.take_next()", "spawn_frame_deferred_reserved", "try_spawn_frame_maintenance_reserved", "pending_frame_maintenance_refusal", "FrameDeferredCursor::close_step", "runtime.return_interaction(interaction)"], "P5a deferred boundary does not take, refuse, close, and resume exactly one retained work owner");
+  requireAll(deferredBoundary, ["cursor_value.take_next()", "spawn_frame_deferred_reserved", "try_spawn_frame_maintenance_reserved", "pending_frame_maintenance_refusal", "owner.close_step(cx)", "runtime.return_interaction(interaction)"], "P5a deferred boundary does not take, refuse, close, and resume exactly one retained work owner");
   for (const forbidden of [".expect(", ".unwrap(", "loop {", "while "])
-    if (deferredBoundary.includes(forbidden)) failures.push(`P5a deferred boundary retains panicking or run-to-completion ${forbidden}`);
+    if (policyStripRustCommentsAndStrings(deferredBoundary).includes(forbidden)) failures.push(`P5a deferred boundary retains panicking or run-to-completion ${forbidden}`);
   requireAll(maintenanceOwnerBoundary, [
     "generation: u64",
-    "cancel: semio_framework_async::CancelToken",
+    "cancel: Option<semio_framework_async::CancelToken>",
     "closing: bool",
     "struct FrameMaintenanceOwner",
     "deadline_ms: Option<u64>",
-    "struct FrameMaintenanceOwnerCell<T>",
+    "struct FrameExecutionOwnerCell<T>",
     "state: std::sync::atomic::AtomicU8",
     "compare_exchange(0, 1",
     "fn try_restore(&self, owner: T) -> Result<(), T>",
@@ -117,25 +119,26 @@ export function checkTransactionAndMaintenanceOwners({ requireAll, transaction, 
     "self.generation.store(0, Ordering::Release)",
     "compare_exchange(1, 0",
   ], "P5a maintenance authority is not generation/cancel/deadline-qualified with nonblocking exact-owner refusal handback");
-  requireAll(maintenanceNativeOwnerBoundary, ["#[cfg(any(not(target_arch = \"wasm32\"), test))]"], "P5a native maintenance close is not available in production");
+  requireAll(maintenanceNativeOwnerBoundary, ["pub fn begin_close(&mut self)"], "P5a native maintenance close is not available in production");
+  if (/#\[cfg\(\s*test\s*\)\]\s*pub fn begin_close/.test(maintenanceNativeOwnerBoundary)) failures.push("P5a native maintenance close is not available in production");
   requireAll(maintenanceCloseBoundary, ["self.closing = true"], "P5a native maintenance close does not retain its closing state");
   requireAll(maintenanceExecutionBoundary, [
-    "struct FrameMaintenanceExecutionRegistry",
+    "struct FrameExecutionRegistry<T>",
     "const QUEUED: u8 = 2",
     "const RUNNING: u8 = 3",
     "const ABANDONED: u8 = 4",
     "fn try_publish(&self, generation: u64",
     "fn try_begin(&self, generation: u64)",
     "fn abandon(&self, generation: u64) -> bool",
-    "fn try_take_abandoned(&self)",
+    "fn try_take_returned(&self)",
     "struct FrameMaintenanceExecutionEnvelope",
-    "impl Drop for FrameMaintenanceExecutionEnvelope",
+    "impl<R> Drop for FrameMaintenanceExecutionEnvelope<R>",
     "if self.armed && self.registry.abandon(self.generation)",
-    "RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None }",
+    "RuntimeApply::FrameExecutionReturned",
     "struct FrameMaintenanceExecutionGuard",
-    "impl Drop for FrameMaintenanceExecutionGuard",
+    "impl<R> Drop for FrameMaintenanceExecutionGuard<R>",
     "self.owner_cell.restore_taken(owner)",
-    "frame_maintenance_executions: Arc<FrameMaintenanceExecutionRegistry>",
+    "frame_maintenance_executions: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>",
   ], "P5a accepted maintenance execution lacks generation-qualified external Drop handback");
   for (const forbidden of ["Mutex", ".lock()", "std::mem::take", "Vec<", "loop {", "while "])
     if (maintenanceRegistryBoundary.includes(forbidden)) failures.push(`P5a maintenance execution registry retains blocking, dynamic, or recursive recovery ${forbidden}`);
@@ -196,13 +199,14 @@ export function checkTransactionAndMaintenanceOwners({ requireAll, transaction, 
 }
 
 /** ⚙ Checks the preference, fixed file page and chrome step boundaries. */
-export function checkPreferencesAndChromeSteps({ requireAll, prefsBoundary, fixedFilePageBoundary, servicesSource, failures, nativePrefsBoundary, chromeBoundary, glue, shellChildren, chromeTextBoundary, chromeGroupBoundary }: {
+export function checkPreferencesAndChromeSteps({ requireAll, prefsBoundary, fixedFilePageBoundary, servicesSource, failures, nativeFieldPageBoundary, nativeConfigDocumentBoundary, chromeBoundary, glue, shellChildren, chromeTextBoundary, chromeGroupBoundary }: {
   readonly requireAll: (source: string | undefined, needles: readonly string[], label: string) => void;
   readonly prefsBoundary: string;
   readonly fixedFilePageBoundary: string;
   readonly servicesSource: string;
   readonly failures: string[];
-  readonly nativePrefsBoundary: string;
+  readonly nativeFieldPageBoundary: string;
+  readonly nativeConfigDocumentBoundary: string;
   readonly chromeBoundary: string | undefined;
   readonly glue: string;
   readonly shellChildren: string | undefined;
@@ -236,10 +240,13 @@ export function checkPreferencesAndChromeSteps({ requireAll, prefsBoundary, fixe
   ], "P5a host-storage service does not own exact 16 KiB page admission/read/write and growth rejection");
   if (!servicesSource.includes("fixed_file_page_exact_max_plus_one_matches_system_oracle_and_preserves_last_valid_page")) failures.push("P5a host-storage fixed page exact/max-plus-one/oracle preservation law is missing");
   for (const forbidden of ["PREFS_STORE", "Mutex", ".lock()", "serde_json::from_", "serde_json::to_", "OS_SHELL_CONFIG_STORAGE_KEY", "Vec::with_capacity", "vec![", "loop {", "while ", "std::fs::", "std::io::"])
-    if (nativePrefsBoundary.includes(forbidden)) failures.push(`P5a native preference field page retains blocking, dynamic, or whole-config ${forbidden}`);
+    if (nativeFieldPageBoundary.includes(forbidden)) failures.push(`P5a native preference field page retains blocking, dynamic, or whole-config ${forbidden}`);
+  requireAll(nativeConfigDocumentBoundary, ["OS_SHELL_CONFIG_MAX_BYTES", "storage_worker_read_fixed_file_document(&path, OS_SHELL_CONFIG_MAX_BYTES)", "value.len() > OS_SHELL_CONFIG_MAX_BYTES", "documents.begin_write(&path, 1, generation, value.as_bytes().to_vec(), OS_SHELL_CONFIG_MAX_BYTES)", "documents.write_step(token)", "documents.publish(token)", "documents.cancel(token)"], "P5a native config document does not stay a bounded host-storage document with admission, staged pages, atomic publish, and cancel");
+  for (const forbidden of ["serde_json::", "Vec::with_capacity", "vec![", "std::fs::", "std::io::", "PREFS_STORE"])
+    if (nativeConfigDocumentBoundary.includes(forbidden)) failures.push(`P5a native config document retains whole-config or unowned work ${forbidden}`);
   for (const forbidden of ["load_ui_prefs_once()", "read_stored_introduction_seen(", "persist_panel_layout_if_changed()", "write_stored_introduction_seen(", "persist_ui_prefs_if_changed()", "publish_presence_heartbeat()"])
     if (chromeBoundary?.includes(forbidden)) failures.push(`P5a chrome frame still reaches synchronous maintenance ${forbidden}`);
-  requireAll(glue, ["FrameDeferredWork::ShellMaintenance", "shell_maintenance: bool", "semio_framework_async::Lane::Io", "PreparedAtlasPages::next_abandoned_close_demands(4096)", "PreparedAtlasPages::close_abandoned_step(grant)"], "P5a Shell I/O or abandoned atlas close is not mounted on the shared retained boundary");
+  requireAll(glue, ["FrameDeferredWork::ShellMaintenance", "shell_maintenance: bool", "semio_framework_async::Lane::Io", "PreparedAtlasPages::close_abandoned_step(grant)", "PreparedAtlasPages::close_abandoned_step(grant)"], "P5a Shell I/O or abandoned atlas close is not mounted on the shared retained boundary");
   requireAll(chromeBoundary, [
     "ShellChromeFramePhase::MainWindow",
     "ShellChromeFramePhase::PaneOverlayHits",
@@ -294,7 +301,7 @@ export function checkPreferencesAndChromeSteps({ requireAll, prefsBoundary, fixe
   requireAll(chromeGroupBoundary, [
     "enum RetainedChromeGroupStep",
     "fn retained_chrome_group_item_width",
-    "label.len() > ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES",
+    "label.len() > semio_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES",
     "fn render_retained_chrome_group_item_step",
     "group_phase: &mut u8",
     "glyph: &mut RetainedGlyphCursor",

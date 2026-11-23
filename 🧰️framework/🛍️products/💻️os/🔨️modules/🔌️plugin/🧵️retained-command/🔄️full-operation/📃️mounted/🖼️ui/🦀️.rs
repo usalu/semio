@@ -20,7 +20,7 @@ impl MountedUiCopy{
   else if self.index<source.len(){
    if target.len()==self.index{d.copy_bytes+=2*size_of::<String>()+size_of::<Vec<String>>();}
    else{let text=&target[self.index];let original=&source[self.index];if text.capacity()==0&&!original.is_empty(){d.copy_bytes+=size_of::<String>();d.capacity_bytes=original.len();}
-    else if text.len()<original.len(){let mut count=original.len().saturating_sub(text.len()).min(body.saturating_sub(d.copy_bytes+size_of::<String>())).min(2048);while count>0&&!original.is_char_boundary(text.len()+count){count-=1}if count==0{return Ok(RetirementDemand{copy_bytes:Self::metadata()+size_of::<String>()+4,depth:1,..Default::default()})}d.copy_bytes+=size_of::<String>()+count;}
+    else if text.len()<original.len(){let mut count=original.len().saturating_sub(text.len()).min(body.saturating_sub(d.copy_bytes+size_of::<String>()));while count>0&&!original.is_char_boundary(text.len()+count){count-=1}if count==0{return Ok(RetirementDemand{copy_bytes:Self::metadata()+size_of::<String>()+4,depth:1,..Default::default()})}d.copy_bytes+=size_of::<String>()+count;}
    }
   }Ok(d)
  }

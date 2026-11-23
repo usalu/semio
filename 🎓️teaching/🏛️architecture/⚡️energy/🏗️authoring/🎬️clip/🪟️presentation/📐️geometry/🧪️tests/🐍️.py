@@ -77,6 +77,13 @@ class ExactUIParityTests(unittest.TestCase):
             for actual, point in zip(result[key], expected):
                 for a, b in zip(actual, point):
                     self.assertAlmostEqual(a, b, delta=CASES["oracle"]["layoutTolerance"])
+        self.assertEqual(len(result["chip_regions"]), len(case["chipRegions"]))
+        for actual, expected in zip(result["chip_regions"], case["chipRegions"]):
+            self.assertEqual(actual["dock"], expected["dock"])
+            self.assert_rect(actual, {key: expected[key] for key in ("x", "y", "width", "height")})
+        self.assertEqual(result["safe_clearances"]["right"], 0)
+        self.assertAlmostEqual(result["safe_clearances"]["top"], case["safeClearances"]["top"], delta=CASES["oracle"]["layoutTolerance"])
+        self.assert_rect(result["surface"], case["rect"])
 
     def test_native_labels_use_one_css_font_em_and_browser_advance(self):
         typography = importlib.import_module(PRESENTATION + ".🔤️typography.🐍️")
@@ -160,23 +167,38 @@ class ExactUIParityTests(unittest.TestCase):
             for segment in window["border_segments"]:
                 self.assertTrue(segment["path"].startswith("M"))
                 self.assertIn(segment["state"], ("normal", "focus", "active", "waiting", "loading", "introduced", "celebrated", "hover"))
+            self.assertTrue(window["gap_hit_in_content"])
+            self.assertEqual(window["content_clip_path"],"none")
+            self.assertTrue(window["chip_regions"])
+            for chip in window["chip_regions"]:
+                self.assertEqual(chip["dock"],"top")
+                for axis, size in (("x", "width"), ("y", "height")):
+                    self.assertGreaterEqual(chip[axis],window["rect"][axis]-CASES["oracle"]["layoutTolerance"])
+                    self.assertLessEqual(chip[axis]+chip[size],window["rect"][axis]+window["rect"][size]+CASES["oracle"]["layoutTolerance"])
+            self.assertIn("blur(",window["chip_backdropfilter"])
+            self.assertNotEqual(window["chip_background"],window["glassbackground"])
             self.assertEqual(window["font_size"],"11.2px")
             self.assertEqual(window["line_height"],"11.2px")
             self.assertEqual(window["padding"],"3.2px")
             self.assertEqual(window["backdropfilter"],"blur(8px) saturate(1.45)")
-            self.assertAlmostEqual(frame["navbar"]["height"],28.8,delta=0.04)
-            self.assertAlmostEqual(frame["footer"]["height"],28.8,delta=0.04)
+            self.assertAlmostEqual(frame["navbar"]["height"],expected["metrics"]["navbar_height"],delta=CASES["oracle"]["layoutTolerance"])
+            self.assertAlmostEqual(frame["footer"]["height"],expected["metrics"]["footer_height"],delta=CASES["oracle"]["layoutTolerance"])
             with Image.open(output) as source:
                 pixels = source.convert("RGB")
                 self.assertEqual(pixels.size,(1600,900))
                 self.assertEqual(pixels.getpixel((100,100)),tuple(CASES["window"]["bodyPixel"]))
-                self.assertEqual(pixels.getpixel((0,100)),tuple(CASES["window"]["gapPixel"]))
+                self.assertEqual(pixels.getpixel((0,100)),tuple(CASES["window"]["floorPixel"]))
+                for channel, plain in zip(pixels.getpixel((200,60)),pixels.getpixel((200,100)),strict=True):
+                    self.assertAlmostEqual(channel,plain,delta=CASES["oracle"]["compositeChannelTolerance"])
+                self.assertNotEqual(pixels.getpixel((200,60)),tuple(CASES["window"]["floorPixel"]))
                 with Image.open(zoomed) as zoom:
                     self.assertIsNotNone(ImageChops.difference(pixels, zoom.convert("RGB")).getbbox())
 
-    def test_actual_typescript_silhouette_normalizes_small_gaps_and_title_caps(self):
+    def test_frame_is_one_rectangle_with_glass_chips_inside_it(self):
+        import pathops
+
         geometry = importlib.import_module(PRESENTATION + ".📐️geometry.🐍️")
-        for case in CASES["silhouetteCases"]:
+        for case in CASES["frameCases"]:
             with self.subTest(width=case["width"], advance=case["advance"]):
                 rect = {"x":0,"y":0,"width":case["width"],"height":case["height"]}
                 actual = geometry.window_geometry(rect, case["advance"])
@@ -185,12 +207,35 @@ class ExactUIParityTests(unittest.TestCase):
                     for point, expected in zip(actual[key],case[fixture_key]):
                         for a,b in zip(point,expected):
                             self.assertAlmostEqual(a,b)
+                self.assertEqual(len(actual["top_chips"]),len(case["topChips"]))
+                for span, expected in zip(actual["top_chips"],case["topChips"]):
+                    for a,b in zip(span,expected):
+                        self.assertAlmostEqual(a,b)
+                self.assertEqual(len(actual["chip_regions"]),len(case["chipRegions"]))
+                for region, expected in zip(actual["chip_regions"],case["chipRegions"]):
+                    self.assertEqual(region["dock"],expected["dock"])
+                    for key in ("x","y","width","height"):
+                        self.assertAlmostEqual(region[key],expected[key])
+                for key, value in case["safeClearances"].items():
+                    self.assertAlmostEqual(actual["safe_clearances"][key],value)
+                union = pathops.Path()
+                for left, top, right, bottom in [(0,0,case["width"],case["height"]),*[(r["x"],r["y"],r["x"]+r["width"],r["y"]+r["height"]) for r in actual["chip_regions"]]]:
+                    box = pathops.Path()
+                    box.moveTo(left,top)
+                    box.lineTo(right,top)
+                    box.lineTo(right,bottom)
+                    box.lineTo(left,bottom)
+                    box.close()
+                    union = pathops.op(union,box,pathops.PathOp.UNION)
+                self.assertAlmostEqual(abs(union.area),case["width"]*case["height"])
 
     def test_nested_catalog_cells_share_the_same_canvas_and_focus_geometry(self):
         presentation = importlib.import_module(PRESENTATION + ".🐍️")
         contract = presentation.presentation_contract()
-        for key in ("navbarHeight", "footerHeight", "inset", "titleHeight"):
+        metrics = importlib.import_module(PRESENTATION + ".📐️geometry.🐍️").geometry_metrics()
+        for key, metric in (("navbarHeight", "navbar_height"), ("footerHeight", "footer_height"), ("inset", "inset"), ("titleHeight", "title_height")):
             self.assertAlmostEqual(contract["chrome"][key], CASES["shell"][key])
+            self.assertAlmostEqual(contract["chrome"][key], metrics[metric])
         canvas = CASES["grid"]["canvas"]
         grids = [contract["courses"], *[course["topics"] for course in contract["courses"]],
             *[topic["videos"] for topic in contract["topics"]],

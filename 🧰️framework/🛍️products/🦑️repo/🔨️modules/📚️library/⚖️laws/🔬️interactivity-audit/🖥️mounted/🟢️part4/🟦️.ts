@@ -6,11 +6,11 @@ export function buildPart4({ rendererRetainedStart, rendererRetained, schema, re
   if (
     rendererRetainedStart < 0 ||
     !rendererRetained.includes("struct RetainedSurfaceRegistry") ||
-    !rendererRetained.includes("slots: [Option<RetainedSurfaceSlot>; RETAINED_SURFACE_CAPACITY]") ||
+    !rendererRetained.includes("slots: Box<[Option<RetainedSurfaceSlot>; RETAINED_SURFACE_CAPACITY]>") ||
     !rendererRetained.includes("generation: u64") ||
     !rendererRetained.includes("surface: SurfaceId") ||
     !rendererRetained.includes("struct PendingSurfaceRejectionRegistry") ||
-    !rendererRetained.includes("slots: [Option<PendingSurfaceRejection>; RETAINED_SURFACE_CAPACITY]") ||
+    !rendererRetained.includes("slots: Box<[Option<PendingSurfaceRejection>; RETAINED_SURFACE_CAPACITY]>") ||
     !rendererRetained.includes("close_cursor: usize") ||
     !rendererRetained.includes("terminal_is_empty") ||
     rendererRetained.includes("retained: HashMap") ||
@@ -20,24 +20,25 @@ export function buildPart4({ rendererRetainedStart, rendererRetained, schema, re
     !rendererRetained.includes("exchange_closing: Option<UiDocumentLease>") ||
     !schema.includes("pub enum UiTurnPatchTransfer<T>") ||
     !schema.includes("pub fn try_transfer_one<T>(&mut self, transfer: impl FnOnce(UiPatch) -> Result<T, UiPatch>)") ||
-    !reactor.includes("result.ui_patches.try_transfer_one(|patch| self.apply_ui_patch(instance, patch))") ||
-    !reactor.includes("fn apply_ui_patch(&mut self, instance: u32, patch: KernelUiPatch) -> Result<(), KernelUiPatch>") ||
+    !reactor.includes("result.ui_patches.try_transfer_one(|patch| self.apply_ui_patch(instance, patch, patch_receipt))") ||
+    !reactor.includes("fn apply_ui_patch(&mut self, instance: u32, patch: KernelUiPatch, receipt: Option<semio_framework::kernel::ActorUiPatchReceipt>) -> Result<(), KernelUiPatch>") ||
     !schemaSource.includes("refused_turn_patch_transfer_restores_the_exact_retirement_owner")
   ) failures.push("P5b renderer retained/rejection authority or document closer is dynamic, unqualified, or erased before terminality");
   if (
     shellDocumentStart < 0 ||
     !shellDocuments.includes("SHELL_DOCUMENT_RETIREMENT_CAPACITY: usize = UI_DOCUMENT_LEASE_SLOTS * UI_DOCUMENT_LEASE_ALIASES as usize") ||
-    !shellDocuments.includes("slots: [Option<ShellDocumentRetirementSlot>; SHELL_DOCUMENT_RETIREMENT_CAPACITY]") ||
+    !shellDocuments.includes("slots: Box<[Option<ShellDocumentRetirementSlot>; SHELL_DOCUMENT_RETIREMENT_CAPACITY]>") ||
     !shellDocuments.includes("epochs: [u64; SHELL_DOCUMENT_RETIREMENT_CAPACITY]") ||
     !shellDocuments.includes("cursor: usize") ||
     !shellDocuments.includes("fn try_admit(&mut self, document: UiDocumentLease) -> Result<(), UiDocumentLease>") ||
-    !shellDocuments.includes("let terminal = slot.document.close_step() && slot.document.terminal_is_empty()") ||
+    !shellDocuments.includes("let terminal = slot.document.close_step_with_grant(SHELL_DOCUMENT_RETIREMENT_ITEMS, SHELL_DOCUMENT_RETIREMENT_BYTES).is_ok_and(|step| step.complete) && slot.document.terminal_is_empty()") ||
     !shellDocuments.includes("terminal.document.terminal_is_empty()") ||
-    !shellRefresh.includes("Self::retain_document_map_for_close(&mut self.closing_documents, std::mem::take(&mut self.window_ui))") ||
-    !shellRefresh.includes("self.window_ui = documents") ||
-    !shellRefresh.includes("self.panel_documents = documents") ||
-    !shellRefresh.includes("self.spawned_ui = Some(document)") ||
-    !shellRefresh.includes("return Err(refused)") ||
+    !reactor.includes("retire_one_surface_document") ||
+    !reactor.includes("retain_document_for_close") ||
+    !reactor.includes("spawned document retirement registry refused the exact prior owner") ||
+    !reactor.includes("self.spawned_ui = Some(document)") ||
+    !shellRefresh.includes("let consumed = self.close_document_one();") ||
+    !shellRefresh.includes("self.drain_retained_document_arenas();") ||
     !shellRefresh.includes("self.closing_documents.close_one()") ||
     shellRefresh.includes("rejected.close_step()") ||
     shellRefresh.includes("closing_documents.swap_remove(0)")
@@ -46,7 +47,7 @@ export function buildPart4({ rendererRetainedStart, rendererRetained, schema, re
     commandDocumentStart < 0 ||
     commandExchangeStart < 0 ||
     !commandDocuments.includes("COMMAND_DOCUMENT_RETIREMENT_CAPACITY: usize = UI_DOCUMENT_LEASE_SLOTS * ui_contract::UI_DOCUMENT_LEASE_ALIASES as usize") ||
-    !commandDocuments.includes("slots: [Option<CommandDocumentRetirementState>; COMMAND_DOCUMENT_RETIREMENT_CAPACITY]") ||
+    !commandDocuments.includes("slots: Box<[Option<CommandDocumentRetirementState>; COMMAND_DOCUMENT_RETIREMENT_CAPACITY]>") ||
     !commandDocuments.includes("Reserved {") ||
     !commandDocuments.includes("Pending {") ||
     !commandDocuments.includes("Closing {") ||
@@ -79,12 +80,8 @@ export function buildPart4({ rendererRetainedStart, rendererRetained, schema, re
     !reactor.includes("UiFixedList<&'a WindowMeasure, WINDOW_MEASURE_PARTITION_CAPACITY>") ||
     !reactor.includes("Result<WindowMeasurePartition<'a>, &'a WindowMeasure>") ||
     !reactorSource.includes("partition_window_measures_max_plus_one_returns_exact_borrowed_owner") ||
-    !windowMeasure.includes("WindowMeasureRenderFrame") ||
-    !windowMeasure.includes("UiFixedList::<WindowMeasureRenderFrame<'_>, WINDOW_MEASURE_TRAVERSAL_CAPACITY>") ||
-    !windowMeasure.includes("render_window_measure_select") ||
-    !windowMeasure.includes("render_window_measure_slider") ||
-    !windowMeasure.includes("render_window_measure_toggle") ||
-    !windowMeasure.includes("window_measure_actions.try_upsert") ||
+    !windowMeasure.includes("partition.general.try_push(measure)") ||
+    !windowMeasure.includes("partition.utility_options.try_push(child)") ||
     windowMeasure.includes("self.render_window_measure(") ||
     windowMeasure.includes("on_change.clone()") ||
     windowMeasure.includes("items.iter().map(") ||
@@ -95,7 +92,7 @@ export function buildPart4({ rendererRetainedStart, rendererRetained, schema, re
     "renderer_fixed_registries_return_exact_max_plus_one_surface_and_patch_owners",
     "shell_ninth_document_and_nonterminal_first_close_remain_in_qualified_retirement",
     "shell_absolute_refusal_returns_the_exact_max_plus_one_owner_before_mutation",
-    "command_batch_ninth_document_is_retained_after_nonterminal_close_and_exactly_returned_or_retired",
+    "command_batch_slots_plus_one_document_is_retained_after_nonterminal_close_and_exactly_returned_or_retired",
     "command_document_page_saturation_refuses_before_turn_owner_production",
     "stale_cancel_and_fault_document_builds_retain_closer_until_terminal",
     "document_builder_close_persists_until_terminal_after_one_step",

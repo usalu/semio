@@ -6,8 +6,8 @@ use semio_plugin::ViewModel;
 use semio_plugin::ViewWindowInstance;
 use pack::snapshot::ArtifactDsl;
 
-fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("demo document parses")
+fn demo() -> semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring {
+    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("the bundled demo fixture parses"))
 }
 
 fn addressed(kind: &str) -> ViewModel {
@@ -46,7 +46,7 @@ async fn focus_entity_refuses_an_unknown_entity_and_an_unaddressed_window() {
     let doc = demo();
     assert!(focus(&doc, model_window::WINDOW_KIND_ID, "not-an-entity").is_err(), "an unaddressable entity must fault rather than silently move the camera");
     let history = HistoryView::empty();
-    let view = ArtifactView::new(&doc, &history);
+    let view = ArtifactView::new(&*doc, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     assert!(handle_window(&FocusEntity { id: "ridge".into() }, &view, &cfg, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).is_err());

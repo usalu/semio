@@ -48,9 +48,9 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 👁️ Builds the read-only output surface and propagates assembly failures.
-pub fn render(document: &BitmapSnapshot) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &BitmapSnapshot, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
     let layers = crate::bitmap_layers_json("out", document.output.width, document.output.height, &document.input.palette, &[], &document.pinned);
-    scene_surface(SURFACE_ID, ContractSurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, VIEW_ZOOM, layers))
+    scene_surface(SURFACE_ID, ContractSurfaceKind::Canvas2d, &Canvas2dScene::base(0.0, 0.0, VIEW_ZOOM, layers), semio_plugin::surface_name(locale, "Output", "Ausgabe"), None)
 }
 //#endregion 🔖️Render
 

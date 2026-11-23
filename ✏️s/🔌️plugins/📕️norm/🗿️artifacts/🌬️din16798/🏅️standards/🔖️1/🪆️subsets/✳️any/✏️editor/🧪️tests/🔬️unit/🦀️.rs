@@ -141,8 +141,8 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pre_migration_bytes() {
     let hex = |command: &Din16798Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    assert_eq!(hex(&Din16798Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01010001000402");
-    assert_eq!(hex(&Din16798Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01010000");
+    assert_eq!(hex(&Din16798Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01000001000402");
+    assert_eq!(hex(&Din16798Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01000000");
 }
 //#endregion ðï¸CommandSurface
 
@@ -247,7 +247,7 @@ async fn report_out_exports_the_computed_check_report() {
 }
 //#endregion ðï¸Behavior
 
-semio_plugin::history_edit_acceptance_law!("norm", crate::Din16798PlayApp, || semio_plugin::App { definition: crate::create_din16798_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("norm", crate::Din16798PlayApp, || semio_plugin::App { definition: crate::create_din16798_app(), examples: Vec::new() }, "../../..");
 
 #[test]
 fn compiled_input_metadata_matches_all_native_schema_rows() {

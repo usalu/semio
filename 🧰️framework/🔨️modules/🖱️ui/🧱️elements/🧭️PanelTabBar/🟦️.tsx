@@ -513,7 +513,7 @@ interface PanelTabRowProps {
   readonly showActiveColor?: boolean;
   /** 🎀️ Stacking direction from {@link PanelTabBar} — flips the row's divider to the content-facing side for `"panel"` variant. */
   readonly direction?: "up" | "down";
-  /** 📏️ Extends a body-hosted tab line across the panel instead of sizing it like a silhouette cap chip. */
+  /** 📏️ Extends a body-hosted tab line across the panel instead of sizing it like a glass chip overlaid on the frame. */
   readonly fullWidth?: boolean;
   /** 🗜️ Icon-only chips whose names stay the buttons' accessible names — see {@link PanelTabBarProps.compactLabels}. */
   readonly compactLabels?: boolean;

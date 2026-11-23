@@ -239,7 +239,7 @@ pub fn render_with_legend(
     if let Some(window) = camera {
         scene.camera_json = window.camera.scene_camera_json();
     }
-    let node = semio_plugin::scene_surface(BODY_KEY, SemanticSurfaceKind::World3d, &scene)?;
+    let node = semio_plugin::scene_surface(BODY_KEY, SemanticSurfaceKind::World3d, &scene, semio_plugin::surface_name(locale, "Model view", "Modellansicht"), None)?;
     match caption {
         Some(caption) => with_caption(node, caption, bounds,locale),
         None => Ok(node),

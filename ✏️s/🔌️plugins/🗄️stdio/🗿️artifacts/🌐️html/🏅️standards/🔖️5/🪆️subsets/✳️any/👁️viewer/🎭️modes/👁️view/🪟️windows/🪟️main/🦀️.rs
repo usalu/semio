@@ -18,8 +18,8 @@ pub fn definition() -> WindowKindDefinition {
 /// markup — the same textual form `parse_dsl` accepts back on `replace-text` (see the sibling root
 /// `handle`). Round-trips exactly for any document this format's own grammar can already print.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &HtmlSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    TextWindowKit::render(&TextView { text: snapshot.print_dsl(), language: Some("html".into()) })
+pub fn render(snapshot: &HtmlSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    TextWindowKit::render(&TextView { text: snapshot.print_dsl(), language: Some("html".into()) }, locale)
 }
 
 

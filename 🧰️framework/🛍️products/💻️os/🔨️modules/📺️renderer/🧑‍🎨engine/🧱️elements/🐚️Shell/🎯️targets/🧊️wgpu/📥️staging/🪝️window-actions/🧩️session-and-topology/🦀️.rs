@@ -207,7 +207,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
             match document {
                 Ok(document) => {
                     let reveal = tab_id == FRAMEWORK_PANEL_TAB_TOOL_RUN_ID && tool_run_panel_reveals(&mut self.plugins.tool_run_panel_runs, &document)?;
-                    if tab_id == FRAMEWORK_PANEL_TAB_TOOL_RUN_ID && self.opening.set_tool_runs(&session.plugin_id, tool_run_panel_tasks(&document, self.prefs.active_terminology(), self.prefs.active_locale())?) {
+                    if tab_id == FRAMEWORK_PANEL_TAB_TOOL_RUN_ID && self.opening.set_tool_runs(&session.plugin_id, tool_run_panel_tasks(&document)?) {
                         self.settle.owe_refresh(UiDirtyScope::Full);
                     }
                     self.docs.panel_documents.insert(tab_id.clone(), document);

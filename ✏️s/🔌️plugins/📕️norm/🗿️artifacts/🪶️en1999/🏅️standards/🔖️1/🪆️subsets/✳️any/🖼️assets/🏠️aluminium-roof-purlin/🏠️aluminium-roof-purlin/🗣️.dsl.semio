@@ -1,5 +1,5 @@
 semio norm.en1999.dsl v1
-annex=de
+annex=de reliability-class=rc2
 materials [id:TEXT designation:TEXT product-form:ENUM] {
   mat-6082 aw6082-t6 extruded-profile
 }
@@ -8,23 +8,23 @@ sections [id:TEXT kind:ENUM height:NUM width:NUM flange-thickness:NUM web-thickn
   sec-chs168 chs 0 0 0 0.005 0.1683 [ ]
 }
 members [id:TEXT section-id:TEXT material-id:TEXT length:NUM support:ENUM buckling-length-y:NUM buckling-length-z:NUM buckling-length-t:NUM ltb-length:NUM c1:NUM restrained-ltb:BOOL bearing-length:NUM transverse-weld:BOOL transverse-weld-offset:NUM actions:TABLE] {
-  purlin-1 sec-i120 mat-6082 6 simply-supported 1.5 1.5 1.5 1.5 1.132 false 0 false 0 [ {id=G kind=permanent category=self-weight source=udl g-k-line=400 q-k-line=0 n-k=2000 v-y-k=0 v-z-k=0 m-y-k=0 m-z-k=0 torsion-k=0 local-load-k=0} {id=Q-snow kind=snow category=snow source=udl g-k-line=0 q-k-line=900 n-k=1200 v-y-k=50 v-z-k=200 m-y-k=100 m-z-k=40 torsion-k=0 local-load-k=0} ]
+  purlin-1 sec-i120 mat-6082 5 simply-supported 1.5 1.5 1.5 1.5 1.132 false 0 false 0 [ {id=G kind=permanent category=self-weight source=udl g-k-line=350 q-k-line=0 n-k=2000 v-y-k=0 v-z-k=0 m-y-k=0 m-z-k=0 torsion-k=0 local-load-k=0} {id=Q-snow kind=snow category=snow source=udl g-k-line=0 q-k-line=800 n-k=1200 v-y-k=50 v-z-k=200 m-y-k=100 m-z-k=40 torsion-k=0 local-load-k=0} ]
   post-chs sec-chs168 mat-6082 3 cantilever 3 3 3 3 1 false 0 false 0 [ {id=G-post kind=permanent category=self-weight source=external g-k-line=50 q-k-line=0 n-k=-8000 v-y-k=20 v-z-k=80 m-y-k=120 m-z-k=15 torsion-k=0 local-load-k=0} {id=Q-post kind=imposed category=office source=external g-k-line=0 q-k-line=40 n-k=-2000 v-y-k=15 v-z-k=40 m-y-k=50 m-z-k=10 torsion-k=0 local-load-k=0} ]
 }
-connections [id:TEXT member-id:TEXT material-id:TEXT kind:ENUM actions:TABLE bolts:REC welds:REC load-eccentricity:QTY hole-stagger:QTY force-method:TEXT] {
-  support-weld purlin-1 mat-6082 combined [ {id=G-conn kind=permanent category=self-weight source=external g-k-line=800 q-k-line=0 n-k=1500 v-y-k=200 v-z-k=3500 m-y-k=400 m-z-k=150 torsion-k=0 local-load-k=0} {id=Q-conn kind=snow category=snow source=external g-k-line=0 q-k-line=600 n-k=800 v-y-k=150 v-z-k=2500 m-y-k=250 m-z-k=100 torsion-k=0 local-load-k=0} ] {material="8.8" diameter=0.012 rows=2 bolts-per-row=2 edge-distance=0.024 pitch=0.036 gauge=0.016 plate-thickness=0.008} {filler-alloy="4043" throat=0.005 length=0.16 beta-w=0.63 haz-extent=0.025} 0m 0m elastic
+connections [id:TEXT member-id:TEXT material-id:TEXT kind:ENUM actions:TABLE bolts:REC welds:REC load-eccentricity:QTY hole-stagger:QTY force-method:ENUM] {
+  support-weld purlin-1 mat-6082 combined [ {id=G-conn kind=permanent category=self-weight source=external g-k-line=800 q-k-line=0 n-k=1500 v-y-k=200 v-z-k=3500 m-y-k=400 m-z-k=150 torsion-k=0 local-load-k=0} {id=Q-conn kind=snow category=snow source=external g-k-line=0 q-k-line=600 n-k=800 v-y-k=150 v-z-k=2500 m-y-k=250 m-z-k=100 torsion-k=0 local-load-k=0} ] {material="8.8" diameter=0.012 rows=2 bolts-per-row=2 edge-distance=0.024 pitch=0.05 gauge=0.04 plate-thickness=0.008} {filler-alloy="4043" throat=0.006 length=0.2 beta-w=0.63 haz-extent=0.025} 0m 0m elastic
 }
 fire-scenarios [id:TEXT member-id:TEXT theta-a:NUM duration-s:NUM] {
-  fire-1 purlin-1 180 600
+  fire-1 purlin-1 20 1800
 }
 fatigue-details [id:TEXT member-id:TEXT detail-category:TEXT delta-sigma-c:NUM delta-sigma-ed:NUM n-cycles:NUM m1:NUM m2:NUM] {
   fat-1 purlin-1 "71" 71000000 35000000 6000000 4.3 6.3
 }
 cold-formed [id:TEXT material-id:TEXT thickness:NUM width:NUM span:NUM welded:BOOL actions:LIST] {
-  sheet-pass mat-6082 0.005 0.08 1 false [ {id=G-sheet kind=permanent category=self-weight source=external g-k-line=120 q-k-line=0 n-k=5926 v-y-k=0 v-z-k=0 m-y-k=29.6 m-z-k=0 torsion-k=0 local-load-k=0} ]
+  sheet-pass mat-6082 0.005 0.08 0.8 false [ { id=G-sheet kind=permanent category=self-weight source=external g-k-line=40 q-k-line=0 n-k=2500 v-y-k=0 v-z-k=0 m-y-k=12 m-z-k=0 torsion-k=0 local-load-k=0 } ]
 }
 shells [id:TEXT material-id:TEXT radius:NUM thickness:NUM length:NUM welded:BOOL fabrication-class:ENUM actions:LIST] {
-  shell-pass mat-6082 0.5 0.01 2 false b [ {id=G-shell kind=permanent category=self-weight source=external g-k-line=800 q-k-line=0 n-k=29600000 v-y-k=0 v-z-k=3700000 m-y-k=22200000 m-z-k=0 torsion-k=0 local-load-k=0} ]
+  shell-pass mat-6082 0.5 0.01 1 false b [ { id=G-shell kind=permanent category=self-weight source=external g-k-line=200 q-k-line=0 n-k=12000000 v-y-k=0 v-z-k=2000000 m-y-k=8000000 m-z-k=0 torsion-k=0 local-load-k=0 } ]
 }
 placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
 }
@@ -40,8 +40,8 @@ ring-stiffeners [id:TEXT shell-id:TEXT x:NUM depth:NUM thickness:NUM internal:BO
 }
 transverse-stiffeners [id:TEXT girder-id:TEXT position:NUM width:NUM thickness:NUM sides:ENUM] {
 }
-reliability-class=rc2
 sheet-profiles [id:TEXT sheet-id:TEXT pitch:QTY top-flange:QTY bottom-flange:QTY web-height:QTY] {
 }
 fire-insulations [id:TEXT fire-id:TEXT thickness:QTY conductivity:NUM specific-heat:NUM density:NUM] {
+  ins-1 fire-1 0.03m 0.06 1000 300
 }

@@ -350,7 +350,7 @@ describe("tree helpers", () => {
         expect(panel).toBeTruthy();
         expect(panel.querySelector('[data-slot="panel-content"]')?.hasAttribute("data-dim")).toBe(true);
         expect(panel.querySelector('[data-slot="window-chrome-cap"]')?.hasAttribute("data-dim")).toBe(true);
-        expect(panel.querySelector("[data-window-silhouette-border]")?.hasAttribute("data-dim")).toBe(true);
+        expect(panel.querySelector("[data-window-frame-border]")?.hasAttribute("data-dim")).toBe(true);
   
         fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
         fireEvent.pointerMove(document, { clientX: 40, clientY: 10 });
@@ -368,10 +368,10 @@ describe("tree helpers", () => {
           if (this.getAttribute("data-slot") === "ghost-body-surface-stack") {
             return { width: 200, height: 100, top: 0, left: 0, right: 200, bottom: 100, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
           }
-          if (stack && this.hasAttribute("data-window-silhouette-chip")) {
+          if (stack && this.hasAttribute("data-window-frame-chip")) {
             return { width: 60, height: 24, top: 0, left: 0, right: 60, bottom: 24, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
           }
-          if (stack && (this.getAttribute("data-slot") === "window-chrome-cap" || this.getAttribute("data-slot") === "window-chrome-gap")) {
+          if (stack && (this.getAttribute("data-slot") === "window-chrome-cap")) {
             return { width: 140, height: 24, top: 0, left: 60, right: 200, bottom: 24, x: 60, y: 0, toJSON: () => ({}) } as DOMRect;
           }
           return { width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;

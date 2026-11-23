@@ -366,3 +366,9 @@ redundant_clone = "warn"
   level = "warn"
   priority = -1
 
+
+[workspace.dependencies.semio-os-store-codec-registry]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-os-store-operation-wire]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust"

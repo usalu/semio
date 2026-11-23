@@ -444,8 +444,6 @@ impl WorldShadowTarget {
 }
 
 pub struct PipelineResources {
-    #[cfg(any(test,feature="testkit"))]
-    pub mask_pipeline: gpu_device::RenderPipeline,
     pub ui_pipeline: gpu_device::RenderPipeline,
     pub vector_pipeline: gpu_device::RenderPipeline,
     pub world_pipeline: gpu_device::RenderPipeline,
@@ -506,10 +504,4 @@ pub struct PipelineResources {
 pub fn content_stencil_state() -> gpu_device::StencilState {
     let face = gpu_device::StencilFaceState { compare: gpu_device::CompareFunction::Equal, fail_op: gpu_device::StencilOperation::Keep, depth_fail_op: gpu_device::StencilOperation::Keep, pass_op: gpu_device::StencilOperation::Keep };
     gpu_device::StencilState { front: face, back: face, read_mask: 0xff, write_mask: 0x00 }
-}
-
-#[cfg(any(test,feature="testkit"))]
-pub fn mask_stencil_state() -> gpu_device::StencilState {
-    let face = gpu_device::StencilFaceState { compare: gpu_device::CompareFunction::Always, fail_op: gpu_device::StencilOperation::Replace, depth_fail_op: gpu_device::StencilOperation::Replace, pass_op: gpu_device::StencilOperation::Replace };
-    gpu_device::StencilState { front: face, back: face, read_mask: 0xff, write_mask: 0xff }
 }

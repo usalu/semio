@@ -1,15 +1,9 @@
-//! 🔎️ tui paint function for the Window element — extracted from `chrome` mod's inline body
-//! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a crate-root sibling module of
-//! `crate::tui::chrome` (see that mod's `use crate::tui::window::paint_window;`). `paint_corner_tab` is a
-//! private helper used only by `paint_window` and stays module-private here. `window_chip_layout`,
-//! `WindowTab` and `WindowChipLayout`'s fields stay in `chrome` mod (shared with
-//! `ChromeState::window_target`) and were promoted to `pub` there so this sibling module
-//! can reach them.
+//! 🔎️ tui paint functions for the Window element: one rectangular frame, painted below the content, and the chips inside it, painted above the content.
+//! `window_chip_layout` and `WindowChipLayout` stay in the `chrome` mod (shared with `ChromeState::window_target`).
 
 use semio_ui_tui_core::cell::{attr, Cell, CellBuffer};
-use crate::chrome::{window_chip_layout, window_drag_glyph, ChromeMode, TabKind, WindowChipLayout, WindowCornerTab, WindowHit, WindowState, WindowTab};
+use crate::chrome::{window_chip_layout, window_drag_glyph, ChromeMode, TabKind, WindowCornerTab, WindowHit, WindowState};
 use semio_ui_tui_core::geometry::{Pos, Rect};
-use semio_ui_tui_core::docking::WindowStackCorner;
 use semio_ui_tui_core::theme::{Glyph, GlyphSet, Rgb, Role, Surface, Theme};
 
 /// 🖋️ The line-drawing set a window outline uses: heavy for the focused stack so focus shows without colour.
@@ -22,23 +16,10 @@ struct Lines {
     br: char,
     up: char,
     down: char,
-    right: char,
-    left: char,
 }
 
-/// 🖼️ What the outline painters share: the line set, the border and surface colours and the window's left and right columns.
-#[derive(Clone, Copy)]
-struct Frame<'a> {
-    lines: &'a Lines,
-    border: Rgb,
-    bg: Rgb,
-    left: u16,
-    right: u16,
-    emphasized: bool,
-}
-
-const LIGHT: Lines = Lines { h: '\u{2500}', v: '\u{2502}', tl: '\u{250c}', tr: '\u{2510}', bl: '\u{2514}', br: '\u{2518}', up: '\u{2534}', down: '\u{252c}', right: '\u{251c}', left: '\u{2524}' };
-const HEAVY: Lines = Lines { h: '\u{2501}', v: '\u{2503}', tl: '\u{250f}', tr: '\u{2513}', bl: '\u{2517}', br: '\u{251b}', up: '\u{253b}', down: '\u{2533}', right: '\u{2523}', left: '\u{252b}' };
+const LIGHT: Lines = Lines { h: '\u{2500}', v: '\u{2502}', tl: '\u{250c}', tr: '\u{2510}', bl: '\u{2514}', br: '\u{2518}', up: '\u{2534}', down: '\u{252c}' };
+const HEAVY: Lines = Lines { h: '\u{2501}', v: '\u{2503}', tl: '\u{250f}', tr: '\u{2513}', bl: '\u{2517}', br: '\u{251b}', up: '\u{253b}', down: '\u{2533}' };
 
 fn lines(focused: bool) -> &'static Lines {
     if focused {
@@ -56,22 +37,23 @@ fn restore_glyph(set: GlyphSet) -> &'static str {
     }
 }
 
-/// 🎨️ Colours one chip uses, resolved from the tab state.
+/// 🎨️ Colours one chip uses, resolved from the tab state; the chip surface is one elevation step above the content, the opaque capability fallback of a glass chip.
 struct ChipPaint {
     fg: Rgb,
     bg: Rgb,
     attrs: u8,
 }
 
-fn chip_paint(w: &WindowState, theme: &Theme, tab: &WindowCornerTab, window_bg: Rgb) -> ChipPaint {
+fn chip_paint(w: &WindowState, theme: &Theme, tab: &WindowCornerTab) -> ChipPaint {
+    let chip_bg = theme.surface(Surface::Pane);
     let hovered = chip_hovered(w, tab);
     if tab.kind == TabKind::Tab && tab.index == w.active_stack_tab {
-        return ChipPaint { fg: theme.role(Role::Foreground), bg: window_bg, attrs: attr::BOLD };
+        return ChipPaint { fg: theme.role(Role::Foreground), bg: chip_bg, attrs: attr::BOLD };
     }
     if hovered || (tab.kind == TabKind::Tab && w.drop_target == Some(tab.index)) {
         return ChipPaint { fg: theme.role(Role::Foreground), bg: theme.role(Role::HoverInteractive), attrs: 0 };
     }
-    ChipPaint { fg: theme.role(Role::MutedForeground), bg: window_bg, attrs: 0 }
+    ChipPaint { fg: theme.role(Role::MutedForeground), bg: chip_bg, attrs: 0 }
 }
 
 /// 🏆 Whether the pointer's innermost interactive box is this chip itself; a control glyph inside a chip owns its own hover and never hovers the chip.
@@ -87,10 +69,6 @@ fn chip_hovered(w: &WindowState, tab: &WindowCornerTab) -> bool {
 fn chip_border_role(w: &WindowState, tab: &WindowCornerTab, emphasized: bool) -> Role {
     let hovered = chip_hovered(w, tab);
     if emphasized || hovered { Role::BorderEmphasized } else if tab.kind == TabKind::Tab && tab.index == w.active_stack_tab { Role::ActiveBase } else { Role::BorderNormal }
-}
-
-fn chip_border(w: &WindowState, theme: &Theme, tab: &WindowCornerTab, emphasized: bool) -> Rgb {
-    theme.role(chip_border_role(w, tab, emphasized))
 }
 
 /// 🪟 Paints the interior text of one chip and lights the hovered control glyph.
@@ -139,82 +117,26 @@ fn paint_chip_text(buf: &mut CellBuffer, w: &WindowState, theme: &Theme, tab: &W
     }
 }
 
-/// 🔖 Paints one 2-row corner tab. The body hairline is drawn afterwards, so a tab stays closed until the active one is opened.
-fn paint_corner_tab(buf: &mut CellBuffer, y: u16, tab: &WindowCornerTab, is_bottom: bool, frame: &Frame<'_>, paint_text: &dyn Fn(&mut CellBuffer, &WindowCornerTab, u16)) {
-    let Frame { lines: g, border, bg, .. } = *frame;
-    let width = tab.interior_width + 2;
-    let text_y = y + 1;
-    let outer_y = y + 2;
-    let wall = |buf: &mut CellBuffer, x: u16, yy: u16, ch: char| buf.put_border(x, yy, Cell { ch, fg: border, bg, attrs: 0, width: 1 });
-    if is_bottom {
-        wall(buf, tab.x, text_y, g.v);
-        paint_text(buf, tab, text_y);
-        wall(buf, tab.x + width - 1, text_y, g.v);
-        wall(buf, tab.x, outer_y, g.bl);
-        buf.border_hline(Pos { x: tab.x + 1, y: outer_y }, width.saturating_sub(2), g.h, border, bg);
-        wall(buf, tab.x + width - 1, outer_y, g.br);
-    } else {
-        wall(buf, tab.x, y, g.tl);
-        buf.border_hline(Pos { x: tab.x + 1, y }, width.saturating_sub(2), g.h, border, bg);
-        wall(buf, tab.x + width - 1, y, g.tr);
-        wall(buf, tab.x, text_y, g.v);
-        paint_text(buf, tab, text_y);
-        wall(buf, tab.x + width - 1, text_y, g.v);
-    }
+/// 🏅️ The state priority of a border role: emphasized over active over normal.
+fn rank(role: Role) -> u8 {
+    match role { Role::BorderEmphasized => 2, Role::ActiveBase => 1, _ => 0 }
 }
 
-/// 🪡 Joins one tab to the body hairline. A stated tab (active or hovered) closes its whole perimeter on the seam in its own colour.
-fn paint_tab_seam(buf: &mut CellBuffer, tab: &WindowTab, y: u16, active: bool, is_bottom: bool, frame: &Frame<'_>, tab_border: Rgb, hovered: bool) {
-    let Frame { lines: g, border, bg, left: window_left, right: window_right, .. } = *frame;
-    let left = tab.x;
-    let right = tab.x + tab.interior_width + 1;
-    let (at_left, at_right) = (left == window_left, right == window_right);
-    let (left_ch, right_ch) = if is_bottom { (if at_left { g.right } else { g.down }, if at_right { g.left } else { g.down }) } else { (if at_left { g.right } else { g.up }, if at_right { g.left } else { g.up }) };
-    let line = if active || hovered { tab_border } else { border };
-    buf.put_border(left, y, Cell { ch: left_ch, fg: line, bg, attrs: 0, width: 1 });
-    if tab.interior_width > 0 {
-        buf.border_hline(Pos { x: left + 1, y }, tab.interior_width, g.h, line, bg);
-    }
-    buf.put_border(right, y, Cell { ch: right_ch, fg: line, bg, attrs: 0, width: 1 });
+fn rank_color(theme: &Theme, rank: u8) -> Rgb {
+    theme.role(match rank { 2 => Role::BorderEmphasized, 1 => Role::ActiveBase, _ => Role::BorderNormal })
 }
 
-/// 🚪 Fills the union of the body and raised chips. Notches stay on the parent surface.
-fn fill_silhouette(buf: &mut CellBuffer, rect: Rect, layout: &WindowChipLayout, cell: Cell) {
-    if layout.mode != ChromeMode::Full {
-        buf.fill_rect(rect, cell);
+/// 🖌️ Paints the window frame: one rectangle of cells with its outline, whatever chips it hosts.
+pub fn paint_window_frame(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, emphasized: bool) {
+    if rect.width < 2 || rect.height < 2 {
         return;
     }
-    let has_top = layout.groups.iter().any(|group| group.corner.is_top());
-    let has_bottom = layout.groups.iter().any(|group| !group.corner.is_top());
+    let bg = theme.surface(Surface::Window);
+    let border = theme.role(if emphasized { Role::BorderEmphasized } else if w.focused { Role::ActiveBase } else { Role::BorderNormal });
+    let g = lines(w.focused);
     let bottom_y = rect.y + rect.height - 1;
-    let top_edge = if has_top { layout.top_body_y } else { rect.y };
-    let bottom_edge = if has_bottom { layout.bottom_body_y.unwrap_or(bottom_y) } else { bottom_y };
-    if bottom_edge >= top_edge {
-        buf.fill_rect(Rect::new(rect.x, top_edge, rect.width, bottom_edge - top_edge + 1), cell);
-    }
-    for group in &layout.groups {
-        for tab in &group.tabs {
-            let width = tab.interior_width.saturating_add(2);
-            if group.corner.is_top() {
-                let height = layout.top_body_y.saturating_sub(rect.y);
-                if height > 0 {
-                    buf.fill_rect(Rect::new(tab.x, rect.y, width, height), cell);
-                }
-            } else if let Some(hairline) = layout.bottom_body_y {
-                let height = bottom_y.saturating_sub(hairline);
-                if height > 0 {
-                    buf.fill_rect(Rect::new(tab.x, hairline.saturating_add(1), width, height), cell);
-                }
-            }
-        }
-    }
-}
-
-/// 📱️ Paints the one-row chrome: tabs sit on the top border between shared walls.
-fn paint_compact(buf: &mut CellBuffer, rect: Rect, w: &WindowState, theme: &Theme, layout: &WindowChipLayout, frame: &Frame<'_>) {
-    let Frame { lines: g, border, bg, .. } = *frame;
     let right_x = rect.x + rect.width - 1;
-    let bottom_y = rect.y + rect.height - 1;
+    buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
     buf.border_hline(Pos { x: rect.x + 1, y: rect.y }, rect.width.saturating_sub(2), g.h, border, bg);
     buf.border_hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), g.h, border, bg);
     buf.border_vline(Pos { x: rect.x, y: rect.y + 1 }, rect.height.saturating_sub(2), g.v, border, bg);
@@ -222,151 +144,45 @@ fn paint_compact(buf: &mut CellBuffer, rect: Rect, w: &WindowState, theme: &Them
     for (x, y, ch) in [(rect.x, rect.y, g.tl), (right_x, rect.y, g.tr), (rect.x, bottom_y, g.bl), (right_x, bottom_y, g.br)] {
         buf.put_border(x, y, Cell { ch, fg: border, bg, attrs: 0, width: 1 });
     }
-    for group in &layout.groups {
-        for tab in &group.tabs {
-            let paint = chip_paint(w, theme, tab, bg);
-            let tab_border = chip_border(w, theme, tab, frame.emphasized);
-            let wall = if tab.x == rect.x { g.tl } else { g.down };
-            buf.put_border(tab.x, rect.y, Cell { ch: wall, fg: tab_border, bg, attrs: 0, width: 1 });
-            paint_chip_text(buf, w, theme, tab, rect.y, &paint);
-            let end = tab.x + tab.interior_width + 1;
-            let end_ch = if end == right_x { g.tr } else { g.down };
-            buf.put_border(end, rect.y, Cell { ch: end_ch, fg: tab_border, bg, attrs: 0, width: 1 });
-        }
-    }
-    for role in [Role::ActiveBase, Role::BorderEmphasized] {
-        for tab in layout.groups.iter().flat_map(|group| &group.tabs).filter(|tab| chip_border_role(w, tab, frame.emphasized) == role) {
-            for x in [tab.x, tab.x + tab.interior_width + 1] {
-                if let Some(cell) = buf.get(x, rect.y).copied() {
-                    buf.put_border(x, rect.y, Cell { fg: theme.role(role), ..cell });
-                }
-            }
-        }
-    }
 }
 
-/// 🖌️ Paints one closed window outline. Raised chips step out of the body and the notches beside them stay outside it.
-pub fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, emphasized: bool) {
-    if rect.width < 2 || rect.height < 2 {
+/// 🪙️ Paints the chips inside the frame, above the content. A chip covers its own cells of one interior row and draws only its inner edges: its walls and the junctions where they meet the outline; its outer edges are the frame outline. Cells of the row no chip covers keep the content.
+pub fn paint_window_chips(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, emphasized: bool) {
+    let layout = window_chip_layout(w, rect);
+    if layout.mode == ChromeMode::Flat {
         return;
     }
     let bg = theme.surface(Surface::Window);
-    let border = theme.role(if emphasized { Role::BorderEmphasized } else if w.focused { Role::ActiveBase } else { Role::BorderNormal });
-    let fg = theme.role(Role::Foreground);
     let g = lines(w.focused);
-    let bottom_y = rect.y + rect.height - 1;
-    let right_x = rect.x + rect.width - 1;
-    let layout = window_chip_layout(w, rect);
-    let frame = Frame { lines: g, border, bg, left: rect.x, right: right_x, emphasized };
-    fill_silhouette(buf, rect, &layout, Cell::blank(fg, bg));
-
-    if layout.mode == ChromeMode::Flat {
-        buf.border_hline(Pos { x: rect.x + 1, y: rect.y }, rect.width.saturating_sub(2), g.h, border, bg);
-        buf.border_hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), g.h, border, bg);
-        buf.border_vline(Pos { x: rect.x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), g.v, border, bg);
-        buf.border_vline(Pos { x: right_x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), g.v, border, bg);
-        for (x, y, ch) in [(rect.x, rect.y, g.tl), (right_x, rect.y, g.tr), (rect.x, bottom_y, g.bl), (right_x, bottom_y, g.br)] {
-            buf.put_border(x, y, Cell { ch, fg: border, bg, attrs: 0, width: 1 });
-        }
-        return;
-    }
-    if layout.mode == ChromeMode::Compact {
-        paint_compact(buf, rect, w, theme, &layout, &frame);
-        return;
-    }
-
-    let has_top = layout.groups.iter().any(|g| g.corner.is_top());
-    let has_bottom = layout.groups.iter().any(|g| !g.corner.is_top());
-    let top_body_y = layout.top_body_y;
-    let bottom_body_y = layout.bottom_body_y.unwrap_or(bottom_y);
-
-    let wall_top = if has_top { top_body_y + 1 } else { rect.y + 1 };
-    let wall_last = if has_bottom { bottom_body_y.saturating_sub(1) } else { bottom_y.saturating_sub(1) };
-    if wall_last >= wall_top {
-        let len = wall_last - wall_top + 1;
-        buf.border_vline(Pos { x: rect.x, y: wall_top }, len, g.v, border, bg);
-        buf.border_vline(Pos { x: right_x, y: wall_top }, len, g.v, border, bg);
-    }
-
-    if !has_top {
-        buf.border_hline(Pos { x: rect.x + 1, y: rect.y }, rect.width.saturating_sub(2), g.h, border, bg);
-        buf.put_border(rect.x, rect.y, Cell { ch: g.tl, fg: border, bg, attrs: 0, width: 1 });
-        buf.put_border(right_x, rect.y, Cell { ch: g.tr, fg: border, bg, attrs: 0, width: 1 });
-    }
-    if !has_bottom {
-        buf.border_hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), g.h, border, bg);
-        buf.put_border(rect.x, bottom_y, Cell { ch: g.bl, fg: border, bg, attrs: 0, width: 1 });
-        buf.put_border(right_x, bottom_y, Cell { ch: g.br, fg: border, bg, attrs: 0, width: 1 });
-    }
-
+    let body = if emphasized { 2 } else { u8::from(w.focused) };
+    let (left_x, right_x, bottom_y) = (rect.x, rect.x + rect.width - 1, rect.y + rect.height - 1);
+    let mut walls: std::collections::BTreeMap<(bool, u16), u8> = std::collections::BTreeMap::new();
     for group in &layout.groups {
-        let is_bottom = !group.corner.is_top();
-        let y = if is_bottom { layout.bottom_body_y.unwrap_or(rect.y + rect.height.saturating_sub(3)) } else { rect.y };
+        let top = group.corner.is_top();
+        let (y, edge_y) = (layout.text_y(group.corner, rect), if top { rect.y } else { bottom_y });
         for tab in &group.tabs {
-            let paint = chip_paint(w, theme, tab, bg);
-            let tab_frame = Frame { border: chip_border(w, theme, tab, emphasized), ..frame };
-            paint_corner_tab(buf, y, tab, is_bottom, &tab_frame, &|buf, tab, text_y| paint_chip_text(buf, w, theme, tab, text_y, &paint));
-        }
-    }
-
-    let span = rect.width.saturating_sub(2);
-    if has_top {
-        if span > 0 {
-            buf.border_hline(Pos { x: rect.x + 1, y: top_body_y }, span, g.h, border, bg);
-        }
-        let has_tr = layout.groups.iter().any(|g| g.corner == WindowStackCorner::TopRight);
-        let has_tl = layout.groups.iter().any(|g| g.corner == WindowStackCorner::TopLeft);
-        if !has_tl {
-            buf.put_border(rect.x, top_body_y, Cell { ch: g.tl, fg: border, bg, attrs: 0, width: 1 });
-        }
-        if !has_tr {
-            buf.put_border(right_x, top_body_y, Cell { ch: g.tr, fg: border, bg, attrs: 0, width: 1 });
-        }
-        for group in layout.groups.iter().filter(|group| group.corner.is_top()) {
-            for tab in &group.tabs {
-                let open = tab.kind == TabKind::Tab && tab.index == w.active_stack_tab;
-                paint_tab_seam(buf, &tab.as_window_tab(), top_body_y, open, false, &frame, chip_border(w, theme, tab, emphasized), chip_border_role(w, tab, emphasized) == Role::BorderEmphasized);
+            let paint = chip_paint(w, theme, tab);
+            paint_chip_text(buf, w, theme, tab, y, &paint);
+            let tab_rank = rank(chip_border_role(w, tab, emphasized));
+            buf.border_hline(Pos { x: tab.x + 1, y: edge_y }, tab.interior_width, g.h, rank_color(theme, tab_rank.max(body)), bg);
+            for x in [tab.x, tab.x + tab.interior_width + 1] {
+                walls.entry((top, x)).and_modify(|rank| *rank = (*rank).max(tab_rank)).or_insert(tab_rank);
             }
         }
     }
-
-    if has_bottom {
-        if span > 0 {
-            buf.border_hline(Pos { x: rect.x + 1, y: bottom_body_y }, span, g.h, border, bg);
-        }
-        let has_br = layout.groups.iter().any(|g| g.corner == WindowStackCorner::BottomRight);
-        let has_bl = layout.groups.iter().any(|g| g.corner == WindowStackCorner::BottomLeft);
-        if !has_bl {
-            buf.put_border(rect.x, bottom_body_y, Cell { ch: g.bl, fg: border, bg, attrs: 0, width: 1 });
-        }
-        if !has_br {
-            buf.put_border(right_x, bottom_body_y, Cell { ch: g.br, fg: border, bg, attrs: 0, width: 1 });
-        }
-        for group in layout.groups.iter().filter(|group| !group.corner.is_top()) {
-            for tab in &group.tabs {
-                let open = tab.kind == TabKind::Tab && tab.index == w.active_stack_tab;
-                paint_tab_seam(buf, &tab.as_window_tab(), bottom_body_y, open, true, &frame, chip_border(w, theme, tab, emphasized), chip_border_role(w, tab, emphasized) == Role::BorderEmphasized);
-            }
-        }
-    }
-    for top in [true, false] {
-        let mut tabs: Vec<_> = layout.groups.iter().filter(|group| group.corner.is_top() == top).flat_map(|group| &group.tabs).collect();
-        tabs.sort_by_key(|tab| tab.x);
-        for pair in tabs.windows(2) {
-            let (left, right) = (pair[0], pair[1]);
-            let x = left.x + left.interior_width + 1;
-            if x != right.x { continue; }
-            let priority = |tab: &WindowCornerTab| match chip_border_role(w, tab, emphasized) { Role::BorderEmphasized => 2, Role::ActiveBase => 1, _ => 0 };
-            let rank = priority(left).max(priority(right));
-            let color = |rank| theme.role(if rank == 2 { Role::BorderEmphasized } else if rank == 1 { Role::ActiveBase } else { Role::BorderNormal });
-            let outer_y = if top { rect.y } else { bottom_y };
-            let text_y = if top { rect.y + 1 } else { bottom_y - 1 };
-            let seam_y = if top { top_body_y } else { bottom_body_y };
-            let seam = if top { g.up } else { g.down };
-            let body_rank = if emphasized { 2 } else if w.focused { 1 } else { 0 };
-            for (y, ch, fg) in [(outer_y, if top { g.down } else { g.up }, color(rank)), (text_y, g.v, color(rank)), (seam_y, seam, color(rank.max(body_rank)))] {
-                buf.put_border(x, y, Cell { ch, fg, bg, attrs: 0, width: 1 });
-            }
-        }
+    for ((top, x), wall_rank) in walls {
+        let (y, edge_y) = if top { (rect.y + 1, rect.y) } else { (bottom_y - 1, bottom_y) };
+        let on_edge = x == left_x || x == right_x;
+        let joint = rank_color(theme, wall_rank.max(body));
+        let ch = match (x == left_x, x == right_x, top) {
+            (true, _, true) => g.tl,
+            (_, true, true) => g.tr,
+            (true, _, false) => g.bl,
+            (_, true, false) => g.br,
+            (_, _, true) => g.down,
+            (_, _, false) => g.up,
+        };
+        buf.put_border(x, y, Cell { ch: g.v, fg: if on_edge { joint } else { rank_color(theme, wall_rank) }, bg: if on_edge { bg } else { theme.surface(Surface::Pane) }, attrs: 0, width: 1 });
+        buf.put_border(x, edge_y, Cell { ch, fg: joint, bg, attrs: 0, width: 1 });
     }
 }

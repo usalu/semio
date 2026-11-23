@@ -55,7 +55,7 @@ export function routeLocalDocumentObserverV1({ localDocumentOwnersRef, openDocum
   const owner = localDocumentOwnersRef.current.get(message.clientInstanceId);
   if (owner === undefined) return false;
   if (message.event.kind === "status") owner.status?.(message.event.persisted && message.event.pendingMutations === 0 && message.event.writeFailure === undefined);
-  else if (message.event.kind === "documentArchiveReplaced") owner.archive?.(message.event.archive);
+  else if (message.event.kind === "documentArchiveReplaced" || message.event.kind === "documentArchiveHeld") owner.archive?.(message.event.archive);
   const runtimeKey = message.scope === undefined ? message.documentId : scopeRuntimeKey(message);
   const attached = runtimeKey === null ? undefined : openDocumentSessionsRef.current.get(runtimeKey);
   return attached?.clientInstanceId !== message.clientInstanceId;
@@ -96,6 +96,7 @@ export function handleDocumentEventMessage({ openDocumentSessionsRef, dispatch, 
   const entry = openDocumentSessionsRef.current.get(runtimeKey);
   if (!entry || entry.clientInstanceId !== message.clientInstanceId) return;
   const { event } = message;
+  if (event.kind === "documentArchiveHeld") return;
   if (event.kind === "status") {
     const status = event;
     (window as unknown as { semioWgpuHubProjection?: { publishDocumentStatus: (documentKey: string, remote: typeof status.remote | null) => boolean } }).semioWgpuHubProjection?.publishDocumentStatus(runtimeKey, status.remote);

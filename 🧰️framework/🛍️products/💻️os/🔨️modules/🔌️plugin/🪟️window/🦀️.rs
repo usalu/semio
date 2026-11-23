@@ -220,11 +220,28 @@ pub fn section_component_tree(section: semio_framework::UiRefreshSection, payloa
 /// this produced before lanes existed. A scene that does declare them (`World3dScene`) is bounded
 /// by its number of carrier pages instead of by `UI_FIXED_BYTES` — which is what a 57 281-byte
 /// Nakagin world needs, since the 32 KiB `UiFixedBytes` doc cannot page and refused it outright.
-pub fn scene_surface<T: semio_ui_scene::SceneDoc>(id: &str, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
+///
+/// ♿️ A canvas paints into a texture with no accessible children, so `name` (localized by the caller, see [`surface_name`])
+/// is the only thing assistive technology learns about it and is required; `description` is optional.
+pub fn scene_surface<T: semio_ui_scene::SceneDoc>(id: &str, kind: SurfaceKind, scene: &T, name: &str, description: Option<&str>) -> UiAssemblyResult<BuiltNode> {
     let (spine, lanes) = scene.split_lanes();
     let props = semio_ui_scene::encode(kind, &spine).map_err(|error| ui_assembly_error_because("scene-surface.encode", error))?;
     let carriers = lanes.iter().map(|lane| paged_text_carrier(lane.key, &lane.payload)).collect::<UiAssemblyResult<Vec<BuiltNode>>>()?;
-    surface(props).try_id(id).map_err(|_| ui_assembly_error("scene-surface.id"))?.try_children(carriers).map_err(|_| ui_assembly_error("scene-surface.lanes"))?.try_build().map_err(|_| ui_assembly_error("scene-surface.build"))
+    let surface = surface(props).try_id(id).map_err(|_| ui_assembly_error("scene-surface.id"))?.try_label(name).map_err(|_| ui_assembly_error("scene-surface.label"))?;
+    let surface = match description {
+        Some(description) => surface.try_describe(description).map_err(|_| ui_assembly_error("scene-surface.description"))?,
+        None => surface,
+    };
+    surface.try_children(carriers).map_err(|_| ui_assembly_error("scene-surface.lanes"))?.try_build().map_err(|_| ui_assembly_error("scene-surface.build"))
+}
+
+/// 🏷️ The accessible name of a surface in `locale`: English and German are both required, so a canvas can never ship unnamed
+/// in one language. The exhaustive match means adding a locale breaks every caller until it is translated.
+pub fn surface_name<'a>(locale: semio_ui_locale::Locale, en: &'a str, de: &'a str) -> &'a str {
+    match locale {
+        semio_ui_locale::Locale::En => en,
+        semio_ui_locale::Locale::De => de,
+    }
 }
 
 /// 🏷️ Builds one semantic text node from the SDK's retained non-node label type.

@@ -69,11 +69,11 @@ pub(super) fn generation2d_render_body(
     let rendered = match body_key {
         flow_window::GENERATION2D_PLAY_BODY_MAIN => {
             let window_config = flow_window::config::current(cfg);
-            flow_window::render(document, &window_config, session, &marks.graph_selection_ids())
+            flow_window::render(document, &window_config, session, &marks.graph_selection_ids(), view_state.locale)
         }
         edit_preview::GENERATION2D_PLAY_BODY_PREVIEW => {
             let window_config = edit_preview::config::current(cfg);
-            edit_preview::render(document, config, &window_config, session)
+            edit_preview::render(document, config, &window_config, session, view_state.locale)
         }
         generations::GENERATION2D_PLAY_BODY_GENERATIONS => generations::render(
             &document.generation,
@@ -85,7 +85,7 @@ pub(super) fn generation2d_render_body(
         form::GENERATION2D_PLAY_BODY_GENERATE_FORM => form::render(document, &document.generation, view_state, labels),
         generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW => {
             let window_config = generate_preview::config::current(cfg);
-            generate_preview::render(&window_config, None, labels)
+            generate_preview::render(&window_config, None, labels, view_state.locale)
         }
         document_panel::GENERATION2D_PLAY_BODY_ARTIFACT => document_panel::render(document, config, labels, &semio_plugin::TreeWindows::for_body(view_state, document_panel::GENERATION2D_PLAY_BODY_ARTIFACT)),
         catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE)),

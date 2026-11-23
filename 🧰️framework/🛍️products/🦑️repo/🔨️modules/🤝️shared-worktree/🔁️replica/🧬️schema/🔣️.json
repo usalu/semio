@@ -125,7 +125,7 @@
       }
     },
     "EventName": {
-      "enum": ["started", "stopped", "scan", "progress", "published", "applied", "overwritten", "kept", "linearised", "repaired", "state-rebuilt", "state-missing", "refused", "skipped", "blocked", "unstable", "store-unreachable", "store-reachable", "ignore-reloaded", "clock-refused", "clock-skew", "blob-missing", "rejoin-required", "relayed", "snapshot", "compacted", "sync", "restarting", "restart-refused", "store-stuck", "code-reverted", "journal-repaired", "retired", "superseded", "stale-republish", "stale-base", "drift", "blob-repaired", "error"]
+      "enum": ["started", "stopped", "scan", "progress", "published", "applied", "overwritten", "merged", "kept", "linearised", "repaired", "state-rebuilt", "state-missing", "refused", "skipped", "blocked", "unstable", "store-unreachable", "store-reachable", "ignore-reloaded", "clock-refused", "clock-skew", "blob-missing", "rejoin-required", "relayed", "snapshot", "compacted", "sync", "restarting", "restart-refused", "store-stuck", "code-reverted", "journal-repaired", "retired", "superseded", "stale-republish", "stale-base", "drift", "blob-repaired", "error"]
     },
     "ProgressEvent": {
       "description": "One NDJSON line on stdout.",

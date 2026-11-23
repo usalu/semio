@@ -13,7 +13,7 @@ pub fn staged<T,O,E:From<semio_framework_value::ValueError>>(control:&mut Sqlite
 mod tests{
  use super::*;
  use semio_framework_io_control::NativeSnapshotFailure;
- use semio_framework_value::{ErasedSnapshotRetirement,RetainedCloneGrant,ValueError,ValueRefusalKind};
+ use semio_framework_value::{ErasedSnapshotRetirement,RetainedCloneGrant,RetainedWorkPoll,ValueError,ValueRefusalKind};
  use semio_framework_io_sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotPhase};
  #[test]
  fn stage_forwards_actual_work_and_both_original_failures(){
@@ -29,8 +29,8 @@ mod tests{
    RetainedWorkOutcome{result,work:0}
   })));
   assert!(result.is_err());assert!(workspace.is_reserved());let mut called=false;
-  let denied=staged::<(),_,_>(&mut control,&mut workspace,&mut (),&mut |_,_|{called=true;panic!("denied stage was invoked")});
+  let denied=staged::<(),_,NativeSnapshotFailure>(&mut control,&mut workspace,&mut (),&mut |_,_|{called=true;panic!("denied stage was invoked")});
   assert!(denied.result.is_err());assert_eq!(denied.work,0);assert!(!called);
-  let turn=ErasedSnapshotRetirement::close_step(&mut workspace,RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()});assert_eq!(turn.work,1);turn.result.unwrap();assert!(workspace.terminal_is_empty());
+  match crate::original_close::funded_invoked(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()},|effect|ErasedSnapshotRetirement::close_step(&mut workspace,0,effect)){RetainedWorkPoll::Complete(turn)=>{assert_eq!(turn.work,1);turn.result.unwrap();},RetainedWorkPoll::Pending{..}=>panic!("reserved workspace close stayed pending")}assert!(workspace.terminal_is_empty());
  }
 }

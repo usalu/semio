@@ -59,7 +59,7 @@ test("the setting reads never, distribute and pin:<origin>, and every other valu
 test("a unit that the host linker links requires a worker with the same SDK: workers offer semio-sdk=<SDK directory name> by themselves, the requester asks for its own, and WebAssembly units and plain libraries ask for none",()=>{
  expect(offloadLinksNativelyV1(["bin"],undefined)).toBe(true);expect(offloadLinksNativelyV1(["proc-macro"],undefined)).toBe(true);expect(offloadLinksNativelyV1(["lib","cdylib"],"aarch64-apple-darwin")).toBe(true);
  expect(offloadLinksNativelyV1(["lib"],undefined)).toBe(false);expect(offloadLinksNativelyV1(["rlib"],undefined)).toBe(false);expect(offloadLinksNativelyV1(["cdylib"],"wasm32-wasip2")).toBe(false);expect(offloadLinksNativelyV1(["bin"],"wasm32-unknown-unknown")).toBe(false);
- expect(offloadSdkIdentityV1({SDKROOT:"/Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk"},"darwin")).toBe("MacOSX15.4.sdk");
+ expect(offloadSdkIdentityV1({SDKROOT:"/Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk"},"darwin")).toBe("macosx15.4");
  expect(offloadSdkIdentityV1({SDKROOT:"/opt/x/MacOSX15.4.sdk"},"linux")).toBeUndefined();
  const identity={commit:"0".repeat(40),host:"aarch64-apple-darwin",digest:"a".repeat(16),targets:[]},host=[{name:"OSFamily",value:"macos"},{name:"Arch",value:"arm64"}];
  const required=remoteExecutionMatchPropertiesV1(offloadPlatformV1(host,identity,undefined,"g1-m03",0,{sdk:"MacOSX15.4.sdk"})),offered=(sdk:string|undefined)=>[...host,{name:"semio-target",value:identity.host},{name:"semio-toolchain",value:identity.digest},{name:"semio-offload-format",value:"argv-1"},...sdk===undefined?[]:[{name:"semio-sdk",value:sdk}]];
@@ -99,7 +99,24 @@ test("the dependency closure follows the extra-filename each artifact records, s
  expect(closure).toContain(`liba-${externHash("a")}.rlib`);expect(closure).toContain(`liba-${externHash("a")}.rmeta`);
  expect(closure).toContain(`libb-${externHash("b")}.rmeta`);
  expect(dependencyClosureV1([checkout.deps],[join(checkout.deps,`liba-${externHash("a")}.rlib`)])?.get(checkout.deps)).not.toContain(`libb-${externHash("b")}.rlib`);
- expect(dependencyClosureV1([join(checkout.base,"missing")],[])).toBeUndefined();
+ expect(dependencyClosureV1([join(checkout.base,"missing")],[])).toEqual(new Map());
+ expect(dependencyClosureV1([join(checkout.base,"missing"),checkout.deps],[join(checkout.deps,`libb-${externHash("b")}.rlib`)])?.get(checkout.deps)).toContain(`liba-${externHash("a")}.rmeta`);
+ const library=dependencyClosureV1([checkout.deps],[join(checkout.deps,`libb-${externHash("b")}.rmeta`)],undefined,false)!.get(checkout.deps)!;
+ expect(library).toContain(`liba-${externHash("a")}.rmeta`);expect(library).not.toContain(`liba-${externHash("a")}.rlib`);expect(library).not.toContain(`libb-${externHash("b")}.rlib`);
+});
+
+test("a search directory full of unrelated artifacts ships only the artifacts the unit loads: the direct externs and what their metadata names, an unreadable or missing directory is skipped, a library unit leaves the rlibs behind",()=>{
+ const checkout=chain("closure-unrelated"),crowd=join(checkout.base,"crowd");
+ try{
+  mkdirSync(crowd,{recursive:true});
+  const hex=(index:number)=>index.toString(16).padStart(16,"0"),artifact=(name:string,index:number,extension:string)=>`lib${name}-${hex(index)}.${extension}`;
+  for(let index=1;index<=300;index++)for(const extension of ["rlib","rmeta"])writeFileSync(join(crowd,artifact("unrelated"+index,index,extension)),extension==="rmeta"?`names ${hex(index+1)} only`:"x".repeat(2048));
+  writeFileSync(join(crowd,artifact("root",1000,"rmeta")),`depends on ${hex(1001)}`);writeFileSync(join(crowd,artifact("root",1000,"rlib")),`depends on ${hex(1001)} and ${hex(1002)}`);
+  writeFileSync(join(crowd,artifact("leaf",1001,"rmeta")),"leaf");writeFileSync(join(crowd,artifact("leaf",1001,"rlib")),"leaf");
+  const direct=[join(crowd,artifact("root",1000,"rmeta"))],linked=dependencyClosureV1([crowd,join(checkout.base,"gone")],direct)!.get(crowd)!,library=dependencyClosureV1([crowd,join(checkout.base,"gone")],direct,undefined,false)!.get(crowd)!;
+  expect(linked).toEqual([artifact("leaf",1001,"rlib"),artifact("leaf",1001,"rmeta"),artifact("root",1000,"rlib"),artifact("root",1000,"rmeta")]);
+  expect(library).toEqual([artifact("leaf",1001,"rmeta"),artifact("root",1000,"rmeta")]);
+ }finally{rmSync(checkout.base,{recursive:true,force:true});}
 });
 
 test("offload preserves each Cargo search root and ships only metadata-reached artifacts across them",()=>{
@@ -119,10 +136,9 @@ test("offload preserves each Cargo search root and ships only metadata-reached a
   const primary=OFFLOAD_POLICY_V1.virtual.deps,secondary=primary+"1";
   expect(result.arguments.filter(argument=>argument.startsWith("dependency="))).toEqual([`dependency=${primary}`,`dependency=${secondary}`]);
   expect(result.files.get(`${primary}/${artifact("b","rmeta")}`)).toBe(join(checkout.deps,artifact("b","rmeta")));
-  for(const extension of ["rlib","rmeta"]){
-   expect(result.files.get(`${secondary}/${artifact("a",extension)}`)).toBe(join(transitive,artifact("a",extension)));
-   expect(result.files.has(`${secondary}/${artifact("unused",extension)}`)).toBe(false);
-  }
+  expect(result.files.get(`${secondary}/${artifact("a","rmeta")}`)).toBe(join(transitive,artifact("a","rmeta")));
+  for(const extension of ["rlib","rmeta"])expect(result.files.has(`${secondary}/${artifact("unused",extension)}`)).toBe(false);
+  expect(result.files.has(`${secondary}/${artifact("a","rlib")}`)).toBe(false);
  }finally{rmSync(checkout.base,{recursive:true,force:true});}
 });
 
@@ -140,7 +156,7 @@ test("the transitive extern closure is complete: rustc itself compiles the plann
   expect(run.status,run.stderr.slice(0,600)).toBe(0);
   expect(readdirSync(join(scratchRoot,OFFLOAD_POLICY_V1.virtual.out)).some(name=>name===`libc-${externHash("c")}.rmeta`)).toBe(true);
   const stub=join(checkout.base,"stub");mkdirSync(stub,{recursive:true});
-  writeFileSync(join(stub,"libx-0123456789abcdef.rmeta"),"nothing");writeFileSync(join(stub,"libx-0123456789abcdef.rlib"),"refers to -fedcba9876543210 here");writeFileSync(join(stub,"liby-fedcba9876543210.rmeta"),"leaf");
+  writeFileSync(join(stub,"libx-0123456789abcdef.rmeta"),"refers to -fedcba9876543210 here");writeFileSync(join(stub,"libx-0123456789abcdef.rlib"),"nothing");writeFileSync(join(stub,"liby-fedcba9876543210.rmeta"),"leaf");
   expect(dependencyClosureV1([stub],[join(stub,"libx-0123456789abcdef.rlib")])!.get(stub)).toEqual(["libx-0123456789abcdef.rlib","libx-0123456789abcdef.rmeta","liby-fedcba9876543210.rmeta"]);
  }finally{rmSync(checkout.base,{recursive:true,force:true});}
 });
@@ -195,7 +211,7 @@ test("units that cannot be made path-independent are declined with a reason inst
  expect(declined([...checkout.arguments("c",["b"]),"-o","/x"])).toBe("unmapped-path");
  expect(declined([...checkout.arguments("c",["b"]),"-C","linker=/Users/x/ld"])).toBe("unmapped-path");
  expect(declined([...checkout.arguments("c",["b"]),"-C",`link-arg=${checkout.root}/x`])).toBe("not-portable");
- expect(declined(checkout.arguments("c",["b"]),{...base.environment,SOMETHING:`${checkout.root}/x`})).toBe("unmapped-path");
+ expect(declined(checkout.arguments("c",["b"]),{...base.environment,CARGO_SOMETHING:`${checkout.root}/x`})).toBe("unmapped-path");
  expect(declined(checkout.arguments("c",["b"]),{...base.environment,CARGO_MANIFEST_DIR:undefined as never})).toBe("unmapped-path");
  expect(declined(checkout.arguments("c",["missing"]))).toBe("unreadable-input");
 });
@@ -399,10 +415,10 @@ test("a unit Cargo compiles in its package directory (absolute source, working d
 });
 
 test("environment variables the worker policy cannot carry (a name with a hyphen, a value with a line break or beyond the bound) stay on the requester instead of failing the whole action there",()=>{
- const checkout=chain("names"),result=planOffloadV1({args:checkout.arguments("c",["b"]),environment:{...checkout.environment("c"),"SENTRY-TRACE":"00-abc-def-01",BROKEN_LINES:"a\nb",HUGE:"x".repeat(20000),KEPT_NAME:"fine"},cwd:checkout.root});
+ const checkout=chain("names"),result=planOffloadV1({args:checkout.arguments("c",["b"]),environment:{...checkout.environment("c"),"SENTRY-TRACE":"00-abc-def-01",CARGO_BROKEN_LINES:"a\nb",CARGO_HUGE:"x".repeat(20000),CARGO_KEPT_NAME:"fine"},cwd:checkout.root});
  if("declined" in result)throw Error(JSON.stringify(result));
- for(const name of ["SENTRY-TRACE","BROKEN_LINES","HUGE"])expect(result.environment[name],name).toBeUndefined();
- expect(result.environment.KEPT_NAME).toBe("fine");expect(result.environment.CARGO_PKG_NAME).toBe("c");
+ for(const name of ["SENTRY-TRACE","CARGO_BROKEN_LINES","CARGO_HUGE"])expect(result.environment[name],name).toBeUndefined();
+ expect(result.environment.CARGO_KEPT_NAME).toBe("fine");expect(result.environment.CARGO_PKG_NAME).toBe("c");
 });
 
 test("the requester's own temporary directories and path remaps are left behind, not carried to the other machine",()=>{

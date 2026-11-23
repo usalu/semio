@@ -14,6 +14,6 @@ fn viewer_dialect_matches_the_artifact_coordinate() {
 
 #[test]
 fn initial_snapshot_is_non_empty() {
-    let snapshot = <Fem2dViewer as ArtifactViewer>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(<Fem2dViewer as ArtifactViewer>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"));
     assert!(!snapshot.nodes.is_empty(), "expected the bundled example fixture's nodes");
 }

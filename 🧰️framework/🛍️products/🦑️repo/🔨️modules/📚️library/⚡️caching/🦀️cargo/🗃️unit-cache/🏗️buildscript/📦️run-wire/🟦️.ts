@@ -61,7 +61,7 @@ export function packRunV1(entry:BuildEntryV1,header:Readonly<{key:string;localKe
    return add(portable(stored).bytes,label);
   };
   const stdout=stream(entry.stdout,"stdout"),stderr=stream(entry.stderr,"stderr");
-  return Object.freeze({unit:{version:1,key:header.key,localKey:header.localKey,slot:header.slot,crate:entry.package,platform:header.platform,createdMs:entry.createdMs,costMs:header.costMs,dependencies:[],environment:[],outputs,stdout,stderr},contents});
+  return Object.freeze({unit:{version:1,key:header.key,localKey:header.localKey,slot:header.slot,crate:entry.package,platform:header.platform,createdMs:entry.createdMs,costMs:header.costMs,dependencies:[],environment:[],outputs,stdout,stderr,...(entry.retention===undefined?{}:{retention:entry.retention})},contents});
  }catch(error){return String((error as Error).message);}
 }
 
@@ -79,5 +79,5 @@ export function unpackRunV1(input:Readonly<{localKey:string;roots:readonly Porta
   return{path:runFilePathV1(output.name),sha256:input.put(stored),bytes:stored.length,executable:output.executable,template:output.template===true};
  });
  const stream=(digest:string|null):string|null=>digest===null?null:input.put(encoder.encode(local(decoder.decode(blobs.get(digest)!))));
- return{version:1,key:input.localKey,package:document.package,facts:document.facts.map(fact=>({...fact,path:local(fact.path)})),environment:document.environment.map(variable=>({name:variable.name,value:variable.value===null?null:local(variable.value)})),outputs,stdout:stream(manifest.stdout),stderr:stream(manifest.stderr),createdMs:Date.now()};
+ return{version:1,key:input.localKey,...(manifest.retention===undefined?{}:{retention:manifest.retention}),package:document.package,facts:document.facts.map(fact=>({...fact,path:local(fact.path)})),environment:document.environment.map(variable=>({name:variable.name,value:variable.value===null?null:local(variable.value)})),outputs,stdout:stream(manifest.stdout),stderr:stream(manifest.stderr),createdMs:Date.now()};
 }

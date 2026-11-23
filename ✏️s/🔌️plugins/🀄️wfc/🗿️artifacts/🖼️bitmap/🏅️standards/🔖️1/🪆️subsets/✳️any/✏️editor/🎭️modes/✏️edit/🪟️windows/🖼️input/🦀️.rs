@@ -152,11 +152,11 @@ pub fn definition() -> WindowKindDefinition {
 /// 🎬️ Encodes the authored sample behind the semantic surface contract. A document whose pixel
 /// buffer does not decode renders as an EMPTY layer list rather than a plausible-looking wrong
 /// image — the honest answer while the only way to reach that state is a hand-edited file.
-pub fn render(document: &BitmapSnapshot, config: &BitmapInputWindowConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &BitmapSnapshot, config: &BitmapInputWindowConfig, locale: semio_ui_locale::Locale) -> UiAssemblyResult<BuiltNode> {
     let indices = document.input.indices().unwrap_or_default();
     let layers = crate::bitmap_layers_json("in", document.input.width, document.input.height, &document.input.palette, &indices, &[]);
     let scene = Canvas2dScene::base(0.0, 0.0, config.zoom, layers);
-    scene_surface(SURFACE_ID, ContractSurfaceKind::Canvas2d, &scene)
+    scene_surface(SURFACE_ID, ContractSurfaceKind::Canvas2d, &scene, semio_plugin::surface_name(locale, "Input", "Eingabe"), None)
 }
 //#endregion 🔖️Render
 

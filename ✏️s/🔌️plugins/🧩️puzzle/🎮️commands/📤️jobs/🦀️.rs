@@ -703,7 +703,7 @@ impl InteractiveJob for EchoJob {
     /// 🌐️ Each browser call borrows fresh context over the same roots and pays their terminal retirement.
     #[test]
     fn a_browser_caller_lends_fresh_contexts_over_one_root_and_retires_in_quoted_turns() {
-        let grant = RetainedCloneGrant { maximum_items: 32, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 16_777_216, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let grant = testing::fixture_stock();
         let mut caller = BrowserCaller::admit(grant).expect("the roots are funded by the mounted turn grant");
         let first = caller.turn(|cx| (cx.operation(), cx.generation(), cx.fuel_remaining(), cx.retained_grant())).expect("first call context");
         let second = caller.turn(|cx| (cx.operation(), cx.generation(), cx.fuel_remaining(), cx.retained_grant())).expect("second call context");
@@ -724,7 +724,7 @@ impl InteractiveJob for EchoJob {
         for raw in [Vec::new(), b"puzzle reserved wire".to_vec(), vec![0xA5; 1_000]] {
             let mut job = EchoJob::new(raw.clone());
             let mut original = testing::OriginalFixture::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), testing::fixture_stock(), semio_framework_job::default_now_us, u64::MAX, 1 << 24);
-            let budget = semio_framework_job::StepBudget::new(1, u64::MAX, testing::fixture_stock());
+            let budget = semio_framework_job::StepBudget::new(1 << 24, u64::MAX, testing::fixture_stock());
             let (turn, output) = testing::drive_output(&mut job, budget, &mut original);
             assert_eq!(turn, JobTurn::Complete);
             assert_eq!(output, (!raw.is_empty()).then_some(raw), "the completion carries exactly the wire the job was admitted with");

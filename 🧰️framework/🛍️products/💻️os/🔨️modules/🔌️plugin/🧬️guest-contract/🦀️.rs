@@ -38,7 +38,7 @@ pub enum PluginHostError {
     Io(std::io::Error),
     Json(String),
     NativeIo(semio_framework_value::ValueError),
-    OriginalTurn(semio_framework_job::OriginalTurnFailure),
+    OriginalTurn(Box<semio_framework_job::OriginalTurnFailure>),
     Wasmtime(String),
     Plugin(String),
     IoRouteConflict(Box<IoRouteConflict>),
@@ -136,7 +136,7 @@ pub enum JobStep {
 pub enum TurnFault {
     ActorCall(original_actor_context::OriginalActorFixedCall),
     Host(PluginHostError),
-    Guest(semio_framework::Fault),
+    Guest(Box<semio_framework::Fault>),
     Exhausted,
     Trapped(String),
     DeadlineExceeded,
@@ -196,7 +196,7 @@ pub fn decode_guest_fault_bytes(bytes: &[u8]) -> TurnFault {
     if bytes.len() > GUEST_FAULT_MAXIMUM_BYTES {
         return TurnFault::Host(PluginHostError::Plugin("guest fault exceeds bounded wire capacity".into()));
     }
-    TurnFault::Guest(semio_framework_diagnostic::decode_fault_bytes(bytes))
+    TurnFault::Guest(Box::new(semio_framework_diagnostic::decode_fault_bytes(bytes)))
 }
 
 impl From<PluginHostError> for TurnFault {

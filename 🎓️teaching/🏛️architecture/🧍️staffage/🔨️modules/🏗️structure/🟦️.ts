@@ -150,6 +150,49 @@ export function solveSemiDefinite(k: number[][], f: readonly number[]): { u: num
   });
   return { u, unbalanced: Math.sqrt(lost) };
 }
+
+/** 🥇️ The solution of the symmetric semi-definite system `K u = f` of a six-component wrench (three forces, three moments) that balances the forces first: of all wrenches the supports can give, the one with the smallest unbalanced force, and among those the one with the smallest unbalanced moment. When `f` lies in the range of `K` it is the solution of {@link solveSemiDefinite}. A plain least-squares projection of the wrench trades newtons against newton-metres, so a body that only tips (a moment the supports cannot carry) would show a force residual that depends on the unit of length and on the reference point of the moments. */
+export function solveForceFirst(k: number[][], f: readonly number[]): { u: number[]; unbalanced: number } {
+  const { values, vectors } = symmetricEigen(k);
+  const top = Math.max(...values.map(Math.abs), 0);
+  const kept = values.map((lambda, i) => i).filter((i) => values[i]! > NULL_SPACE * top && values[i]! > 0);
+  if (kept.length === values.length || kept.length === 0) return solveSemiDefinite(k, f);
+  const column = (i: number, rows: readonly number[]): number[] => rows.map((r) => vectors[r]![i]!);
+  const [forceRows, momentRows] = [[0, 1, 2], [3, 4, 5]];
+  const least = (columns: readonly (readonly number[])[], target: readonly number[]): { x: number[]; free: number[][] } => {
+    const n = columns.length;
+    const gram = columns.map((p) => columns.map((q) => sumOf(p.map((value, r) => value * q[r]!))));
+    const eigen = symmetricEigen(gram);
+    const largest = Math.max(...eigen.values.map(Math.abs), 0);
+    const x = new Array<number>(n).fill(0);
+    const free: number[][] = [];
+    eigen.values.forEach((s, j) => {
+      const w = eigen.vectors.map((row) => row[j]!);
+      if (s > 1e-9 * largest && s > 0) {
+        const projected = sumOf(w.map((weight, c) => weight * sumOf(columns[c]!.map((value, r) => value * target[r]!)))) / s;
+        for (let c = 0; c < n; c++) x[c]! += projected * w[c]!;
+      } else free.push(w);
+    });
+    return { x, free };
+  };
+  const forces = least(kept.map((i) => column(i, forceRows)), forceRows.map((r) => f[r]!));
+  const a = [...forces.x];
+  if (forces.free.length > 0) {
+    const momentOf = (weights: readonly number[]): number[] => momentRows.map((r) => sumOf(weights.map((weight, c) => weight * vectors[r]![kept[c]!]!)));
+    const carried = momentOf(a);
+    const moments = least(forces.free.map(momentOf), momentRows.map((r, n) => f[r]! - carried[n]!));
+    moments.x.forEach((z, j) => forces.free[j]!.forEach((weight, c) => (a[c]! += z * weight)));
+  }
+  const u = f.map(() => 0);
+  const given = f.map(() => 0);
+  kept.forEach((i, c) => {
+    for (let r = 0; r < u.length; r++) {
+      u[r]! += (a[c]! / values[i]!) * vectors[r]![i]!;
+      given[r]! += a[c]! * vectors[r]![i]!;
+    }
+  });
+  return { u, unbalanced: Math.sqrt(sumOf(f.map((x, r) => (x - given[r]!) ** 2))) };
+}
 //#endregion 🧰️Helpers
 
 //#region ⚖️Forces
@@ -259,10 +302,10 @@ function reactionSolution(supports: readonly Support[], external: readonly World
       return { rows, k, f: [...f, ...m] };
     };
     const base = assemble(false);
-    const first = solveSemiDefinite(base.k, base.f);
+    const first = solveForceFirst(base.k, base.f);
     if (first.unbalanced <= 1e-9 * scale || !active.some((s) => length(s) > 0 || width(s) > 0)) return { u: first.u, rows: base.rows };
     const extra = assemble(true);
-    return { u: solveSemiDefinite(extra.k, extra.f).u, rows: extra.rows };
+    return { u: solveForceFirst(extra.k, extra.f).u, rows: extra.rows };
   };
 
   let lastForces = new Map<Slug, Solved & { tangent: readonly [number, number] }>();
@@ -657,7 +700,7 @@ export function solveStructure(state: EvaluatedState): StructuralResult {
   const notes: Text[] = [
     text("Three-dimensional statics: forces, supports, reactions, joint loads and member cuts are solved in world metres and newtons (x ahead, y up, z the asset's left) from the bone frames of the evaluated state; side elevation, plan (top view) and front elevation only project these vectors, so every magnitude is the same in all views and a component along the line of sight is stated explicitly.", "Räumliche Statik: Kräfte, Auflager, Reaktionen, Gelenklasten und Stabschnitte werden in Weltmetern und Newton (x voraus, y oben, z links des Objekts) aus den Stabsystemen des ausgewerteten Zustands gelöst; Seitenansicht, Draufsicht und Vorderansicht projizieren diese Vektoren nur, jeder Betrag ist daher in allen Ansichten gleich, und eine Komponente in Blickrichtung wird ausdrücklich genannt."),
     text("Contacts with a footprint length l and width b transmit a moment |M| ≤ N·l/2 about the lateral axis and |M| ≤ N·b/2 about the tangent axis in the side elevation plane (the centre of pressure moves within the sole, tyre patch or hoof); rotational stiffness k·l²/12 and k·b²/12, engaged only when the supports cannot balance the moment otherwise, capped at the limit like friction; `cop` is the resulting centre of pressure. A contact transmits no torque about its normal.", "Kontakte mit Aufstandslänge l und -breite b übertragen ein Moment |M| ≤ N·l/2 um die Querachse und |M| ≤ N·b/2 um die Tangentenachse in der Ebene der Seitenansicht (der Druckmittelpunkt wandert in der Sohle, Reifenaufstandsfläche oder dem Huf); Drehsteifigkeit k·l²/12 und k·b²/12, nur aktiv, wenn die Auflager das Moment sonst nicht aufnehmen können, wie die Reibung auf die Grenze begrenzt; `cop` ist der resultierende Druckmittelpunkt. Ein Kontakt überträgt kein Moment um seine Normale."),
-    text("Model: instantaneously rigid body on elastic supports of equal normalised stiffness (contact: normal 1, friction 0.5 in both tangent directions; pin, roller, fixed: 1); small-displacement 6x6 equilibrium by pseudo-inverse; contacts that would pull are dropped; friction is capped at μ·N in the tangent plane.", "Modell: momentan starrer Körper auf elastischen Auflagern gleicher normierter Steifigkeit (Kontakt: normal 1, Reibung 0,5 in beiden Tangentenrichtungen; Gelenk, Rollenlager, Einspannung: 1); 6x6-Gleichgewicht kleiner Verschiebungen per Pseudoinverse; ziehende Kontakte entfallen; Reibung in der Tangentialebene auf μ·N begrenzt."),
+    text("Model: instantaneously rigid body on elastic supports of equal normalised stiffness (contact: normal 1, friction 0.5 in both tangent directions; pin, roller, fixed: 1); small-displacement 6x6 equilibrium by pseudo-inverse; loads the supports cannot balance are balanced in force first, so a body that only tips leaves a moment and no force; contacts that would pull are dropped; friction is capped at μ·N in the tangent plane.", "Modell: momentan starrer Körper auf elastischen Auflagern gleicher normierter Steifigkeit (Kontakt: normal 1, Reibung 0,5 in beiden Tangentenrichtungen; Gelenk, Rollenlager, Einspannung: 1); 6x6-Gleichgewicht kleiner Verschiebungen per Pseudoinverse; Lasten, die die Auflager nicht aufnehmen können, werden zuerst in den Kräften ausgeglichen, ein nur kippender Körper behält also ein Moment und keine Kraft; ziehende Kontakte entfallen; Reibung in der Tangentialebene auf μ·N begrenzt."),
     inertial
       ? text("Dynamics: inertial (d'Alembert from evaluated kinematics): forces -m·a at the segment centres; rotational inertia of segments is neglected. The residual includes the d'Alembert forces and is therefore also zero.", "Dynamik: inertial (d'Alembert aus den ausgewerteten Kinematiken): Kräfte -m·a in den Segmentschwerpunkten; Drehträgheit der Segmente vernachlässigt. Das Residuum enthält die d'Alembert-Kräfte und ist daher ebenfalls null.")
       : text("Dynamics: quasi-static (weights and applied loads only); the residual is zero when the supports can balance the load.", "Dynamik: quasi-statisch (nur Gewichte und aufgebrachte Lasten); das Residuum ist null, wenn die Auflager die Last aufnehmen können."),

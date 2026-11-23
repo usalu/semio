@@ -722,8 +722,9 @@ macro_rules! absorb_lists {
 }
 
 impl MutationDiff<Fem2dSnapshot> for Fem2dDiff {
-
-
+    fn retire_projection(projection: Fem2dSnapshot) {
+        semio_s_fem_receiving::cold::retire(projection);
+    }
 }
 impl protocol::ColdMutationDiff<Fem2dSnapshotValue> for Fem2dDiff {
 
@@ -819,7 +820,8 @@ impl protocol::ColdMutationDiff<Fem2dSnapshot> for Fem2dDiff {
     fn apply(&self, unpublished: &mut Fem2dSnapshot, capability: ApplyCapability) -> MutationApplyResult<()> {
         let mut reference = unpublished.to_reference();
         <Self as protocol::ColdMutationDiff<Fem2dSnapshotValue>>::apply(self, &mut reference, capability)?;
-        *unpublished = Fem2dSnapshot::from_reference(reference).map_err(|error| protocol::MutationApplyError { code: "mutation.reference-receive".into(), message: error.to_string(), target: Vec::new() })?;
+        let received = Fem2dSnapshot::from_reference(reference).map_err(|error| protocol::MutationApplyError { code: "mutation.reference-receive".into(), message: error.to_string(), target: Vec::new() })?;
+        semio_s_fem_receiving::cold::retire(std::mem::replace(unpublished, received));
         Ok(())
     }
 }

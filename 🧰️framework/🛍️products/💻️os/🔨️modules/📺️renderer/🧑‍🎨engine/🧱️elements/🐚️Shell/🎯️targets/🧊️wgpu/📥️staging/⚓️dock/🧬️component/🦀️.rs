@@ -80,8 +80,8 @@ pub struct ShellDockState {
     pub mobile_panel_visible: bool,
     pub mobile_panel_path: Vec<String>,
     /// 🖱️ Last-rendered full window content bounds per window id — used to apply the active utility's
-    /// cursor while the pointer is inside that window's silhouette (Architecture Decision 8, P5).
+    /// cursor while the pointer is inside that window's frame (Architecture Decision 8, P5).
     pub window_content_rects: HashMap<String, Rect>,
-    /// 🪟️ Last-rendered dock-stack silhouette per active window id (tabs + gap cutout + controls + body).
-    pub window_silhouettes: HashMap<String, WindowSilhouette>,
+    /// 🪟️ Last-rendered dock-stack frame per active window id (the content rectangle with its glass chips inside).
+    pub window_frames: HashMap<String, WindowFrame>,
 }

@@ -85,7 +85,7 @@ fn pending_response_faults_oversize_and_duplicate_and_stamps_a_silent_settlement
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn guest_fault_wire_decodes_through_the_first_party_value_codec() {
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
     let wire = semio_framework_value::DslValue::from(&fixture["guestFault"]["wire"]);
     let fault = decode_guest_fault(&store::pack_rt::encode_wire_value(&wire));
     assert_eq!(fault.code, fixture["guestFault"]["expected"]["code"].as_str().expect("fixture fault code"));
@@ -98,7 +98,7 @@ fn activation_preserves_the_channel_fault_on_the_gateway_wire() {
     use semio_framework_value::ToValue as _;
     use semio_os_mcp_plugin_runtime::compiled_components::activation_fault;
 
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral fault fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral fault fixture parses");
     for case in fixture["activationFaults"].as_array().expect("activation fault cases") {
         let fault = Fault {
             code: case["fault"]["code"].as_str().expect("channel fault code").to_string(),
@@ -118,7 +118,7 @@ fn activation_preserves_the_channel_fault_on_the_gateway_wire() {
 #[test]
 fn probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third_party_serializer() {
     use semio_framework_value::{FromValue as _, ToValue as _};
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
     let probe = &fixture["probeCodec"];
     let value = probe["value"].clone();
     let snapshot = ProbeSnapshot(value.clone().into());

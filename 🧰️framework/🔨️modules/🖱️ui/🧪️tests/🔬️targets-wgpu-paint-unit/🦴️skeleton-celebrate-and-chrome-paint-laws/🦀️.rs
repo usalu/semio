@@ -199,9 +199,9 @@ fn number_stepper_catalog_icons_match_chromiums_measured_content_boxes() {
 }
 
 //#region 🃏️CardStackPaint
-/// 🃏️ A native `CardStack` of `OverviewCard`s mounts as retained nodes and renders interlocked: the lower card starts exactly on the upper card's bottom line (no gap), its cap row is the band the upper card's footer chip shares, and every coincident line paints ONCE (`compositor.cases.json` `interlock` geometry, consumed by `stack.test.rs`).
+/// 🃏️ A native `CardStack` of `OverviewCard`s mounts as retained nodes and renders as abutting rectangular frames: the lower card starts exactly on the upper card's bottom line (no gap), each card keeps its own cap row and, with a footer, its own footer row, the chip glass sits inside the frame and every coincident line is painted once.
 #[test]
-fn a_native_card_stack_lays_out_gapless_and_paints_each_shared_line_once() {
+fn a_native_card_stack_lays_out_abutting_frames_and_paints_each_shared_line_once() {
     use semio_ui_declaration::ui::{UiCardStackNode, UiOverviewCardNode};
     let card = |id: &str, title: &str, footer: Option<&str>| UiNode::OverviewCard(UiOverviewCardNode { id: id.into(), title: Label::data(title), footer: footer.map(str::to_string), presence: UiPresence::default(), menu: None, children: vec![text("body")] });
     let stack = UiNode::CardStack(UiCardStackNode { id: "quiz".into(), presence: UiPresence::default(), menu: None, children: vec![card("one", "Question one", Some("Submit quiz")), card("two", "Question two", None)] });
@@ -218,13 +218,19 @@ fn a_native_card_stack_lays_out_gapless_and_paints_each_shared_line_once() {
     let body_a = tree.node(first).and_then(|node| node.first_child).and_then(|child| tree.accepted_layout(child)).expect("first body");
     let body_b = tree.node(second).and_then(|node| node.first_child).and_then(|child| tree.accepted_layout(child)).expect("second body");
     assert!((body_a.y - theme.control_height).abs() < 0.01, "the cap row is one control row: {body_a:?}");
-    assert!((body_b.y - theme.control_height).abs() < 0.01, "the shared band is as high as the cap row: {body_b:?}");
-    assert!((a.height - (theme.control_height + body_a.height)).abs() < 0.01, "the upper card's footer chip lives in the lower card's cap band, not below the upper card: {a:?} {body_a:?}");
+    assert!((body_b.y - theme.control_height).abs() < 0.01, "every card keeps its own cap row: {body_b:?}");
+    assert!((a.height - (2.0 * theme.control_height + body_a.height)).abs() < 0.01, "the upper card's footer row lives inside its own frame: {a:?} {body_a:?}");
+    assert!((b.height - (theme.control_height + body_b.height)).abs() < 0.01, "a card without footer has no footer row: {b:?} {body_b:?}");
 
     let mut draw = paint_retained_node_for_test(&tree, root, &theme, &mut atlas);
+    assert_eq!(draw.glass_regions.len(), 3, "two title chips and one footer chip are glass overlays");
+    for (region, frame) in draw.glass_regions.iter().zip([a, a, b]) {
+        assert!(region.rect[0] >= frame.x - 0.01 && region.rect[1] >= frame.y - 0.01 && region.rect[0] + region.rect[2] <= frame.x + frame.width + 0.01 && region.rect[1] + region.rect[3] <= frame.y + frame.height + 0.01, "chip glass {:?} leaves its frame {frame:?}", region.rect);
+    }
+    assert!(draw.layers.iter().all(|layer| layer.clip.is_none()), "a frame never opens a clip region");
     settle_borders(&mut draw);
     let lines: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|item| item.rect[2] > 0.0 && item.rect[3] > 0.0 && (item.rect[3] - theme.stroke_hairline).abs() < 0.001 && item.rect[2] > 2.0 * theme.stroke_hairline).map(|item| item.rect).collect();
-    assert!(!lines.is_empty(), "the silhouettes paint border lines");
+    assert!(!lines.is_empty(), "the frames paint border lines");
     for (index, one) in lines.iter().enumerate() {
         for other in &lines[index + 1..] {
             let overlap = (one[0] + one[2]).min(other[0] + other[2]) - one[0].max(other[0]);
@@ -249,30 +255,26 @@ fn a_native_card_stack_lays_out_gapless_and_paints_each_shared_line_once() {
     assert!(!normal.is_empty() && !emphasized.is_empty());
     assert_eq!(idle.len(), normal.len() + emphasized.len());
     assert!(idle.iter().all(|rect| normal.contains(rect) || emphasized.contains(rect)));
-    assert!(emphasized.iter().any(|rect| rect[1] < b.y && rect[3] == theme.stroke_hairline));
-    assert!(emphasized.iter().any(|rect| rect[1] >= b.y && rect[3] == theme.stroke_hairline), "the upper card's footer stays part of its highlighted silhouette");
+    assert!(emphasized.iter().any(|rect| rect[1] < b.y - 2.0 * theme.stroke_hairline && rect[3] == theme.stroke_hairline), "the hovered card's top line is emphasized");
+    assert!(emphasized.iter().any(|rect| (rect[1] - (b.y - theme.control_height)).abs() < 0.01 && rect[3] == theme.stroke_hairline), "the footer chip's inner edge is part of its card's highlighted frame");
 
     tree.node_mut(first).unwrap().flags.set(NodeFlags::HOVER_OWNER, false);
     tree.node_mut(second).unwrap().flags.set(NodeFlags::HOVER_OWNER, true);
     tree.node_mut(root).unwrap().flags.set(NodeFlags::HOVERED, true);
-    let shared_y = b.y + theme.control_height * 0.5;
-    for (x, upper) in [(b.x + 1.0, false), (b.x + b.width - 1.0, true)] {
-        let mut hovered = paint_retained_node_with_pointer_for_test(&tree, root, &theme, &mut atlas, Some((x, shared_y)));
+    for (y, upper) in [(b.y + 5.0, false), (b.y - 5.0, true)] {
+        let mut hovered = paint_retained_node_with_pointer_for_test(&tree, root, &theme, &mut atlas, Some((b.x + b.width * 0.5, y)));
         settle_borders(&mut hovered);
         let emphasized = matching(&hovered, theme.border_emphasized);
         let normal = matching(&hovered, theme.border_normal);
         assert_eq!(idle.len(), normal.len() + emphasized.len());
         assert!(idle.iter().all(|rect| normal.contains(rect) || emphasized.contains(rect)));
-        assert_eq!(emphasized.iter().any(|rect| rect[1] < b.y - theme.stroke_hairline), upper, "the pointer selects the visible card within the shared band");
+        assert_eq!(emphasized.iter().any(|rect| rect[1] < b.y - 2.0 * theme.stroke_hairline), upper, "the pointer selects the card whose frame contains it");
         assert!(!emphasized.is_empty());
     }
-    let mut gap = paint_retained_node_with_pointer_for_test(&tree, root, &theme, &mut atlas, Some((b.x + b.width * 0.5, shared_y)));
-    settle_borders(&mut gap);
-    assert!(matching(&gap, theme.border_emphasized).is_empty());
 
     tree.node_mut(second).unwrap().flags.set(NodeFlags::HOVER_OWNER, false);
     tree.node_mut(root).unwrap().flags.set(NodeFlags::HOVERED, false);
-    let mut obscured = paint_retained_node_with_pointer_for_test(&tree, root, &theme, &mut atlas, Some((b.x + b.width - 1.0, shared_y)));
+    let mut obscured = paint_retained_node_with_pointer_for_test(&tree, root, &theme, &mut atlas, Some((b.x + b.width - 1.0, b.y + 5.0)));
     settle_borders(&mut obscured);
     assert_eq!(matching(&obscured, theme.border_normal), idle, "the router's hover chain excludes a stack beneath another hit target");
     let mut exited = paint_retained_node_for_test(&tree, root, &theme, &mut atlas);

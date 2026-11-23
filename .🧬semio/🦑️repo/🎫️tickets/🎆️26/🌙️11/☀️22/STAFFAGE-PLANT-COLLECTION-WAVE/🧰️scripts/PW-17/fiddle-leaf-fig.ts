@@ -144,6 +144,7 @@ export function build(): { doc: Json; distinction: Text; notes: string[] } {
     const body: Json[] = [...pot.body];
     const thermal: Json[] = [...pot.thermal];
     const structure: Json[] = [...potStructure(POT, scale)];
+    structure.push({ id: "m-root-ball", kind: "revolve", bone: "pot", material: "potting-compost", role: "body", tone: 0.5, axis: [1, 0, 0], origin: [0, 0, 0], profile: [[0.03, 0.06], [0.2, 0.06]], member: "pot", part: "member" });
     const fine = scale <= 100;
     const drawLeaves = scale <= 200;
     const pen = PENS[scale].body;
@@ -165,7 +166,7 @@ export function build(): { doc: Json; distinction: Text; notes: string[] } {
         structure.push({ id: `m-${petioleId(l.k)}`, of: petioleId(l.k), member: petioleId(l.k), part: "member" });
       }
       const outline = figBlade(l.L, l.W, scale, fine ? 0 : l.P + 0.004);
-      const pl = plate(bladeId(l.k), bladeId(l.k), F[bladeId(l.k)]!, outline, [], -THICK / 2, THICK / 2, scale, { tone: leafTone(l), region: leafRegion(l), material: "ficus-leaf" }, { material: "ficus-leaf", tone: leafTone(l), sheet: true }, pen);
+      const pl = plate(bladeId(l.k), bladeId(l.k), F[bladeId(l.k)]!, outline, [], -THICK / 2, THICK / 2, scale, { tone: leafTone(l), region: leafRegion(l), material: "ficus-leaf" }, { material: "ficus-leaf", tone: leafTone(l), sheet: true }, pen, scale === 200 && l.k === 0);
       body.push(pl.solid); plantSolids.push(pl.solid);
       thermal.push({ id: `th-${bladeId(l.k)}`, of: bladeId(l.k), region: leafRegion(l) });
       if (drawLeaves) add2(pl.placed);

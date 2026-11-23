@@ -72,6 +72,60 @@ test("cancel drops the held output of its job", async () => {
   expect(log).toEqual(["cancel"]);
 });
 
+function strictGuest(bodies: Map<bigint, Uint8Array>, failAck: { count: number } = { count: 0 }) {
+  let identity: bigint | undefined, offset = 0, ack = false;
+  const log: string[] = [];
+  const jobs = {
+    stepJob: async (job: bigint, budget: { input: unknown }) => {
+      log.push(`step${job}`);
+      if ((identity !== undefined && identity !== job) || ack) throw new Error("InvariantViolated: actor job output differs from its retained request or closing phase");
+      identity = job;
+      return reply(budget, zero, { outcome: some({ state: "done", byteLength: BigInt(bodies.get(job)!.length) }) });
+    },
+    readJobOutput: async (job: bigint, budget: { input: unknown }) => {
+      log.push(`read${job}`);
+      const body = bodies.get(job)!;
+      if (offset >= body.length) { ack = true; return reply(budget, zero, { chunk: some({ offset: BigInt(offset), bytes: none, outputClosed: true }) }); }
+      const page = body.slice(offset, offset + 1);
+      const at = offset;
+      offset += 1;
+      return reply(budget, zero, { chunk: some({ offset: BigInt(at), bytes: some(page), outputClosed: false }) });
+    },
+    acknowledgeJobOutput: async (job: bigint, budget: { input: unknown }) => {
+      log.push(`ack${job}`);
+      if (failAck.count > 0) { failAck.count--; return reply(budget, zero, { acknowledged: false }); }
+      ack = false; identity = undefined; offset = 0;
+      return reply(budget, zero, { acknowledged: true });
+    },
+    cancelJob: async (job: bigint, budget: { input: unknown }) => (log.push(`cancel${job}`), reply(budget, zero, { admitted: true })),
+  };
+  return { jobs: jobs as never, log };
+}
+
+test("a retried step acknowledges a closed output without stepping again", async () => {
+  const failAck = { count: 5000 };
+  const { jobs, log } = strictGuest(new Map([[1n, new Uint8Array([1, 2])]]), failAck);
+  const held = new Map();
+  await expect(new OriginalJobFunds(1n, 0n, 1_000_000_000n, clock()).step(jobs, 1n, { held })).rejects.toThrow("original-job.output-ack-stalled");
+  failAck.count = 0;
+  const final = await new OriginalJobFunds(1n, 0n, 1_000_000n, clock()).step(jobs, 1n, { held });
+  expect(final).toEqual({ status: "done", value: new Uint8Array([1, 2]) });
+  expect(log.filter((entry) => entry === "step1")).toHaveLength(1);
+  expect(held.size).toBe(0);
+});
+
+test("cancel drains the unfinished output of its job before the next job steps", async () => {
+  const failAck = { count: 5000 };
+  const { jobs, log } = strictGuest(new Map([[1n, new Uint8Array([1, 2])], [2n, new Uint8Array([7])]]), failAck);
+  const held = new Map();
+  await expect(new OriginalJobFunds(1n, 0n, 1_000_000_000n, clock()).step(jobs, 1n, { held })).rejects.toThrow("original-job.output-ack-stalled");
+  failAck.count = 0;
+  await new OriginalJobFunds(1n, 0n, 1_000_000n, clock()).cancel(jobs, 1n, { held });
+  expect(held.size).toBe(0);
+  expect(await new OriginalJobFunds(1n, 0n, 1_000_000n, clock()).step(jobs, 2n, { held })).toEqual({ status: "done", value: new Uint8Array([7]) });
+  expect(log.filter((entry) => entry === "step1")).toHaveLength(1);
+});
+
 function kernelSource() {
   const pool = new KernelOriginalResourcePool({ grant: { maximumItems: 100, maximumCopyBytes: 1000, maximumCapacityBytes: 1000, maximumReleaseBytes: 1000, maximumDepth: 8 }, fuel: 1000, maximumElapsedUs: 1_000_000n });
   const admission = new KernelOriginalOperationIssuer((request) => pool.admit(request)).admit({ grant: { maximumItems: 100, maximumCopyBytes: 1000, maximumCapacityBytes: 1000, maximumReleaseBytes: 1000, maximumDepth: 8 }, fuel: 1000, maximumElapsedUs: 1_000_000n });

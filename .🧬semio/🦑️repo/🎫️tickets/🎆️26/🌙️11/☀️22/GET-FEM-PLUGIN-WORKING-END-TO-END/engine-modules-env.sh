@@ -1,0 +1,9 @@
+export CARGO_TARGET_DIR='C:\t\engmod'
+export CARGO_BUILD_BUILD_DIR='C:\t\engmodb'
+export CARGO_BUILD_RUSTC=rustc
+export CARGO_BUILD_RUSTC_WRAPPER=
+export RUSTC_WRAPPER=
+export TMP='C:\t\tmp'
+export TEMP='C:\t\tmp'
+export TMPDIR='C:\t\tmp'
+export CARGO_INCREMENTAL=0

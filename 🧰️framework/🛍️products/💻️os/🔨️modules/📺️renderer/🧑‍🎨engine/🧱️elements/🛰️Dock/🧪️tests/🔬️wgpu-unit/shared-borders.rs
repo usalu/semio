@@ -23,20 +23,23 @@ fn shared_border_segments_match_language_neutral_contract() {
 }
 
 #[test]
-fn shared_silhouette_projection_keeps_chip_cutouts_and_rectangular_edges_inward() {
-    let silhouette = WindowSilhouette::from_measured_top(Rect::new(0.0, 0.0, 200.0, 100.0), 60.0, 40.0, 24.0);
-    let edges = window_silhouette_border_edges(&silhouette);
-    assert!(edges.iter().any(|edge| edge.from.x == 60.0 && edge.to.x == 160.0 && edge.from.y == 24.0 && edge.to.y == 24.0));
-    assert!(!edges.iter().any(|edge| edge.from.y == 0.0 && edge.to.y == 0.0 && edge.from.x < 100.0 && edge.to.x > 100.0));
-    let bottom = WindowSilhouette::new(silhouette.bounds, WindowSilhouetteEdge::default(), silhouette.top.clone());
-    for shape in [&silhouette, &bottom] {
-        for edge in window_silhouette_border_edges(shape) {
+fn frame_border_is_the_outline_plus_the_chips_inner_edges_all_inward() {
+    let frame = WindowFrame::from_measured_top(Rect::new(0.0, 0.0, 200.0, 100.0), 60.0, 40.0, 24.0);
+    let edges = window_frame_border_edges(&frame);
+    assert_eq!(edges.len(), 4 + 2 + 1 + 1, "outline, two chip baselines, the first chip's right edge and the second chip's left edge");
+    assert!(edges.iter().any(|edge| edge.from.y == 0.0 && edge.to.y == 0.0 && edge.from.x == 0.0 && edge.to.x == 200.0), "the top outline is one line across the chip row");
+    assert!(edges.iter().any(|edge| edge.from.x == 0.0 && edge.to.x == 60.0 && edge.from.y == 24.0 && edge.to.y == 24.0), "left chip baseline");
+    assert!(edges.iter().any(|edge| edge.from.x == 160.0 && edge.to.x == 200.0 && edge.from.y == 24.0), "right chip baseline");
+    assert!(!edges.iter().any(|edge| edge.from.x == 60.0 && edge.to.x == 160.0 && edge.from.y == 24.0), "nothing closes the span between the chips");
+    let bottom = WindowFrame::new(frame.bounds, WindowFrameEdge::default(), frame.top.clone());
+    for shape in [&frame, &bottom] {
+        for edge in window_frame_border_edges(shape) {
             let [x, y, w, h] = edge.paint_rect(1.0);
-            assert!(shape.contains(x + w * 0.5, y + h * 0.5), "paint must remain inside the chip/body silhouette");
+            assert!(shape.contains(x + w * 0.5, y + h * 0.5), "paint must remain inside the frame");
         }
     }
-    let plain = WindowSilhouette::new(Rect::new(10.0, 20.0, 200.0, 100.0), WindowSilhouetteEdge::default(), WindowSilhouetteEdge::default());
-    let edges = window_silhouette_border_edges(&plain);
+    let plain = WindowFrame::new(Rect::new(10.0, 20.0, 200.0, 100.0), WindowFrameEdge::default(), WindowFrameEdge::default());
+    let edges = window_frame_border_edges(&plain);
     assert_eq!(edges.len(), 4);
     for edge in edges {
         let [x, y, w, h] = edge.paint_rect(1.0);
@@ -51,10 +54,9 @@ fn shared_dock_frames_abut_and_resize_hit_stays_centered() {
     let bounds = Rect::new(0.0, 0.0, 800.0, 600.0);
     let theme = Theme::default();
     let mut atlas = FontAtlas::builtin();
-    let (bodies, silhouettes) = dock.stack_body_rects_with_silhouettes(bounds, &theme, &HashMap::new(), &mut atlas);
-    assert_eq!(silhouettes["a"].bounds.x + silhouettes["a"].bounds.w, silhouettes["b"].bounds.x);
-    let body_gap = bodies[1].1.x - bodies[0].1.x - bodies[0].1.w;
-    assert!((body_gap - theme.padding_standard * 2.0).abs() < 0.001);
+    let (bodies, frames) = dock.stack_body_rects_with_frames(bounds, &theme, &HashMap::new(), &mut atlas);
+    assert_eq!(frames["a"].bounds.x + frames["a"].bounds.w, frames["b"].bounds.x);
+    assert_eq!(bodies[1].1.x, bodies[0].1.x + bodies[0].1.w, "content planes abut, no body inset");
     let mut input = InputState::<ActionDescriptor>::default();
     let mut draw = DrawList::default();
     let labels = HashMap::new();

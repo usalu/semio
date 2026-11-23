@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "EN: How long the synchronous inference of a script process may run before a yield gives the event loop a turn (timers, messages of the parent such as cancellation or a request to settle memory, progress). DE: Wie lange die synchrone Inferenz eines Skriptprozesses laufen darf, bevor ein Yield der Ereignisschleife einen Durchlauf gibt (Zeitgeber, Nachrichten des Elternprozesses wie Abbruch oder die Bitte, Speicher zu beruhigen, Fortschritt).",
+  "const": {
+    "version": 1,
+    "turnMilliseconds": 50
+  }
+}

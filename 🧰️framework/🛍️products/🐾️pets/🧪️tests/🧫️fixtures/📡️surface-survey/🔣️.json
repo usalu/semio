@@ -2056,7 +2056,7 @@
       }
     },
     {
-      "name": "a silhouette of parts: the tab and the body each carry pets, a part is solid where it stands on an edge, and what lies under an edge does not reach over it",
+      "name": "a stack of parts: the tab and the body each carry pets, a part is solid where it stands on an edge, and what lies under an edge does not reach over it",
       "viewport": {
         "width": 1200,
         "height": 800
@@ -3040,7 +3040,7 @@
       }
     },
     {
-      "name": "walls: both sides of every part of a silhouette, from its top down to its bottom, a narrow part included",
+      "name": "walls: both sides of every part of a stack, from its top down to its bottom, a narrow part included",
       "viewport": {
         "width": 1200,
         "height": 800

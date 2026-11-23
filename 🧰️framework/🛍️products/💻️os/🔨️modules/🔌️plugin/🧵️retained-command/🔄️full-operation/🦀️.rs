@@ -251,13 +251,19 @@ fn return_session_cancel_alias(session: &semio_framework_job_worker::MountedWork
 }
 
 impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
-    /// 🚨️ The retained refusal of an owner that has no retirement path at all: neither a preparation that was refused at birth nor a refused fault close can ever succeed on retry, so the operation would otherwise stay pending without a word.
+    /// 🚨️ The retained refusal of an owner that has no retirement path or broke an invariant: neither a preparation that was refused at birth nor a refused fault close can ever succeed on retry, so the operation would otherwise stay pending without a word.
     pub fn retained_structural_refusal(&self) -> Option<String> {
         if let Some(fault) = self.retained_close_fault.as_ref() {
             return Some(format!("retains its original close fault: {}: {}", fault.code.0, fault.message));
         }
         let refusal = self.pending_artifact_publication.as_ref().and_then(|publication| publication.preparation_refusal()).or(self.retained_close_fault_refusal.as_ref())?;
-        (refusal.kind == semio_framework_value::ValueRefusalKind::UnsupportedOwner).then(|| format!("is refused by an owner without a retirement path: {refusal}"))
+        matches!(refusal.kind,semio_framework_value::ValueRefusalKind::UnsupportedOwner|semio_framework_value::ValueRefusalKind::InvariantViolated).then(|| format!("is refused by its owner without a retry path: {refusal}"))
+    }
+
+    /// 🛑️ The deterministic refusal of a live preparation: its owner refused it for a reason no retry can change, so the publication unit faults the operation at once instead of advancing it into the stall ceiling.
+    pub fn deterministic_preparation_refusal(&self) -> Option<String> {
+        let refusal = self.pending_artifact_publication.as_ref()?.preparation_refusal()?;
+        matches!(refusal.kind,semio_framework_value::ValueRefusalKind::UnsupportedOwner|semio_framework_value::ValueRefusalKind::InvariantViolated).then(|| format!("is refused by its owner without a retry path: {refusal}"))
     }
 
     /// 🎭️ Yields the actual actor capture receipt before admitting any durable mutation input.
@@ -359,8 +365,11 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 Ok(Some(original))=>original,
                 Ok(None)=>{
                     if let Some(view)=session.checked_out_continuation(){
-                        let cause=view.callback.or(view.qualification).or(view.receipt_qualification).map_or_else(||"typed operation worker step returned a continuation without a cause".to_owned(),|failure|match &failure.primary{semio_framework_job::OriginalTurnPrimary::Fault(fault)=>format!("{:?}: {}",fault.code,fault.message),semio_framework_job::OriginalTurnPrimary::Value(error)=>format!("{:?}: {}",error.kind,error.message),other=>format!("{other:?}")});
-                        self.terminal_fault.get_or_insert_with(||ArtifactBoundedToolFault::from_fault(&Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.worker-continuation"),cause)));
+                        let failure=view.callback.or(view.qualification).or(view.receipt_qualification);
+                        let authored=failure.as_ref().and_then(|failure|match &failure.primary{semio_framework_job::OriginalTurnPrimary::Fault(fault)=>Some(ArtifactBoundedToolFault::from_fault(fault)),_=>None});
+                        let cause=failure.map_or_else(||"typed operation worker step returned a continuation without a cause".to_owned(),|failure|match &failure.primary{semio_framework_job::OriginalTurnPrimary::Fault(fault)=>format!("{:?}: {}",fault.code,fault.message),semio_framework_job::OriginalTurnPrimary::Value(error)=>format!("{:?}: {}",error.kind,error.message),other=>format!("{other:?}")});
+                        eprintln!("[DEBUG] worker continuation cause: {cause}");
+                        self.terminal_fault.get_or_insert_with(||authored.unwrap_or_else(||ArtifactBoundedToolFault::from_fault(&Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.worker-continuation"),cause))));
                         self.terminal_seen=true;
                         if let Some(lease)=self.cancellation_lease.as_ref(){lease.cancel();}
                     }

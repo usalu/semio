@@ -165,15 +165,13 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
 /// refuses UI dispatch of every command not classified `Migrated`, which left the whole document surface
 /// dead in the shell. `patchNodes`/`deleteSelection` publish granular graph mutations; the example and
 /// fixture loaders publish a host-applied `Effect::LoadDocument`.
-pub const JACK_RETAINED_DOCUMENT_TOOL_IDS: &[&str] = &["patchNodes", "deleteSelection", "setActiveExample", "loadDocumentJson", "textEdit", "formatDocument"];
+pub const JACK_RETAINED_DOCUMENT_TOOL_IDS: &[&str] = &["setActiveExample", "loadDocumentJson", "textEdit", "formatDocument"];
 
 const JACK_RETAINED_DOCUMENT_PAYLOAD_SCHEMA: &str = "trinity.graph.document-command.v1";
 
 pub const JACK_RETAINED_DOCUMENT_RAW_BYTES: usize = 32_768;
 
 const JACK_RETAINED_DOCUMENT_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "patchNodes", lanes: &[ArtifactToolPublicationLane::Child] },
-    ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Child] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -203,15 +201,12 @@ pub fn jack_retained_document_reduce<C:crate::standards::v1::subsets::any::schem
     snapshot: &JackSnapshot,
     _config: &NoConfig,
     _history: &semio_plugin::HistoryView,
-    interaction: &protocol::InteractionState,
+    _interaction: &protocol::InteractionState,
     _hover: &semio_plugin::app::InteractionHoverState,
-    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp<C>>>>,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp<C>>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<TrinityGraphMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    let children = || context.map(|context| context.children.as_ref()).ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("trinity.jack.content-missing"), "the retained document command carries no child view"));
     Ok(match command {
-        TrinityJackCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes::patch_nodes::<C>(snapshot, children()?, node_ids, interaction.selection.get("ast").map_or(&[][..], |selection| selection.ids.as_slice()), field, value)?,
-        TrinityJackCommand::DeleteSelection => commands::delete_selection::delete_selection::<C>(snapshot, children()?, interaction.selection.get("ast").map_or(&[][..], |selection| selection.ids.as_slice()))?,
         TrinityJackCommand::SetActiveExample { example_id } => commands::set_active_example::set_active_example::<C>(example_id),
         TrinityJackCommand::LoadDocumentJson { json } => commands::load_document_json::load_document_json(json),
         TrinityJackCommand::TextEdit { text } => commands::text_edit::text_edit(text)?,

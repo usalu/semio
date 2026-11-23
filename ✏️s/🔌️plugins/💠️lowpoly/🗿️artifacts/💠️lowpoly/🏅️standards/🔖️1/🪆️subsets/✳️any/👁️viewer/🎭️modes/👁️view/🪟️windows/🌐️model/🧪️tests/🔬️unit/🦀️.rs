@@ -9,5 +9,5 @@ async fn definition_declares_the_shared_mesh_window_kit() {
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_scene_node_for_the_default_document() {
     let document = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    let _node = render(&document);
+    let _node = render(&document, semio_plugin::Locale::En);
 }

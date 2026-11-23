@@ -4,26 +4,22 @@ use super::*;
 
 //#region 🔖️Scene
 //#region 🔖️Finish
-/// 🏷️ The scissor/clip/glass-membership/overlay state a [`DrawBatch`] renders under.
+/// 🏷️ The scissor/glass-membership/overlay state a [`DrawBatch`] renders under.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct LayerState {
     pub scissor: Option<ScissorRect>,
-    pub clip: Option<ClipRegion>,
     pub foreground_of: Option<usize>,
     pub overlay: bool,
 }
 
 /// 🖍️ One replayable draw call: a pipeline, the state to render under, an instance range into
 /// [`RenderPacket::quad_instances`] or [`RenderPacket::vector_vertices`] (backend picks the array by
-/// `pipeline`), and an optional precomputed stencil-mask range (also into `quad_instances`) a backend
-/// paints with [`StencilPolicy::WriteMask`] before painting `instance_range` with
-/// [`StencilPolicy::RequireMaskEquality`]. A backend replays ranges; it makes no clipping decisions.
+/// `pipeline`). A backend replays ranges under the batch's rectangular scissor; it makes no clipping decisions.
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawBatch {
     pub pipeline: PipelineKind,
     pub layer_state: LayerState,
     pub instance_range: (u32, u32),
-    pub mask_range: Option<(u32, u32)>,
     pub texture: Option<TextureId>,
 }
 
@@ -31,7 +27,6 @@ pub struct DrawBatch {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SceneError {
     UnbalancedScissorStack,
-    UnbalancedClipStack,
     UnbalancedGlassStack,
     NonFiniteGeometry,
     NegativeRect,
@@ -58,7 +53,7 @@ impl Scene {
         let layers = std::mem::take(&mut snapped.layers);
         let mut scene_passes = std::mem::take(&mut snapped.scene_passes);
         let ordered_layers = order(layers, &mut scene_passes);
-        let (quad_instances, vector_vertices, glass_instances, batches) = batch(&ordered_layers, &snapped.glass_regions, params.viewport);
+        let (quad_instances, vector_vertices, glass_instances, batches) = batch(&ordered_layers, &snapped.glass_regions);
         let has_animated_primitives = quad_instances.iter().any(|quad| is_animated_kind(quad.params[2]));
         let content_hash = content_hash(&quad_instances, &vector_vertices, &glass_instances, &batches);
         Ok(RenderPacket {
@@ -83,9 +78,6 @@ impl Scene {
 fn validate(builder: &SceneBuilder) -> Result<(), SceneError> {
     if !builder.scissor_stack.is_empty() {
         return Err(SceneError::UnbalancedScissorStack);
-    }
-    if !builder.clip_stack.is_empty() {
-        return Err(SceneError::UnbalancedClipStack);
     }
     if !builder.glass_content_stack.is_empty() {
         return Err(SceneError::UnbalancedGlassStack);
@@ -150,10 +142,10 @@ fn snap(mut builder: SceneBuilder, dpr: f32) -> SceneBuilder {
 //#endregion Snap
 
 //#region Order
-/// 🗜️ Merges consecutive layers that share identical `(scissor, clip, foreground_of)` state and drops
+/// 🗜️ Merges consecutive layers that share identical `(scissor, foreground_of)` state and drops
 /// layers left empty by upstream push/pop pairs that never drew anything between them — the wgpu
-/// target's `push_scissor`/`pop_scissor`/`begin_silhouette_clip`/`end_silhouette_clip` each start a new
-/// layer unconditionally, so returning to an outer clip state that was already active produces an
+/// target's `push_scissor`/`pop_scissor` each start a new
+/// layer unconditionally, so returning to an outer scissor state that was already active produces an
 /// empty boundary layer plus a content layer identical in state to one seen before; dropping the empty
 /// one lets the identical-state survivors coalesce into a single batch. A layer referenced by a
 /// [`SurfacePass::layer_index`] (an "anchor") is kept even if empty and is never merged with a
@@ -172,7 +164,7 @@ fn order(layers: Vec<SceneLayer>, scene_passes: &mut [SurfacePass]) -> Vec<Scene
 
     for (old_index, layer) in survivors {
         let is_anchor = anchors.contains(&old_index);
-        let can_merge = !is_anchor && !last_was_anchor && merged.last().is_some_and(|prev: &SceneLayer| prev.scissor == layer.scissor && prev.clip == layer.clip && prev.foreground_of == layer.foreground_of);
+        let can_merge = !is_anchor && !last_was_anchor && merged.last().is_some_and(|prev: &SceneLayer| prev.scissor == layer.scissor && prev.foreground_of == layer.foreground_of);
         if can_merge {
             merged.last_mut().expect("checked by can_merge").merge_from(layer);
         } else {
@@ -197,7 +189,6 @@ fn order(layers: Vec<SceneLayer>, scene_passes: &mut [SurfacePass]) -> Vec<Scene
 #[cfg(any(test, feature = "backend-testing"))]
 struct LayerSpan {
     pub(super) scissor: Option<ScissorRect>,
-    pub(super) clip: Option<ClipRegion>,
     pub(super) foreground_of: Option<usize>,
     quad_range: (u32, u32),
     raster_runs: Vec<(TextureId, u32, u32)>,
@@ -242,20 +233,17 @@ fn collect_spans<'a>(layers: impl Iterator<Item = &'a SceneLayer>, overlay: bool
         vector_vertices.extend_from_slice(vertices);
         let vec_range = (vec_start, vertices.len() as u32);
 
-        spans.push(LayerSpan { scissor: layer.scissor, clip: layer.clip.clone(), foreground_of: layer.foreground_of, quad_range, raster_runs, vec_range });
+        spans.push(LayerSpan { scissor: layer.scissor, foreground_of: layer.foreground_of, quad_range, raster_runs, vec_range });
     }
     spans
 }
 
 /// 🎞️ Builds every [`DrawBatch`] across the four independent streams (backdrop/foreground ×
-/// normal/overlay — each renders in its own pass with its own stencil buffer, so each gets its own
-/// mask chain) plus one [`PipelineKind::Glass`] batch per glass region, then appends the precomputed
-/// stencil-mask quads for every batch straight into `quad_instances` (ported from `build_batch_masks`)
-/// so a backend replays `mask_range` with [`StencilPolicy::WriteMask`] and needs no mask geometry of
-/// its own.
+/// normal/overlay) plus one [`PipelineKind::Glass`] batch per glass region. Glass batches sample the
+/// complete backdrop, so a glass region painted over earlier content shows that content blurred and tinted.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 #[cfg(any(test, feature = "backend-testing"))]
-fn batch(layers: &[SceneLayer], glass_regions: &[GlassRegion], viewport: [f32; 2]) -> (Vec<QuadInstance>, Vec<VectorVertex>, Vec<GlassInstance>, Vec<DrawBatch>) {
+fn batch(layers: &[SceneLayer], glass_regions: &[GlassRegion]) -> (Vec<QuadInstance>, Vec<VectorVertex>, Vec<GlassInstance>, Vec<DrawBatch>) {
     let mut quad_instances = Vec::new();
     let mut vector_vertices = Vec::new();
     let mut batches = Vec::new();
@@ -263,28 +251,16 @@ fn batch(layers: &[SceneLayer], glass_regions: &[GlassRegion], viewport: [f32; 2
     for overlay in [false, true] {
         for want_foreground in [false, true] {
             let spans = collect_spans(layers.iter().filter(|layer| layer.foreground_of.is_some() == want_foreground), overlay, &mut quad_instances, &mut vector_vertices);
-            let mut previous_bounds = None;
             for span in spans {
-                let (mask_quads, current_bounds) = tessellate::mask_instances(span.scissor, span.clip.as_ref(), previous_bounds, viewport[0], viewport[1]);
-                let mask_range = if mask_quads.is_empty() {
-                    None
-                } else {
-                    let start = quad_instances.len() as u32;
-                    let count = mask_quads.len() as u32;
-                    quad_instances.extend(mask_quads);
-                    Some((start, count))
-                };
-                previous_bounds = current_bounds;
-
-                let layer_state = LayerState { scissor: span.scissor, clip: span.clip.clone(), foreground_of: span.foreground_of, overlay };
+                let layer_state = LayerState { scissor: span.scissor, foreground_of: span.foreground_of, overlay };
                 if span.quad_range.1 > 0 {
-                    batches.push(DrawBatch { pipeline: PipelineKind::UiQuad, layer_state: layer_state.clone(), instance_range: span.quad_range, mask_range, texture: None });
+                    batches.push(DrawBatch { pipeline: PipelineKind::UiQuad, layer_state: layer_state.clone(), instance_range: span.quad_range, texture: None });
                 }
                 for (texture, start, count) in span.raster_runs {
-                    batches.push(DrawBatch { pipeline: PipelineKind::UiRasterTextured, layer_state: layer_state.clone(), instance_range: (start, count), mask_range, texture: Some(texture) });
+                    batches.push(DrawBatch { pipeline: PipelineKind::UiRasterTextured, layer_state: layer_state.clone(), instance_range: (start, count), texture: Some(texture) });
                 }
                 if span.vec_range.1 > 0 {
-                    batches.push(DrawBatch { pipeline: PipelineKind::Vector, layer_state, instance_range: span.vec_range, mask_range, texture: None });
+                    batches.push(DrawBatch { pipeline: PipelineKind::Vector, layer_state, instance_range: span.vec_range, texture: None });
                 }
             }
         }
@@ -292,7 +268,7 @@ fn batch(layers: &[SceneLayer], glass_regions: &[GlassRegion], viewport: [f32; 2
 
     let glass_instances: Vec<GlassInstance> = glass_regions.iter().copied().map(GlassInstance::from).collect();
     for index in 0..glass_instances.len() {
-        batches.push(DrawBatch { pipeline: PipelineKind::Glass, layer_state: LayerState::default(), instance_range: (index as u32, 1), mask_range: None, texture: None });
+        batches.push(DrawBatch { pipeline: PipelineKind::Glass, layer_state: LayerState::default(), instance_range: (index as u32, 1), texture: None });
     }
 
     (quad_instances, vector_vertices, glass_instances, batches)
@@ -323,10 +299,6 @@ pub(super) fn content_hash(quad_instances: &[QuadInstance], vector_vertices: &[V
         state = fnv1a64(&(draw_batch.pipeline as u32).to_le_bytes(), state);
         state = fnv1a64(&draw_batch.instance_range.0.to_le_bytes(), state);
         state = fnv1a64(&draw_batch.instance_range.1.to_le_bytes(), state);
-        if let Some((start, count)) = draw_batch.mask_range {
-            state = fnv1a64(&start.to_le_bytes(), state);
-            state = fnv1a64(&count.to_le_bytes(), state);
-        }
     }
     state
 }

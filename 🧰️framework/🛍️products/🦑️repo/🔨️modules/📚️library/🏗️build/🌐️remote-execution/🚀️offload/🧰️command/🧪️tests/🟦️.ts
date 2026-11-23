@@ -1,3 +1,4 @@
+import{stretchedBudgetMillisecondsV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {afterAll,beforeAll,expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
@@ -46,7 +47,7 @@ beforeAll(async()=>{
  reporter=runRemoteExecutionReporterV1({scheduler:cluster.server.workerUrl,token:undefined,fetch,intervalSeconds:1,signal:agentStop.signal,report});
  await eventuallyV1(async()=>{const status=await (await fetch(cluster.server.workerUrl+"/status")).json() as {workers?:unknown[]};return(status.workers?.length??0)>=1;},60000,"the worker joined");
  await eventuallyV1(async()=>{const table=await (await fetch(cluster.server.workerUrl+"/v1/fleet/load")).json() as {machines?:{origin:string;headroom?:boolean}[]};return table.machines?.some(row=>row.origin==="wA"&&row.headroom===true)===true;},60000,"the worker's machine reports its load");
-},120000);
+},stretchedBudgetMillisecondsV1(120000));
 afterAll(async()=>{agentStop.abort();await reporter?.catch(()=>{});await cluster?.stop().catch(()=>{});rmSync(scratch,{recursive:true,force:true});});
 
 test("the policy and the texts validate against the closed schema, in both validators, and both languages carry the same texts",()=>{
@@ -91,7 +92,7 @@ test("a wasm-opt step offloaded to a worker through the command path gives the b
  for(const event of events)expect(rustcAjv.validate({$ref:`${offloadSchema.$id}#/definitions/Event`},event),JSON.stringify(rustcAjv.errors)).toBe(true);
  expect(events.filter(event=>event.kind==="offload-run").length).toBe(2);
  expect(readFileSync(join(offloadRoot,"x","offload.progress"),"utf8")).toContain("Schritt wasm-opt core lief auf ");
-},60000);
+},stretchedBudgetMillisecondsV1(60000));
 
 test("a step with a predicted peak runs on a machine that reports its load and has the memory, and its outputs equal a local run",async()=>{
  const work=join(scratch,"peak");mkdirSync(work,{recursive:true});
@@ -99,7 +100,7 @@ test("a step with a predicted peak runs on a machine that reports its load and h
  expect(spawnSync(wasmOpt!,[input,...WASM_OPT_ARGS,"-o",local],{encoding:"utf8"}).status).toBe(0);
  const outcome=await offloadCommandV1({tool:{name:"wasm-opt",digest},arguments:["@root/in/core.wasm",...WASM_OPT_ARGS,"-o","@root/out/core.wasm"],inputs:new Map([["in/core.wasm",input]]),outputs:new Map([["out/core.wasm",remote]]),root:join(scratch,"peak-root"),environment,label:"wasm-opt peak",key:null,ports:ports()});
  expect(outcome,JSON.stringify(outcome)).toMatchObject({kind:"done"});expect(readFileSync(remote)).toEqual(readFileSync(local));
-},60000);
+},stretchedBudgetMillisecondsV1(60000));
 
 test("a tool that is not on the allow-list never leaves the requester and the worker refuses one that arrives anyway, as a policy failure that makes the step run here",async()=>{
  const outcome=await offloadCommandV1({tool:{name:"curl",digest:"c".repeat(64)},arguments:["https://example.com"],inputs:new Map(),outputs:new Map([["out/x",join(scratch,"x")]]),root:offloadRoot,environment,label:"curl",key:null,ports:ports()});
@@ -115,12 +116,12 @@ test("a tool that is not on the allow-list never leaves the requester and the wo
  const shell=await cluster.action({arguments:["/bin/sh","-c","echo hi > out/x"],outputPaths:["out/x"],platform:props,timeoutSeconds:20});
  const plain=await cluster.execute(shell);
  expect(plain.response.status.code).toBe(9);expect(String(plain.response.status.message)).toContain("Action refused by the worker policy");
-},60000);
+},stretchedBudgetMillisecondsV1(60000));
 
 test("a requester that names a digest no worker owns is told at once that no machine can take the step, and the step runs here",async()=>{
  const started=Date.now(),outcome=await offloadCommandV1({tool:{name:"wasm-opt",digest:"e".repeat(64)},arguments:["@root/in/core.wasm","-o","@root/out/core.wasm"],inputs:new Map([["in/core.wasm",join(scratch,"wasm-opt","core.wasm")]]),outputs:new Map([["out/core.wasm",join(scratch,"never.wasm")]]),root:join(scratch,"other-root"),environment,label:"wasm-opt core",key:null,ports:ports()});
  expect(outcome.kind).toBe("local");expect(existsSync(join(scratch,"never.wasm"))).toBe(false);expect(Date.now()-started).toBeLessThan(20000);
-},60000);
+},stretchedBudgetMillisecondsV1(60000));
 
 test("a shipped tool runs only when the file the worker received has the digest the action names, and its declared output lands where a local run writes it",async()=>{
  const tool=join(scratch,"shipped-tool.sh"),text="#!/bin/sh\nprintf 'shipped %s' \"$(cat \"$1\")\" > \"$2\"\n";
@@ -133,14 +134,14 @@ test("a shipped tool runs only when the file the worker received has the digest 
  rmSync(output);
  const bad=await offloadCommandV1({tool:{name:"build-script",digest:sha("another"),file:tool},arguments:["@root/in/a.txt","@root/out/a.txt"],inputs:new Map([["in/a.txt",input]]),outputs:new Map([["out/a.txt",output]]),root:join(scratch,"shipped-root-2"),environment,label:"build script",key:null,ports:ports()});
  expect(bad).toMatchObject({kind:"local",reason:"worker-policy"});expect(existsSync(output)).toBe(false);
-},60000);
+},stretchedBudgetMillisecondsV1(60000));
 
 test("a step whose tool exits non-zero on the worker leaves no output and runs here",async()=>{
  const tool=join(scratch,"failing.sh"),text="#!/bin/sh\necho oops >&2\nexit 3\n";writeFileSync(tool,text);chmodSync(tool,0o755);
  const output=join(scratch,"failed.txt");
  const outcome=await offloadCommandV1({tool:{name:"build-script",digest:sha(text),file:tool},arguments:[],inputs:new Map(),outputs:new Map([["out/a.txt",output]]),root:join(scratch,"failing-root"),environment,label:"failing",key:null,ports:ports()});
  expect(outcome).toMatchObject({kind:"local",reason:"incomplete-inputs",detail:"exit 3"});expect(existsSync(output)).toBe(false);
-},60000);
+},stretchedBudgetMillisecondsV1(60000));
 
 test("an unreadable input and a cancelled build end as a local run without touching the fleet twice",async()=>{
  const gone=await offloadCommandV1({tool:{name:"wasm-opt",digest},arguments:[],inputs:new Map([["in/x",join(scratch,"does-not-exist")]]),outputs:new Map([["out/x",join(scratch,"y")]]),root:join(scratch,"gone-root"),environment,label:"gone",key:null,ports:ports()});
@@ -149,7 +150,7 @@ test("an unreadable input and a cancelled build end as a local run without touch
  const cancelled=await offloadCommandV1({tool:{name:"wasm-opt",digest},arguments:[],inputs:new Map(),outputs:new Map([["out/x",join(scratch,"y")]]),root:join(scratch,"cancel-root"),environment,label:"cancel",key:null,signal:stop.signal,ports:ports()});
  expect(cancelled).toMatchObject({kind:"local",reason:"cancelled"});
  expect(textOfV1(new Uint8Array(0))).toBe("");expect(commandToolDigestV1(process.execPath)).toMatch(/^[0-9a-f]{64}$/u);
-},60000);
+},stretchedBudgetMillisecondsV1(60000));
 
 test("a stage that misses at the fleet is produced on another machine through the command offload, never here, shared by its digests, and a second machine is served those exact bytes",async()=>{
  const work=join(scratch,"stage");mkdirSync(work,{recursive:true});
@@ -170,4 +171,4 @@ test("a stage that misses at the fleet is produced on another machine through th
  const declined=machine("three"),out3=join(declined.root,"out");let ran=0;
  const fallback=await declined.cache.run({...key,inputs:{core:sha("other")}},out3,async directory=>{ran++;writeFileSync(join(directory,"core.wasm"),"local");},undefined,"core/slot",async()=>false);
  expect(ran,"a producer that answers false leaves the stage to the local run").toBe(1);expect(fallback.hit).toBe(false);expect(readFileSync(join(out3,"core.wasm"),"utf8")).toBe("local");
-},90000);
+},stretchedBudgetMillisecondsV1(90000));

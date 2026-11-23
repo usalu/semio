@@ -72,7 +72,7 @@ async fn send(app: &mut Generation3dAppFixture, args: serde_json::Value) {
 
 /// 🧾️ Every applied history row that carries document operations, oldest first.
 async fn edit_rows(app: &mut Generation3dAppFixture) -> Vec<HistoryEntry> {
-    let mut rows: Vec<HistoryEntry> = PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect();
+    let mut rows: Vec<HistoryEntry> = PluginApp::history_snapshot(&mut app.0).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect();
     rows.sort_by_key(|entry| entry.seq);
     rows
 }

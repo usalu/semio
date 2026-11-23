@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::x::schema::mutations::insert_media_annotation::InsertMediaAnnotation;
 use crate::standards::v1_7::subsets::x::schema::mutations::PdfXMutation;
 #[allow(unused_imports)]
@@ -18,7 +18,7 @@ fn removes_only_the_matching_media_annotation() {
     let mutation = RemoveMediaAnnotation { subtype: "Sound".to_string(), title: "narration".to_string() };
     let next = applied(&base, &PdfXMutation::RemoveMediaAnnotation(mutation.clone()));
     assert!(support::media_annotation(&next, &mutation.subtype, &mutation.title).is_none());
-    assert_eq!(<RemoveMediaAnnotation as MutationKind<PdfSnapshot, PdfXMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
+    assert_eq!(<RemoveMediaAnnotation as ColdMutationKind<PdfSnapshot, PdfXMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]

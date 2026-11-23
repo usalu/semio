@@ -5,7 +5,7 @@ import {homedir} from "node:os";
 import {dirname,join} from "node:path";
 import {appendCasAccessV1} from "../📒️ledger/🟦️.ts";
 import {createCasGuardV1,type CasGuardV1} from "../🚦️guard/🟦️.ts";
-import {pinCasV1,releaseCasPinsV1} from "../📌️pins/🟦️.ts";
+import {leaseCasTransientV1,pinCasV1,releaseCasPinsV1} from "../📌️pins/🟦️.ts";
 import {CAS_POLICY_V1,requireCasPolicyV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
 
 /** 🧾️ A content address: lowercase sha256 hex and the byte length. */
@@ -26,6 +26,7 @@ export type CasStoreV1=Readonly<{
  touch(hash:string):Promise<void>;
  adopt(path:string,signal?:AbortSignal):Promise<CasDigestV1>;
  pin(holder:string,hashes:readonly string[],ttlMs?:number):Promise<void>;
+ lease(hashes:readonly string[],ttlMs?:number):Promise<void>;
  release(holder:string):Promise<void>;
  objectPath(hash:string):string;
 }>;
@@ -33,8 +34,8 @@ export type CasStoreV1=Readonly<{
 export type CasExpectationV1=Readonly<{hash?:string;size?:number;maxBytes?:number}>;
 /** 🛂️ How a checked put ended; nothing is published unless it is `created` or `exists`. */
 export type CasPutOutcomeV1=Readonly<{outcome:"created"|"exists"|"too-large"|"length-mismatch"|"digest-mismatch"|"aborted";digest?:CasDigestV1}>;
-/** 🧰️ Ports of a store: clock (tests), process id and writer identity, and the admission guard (by default the guard of the root, which keeps the cap and the partition watermarks before a write adds to the disk). */
-export type CasStoreOptionsV1=Readonly<{root?:string;policy?:CasPolicyV1;now?():number;pid?:number;writer?:string;guard?:CasGuardV1}>;
+/** 🧰️ Ports of a store: clock (tests), process id and writer identity, the admission guard (by default the guard of the root, which keeps the cap and the partition watermarks before a write adds to the disk) and `refuseOverCap`: a store of a cache server refuses a write that stays over the cap after a bounded synchronous collection (its callers carry on without the cache), every other store admits it. */
+export type CasStoreOptionsV1=Readonly<{root?:string;policy?:CasPolicyV1;now?():number;pid?:number;writer?:string;guard?:CasGuardV1;refuseOverCap?:boolean}>;
 
 const HASH=/^[0-9a-f]{64}$/u;
 const sha=(hash:string):void=>{if(!HASH.test(hash))throw Error("Valid sha256 digest required / Gültiger sha256-Digest erforderlich");};
@@ -54,7 +55,7 @@ const allocated=(info:{size:number;blocks?:number}):number=>info.size;
 /** 🗄️ Opens a store; no state is held beyond the throttle of access events, so any number of processes and workspaces share one root. */
 export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
  const root=options.root??casRootV1(),policy=requireCasPolicyV1(options.policy??CAS_POLICY_V1),now=options.now??Date.now,pid=options.pid??process.pid,writer=options.writer??`${pid}-${randomUUID().slice(0,8)}`;
- const guard=options.guard??createCasGuardV1({root,policy,now});
+ const guard=options.guard??createCasGuardV1({root,policy,now,...options.refuseOverCap?{refuseOverCap:true}:{}});
  const fan=policy.fanOutHexLength,objectPath=(hash:string):string=>casObjectPathV1(root,hash,fan),shard=(hash:string):string=>hash.slice(0,fan),touched=new Map<string,number>();
  const touch=async(hash:string):Promise<void>=>{
   const at=now(),last=touched.get(hash);
@@ -142,6 +143,7 @@ export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
   },
   pin:(holder,hashes,ttlMs=policy.leaseMaxMs)=>pinCasV1(root,policy,holder,hashes,ttlMs,now(),pid),
   release:holder=>releaseCasPinsV1(root,holder),
+  lease:(hashes,ttlMs)=>leaseCasTransientV1(root,policy,writer.replace(/[^A-Za-z0-9._-]/gu,"-").slice(0,96),hashes,now(),ttlMs),
  };
  return Object.freeze(store);
 }

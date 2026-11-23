@@ -46,6 +46,8 @@ const onInterrupt = () => cancel("SIGINT");
 const onTerminate = () => cancel("SIGTERM");
 process.once("SIGINT", onInterrupt);
 process.once("SIGTERM", onTerminate);
+/** 🐫️ Mirrors `element_id_segment` (🧰️framework/🔨️modules/🛂️manifest/🧭️address/🦀️.rs): camelCases a raw id into one element-id segment. */
+const elementIdSegment = raw => [...raw].reduce((state, ch) => /[-_ .]/.test(ch) ? { ...state, upper: true } : !/[A-Za-z0-9]/.test(ch) ? state : !state.text ? { text: ch.toLowerCase(), upper: state.upper } : { text: state.text + (state.upper ? ch.toUpperCase() : ch), upper: false }, { text: "", upper: false }).text;
 const attr = (name, value) => "[" + name + "=" + JSON.stringify(value) + "]";
 const write = () => {
   writeFileSync(join(outDir, "report.json"), JSON.stringify(report, null, 2));
@@ -161,7 +163,7 @@ try {
   };
   const pane = owner => nodes().and(page.locator(attr("data-window", owner + contract.renderer.actionsSurfaceSuffix)));
   const openActions = async owner => {
-    if (await pane(owner).count() === 0) await activate(key("framework.window." + owner + ".engagement.toggle"), "Actions toggle");
+    if (await pane(owner).count() === 0) await activate(key("framework.window." + elementIdSegment(owner) + ".engagement.toggle"), "Actions toggle");
     await one(pane(owner).and(page.locator(attr("data-node-key", "window-action-pane"))), "owner Actions pane");
   };
   const stageAction = async (owner, action, args) => {
@@ -552,7 +554,7 @@ try {
     const saved = await download(owner, "exportSvg", "large-sheet.svg");
     await record("large-sheet-authoring", { ...verifyLargeSheetSvg(saved.bytes, fixture), dimensionsMs, authored }, fromAuthoring);
     if (await pane(owner).count() > 0) {
-      await activate(key("framework.window." + owner + ".engagement.toggle"), "Close Actions before viewport input");
+      await activate(key("framework.window." + elementIdSegment(owner) + ".engagement.toggle"), "Close Actions before viewport input");
       await pane(owner).first().waitFor({ state: "detached" });
     }
     await openArtifact();

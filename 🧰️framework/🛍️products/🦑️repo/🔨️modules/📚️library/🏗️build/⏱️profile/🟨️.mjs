@@ -100,12 +100,14 @@ export function repoProfileV1(){
 /** 🧪️ Drops the shared profile so a test can create another one. */
 export function resetRepoProfileV1(){shared=undefined;}
 /** ⏲️ Times one body as a phase of the process wide profile; a disabled profile costs one function call. */
-let lastPhase;
-export function profilePhaseV1(phase,body,detail){lastPhase=phase;return repoProfileV1().phase(phase,body,detail);}
+let lastPhase,lastProgress;
+export function profilePhaseV1(phase,body,detail){lastPhase=phase;lastProgress=undefined;return repoProfileV1().phase(phase,body,detail);}
 /** 📍️ Records a zero length marker in the process wide profile. */
-export function profileMarkV1(phase,detail){lastPhase=phase;repoProfileV1().mark(phase,detail);}
-/** 🧭️ The name of the phase or marker started last, also while the profile is off; the front door names it when it says what it works on. */
-export function profileCurrentPhaseV1(){return lastPhase;}
+export function profileMarkV1(phase,detail){lastPhase=phase;lastProgress=undefined;repoProfileV1().mark(phase,detail);}
+/** 📶️ Says what the phase started last is working on right now (a count, the path or lock it waits on); the next phase or marker clears it, and it is never part of the profile rows. */
+export function profileProgressV1(text){lastProgress=text;}
+/** 🧭️ The name of the phase or marker started last, followed by its progress in parentheses when it reported one, also while the profile is off; the front door names it when it says what it works on. */
+export function profileCurrentPhaseV1(){return lastPhase===undefined||lastProgress===undefined?lastPhase:lastPhase+" ("+lastProgress+")";}
 
 /** 🏷️ Names a child process event after its program: the base name, lower case, with every character outside `a-z0-9-` folded to `-`, so `/usr/bin/vm_stat` becomes `spawn.vm-stat` and `C:\\tools\\Python3.11.exe` becomes `spawn.python3-11-exe`. */
 export function repoProfileSpawnLabelV1(command){

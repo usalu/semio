@@ -84,7 +84,7 @@ class ClipScene(_drafting.Drafting, _Savoye, _Axon, _panels.Panels, _Analysis, _
 
     def present(self, topic: str) -> None:
         """🧭 Initialize the canonical teaching style and render one chapter through the scene's own ``present_<topic>``."""
-        _art.set_vo_language(self.language())
+        self.language()
         _fonts.apply_scene_style(self)
         self._caption = None
         getattr(self, "present_" + topic)()

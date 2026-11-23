@@ -1,6 +1,6 @@
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use protocol::MutationKind;
+use protocol::ColdMutationKind;
 use crate::standards::v1_7::subsets::vt::schema::mutations::insert_javascript_action::InsertJavascriptAction;
 use crate::standards::v1_7::subsets::vt::schema::mutations::PdfVtMutation;
 #[allow(unused_imports)]
@@ -18,7 +18,7 @@ fn removes_the_matching_script_action() {
     let mutation = RemoveJavascriptAction { script: "audit".to_string() };
     let next = applied(&base, &PdfVtMutation::RemoveJavascriptAction(mutation.clone()));
     assert!(support::action_with(&next, "JavaScript", "JS", "audit").is_none());
-    assert_eq!(<RemoveJavascriptAction as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
+    assert_eq!(<RemoveJavascriptAction as ColdMutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]

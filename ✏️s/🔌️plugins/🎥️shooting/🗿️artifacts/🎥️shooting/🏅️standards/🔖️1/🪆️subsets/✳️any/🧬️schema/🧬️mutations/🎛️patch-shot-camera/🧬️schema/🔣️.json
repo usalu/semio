@@ -49,7 +49,35 @@
         "upX",
         "upY",
         "upZ"
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Camera field",
+          "de": "Kamerafeld"
+        },
+        "description": {
+          "en": "The camera component this patch edits.",
+          "de": "Die Kamerakomponente, die dieser Patch bearbeitet."
+        },
+        "options": {
+          "projection": { "en": "Projection", "de": "Projektion" },
+          "zoom": { "en": "Zoom", "de": "Zoom" },
+          "fov": { "en": "Perspective field of view (°)", "de": "Perspektivischer Bildwinkel (°)" },
+          "eyeX": { "en": "Camera position X", "de": "Kameraposition X" },
+          "eyeY": { "en": "Camera position Y", "de": "Kameraposition Y" },
+          "eyeZ": { "en": "Camera position Z", "de": "Kameraposition Z" },
+          "targetX": { "en": "Camera target X", "de": "Kameraziel X" },
+          "targetY": { "en": "Camera target Y", "de": "Kameraziel Y" },
+          "targetZ": { "en": "Camera target Z", "de": "Kameraziel Z" },
+          "upX": { "en": "Camera up X", "de": "Kamera-Hochachse X" },
+          "upY": { "en": "Camera up Y", "de": "Kamera-Hochachse Y" },
+          "upZ": { "en": "Camera up Z", "de": "Kamera-Hochachse Z" }
+        },
+        "group": "camera",
+        "order": 20
+      }
     },
     "camera": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera"
@@ -65,12 +93,53 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera"
         },
         "cameraId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Saved camera",
+              "de": "Gespeicherte Kamera"
+            },
+            "description": {
+              "en": "Saved camera released by this patch.",
+              "de": "Gespeicherte Kamera, die dieser Patch freigibt."
+            },
+            "ref": { "kind": "savedCamera" },
+            "group": "release",
+            "order": 20
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Release",
+          "de": "Freigabe"
+        },
+        "description": {
+          "en": "Saved-camera release recorded with the patch.",
+          "de": "Mit dem Patch aufgezeichnete Freigabe der gespeicherten Kamera."
+        },
+        "group": "release",
+        "order": 40
       }
     },
     "fallback": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Fallback camera",
+          "de": "Ersatzkamera"
+        },
+        "description": {
+          "en": "Camera used when the patched shot has no saved camera.",
+          "de": "Kamera, die genutzt wird, wenn die Aufnahme keine gespeicherte Kamera hat."
+        },
+        "group": "camera",
+        "order": 30
+      }
     }
   }
 }

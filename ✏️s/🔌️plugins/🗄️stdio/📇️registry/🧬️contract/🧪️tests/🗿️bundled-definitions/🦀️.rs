@@ -60,3 +60,88 @@ fn every_bundled_artifact_definition_assembles_without_violations() {
     }
     assert!(report.is_empty(), "{} violation(s) across {} definitions:\n{}", report.len(), definitions.len(), report.join("\n"));
 }
+
+fn plugin_definitions() -> Vec<(String, String)> {
+    let plugins = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../../..");
+    let mut found = Vec::new();
+    for plugin in ["🗄️stdio", "📕️norm"] {
+        let root = plugins.join(plugin).join("🗿️artifacts");
+        for entry in std::fs::read_dir(&root).unwrap_or_else(|error| panic!("cannot list artifact definitions in {}: {error}", root.display())).filter_map(Result::ok) {
+            let path = entry.path().join("📜️artifact-definition.json");
+            if path.is_file() {
+                let text = std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+                found.push((format!("{plugin}/🗿️artifacts/{}/📜️artifact-definition.json", entry.file_name().to_string_lossy()), text));
+            }
+        }
+    }
+    found.sort();
+    found
+}
+
+fn framed_dialects(value: &str) -> Option<Vec<semio_plugin::io::ArtifactDialect>> {
+    let mut rest = value;
+    let mut found = Vec::new();
+    for _ in 0..2 {
+        let (length, tail) = rest.split_once(':')?;
+        let coordinate = tail.get(..length.parse::<usize>().ok()?)?;
+        let (artifact_kind, remainder) = coordinate.split_once('@')?;
+        let (standard, subset) = remainder.rsplit_once('/')?;
+        found.push(semio_plugin::io::ArtifactDialect { artifact_kind: artifact_kind.into(), standard: standard.into(), subset: subset.into() });
+        rest = &tail[coordinate.len()..];
+    }
+    rest.is_empty().then_some(found)
+}
+
+fn runtime_claim_violations(file: &str, text: &str) -> Vec<String> {
+    let document: serde_json::Value = serde_json::from_str(text).unwrap_or_else(|error| panic!("{file}: {error}"));
+    let mut found = Vec::new();
+    for capability in document["runtime_capabilities"].as_array().into_iter().flatten() {
+        let identity = capability["id"].as_str().unwrap_or_default();
+        let claims = capability["claims"].as_array().into_iter().flatten().collect::<Vec<_>>();
+        let value_of = |namespace: &str| claims.iter().find(|claim| claim["namespace"] == namespace).and_then(|claim| claim["value"].as_str());
+        let mut check = |namespace: &str, declared: &str, rebuilt: Result<ArtifactIdentityClaim, ArtifactDefinitionError>| match rebuilt {
+            Err(error) => found.push(format!("{file}: {identity}: {namespace} claim {declared:?} cannot be rebuilt: {}", error.message)),
+            Ok(runtime) => {
+                if runtime.value() != declared {
+                    found.push(format!("{file}: {identity}: {namespace} claim declares {declared:?} but the runtime constructor produces {:?}", runtime.value()));
+                }
+                let descriptor = capability["descriptor"].as_str().unwrap_or_default();
+                if !descriptor.contains(&format!("{namespace}:{}", runtime.value())) {
+                    found.push(format!("{file}: {identity}: descriptor {descriptor:?} does not carry the runtime {namespace} claim {:?}", runtime.value()));
+                }
+            }
+        };
+        if let Some(declared) = value_of("codec-extension") {
+            let schema = value_of("codec").unwrap_or_default();
+            let extension = identity.rsplit_once("-extension-").and_then(|(_, tail)| tail.strip_suffix(".v1")).unwrap_or_default();
+            check("codec-extension", declared, ArtifactIdentityClaim::codec_extension(schema, extension));
+        }
+        if let Some(declared) = value_of("composition-route") {
+            match framed_dialects(declared) {
+                Some(endpoints) => check("composition-route", declared, ArtifactIdentityClaim::composition_route(&endpoints[0], &endpoints[1])),
+                None => found.push(format!("{file}: {identity}: composition-route claim {declared:?} is not two length-framed dialect coordinates")),
+            }
+        }
+    }
+    found
+}
+
+/// 🪪 Every declared codec-extension and composition-route claim equals what the runtime constructors rebuild from the definition's own data.
+#[test]
+fn every_declared_codec_extension_and_composition_route_claim_matches_the_runtime_constructors() {
+    let definitions = plugin_definitions();
+    assert!(definitions.len() >= 45, "expected the bundled stdio and norm artifact definitions, found {}", definitions.len());
+    let report = definitions.iter().flat_map(|(file, text)| runtime_claim_violations(file, text)).collect::<Vec<_>>();
+    assert!(report.is_empty(), "{} claim violation(s) across {} definitions:\n{}", report.len(), definitions.len(), report.join("\n"));
+}
+
+/// 🚫 The retired semio form with an owner prefix and the matching length frame is rejected, naming file and claim.
+#[test]
+fn the_retired_owner_prefixed_semio_codec_extension_claim_is_rejected() {
+    let file = "🗄️stdio/🗿️artifacts/🧿️semio/📜️artifact-definition.json";
+    let (_, text) = plugin_definitions().into_iter().find(|(name, _)| name == file).expect("semio definition is bundled");
+    assert!(text.contains("21:stdio.semio.animation:semio"));
+    let regressed = text.replace("21:stdio.semio.animation:semio", "23:s.stdio.semio.animation:semio");
+    let report = runtime_claim_violations(file, &regressed);
+    assert!(report.iter().any(|line| line.contains(file) && line.contains("codec-extension") && line.contains("23:s.stdio.semio.animation:semio") && line.contains("21:stdio.semio.animation:semio")), "retired form was not rejected: {report:?}");
+}

@@ -693,6 +693,76 @@
    }
   },
   {
+   "name": "stale-edit-of-other-lines-is-merged-onto-the-fleet-content-and-published",
+   "machines": [
+    "a",
+    "b"
+   ],
+   "steps": [
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "m.txt",
+     "text": "one\ntwo\nthree\nfour\nfive\n"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "b",
+     "op": "write",
+     "path": "m.txt",
+     "text": "one\ntwo\nthree\nfour\nFIVE\n",
+     "mtime": "future"
+    },
+    {
+     "machine": "a",
+     "op": "write",
+     "path": "m.txt",
+     "text": "ONE\ntwo\nthree\nfour\nfive\n"
+    },
+    {
+     "machine": "a",
+     "op": "publish"
+    },
+    {
+     "machine": "b",
+     "op": "follow"
+    },
+    {
+     "machine": "b",
+     "op": "publish"
+    },
+    {
+     "machine": "a",
+     "op": "follow"
+    }
+   ],
+   "expect": {
+    "tree": {
+     "m.txt": "ONE\ntwo\nthree\nfour\nFIVE\n"
+    },
+    "converged": [
+     "a",
+     "b"
+    ],
+    "lostTexts": {
+     "a": [],
+     "b": [
+      "one\ntwo\nthree\nfour\nFIVE\n"
+     ]
+    },
+    "mergedOn": [
+     "b"
+    ]
+   }
+  },
+  {
    "name": "offline-edit-older-than-the-remote-event-goes-to-lost",
    "machines": [
     "a",

@@ -90,7 +90,9 @@ describe("scene pointer cancellation contract", () => {
     };
     expect(actual).toEqual(Object.fromEntries(fixture.cases.map(({ family, reactStatus }) => [family, reactStatus])));
     expect(boardSource.match(/const onPointerCancel[\s\S]*?\n    };/)?.[0]).not.toContain("pointerUpScreen");
-    expect(tiledMapSource.match(/const onPointerCancel[\s\S]*?\n    };/)?.[0]).toContain("session.pointerUpScreen");
+    expect(tiledMapSource.match(/const onPointerCancel[\s\S]*?\n    };/)?.[0]).toContain("finishMiddlePan(event, pan)");
+    expect(tiledMapSource.match(/const finishMiddlePan[\s\S]*?\n    };/)?.[0]).toContain("endPan(");
+    expect(tiledMapSource.match(/const endPan[\s\S]*?\n    };/)?.[0]).toContain("session.pointerUpScreen");
   });
 
   it("preserves the physical pointer and surface generation through the native cancellation owner", () => {

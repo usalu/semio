@@ -9,8 +9,8 @@ pub fn definition() -> WindowKindDefinition {
     MeshWindowKit::window_kind()
 }
 
-pub fn render(document: &IfcSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    crate::standards::v4::subsets::any::io::geometry::render(document)
+pub fn render(document: &IfcSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    crate::standards::v4::subsets::any::io::geometry::render(document, locale)
 }
 
 #[cfg(test)]

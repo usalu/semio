@@ -1,0 +1,9 @@
+{
+  "title": "A multi-unit grammar turn stops at its funded depth",
+  "turnUnits": 64,
+  "documents": [
+    "[[[[[[[[1]]]]]]]]",
+    "{\"a\":{\"b\":{\"c\":[{\"d\":[1,2,{\"e\":\"x\"}]}]}}}",
+    "[{\"pluginId\":\"p\",\"topicContribution\":{\"topic\":\"t\",\"payload\":{\"appId\":\"a\",\"nested\":[[[\"deep\"]]]}}}]"
+  ]
+}

@@ -18,7 +18,7 @@ describe("settling a painted row", () => {
   const box = (left: number, right: number) => ({ left, right, width: right - left, top: 0, bottom: 30, height: 30, x: left, y: 0, toJSON: () => ({}) }) as DOMRect;
   const place = (element: Element, left: number, right: number) => Object.defineProperty(element, "getBoundingClientRect", { value: () => box(left, right) });
   const row = (gapLeft: number, controlsLeft: number) => {
-    document.body.innerHTML = '<div data-window-silhouette><div id="row"><div id="title" data-window-silhouette-chip data-chip-reach="next"><span></span></div><div data-window-silhouette-gap></div><div id="controls" data-window-silhouette-chip></div></div></div>';
+    document.body.innerHTML = '<div data-window-frame><div id="row"><div id="title" data-window-frame-chip data-chip-reach="next"><span></span></div><div id="controls" data-window-frame-chip></div></div></div>';
     const element = document.getElementById("row")!;
     place(element, 0, 420);
     place(document.getElementById("title")!, 0, gapLeft);
@@ -40,13 +40,13 @@ describe("settling a painted row", () => {
 describe("settling the anchored panes of a window body", () => {
   const box = (left: number, right: number) => ({ left, right, width: right - left, top: 0, bottom: 30, height: 30, x: left, y: 0, toJSON: () => ({}) }) as DOMRect;
   const place = (element: Element, left: number, right: number) => Object.defineProperty(element, "getBoundingClientRect", { value: () => box(left, right) });
-  const pane = (anchor: string, left: number, right: number, natural: number) => `<div data-anchor="${anchor}"><div data-window-silhouette><div data-window-silhouette-chip data-slot="${anchor}"><span data-w="${natural}" data-l="${left}" data-r="${right}"></span></div></div></div>`;
+  const pane = (anchor: string, left: number, right: number, natural: number) => `<div data-anchor="${anchor}"><div data-window-frame><div data-window-frame-chip data-slot="${anchor}"><span data-w="${natural}" data-l="${left}" data-r="${right}"></span></div></div></div>`;
   const body = (rightLeft: number, natural = 118) => {
     document.body.innerHTML = `<div id="body" data-slot="window-body">${pane("top-left", 0, 75, 75)}${pane("top-middle", 156, 228, 72)}${pane("top-right", rightLeft, 384, natural)}</div>`;
     const element = document.getElementById("body")!;
     place(element, 0, 384);
     Object.defineProperty(element, "offsetWidth", { value: 384 });
-    for (const chip of document.querySelectorAll<HTMLElement>("[data-window-silhouette-chip]")) {
+    for (const chip of document.querySelectorAll<HTMLElement>("[data-window-frame-chip]")) {
       const span = chip.firstElementChild as HTMLElement;
       place(chip, +span.dataset.l!, +span.dataset.r!);
       place(span, 0, +span.dataset.w!);

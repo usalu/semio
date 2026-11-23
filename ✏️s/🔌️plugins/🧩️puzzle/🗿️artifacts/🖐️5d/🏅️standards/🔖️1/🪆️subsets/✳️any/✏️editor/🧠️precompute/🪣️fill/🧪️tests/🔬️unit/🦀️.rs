@@ -42,7 +42,6 @@ use crate::editor::puzzle5d::testkit::{app_with_registry, close_app, dispatch, m
 
 
 
-use crate::editor::puzzle5d::unit_tests::context::Puzzle5dApp;
 use crate::editor::puzzle5d::entities::capsule_dream_example_document;
 use crate::editor::puzzle5d::entities::concrete_forest_example_document;
 use crate::editor::puzzle5d::entities::nakagin_example_document;
@@ -506,10 +505,11 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_on_the_largest_examples
 
 //#region ⏯️App
 pub(crate) fn host_turn(app: &mut Puzzle5dTestApp) {
-    app.maintain(&mut app.0, semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_copy_bytes, app.1.cx()).expect("maintenance step");
+    app.maintain(semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_copy_bytes).expect("maintenance step");
     semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut identity, app.1.cx()))).expect("advance one typed operation publication unit");
     crate::puzzle_job::testing::drain_outboxes(&mut app.0);
-    if let Some(page) = app.take_typed_operation_result_page(1) {
+    let grant = semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance;
+    if let Some(page) = semio_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 1, grant).expect("result page") {
         assert_ne!(page.lane, semio_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
         app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page");
     }

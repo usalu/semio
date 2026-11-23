@@ -7,7 +7,7 @@ import type { ResizableGroupHandle } from "../../↔️Resizable/🟦️.tsx";
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import type { ResizableJoinCornerSpec } from "../../↔️Resizable/🟦️.tsx";
-import { isSurfaceActiveBackgroundPointer, setSurfaceActiveRoot } from "../../🌈️Surface/🟦️.tsx";
+import { setSurfaceActiveRoot } from "../../🌈️Surface/🟦️.tsx";
 import { type WindowLayoutDropZone, type WindowLayoutNode, type WindowLayoutPath, type WindowStackCorner, WINDOW_STACK_CORNERS, applyWindowLayoutOp, collectWindowIds } from "@semio-tech/ui-layout";
 import { endWindowTemplateDrag } from "../🪟️template-drag/🟦️.ts";
 import { applyModeSplitPercents, modePathEquals, modePathFromKey, modePathKey } from "../🗺️layout/🟦️.ts";
@@ -56,10 +56,6 @@ export function useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, s
 
   const handleCanvasBackgroundPointerDown = reactHostPort.useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (isSurfaceActiveBackgroundPointer(event)) {
-        deactivateActiveWindow();
-        return;
-      }
       if (!(event.target instanceof HTMLElement)) return;
       if (event.target.closest('[data-slot="mode-dock-stack"]')) return;
       if (event.target !== event.currentTarget && event.target.dataset.slot !== "resizable-panel") return;

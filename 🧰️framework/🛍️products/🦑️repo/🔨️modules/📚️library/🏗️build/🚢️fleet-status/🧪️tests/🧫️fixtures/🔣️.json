@@ -8306,6 +8306,768 @@
      }
     ]
    }
+  },
+  {
+   "id": "one-machine-visible-en",
+   "language": "en",
+   "facts": {
+    "version": 1,
+    "atMs": 1793000000000,
+    "workspace": "/w",
+    "fleet": {
+     "scheduler": "http://cache.g1.semio.internal:8981",
+     "expireSeconds": 15,
+     "machines": [],
+     "queued": 0,
+     "executing": 0,
+     "offloadRejected": 0,
+     "refused": 0,
+     "retried": 0,
+     "retention": {
+      "version": 1,
+      "mode": "dry-run",
+      "sweptAt": 1792999700000,
+      "entries": 1000,
+      "declared": 700,
+      "live": 500,
+      "grace": 20,
+      "stale": {
+       "edited": 120,
+       "extern": 30
+      },
+      "unreached": 50,
+      "retired": 0,
+      "refused": {
+       "would-refuse-stale-on-arrival": 3
+      },
+      "examples": [
+       "edited k"
+      ]
+     }
+    },
+    "sources": [
+     {
+      "id": "fleet",
+      "ok": true,
+      "milliseconds": 4
+     },
+     {
+      "id": "cas",
+      "ok": true,
+      "milliseconds": 4
+     },
+     {
+      "id": "offload",
+      "ok": true,
+      "milliseconds": 4
+     }
+    ],
+    "cas": {
+     "root": "/h/.cache/semio/cas",
+     "capBytes": 53687091200,
+     "effectiveCapBytes": 35433480192,
+     "highWatermarkBytes": 31890132172,
+     "lowWatermarkBytes": 26575110144,
+     "incrementBytes": 2147483648,
+     "leases": {
+      "leased": 120,
+      "expired": 30,
+      "leasedBytes": 1610612736,
+      "expiredBytes": 536870912
+     },
+     "lastCollection": {
+      "atMs": 1792999400000,
+      "bytes": 23622320128
+     }
+    },
+    "offload": {
+     "local": 6,
+     "fleet": 40,
+     "builds": [
+      {
+       "pid": 4100,
+       "local": 2,
+       "fleet": 30
+      },
+      {
+       "pid": 4000,
+       "local": 4,
+       "fleet": 10
+      }
+     ],
+     "out": 500,
+     "refused": 7,
+     "fellBack": 9,
+     "reasons": {
+      "deadline": 4,
+      "operation-lost": 2,
+      "silent": 1,
+      "infrastructure": 7,
+      "no-idle-machine": 7
+     }
+    }
+   },
+   "report": {
+    "version": 1,
+    "atMs": 1793000000000,
+    "workspace": "/w",
+    "summary": {
+     "running": 0,
+     "blocked": 0,
+     "waiting": 0,
+     "alerts": 0,
+     "warnings": 0
+    },
+    "memory": {
+     "totalMegabytes": 0,
+     "availableMegabytes": 0,
+     "floorMegabytes": 0,
+     "spareMegabytes": 0,
+     "pressure": "normal",
+     "swapUsedMegabytes": null,
+     "load": null,
+     "sampleAgeSeconds": null,
+     "cores": null,
+     "admittedMegabytes": 0,
+     "observedMegabytes": 0,
+     "unobservedGrants": 0,
+     "overReservedMegabytes": 0,
+     "underReservedMegabytes": 0,
+     "grants": 0,
+     "waiters": 0
+    },
+    "runs": [],
+    "queues": {
+     "graph": {
+      "builder": null,
+      "computers": 0,
+      "slots": 0,
+      "waiting": 0,
+      "longestWaitSeconds": 0,
+      "estimatedWaitSeconds": null
+     },
+     "capacity": {
+      "floorMegabytes": 0,
+      "spareMegabytes": 0,
+      "grants": 0,
+      "waiters": []
+     },
+     "leases": [],
+     "leasesOmitted": 0
+    },
+    "bazel": {
+     "slots": 0,
+     "live": 0,
+     "held": 0,
+     "rssMegabytes": 0,
+     "servers": []
+    },
+    "storage": {
+     "hostFreeBytes": null,
+     "hostFreeFloorBytes": 0,
+     "machine": {
+      "totalBytes": 0,
+      "effectiveTotalBytes": 0,
+      "usedBytes": 0,
+      "footprintBytes": 0,
+      "overBytes": 0,
+      "evictBytes": 0,
+      "blockedBytes": 0,
+      "source": "default"
+     },
+     "overAreas": [],
+     "images": []
+    },
+    "sealed": {
+     "mode": "live",
+     "drifted": 0,
+     "blocked": 0,
+     "entries": []
+    },
+    "generation": null,
+    "findings": [],
+    "sources": [
+     {
+      "id": "fleet",
+      "ok": true,
+      "milliseconds": 4
+     },
+     {
+      "id": "cas",
+      "ok": true,
+      "milliseconds": 4
+     },
+     {
+      "id": "offload",
+      "ok": true,
+      "milliseconds": 4
+     }
+    ],
+    "fleet": {
+     "scheduler": "http://cache.g1.semio.internal:8981",
+     "machines": [],
+     "queued": 0,
+     "executing": 0,
+     "offloadedIn": 0,
+     "offloadedOut": 0,
+     "refused": 0,
+     "declined": 0,
+     "retried": 0,
+     "cacheHit": 0,
+     "cacheMiss": 0
+    },
+    "cas": {
+     "root": "/h/.cache/semio/cas",
+     "usedBytes": 23622320128,
+     "usedBasisPoints": 6666,
+     "capBytes": 53687091200,
+     "effectiveCapBytes": 35433480192,
+     "highWatermarkBytes": 31890132172,
+     "lowWatermarkBytes": 26575110144,
+     "incrementBytes": 2147483648,
+     "leases": {
+      "leased": 120,
+      "expired": 30,
+      "leasedBytes": 1610612736,
+      "expiredBytes": 536870912
+     },
+     "lastCollection": {
+      "atMs": 1792999400000,
+      "ageSeconds": 600,
+      "bytes": 23622320128
+     }
+    },
+    "retention": {
+     "mode": "dry-run",
+     "sweptAt": 1792999700000,
+     "ageSeconds": 300,
+     "entries": 1000,
+     "judged": 700,
+     "live": 500,
+     "grace": 20,
+     "stale": 150,
+     "staleByReason": {
+      "edited": 120,
+      "extern": 30
+     },
+     "unreached": 50,
+     "undeclared": 300,
+     "retired": 0,
+     "refused": {
+      "would-refuse-stale-on-arrival": 3
+     }
+    },
+    "offload": {
+     "local": 6,
+     "fleet": 40,
+     "builds": [
+      {
+       "pid": 4000,
+       "local": 4,
+       "fleet": 10
+      },
+      {
+       "pid": 4100,
+       "local": 2,
+       "fleet": 30
+      }
+     ],
+     "out": 500,
+     "refused": 7,
+     "fellBack": 9,
+     "deadline": 4,
+     "lost": 2,
+     "silent": 1,
+     "reasons": {
+      "deadline": 4,
+      "operation-lost": 2,
+      "silent": 1,
+      "infrastructure": 7,
+      "no-idle-machine": 7
+     }
+    }
+   }
+  },
+  {
+   "id": "one-machine-visible-de",
+   "language": "de",
+   "facts": {
+    "version": 1,
+    "atMs": 1793000000000,
+    "workspace": "/w",
+    "fleet": {
+     "scheduler": "http://cache.g1.semio.internal:8981",
+     "expireSeconds": 15,
+     "machines": [],
+     "queued": 0,
+     "executing": 0,
+     "offloadRejected": 0,
+     "refused": 0,
+     "retried": 0,
+     "retention": {
+      "version": 1,
+      "mode": "dry-run",
+      "sweptAt": 1792999700000,
+      "entries": 1000,
+      "declared": 700,
+      "live": 500,
+      "grace": 20,
+      "stale": {
+       "edited": 120,
+       "extern": 30
+      },
+      "unreached": 50,
+      "retired": 0,
+      "refused": {
+       "would-refuse-stale-on-arrival": 3
+      },
+      "examples": [
+       "edited k"
+      ]
+     }
+    },
+    "sources": [
+     {
+      "id": "fleet",
+      "ok": true,
+      "milliseconds": 4
+     },
+     {
+      "id": "cas",
+      "ok": true,
+      "milliseconds": 4
+     },
+     {
+      "id": "offload",
+      "ok": true,
+      "milliseconds": 4
+     }
+    ],
+    "cas": {
+     "root": "/h/.cache/semio/cas",
+     "capBytes": 53687091200,
+     "effectiveCapBytes": 35433480192,
+     "highWatermarkBytes": 31890132172,
+     "lowWatermarkBytes": 26575110144,
+     "incrementBytes": 2147483648,
+     "leases": {
+      "leased": 120,
+      "expired": 30,
+      "leasedBytes": 1610612736,
+      "expiredBytes": 536870912
+     },
+     "lastCollection": {
+      "atMs": 1792999400000,
+      "bytes": 23622320128
+     }
+    },
+    "offload": {
+     "local": 6,
+     "fleet": 40,
+     "builds": [
+      {
+       "pid": 4100,
+       "local": 2,
+       "fleet": 30
+      },
+      {
+       "pid": 4000,
+       "local": 4,
+       "fleet": 10
+      }
+     ],
+     "out": 500,
+     "refused": 7,
+     "fellBack": 9,
+     "reasons": {
+      "deadline": 4,
+      "operation-lost": 2,
+      "silent": 1,
+      "infrastructure": 7,
+      "no-idle-machine": 7
+     }
+    }
+   },
+   "report": {
+    "version": 1,
+    "atMs": 1793000000000,
+    "workspace": "/w",
+    "summary": {
+     "running": 0,
+     "blocked": 0,
+     "waiting": 0,
+     "alerts": 0,
+     "warnings": 0
+    },
+    "memory": {
+     "totalMegabytes": 0,
+     "availableMegabytes": 0,
+     "floorMegabytes": 0,
+     "spareMegabytes": 0,
+     "pressure": "normal",
+     "swapUsedMegabytes": null,
+     "load": null,
+     "sampleAgeSeconds": null,
+     "cores": null,
+     "admittedMegabytes": 0,
+     "observedMegabytes": 0,
+     "unobservedGrants": 0,
+     "overReservedMegabytes": 0,
+     "underReservedMegabytes": 0,
+     "grants": 0,
+     "waiters": 0
+    },
+    "runs": [],
+    "queues": {
+     "graph": {
+      "builder": null,
+      "computers": 0,
+      "slots": 0,
+      "waiting": 0,
+      "longestWaitSeconds": 0,
+      "estimatedWaitSeconds": null
+     },
+     "capacity": {
+      "floorMegabytes": 0,
+      "spareMegabytes": 0,
+      "grants": 0,
+      "waiters": []
+     },
+     "leases": [],
+     "leasesOmitted": 0
+    },
+    "bazel": {
+     "slots": 0,
+     "live": 0,
+     "held": 0,
+     "rssMegabytes": 0,
+     "servers": []
+    },
+    "storage": {
+     "hostFreeBytes": null,
+     "hostFreeFloorBytes": 0,
+     "machine": {
+      "totalBytes": 0,
+      "effectiveTotalBytes": 0,
+      "usedBytes": 0,
+      "footprintBytes": 0,
+      "overBytes": 0,
+      "evictBytes": 0,
+      "blockedBytes": 0,
+      "source": "default"
+     },
+     "overAreas": [],
+     "images": []
+    },
+    "sealed": {
+     "mode": "live",
+     "drifted": 0,
+     "blocked": 0,
+     "entries": []
+    },
+    "generation": null,
+    "findings": [],
+    "sources": [
+     {
+      "id": "fleet",
+      "ok": true,
+      "milliseconds": 4
+     },
+     {
+      "id": "cas",
+      "ok": true,
+      "milliseconds": 4
+     },
+     {
+      "id": "offload",
+      "ok": true,
+      "milliseconds": 4
+     }
+    ],
+    "fleet": {
+     "scheduler": "http://cache.g1.semio.internal:8981",
+     "machines": [],
+     "queued": 0,
+     "executing": 0,
+     "offloadedIn": 0,
+     "offloadedOut": 0,
+     "refused": 0,
+     "declined": 0,
+     "retried": 0,
+     "cacheHit": 0,
+     "cacheMiss": 0
+    },
+    "cas": {
+     "root": "/h/.cache/semio/cas",
+     "usedBytes": 23622320128,
+     "usedBasisPoints": 6666,
+     "capBytes": 53687091200,
+     "effectiveCapBytes": 35433480192,
+     "highWatermarkBytes": 31890132172,
+     "lowWatermarkBytes": 26575110144,
+     "incrementBytes": 2147483648,
+     "leases": {
+      "leased": 120,
+      "expired": 30,
+      "leasedBytes": 1610612736,
+      "expiredBytes": 536870912
+     },
+     "lastCollection": {
+      "atMs": 1792999400000,
+      "ageSeconds": 600,
+      "bytes": 23622320128
+     }
+    },
+    "retention": {
+     "mode": "dry-run",
+     "sweptAt": 1792999700000,
+     "ageSeconds": 300,
+     "entries": 1000,
+     "judged": 700,
+     "live": 500,
+     "grace": 20,
+     "stale": 150,
+     "staleByReason": {
+      "edited": 120,
+      "extern": 30
+     },
+     "unreached": 50,
+     "undeclared": 300,
+     "retired": 0,
+     "refused": {
+      "would-refuse-stale-on-arrival": 3
+     }
+    },
+    "offload": {
+     "local": 6,
+     "fleet": 40,
+     "builds": [
+      {
+       "pid": 4000,
+       "local": 4,
+       "fleet": 10
+      },
+      {
+       "pid": 4100,
+       "local": 2,
+       "fleet": 30
+      }
+     ],
+     "out": 500,
+     "refused": 7,
+     "fellBack": 9,
+     "deadline": 4,
+     "lost": 2,
+     "silent": 1,
+     "reasons": {
+      "deadline": 4,
+      "operation-lost": 2,
+      "silent": 1,
+      "infrastructure": 7,
+      "no-idle-machine": 7
+     }
+    }
+   }
+  },
+  {
+   "id": "one-machine-unreported",
+   "language": "en",
+   "facts": {
+    "version": 1,
+    "atMs": 1793000000000,
+    "workspace": "/w",
+    "fleet": {
+     "scheduler": "http://cache.g1.semio.internal:8981",
+     "expireSeconds": 15,
+     "machines": [],
+     "queued": 0,
+     "executing": 0,
+     "offloadRejected": 0,
+     "refused": 0,
+     "retried": 0
+    },
+    "sources": [
+     {
+      "id": "fleet",
+      "ok": true,
+      "milliseconds": 4
+     },
+     {
+      "id": "cas",
+      "ok": true,
+      "milliseconds": 4
+     },
+     {
+      "id": "offload",
+      "ok": true,
+      "milliseconds": 4
+     }
+    ],
+    "cas": {
+     "root": "/h/.cache/semio/cas",
+     "capBytes": 53687091200,
+     "effectiveCapBytes": 0,
+     "highWatermarkBytes": 0,
+     "lowWatermarkBytes": 0,
+     "incrementBytes": 2147483648,
+     "leases": {
+      "leased": 0,
+      "expired": 5000,
+      "leasedBytes": 0,
+      "expiredBytes": null
+     },
+     "lastCollection": null
+    },
+    "offload": {
+     "local": 0,
+     "fleet": 0,
+     "builds": [],
+     "out": 0,
+     "refused": 0,
+     "fellBack": 0,
+     "reasons": {}
+    }
+   },
+   "report": {
+    "version": 1,
+    "atMs": 1793000000000,
+    "workspace": "/w",
+    "summary": {
+     "running": 0,
+     "blocked": 0,
+     "waiting": 0,
+     "alerts": 0,
+     "warnings": 0
+    },
+    "memory": {
+     "totalMegabytes": 0,
+     "availableMegabytes": 0,
+     "floorMegabytes": 0,
+     "spareMegabytes": 0,
+     "pressure": "normal",
+     "swapUsedMegabytes": null,
+     "load": null,
+     "sampleAgeSeconds": null,
+     "cores": null,
+     "admittedMegabytes": 0,
+     "observedMegabytes": 0,
+     "unobservedGrants": 0,
+     "overReservedMegabytes": 0,
+     "underReservedMegabytes": 0,
+     "grants": 0,
+     "waiters": 0
+    },
+    "runs": [],
+    "queues": {
+     "graph": {
+      "builder": null,
+      "computers": 0,
+      "slots": 0,
+      "waiting": 0,
+      "longestWaitSeconds": 0,
+      "estimatedWaitSeconds": null
+     },
+     "capacity": {
+      "floorMegabytes": 0,
+      "spareMegabytes": 0,
+      "grants": 0,
+      "waiters": []
+     },
+     "leases": [],
+     "leasesOmitted": 0
+    },
+    "bazel": {
+     "slots": 0,
+     "live": 0,
+     "held": 0,
+     "rssMegabytes": 0,
+     "servers": []
+    },
+    "storage": {
+     "hostFreeBytes": null,
+     "hostFreeFloorBytes": 0,
+     "machine": {
+      "totalBytes": 0,
+      "effectiveTotalBytes": 0,
+      "usedBytes": 0,
+      "footprintBytes": 0,
+      "overBytes": 0,
+      "evictBytes": 0,
+      "blockedBytes": 0,
+      "source": "default"
+     },
+     "overAreas": [],
+     "images": []
+    },
+    "sealed": {
+     "mode": "live",
+     "drifted": 0,
+     "blocked": 0,
+     "entries": []
+    },
+    "generation": null,
+    "findings": [],
+    "sources": [
+     {
+      "id": "fleet",
+      "ok": true,
+      "milliseconds": 4
+     },
+     {
+      "id": "cas",
+      "ok": true,
+      "milliseconds": 4
+     },
+     {
+      "id": "offload",
+      "ok": true,
+      "milliseconds": 4
+     }
+    ],
+    "fleet": {
+     "scheduler": "http://cache.g1.semio.internal:8981",
+     "machines": [],
+     "queued": 0,
+     "executing": 0,
+     "offloadedIn": 0,
+     "offloadedOut": 0,
+     "refused": 0,
+     "declined": 0,
+     "retried": 0,
+     "cacheHit": 0,
+     "cacheMiss": 0
+    },
+    "cas": {
+     "root": "/h/.cache/semio/cas",
+     "usedBytes": null,
+     "usedBasisPoints": null,
+     "capBytes": 53687091200,
+     "effectiveCapBytes": 0,
+     "highWatermarkBytes": 0,
+     "lowWatermarkBytes": 0,
+     "incrementBytes": 2147483648,
+     "leases": {
+      "leased": 0,
+      "expired": 5000,
+      "leasedBytes": 0,
+      "expiredBytes": null
+     },
+     "lastCollection": null
+    },
+    "retention": null,
+    "offload": {
+     "local": 0,
+     "fleet": 0,
+     "builds": [],
+     "out": 0,
+     "refused": 0,
+     "fellBack": 0,
+     "deadline": 0,
+     "lost": 0,
+     "silent": 0,
+     "reasons": {}
+    }
+   }
   }
  ]
 }

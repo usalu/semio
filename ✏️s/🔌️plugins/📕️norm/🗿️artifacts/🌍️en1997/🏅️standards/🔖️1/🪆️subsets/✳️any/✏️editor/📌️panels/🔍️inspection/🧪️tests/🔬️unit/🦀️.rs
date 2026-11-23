@@ -1,7 +1,7 @@
 use crate::panels::inspection::*;
 use crate::unit_tests::context;
 use semio_s_plugin_norm_compliance::NormHost;
-use semio_s_artifact_norm_en1997_editor::En1997Family;
+use crate::En1997Family;
 use semio_plugin::PanelGroup;
 use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
 

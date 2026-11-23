@@ -94,7 +94,7 @@ describe("Shell components", () => {
       expect(pressed).toEqual(["open"]);
     });
 
-    it("Window shows engagement and search as folded strips by default, same U-cutout surface as window options", () => {
+    it("Window shows engagement and search as folded strips by default, same glass chip surface as window options", () => {
       const { container } = render(
         <Window id="engagement-window" active engagement={{ sessionActive: true, status: [{ id: "s", content: "Idle" }] }} search={{ sessionActive: true, input: { value: "Box", placeholder: uiDataLabel("Action") } }}>
           <div>Body</div>
@@ -104,10 +104,10 @@ describe("Shell components", () => {
       const searchZone = container.querySelector('[data-slot="window-search-zone"]') as HTMLElement;
       expect(engagementZone).toBeTruthy();
       expect(engagementZone.getAttribute("data-level")).toBe("pane");
-      expect(engagementZone.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+      expect(engagementZone.querySelector('[data-slot="window-chrome-frame-border"]')).toBeTruthy();
       expect(searchZone).toBeTruthy();
       expect(searchZone.getAttribute("data-level")).toBe("pane");
-      expect(searchZone.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+      expect(searchZone.querySelector('[data-slot="window-chrome-frame-border"]')).toBeTruthy();
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
       fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]')!);
@@ -358,7 +358,7 @@ describe("Shell components", () => {
       expect(overlay).toBeTruthy();
       expect(overlay.style.top).toBe("0px");
       expect(overlay.style.left).toBe("0px");
-      expect(overlay.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+      expect(overlay.querySelector('[data-slot="window-chrome-frame-border"]')).toBeTruthy();
       expect(overlay.getAttribute("data-folded")).toBe("true");
       expect(screen.queryByText("Idle")).toBeNull();
       fireEvent.click(toggleBtn);

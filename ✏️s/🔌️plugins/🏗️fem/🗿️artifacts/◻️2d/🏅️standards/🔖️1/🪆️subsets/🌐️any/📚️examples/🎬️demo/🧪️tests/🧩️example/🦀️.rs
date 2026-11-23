@@ -11,7 +11,7 @@ fn inference_determinism_law() {
     use protocol::Inference;
 
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses"));
     assert_eq!(Fem2dInference::infer(&snapshot).expect("valid materialized inference fixture"), Fem2dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
@@ -21,6 +21,7 @@ fn inference_default_law() {
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
     use protocol::Inference;
 
-    assert_eq!(Fem2dInference::infer(&Fem2dSnapshot::default()).expect("valid materialized inference fixture"), Fem2dInference::default());
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(Fem2dSnapshot::default());
+    assert_eq!(Fem2dInference::infer(&snapshot).expect("valid materialized inference fixture"), Fem2dInference::default());
 }
 //#endregion 🧪️InferenceLaws

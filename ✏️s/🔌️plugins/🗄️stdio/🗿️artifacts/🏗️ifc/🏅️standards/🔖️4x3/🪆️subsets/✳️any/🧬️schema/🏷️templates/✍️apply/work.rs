@@ -383,7 +383,8 @@ pub(crate) fn test_identity_query(original:DslValue,snapshot:&IfcSnapshot,cancel
 enum TestPlanningOutcome{Mutations(Vec<IfcMutation>),Identities(Vec<(usize,bool)>)}
 #[cfg(test)]
 fn test_planning(original: DslValue, snapshot: &IfcSnapshot, cancel_at: Option<usize>,query:bool) -> Result<TestPlanningOutcome, String> {
-    use semio_plugin::app_testing::OriginalWorkFixture;
+    use semio_plugin::artifact_app_laws::OriginalWorkFixture;
+    use semio_framework_value::RetainedCloneGrant;
     let mut caller = OriginalWorkFixture::with_identity(semio_framework_job::OperationId(918), semio_framework_job::Generation(1));
     let grant = RetainedCloneGrant { maximum_items: 1_000_000, maximum_copy_bytes: 1_048_576, maximum_capacity_bytes: 1_048_576, maximum_release_bytes: 1_048_576, maximum_depth: 256 };
     let mut receiver = ApplicationReceiver::default();
@@ -419,12 +420,11 @@ fn test_planning(original: DslValue, snapshot: &IfcSnapshot, cancel_at: Option<u
                 _ => {
                     if planner.garbage.is_some() || !retirement.is_empty() {
                         let demand = retirement.next_owner_demands::<IfcValue>(planner.garbage.is_some(), &None, 4096)?;
-                        semio_framework_job::close_original_retained_step(cx, demand, |grant| {
+                        closed_in(cx, demand, |effect| {
                             if retirement.is_empty() {
-                                let turn = retirement.begin_granted(&mut planner.garbage, grant);
-                                semio_framework_value::RetainedWorkOutcome { result: turn.result.and_then(|step| step.ok_or_else(|| invalid("Template scalar envelope omitted its owner"))), work: turn.work }
+                                owned_step(retirement.begin_granted(&mut planner.garbage, effect), "Template scalar envelope omitted its owner")
                             } else {
-                                retirement.step_granted(grant)
+                                settled(retirement.step_granted(4096, effect))
                             }
                         })?;
                         return Ok(());

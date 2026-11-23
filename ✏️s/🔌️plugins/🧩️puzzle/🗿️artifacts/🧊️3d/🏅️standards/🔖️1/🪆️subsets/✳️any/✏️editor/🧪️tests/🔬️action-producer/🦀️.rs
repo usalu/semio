@@ -38,8 +38,8 @@ fn target_volumes(app: &Puzzle3dMounted) -> usize {
 
 #[semio_framework_async_macros::async_test]
 async fn target_volume_action_and_undo_reach_the_command_through_the_framework_declared_producer() {
-    assert!(<Puzzle3dPlayApp as ArtifactEditor>::original_action_command_producer().is_none(), "the plugin hand-writes no producer");
-    assert!(<EditorApp<Puzzle3dPlayApp> as ArtifactApp>::original_action_command_producer().is_some(), "the framework supplies the generic producer");
+    assert!(<Puzzle3dPlayApp as ArtifactEditor>::original_action_command_producer().is_some(), "the plugin declares its import wire budget");
+    assert!(<EditorApp<Puzzle3dPlayApp> as ArtifactApp>::original_action_command_producer().is_some(), "the framework adopts the plugin producer");
     let mut scope = OriginalFixtureScope::admit();
     let mut app = mounted(&mut scope).await;
     let before = target_volumes(&app);
@@ -87,10 +87,11 @@ async fn settlement_work_ledger_is_finite_and_progresses() {
             let (answer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_plugin::artifact_app_laws::take_fixture_result_turn(&mut *app, action_meta.instance_id, policy.preparation));
             let Ok((page, progress)) = answer else { page_log.push("refused".to_string()); break };
             page_log.push(format!("heap(req {}, rel {}) progress(cap {}, rel {}, copy {}) page {}", heap.requested_bytes, heap.released_bytes, progress.retained_capacity_bytes, progress.released_bytes, progress.copied_bytes, page.is_some()));
-            if let Some(page) = page {
+            if let Some(mut page) = page {
                 let lane = page.lane;
                 let text = String::from_utf8_lossy(page.bytes()).into_owned();
-                app.acknowledge_typed_operation_result(page.token).expect("ack");
+                let token = semio_plugin::artifact_app_laws::close_fixture_result_page(&mut page, policy.close);
+                app.acknowledge_typed_operation_result(token).expect("ack");
                 if format!("{lane:?}") == "Fault" { panic!("the settlement faulted with: {text}; presentation log: {page_log:#?}"); }
                 break;
             }

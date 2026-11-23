@@ -74,15 +74,15 @@ pub fn replacement_seed(event: &editing::SnapshotEditEvent, snapshot: &IfcSnapsh
 
 #[derive(Default)]
 pub struct ReductionControl {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     cancel_at: Option<usize>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     ticks: usize,
 }
 
 impl ReductionControl {
     fn tick(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), String> {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         {
             self.ticks += 1;
             if self.cancel_at == Some(self.ticks) {
@@ -194,7 +194,7 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
         }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn cancel_at_reduction_tick(&mut self, tick: usize) {
         self.control.cancel_at = Some(tick);
     }
@@ -207,28 +207,28 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
     pub fn domain_turns(&self) -> usize {
         self.domain.turns()
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn reduction_ticks(&self) -> usize {
         self.control.ticks
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn staged_native_value(&self) -> bool {
         self.value_edit.started() || self.borrowed_preimage
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn borrowed_inverse_wire<'a>(&'a self, mutations: &'a [IfcMutation]) -> impl semio_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJson + 'a {
         self.publication.inverse_wire(mutations)
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn cancel_at_publication_turn(&mut self, turn: usize) {
         self.publication.cancel_at_turn(turn);
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn publication_turns(&self) -> usize {
         self.publication.turns()
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn retained_text_bytes(&self) -> usize {
         fn values(items: &[IfcValue]) -> usize {
             items

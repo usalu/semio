@@ -26,7 +26,7 @@ Feature: Route terminal pointer events to the right control
   @mode-conformance
   Scenario: A press focuses the containing focusable and tells the app which window took focus
     Given the two-stack scene painted at 80 by 40 cells
-    When the left button presses a chip or the empty cap row of a window
+    When the left button presses a chip or an uncovered cell of the chip row of a window
     Then keyboard focus moves to the first widget inside that window
     And the window reports that it took focus once
     And a press on a widget row focuses the widget and selects the row, and a double press activates it

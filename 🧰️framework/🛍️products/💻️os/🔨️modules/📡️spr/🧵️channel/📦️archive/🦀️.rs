@@ -6,3 +6,8 @@ pub mod archive_schema;
 pub mod archive_decoding;
 #[path = "🧭️reopen-route/🦀️.rs"]
 pub mod archive_reopen_route;
+#[cfg(test)]
+#[path="../../../🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🪙️close/🦀️.rs"]
+pub(crate) mod original_close;
+#[cfg(test)]
+use semio_framework_value_testing_allocator as _;

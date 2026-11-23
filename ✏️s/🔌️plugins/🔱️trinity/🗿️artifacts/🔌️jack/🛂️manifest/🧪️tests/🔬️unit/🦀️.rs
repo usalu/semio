@@ -1,15 +1,15 @@
-//! 🧪️ Native manifest identities owned by their concrete catalog.
-use crate::standards::v1::subsets::any::schema::graph_manifest::*;
+// Generated manifest registry
 
-#[test]
-fn nakagin_manifest_loads() {
-    let m = nakagin::nakagin_manifest();
-    assert_eq!(m.id, "nakagin");
-    assert!(m.node_kind("Piece").is_some());
-    assert!(m.edge_kind("Connection").is_some());
+pub use semio_s_artifact_trinity_jack_model::standards::v1::subsets::any::schema::graph_manifest::nakagin;
+
+use semio_framework_graph_manifest::Manifest;
+
+pub const MANIFEST_IDS: &[&str] = &["nakagin"];
+
+pub fn manifest_by_id(id: &str) -> Option<Manifest> {
+    match id {
+        "nakagin" => Some(nakagin::nakagin_manifest()),
+        _ => None,
+    }
 }
-#[test]
-fn manifest_by_id_resolves() {
-    let m = manifest_by_id("nakagin").expect("nakagin");
-    assert!(m.node_kind("Balcony").is_some());
-}
+

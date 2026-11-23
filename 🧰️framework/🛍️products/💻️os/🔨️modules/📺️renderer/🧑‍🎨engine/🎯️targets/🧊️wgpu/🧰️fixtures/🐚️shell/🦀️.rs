@@ -354,6 +354,8 @@ pub fn retained_world_sequence_probe(scenario: &str) {
     for mut document in retired_documents.into_iter().chain(active_documents) {
         while !document.close_step() {}
     }
+    let mounted: Vec<_> = rows.iter().map(|row| row.0.as_str()).collect();
+    retire_pointer_surfaces(&mounted);
     assert!(fault.is_none(), "pointer admission fault: {fault:?}");
     for (surface, count) in observed {
         let expected = if Some(surface.as_str()) == fixture["expectedOwner"].as_str() { case["events"].as_array().unwrap().len() as u64 } else { 0 };
@@ -392,8 +394,33 @@ pub fn tree_pointer_record(id: u64, key: &str, component: ui_contract::Component
     }
 }
 
+/// 🎟️ The fuel one pointer-document paint turn is quoted: a layout or paint phase posts one unit per node it settles, which a one-unit default turn cannot hold.
+const POINTER_DOCUMENT_TURN_WORK: u64 = 1 << 20;
+
+/// 🧹️ Retires the engine surfaces the pointer paint fixtures mounted, once the caller has closed every document lease it published, because a surface cannot retire while its document is held.
+pub fn retire_pointer_surfaces(surfaces: &[&str]) {
+    let mut closer = fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 7);
+    for surface in surfaces {
+        closer.own_surface(surface);
+    }
+    closer.finish();
+}
+
+/// 🎟️ The fixture turn whose generation is the one `document` carries, issued a grant wide enough for layout and session admission to copy their parameter records; a turn of another generation is retired first, because the engine admits a document only from a turn of its own ingress generation.
+fn fixture_turn_for_document<'a>(slot: &'a mut Option<(u64, fixture_original_turn::FixtureTurnV1)>, document: &UiDocumentLease, world: &mut infinite_world::world::World3dBuildContext) -> &'a mut fixture_original_turn::FixtureTurnV1 {
+    let generation = document.header().expect("the pointer document header").generation;
+    if slot.as_ref().is_some_and(|(live, _)| *live != generation) {
+        let (_, mut stale) = slot.take().expect("live fixture turn");
+        stale.retire_world(world);
+        stale.finish();
+    }
+    &mut slot.get_or_insert_with(|| (generation, {
+        fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, generation)
+    })).1
+}
+
 pub fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, &UiDocumentLease, Rect)]) -> InputState<ActionDescriptor> {
-    let mut caller = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller: Option<(u64, fixture_original_turn::FixtureTurnV1)> = None;
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -404,6 +431,8 @@ pub fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, 
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     for (surface, document, body) in documents {
+        let caller = fixture_turn_for_document(&mut caller, document, &mut world_resources);
+        caller.own_surface(surface);
         let mut cursor = UiDocumentFrameCursor::default();
         let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
             let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
@@ -413,7 +442,7 @@ pub fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, 
                 world_resources: &mut world_resources,
                 window_id: surface,
             };
-            let done = caller.turn(|cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, surface, "s.test.tree", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
+            let done = caller.turn_funded(POINTER_DOCUMENT_TURN_WORK, |cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, surface, "s.test.tree", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
             assert!(done || !cursor.terminal_is_fault(), "the tree pointer document faulted in phase {}", cursor.phase_name());
             done
         });
@@ -422,8 +451,12 @@ pub fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, 
     }
     shell.surfaces.world3d_states = world3d_states;
     PanelsViewCtx::of(shell).publish_retained_hit_registry(&mut input);
-    caller.retire_world(&mut world_resources);
-    caller.finish();
+    if let Some((_, caller)) = caller.as_mut() {
+        caller.retire_world(&mut world_resources);
+    }
+    if let Some((_, caller)) = caller {
+        caller.finish();
+    }
     input
 }
 
@@ -433,7 +466,7 @@ pub fn world3d_pointer_record(id: u64, key: &str, scene: &semio_ui_scene_world3d
 }
 
 pub fn paint_component_pointer_documents(shell: &mut ShellState, documents: &[(&str, &str, &UiDocumentLease, Rect)]) -> InputState<ActionDescriptor> {
-    let mut caller = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller: Option<(u64, fixture_original_turn::FixtureTurnV1)> = None;
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -444,6 +477,8 @@ pub fn paint_component_pointer_documents(shell: &mut ShellState, documents: &[(&
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     for (window_id, controller_id, document, body) in documents {
+        let caller = fixture_turn_for_document(&mut caller, document, &mut world_resources);
+        caller.own_surface(window_id);
         let mut cursor = UiDocumentFrameCursor::default();
         let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
             let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
@@ -453,7 +488,7 @@ pub fn paint_component_pointer_documents(shell: &mut ShellState, documents: &[(&
                 world_resources: &mut world_resources,
                 window_id,
             };
-            let done = caller.turn(|cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, window_id, controller_id, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
+            let done = caller.turn_funded(POINTER_DOCUMENT_TURN_WORK, |cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, window_id, controller_id, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
             assert!(done || !cursor.terminal_is_fault(), "the component pointer document faulted in phase {}", cursor.phase_name());
             done
         });
@@ -461,8 +496,12 @@ pub fn paint_component_pointer_documents(shell: &mut ShellState, documents: &[(&
         shell.input.register_retained_body_hits(window_id, *body, &mut input);
     }
     PanelsViewCtx::of(shell).publish_retained_hit_registry(&mut input);
-    caller.retire_world(&mut world_resources);
-    caller.finish();
+    if let Some((_, caller)) = caller.as_mut() {
+        caller.retire_world(&mut world_resources);
+    }
+    if let Some((_, caller)) = caller {
+        caller.finish();
+    }
     input
 }
 

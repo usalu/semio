@@ -280,8 +280,8 @@ impl ArtifactEditor for NotePlayApp {
         let labels = note_play_labels(view_state);
         let active_utility = note_active_utility(view_state);
         match body_key {
-            NOTE_PLAY_BODY_COMPOSITE => composite::render(document, &window.camera, active_utility),
-            NOTE_PLAY_BODY_NAVIGATOR => navigator::render(document, &crate::NoteCamera::default(), active_utility),
+            NOTE_PLAY_BODY_COMPOSITE => composite::render(document, &window.camera, active_utility, view_state.locale),
+            NOTE_PLAY_BODY_NAVIGATOR => navigator::render(document, &crate::NoteCamera::default(), active_utility, view_state.locale),
             NOTE_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_plugin::TreeWindows::for_body(view_state, NOTE_PLAY_BODY_ARTIFACT)),
             NOTE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             NOTE_PLAY_BODY_PROPERTIES => inspection_panel::render(document, active_utility, labels),
@@ -306,7 +306,7 @@ impl ArtifactEditor for NotePlayApp {
         }
         let window = crate::editor::note::window::config_from_view(cfg);
         let preview = crate::editor::note::window::transient_from_view(transient).ink_tool.map(|state| ink_apply_events::note_ink_tool_preview(doc.snapshot, &state));
-        composite::render_with_interaction(preview.as_ref().unwrap_or(doc.snapshot), &window.camera, note_active_utility(view_state), interaction).map(semio_plugin::built_to_component_tree)
+        composite::render_with_interaction(preview.as_ref().unwrap_or(doc.snapshot), &window.camera, note_active_utility(view_state), interaction, view_state.locale).map(semio_plugin::built_to_component_tree)
 
         })();
         rendered.map(Some).map_err(Into::into)

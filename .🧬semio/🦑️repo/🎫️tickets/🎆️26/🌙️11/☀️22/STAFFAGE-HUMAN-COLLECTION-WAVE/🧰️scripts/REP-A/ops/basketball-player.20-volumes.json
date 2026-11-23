@@ -1,0 +1,3 @@
+[
+ {"op": "solid-radii", "scale": "50", "list": "body", "match": "finger-[0-9]-(mid-|tip-)?l", "factor": 1.2}
+]

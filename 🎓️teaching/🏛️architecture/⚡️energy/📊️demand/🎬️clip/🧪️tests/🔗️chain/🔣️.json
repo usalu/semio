@@ -1,6 +1,7 @@
 {
   "unit": "kWh/(m²·a)",
   "useful": 100,
+  "annual_heating_demand": 11500,
   "gas": {"final": 140, "primary": 154, "e_E": 1.4, "f_P": 1.1, "class": "E"},
   "heat_pump": {"final": 31, "primary": 56, "e_E": 0.31, "f_P": 1.8, "class": "A"},
   "classes": [["A+", 30], ["A", 50], ["B", 75], ["C", 100], ["D", 130], ["E", 160], ["F", 200], ["G", 250], ["H", null]],

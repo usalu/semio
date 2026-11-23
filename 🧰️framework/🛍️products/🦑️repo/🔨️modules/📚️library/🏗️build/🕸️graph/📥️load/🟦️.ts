@@ -8,7 +8,7 @@ import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../.
 import {repositoryBuildGraphWriterDirectoryV1,withBuildGraphOptionalPublicationsV1,withRepositoryBuildGraphConsumerV1} from "../../📥️inputs/💾️storage/🟨️.mjs";
 import {settleOwnerRegistryV1,withOwnerRegistryCustodyV1} from "./🧭️registry-follow/🟦️.ts";
 import {ownerRegistryDigestV1,askOwnerRegistryV1} from "../🧾️registry-reads/🟨️.mjs";
-import {readBuildOwnerRegistryV1,readBuildGraphSelectionV1,closeBuildOwnerAdmissionV1,buildGraphScopeKeyV1,type BuildGraphSelectionV1,type BuildOwnerRegistryV1,type BuildOwnerAdmissionV1} from "../🚪️admission/🟦️.ts";
+import {readBuildOwnerRegistryV1,readBuildGraphSelectionV1,closeBuildOwnerAdmissionV1,buildGraphScopeKeyV1,type BuildGraphSelectionV1,type OwnerObservationRequestV1,type BuildOwnerRegistryV1,type BuildOwnerAdmissionV1} from "../🚪️admission/🟦️.ts";
 import {selectLiteralBuildProjectsV1} from "../../🧭️selection/📥️options/🟦️.ts";
 import {readdir,readFile,open,mkdir,writeFile,rename,lstat,rm} from "node:fs/promises";
 import {constants} from "node:fs";
@@ -26,11 +26,13 @@ import {loadGenerationGraphV1,type GenerationLoadStatsV1} from "../🕰️genera
 import {graphSnapshotPolicyV1,GRAPH_LIMITS_V1,graphDeclarationV1,graphPinSchemaV1,buildGraphProducerAuthorityV1,loadedGraphModuleAuthorityV1,loadedGraphAdmissionFormatV1,graphSelfUrlsV1} from "../🔐️authority/🟦️.ts";
 import {openOwnerCheckpointV1} from "./💾️owner-checkpoint/🟦️.ts";
 import {createPassReuseV1} from "./♻️pass-reuse/🟦️.ts";
-import {graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,membershipChangePathsV1,followedPathsV1} from "./🧲️membership-follow/🟦️.ts";
+import type {TakenMemoV1} from "../📥️inference/📦️project-nodes/♻️taken-memo/🟨️.mjs";
+import {settleInventoryRoundsV1,type InventoryVolatileV1} from "./🔁️inventory-rounds/🟦️.ts";
+import {graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1,graphVolatileTextV1,membershipChangePathsV1,followedPathsV1} from "./🧲️membership-follow/🟦️.ts";
 import {awaitPlannerQuietV1} from "./🔕️settle-quiet/🟦️.ts";
 import {observeOwnerWithRetryV1,ownerWithheldTextV1,stableOwnerFailureHoldsV1} from "./🛟️owner-isolation/🟦️.ts";
 import {readAdmissionMemoV1,writeAdmissionMemoV1,packAdmissionMemoV1,ownersOfAdmissionMemoV1} from "./🧠️admission-memo/🟦️.ts";
-import {sliceReadStepV1} from "../../🧠️memory/📋️slice-report/🟨️.mjs";
+import {describeCollectionV1,registerSliceCollectionsV1,sliceReadStepV1} from "../../🧠️memory/📋️slice-report/🟨️.mjs";
 import sourceAuthoritySchema from "../../🧬️schema/📥️authority.json" with {type:"json"};
 import sliceReportSchema from "../../🧠️memory/📋️slice-report/🧬️schema/🔣️.json" with {type:"json"};
 import {loadSelectedThroughFleetV1} from "./🤝️selected-exchange/🔌️attempt/🟦️.ts";
@@ -55,6 +57,10 @@ const isOwnerRegistryInvalidationV1=(value:unknown):value is OwnerRegistryInvali
  * @see ../../🧪️tests/🕸️graph/🩹️repair-rounds */
 const ownerFactsMemoV1=new Map<string,{readonly facts:unknown;readonly rows:readonly unknown[]}>();
 
+/** 📏️ What the owner memo holds, for the slice memory report: its entries, and its distinct rows beside the row references its entries hold (equal when every entry shares one instance per row).
+ * @see ../../🧠️memory/📋️slice-report/🟨️.mjs */
+registerSliceCollectionsV1("owner-facts",()=>{const distinct=new Set<unknown>();let held=0;for(const entry of ownerFactsMemoV1.values()){held+=entry.rows.length;for(const row of entry.rows)distinct.add(row);}return [describeCollectionV1("graph:ownerFactsMemo",ownerFactsMemoV1),{...describeCollectionV1("graph:ownerFactsMemoRows ("+held+" held, "+distinct.size+" distinct)",[...distinct].slice(0,64)),entries:distinct.size}];});
+
 function rememberOwnerFactsV1(key:string,entry:{readonly facts:unknown;readonly rows:readonly unknown[]}):void{
   ownerFactsMemoV1.delete(key);ownerFactsMemoV1.set(key,entry);
   while(ownerFactsMemoV1.size>GRAPH_LIMITS_V1.ownerFactsMemoEntries)ownerFactsMemoV1.delete(ownerFactsMemoV1.keys().next().value as string);
@@ -64,18 +70,18 @@ function rememberOwnerFactsV1(key:string,entry:{readonly facts:unknown;readonly 
  * @see ./🤝️selected-exchange/🔌️attempt/🟦️.ts */
 export const selectedAdmissionFactsV1={
   entries(scope:string):readonly {suffix:string;facts:unknown;rows:readonly unknown[]}[]{const prefix=scope+"\0"+loadedGraphAdmissionFormatV1+"\0";return [...ownerFactsMemoV1].filter(([key])=>key.startsWith(prefix)).map(([key,entry])=>({suffix:key.slice(prefix.length),facts:entry.facts,rows:entry.rows}));},
-  seed(scope:string,suffix:string,facts:unknown,rows:readonly unknown[]):void{rememberOwnerFactsV1(scope+"\0"+loadedGraphAdmissionFormatV1+"\0"+suffix,{facts,rows});}
+  seed(scope:string,suffix:string,facts:unknown,rows:readonly unknown[]):void{rememberOwnerFactsV1(scope+"\0"+loadedGraphAdmissionFormatV1+"\0"+suffix,{facts,rows:observationV1.shareObservationRowsV1((Object.isFrozen(rows)?[...rows]:rows) as unknown[])});}
 };
 
 /** 🪄️ Answers the admission facts of one owner from the memo while every row of its observation holds, and observes the owner (recording its rows apart) otherwise; the rows of a reused answer are retained by the capture around the caller, so the result stays held to what it rests on. An entry the caller already `trust`s (verified or observed earlier in the same follow-up of one read, whose final seal verifies every row again) answers without a second verification, so a restart of the inventory pays only for the owners that were forgotten.
  * @see ../../🧪️tests/🕸️graph/🩹️repair-rounds
  * @see ../../🧪️tests/🕸️graph/🩹️repair-rounds */
-export async function observeOwnerFactsMemoizedV1(input:{readonly key:string;readonly hold:(rows:readonly unknown[])=>Promise<boolean>;readonly observation:Pick<typeof observationV1,"captureObservedSourceInputsV1"|"retainObservedRowsV1">;readonly observe:()=>Promise<unknown>;readonly boundary?:(error:unknown)=>unknown;readonly recover?:()=>Promise<{readonly facts:unknown;readonly rows:readonly unknown[]}|undefined>;readonly persist?:(entry:{readonly facts:unknown;readonly rows:readonly unknown[]})=>void;readonly outcome?:(kind:"memo"|"checkpoint"|"discovery")=>void;readonly owner?:string;readonly aborted?:()=>boolean;readonly foreign?:(error:unknown)=>boolean;readonly onRetry?:Parameters<typeof observeOwnerWithRetryV1>[0]["onRetry"];readonly trust?:{has(entry:object):boolean;add(entry:object):void}}):Promise<unknown>{
+export async function observeOwnerFactsMemoizedV1(input:{readonly key:string;readonly hold:(rows:readonly unknown[])=>Promise<boolean>;readonly observation:Pick<typeof observationV1,"captureObservedSourceInputsV1"|"retainObservedRowsV1">&Partial<Pick<typeof observationV1,"shareObservationRowsV1">>;readonly observe:()=>Promise<unknown>;readonly boundary?:(error:unknown)=>unknown;readonly recover?:()=>Promise<{readonly facts:unknown;readonly rows:readonly unknown[]}|undefined>;readonly persist?:(entry:{readonly facts:unknown;readonly rows:readonly unknown[]})=>void;readonly outcome?:(kind:"memo"|"checkpoint"|"discovery")=>void;readonly owner?:string;readonly aborted?:()=>boolean;readonly foreign?:(error:unknown)=>boolean;readonly onRetry?:Parameters<typeof observeOwnerWithRetryV1>[0]["onRetry"];readonly trust?:{has(entry:object):boolean;add(entry:object):void}}):Promise<unknown>{
   const memoized=ownerFactsMemoV1.get(input.key);
   if(memoized!==undefined&&(input.trust?.has(memoized)===true||await input.hold(memoized.rows))){input.trust?.add(memoized);input.observation.retainObservedRowsV1(memoized.rows as never);input.outcome?.("memo");return memoized.facts;}
   const recovered=await input.recover?.();
-  if(recovered!==undefined&&await input.hold(recovered.rows)){rememberOwnerFactsV1(input.key,recovered);input.trust?.add(recovered);input.observation.retainObservedRowsV1(recovered.rows as never);input.outcome?.("checkpoint");return recovered.facts;}
-  const observe=input.boundary===undefined?input.observe:async()=>{try{return await input.observe();}catch(error){let classified:unknown;try{classified=input.boundary!(error);}catch{classified=undefined;}throw classified??error;}},fresh=await observeOwnerWithRetryV1({owner:input.owner??input.key,attempt:onFailure=>input.observation.captureObservedSourceInputsV1(observe,onFailure as never,false),hold:input.hold,aborted:input.aborted,foreign:input.foreign,onRetry:input.onRetry}),entry={facts:fresh.value,rows:fresh.observations};
+  if(recovered!==undefined&&await input.hold(recovered.rows)){input.observation.shareObservationRowsV1?.(recovered.rows as never);rememberOwnerFactsV1(input.key,recovered);input.trust?.add(recovered);input.observation.retainObservedRowsV1(recovered.rows as never);input.outcome?.("checkpoint");return recovered.facts;}
+  const observe=input.boundary===undefined?input.observe:async()=>{try{return await input.observe();}catch(error){let classified:unknown;try{classified=input.boundary!(error);}catch{classified=undefined;}throw classified??error;}},fresh=await observeOwnerWithRetryV1({owner:input.owner??input.key,attempt:onFailure=>input.observation.captureObservedSourceInputsV1(observe,onFailure as never,false),hold:input.hold,aborted:input.aborted,foreign:input.foreign,onRetry:input.onRetry}),entry={facts:fresh.value,rows:input.observation.shareObservationRowsV1?.(fresh.observations as never)??fresh.observations};
   input.persist?.(entry);rememberOwnerFactsV1(input.key,entry);input.trust?.add(entry);input.outcome?.("discovery");return fresh.value;
 }
 
@@ -83,11 +89,17 @@ export async function observeOwnerFactsMemoizedV1(input:{readonly key:string;rea
 /** 🧹️ Forgets the memoized owner facts of `scope` whose rows name one of `paths` or the listing of its parent directory, so a member that vanished or changed type re-observes exactly the owners that read it; the answer is the number forgotten.
  * @see ./🧪️tests/🧲️membership-follow */
 export function evictOwnerFactsReferencingV1(scope:string,paths:readonly string[]):number{
-  if(paths.length===0)return 0;
+  return forgetOwnerFactsReferencingV1(scope,paths).length;
+}
+
+/** 🧹️ The dirty set of a moved path: forgets exactly the owners `evictOwnerFactsReferencingV1` forgets and names them, so a follow-up observes those owners and trusts every other.
+ * @see ./🔁️inventory-rounds/🟦️.ts */
+export function forgetOwnerFactsReferencingV1(scope:string,paths:readonly string[]):string[]{
+  if(paths.length===0)return [];
   const named=new Set(paths),listings=new Set(paths.map(path=>path.slice(0,Math.max(path.lastIndexOf("/"),path.lastIndexOf("\\")))));
-  const prefix=scope+"\0"+loadedGraphAdmissionFormatV1+"\0";let forgotten=0;
-  for(const [key,entry] of [...ownerFactsMemoV1])if(key.startsWith(prefix)&&entry.rows.some(row=>{const {kind,path}=row as {kind:string;path:string};return named.has(path)||(kind==="readdir"||kind==="readdirNames")&&listings.has(path);})){ownerFactsMemoV1.delete(key);forgotten++;}
-  return forgotten;
+  const prefix=scope+"\0"+loadedGraphAdmissionFormatV1+"\0";const forgotten:string[]=[];
+  for(const [key,entry] of [...ownerFactsMemoV1])if(key.startsWith(prefix)&&entry.rows.some(row=>{const {kind,path}=row as {kind:string;path:string};return named.has(path)||(kind==="readdir"||kind==="readdirNames")&&listings.has(path);})){ownerFactsMemoV1.delete(key);forgotten.push(key.slice(prefix.length).split(" ")[0]!);}
+  return [...new Set(forgotten)];
 }
 
 /** 📌️ Reads immutable snapshot bytes while the existing original Graph store and exact content reader lease remain held. */
@@ -148,7 +160,7 @@ function createGraphInventoryAwaitReportV1(clock=()=>performance.now()){
 }
 
 /** 🎬️ Resolves one candidate while keeping every candidate's memory within its own finite attempt. */
-async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean;sealedOnly?:boolean},registry?:BuildOwnerRegistryV1,scope?:string,critical:BuildGraphCriticalV1=work=>work()):Promise<BuildGraphV1|OwnerRegistryInvalidationV1|undefined> {
+async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean;sealedOnly?:boolean;takenMemo?:TakenMemoV1},registry?:BuildOwnerRegistryV1,scope?:string,critical:BuildGraphCriticalV1=work=>work()):Promise<BuildGraphV1|OwnerRegistryInvalidationV1|undefined> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
   const invalidated=(reason:string,details:Record<string,unknown>={})=>{if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true"){let diagnostic;try{diagnostic=buildGraphRetryDiagnosticV1(root,reason,details,path=>captureBoundedSourceRevisionV1(path,REVISION_POLICY_V1.maximumSourceBytes).sha256);}catch{diagnostic=buildGraphRetryDiagnosticV1(root,reason);}process.stderr.write("[graph-retry] "+JSON.stringify(diagnostic)+"\n");}else process.stderr.write("[graph-retry] "+JSON.stringify({version:1,reason,stale:((details.stale as {path:string}[]|undefined)??[]).map(row=>row.path)})+"\n");return undefined;};
   const phaseRows:{phase:string;milliseconds:number}[]=[],timing=(phase:string,started:number,details:Record<string,unknown>={})=>{const row={phase,milliseconds:Math.round(performance.now()-started),...details};phaseRows.push(row);if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"||process.env.SEMIO_GRAPH_PHASES==="1")process.stderr.write("[graph-phase] "+JSON.stringify(row)+"\n");};
@@ -165,7 +177,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
     if(!scope)return undefined;
     try{return await openOwnerCheckpointV1(join(repositoryBuildGraphWriterDirectoryV1(root,"inference"),"oc"),scope,loadedGraphAdmissionFormatV1,{check,yieldContinuation:()=>phaseControl.yieldContinuation(),publish:(paths,plan,write)=>withBuildGraphOptionalPublicationsV1(paths,plan,write,undefined)});}catch{check();return undefined;}
   })();
-  const inventory=async(report:ReturnType<typeof createGraphInventoryAwaitReportV1>,followUp=false,trust:{current:WeakSet<object>}={current:new WeakSet()})=>{
+  const inventory=async(report:ReturnType<typeof createGraphInventoryAwaitReportV1>,followUp=false,trust:{current:WeakSet<object>}={current:new WeakSet()},volatile:ReadonlySet<string>=new Set())=>{
     let started=performance.now();
     if(selected&&scope){
       report.begin("registry-check");
@@ -173,7 +185,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
       report.begin("memo-read");
     }
     let lent=selected&&scope&&!followUp?await readAdmissionMemoV1(memoPath,scope,value=>value.format===loadedGraphAdmissionFormatV1):undefined;
-    const stored=lent;
+    const storedAdmission=lent?.admission;
     if(lent!==undefined&&scope!==undefined){
       report.count({observations:lent.observations.length});report.begin("memo-seed");
       const known=new Set(selectedAdmissionFactsV1.entries(scope).map(entry=>entry.suffix));for(const owner of ownersOfAdmissionMemoV1(lent,known))selectedAdmissionFactsV1.seed(scope,owner.suffix,owner.facts,owner.rows);
@@ -188,7 +200,17 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
     const captured=remembered!==undefined?{value:remembered.admission as unknown,observations:remembered.observations}:selected?await observation.captureObservedSourceInputsV1(()=>observation.settleObservedComputationV1(async()=>{
       const current=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));if(ownerRegistryDigestV1(current)!==registryDigest)return ownerRegistryInvalidationV1;askOwnerRegistryV1(root,registry!,["digest"]);
       const nativeCache=new Map(),nativeClosures=new Map();
-      return closeBuildOwnerAdmissionV1(options.selection,registry!,async(owner,targets,inputs)=>{
+      const epoch=randomUUID();let farm:ReturnType<typeof producer.ownerFactsFarmV1>,farmTold=0,farmAsked=false;
+      const farmOf=()=>{if(!farmAsked){farmAsked=true;farm=producer.ownerFactsFarmV1?.(root);}return farm;},discoverHere=(owner:OwnerObservationRequestV1["owner"],targets:readonly string[],inputs:readonly string[],lookup:{operation:(value:string)=>void})=>producer.discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,{workspaceRoot:root,invocation,phaseControl,selection:options.selection,nativeCache,nativeClosures,onOwnerDiscoveryPhase:lookup.operation},inputs);
+      const discoverThrough=async(owner:OwnerObservationRequestV1["owner"],targets:readonly string[],inputs:readonly string[],lookup:{operation:(value:string)=>void})=>{
+        const pool=farmOf();
+        if(pool?.ready()===true)try{
+          const answer=await pool.discover({owner:owner.name,targets,inputs,selection:options.selection,registryDigest,format:loadedGraphAdmissionFormatV1,epoch},invocation?.control.signal) as {facts:unknown;rows:readonly unknown[]};
+          observation.retainObservedRowsV1(observation.shareObservationRowsV1(answer.rows as never[]) as never);return answer.facts;
+        }catch(error){if(invocation?.control.signal.aborted===true)throw error;if(farmTold++<3)process.stderr.write("[graph-owner-farm] "+JSON.stringify({version:1,owner:owner.name,fallback:"parent",reason:String((error as Error)?.message??error).slice(0,200)})+"\n");}
+        return discoverHere(owner,targets,inputs,lookup);
+      };
+      const run=async({owner,targets,inputs}:OwnerObservationRequestV1)=>{
         if(invocation)checkScriptInvocation(invocation);
         const suffix=owner.name+"\0"+JSON.stringify([targets,inputs]),key=scope+"\0"+loadedGraphAdmissionFormatV1+"\0"+suffix,lookup=report.ownerLookup(owner.name,key);
         try{
@@ -201,11 +223,12 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
             outcome:kind=>report.outcome(kind),
             trust:{has:entry=>trust.current.has(entry),add:entry=>trust.current.add(entry)},
             boundary:error=>producer.ownerBoundaryFailureV1(error,{workspaceRoot:root,fallback:join(root,owner.manifest)}),
-            observe:()=>{lookup.stage("discovery");return producer.discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,{workspaceRoot:root,invocation,phaseControl,selection:options.selection,nativeCache,nativeClosures,onOwnerDiscoveryPhase:lookup.operation},inputs);},
+            observe:()=>{lookup.stage("discovery");return discoverThrough(owner,targets,inputs,lookup);},
           }) as never;
           report.ownerCompleted();return facts;
         }finally{lookup.end();}
-      },failure=>{process.stderr.write("[graph-owner] "+JSON.stringify({version:1,owners:failure.error.owners,needed:failure.needed,text:failure.needed?failure.error.text:ownerWithheldTextV1(failure.owner,failure.error)})+"\n");},(name,target)=>{const manifest=registry!.owners.find(owner=>owner.name===name)?.manifest;if(manifest===undefined||!manifest.endsWith(".json"))return undefined;try{const targets=(JSON.parse(observation.observedFs.readFileSync(join(root,manifest),"utf8")) as {targets?:Record<string,unknown>}).targets;return targets===undefined?undefined:Object.hasOwn(targets,target);}catch{return undefined;}},summary=>{report.count({admittedOwners:summary.owners});process.stderr.write("[graph-closure] "+JSON.stringify({version:1,...summary})+"\n");});
+      };
+      return closeBuildOwnerAdmissionV1(options.selection,registry!,(owner,targets,inputs)=>run({owner,targets,inputs}) as never,failure=>{process.stderr.write("[graph-owner] "+JSON.stringify({version:1,owners:failure.error.owners,needed:failure.needed,text:failure.needed?failure.error.text:ownerWithheldTextV1(failure.owner,failure.error)})+"\n");},(name,target)=>{const manifest=registry!.owners.find(owner=>owner.name===name)?.manifest;if(manifest===undefined||!manifest.endsWith(".json"))return undefined;try{const targets=(JSON.parse(observation.observedFs.readFileSync(join(root,manifest),"utf8")) as {targets?:Record<string,unknown>}).targets;return targets===undefined?undefined:Object.hasOwn(targets,target);}catch{return undefined;}},summary=>{report.count({admittedOwners:summary.owners});process.stderr.write("[graph-closure] "+JSON.stringify({version:1,...summary})+"\n");},()=>farm?.ready()===true?farm.size:0);
     },{signal:invocation?.control.signal,onRound:async event=>{
       const paths=event.paths??[],settled=event.settled===true,evicted=!settled&&scope?evictOwnerFactsReferencingV1(scope,paths):0,first=paths.slice(0,5).map(path=>path.startsWith(root)?path.slice(root.length+1):path);
       if(paths.length>0)process.stderr.write("[graph-settle] "+JSON.stringify({version:1,round:event.round,settled,paths:paths.length,first,evicted,text:graphSettleTextV1(event.round,paths.length,first.slice(0,3),evicted,settled)})+"\n");
@@ -213,7 +236,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
       if(!settled&&paths.length>0)await awaitPlannerQuietV1({paths,signal:invocation?.control.signal});
     }})):undefined,candidate=captured?.value;
     if(isOwnerRegistryInvalidationV1(candidate))return candidate;
-    const owners=report.outcomes(),unchanged=stored!==undefined&&owners.discovery===0&&owners.checkpoint===0&&JSON.stringify(captured?.value)===JSON.stringify(stored.admission);
+    const owners=report.outcomes(),unchanged=storedAdmission!==undefined&&owners.discovery===0&&owners.checkpoint===0&&JSON.stringify(captured?.value)===JSON.stringify(storedAdmission);
     if(remembered===undefined&&selected&&scope&&captured!==undefined&&!followUp&&!unchanged){
       checkpoint?.flush();
       report.count({observations:captured.observations.length});report.begin("memo-publish",{observations:captured.observations.length});
@@ -222,31 +245,37 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
       if(published!==undefined)report.count({published});timing("admission-memo-write",started);
     }
     report.begin("catalog");
-    const admission=candidate as BuildOwnerAdmissionV1|undefined,files=admission?.files??buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation)),counts={files:files.length,directories:inventoryDirectoriesV1.get(files)?.length??0};
+    const admission=candidate as BuildOwnerAdmissionV1|undefined,files=admission?.files??buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation,volatile)),counts={files:files.length,directories:inventoryDirectoriesV1.get(files)?.length??0};
     report.count(counts);timing("workspace-catalog-lookup",started,counts);started=performance.now();
-    report.begin("membership-hash",counts);const digest=await buildGraphMembershipV1(root,files,invocation);timing("workspace-membership-hash",started);
+    report.begin("membership-hash",counts);const digest=await buildGraphMembershipV1(root,files,invocation,volatile);timing("workspace-membership-hash",started);
     return {files,digest,admission,observations:captured?.observations??[]};
   };
-  const settledInventory=async(orNothing:boolean):Promise<Awaited<ReturnType<typeof inventory>>|undefined>=>{
-    const started=performance.now(),trust={current:new WeakSet<object>()};let previous="",repeats=0;
-    for(let round=1;;round++){
-      const report=createGraphInventoryAwaitReportV1(),attemptStarted=performance.now();
-      try{
-        const value=await sliceReadStepV1("inventory",()=>inventory(report,round>1,trust),{},report.read);
+  const settledInventory=async(orNothing:boolean):Promise<(Awaited<ReturnType<typeof inventory>>&{volatile?:InventoryVolatileV1})|undefined>=>{
+    const started=performance.now(),trust={current:new WeakSet<object>()},relative=(path:string)=>(path.startsWith(root)?path.slice(root.length+1):path).split("\\").join("/");
+    let attemptStarted=performance.now(),note:{en:string;de:string}|undefined,report=createGraphInventoryAwaitReportV1(),attempts=0;
+    const settled=await settleInventoryRoundsV1({
+      limits:{repairRounds:GRAPH_LIMITS_V1.repairRounds,volatileRounds:GRAPH_LIMITS_V1.inventoryVolatileRounds,inventoryRounds:GRAPH_LIMITS_V1.inventoryRounds},orNothing,
+      attempt:async(round,volatile)=>{
+        attempts=round;report=createGraphInventoryAwaitReportV1();attemptStarted=performance.now();
+        const value=await sliceReadStepV1("inventory",()=>inventory(report,round>1,trust,new Set([...volatile].map(relative))),{},()=>({...report.read(),...(note&&{note})}));
         if(round>1)process.stderr.write("[graph-inventory] "+JSON.stringify({version:1,round,elapsedMilliseconds:Math.round(performance.now()-started),...report.outcomes(),text:graphInventoryTextV1(round,report.outcomes(),Math.round(performance.now()-started))})+"\n");
         return value;
-      }catch(error){
-        const membership=buildGraphErrorCodeV1(error)==="BUILD_MEMBERSHIP_CHANGED",paths=membership?membershipChangePathsV1(root,error):followedPathsV1(root,error);
-        if(!membership&&paths.length===0)throw error;
-        if(invocation)checkScriptInvocation(invocation);
-        const signature=JSON.stringify([...paths].sort());
-        repeats=signature===previous?repeats+1:0;previous=signature;
-        if(repeats>=2||paths.length===0&&round>=GRAPH_LIMITS_V1.repairRounds){if(orNothing&&membership)return undefined;throw error;}
-        if(!membership)await new Promise<void>(accept=>setTimeout(accept,Math.min(round,8)*GRAPH_LIMITS_V1.editFollowPauseMilliseconds));
-        const evicted=scope?evictOwnerFactsReferencingV1(scope,paths):0,counts=report.outcomes(),elapsed=Math.round(performance.now()-attemptStarted);
-        process.stderr.write("[graph-retry] "+JSON.stringify({version:1,reason:membership?"membership-changed":"path-moved",round,path:paths[0]?.slice(root.length+1)??null,paths:paths.length,evicted,...counts,elapsedMilliseconds:elapsed,text:graphRetryTextV1(round,paths[0]?.slice(root.length+1)??"",paths.length,evicted,counts,elapsed)})+"\n");
-      }
-    }
+      },
+      follow:error=>{const membership=buildGraphErrorCodeV1(error)==="BUILD_MEMBERSHIP_CHANGED";return {membership,paths:membership?membershipChangePathsV1(root,error):followedPathsV1(root,error)};},
+      forget:paths=>scope?forgetOwnerFactsReferencingV1(scope,paths):[],
+      check:()=>{if(invocation)checkScriptInvocation(invocation);},
+      pause:(round,membership)=>membership?Promise.resolve():new Promise<void>(accept=>setTimeout(accept,Math.min(round,8)*GRAPH_LIMITS_V1.editFollowPauseMilliseconds)),
+      dirty:event=>{
+        const first=event.paths.map(relative),text=graphDirtyTextV1(event.round,first,event.owners,event.streak),counts=report.outcomes(),elapsed=Math.round(performance.now()-attemptStarted);
+        note={en:text.en.slice(0,480),de:text.de.slice(0,480)};
+        process.stderr.write("[graph-retry] "+JSON.stringify({version:1,round:event.round,paths:event.paths.length,first:first.slice(0,5),dirtyOwners:event.owners.slice(0,16),dirtyCount:event.owners.length,streak:event.streak,...counts,elapsedMilliseconds:elapsed,text,retry:graphRetryTextV1(event.round,first[0]??"",event.paths.length,event.owners.length,counts,elapsed)})+"\n");
+      },
+    });
+    if(settled.value===undefined)return undefined;
+    if(settled.volatile.paths.length===0)return settled.value;
+    const volatilePaths=settled.volatile.paths.map(relative),text=graphVolatileTextV1(volatilePaths,settled.volatile.owners);
+    process.stderr.write("[graph-volatile] "+JSON.stringify({version:1,rounds:attempts,paths:volatilePaths.slice(0,16),pathCount:volatilePaths.length,owners:settled.volatile.owners.slice(0,16),ownerCount:settled.volatile.owners.length,text})+"\n");
+    return {...settled.value,volatile:{paths:volatilePaths,owners:settled.volatile.owners}};
   };
   const initial=(await settledInventory(false))!;
   if(isOwnerRegistryInvalidationV1(initial)){invalidated("owner-registry");return initial;}
@@ -267,7 +296,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
   }catch(error){const code=buildGraphErrorCodeV1(error);if(code!=="ENOENT"&&code!=="closure-missing")throw error;check();}
   if(options.sealedOnly)return undefined;
   let captured!:{value:BuildGraphV1;observations:readonly unknown[]};
-  const reuse=createPassReuseV1();
+  const reuse=createPassReuseV1(options.takenMemo===undefined?{}:{memo:options.takenMemo});
   let basis=initial as Basis,failedFacts:unknown[]=[],failedAuthority:unknown[]=[];
   phaseStarted=performance.now();
   const discoverOnce=(on:Basis)=>observation.captureObservedSourceInputsV1(async()=>{
@@ -336,7 +365,7 @@ export {pendingOwnerRootsV1,vanishedOwnerRootsV1,adoptPendingBuildOwnersV1} from
 /** 🕸️ Loads the graph and follows the owner registry when inference started before a peer added, moved or removed a native owner.
  * @see ./🧭️registry-follow/🟦️.ts */
 export async function loadBuildGraphV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:BuildGraphLoadOptionsV1):Promise<BuildGraphV1> {
-  const attempt=()=>loadBuildGraphOnceV1(root,invocation,phaseControl,options);
+  const attempt=(carried?:{readonly takenMemo:TakenMemoV1})=>loadBuildGraphOnceV1(root,invocation,phaseControl,carried===undefined?options:{...options,takenMemo:carried.takenMemo});
   if(options.reuse)return attempt();
   return settleOwnerRegistryV1(root,attempt,{aborted:()=>invocation?.control.signal.aborted===true,say:line=>{process.stderr.write(line);}});
 }
@@ -381,7 +410,7 @@ function requireSelectedSubgraphV1(slice:BuildGraphV1,selected:BuildGraphV1):voi
 }
 
 
-type BuildGraphLoadOptionsV1={selection:BuildGraphSelectionV1;reuse?:boolean;baseline?:boolean;onStats?:(stats:GenerationLoadStatsV1)=>void;graph?:{policy?:"fresh"|"current";closure?:readonly string[];sealedOnly?:boolean;lean?:boolean;compact?:boolean;externalInputs?:readonly string[]}};
+type BuildGraphLoadOptionsV1={selection:BuildGraphSelectionV1;reuse?:boolean;baseline?:boolean;takenMemo?:TakenMemoV1;onStats?:(stats:GenerationLoadStatsV1)=>void;graph?:{policy?:"fresh"|"current";closure?:readonly string[];sealedOnly?:boolean;lean?:boolean;compact?:boolean;externalInputs?:readonly string[]}};
 
 
 /** 🕸️ Loads the graph with the strict self-checks of the loaded implementation; the generation path runs pinned and completes with what it loaded. A moved owner registry is adopted (the authority snapshot is dropped and the registry read once more, its owners are inferred or served by their own records) and never ends the read: under the pin the next registry read is fixed again, so the loop has no count to give up at and ends with the first candidate that holds. */

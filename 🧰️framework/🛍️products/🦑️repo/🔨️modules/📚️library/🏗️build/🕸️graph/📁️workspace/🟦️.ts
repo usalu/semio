@@ -20,14 +20,14 @@ import {inventoryDirectoriesV1,expandedClosuresV1,rememberExpandedClosureV1} fro
 
 
 /** 📁️ Discovers real workspace authority while yielding cancellation and progress. */
-export async function workspaceBuildFilesV1(root:string,invocation?:ScriptInvocation):Promise<string[]> {
+export async function workspaceBuildFilesV1(root:string,invocation?:ScriptInvocation,volatile:ReadonlySet<string>=new Set()):Promise<string[]> {
   const descends=buildWalkDescendsV1(),pending=[""],files:string[]=[],directories:string[]=[];
   let visited=0;
   while(pending.length){
     if(invocation)checkScriptInvocation(invocation);
     const batch=pending.splice(-32),listings=await Promise.all(batch.map(async directory=>{
       try{return {directory,entries:await readdir(join(root,directory),{withFileTypes:true})};}
-      catch(error){if(directory&&["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))throw Object.assign(Error(`Build directory removed during discovery: ${directory}`),{code:"BUILD_MEMBERSHIP_CHANGED",paths:[directory]});throw error;}
+      catch(error){if(directory&&volatile.has(directory)&&["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return {directory,entries:[]};if(directory&&["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))throw Object.assign(Error(`Build directory removed during discovery: ${directory}`),{code:"BUILD_MEMBERSHIP_CHANGED",paths:[directory]});throw error;}
     }));
     if(invocation)checkScriptInvocation(invocation);
     for(const {directory,entries}of listings){
@@ -130,10 +130,10 @@ export function graphMemberPredicateV1():(file:string)=>boolean {
 }
 
 
-/** 🧾️ Identifies complete admitted physical membership, types and modes independently of implementation bytes. Every member that vanished or changed type is collected in one pass and named once by `paths`, so a single follow-up round answers all changes seen so far.
+/** 🧾️ Identifies complete admitted physical membership, types and modes independently of implementation bytes; a `volatile` member or directory (root-relative, forward slashes) that kept changing is left out of the hash with everything below it. Every member that vanished or changed type is collected in one pass and named once by `paths`, so a single follow-up round answers all changes seen so far.
  * @see ../📥️load/🧪️tests/🧲️membership-follow */
-export async function buildGraphMembershipV1(root:string,files:string[],invocation?:ScriptInvocation):Promise<string> {
-  const records:string[]=[],changed:string[]=[],entries=[...files.map(file=>({file,directory:false})),...(inventoryDirectoriesV1.get(files)??[]).map(file=>({file,directory:true}))].filter(({file})=>![".nxignore","nx.json"].includes(file)).sort((a,b)=>a.file.localeCompare(b.file));
+export async function buildGraphMembershipV1(root:string,files:string[],invocation?:ScriptInvocation,volatile:ReadonlySet<string>=new Set()):Promise<string> {
+  const records:string[]=[],changed:string[]=[],within=(file:string)=>{for(let at=file.length;at>0;at=file.lastIndexOf("/",at-1))if(volatile.has(file.slice(0,at)))return true;return false;},entries=[...files.map(file=>({file,directory:false})),...(inventoryDirectoriesV1.get(files)??[]).map(file=>({file,directory:true}))].filter(({file})=>![".nxignore","nx.json"].includes(file)&&!(volatile.size>0&&within(file))).sort((a,b)=>a.file.localeCompare(b.file));
   for(let index=0;index<entries.length;index+=64){
     if(invocation)checkScriptInvocation(invocation);
     records.push(...await Promise.all(entries.slice(index,index+64).map(async({file,directory})=>{let info;try{info=await lstat(join(root,file));}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??"")){changed.push(file);return"";}throw error;}if(info.isSymbolicLink()||(directory?!info.isDirectory():!info.isFile())){changed.push(file);return"";}return JSON.stringify([file,info.isDirectory()?"directory":"file",info.mode]);})));
@@ -144,4 +144,4 @@ export async function buildGraphMembershipV1(root:string,files:string[],invocati
 
 
 /** 🚪️ Admits content-aware observations through the same owned inference mechanism. */
-export async function buildGraphSourceFactsHoldV1(observations:readonly unknown[],invocation?:ScriptInvocation,onStale?:(row:{kind:string;path:string;fact:unknown})=>void,onVerified?:(rows:number)=>void,withinRound=false):Promise<boolean>{return withinRound?observationV1.observationsHoldWithinRoundV1(observations,64,invocation?.control.signal,onStale,onVerified):observationV1.observationsHold(observations,64,new Set(),new Set(),invocation?.control.signal,onStale,onVerified);}
+export async function buildGraphSourceFactsHoldV1(observations:readonly unknown[],invocation?:ScriptInvocation,onStale?:(row:{kind:string;path:string;fact:unknown})=>void,onVerified?:(rows:number)=>void,withinRound=false,exhaustive=false):Promise<boolean>{return withinRound?observationV1.observationsHoldWithinRoundV1(observations,64,invocation?.control.signal,onStale,onVerified):observationV1.observationsHold(observations,64,new Set(),new Set(),invocation?.control.signal,onStale,onVerified,exhaustive);}

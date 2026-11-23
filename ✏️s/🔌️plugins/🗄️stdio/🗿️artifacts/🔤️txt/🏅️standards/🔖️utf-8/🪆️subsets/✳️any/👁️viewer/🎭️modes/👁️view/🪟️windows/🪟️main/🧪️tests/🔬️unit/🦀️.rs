@@ -31,6 +31,6 @@ async fn definition_declares_a_text_window() {
 #[semio_framework_async_macros::async_test]
 async fn render_joins_lines_with_the_line_ending() {
     let document = TxtSnapshot { schema: "stdio.txt".into(), lines: vec!["a".into(), "b".into()], trailing_newline: false, line_ending: Default::default() };
-    let node = render(&document).expect("render");
+    let node = render(&document, semio_plugin::Locale::En).expect("render");
     assert_eq!(merged_scene(&node).buffer, "a\nb");
 }

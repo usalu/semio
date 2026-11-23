@@ -213,7 +213,7 @@
           },
           "mass": {
             "kg": 27.5,
-            "comX": 0,
+            "comX": -0.0000727,
             "comY": 0.42,
             "distribution": "point",
             "source": "authored-estimate"

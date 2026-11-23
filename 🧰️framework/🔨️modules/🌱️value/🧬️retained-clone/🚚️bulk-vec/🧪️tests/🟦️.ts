@@ -102,17 +102,17 @@ test("logical clone bodies remain independent from admitted physical headers",()
  expect(source).toContain("size_of::<[T;N]>()<=body");
  expect(source).toContain("T::native_copy()");
  expect(source).toContain("maximum_work_units:u64");
- const field=readFileSync(new URL("../../⚙️engine/📋️field/🦀️.rs",import.meta.url),"utf8");expect(field).toContain("child.advance_into(source,body,maximum,&mut effect,reply)");
- const derive=readFileSync(new URL("../../../✨️derive/🧬️retained-clone/🦀️.rs",import.meta.url),"utf8");expect(derive).toContain("advance_demands(self,source,body,maximum_work_units)");
+ const field=readFileSync(new URL("../../⚙️engine/📋️field/🦀️.rs",import.meta.url),"utf8");expect(field).toContain("child.advance_captured_into(captured,body,maximum,&mut effect");
+ const derive=readFileSync(new URL("../../../✨️derive/🧬️retained-clone/🦀️.rs",import.meta.url),"utf8");expect(derive).toContain("advance_demands(self,source,body,maximum)");
 });
 
 
 test("production clone wrappers require the original body through quoted child loans",()=>{
  const owner=(name:string)=>readFileSync(new URL("../../../../../../"+name,import.meta.url),"utf8");
  const projection=owner("🧰️framework/🔨️modules/🌱️value/📽️projection/🦀️.rs");expect(projection).toContain("body:usize,effect:&mut crate::RetainedAllocationEffect");
- const field=owner("🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🦀️.rs");expect(field).toContain("self.cursor.advance_into(source,body,maximum_work_units");expect(field).not.toContain("self.demand(source, grant.maximum_copy_bytes)");
- const semantic=owner("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🦀️.rs");expect(semantic).toContain("self.demands(body)");expect(semantic).not.toContain("self.demands(grant.maximum_copy_bytes)");
- const drivers=owner("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔌️drivers/🦀️.rs");expect(drivers).toContain("advance(s,body,g)");
+ const field=owner("🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🦀️.rs");expect(field).toContain("pub fn close_into<'r>(&mut self,body:usize,effect:");expect(field).not.toContain("self.demand(source, grant.maximum_copy_bytes)");
+ const semantic=owner("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🦀️.rs");expect(semantic).toContain("self.demands(body,maximum_work_units)");expect(semantic).not.toContain("self.demands(grant.maximum_copy_bytes)");
+ const drivers=owner("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔌️drivers/🦀️.rs");expect(drivers).toContain("fn advance(&mut self,s:RetainedCloneRef<'_,P>,body:usize,effect:Effect");
 });
 
 

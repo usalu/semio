@@ -147,3 +147,7 @@ Fixes (Rust, engine owner `🔢️sparse`):
 | s-fem-static | `p6h_mounted_element_fixed_schema_cells_match_batch_and_reject_maximum_plus_one` | PASS |
 
 Second OBJ/STL attempt failed on another transient: `semio-ui-layout` unresolved imports from `semio_ui_contract::window_layout_ops` (another agent mid-edit). A sequential run of surface, owner-claim and visual tests is in progress (`🗑️generated/ts-art.sh`, results in `ts-art.txt`).
+
+## Round 5c (paused, coordinator order: C: at 0 bytes)
+
+All my cargo runs were stopped by PID; none of mine is running. My own `C:\t\ts`/`C:\t\tsb` were deleted. Earlier G: runs sat at about 14% CPU (spinning HDD); the C: runs failed with os error 112 and rustc STATUS_ACCESS_VIOLATION (disk full), so no owner-claim, visual or OBJ/STL result exists yet. Resume with `ts-env.sh` (targets `C:\t\2d-a`, `C:\t\2d-ab`) plus `CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0`, `-j 6`, once the coordinator wipes the dirs: `ts-surf3.sh`, then `ts-art2.sh`.

@@ -1,3 +1,8 @@
+import{createHash}from"node:crypto";
+
+/** 🔑️ The length of the JSON text of a fact above which the pool keys a row by the digest of the text and not by the text itself (a directory listing is kilobytes of names the pool would hold a second time as its key, as long as the row lives). */
+const POOL_DIGEST_CHARACTERS=256;
+
 /** 🔤️ The text identity of one fact inside an observation row: a primitive by type and value, any other value by its compact JSON text with the key order kept. */
 export function factKeyV1(fact){
  if(fact===null||typeof fact!=="object")return typeof fact+String(fact);
@@ -182,7 +187,9 @@ export function createRowPoolV1(){
   if(fact===null||typeof fact!=="object")return head+typeof fact+String(fact);
   if(Array.isArray(fact.nestedObservations)&&Object.keys(fact).length===5&&typeof fact.provider==="string"&&typeof fact.revision==="string"&&typeof fact.resultSha256==="string"){const source=stampOf(fact.source);if(source!==undefined)return head+"a\0"+fact.provider+"\0"+fact.revision+"\0"+fact.resultSha256+"\0"+source+"\0"+fact.nestedObservations.map(number).join(",");}
   const flat=stampOf(fact);
-  return flat!==undefined?head+"f\0"+flat:head+"j\0"+JSON.stringify(fact);
+  if(flat!==undefined)return head+"f\0"+flat;
+  const text=JSON.stringify(fact);
+  return head+(text.length>POOL_DIGEST_CHARACTERS?"h\0"+createHash("sha256").update(text).digest("base64"):"j\0"+text);
  };
  const share=row=>{
   if(canonical.has(row))return row;

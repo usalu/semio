@@ -27,5 +27,6 @@
 #[path = "../../🦀️.rs"]
 pub mod plugin;
 pub use plugin::DrawApps;
+pub use plugin::DRAW_MOUNTED_OWNER_POLICY;
 
 //#endregion 🔖️Plugin

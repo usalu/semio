@@ -143,3 +143,18 @@ test("the owner loop answers from the memo before any look, remembers an owner o
  expect(finished).toBeGreaterThan(-1);expect(remembered).toBeGreaterThan(finished);expect(text.split("takenMemo.remember(").length).toBe(2);
  expect(text.indexOf("if(result.projects[name].unavailable){")).toBeLessThan(remembered);
 });
+
+test("trusted survivors are answered without a row check until distrusted, and a moved path or a changed job still evicts them",async()=>{
+ let checks=0;const memo=createTakenMemoV1({holds:()=>{checks++;return true;},retain:()=>{}}),row=(path:string)=>({kind:"file",path});
+ for(const name of["a","b","c"])memo.remember(name,{key:"k",project:{name},rows:[row("/r/"+name)]});
+ const wanted=["a","b","c"].map(name=>({name,key:"k"}));
+ expect(memo.distrust()).toBe(0);expect(memo.trustSurvivors()).toBe(3);expect(memo.trustSurvivors()).toBe(0);
+ expect((await memo.replay(wanted)).map(entry=>entry.name)).toEqual(["a","b","c"]);expect(checks).toBe(0);expect(memo.stats().trusted).toBe(3);
+ expect(memo.evictReferencing(["/r/b"])).toBe(1);
+ expect((await memo.replay([{name:"a",key:"other"}])).map(entry=>entry.name)).toEqual([]);
+ expect(memo.stats().evictedKey).toBe(1);
+ expect(memo.distrust()).toBe(1);
+ expect((await memo.replay(wanted)).map(entry=>entry.name)).toEqual(["c"]);expect(checks).toBe(1);
+ memo.remember("d",{key:"k",project:{},rows:[row("/r/d")]});expect(memo.stats().remembered).toBe(4);
+ await memo.replay([{name:"d",key:"k"}]);expect(checks).toBe(2);
+});

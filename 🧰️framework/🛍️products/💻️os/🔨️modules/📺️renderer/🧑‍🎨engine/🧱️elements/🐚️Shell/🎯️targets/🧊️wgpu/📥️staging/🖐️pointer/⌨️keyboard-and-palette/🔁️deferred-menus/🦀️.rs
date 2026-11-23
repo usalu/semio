@@ -2,6 +2,9 @@
 
 use super::*;
 
+/// 🌳️ The context-menu hit domain a tree row answers under, the domain React's Tree adapts its rows to.
+const CONTEXT_MENU_TREE_HIT_DOMAIN: &str = "tree";
+
 //#region ShellInput
 impl<'ctx> PointerCtx<'ctx> {
     /// 🔁️ Drains the deferred halves AND re-enters the window bodies until nothing new is armed.
@@ -193,7 +196,7 @@ impl<'ctx> PointerCtx<'ctx> {
         use semio_renderer_wgpu_shell_window_actions as host;
         let is_de = self.prefs.locale_id == "de";
         let text = |key: &'static str| semio_renderer_wgpu_shell_vocab::shell_chrome_string(key, is_de).to_string();
-        let name = self.sync.active_sync_owner().map(|owner| owner.document_id).or_else(|| self.docs.session.as_ref().map(|session| session.app.id.clone())).unwrap_or_default();
+        let name = self.sync.active_sync_owner().map(|owner| owner.document_key).or_else(|| self.docs.session.as_ref().map(|session| session.app.id.clone())).unwrap_or_default();
         let body = if saving {
             semio_renderer_wgpu_shell_vocab::shell_chrome_format("closeGuard.saving", is_de, &[("name", &name)])
         } else {

@@ -536,9 +536,10 @@ where
     }
 
     /// 🚫️async: E1 pure field comparison, consumed only through `is_some_and`/`Iterator::all`
-    /// sync closures — see R9.
+    /// sync closures — see R9. The origin `document_id` is replica-local naming (each replica re-derives its
+    /// established envelopes under its own id), so operation identity is the mutation id, schema and payload.
     pub fn same_operation_identity_and_payload(left: &semio_os_spr::MutationEnvelope, right: &semio_os_spr::MutationEnvelope) -> bool {
-        left.mutation_id == right.mutation_id && left.document_id == right.document_id && left.diff.schema == right.diff.schema && left.diff.payload == right.diff.payload
+        left.mutation_id == right.mutation_id && left.diff.schema == right.diff.schema && left.diff.payload == right.diff.payload
     }
 
     fn take_candidate_envelope(&mut self) -> ArtifactEnvelope<P, Mutation> {

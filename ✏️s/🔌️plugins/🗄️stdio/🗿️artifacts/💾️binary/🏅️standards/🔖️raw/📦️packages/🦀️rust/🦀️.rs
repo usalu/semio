@@ -1,6 +1,7 @@
 //! 🔖️ io-registry of `semio-s-artifact-stdio-binary` — a path-preserving carve of the artifact root mounts.
 
 #![allow(async_fn_in_trait)]
+#![recursion_limit = "256"]
 
 extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;

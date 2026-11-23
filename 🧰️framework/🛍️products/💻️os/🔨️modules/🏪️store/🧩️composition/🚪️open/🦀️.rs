@@ -467,6 +467,7 @@ impl MemberOpenRequest {
 }
 
 impl ErasedSnapshotRetirement for MemberOpenRequest {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:MemberOpenRequest::next_copy_byte_demand(self)?,capacity_bytes:MemberOpenRequest::next_capacity_byte_demand(self,body)?,release_bytes:MemberOpenRequest::next_release_byte_demand(self)?,depth:MemberOpenRequest::next_depth_demand(self)?})}
     fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = MemberOpenRequest::close_step(self, effect.grant()); let result = match effect.performed(self.last_turn_work()) { Ok(true) => result, Ok(false) => result.and_then(|_| Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "member request close exceeds its work grant"))), Err(error) => Err(error) }; semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work: effect.performed_work() }) }
     fn terminal_is_empty(&self) -> bool { MemberOpenRequest::terminal_is_empty(self) }

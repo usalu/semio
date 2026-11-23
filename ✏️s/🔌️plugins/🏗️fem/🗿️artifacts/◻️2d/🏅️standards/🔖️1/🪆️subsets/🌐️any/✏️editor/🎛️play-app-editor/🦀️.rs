@@ -40,8 +40,20 @@ impl ArtifactEditor for Fem2dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA;
 
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
 
+    fn build_document_store_owners(grant: semio_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = store::ArtifactOperationWire::semantic::<Self::Snapshot>().with_batch_digest().with_original_pack_value_receiving().with_original_target(store::whole_document_target::<Self::Mutation>);
+            (owners, progress)
+        }))
+    }
 
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+        Some(fem2d_envelope_decode_owner_bundle())
+    }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
@@ -296,12 +308,13 @@ impl ArtifactEditor for Fem2dPlayApp {
     fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref();
-        let text = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
-        let number = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64);
-        let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_bool);
-        let list = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_array).map(|items| items.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect::<Vec<_>>());
+        let lookup = |key: &str| args.and_then(|value| value.get(key).or_else(|| value.get(&key.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['_', c.to_ascii_lowercase()] } else { vec![c] }).collect::<String>())));
+        let text = |key: &str| lookup(key).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
+        let number = |key: &str| lookup(key).and_then(semio_framework_value::DslValue::as_f64);
+        let flag = |key: &str| lookup(key).and_then(semio_framework_value::DslValue::as_bool);
+        let list = |key: &str| lookup(key).and_then(semio_framework_value::DslValue::as_array).map(|items| items.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect::<Vec<_>>());
         let point_list = |key: &str| {
-            args.and_then(|value| value.get(key))
+            lookup(key)
                 .and_then(semio_framework_value::DslValue::as_array)
                 .map(|items| {
                     items
@@ -315,7 +328,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                 .unwrap_or_default()
         };
         let scalar_text = |key: &str| {
-            args.and_then(|value| value.get(key)).and_then(|value| match value {
+            lookup(key).and_then(|value| match value {
                 semio_framework_value::DslValue::String(text) => Some(text.clone()),
                 semio_framework_value::DslValue::Bool(flag) => Some(flag.to_string()),
                 other => other.as_f64().map(|number| number.to_string()),
@@ -529,12 +542,15 @@ impl ArtifactEditor for Fem2dPlayApp {
         interaction: &InteractionView<'_>,
         cx:&mut semio_plugin::StepContext<'_>,
     ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
-        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
+        let rendered:(semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>,Option<Fem2dSnapshot>)=(||{
         let clock = transient.window::<results_window::transient::Fem2dResultsWindowTransientOwner>().and_then(|window| window.clock);
         let preview = transient.snapshot.preview::<Fem2dSnapshot, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue, Fem2dMutation>(doc.snapshot, Fem2dSnapshot::to_reference, |value| Fem2dSnapshot::from_reference(value).ok());
-        Self::render_body(body_key, doc, preview.as_ref(), cfg, view_state, Fem2dInteractionSnapshot::from_interaction(interaction), clock)
+        let tree = Self::render_body(body_key, doc, preview.as_ref(), cfg, view_state, Fem2dInteractionSnapshot::from_interaction(interaction), clock);
+        (tree, preview)
 
         })();
+        let (rendered, preview) = rendered;
+        Self::retire_preview(preview, cx)?;
         rendered.map(Some).map_err(Into::into)
         }
 
@@ -546,6 +562,26 @@ impl ArtifactEditor for Fem2dPlayApp {
 }
 
 impl Fem2dPlayApp {
+    /// ♻️ Pays the retirement of a gumball preview snapshot through the render turn's funded original effect, because its sealed lists refuse a plain drop of their last owner.
+    fn retire_preview(preview: Option<Fem2dSnapshot>, cx: &mut semio_plugin::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        let Some(preview) = preview else { return Ok(()) };
+        let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::retain(preview);
+        cx.with_original_retirement(|cx| {
+            while !owner.terminal_is_empty() {
+                let demand = owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;
+                semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+                    let body = effect.grant().maximum_copy_bytes;
+                    owner.step(body, effect)
+                })?;
+                if cx.retirement_should_yield() {
+                    break;
+                }
+            }
+            Ok(())
+        })?;
+        if owner.terminal_is_empty() { Ok(()) } else { std::mem::forget(owner); Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "fem2d preview retirement exceeds the render turn's grant").into()) }
+    }
+
     /// 🖼️ Body-key routing table shared by both render entry points: two Canvas2d windows and the
     /// three dock panels. While a gumball gesture is open both canvas windows paint its `preview` (the committed
     /// document with the open transaction applied, never history); the panels keep the committed document. The results
@@ -559,7 +595,7 @@ impl Fem2dPlayApp {
                 let window_id = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_gesture_window_id_for_render(view_state, model_window::WINDOW_KIND_ID);
                 let active_utility = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_active_utility(view_state);
                 semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| {
-                    model_window::render_with_progress(canvas, &window.camera, visual, &interaction, window_id.as_deref(), active_utility)
+                    model_window::render_with_progress(canvas, &window.camera, visual, &interaction, window_id.as_deref(), active_utility, view_state.locale)
                 })
             }
             results_window::BODY_KEY => {
@@ -577,6 +613,7 @@ impl Fem2dPlayApp {
                     cfg.window.map(|window|window.authority()),
                     active_utility,
                     labels,
+                    view_state.locale,
                 )
             }
             artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),

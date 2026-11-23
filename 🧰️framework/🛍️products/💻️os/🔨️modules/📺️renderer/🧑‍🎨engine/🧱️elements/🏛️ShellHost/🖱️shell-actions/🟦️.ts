@@ -79,7 +79,7 @@ import {
   frameworkLayoutDeclaredInstances
 } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
-import { uiIntentToActionDescriptor } from "../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import { uiIntentToActionDescriptor } from "../../🗣️Interpreter/🎬️intent-descriptor/🟦️.ts";
 // #endregion 🔌️Adapters
 import { browserActorActionRefusalReasonV1 } from "@semio-tech/framework/browser-bundle/action-handoff/requests";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "@semio-tech/framework/browser-bundle/action-handoff";

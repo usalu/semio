@@ -22,8 +22,6 @@
         "artifactKind",
         "artifactSchema",
         "artifactSchemaVersion",
-        "documentSchema",
-        "documentSchemaVersion",
         "inferenceSchema",
         "inferenceSchemaVersion",
         "algorithmVersion",
@@ -42,12 +40,6 @@
           "$ref": "#/$defs/InferenceIdV1"
         },
         "artifactSchemaVersion": {
-          "$ref": "#/$defs/InferenceVersionV1"
-        },
-        "documentSchema": {
-          "$ref": "#/$defs/InferenceIdV1"
-        },
-        "documentSchemaVersion": {
           "$ref": "#/$defs/InferenceVersionV1"
         },
         "inferenceSchema": {

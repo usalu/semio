@@ -1,7 +1,7 @@
 import * as React from "react";
-import { borderStatePriority, boxDrawnSides, resolveBorderSegments, resolveBoxStates, type BorderSide, type BorderState, type StateBox } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
-import { type SharedBorderClip, type SharedBorderTransform, createSharedBorderSnap, sharedBorderAxisScale, sharedOutlineSegments, clipSharedOutlineSegments, visibleSharedOutlineSegments, createSharedBorderJunctionResolver, leadingSharedOutlineSegments, sharedBorderPaintPoints, type SharedOutlineSegment } from "../🔲️WindowSilhouette/shared-border.ts";
-import { windowSilhouetteOutline, type WindowSilhouetteGeometry } from "../🔲️WindowSilhouette/🟦️.tsx";
+import { borderStatePriority, boxDrawnSides, resolveBorderSegments, resolveBoxStates, type BorderPoint, type BorderSide, type BorderState, type StateBox } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
+import { type SharedBorderClip, type SharedBorderTransform, createSharedBorderSnap, sharedBorderAxisScale, sharedOutlineSegments, clipSharedOutlineSegments, visibleSharedOutlineSegments, createSharedBorderJunctionResolver, leadingSharedOutlineSegments, sharedBorderPaintPoints, type SharedOutlineSegment } from "../🔲️WindowFrame/shared-border.ts";
+import { WINDOW_FRAME_PATH_INSET, type WindowFrameChipRegion, type WindowFrameGeometry } from "../🔲️WindowFrame/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 
 export interface SharedBorderPaintSegment {
@@ -11,7 +11,7 @@ export interface SharedBorderPaintSegment {
 }
 interface Registration {
   element: HTMLElement;
-  geometry: WindowSilhouetteGeometry;
+  geometry: WindowFrameGeometry;
   state: BorderState;
   update: (segments: readonly SharedBorderPaintSegment[]) => void;
   painted?: string;
@@ -40,7 +40,7 @@ const bareFieldSelector = '[data-shared-border-cells] > :is(input:not([type="hid
 const interactiveSelector = 'button, a[href], input:not([type="hidden"]), select, textarea, summary, [contenteditable]:not([contenteditable="false"]), [role="button"], [role="link"], [role="tab"], [role="option"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="treeitem"], [role="switch"], [role="checkbox"], [role="radio"], [role="textbox"], [role="combobox"], [role="searchbox"], [role="slider"], [role="spinbutton"], [tabindex]:not([tabindex="-1"]), [data-shared-border-interactive]';
 const activeSelector = '[data-active="true"], [data-selected="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]';
 const invalidSelector = '[aria-invalid="true"], [data-invalid]:not([data-invalid="false"])';
-const boxRelevantSelector = `${ownerSelector}, ${cellSelector}, ${bareFieldSelector}, [data-window-silhouette-chip], ${interactiveSelector}`;
+const boxRelevantSelector = `${ownerSelector}, ${cellSelector}, ${bareFieldSelector}, [data-window-frame-chip], ${interactiveSelector}`;
 const allSides: readonly BorderSide[] = ["top", "right", "bottom", "left"];
 const namespace = "http://www.w3.org/2000/svg";
 const xhtml = "http://www.w3.org/1999/xhtml";
@@ -95,7 +95,7 @@ export function sharedBorderStroke(state: BorderState): string {
   return "var(--border-normal-color)";
 }
 
-/** 📌️ A client rect with every edge rounded to a whole device pixel, so silhouette strokes and the bars they meet land on the same physical pixel at fractional heights and zoom levels. */
+/** 📌️ A client rect with every edge rounded to a whole device pixel, so frame strokes and the bars they meet land on the same physical pixel at fractional heights and zoom levels. */
 export function deviceSnappedRect(element: Element): DOMRect {
   return snapRect(element.getBoundingClientRect());
 }
@@ -107,7 +107,7 @@ function snapRect(rect: DOMRect): DOMRect {
   return { left, top, right, bottom, x: left, y: top, width: right - left, height: bottom - top, toJSON: () => ({}) } as DOMRect;
 }
 
-/** 🫥️ Props of a borderless box (a tab, tree row, menu item, icon button): no line in the normal state, the full closed silhouette in its own overlay while it is stated. The overlay exists only while the box is stated. */
+/** 🫥️ Props of a borderless box (a tab, tree row, menu item, icon button): no line in the normal state, the full closed outline in its own overlay while it is stated. The overlay exists only while the box is stated. */
 export const sharedBorderlessBoxProps = { "data-shared-border-frame": "", "data-shared-border-edges": "" } as const;
 
 /** 📜️ A group that scrolls its content cannot hold an overlay that stays on the strip: its cells are painted by the next owner out. */
@@ -123,7 +123,7 @@ export function sharedBorderCellOwner(element: Element): HTMLElement | null {
   if (parent.hasAttribute("data-shared-border-cells") && (element.matches(selector) || element.matches(bareFieldSelector))) return parent;
   if (!element.matches(cellSelector)) return null;
   let scroller: HTMLElement | null = null;
-  for (let ancestor: HTMLElement | null = parent; ancestor && !ancestor.hasAttribute("data-window-silhouette"); ancestor = ancestor.parentElement) {
+  for (let ancestor: HTMLElement | null = parent; ancestor && !ancestor.hasAttribute("data-window-frame"); ancestor = ancestor.parentElement) {
     if (!ancestor.matches(ownerSelector) || !(ancestor.matches(groupSelector) || sharedBorderCellOwner(ancestor) === null)) continue;
     if (ancestor.matches(selector) || !scrollsContent(ancestor)) return ancestor;
     scroller ??= ancestor;
@@ -151,12 +151,37 @@ export function matchesFocusVisible(element: Element): boolean {
   }
 }
 
-/** 🧲️ A chip edge within 2 px of a line of the window's own silhouette snaps onto it, so a stated chip never sits beside the seam it recolours. */
+/** 🧲️ A chip edge within 2 px of a line of the window's own outline snaps onto it, so a stated chip never sits beside the seam it recolours. */
 const snapToLine = (value: number, lines: readonly number[]): number => {
   let best = value, reach = 2 + 1e-6;
   for (const line of lines) if (Math.abs(line - value) < reach) { best = line; reach = Math.abs(line - value); }
   return best;
 };
+
+/** 🔲️ The logical corners of a frame rectangle and the corners of its inset paint path, clockwise from the top left.
+ *
+ * @see ../🔲️WindowFrame/frame.cases.json */
+export function windowFrameOutline(metrics: { readonly width: number; readonly height: number }): { readonly logical: readonly BorderPoint[]; readonly paint: readonly BorderPoint[] } {
+  const { width, height } = metrics, inset = Math.min(WINDOW_FRAME_PATH_INSET, width / 2, height / 2);
+  return {
+    logical: [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }],
+    paint: [{ x: inset, y: inset }, { x: width - inset, y: inset }, { x: width - inset, y: height - inset }, { x: inset, y: height - inset }],
+  };
+}
+
+/** 📏️ The vertical and horizontal paint lines a stated chip snaps onto: the four frame edges and the inner edges of each chip region. */
+export function windowFrameLines(paint: readonly BorderPoint[], regions: readonly WindowFrameChipRegion[]): { readonly vertical: readonly { x: number; top: number; bottom: number }[]; readonly ys: readonly number[] } {
+  const [topLeft, , bottomRight] = paint as readonly [BorderPoint, BorderPoint, BorderPoint, BorderPoint];
+  const vertical = [{ x: topLeft.x, top: topLeft.y, bottom: bottomRight.y }, { x: bottomRight.x, top: topLeft.y, bottom: bottomRight.y }];
+  const ys = [topLeft.y, bottomRight.y];
+  for (const region of regions) {
+    const inset = Math.min(WINDOW_FRAME_PATH_INSET, region.width / 2, region.height / 2);
+    const top = region.y + inset, bottom = region.y + region.height - inset;
+    vertical.push({ x: region.x + inset, top, bottom }, { x: region.x + region.width - inset, top, bottom });
+    ys.push(region.dock === "top" ? bottom : top);
+  }
+  return { vertical, ys };
+}
 
 /** 🪟️ A stated box stays fully visible: a side that overshoots a clipping ancestor by more than a pixel moves onto the clip edge, while a clip coinciding with the box edge within a pixel does not clip it at all. Returns null when nothing of the box is visible. */
 function clampToClip(rect: { left: number; top: number; right: number; bottom: number }, widened: SharedBorderClip): { left: number; top: number; right: number; bottom: number } | null {
@@ -236,13 +261,13 @@ export class BorderCompositor {
             any = true;
             if (isElement(node) && (node.matches(boxRelevantSelector) || (node.namespaceURI === xhtml && node.querySelector(boxRelevantSelector) !== null))) touched = true;
           }
-          if (!any || (!touched && tracked !== null && !tracked.has(target)) || target.closest("[data-shared-border-overlay], [data-window-silhouette-border]")) continue;
+          if (!any || (!touched && tracked !== null && !tracked.has(target)) || target.closest("[data-shared-border-overlay], [data-window-frame-border]")) continue;
           changed = geometric = true;
           if (touched) structural = true;
         } else {
           const name = record.attributeName!;
           if (tracked !== null && !tracked.has(target) && !MARKER_ATTRIBUTES.has(name) && !(name === "class" && target.matches(cellSelector))) continue;
-          if (target.closest("[data-shared-border-overlay], [data-window-silhouette-border]")) continue;
+          if (target.closest("[data-shared-border-overlay], [data-window-frame-border]")) continue;
           changed = true;
           if (GEOMETRIC_ATTRIBUTES.has(name)) { geometric = true; if (name !== "style") structural = true; }
         }
@@ -404,8 +429,8 @@ export class BorderCompositor {
     const updates = new Map<Registration, readonly SharedBorderPaintSegment[]>();
     const frameSources = new Map<string, { element: HTMLElement; frame: Frame; width: number; height: number; sides: string | null }>();
     const scope = this.root.closest(".semio-scope");
-    const found = this.candidates ??= { owners: [...this.root.querySelectorAll<HTMLElement>(ownerSelector)], frames: [...this.root.querySelectorAll<HTMLElement>(selector)], chips: [...this.root.querySelectorAll<HTMLElement>("[data-window-silhouette-chip]")], cells: [...this.root.querySelectorAll<HTMLElement>(`${cellSelector}, ${selector}, ${bareFieldSelector}`)] };
-    const hosts = found.owners.filter(element => !element.hasAttribute("data-window-silhouette") && element.closest(".semio-scope") === scope && isSharedBorderHost(element));
+    const found = this.candidates ??= { owners: [...this.root.querySelectorAll<HTMLElement>(ownerSelector)], frames: [...this.root.querySelectorAll<HTMLElement>(selector)], chips: [...this.root.querySelectorAll<HTMLElement>("[data-window-frame-chip]")], cells: [...this.root.querySelectorAll<HTMLElement>(`${cellSelector}, ${selector}, ${bareFieldSelector}`)] };
+    const hosts = found.owners.filter(element => !element.hasAttribute("data-window-frame") && element.closest(".semio-scope") === scope && isSharedBorderHost(element));
     const hostSet = new Set<Element>(hosts);
     const replaced = new Map<HTMLElement, HTMLElement>();
     for (const element of found.frames) {
@@ -434,7 +459,7 @@ export class BorderCompositor {
     for (const [element, owner] of replaced) put({ id: boxId(element), element, kind: "frame", paint: owner, parent: null });
     for (const element of found.cells) {
       const owner = sharedBorderCellOwner(element);
-      if (owner && hostSet.has(owner) && !element.hasAttribute("data-window-silhouette") && element.closest(".semio-scope") === scope) put({ id: boxId(element), element, kind: "cell", paint: owner, parent: null });
+      if (owner && hostSet.has(owner) && !element.hasAttribute("data-window-frame") && element.closest(".semio-scope") === scope) put({ id: boxId(element), element, kind: "cell", paint: owner, parent: null });
     }
     const parents = new Set<Box | null>();
     for (const box of boxes) {
@@ -450,7 +475,7 @@ export class BorderCompositor {
       const disabled = target.matches(":disabled") || target.closest('[aria-disabled="true"]') !== null;
       if (disabled) disabledBoxes.add(box.id);
       const hover = box.element.getAttribute("data-shared-border-hover");
-      return { id: box.id, parent: box.parent?.id ?? null, interactive: holder !== null || (box.kind === "chip" && box.element.querySelector(interactiveSelector) !== null), hoverWithin: hover === "declared" || hover === "silhouette", disabled, marks };
+      return { id: box.id, parent: box.parent?.id ?? null, interactive: holder !== null || (box.kind === "chip" && box.element.querySelector(interactiveSelector) !== null), hoverWithin: hover === "declared" || hover === "frame", disabled, marks };
     });
     const tracked = new Set<Element>();
     for (const box of boxes) for (let element: Element | null = box.element; element && !tracked.has(element); element = element.parentElement) tracked.add(element);
@@ -479,13 +504,10 @@ export class BorderCompositor {
       const { snapped: rect, offsetWidth, offsetHeight } = this.measure(entry.element);
       if (rect.width <= 0 || rect.height <= 0 || entry.geometry.state !== "ready") { updates.set(entry, []); continue; }
       const metrics = entry.geometry.metrics;
-      const outline = windowSilhouetteOutline(metrics);
-      const vertical = outline.flatMap((point, index) => {
-        const next = outline[(index + 1) % outline.length]!;
-        return point.x === next.x ? [{ x: point.x, top: Math.min(point.y, next.y), bottom: Math.max(point.y, next.y) }] : [];
-      });
-      windowTransforms.set(entry.element, { id, vertical, ys: outline.map(point => point.y), left: rect.left, top: rect.top, scaleX: sharedBorderAxisScale(rect.width, offsetWidth), scaleY: sharedBorderAxisScale(rect.height, offsetHeight) });
-      sources.push(...this.visibleSources(entry.element, sharedOutlineSegments(id, entry.geometry.outline, windowSilhouetteOutline(metrics), states[id]!, { left: rect.left, top: rect.top, scaleX: sharedBorderAxisScale(rect.width, offsetWidth), scaleY: sharedBorderAxisScale(rect.height, offsetHeight) }, snap)));
+      const { logical, paint } = windowFrameOutline(metrics), regions = entry.geometry.chipRegions;
+      const lines = windowFrameLines(paint, regions);
+      windowTransforms.set(entry.element, { id, vertical: lines.vertical, ys: lines.ys, left: rect.left, top: rect.top, scaleX: sharedBorderAxisScale(rect.width, offsetWidth), scaleY: sharedBorderAxisScale(rect.height, offsetHeight) });
+      sources.push(...this.visibleSources(entry.element, sharedOutlineSegments(id, logical, paint, states[id]!, { left: rect.left, top: rect.top, scaleX: sharedBorderAxisScale(rect.width, offsetWidth), scaleY: sharedBorderAxisScale(rect.height, offsetHeight) }, snap, id, regions)));
     }
     const declared = (box: Box): readonly BorderSide[] => box.kind === "group" ? [] : box.kind === "frame" ? edgesOf(box.element).split(/\s+/).filter((side): side is BorderSide => allSides.includes(side as BorderSide)) : allSides;
     const cellHosts = new Set<Element>();
@@ -591,8 +613,6 @@ export class BorderCompositor {
     sources = visibleSharedOutlineSegments(sources);
     const byId = new Map(sources.map(source => [source.id, source]));
     const output = new Map<string, SharedBorderPaintSegment[]>();
-    const chipOutput = new Map<string, SharedBorderPaintSegment[]>();
-    const chipIds = new Set(boxes.filter(box => box.kind === "chip").map(box => box.id));
     const resolved = resolveBorderSegments(sources);
     const junction = createSharedBorderJunctionResolver(sources);
     const interacting = new Set<string>();
@@ -633,7 +653,6 @@ export class BorderCompositor {
       const paintSegment: SharedBorderPaintSegment = { d: points.map(local).map((point, index) => `${index ? "L" : "M"} ${point.x} ${point.y}`).join(" "), state: segment.state, ...disabledBoxes.has(segment.id.split(":")[0]!) ? { disabled: true as const } : {} };
       list.push(paintSegment);
       output.set(segment.owner, list);
-      if (chipIds.has(segment.id.split(":")[0]!)) chipOutput.set(segment.owner, [...chipOutput.get(segment.owner) ?? [], paintSegment]);
     }
     for (const [id, entry] of this.windows) {
       const owned = sources.filter(source => source.owner === id);
@@ -642,8 +661,7 @@ export class BorderCompositor {
       const complete = owned.length > 0 && Math.abs(owned.reduce((sum, edge) => sum + length(edge), 0) - won.reduce((sum, edge) => sum + length(edge), 0)) < 0.001;
       const sameState = won.length > 0 && won.every(segment => segment.state === won[0]!.state);
       const unclipped = owned.every(source => (source.from.x === source.logicalFrom.x && source.from.y === source.logicalFrom.y && source.to.x === source.logicalTo.x && source.to.y === source.logicalTo.y) || (source.to.x === source.logicalFrom.x && source.to.y === source.logicalFrom.y && source.from.x === source.logicalTo.x && source.from.y === source.logicalTo.y));
-      const degenerate = entry.geometry.outline.length !== windowSilhouetteOutline(entry.geometry.metrics).length;
-      updates.set(entry, degenerate ? [{ d: entry.geometry.borderPath, state: states[id]! }, ...chipOutput.get(id) ?? []] : complete && sameState && unclipped && !interacting.has(id) ? [{ d: entry.geometry.borderPath, state: won[0]!.state }] : output.get(id) ?? []);
+      updates.set(entry, entry.geometry.chipRegions.length === 0 && complete && sameState && unclipped && !interacting.has(id) ? [{ d: entry.geometry.borderPath, state: won[0]!.state }] : output.get(id) ?? []);
     }
     for (const [id, { element, frame, width, height, sides }] of frameSources) {
       const size = `${width}x${height}`;
@@ -669,11 +687,11 @@ export class BorderCompositor {
           path.setAttribute("stroke", sharedBorderStroke(segment.state));
           path.setAttribute("vector-effect", "non-scaling-stroke");
           path.setAttribute("stroke-linecap", "square"); path.setAttribute("stroke-linejoin", "miter");
-          path.setAttribute("class", `window-silhouette-border window-silhouette-border-${segment.state}`);
+          path.setAttribute("class", `window-frame-border window-frame-border-${segment.state}`);
           path.setAttribute("data-shared-border-segment", ""); path.setAttribute("data-shared-border-state", segment.state);
           if (segment.disabled) path.setAttribute("data-shared-border-disabled", "");
           if (segment.state !== "celebrated") return path;
-          path.classList.add("window-silhouette-border-celebrated-mask");
+          path.classList.add("window-frame-border-celebrated-mask");
           const group = element.ownerDocument.createElementNS(namespace, "g");
           const defs = element.ownerDocument.createElementNS(namespace, "defs");
           const mask = element.ownerDocument.createElementNS(namespace, "mask");
@@ -684,7 +702,7 @@ export class BorderCompositor {
           const fill = element.ownerDocument.createElementNS(namespace, "foreignObject");
           fill.setAttribute("x", "0"); fill.setAttribute("y", "0"); fill.setAttribute("width", String(width)); fill.setAttribute("height", String(height)); fill.setAttribute("mask", `url(#${maskId})`);
           const content = element.ownerDocument.createElement("div");
-          content.className = "window-silhouette-border-celebrated-fill"; content.style.cssText = "width:100%;height:100%";
+          content.className = "window-frame-border-celebrated-fill"; content.style.cssText = "width:100%;height:100%";
           fill.append(content); group.append(defs, fill); return group;
         }));
         frame.svg.setAttribute("data-paint", signature);
@@ -710,14 +728,14 @@ export class BorderCompositor {
     this.root.removeAttribute("data-shared-border-pending");
     this.observer?.disconnect(); this.resize?.disconnect();
     const view = this.root.ownerDocument.defaultView;
-    if (this.frame) view?.cancelAnimationFrame(this.frame);
+    if (this.frame) view?.cancelAnimationFrame?.(this.frame);
     this.frame = 0;
     for (const [element, frame] of this.frames) this.restore(element, frame);
     this.root.removeEventListener("pointerover", this.pointer); this.root.removeEventListener("pointerout", this.pointer);
     this.root.removeEventListener("focusin", this.scheduleState); this.root.removeEventListener("focusout", this.scheduleState);
     this.root.removeEventListener("keydown", this.scheduleState, true); this.root.removeEventListener("pointerdown", this.scheduleState, true);
     this.root.removeEventListener("transitionrun", this.motionStart); this.root.removeEventListener("transitionend", this.motionEnd); this.root.removeEventListener("transitioncancel", this.motionEnd);
-    view?.removeEventListener("resize", this.scheduleGeometry); view?.removeEventListener("scroll", this.scheduleGeometry, true);
+    view?.removeEventListener?.("resize", this.scheduleGeometry); view?.removeEventListener?.("scroll", this.scheduleGeometry, true);
     if (roots.get(this.root)?.compositor === this) roots.delete(this.root);
   }
 }
@@ -758,7 +776,7 @@ export function useSharedBorderFrameRef<T extends HTMLElement>(forwardedRef?: Re
   }, [forwardedRef]);
 }
 
-/** 🖌️ Paints a window's resolved segments into its silhouette `svg` without React: the path marked `data-shared-border-main` takes the outline of the segments in the window's own state (`fallback` before any are resolved), and the layer marked `data-shared-border-extra` holds one path per segment in another state. Writes only what changed. */
+/** 🖌️ Paints a window's resolved segments into its frame `svg` without React: the path marked `data-shared-border-main` takes the outline of the segments in the window's own state (`fallback` before any are resolved), and the layer marked `data-shared-border-extra` holds one path per segment in another state. Writes only what changed. */
 export function paintSharedWindowBorder(svg: SVGSVGElement, segments: readonly SharedBorderPaintSegment[] | null, fallback: string, kind: BorderState): void {
   const main = svg.querySelector("[data-shared-border-main]");
   const outline = segments === null ? fallback : segments.filter(segment => segment.state === kind).map(segment => segment.d).join(" ");
@@ -776,7 +794,7 @@ export function paintSharedWindowBorder(svg: SVGSVGElement, segments: readonly S
       layer.append(path);
     }
     if (path.getAttribute("d") !== segment.d) path.setAttribute("d", segment.d);
-    const stroke = sharedBorderStroke(segment.state), className = `window-silhouette-border window-silhouette-border-${segment.state}`;
+    const stroke = sharedBorderStroke(segment.state), className = `window-frame-border window-frame-border-${segment.state}`;
     if (path.getAttribute("stroke") !== stroke) path.setAttribute("stroke", stroke);
     if (path.getAttribute("class") !== className) path.setAttribute("class", className);
     path.setAttribute("data-shared-border-state", segment.state);
@@ -784,8 +802,8 @@ export function paintSharedWindowBorder(svg: SVGSVGElement, segments: readonly S
   });
 }
 
-/** 🪟️ Connects a silhouette to its shell-local compositor, including portaled descendants. The compositor hands every changed outline to `paint`, outside React: a pan frame renders no component. */
-export function useSharedWindowBorder(element: HTMLElement | null, geometry: WindowSilhouetteGeometry, state: BorderState, paint?: (segments: readonly SharedBorderPaintSegment[]) => void): void {
+/** 🪟️ Connects a frame to its shell-local compositor, including portaled descendants. The compositor hands every changed outline to `paint`, outside React: a pan frame renders no component. */
+export function useSharedWindowBorder(element: HTMLElement | null, geometry: WindowFrameGeometry, state: BorderState, paint?: (segments: readonly SharedBorderPaintSegment[]) => void): void {
   const scope = useShellScopeOptional();
   const id = React.useId();
   const current = React.useRef<BorderCompositor | null>(null);
@@ -819,7 +837,7 @@ export function useSharedBorderBox<T extends HTMLElement>(forwardedRef?: React.R
 }
 
 const attachedRoots = new Map<HTMLElement, () => void>();
-const attachSelector = `${ownerSelector}, [data-window-silhouette-chip]`;
+const attachSelector = `${ownerSelector}, [data-window-frame-chip]`;
 
 /** 🔗️ Retains a compositor for the root of every box that appears in `document`, until that root leaves the document or holds no box any more: a box can never exist without a compositor, however its attributes were set. Called once at module load; returns the stop function. */
 export function attachSharedBorderRoots(document: Document): () => void {

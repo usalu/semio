@@ -1,8 +1,9 @@
 import {homedir} from "node:os";
 import {adoptCasV1,casPlacesOfWorkspaceV1,type CasAdoptionV1} from "../🧲️adopt/🟦️.ts";
 import {casAreasOfWorkspaceV1} from "../📂️areas/🟦️.ts";
-import {collectCasV1,formatCasCollectionV1} from "../🧹️collector/🟦️.ts";
-import {casPartitionUsedFractionV1,measureCasPartitionV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
+import {collectCasV1,formatCasCollectionV1,readCasUsageHintV1} from "../🧹️collector/🟦️.ts";
+import {readCasTransientsV1} from "../📌️pins/🟦️.ts";
+import {casEffectiveCapBytesV1,casPartitionUsedFractionV1,measureCasPartitionV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
 import {CAS_POLICY_V1,casTextV1} from "../🧬️schema/🟦️.ts";
 import {casRootV1} from "../🗃️store/🟦️.ts";
 import {casUsageV1} from "../🗃️store/📏️usage/🟦️.ts";
@@ -29,7 +30,10 @@ export async function runCasCommandV1(args:readonly string[],context:CasCommandC
  if(operation==="status"){
   const usage=await casUsageV1(root),partition=(context.partition??measureCasPartitionV1)(root),percent=(fraction:number):number=>Math.round(fraction*1000)/10;
   const partitionLine=partition?casTextV1("statusPartition",language,{partition:partition.partition,usedPercent:percent(casPartitionUsedFractionV1(partition)),freeGib:gib(partition.freeBytes),highPercent:percent(policy.partition.highUsedFraction),lowPercent:percent(policy.partition.lowUsedFraction),criticalPercent:percent(policy.partition.criticalUsedFraction)}):undefined;
-  context.write(json?JSON.stringify({version:1,root,capBytes:policy.capBytes,...usage,...partition?{partition:{...partition,usedFraction:casPartitionUsedFractionV1(partition)}}:{}},null,2):[casTextV1("status",language,{root,objects:usage.objects,usedGib:gib(usage.bytes),capGib:gib(policy.capBytes)}),...partitionLine?[partitionLine]:[]].join("\n"));
+  const effective=partition?casEffectiveCapBytesV1(policy,partition,usage.bytes):policy.capBytes,leases=[...(await readCasTransientsV1(root)).values()],at=Date.now(),transient={leased:leases.filter(until=>until>at).length,expired:leases.filter(until=>until<=at).length};
+  const hint=await readCasUsageHintV1(root),collectionLine=hint===undefined?casTextV1("statusNoCollection",language):casTextV1("statusCollection",language,{age:Math.max(0,Math.round((at-hint.atMs)/60000)),gib:gib(hint.bytes)});
+  const capLine=casTextV1("statusCap",language,{effectiveGib:gib(effective),capGib:gib(policy.capBytes),highGib:gib(effective*policy.highWatermark),lowGib:gib(effective*policy.lowWatermark),incrementGib:gib(policy.incrementBytes),transient:transient.leased+transient.expired,leaseMinutes:Math.round(policy.transientLeaseMs/60000)});
+  context.write(json?JSON.stringify({version:1,root,capBytes:policy.capBytes,effectiveCapBytes:effective,highWatermarkBytes:Math.floor(effective*policy.highWatermark),lowWatermarkBytes:Math.floor(effective*policy.lowWatermark),incrementBytes:policy.incrementBytes,transientLeaseMs:policy.transientLeaseMs,transient,lastCollection:hint===undefined?null:{atMs:hint.atMs,bytes:hint.bytes},...usage,...partition?{partition:{...partition,usedFraction:casPartitionUsedFractionV1(partition)}}:{}},null,2):[casTextV1("status",language,{root,objects:usage.objects,usedGib:gib(usage.bytes),capGib:gib(policy.capBytes)}),capLine,collectionLine,...partitionLine?[partitionLine]:[]].join("\n"));
   return 0;
  }
  if(operation==="adopt"){

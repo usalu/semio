@@ -222,7 +222,7 @@ fn inspector_collection_window_reaches_late_items_and_preserves_fixed_cardinalit
     let items = (0..1024).map(|index| WidgetInputValue::Number(index as f64)).collect::<Vec<_>>();
     for (locale, labels) in [(Locale::En, &Generation3dLabels::NATIVE_EN), (Locale::De, &Generation3dLabels::NATIVE_DE)] {
         let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: GENERATION_3D_PLAY_BODY_INSPECTION.into(), node_key: key.into(), open: Some(true), offset: 1000, rows: 2 }], ..ViewModel::new(locale, Terminology::Native) };
-        let tree = collection_input(&TreeWindows::for_body(&view, GENERATION_3D_PLAY_BODY_INSPECTION), key, labels.input_name_rows.as_str(), "shape", "rows", &items, &semio_os_flow::neural::Cardinality::from_symbol("1024").unwrap(), labels).unwrap();
+        let tree = collection_input(&TreeWindows::for_body(&view, GENERATION_3D_PLAY_BODY_INSPECTION), semio_ui_locale::Locale::En, key, labels.input_name_rows.as_str(), "shape", "rows", &items, &semio_os_flow::neural::Cardinality::from_symbol("1024").unwrap(), labels).unwrap();
         let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
         let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
         assert!(inspector_node(&tree, &format!("{key}.add")).is_none());
@@ -388,7 +388,7 @@ fn inspector_geometry_output_reflects_exact_topology_identity_in_both_languages(
     let case = &fixture["geometryReflection"];
     let value = semio_framework_pack_json::parse(&case["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (language, labels) in [("en", &Generation3dLabels::NATIVE_EN), ("de", &Generation3dLabels::NATIVE_DE)] {
-        let built = reflected_output(&semio_plugin::TreeWindows::unhosted(), "geometry-output", "Solid", &value, 0, labels, None, false).unwrap();
+        let built = reflected_output(&semio_plugin::TreeWindows::unhosted(), semio_ui_locale::Locale::En, "geometry-output", "Solid", &value, 0, labels, None, false).unwrap();
         let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap();
         for (field, label) in case["fields"].as_object().unwrap() { assert!(projection.contains(label[language].as_str().unwrap()), "{projection}"); assert!(projection.contains(case["value"][field].as_str().unwrap()), "{projection}"); }
         assert!(!projection.contains("setWidgetInput"));
@@ -447,7 +447,7 @@ fn inspected_channels_share_the_graph_hover_binding() {
             "output" => {
                 let source = semio_framework_pack_json::parse(&row["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
                 let target = graph_port_id(widget, port, false);
-                (reflected_output(&windows, key, "Value", &source, 0, labels, Some((GraphTargetKind::Handle, &target)), false).unwrap(), key.to_owned())
+                (reflected_output(&windows, semio_ui_locale::Locale::En, key, "Value", &source, 0, labels, Some((GraphTargetKind::Handle, &target)), false).unwrap(), key.to_owned())
             }
             "connected" => {
                 let connection = SynapseSpec { id: "wire".into(), from: row["sourceWidget"].as_str().unwrap().into(), from_port: row["sourcePort"].as_str().unwrap().into(), to: widget.into(), to_port: port.into() };
@@ -461,7 +461,7 @@ fn inspected_channels_share_the_graph_hover_binding() {
             "text" => {
                 let text = row["value"].as_str().unwrap();
                 let incoming = row["incoming"].as_bool().unwrap();
-                (editable_text_input(&windows, key, "Text", widget, port, None, text, incoming).unwrap(), key.to_owned())
+                (editable_text_input(&windows, semio_ui_locale::Locale::En, key, "Text", widget, port, None, text, incoming).unwrap(), key.to_owned())
             }
             "literal" => {
                 let value = semio_framework_value::DslValue::from(&row["value"]);

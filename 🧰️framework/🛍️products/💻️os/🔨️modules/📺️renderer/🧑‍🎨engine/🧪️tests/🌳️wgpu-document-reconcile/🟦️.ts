@@ -13,7 +13,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { uiIntentToActionDescriptor } from "../../🧱️elements/🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import { uiIntentToActionDescriptor } from "../../🧱️elements/🗣️Interpreter/🎬️intent-descriptor/🟦️.ts";
 import type { UiValue } from "@semio-tech/framework";
 import laws from "../🧫️fixtures/🌳️wgpu-document-reconcile/🔣️.json";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";

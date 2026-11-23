@@ -534,8 +534,8 @@ impl ArtifactEditor for ImperativePlayApp {
         let config = cfg.snapshot;
         let labels = imperative_labels(view_state);
         (match body_key {
-            IMPERATIVE_PLAY_BODY_MAIN => main::render(&scene, &config.run_output_json, labels),
-            IMPERATIVE_PLAY_BODY_SCRIPT => script::render(&scene),
+            IMPERATIVE_PLAY_BODY_MAIN => main::render(&scene, &config.run_output_json, labels, view_state.locale),
+            IMPERATIVE_PLAY_BODY_SCRIPT => script::render(&scene, view_state.locale),
             IMPERATIVE_PLAY_BODY_ARTIFACT => document_panel::render(&scene, labels, &semio_plugin::TreeWindows::for_body(view_state, IMPERATIVE_PLAY_BODY_ARTIFACT)),
             IMPERATIVE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, IMPERATIVE_PLAY_BODY_CATALOGUE)),
             IMPERATIVE_PLAY_BODY_INSPECTOR => inspection_panel::render(&scene, labels),

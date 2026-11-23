@@ -244,6 +244,7 @@ impl ArtifactStoreDiagnosticStage {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreDiagnosticStage {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.close_demands(body) }
     fn close_step(&mut self,_body:usize,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let result=Self::close_step(self,effect).map_err(RetirementPollExit::from);RetirementPollExit::settle(effect,result)}
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }

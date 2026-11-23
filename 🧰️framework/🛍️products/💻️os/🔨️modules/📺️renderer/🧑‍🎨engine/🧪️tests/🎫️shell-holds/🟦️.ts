@@ -121,7 +121,7 @@ describe("🎫️ the shell says what it holds", () => {
   });
 
   it("an open chrome-hosted dock lays its fold control BESIDE the tab strip, never under it", async () => {
-    const { chromeHostedPanelCapRowStyle, uiSpacingPx } = await import("@semio-tech/ui-react");
+    const { chromeHostedPanelCapRowStyle } = await import("@semio-tech/ui-react");
     /** 📐️ The measured 6018 geometry (`🐍️remaining-reds-recon.mjs` → `🗑️generated/react-reds/recon/recon.json`):
      * a 300 px dock body, a 238 px tab strip, a 64 px `Collapse` control and a 92 px navbar trailing-end
      * reserve — 394 px of content for 300 px of body. */
@@ -130,7 +130,7 @@ describe("🎫️ the shell says what it holds", () => {
       controls = 64,
       reserve = 92;
     const style = chromeHostedPanelCapRowStyle("top-right", reserve);
-    expect(style.paddingInlineStart, "the navbar's trailing end is still cleared").toBe(`${reserve + uiSpacingPx(1)}px`);
+    expect(style.paddingInlineStart, "the navbar's trailing end is still cleared").toBe(`${reserve}px`);
     expect(style.width, "the cap row sizes to its content").toBe("max-content");
     expect(style.minWidth, "and never shrinks below the body it caps").toBe("100%");
 

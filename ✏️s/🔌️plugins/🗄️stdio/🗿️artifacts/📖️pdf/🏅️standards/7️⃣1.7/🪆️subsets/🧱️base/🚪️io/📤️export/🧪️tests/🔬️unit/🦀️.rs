@@ -39,7 +39,7 @@ static THESIS: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| 
 static REPORT_STRIP: std::sync::LazyLock<&[u8]> = std::sync::LazyLock::new(|| fixture_bytes!("../../../../🧪️tests/🧫️fixtures/📊️report-strip/📊️report-strip.pdf"));
 
 fn typed_lanes(snapshot: &PdfSnapshot) -> PdfSnapshot {
-    PdfSnapshot { objects: Vec::new(), trailer: Vec::new(), ..snapshot.clone() }
+    PdfSnapshot { objects: Vec::new(), trailer: Vec::new(), admitted_stream_roles: Vec::new(), ..snapshot.clone() }
 }
 
 fn json_diff(path: &str, a: &serde_json::Value, b: &serde_json::Value, out: &mut Vec<String>) {
@@ -198,6 +198,17 @@ fn rich_document() -> PdfSnapshot {
     snapshot.info = PdfInfo { title: Some("Rich — document".into()), author: Some("semio".into()), subject: None, keywords: Some("pdf, typed".into()), creator: Some("semio".into()), producer: Some("semio pdf".into()), creation_date: Some(PdfDate { year: 2026, month: 9, day: 18, hour: 20, minute: 0, second: 0, offset_minutes: Some(120) }), modification_date: None, trapped: Some("False".into()), extra: Vec::new() };
     snapshot.catalog_extra.push(PdfDictEntry::new("SemioMarker", PdfObject::Int(7)));
     snapshot
+}
+
+#[test]
+fn blank_document_is_one_letter_page_and_its_own_fixed_point() {
+    let blank = blank_pdf_snapshot();
+    assert_eq!(blank.pages.len(), 1);
+    assert_eq!(blank.pages[0].media_box, [0.0, 0.0, 612.0, 792.0]);
+    assert!(blank.pages[0].content.is_empty());
+    let bytes = encode_pdf(&blank).unwrap();
+    assert!(bytes.starts_with(b"%PDF-1.7"));
+    assert_same_lanes(&decode_pdf(&bytes).unwrap(), &blank);
 }
 
 #[test]
@@ -497,5 +508,49 @@ fn retained_text_dates_admit_owned_values_and_keep_indirect_identity() {
         assert_eq!(oracle,title);
         let mut emitted=object_bytes(&objects[1].value);emitted.extend_from_slice(b" Tj");
         assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_text_operand(&emitted).unwrap(),oracle);
+    }
+}
+
+#[test]
+fn demo_pdf_asset_is_the_natural_file_of_the_demo_snapshot() {
+    let asset = fixture_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎬️demo.pdf");
+    assert!(asset.starts_with(b"%PDF-1.7"));
+    assert_eq!(asset, encode_pdf(&text_document(&[(200.0, 300.0, "Semio")])).unwrap());
+    assert_same_lanes(&decode_pdf(&asset).unwrap(), &demo_pdf17_snapshot());
+    assert_eq!(crate::standards::v1_7::subsets::base::io::import::page_text(&decode_pdf(&asset).unwrap(), 0).unwrap(), "Semio");
+    assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_page_count(&asset).unwrap(), 1);
+}
+
+#[test]
+fn prefixed_pdf_preserves_structured_free_entries_under_either_offset_convention() {
+    let source = include_bytes!("../../../../🧪️tests/🧫️fixtures/🔗️incremental-free/📑️table.pdf");
+    let prefix = b"\n% document preamble\n";
+    let delta = prefix.len();
+    let mut absolute = source.to_vec();
+    let mut next_footer = false;
+    for line in absolute.split_mut(|&byte| byte == b'\n') {
+        if next_footer {
+            shift_decimal(line, delta);
+            next_footer = false;
+        }
+        if line == b"startxref" { next_footer = true; }
+        if line.get(16..18) == Some(b" n") { shift_decimal(&mut line[..10], delta); }
+        if let Some(prev) = line.windows(6).position(|word| word == b"/Prev ") {
+            let digits = &mut line[prev + 6..];
+            let end = digits.iter().position(|b| !b.is_ascii_digit()).unwrap_or(digits.len());
+            shift_decimal(&mut digits[..end], delta);
+        }
+    }
+    for source in [source.as_slice(), &absolute] {
+        let pdf = [prefix.as_slice(), source].concat();
+        let doc = decode_pdf(&pdf).unwrap();
+        assert_eq!(doc.pages.len(), 2);
+        assert_eq!(doc.info.title.as_deref(), Some("Updated"));
+        assert!(doc.objects.iter().all(|object| object.id.num != 3));
+    }
+
+    fn shift_decimal(field: &mut [u8], delta: usize) {
+        let value = std::str::from_utf8(field).unwrap().parse::<usize>().unwrap() + delta;
+        field.copy_from_slice(format!("{value:0width$}", width = field.len()).as_bytes());
     }
 }

@@ -25,3 +25,9 @@ Repo: `/Users/ueli/Documents/semio` — ONE shared live worktree replicated to 5
 
 ## Binding addendum 22:20 (host load 63/10 cores, play attempt 3 in flight)
 - Until `[ok] site-build` in the play supervisor.out: at most 1 local cargo/test run per lane, always prefixed `taskpolicy -b`.
+
+## Binding addendum 23:22 (play attempt 4 wedged on a lost remote action)
+- Never restart the remote-execution server/scheduler, the cache server or worker sidecars by hand while play `[run] site-build` is active without a later `[ok] site-build` / `[chain exit`. Land code only.
+
+## Binding addendum 00:45 (play moved to a pinned clone)
+- The play release now runs from the pinned clone `/Users/ueli/.sinc/play`; its gate file is `/Users/ueli/Documents/semio/.🧬semio/🌐hub/play-cdn-1122/pinned/supervisor.out` (same markers). All earlier "site-build active" rules now refer to this file.

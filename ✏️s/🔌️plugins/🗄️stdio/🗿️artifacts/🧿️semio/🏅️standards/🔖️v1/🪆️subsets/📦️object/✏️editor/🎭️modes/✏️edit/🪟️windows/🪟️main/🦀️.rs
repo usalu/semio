@@ -55,7 +55,7 @@ fn world_instances_json(document: &SemioObjectSnapshot) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &SemioObjectSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &SemioObjectSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let meshes_json = world3d_meshes_json_from_kinds(&[SEMIO_OBJECT_EDIT_FALLBACK_MESH_KIND.to_string()]);
     let view = MeshView {
         camera_json: world3d_camera_json(SEMIO_OBJECT_EDIT_DEFAULT_CAMERA_POSITION, SEMIO_OBJECT_EDIT_DEFAULT_CAMERA_TARGET, SEMIO_OBJECT_EDIT_DEFAULT_CAMERA_FOV),
@@ -63,7 +63,7 @@ pub fn render(document: &SemioObjectSnapshot) -> semio_plugin::UiAssemblyResult<
         instances_json: world_instances_json(document),
         selection_json: world3d_selection_json("rectangle", &[], None),
     };
-    MeshWindowKit::render(&view)
+    MeshWindowKit::render(&view, locale)
 }
 //#endregion 🔖️Render
 

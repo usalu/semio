@@ -42,12 +42,12 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(transient: &FlowWindowTransient) -> UiAssemblyResult<BuiltNode> {
+pub fn render(transient: &FlowWindowTransient, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let mut generation_owner = transient.generation().map_err(|error| semio_plugin::PluginAssemblyError::new("ui.generate-preview", error.into_message()))?;
     let generation = generation_owner.as_mut();
     let text = generation.preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or(FLOW_PLAY_PREVIEW_PLACEHOLDER);
     let scene = TextEditorScene::base(text.to_string(), Some("json".into()), None);
-    scene_surface(FLOW_PLAY_SURFACE_GENERATE_PREVIEW, ContractSurfaceKind::TextEditor, &scene)
+    scene_surface(FLOW_PLAY_SURFACE_GENERATE_PREVIEW, ContractSurfaceKind::TextEditor, &scene, semio_plugin::surface_name(locale, "Generation preview", "Generierungsvorschau"), None)
 }
 //#endregion 🔖️Render
 

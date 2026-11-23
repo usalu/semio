@@ -10,7 +10,7 @@ use super::xobjects::PdfTransparencyGroup;
 /// applied (§7.7.3.4). `content` is the concatenation of the page's content streams as typed
 /// operators whose resource names are the document-level ids ([`PdfSnapshot::fonts`], images,
 /// forms, …); the page's own `/Resources` dictionary is regenerated from them on write.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PdfPage {

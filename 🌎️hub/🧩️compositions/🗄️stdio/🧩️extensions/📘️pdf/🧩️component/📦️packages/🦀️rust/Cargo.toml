@@ -51,6 +51,7 @@ variant = "stdio-pdf-1-7"
 app = "s.stdio.pdf@1.7/*#editor"
 aliases = ["stdio pdf 1.7"]
 ports = { react = 6260, wgpu = 6360 }
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/📘️stdio-pdf/🧬️schema/🔣️.json"
 
 [[package.metadata.semio.playground]]
 variant = "stdio-pdf-1-7-e"

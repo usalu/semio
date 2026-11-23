@@ -26,7 +26,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `CsvSnapshot -> BuiltNode` read: header row (if any) supplies column labels, every
 /// remaining record is one read-only row — no mutation, no selection state.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &CsvSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &CsvSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let (columns, data_rows): (Vec<String>, &[crate::CsvRecord]) = if document.has_header && !document.records.is_empty() {
         (document.records[0].fields.iter().map(|field| field.value.clone()).collect(), &document.records[1..])
     } else {
@@ -34,7 +34,7 @@ pub fn render(document: &CsvSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNod
         ((0..width).map(|index| format!("Column {}", index + 1)).collect(), &document.records[..])
     };
     let rows = data_rows.iter().map(|record| record.fields.iter().map(|field| field.value.clone()).collect()).collect();
-    TableWindowKit::render(&TableView { columns, rows })
+    TableWindowKit::render(&TableView { columns, rows }, locale)
 }
 //#endregion 🔖️Render
 

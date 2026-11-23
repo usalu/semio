@@ -284,6 +284,7 @@ where
                 Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}),false))
             });
         }
+        if store.snapshot_read_leases_await_return()&&store.close_owned_phase_witness().starts_with("ReturnedReads"){return Ok(PluginLifecycleStep::AwaitingInput{reason:"displaced document store awaits its outstanding read leases"});}
         let demand=disposer.retirement_demands(store,grant.maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.to_string()))?;
         semio_plugin_ownership::bounded_ownership::runtime_lifecycle_step(demand,grant,|_|{
             let step=disposer.close_step(store,effect)?;

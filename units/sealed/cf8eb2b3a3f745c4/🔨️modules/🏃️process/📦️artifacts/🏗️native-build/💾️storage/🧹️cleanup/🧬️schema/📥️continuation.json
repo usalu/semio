@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/native-image-cleanup-continuation-fixtures/v1",
+  "description": "Language-neutral schedules for the cleanup evidence owner. Data never grants process, image or cleanup authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumCleanupMilliseconds",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumCleanupMilliseconds": {
+      "const": 10000
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/definitions/Case"
+      }
+    }
+  },
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "schedule",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "schedule": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "enum": [
+              "receive-original",
+              "enroll-funded-cleanup",
+              "refuse-expired-original",
+              "present-copied-grant",
+              "create-owned-backing",
+              "submit-activation",
+              "observe-exact-active",
+              "activation-child-fails",
+              "join-activation-child",
+              "publish-body-progress",
+              "reject-body-progress",
+              "stall-body-progress",
+              "join-body-progress",
+              "cancel-body",
+              "expire-body-cutoff",
+              "close-first",
+              "close-second",
+              "close-after-settlement",
+              "stall-deactivation",
+              "complete-deactivation",
+              "fail-deactivation",
+              "expire-cleanup-absolute-bound",
+              "join-deactivation-child",
+              "observe-exact-inactive",
+              "observe-still-active",
+              "replace-backing",
+              "fail-observation",
+              "fail-persistent-publication",
+              "accept-persistent-handoff",
+              "accept-unresolved-handoff",
+              "fail-guard-release",
+              "submit-body-work",
+              "join-body-work"
+            ]
+          }
+        },
+        "expected": {
+          "$ref": "#/definitions/Expectation"
+        }
+      }
+    },
+    "Expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deactivationAttempts",
+        "bodyAdmissionsAfterStop",
+        "guardRelease",
+        "settlement",
+        "failures",
+        "absoluteDeadlineRenewed"
+      ],
+      "properties": {
+        "deactivationAttempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "bodyAdmissionsAfterStop": {
+          "const": 0
+        },
+        "guardRelease": {
+          "enum": [
+            "after-physical-settlement",
+            "after-unresolved-handoff",
+            "persistent-reader-release",
+            "held",
+            "never-acquired"
+          ]
+        },
+        "settlement": {
+          "enum": [
+            "physical",
+            "persistent",
+            "unresolved",
+            "refused"
+          ]
+        },
+        "failures": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "enum": [
+              "body",
+              "progress",
+              "cleanup",
+              "handoff",
+              "guard",
+              "admission"
+            ]
+          }
+        },
+        "absoluteDeadlineRenewed": {
+          "const": false
+        }
+      }
+    }
+  }
+}

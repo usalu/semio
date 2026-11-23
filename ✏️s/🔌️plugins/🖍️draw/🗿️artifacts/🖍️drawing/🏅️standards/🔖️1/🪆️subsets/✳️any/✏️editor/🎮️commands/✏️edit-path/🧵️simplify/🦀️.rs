@@ -46,21 +46,21 @@ impl ArtifactCommandWork<App> for Work {
         let Some(DrawingLayerNode::Path(path))=semio_s_artifact_draw_drawing_model::find_drawing_layer(input.snapshot,&payload.layer_id) else {return Err(Fault::from("Select a path to edit").into());};
         let owner=self.workspace.get_or_insert_with(||ControlledRetirement::new(Workspace {source:Default::default(),job:None}).unwrap_or_else(|_|unreachable!()));
         let workspace=owner.original_mut().ok_or_else(||Fault::from("drawing-path-retirement-started"))?;
-        while !cx.should_yield() {
+        while !cx.should_yield()&&cx.retained_work_can_enter(semio_framework_value::RetirementDemand {depth:1,..Default::default()}) {
             if cx.is_cancelled() {return Err(Fault::from("Path simplification cancelled").into());}
             if workspace.job.is_none() {
                 if workspace.source.len()<path.segments.len() {
                     cx.set_stage("path-copy");
                     workspace.source.try_push(path.segments.get(workspace.source.len()).unwrap().clone()).map_err(|error|Fault::from(error.to_string()))?;
-                    cx.consume_fuel(1);continue;
+                    cx.consume_fuel(1);cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:1,..Default::default()})?;continue;
                 }
                 workspace.job=Some(PathSimplifyJob::new_paged(std::mem::take(&mut workspace.source),*tolerance).map_err(Fault::from)?);
-                cx.consume_fuel(1);continue;
+                cx.consume_fuel(1);cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:1,..Default::default()})?;continue;
             }
             let job=workspace.job.as_mut().unwrap();
             let progress=job.advance(1).map_err(Fault::from)?;
             cx.set_stage(match progress.phase {semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyPhase::Scanning=>"path-scan",semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyPhase::Reducing=>"path-simplify",semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyPhase::Building=>"path-build",semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyPhase::Complete=>"path-publish"});
-            cx.consume_fuel(1);
+            cx.consume_fuel(1);cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:1,..Default::default()})?;
             if !progress.done {continue;}
             self.complete=true;
             if job.result().map_err(Fault::from)?.len()==path.segments.len() {return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));}

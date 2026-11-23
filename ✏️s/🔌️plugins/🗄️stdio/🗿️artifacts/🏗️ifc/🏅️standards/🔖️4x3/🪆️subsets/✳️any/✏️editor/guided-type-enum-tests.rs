@@ -42,7 +42,7 @@ fn enum_type_inputs_use_the_original_controller_and_declared_resident_choices() 
             base_revision: semio_framework_job::RevisionId(0),
             generation: semio_framework_job::Generation(1),
             canonical_base_revision: [0; 32],
-            mounted_policy: semio_plugin::app_testing::artifact_app_laws::fixture_mounted_policy(),
+            mounted_policy: semio_plugin::artifact_app_laws::fixture_mounted_policy(),
         };
         let doc = semio_framework_async::poll::resolve_ready(ArtifactView::with_render_context(snapshot.as_ref(), &history, ChildContentView::EMPTY, operation, "multiple-source", None));
         let mut caller = OriginalWorkFixture::new();
@@ -92,7 +92,7 @@ fn enum_type_inputs_use_the_original_controller_and_declared_resident_choices() 
                 .turn(staged_grant(), |cx| {
                     cx.with_original_retirement(|cx| {
                         let demand = close.next_demand(32768)?;
-                        semio_framework_job::close_original_retained_step(cx, demand, |grant| close.step(grant))?;
+                        semio_framework_job::close_original_retained_effect_step(cx,demand,|effect|close.step(effect.grant()))?;
                         Ok(())
                     })
                 })

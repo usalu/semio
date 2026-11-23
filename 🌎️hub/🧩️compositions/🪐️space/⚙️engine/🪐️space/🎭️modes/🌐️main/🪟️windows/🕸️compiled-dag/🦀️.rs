@@ -51,9 +51,9 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Render
-pub async fn render(projection: &WorkflowSnapshot) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub async fn render(projection: &WorkflowSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let wire = compiled_dag_wire_literal(projection).await;
-    semio_plugin::scene_surface(S_PLAY_SURFACE_COMPILED_DAG, semio_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(wire, Some("wire".into()), None))
+    semio_plugin::scene_surface(S_PLAY_SURFACE_COMPILED_DAG, semio_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(wire, Some("wire".into()), None), semio_plugin::surface_name(locale, "Compiled workflow", "Kompilierter Workflow"), None)
 }
 //#endregion 🔖️Render
 

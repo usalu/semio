@@ -127,8 +127,8 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pinned_wire_bytes() {
     let hex = |command: &En1992Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    assert_eq!(hex(&En1992Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01010001000402");
-    assert_eq!(hex(&En1992Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01010000");
+    assert_eq!(hex(&En1992Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01000001000402");
+    assert_eq!(hex(&En1992Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01000000");
 }
 //#endregion ðï¸CommandSurface
 
@@ -251,7 +251,7 @@ fn a_picked_entity_selects_its_governing_check_in_every_window() {
 }
 //#endregion 🛰️LiveWiring
 
-semio_plugin::history_edit_acceptance_law!("norm", crate::En1992PlayApp, || semio_plugin::App { definition: crate::create_en1992_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("norm", crate::En1992PlayApp, || semio_plugin::App { definition: crate::create_en1992_app(), examples: Vec::new() }, "../../..");
 
 //#region ♿️ScreenReader
 /// ♿️ Every check row, scene entity, handle and diagram of the default document has an accessible node (label, role, value or position) in English and German.

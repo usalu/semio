@@ -59,6 +59,7 @@
   },
   "gains": {
     "solarKWhPerA": 3000,
-    "internalKWhPerA": 2000
+    "internalKWhPerA": 2000,
+    "utilisationFactor": 0.9
   }
 }

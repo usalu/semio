@@ -6,7 +6,8 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
-        "💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🟦️.ts"
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/📦️budget/📥️opening/🔄️refresh/🧪️tests/🟦️.ts"
       ],
       "platforms": [
         "darwin",

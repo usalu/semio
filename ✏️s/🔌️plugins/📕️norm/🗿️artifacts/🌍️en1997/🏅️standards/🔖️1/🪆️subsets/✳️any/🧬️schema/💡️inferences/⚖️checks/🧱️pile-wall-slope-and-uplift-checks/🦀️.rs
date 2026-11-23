@@ -86,12 +86,15 @@ fn check_pile_resistances(
                     Quantity::new(QuantityKind::Dimensionless, pile.count as f64),
                     Quantity::new(QuantityKind::Dimensionless, n_req as f64),
                     loc("Increase pile count or length for compression.", "Pfahlan zahl oder -länge für Druck erhöhen."),
-                )).remedy(Remedy::at_least(
-                    subject_entity(&pile.id, &path_l, &label.en, &label.de),
-                    Quantity::length_m(pile.length),
-                    Quantity::length_m(pile.length * n_ed / r_c_d.max(1.0)),
-                    loc("Increase pile length to raise compression resistance.", "Pfahllänge erhöhen, um den Druckwiderstand zu steigern."),
                 ));
+                if pile.test_profiles.is_empty() {
+                    comp = comp.remedy(Remedy::at_least(
+                        subject_entity(&pile.id, &path_l, &label.en, &label.de),
+                        Quantity::length_m(pile.length),
+                        Quantity::length_m(pile.length * n_ed / r_c_d.max(1.0)),
+                        loc("Increase pile length to raise compression resistance.", "Pfahllänge erhöhen, um den Druckwiderstand zu steigern."),
+                    ));
+                }
             }
             comp = comp.field("pile-shaft", station_fields::pile_shaft(&doc.layers, gwl, pile.length, r_s_k_t / gamma_s_t * pile.count as f64, n_ed, u));
             let built = comp.ndps(&factor_ndp_ids(annex)).build();
@@ -513,17 +516,11 @@ fn check_slopes(doc: &En1997Snapshot, report: &mut CheckReport, annex: AnnexChoi
                 &format!("η={:.2} (GEO-3 nach EN 1997-1 §2.4.7.3.4 / DIN 1054 NA; Lamellen nach Tiefe, maßgebende Schicht {}, L={:.1} m, GW={:.1} m, γ_φ={:.2}).", fos, slope.governing_layer_id, slope.length, gwl, geo3.gamma_phi),
             ));
             if fos < 1.0 {
-                let path_h = id_path("slopes", &slope.id, "height");
                 st = st.remedy(Remedy::at_most(
                     subject_entity(&slope.id, &path, &label.en, &label.de),
                     Quantity::new(QuantityKind::Dimensionless, slope.angle_deg),
                     Quantity::new(QuantityKind::Dimensionless, (slope.angle_deg * 0.85).max(10.0)),
                     loc("Flatten the slope angle to raise Bishop FoS.", "Böschungswinkel abflachen, um die Bishop-Sicherheit zu erhöhen."),
-                )).remedy(Remedy::at_most(
-                    subject_entity(&slope.id, &path_h, &label.en, &label.de),
-                    Quantity::length_m(slope.height),
-                    Quantity::length_m((slope.height * 0.9).max(1.0)),
-                    loc("Reduce slope height to raise Bishop FoS.", "Böschungshöhe verringern, um die Bishop-Sicherheit zu erhöhen."),
                 ));
             }
             let mobilisation = match &fixed {
@@ -654,10 +651,10 @@ fn check_uplift(doc: &En1997Snapshot, report: &mut CheckReport, annex: AnnexChoi
                 Quantity::new(QuantityKind::Pressure, u_d / upl_p.gamma_hyd_stb.max(0.5)),
                 loc("Increase total stress or lower groundwater / pore pressure.", "Totalspannung erhöhen oder Grundwasser / Porenwasserdruck absenken."),
             )).remedy(Remedy::at_most(
-                subject_entity("", "groundwaterLevel", "Groundwater level", "Grundwasserstand"),
-                Quantity::length_m(gwl),
-                Quantity::length_m((gwl * 0.7).max(0.0)),
-                loc("Lower groundwater level to reduce pore pressure.", "Grundwasserstand absenken, um den Porenwasserdruck zu reduzieren."),
+                subject_entity(&u.id, &id_path("upliftCases", &u.id, "porePressure"), &label.en, &label.de),
+                Quantity::new(QuantityKind::Pressure, u.pore_pressure),
+                Quantity::new(QuantityKind::Pressure, sigma_d / upl_p.gamma_hyd.max(0.5)),
+                loc("Lower the pore pressure at the base.", "Porenwasserdruck an der Sohle absenken."),
             ));
         }
         if !pore_given {

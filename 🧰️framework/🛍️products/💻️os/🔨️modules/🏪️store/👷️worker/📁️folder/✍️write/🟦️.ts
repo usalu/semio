@@ -2,7 +2,7 @@ import { fetchWithTimeout } from "@semio-tech/framework";
 import type { PersistenceBinding } from "../../../../../🟦️";
 import { decodeDocumentArchiveBytes, DOCUMENT_ARCHIVE_MAXIMUM_BYTES } from "../../../../../🟦️";
 import { FOLDER_ENDPOINT_PATH, FOLDER_FETCH_TIMEOUT_MS } from "../../⚙️constants/🟦️.ts";
-import type { ArtifactState } from "../../🧾️document-state/🟦️.ts";
+import { type ArtifactState, emitEvent } from "../../🧾️document-state/🟦️.ts";
 import { retireFolderCanonicalBootstrapMirror } from "../../🌉️wire-bridge/🟦️.ts";
 import { folderBinding, setStatus } from "../../🎭️actor-lifecycle/🟦️.ts";
 import { equalByteArrays, releaseDocumentBackboneOwnership } from "../../📮️hub-outbox/🟦️.ts";
@@ -26,7 +26,10 @@ export async function writeFolder(state: ArtifactState, binding: Extract<Persist
   const bytes = archive;
   if (bytes.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("document archive exceeds its fixed byte authority");
   decodeDocumentArchiveBytes(bytes);
-  if (state.folderArchive !== null && equalByteArrays(state.folderArchive, bytes)) return;
+  if (state.folderArchive !== null && equalByteArrays(state.folderArchive, bytes)) {
+    emitEvent(state, { kind: "documentArchiveHeld", archive: bytes });
+    return;
+  }
   const response = await fetchWithTimeout(
     folderEnvelopeUrl(binding, state.config.documentId),
     { method: "PUT", headers: { "content-type": "application/octet-stream" }, body: bytes },
@@ -35,6 +38,7 @@ export async function writeFolder(state: ArtifactState, binding: Extract<Persist
   if (!response.ok) throw new Error(`folder backbone write failed (${response.status})`);
   state.folderArchive = bytes;
   state.folderBootstrapped = true;
+  emitEvent(state, { kind: "documentArchiveHeld", archive: bytes });
 }
 
 type ArchiveWrite = Readonly<{ archive: Uint8Array; covered: readonly MutationEnvelope[] }>;

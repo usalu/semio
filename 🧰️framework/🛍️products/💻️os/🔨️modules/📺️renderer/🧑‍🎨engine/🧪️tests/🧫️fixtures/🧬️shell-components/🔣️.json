@@ -360,7 +360,7 @@
     "mobile_panel_visible",
     "mobile_panel_path",
     "window_content_rects",
-    "window_silhouettes"
+    "window_frames"
    ]
   },
   {

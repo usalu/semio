@@ -1,6 +1,10 @@
 //! 🧪️ Shared owned serde_json witnesses exercise the real Draw source issuer and exact cursor backing retirement.
-use super::*;
+use semio_framework_io_ports::{ChildAdmissionAdvance, ChildAdmissionSource, EmbeddedChildAdmission, EmbeddedChildAdmissionCursorV1, EmbeddedChildAdmitterV1};
+use semio_framework_value::{ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
 use semio_framework_value_clone_source_testing::{FixtureSource, drive::drive_reply};
+use semio_s_artifact_draw_drawing_model::snapshot::{DrawingSnapshot, retire_decoded_drawing_snapshot};
+use semio_s_artifact_draw_drawing_model::validation::DRAWING_ADMITTER;
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 fn advance(cursor:&mut EmbeddedChildAdmission, source:ChildAdmissionSource<'_>, grant:RetainedCloneGrant)->Result<ChildAdmissionAdvance,ValueError>{
     drive_reply(grant,256,|result|result.as_ref().map_or_else(ValueError::retained_progress,|step:&ChildAdmissionAdvance|step.progress),
         |effect,reply,recover|{assert!(!recover);Ok(reply.complete(cursor.advance(source,effect)))}).result
@@ -29,12 +33,12 @@ fn deep_original_ancestry_is_iterative_and_cancellable(){let corpus=fixture();le
 fn cold_disposal_drains_deep_groups_without_recursing() {
     let corpus = fixture();
     let mut snapshot = decode(&corpus["base"]);
-    let Some(crate::DrawingLayerNode::Group(mut group)) = snapshot.layers.get(0).cloned() else { panic!("fixture requires a top-level group") };
+    let Some(DrawingLayerNode::Group(mut group)) = snapshot.layers.get(0).cloned() else { panic!("fixture requires a top-level group") };
     group.children = Default::default();
     for _ in 0..corpus["coldRetirementDepth"].as_u64().unwrap() {
         let mut parent = group.clone();
         parent.children = std::mem::take(&mut snapshot.layers);
-        snapshot.layers = vec![crate::DrawingLayerNode::Group(parent)].into();
+        snapshot.layers = vec![DrawingLayerNode::Group(parent)].into();
     }
-    crate::snapshot::retire_decoded_drawing_snapshot(snapshot);
+    retire_decoded_drawing_snapshot(snapshot);
 }

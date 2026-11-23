@@ -29,6 +29,12 @@ fn wasm_host_serial() -> std::sync::MutexGuard<'static, ()> {
     WASM_HOST_SERIAL.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
+/// ⛽️ The fixture's original retained turn with unbounded guest fuel and no deadline: the idle-turn laws measure memory, not scheduling.
+fn unbounded_guest_fuel_budget(max_frames: u32) -> Budget {
+    let retained = semio_plugin::artifact_app_laws::fixture_retained_turn();
+    Budget { retained, retained_policy: retained.grant, work_fuel: retained.work.fuel, fuel: u64::MAX, deadline_us: retained.work.absolute_deadline_us, max_effects: 256, max_patch_bytes: 1 << 20, max_frames }
+}
+
 /// 🔁️ Drives `turns` idle `poll` turns and returns `(bytes after instantiate, per-turn readings,
 /// turns that answered `MoreWork`)`. Acknowledges every lifecycle receipt the guest publishes, the
 /// way a real host does — an open the host never acknowledges is retained state the guest re-offers
@@ -38,12 +44,12 @@ fn wasm_host_serial() -> std::sync::MutexGuard<'static, ()> {
 /// per-call cost of the shared component-async machinery separates from the reactor turn itself.
 async fn drive_idle_poll_turns(component: &std::path::Path, turns: usize) -> (usize, Vec<usize>, Vec<usize>) {
     let bytes = std::fs::read(component).unwrap_or_else(|error| panic!("read {}: {error}", component.display()));
-    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
+    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default(), semio_framework_job::default_now_us).await.expect("engine builds");
     let hash = *semio_framework_hash::hash(&bytes).as_bytes();
     let package = PackageRef { package: PackageId("poll-turn-memory".to_string()), hash: PackageHash(hash) };
     let compiled = runtime.compile(&package, &bytes).await.expect("the staged actor component compiles");
     let max_frames: u32 = std::env::var("SEMIO_POLL_TURN_LEAK_FRAMES").ok().and_then(|value| value.parse().ok()).unwrap_or(64);
-    let budget = Budget { retained: semio_plugin::artifact_app_laws::fixture_retained_turn(), fuel: u64::MAX, deadline_ms: 60_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames };
+    let budget = unbounded_guest_fuel_budget(max_frames);
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).await.expect("the staged actor component instantiates");
     let instantiated = instance.guest_linear_memory_bytes().expect("a wasmtime instance owns linear memory");
     let app_id = std::env::var("SEMIO_POLL_TURN_LEAK_APP").unwrap_or_else(|_| "s.procedural.generation3d@1/*#editor".to_string());
@@ -76,7 +82,7 @@ async fn drive_idle_poll_turns(component: &std::path::Path, turns: usize) -> (us
         if turn < opens.len() && !app_id.is_empty() {
             events.push(opens[turn].clone());
         }
-        match runtime.execute_turn(&mut instance, &events, budget, &mut semio_plugin::artifact_app_laws::fixture_identity()).await {
+        match runtime.execute_turn(&mut instance, &mut events, budget, &mut semio_plugin::artifact_app_laws::fixture_identity()).await {
             Ok(result) => {
                 if matches!(result.status, TurnStatus::MoreWork) {
                     hot += 1;
@@ -152,11 +158,11 @@ async fn an_armed_host_reaches_the_guests_own_runtime_diagnostics() {
 async fn drive_diagnostics_turns(component: &std::path::Path, turns: usize, armed: bool) -> Option<String> {
     semio_framework_job::set_runtime_diagnostics(armed);
     let bytes = std::fs::read(component).unwrap_or_else(|error| panic!("read {}: {error}", component.display()));
-    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
+    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default(), semio_framework_job::default_now_us).await.expect("engine builds");
     let hash = *semio_framework_hash::hash(&bytes).as_bytes();
     let package = PackageRef { package: PackageId(format!("poll-turn-diagnostics-{armed}")), hash: PackageHash(hash) };
     let compiled = runtime.compile(&package, &bytes).await.expect("the staged actor component compiles");
-    let budget = Budget { retained: semio_plugin::artifact_app_laws::fixture_retained_turn(), fuel: u64::MAX, deadline_ms: 60_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 64 };
+    let budget = unbounded_guest_fuel_budget(64);
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).await.expect("the staged actor component instantiates");
     let app_id = std::env::var("SEMIO_POLL_TURN_LEAK_APP").unwrap_or_else(|_| "s.procedural.generation3d@1/*#editor".to_string());
     let mut events: Vec<Event> = vec![Event::InstanceOpen {
@@ -170,7 +176,7 @@ async fn drive_diagnostics_turns(component: &std::path::Path, turns: usize, arme
         quotas: Default::default(),
     }];
     for turn in 0..turns {
-        match runtime.execute_turn(&mut instance, &events, budget, &mut semio_plugin::artifact_app_laws::fixture_identity()).await {
+        match runtime.execute_turn(&mut instance, &mut events, budget, &mut semio_plugin::artifact_app_laws::fixture_identity()).await {
             Ok(result) => {
                 events = result.lifecycle_receipt.map(|receipt| vec![Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt })]).unwrap_or_default();
             }

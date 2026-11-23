@@ -72,8 +72,8 @@ pub fn engagement(active_utility: &str) -> WindowEngagement {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
-    crate::editor::note::modes::edit::windows::composite::render_canvas_scene(document, camera, active_utility, NOTE_PLAY_SURFACE_NAVIGATOR, "navigator")
+pub fn render(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
+    crate::editor::note::modes::edit::windows::composite::render_canvas_scene(document, camera, active_utility, NOTE_PLAY_SURFACE_NAVIGATOR, "navigator", semio_plugin::surface_name(locale, "Note navigator", "Notiznavigator"))
 }
 //#endregion 🔖️Render
 

@@ -24,7 +24,7 @@ export {
   type OverviewCardSectionProps,
 } from "@semio-tech/ui/elements/OverviewCard";
 export { SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, SharedBorderRowLabel, type SharedBorderRowCellProps, type SharedBorderRowEdge, type SharedBorderRowFieldProps, type SharedBorderRowLabelProps, type SharedBorderRowOrientation, type SharedBorderRowProps } from "@semio-tech/ui/elements/SharedBorderRow";
-export { CardGrid, CardGridCell, CardStack, resolveCardBands, useCardInterlock, type CardBand, type CardBandCard, type CardBandSpan, type CardGridCellProps, type CardGridProps, type CardStackProps } from "@semio-tech/ui/elements/CardStack";
+export { CardGrid, CardGridCell, CardStack, useCardInterlock, type CardGridCellProps, type CardGridProps, type CardStackProps } from "@semio-tech/ui/elements/CardStack";
 export { LayeredOverview, type LayeredDirection } from "@semio-tech/ui/elements/LayeredOverview";
 export { capturePosterFromCanvases } from "@semio-tech/ui/elements/LayeredOverview/pane-helpers";
 export { type LayeredCardState, type LayeredChromeState, type LayeredInsets, type LayeredLabels, type LayeredMode, type LayeredOverviewProps, type LayeredPane, type LayeredPaneState } from "@semio-tech/ui/elements/LayeredOverview/types";

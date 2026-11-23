@@ -61,6 +61,43 @@ pub struct PdfIndexedDiff<T> {
     pub added: Vec<PdfIndexedItem<T>>,
 }
 
+/// 🪪️ Concrete admitted-stream-role item the operation wire receives natively; the generic [`PdfIndexedItem`] is its in-memory twin.
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct PdfRoleItem {
+    pub index: usize,
+    pub value: crate::standards::v1_7::subsets::base::schema::stream_roles::PdfAdmittedStreamRole,
+}
+
+/// 🪪️ Concrete admitted-stream-role triple the operation wire receives natively; same wire shape as [`PdfIndexedDiff`].
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct PdfRoleDiff {
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub removed: Vec<usize>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub modified: Vec<PdfRoleItem>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub added: Vec<PdfRoleItem>,
+}
+
+impl From<PdfIndexedDiff<crate::standards::v1_7::subsets::base::schema::stream_roles::PdfAdmittedStreamRole>> for PdfRoleDiff {
+    fn from(diff: PdfIndexedDiff<crate::standards::v1_7::subsets::base::schema::stream_roles::PdfAdmittedStreamRole>) -> Self {
+        let items = |items: Vec<PdfIndexedItem<_>>| items.into_iter().map(|item| PdfRoleItem { index: item.index, value: item.value }).collect();
+        Self { removed: diff.removed, modified: items(diff.modified), added: items(diff.added) }
+    }
+}
+
+impl PdfRoleDiff {
+    /// 🔁️ The generic in-memory triple the diff algebra consumes.
+    pub fn to_indexed(&self) -> PdfIndexedDiff<crate::standards::v1_7::subsets::base::schema::stream_roles::PdfAdmittedStreamRole> {
+        let items = |items: &[PdfRoleItem]| items.iter().map(|item| PdfIndexedItem { index: item.index, value: item.value.clone() }).collect();
+        PdfIndexedDiff { removed: self.removed.clone(), modified: items(&self.modified), added: items(&self.added) }
+    }
+}
+
 impl<T> Default for PdfIndexedDiff<T> {
     fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }

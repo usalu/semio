@@ -107,7 +107,7 @@ fn render_retained_chrome_group_item_step_with_trailing(
         }
         2 => {
             if let Some(label) = item.label {
-                if label.len() > semio_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES {
+                if label.len() > semio_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES || label.len() > RETAINED_CHROME_GROUP_LABEL_MAX_BYTES {
                     *group_phase = 0;
                     glyph.reset();
                     return RetainedChromeGroupStep::Fault;
@@ -119,8 +119,7 @@ fn render_retained_chrome_group_item_step_with_trailing(
                 match chrome_text_complete_step(draw, atlas, label, x, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, width, theme.font_size_small, color, glyph) {
                     Ok(false) => return RetainedChromeGroupStep::Pending,
                     Ok(true) => {
-                        let text_w = atlas.measure_text(label, theme.font_size_small).0.min(width);
-                        CHROME_LABEL_SPANS.with(|spans| spans.borrow_mut().insert(item.control_id.to_string(), (x, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, text_w, theme.font_size_small, color, item.active)));
+                        note_chrome_label_span(item.control_id, atlas, label, x, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, width, theme.font_size_small, color, item.active);
                     }
                     Err(()) => {
                         *group_phase = 0;

@@ -349,23 +349,6 @@ fn no_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
     D3D12_DEPTH_STENCIL_DESC::default()
 }
 
-/// 🩹️ Mirrors `UI_MASK_PIPELINE`'s depth/stencil spec: depth `Always`/no-write, stencil
-/// `Always`/`Replace`/`Replace`/`Replace`, both masks `0xff`.
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn mask_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
-    let face = D3D12_DEPTH_STENCILOP_DESC { StencilFailOp: D3D12_STENCIL_OP_REPLACE, StencilDepthFailOp: D3D12_STENCIL_OP_REPLACE, StencilPassOp: D3D12_STENCIL_OP_REPLACE, StencilFunc: D3D12_COMPARISON_FUNC_ALWAYS };
-    D3D12_DEPTH_STENCIL_DESC {
-        DepthEnable: true.into(),
-        DepthWriteMask: D3D12_DEPTH_WRITE_MASK_ZERO,
-        DepthFunc: D3D12_COMPARISON_FUNC_ALWAYS,
-        StencilEnable: true.into(),
-        StencilReadMask: D3D12_DEFAULT_STENCIL_READ_MASK as u8,
-        StencilWriteMask: D3D12_DEFAULT_STENCIL_WRITE_MASK as u8,
-        FrontFace: face,
-        BackFace: face,
-    }
-}
-
 /// 🔒 Mirrors `UI_CONTENT_PIPELINE`/`VECTOR_PIPELINE`'s depth/stencil spec: depth `Always`/no-write,
 /// stencil `Equal`/`Keep`, read mask `0xff`, write mask `0x00`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -384,7 +367,7 @@ fn content_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
 }
 
 /// 🗻️ Mirrors `WORLD3D_OPAQUE_PIPELINE`'s depth/stencil spec: depth `Less`, write on; stencil `Equal`/
-/// `Keep`, write mask `0x00` (reads the same silhouette mask the 2D content wrote, never writes it).
+/// `Keep`, write mask `0x00` (reads the stencil buffer, never writes it).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn world3d_opaque_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
     let face = D3D12_DEPTH_STENCILOP_DESC { StencilFailOp: D3D12_STENCIL_OP_KEEP, StencilDepthFailOp: D3D12_STENCIL_OP_KEEP, StencilPassOp: D3D12_STENCIL_OP_KEEP, StencilFunc: D3D12_COMPARISON_FUNC_EQUAL };
@@ -428,7 +411,6 @@ fn world3d_translucent_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
 pub struct Pipelines {
     pub root_signature: ID3D12RootSignature,
     pub samplers: SamplerHeap,
-    pub ui_mask: ID3D12PipelineState,
     pub ui_content: ID3D12PipelineState,
     pub vector: ID3D12PipelineState,
     pub glass: ID3D12PipelineState,
@@ -500,20 +482,6 @@ impl Pipelines {
         let ui_ps = compile_shader("ui_shader", UI_SHADER_HLSL, "ui_fragment_main", "ps_5_0")?;
         let ui_input = ui_layout();
 
-        let ui_mask = build_pso(
-            device,
-            &root_signature,
-            "silhouette_mask_pipeline",
-            &ui_vs,
-            &ui_ps,
-            &ui_input,
-            blend_desc(no_blend(0)),
-            rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0),
-            mask_depth_stencil(),
-            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
-            scene_format,
-            DEPTH_STENCIL_FORMAT,
-        )?;
         let ui_content = build_pso(
             device,
             &root_signature,
@@ -646,7 +614,7 @@ impl Pipelines {
             DEPTH_STENCIL_FORMAT,
         )?;
 
-        Ok(Self { root_signature, samplers, ui_mask, ui_content, vector, glass, blur_downsample, scene_blit, world3d_opaque, world3d_translucent, world3d_line })
+        Ok(Self { root_signature, samplers, ui_content, vector, glass, blur_downsample, scene_blit, world3d_opaque, world3d_translucent, world3d_line })
     }
 }
 

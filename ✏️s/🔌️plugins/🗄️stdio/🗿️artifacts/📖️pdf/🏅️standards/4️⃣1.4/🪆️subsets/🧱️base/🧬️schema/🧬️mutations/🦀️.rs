@@ -22,7 +22,7 @@ pub use replace_page_text::ReplacePageText;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
 #[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.4", reference = PdfSnapshot, reference_diff = PdfDiff)]
@@ -92,7 +92,7 @@ impl PdfMutation {
         store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<super::PdfSnapshot, Self>,
     > {
         semio_plugin::cold_replay_document_store_owners::<super::PdfSnapshot, Self>(grant).map(|(mut owners, progress)| {
-            owners.operation_wire = owners.operation_wire.with_original_target(Self::original_conflict_target);
+            owners.operation_wire = owners.operation_wire.with_original_receiving().with_original_target(Self::original_conflict_target);
             (owners, progress)
         })
     }

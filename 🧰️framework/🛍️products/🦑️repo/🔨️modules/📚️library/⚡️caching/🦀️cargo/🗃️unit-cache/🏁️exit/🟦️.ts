@@ -5,5 +5,6 @@ export const UNFINISHED_EXIT_STATUS_V1=70;
 /** 🏁️ Runs `work` as the body of a process and ends it with the status `work` answers; a rejection ends it with status 1 and its message, work that never settles ends it with {@link UNFINISHED_EXIT_STATUS_V1}. Every process Cargo executes for a unit (the compiler stand-in, the build script stand-in) ends this way and no other. */
 export function exitWithStatusOfV1(work:()=>Promise<number>):void{
  process.exitCode=UNFINISHED_EXIT_STATUS_V1;
- work().then(status=>{process.exitCode=status;},error=>{console.error(String((error as Error)?.message??error));process.exitCode=1;});
+ const finish=(status:number)=>{process.exitCode=status;setImmediate(()=>process.exit(status));};
+ work().then(finish,error=>{console.error(String((error as Error)?.message??error));finish(1);});
 }

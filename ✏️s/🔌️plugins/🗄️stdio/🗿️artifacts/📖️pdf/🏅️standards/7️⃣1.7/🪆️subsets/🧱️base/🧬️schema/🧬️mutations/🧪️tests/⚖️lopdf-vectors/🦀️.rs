@@ -8,7 +8,7 @@
 //! writer and reads it back, and requires the typed model to equal lopdf's after-document — so the
 //! mutation, the writer and the reader are held to bytes an independent writer produced. The
 //! inverse steps must then write back to the before-document. The retained COS carrier
-//! (`objects`, `trailer`) is left out of both comparisons: object numbers are writer freedom.
+//! (`objects`, `trailer`, `admitted_stream_roles`) is left out of both comparisons: object numbers are writer freedom.
 //!
 //! @see ../../../../🏭️generator/🔁️codec/🦀️.rs
 
@@ -36,6 +36,7 @@ fn lanes(snapshot: &PdfSnapshot) -> PdfSnapshot {
     let mut lanes = snapshot.clone();
     lanes.objects.clear();
     lanes.trailer.clear();
+    lanes.admitted_stream_roles.clear();
     lanes
 }
 

@@ -8,7 +8,7 @@ import {OFFLOAD_REFUSAL_PREFIX_V1} from "../🚀️offload/🩺️failure/🟦�
 import {OFFLOAD_POLICY_V1} from "../🚀️offload/📐️policy/🟦️.ts";
 
 const withoutWhyV1=(state:RemoteExecutionWorkerStateV1):Omit<RemoteExecutionWorkerStateV1,"why">=>{const {why:_why,...rest}=state;return rest;};
-import {remoteExecutionControlV1,remoteExecutionPeakMegabytesV1,remoteExecutionDigestV1,remoteExecutionMatchPropertiesV1,remoteExecutionPlatformKeyV1,remoteExecutionPlatformMatchesV1,type RemoteExecutionDigestV1,type RemoteExecutionHeartbeatAnswerV1,type RemoteExecutionPollAnswerV1,type RemoteExecutionPropertyV1,type RemoteExecutionTaskResultV1,type RemoteExecutionTaskStatusV1,type RemoteExecutionTaskV1,type RemoteExecutionWorkerRegisteredV1,type RemoteExecutionWorkerRegistrationV1} from "../🟦️.ts";
+import {readRemoteExecutionPolicyV1,remoteExecutionControlV1,remoteExecutionPeakMegabytesV1,remoteExecutionDigestV1,remoteExecutionMatchPropertiesV1,remoteExecutionPlatformKeyV1,remoteExecutionPlatformMatchesV1,type RemoteExecutionDigestV1,type RemoteExecutionHeartbeatAnswerV1,type RemoteExecutionPollAnswerV1,type RemoteExecutionPropertyV1,type RemoteExecutionTaskResultV1,type RemoteExecutionTaskStatusV1,type RemoteExecutionTaskV1,type RemoteExecutionWorkerRegisteredV1,type RemoteExecutionWorkerRegistrationV1} from "../🟦️.ts";
 
 /** 🎞️ The stages an operation passes through, in the protocol's own words. */
 export type RemoteExecutionStageV1="CACHE_CHECK"|"QUEUED"|"EXECUTING"|"COMPLETED";
@@ -23,22 +23,22 @@ export type RemoteExecutionSnapshotV1=Readonly<{name:string;instance:string;acti
 export type RemoteExecutionSchedulerEventV1=Readonly<{stage:"submitted"|"cached"|"assigned"|"completed"|"retried"|"worker-joined"|"worker-left"|"worker-lost"|"unmatched"|"refused"|"declined";detail:string}>;
 
 /** ⚙️ Bounds of the scheduler; all durations are seconds. */
-export type RemoteExecutionSchedulerOptionsV1=Readonly<{content:RemoteExecutionContentV1;unmatchedSeconds:number;lingerSeconds:number;leaseSeconds:number;maximumAttempts:number;defaultActionSeconds:number;maximumActionSeconds:number;maximumQueued:number;heartbeatSeconds:number;pollSeconds:number;loadExpireSeconds:number;refusalCooldownSeconds:number;cache:Readonly<{url:string;relative:boolean}>;language:"en"|"de"|"none";sweepMilliseconds?:number;now?:()=>number;onEvent?:(event:RemoteExecutionSchedulerEventV1)=>void}>;
+export type RemoteExecutionSchedulerOptionsV1=Readonly<{content:RemoteExecutionContentV1;unmatchedSeconds:number;lingerSeconds:number;leaseSeconds:number;maximumAttempts:number;defaultActionSeconds:number;maximumActionSeconds:number;maximumQueued:number;heartbeatSeconds:number;pollSeconds:number;loadExpireSeconds:number;refusalCooldownSeconds:number;keepAliveSeconds?:number;cancelGraceSeconds?:number;stuckSeconds?:number;cache:Readonly<{url:string;relative:boolean}>;language:"en"|"de"|"none";sweepMilliseconds?:number;now?:()=>number;onEvent?:(event:RemoteExecutionSchedulerEventV1)=>void}>;
 
 type Operation={
  id:string;instance:string;action:RemoteExecutionDigestV1;key:string;platform:RemoteExecutionPropertyV1[];timeoutSeconds:number;stage:RemoteExecutionStageV1;version:number;createdAt:number;queuedAt:number;
- attempt:number;failures:number;tried:Set<string>;requester?:string;peakMegabytes?:number;submittedBy?:string;offload:boolean;worker?:string;startedAt?:number;outcome?:RemoteExecutionOutcomeV1;subscribers:Set<()=>void>;cancelRequested:boolean;adopted?:true;lingerTimer?:ReturnType<typeof setTimeout>;
+ attempt:number;failures:number;tried:Set<string>;requester?:string;peakMegabytes?:number;submittedBy?:string;offload:boolean;worker?:string;startedAt?:number;outcome?:RemoteExecutionOutcomeV1;subscribers:Set<()=>void>;cancelRequested:boolean;adopted?:true;cancelRequestedAt?:number;lingerTimer?:ReturnType<typeof setTimeout>;
 };
 
 type Worker={
- id:string;registration:RemoteExecutionWorkerRegistrationV1;lastSeen:number;running:Set<string>;cancel:Set<string>;waiter?:(answer:RemoteExecutionPollAnswerV1)=>void;draining:boolean;refusedUntil:number;refused:number;
+ id:string;registration:RemoteExecutionWorkerRegistrationV1;lastSeen:number;running:Set<string>;cancel:Set<string>;announced:Set<string>;waiter?:(answer:RemoteExecutionPollAnswerV1)=>void;draining:boolean;refusedUntil:number;refused:number;
 };
 
 /** ⏳️ How long the answer "another machine is idle" holds for the machine that was told: its next units are queued instead of declined while the headroom that was promised may have been taken by someone else in between (the queue limit of the requester still bounds the wait). */
 const RESERVATION_SECONDS=20;
 const OK:RemoteExecutionTaskStatusV1={code:0,message:""},DECLINED:RemoteExecutionTaskStatusV1={code:8,message:"No other machine has headroom: run the action locally"},FAILED_BACK=(why:string):RemoteExecutionTaskStatusV1=>({code:14,message:`${why}; run the action locally`}),MISSING=(digest:RemoteExecutionDigestV1):RemoteExecutionTaskStatusV1=>({code:9,message:`Missing blob ${digest.hash}/${digest.size}`,missing:[digest]});
 
-/** 🗓️ The scheduler: deduplicates identical actions, answers from the action cache, queues actions, hands each to the least loaded compatible long-polling worker that has headroom (see `⚖️placement`), tracks leases and heartbeats, reschedules lost work once on another worker and then fails it back to the requester, cancels abandoned work, keeps the live load table of the fleet and counters. Pure logic over a content store; transports are separate. */
+/** 🗓️ The scheduler: deduplicates identical actions, answers from the action cache, queues actions, hands each to the least loaded compatible long-polling worker that has headroom (see `⚖️placement`), tracks leases and heartbeats, reschedules lost work once on another worker and then fails it back to the requester (a worker that no longer holds an action, left, was lost or misses its heartbeats), repeats every waiting operation to its clients as a keep-alive, cancels abandoned work (a cancellation the worker does not acknowledge in time frees the operation, a client that joins an operation under cancellation revokes it), ends operations on an operator's word, keeps the live load table of the fleet and counters. Pure logic over a content store; transports are separate. */
 export class RemoteExecutionSchedulerV1{
  private readonly operations=new Map<string,Operation>();
  private readonly byKey=new Map<string,Operation>();
@@ -53,7 +53,8 @@ export class RemoteExecutionSchedulerV1{
  private timer?:ReturnType<typeof setInterval>;
  readonly startedAt:string;
 
- readonly options:RemoteExecutionSchedulerOptionsV1; constructor(options:RemoteExecutionSchedulerOptionsV1){this.options=options;
+ readonly options:RemoteExecutionSchedulerOptionsV1;private readonly keepAliveMilliseconds:number;private readonly cancelGraceMilliseconds:number;private readonly stuckMilliseconds:number; constructor(options:RemoteExecutionSchedulerOptionsV1){this.options=options;
+  const server=readRemoteExecutionPolicyV1().server;this.keepAliveMilliseconds=(options.keepAliveSeconds??server.keepAliveSeconds)*1000;this.cancelGraceMilliseconds=(options.cancelGraceSeconds??server.cancelGraceSeconds)*1000;this.stuckMilliseconds=(options.stuckSeconds??server.stuckSeconds)*1000;
   this.clock=options.now??Date.now;this.startedAt=new Date(this.clock()).toISOString();this.load=new RemoteExecutionLoadTableV1(options.loadExpireSeconds*1000,this.clock);
   const every=options.sweepMilliseconds??1000;
   this.lastTick=this.clock();
@@ -124,6 +125,10 @@ export class RemoteExecutionSchedulerV1{
  private attach(operation:Operation,wake:()=>void):void{
   operation.subscribers.add(wake);
   if(operation.lingerTimer){clearTimeout(operation.lingerTimer);delete operation.lingerTimer;}
+  if(operation.cancelRequested&&operation.stage==="EXECUTING"){
+   operation.cancelRequested=false;delete operation.cancelRequestedAt;
+   if(operation.worker)this.workers.get(operation.worker)?.cancel.delete(`${operation.id}.${operation.attempt}`);
+  }
  }
 
  private detach(operation:Operation,wake:()=>void):void{
@@ -138,22 +143,25 @@ export class RemoteExecutionSchedulerV1{
   if(operation.stage==="EXECUTING")this.counters.cancelledExecuting++;else this.counters.cancelledQueued++;
   if(operation.stage==="EXECUTING"&&operation.worker){
    const worker=this.workers.get(operation.worker);
-   if(worker){operation.cancelRequested=true;worker.cancel.add(`${operation.id}.${operation.attempt}`);worker.waiter?.({version:1,task:null,cancel:[...worker.cancel],known:true});delete worker.waiter;return;}
+   if(worker){operation.cancelRequested=true;worker.cancel.add(`${operation.id}.${operation.attempt}`);operation.cancelRequestedAt=this.clock();worker.waiter?.({version:1,task:null,cancel:[...worker.cancel],known:true});delete worker.waiter;return;}
   }
   this.finish(operation,{status:{code:1,message:"Cancelled: no client waits for the result"},actionResult:null,cached:false,worker:operation.worker??""});
  }
 
  private async *watch(operation:Operation,signal:AbortSignal):AsyncGenerator<RemoteExecutionSnapshotV1>{
-  let wake!:()=>void,seen=-1;
-  const changed=():void=>{wake();};
+  let wake:()=>void=()=>{},seen=-1,beat=false;
+  const changed=():void=>{wake();},aborted=():void=>{wake();};
   this.attach(operation,changed);
+  signal.addEventListener("abort",aborted,{once:true});
   try{
    for(;;){
-    if(operation.version!==seen){seen=operation.version;const shown=this.snapshot(operation);yield shown;if(shown.stage==="COMPLETED")return;}
+    if(operation.version!==seen||beat){seen=operation.version;beat=false;const shown=this.snapshot(operation);yield shown;if(shown.stage==="COMPLETED")return;}
     if(signal.aborted)return;
-    await new Promise<void>(resolve=>{wake=resolve;signal.addEventListener("abort",()=>{resolve();},{once:true});if(operation.version!==seen)resolve();});
+    let timer:ReturnType<typeof setTimeout>|undefined;
+    await new Promise<void>(resolve=>{wake=resolve;timer=setTimeout(()=>{beat=true;resolve();},this.keepAliveMilliseconds);if(operation.version!==seen||signal.aborted)resolve();});
+    clearTimeout(timer);
    }
-  }finally{this.detach(operation,changed);}
+  }finally{signal.removeEventListener("abort",aborted);this.detach(operation,changed);}
  }
 
  /** 🚀️ Submits an action (or joins the identical one already in flight) and streams its operation snapshots until it completes or the caller goes away. */
@@ -178,7 +186,7 @@ export class RemoteExecutionSchedulerV1{
   const known=[...this.workers.values()].find(worker=>worker.registration.name===registration.name&&worker.registration.origin===registration.origin);
   if(known){known.registration=registration;known.lastSeen=this.clock();this.counters.workersReused++;this.dispatch();return this.registered(known.id);}
   const id=randomUUID();
-  this.workers.set(id,{id,registration,lastSeen:this.clock(),running:new Set(),cancel:new Set(),draining:false,refusedUntil:0,refused:0});
+  this.workers.set(id,{id,registration,lastSeen:this.clock(),running:new Set(),cancel:new Set(),announced:new Set(),draining:false,refusedUntil:0,refused:0});
   for(const row of registration.resumed??[]){
    const dot=row.task.lastIndexOf("."),oldId=row.task.slice(0,dot),attempt=Number(row.task.slice(dot+1)),key=`${row.instance}|${row.action.hash}`,existing=this.byKey.get(key);
    if(existing?.stage==="EXECUTING"||this.operations.has(oldId))continue;
@@ -237,6 +245,7 @@ export class RemoteExecutionSchedulerV1{
 
  private requeue(operation:Operation,reason:string,failure:boolean):void{
   const name=operation.worker??"";
+  if(operation.worker)this.workers.get(operation.worker)?.running.delete(`${operation.id}.${operation.attempt}`);
   if(operation.adopted===true)return this.finish(operation,{status:FAILED_BACK(reason),actionResult:null,cached:false,worker:name});
   if(operation.cancelRequested)return this.finish(operation,{status:{code:1,message:"Cancelled"},actionResult:null,cached:false,worker:name});
   if(failure&&++operation.failures>=this.options.maximumAttempts)return this.finish(operation,{status:FAILED_BACK(`${reason}; gave up after ${operation.failures} attempt${operation.failures===1?"":"s"}`),actionResult:null,cached:false,worker:name});
@@ -265,7 +274,8 @@ export class RemoteExecutionSchedulerV1{
   const worker=this.workers.get(workerId);
   if(!worker)return Promise.resolve({version:1,task:null,cancel:[],known:false});
   worker.lastSeen=this.clock();
-  if(worker.cancel.size>0)return Promise.resolve({version:1,task:null,cancel:[...worker.cancel],known:true});
+  const fresh=[...worker.cancel].filter(id=>!worker.announced.has(id));
+  if(fresh.length>0){for(const id of fresh)worker.announced.add(id);return Promise.resolve({version:1,task:null,cancel:[...worker.cancel],known:true});}
   worker.waiter?.({version:1,task:null,cancel:[],known:true});
   return new Promise(resolve=>{
    let timer:ReturnType<typeof setTimeout>|undefined;
@@ -284,16 +294,18 @@ export class RemoteExecutionSchedulerV1{
   worker.lastSeen=this.clock();
   for(const id of [...worker.running])if(!running.includes(id)){
    const operation=this.operations.get(id.split(".")[0]!);
-   if(operation&&operation.stage==="EXECUTING"&&`${operation.id}.${operation.attempt}`===id&&this.clock()-(operation.startedAt??0)>this.options.leaseSeconds*1000){operation.tried.add(placementKeyV1(this.workerView(worker)));this.requeue(operation,"Worker no longer runs the task",true);}
-   worker.running.delete(id);
+   if(!operation||operation.stage!=="EXECUTING"||`${operation.id}.${operation.attempt}`!==id){worker.running.delete(id);continue;}
+   if(this.clock()-(operation.startedAt??0)>this.options.leaseSeconds*1000){operation.tried.add(placementKeyV1(this.workerView(worker)));this.requeue(operation,"Worker no longer runs the task",true);}
   }
-  return {version:1,known:true,cancel:[...worker.cancel].filter(id=>running.includes(id))};
+  const answer={version:1 as const,known:true,cancel:[...worker.cancel].filter(id=>running.includes(id))};
+  for(const id of [...worker.cancel])if(!running.includes(id)){worker.cancel.delete(id);worker.announced.delete(id);}
+  return answer;
  }
 
  /** 🏁️ Takes a worker's report of a task. */
  report(workerId:string,taskId:string,result:RemoteExecutionTaskResultV1):boolean{
   const worker=this.workers.get(workerId),operation=this.operations.get(taskId.split(".")[0]!);
-  if(worker){worker.lastSeen=this.clock();worker.running.delete(taskId);worker.cancel.delete(taskId);}
+  if(worker){worker.lastSeen=this.clock();worker.running.delete(taskId);worker.cancel.delete(taskId);worker.announced.delete(taskId);}
   if(!operation||operation.stage!=="EXECUTING"||`${operation.id}.${operation.attempt}`!==taskId||operation.worker!==workerId)return false;
   const bytes=result.actionResult===null?null:new Uint8Array(Buffer.from(result.actionResult,"base64")),name=worker?.registration.name??"";
   if(result.outcome==="refused"){
@@ -332,12 +344,33 @@ export class RemoteExecutionSchedulerV1{
     if(operation.failures+1>=this.options.maximumAttempts)this.finish(operation,{status:{code:4,message:`Action exceeded its timeout of ${operation.timeoutSeconds}s`},actionResult:null,cached:false,worker:worker?.registration.name??""});
     else{if(worker)operation.tried.add(placementKeyV1(this.workerView(worker)));this.requeue(operation,`Action exceeded its deadline on ${worker?.registration.name??"its worker"}`,true);}
    }
+   if(operation.stage==="EXECUTING"&&operation.startedAt!==undefined){
+    const worker=operation.worker?this.workers.get(operation.worker):undefined,task=`${operation.id}.${operation.attempt}`;
+    if(operation.cancelRequested&&operation.cancelRequestedAt!==undefined&&now-operation.cancelRequestedAt>this.cancelGraceMilliseconds){worker?.running.delete(task);this.finish(operation,{status:{code:1,message:"Cancelled: the worker did not acknowledge in time"},actionResult:null,cached:false,worker:worker?.registration.name??""});continue;}
+    if((worker===undefined||!worker.running.has(task))&&now-operation.startedAt>lease&&!grace){if(worker)operation.tried.add(placementKeyV1(this.workerView(worker)));this.requeue(operation,"The worker of the action no longer holds it",true);continue;}
+   }
    if(operation.stage==="QUEUED"&&now-operation.queuedAt>this.options.unmatchedSeconds*1000&&!placementAnyCandidateV1(this.view(operation),this.views(),this.load)){
     this.emit("unmatched",`${this.label(operation)}: ${remoteExecutionPlatformKeyV1(remoteExecutionMatchPropertiesV1(operation.platform))}`);
     this.finish(operation,{status:{code:9,message:`No worker offers the platform ${remoteExecutionPlatformKeyV1(remoteExecutionMatchPropertiesV1(operation.platform))||"(any)"}; ${this.workers.size} worker(s) are registered`},actionResult:null,cached:false,worker:""});
    }
   }
   this.dispatch();
+ }
+
+ /** 🛑️ Ends operations on an operator's word and tells their waiting clients to run the action locally (status `CANCELLED`, so no retry): one operation by its id or by at least 8 characters of its id or action digest, or `all-stuck`, every unfinished operation older than `stuckSeconds` (counted from its start, or from its queueing). A worker that still runs one is told to stop it. Answers what was ended. */
+ abort(target:string):readonly Readonly<{id:string;action:string;stage:"QUEUED"|"EXECUTING";worker:string|null;elapsedSeconds:number}>[]{
+  const now=this.clock(),named=target.length>=8?target:"",ended:{id:string;action:string;stage:"QUEUED"|"EXECUTING";worker:string|null;elapsedSeconds:number}[]=[];
+  for(const operation of [...this.operations.values()]){
+   if(operation.stage==="COMPLETED")continue;
+   const age=now-(operation.startedAt??operation.queuedAt);
+   if(target==="all-stuck"?age<=this.stuckMilliseconds:!(operation.id===target||(named!==""&&(operation.id.startsWith(named)||operation.action.hash.startsWith(named)))))continue;
+   const worker=operation.worker?this.workers.get(operation.worker):undefined,task=`${operation.id}.${operation.attempt}`;
+   ended.push({id:operation.id,action:operation.action.hash.slice(0,12),stage:operation.stage as "QUEUED"|"EXECUTING",worker:worker?.registration.origin??null,elapsedSeconds:Math.max(0,Math.round(age/1000))});
+   if(worker&&operation.stage==="EXECUTING")worker.cancel.add(task);
+   this.finish(operation,{status:{code:1,message:"Cancelled by an operator; run the action locally"},actionResult:null,cached:false,worker:worker?.registration.name??""});
+   worker?.waiter?.({version:1,task:null,cancel:[...worker.cancel],known:true});if(worker)delete worker.waiter;
+  }
+  return ended;
  }
 
  /** 📊️ A secret-free view of the scheduler for `GET /status`. */

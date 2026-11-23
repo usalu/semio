@@ -208,7 +208,7 @@ export function prepareStdioComposition(repoRoot: string, hubRoot: string): { co
     if (owner.main) manifest = region(manifest, "Composition Test Dependencies", unique(rows.flatMap(hostedPackages)).filter((name) => !direct.includes(name)).map((name) => `${name} = { workspace = true }`).join("\n"));
     publish(path, manifest);
     const playgrounds = rows.flatMap((row) => row.playgrounds.filter((entry) => entry.owner === owner.id));
-    const playgroundSource = playgrounds.map((entry) => `[[package.metadata.semio.playground]]\nvariant = ${JSON.stringify(entry.variant)}\napp = ${JSON.stringify(entry.app)}\naliases = ${JSON.stringify(entry.aliases)}\nports = { react = ${entry.ports.react}, wgpu = ${entry.ports.wgpu} }`).join("\n\n");
+    const playgroundSource = playgrounds.map((entry) => `[[package.metadata.semio.playground]]\nvariant = ${JSON.stringify(entry.variant)}\napp = ${JSON.stringify(entry.app)}\naliases = ${JSON.stringify(entry.aliases)}\nports = { react = ${entry.ports.react}, wgpu = ${entry.ports.wgpu} }${entry.devContribution === undefined ? "" : `\ndevContribution = ${JSON.stringify(entry.devContribution)}`}`).join("\n\n");
     publish(componentPath, region(read(hubRoot, componentPath), "Composition Playgrounds", playgroundSource));
     const library = (Bun.TOML.parse(manifest) as { package: { name: string } }).package.name;
     const emoji = basename(resolve(hubRoot, directory)).match(/^[^a-z0-9]+/u)?.[0] ?? "🧩️";

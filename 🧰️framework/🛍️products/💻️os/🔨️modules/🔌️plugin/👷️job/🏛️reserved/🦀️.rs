@@ -1107,7 +1107,7 @@ pub(crate) fn validate_tool_job_rows<A: ArtifactApp>(
         }
     }
     if seen != expected {
-        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.catalog-incomplete"), "a migrated generated command lacks its exact owner-local bounded reducer proof"));
+        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.catalog-incomplete"), format!("a migrated generated command lacks its exact owner-local bounded reducer proof: missing {:?}, unexpected {:?}", expected.difference(&seen).collect::<Vec<_>>(), seen.difference(&expected).collect::<Vec<_>>())));
     }
     Ok((controller_id, proofs))
 }

@@ -1,6 +1,7 @@
 import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {readFileSync} from "node:fs";
 import {mkdir,readFile,rename,rm,writeFile} from "node:fs/promises";
+import {createConnection} from "node:net";
 import {randomUUID} from "node:crypto";
 import {dirname,isAbsolute,join,resolve} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -69,14 +70,6 @@ export function readLocalFleetCacheFactsV1(root:string,now:number=Date.now()):Fl
 const filled=(environment:Readonly<Record<string,string|undefined>>,name:string):string|undefined=>{const value=environment[name];return value===undefined||value===""?undefined:value;};
 const origin=(endpoint:string):string=>{try{return new URL(endpoint).origin;}catch{return endpoint;}};
 
-const attempts=new Map<string,number>();
-
-function keepFresh(root:string,copy:FleetCacheLocalCopyV1|undefined):void{
- const now=Date.now();
- if(copy!==undefined&&now-copy.checkedAtMs<2*TTL||now-(attempts.get(root)??0)<TTL)return;
- attempts.set(root,now);void refreshFleetCacheFactsV1({root}).catch(()=>{});
-}
-
 /** 🧷️ The name of the variable that makes an endpoint pointer of the environment win over healthy fleet facts: set to any value, `SEMIO_REMOTE_CACHE_ENDPOINT` is the operator's explicit choice. */
 export const FLEET_POINTER_OVERRIDE_ENVIRONMENT_V1="SEMIO_REMOTE_CACHE_ENDPOINT_OVERRIDE";
 
@@ -89,7 +82,6 @@ export function pointerSupersededV1(environment:Readonly<Record<string,string|un
 /** 🧭️ THE resolver of every client of the remote cache: the environment first, field by field, then the fleet facts of the local copy. The credential of a joined machine is its own signing identity (`tokenFrom: fleet-identity`, no secret in any variable or file that others read) and is only ever used for an endpoint the facts name, so an explicitly foreign endpoint never sees even a signature; an operator token from the environment (`tokenFrom: environment`) is sent as before. Synchronous and local: a stalled store cannot stall a caller; keep the copy fresh with `refreshFleetCacheFactsV1`. `undefined` means the remote cache is off. */
 export function resolveRemoteCacheV1(environment:Readonly<Record<string,string|undefined>>,options:RemoteCacheResolutionOptionsV1={}):RemoteCacheResolutionV1|undefined{
  const policy=options.policy??readRemoteCachePolicyV1(),names=policy.environment,root=options.root??fleetCacheRootV1(environment),copy=options.copy??(root===undefined?undefined:readLocalFleetCacheFactsV1(root)),facts=copy?.facts;
- if(options.copy===undefined&&root!==undefined)keepFresh(root,copy);
  const overlay:Record<string,string|undefined>={...environment},pointer=filled(environment,names.endpoint),superseded=pointerSupersededV1(environment,names.endpoint,facts),explicit=superseded?undefined:pointer,tokenName=filled(environment,names.tokenEnvironment)??policy.defaults.tokenEnvironment,own=filled(environment,tokenName);
  let endpointFrom:RemoteCacheResolutionV1["endpointFrom"]="environment",named=false;
  if(facts!==undefined&&copy!==undefined){
@@ -179,12 +171,32 @@ async function store(root:string,copy:FleetCacheLocalCopyV1):Promise<void>{
  try{await writeFile(temporary,JSON.stringify(copy)+"\n",{mode:0o600});await renameOverReadersV1(temporary,path);}catch(error){await rm(temporary,{force:true}).catch(()=>{});throw error;}
 }
 
+const FLEET_STORE_MOUNTS=new Set(["/Volumes/semio-store","/mnt/semio-store","S:\\","S:/"]);
+
+function probeTcpHost(host:string,port:number,milliseconds:number):Promise<boolean>{
+ return new Promise(done=>{
+  let settled=false;
+  const finish=(ok:boolean)=>{if(settled)return;settled=true;clearTimeout(timer);socket.destroy();done(ok);};
+  const socket=createConnection({host,port},()=>finish(true));
+  socket.once("error",()=>finish(false));
+  const timer=setTimeout(()=>finish(false),milliseconds);
+  timer.unref?.();
+ });
+}
+
+async function ensureMountedStoreReachable(storeRoot:string,milliseconds:number):Promise<void>{
+ const host=filled(process.env,"SEMIO_FLEET_NFS_HOST");
+ if(host===undefined||!FLEET_STORE_MOUNTS.has(storeRoot))return;
+ if(!await probeTcpHost(host,2049,Math.min(milliseconds,500)))throw Error(`fleet NFS host ${host}:2049 is unreachable`);
+}
+
 async function refresh(options:FleetCacheRefreshOptionsV1):Promise<FleetCacheRefreshV1>{
  const now=options.now??Date.now(),local=readLocalFleetCacheFactsV1(options.root,now);
  if(options.force!==true&&local!==undefined&&now-local.checkedAtMs<(options.ttlMilliseconds??TTL))return {state:"fresh",copy:local};
  try{
   const storeRoot=fleetStoreRootV1(options.root);
   if(storeRoot===undefined)throw Error("no store root in .cache/f/machine.json");
+  await ensureMountedStoreReachable(storeRoot,options.timeoutMilliseconds??TIMEOUT);
   await syncFleetIdentityV1({root:options.root,...(options.timeoutMilliseconds===undefined?{}:{timeoutMilliseconds:options.timeoutMilliseconds})});
   const text=await bounded(readFile(fleetCacheFactsPathV1(storeRoot),"utf8"),options.timeoutMilliseconds??TIMEOUT,"reading the fleet cache facts"),facts=parseFleetCacheFactsV1(text),unchanged=local!==undefined&&JSON.stringify(local.facts)===JSON.stringify(facts);
   const selectedEndpoint=await select(facts.cache.endpoints,unchanged?local.selectedEndpoint:null,options.probeMilliseconds??PROBE,options.fetch??fetch);

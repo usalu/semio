@@ -19,7 +19,7 @@ fn fault(message: &str) -> Fault {
 
 fn number(args: Option<&DslValue>, field: &str) -> Result<f64, Fault> {
     semio_s_artifact_stdio_contract::window_kit_text_argument(args, &[field], "")
-        .parse::<f64>().ok().filter(|value| value.is_finite()).ok_or_else(|| fault("Invalid image placement coordinates"))
+        .parse::<f64>().ok().filter(|value| value.is_finite()).ok_or_else(|| crate::document::refuse(crate::document::PdfFault::ImagePlacementInvalid, "Invalid image placement coordinates"))
 }
 
 fn index(args: Option<&DslValue>, field: &str) -> Result<u32, Fault> {

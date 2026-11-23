@@ -17,7 +17,6 @@ use semio_renderer_wgpu_shell_docs::{DocumentState, FRAMEWORK_CHAT_PANEL_ID, FRA
 use semio_renderer_wgpu_shell_history::HistoryState;
 use semio_renderer_wgpu_shell_input::{set_submenu_children, suggestion_rows, suggestion_submenu_target, with_suggestion_submenu, suggestion_popup_owns_window, suggestion_popup_title, SuggestionHover, SuggestionKind, SuggestionSearch, SUGGESTION_SUBMENU_CLOSE_ACTION, SUGGESTION_SUBMENU_OPEN_ACTION, ContextMenuItem, ContextMenuKeyOutcome, ContextMenuState, ContextMenuSurfaceResolution, OverlayState, PointerHitOwner, RightClickState, ShellInputState, ShellPaletteKind, context_menu_item_at_path, context_menu_path_for_item_id, text_selection_menu_items, tree_drag_handle_item_id, tree_hit_item_id};
 use semio_renderer_wgpu_shell_plugins::{PluginState, flatten_panel_tab_leaves};
-#[cfg(target_arch = "wasm32")]
 use semio_renderer_wgpu_shell_plugins::PendingExtensionInvocation;
 use semio_renderer_wgpu_shell_prefs::{PrefsState, TimeTravelVerb, command_address_stable_key, history_refusal_is_silent, history_refusal_notice};
 use semio_renderer_wgpu_shell_session::{FRAMEWORK_CATEGORY_COMMAND_ID, SessionCtx, ShellShortcut, claim_app_catalogue_fetch, import_transfer_notice, mobile_panel_reconcile_path, panel_state_from_view, resident_census};

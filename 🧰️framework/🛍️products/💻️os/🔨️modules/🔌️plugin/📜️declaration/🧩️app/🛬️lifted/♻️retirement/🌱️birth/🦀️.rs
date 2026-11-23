@@ -1,12 +1,12 @@
 //! 🌱️ Completion birth retains the actual native Arc between original allocation and paid header handoff.
-use super::{ArtifactApp,ArtifactToolCompletion,Cell,CompletionCell,ManuallyDrop,Arc,Mutex};
+use super::{ArtifactApp,ArtifactToolCompletion,Cell,CompletionCell,ManuallyDrop,Arc,Slot};
 use semio_framework_job::{StepContext,OriginalTurnFailure,InteractiveJobCloseStep,OriginalConstructionAdmission};
 use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 use std::mem::size_of;
 
 type Scope=(semio_framework::action_bus::OriginalToolSourceBinding,(semio_framework_value::retained_clone::NativeAllocationIdentity,u64));
 pub struct OriginalCompletionBirth<A:ArtifactApp>{source:Option<Scope>,input:Option<Cell<A>>,born:ManuallyDrop<Option<Arc<Cell<A>>>>,allocation:semio_framework_value::native_decoding::NativeSharedAdmission<Cell<A>>,construction:OriginalConstructionAdmission,constructed:bool,complete:bool}
-impl<A:ArtifactApp> Default for OriginalCompletionBirth<A>{fn default()->Self{Self{source:None,input:Some(Cell{genesis_sealed:false.into(),genesis_source:None,value:Mutex::new(None),authoring:Mutex::new(None)}),born:ManuallyDrop::new(None),allocation:Default::default(),construction:Default::default(),constructed:false,complete:false}}}
+impl<A:ArtifactApp> Default for OriginalCompletionBirth<A>{fn default()->Self{Self{source:None,input:Some(Cell{genesis_sealed:false.into(),genesis_source:None,value:Slot::new(None),authoring:Slot::new(None)}),born:ManuallyDrop::new(None),allocation:Default::default(),construction:Default::default(),constructed:false,complete:false}}}
 impl<A:ArtifactApp> OriginalCompletionBirth<A>{
  pub fn output_ready(&self)->bool{self.allocation.phase()==semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty&&self.born.is_some()}
  pub fn shared_admission(&mut self)->&mut semio_framework_value::native_decoding::NativeSharedAdmission<Cell<A>>{&mut self.allocation}

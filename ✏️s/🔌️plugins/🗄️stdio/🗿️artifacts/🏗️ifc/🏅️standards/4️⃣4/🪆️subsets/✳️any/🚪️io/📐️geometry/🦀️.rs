@@ -3,12 +3,12 @@ use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::{ge
 use semio_plugin::{world3d_camera_json, world3d_selection_json_with_granularity, BuiltNode, MeshWindowKit, WindowKit};
 use semio_plugin::app::SurfaceKind;
 
-pub fn render_with(document: &IfcSnapshot, limits: geometry::GeometryLimits, progress: &mut dyn FnMut(geometry::GeometryProgress) -> bool) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_with(document: &IfcSnapshot, limits: geometry::GeometryLimits, progress: &mut dyn FnMut(geometry::GeometryProgress) -> bool, locale:semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let scene = geometry::project_with(document, limits, progress);
-    render_scene(scene,None)
+    render_scene(scene,None,locale)
 }
 
-fn render_scene(mut scene: geometry::GeometryScene, interaction:Option<&semio_plugin::app::InteractionView<'_>>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+fn render_scene(mut scene: geometry::GeometryScene, interaction:Option<&semio_plugin::app::InteractionView<'_>>, locale:semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     if let Some(issue) = scene.payload_issue() { scene.issues.push(issue); scene.status = geometry::GeometryStatus::Limited; }
     if scene.status != geometry::GeometryStatus::Complete { scene.meshes.clear(); }
     let (position, target) = scene.camera();
@@ -19,20 +19,20 @@ fn render_scene(mut scene: geometry::GeometryScene, interaction:Option<&semio_pl
         "status": status, "work": scene.work, "issues": semio_framework_pack_json::array(issues),
         "label": { "en": "IFC Representation Geometry", "de": "IFC-Repräsentationsgeometrie" }
     })));
-    semio_plugin::scene_surface(MeshWindowKit::KIND_ID, SurfaceKind::World3d, &world)
+    semio_plugin::scene_surface(MeshWindowKit::KIND_ID, SurfaceKind::World3d, &world, semio_plugin::surface_name(locale, "IFC representation geometry", "IFC-Repräsentationsgeometrie"), None)
 }
 
-pub fn render(document: &IfcSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    render_with(document, geometry::GeometryLimits::default(), &mut |_| true)
+pub fn render(document: &IfcSnapshot, locale:semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    render_with(document, geometry::GeometryLimits::default(), &mut |_| true, locale)
 }
 
-pub fn render_in_context(document: &IfcSnapshot, cx: &mut semio_framework_job::StepContext<'_>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    render_context_with_selection(document,cx,None)
+pub fn render_in_context(document: &IfcSnapshot, cx: &mut semio_framework_job::StepContext<'_>, locale:semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    render_context_with_selection(document,cx,None,locale)
 }
 
-pub fn render_selected_in_context(document:&IfcSnapshot,cx:&mut semio_framework_job::StepContext<'_>,interaction:&semio_plugin::app::InteractionView<'_>)->semio_plugin::UiAssemblyResult<BuiltNode>{render_context_with_selection(document,cx,Some(interaction))}
+pub fn render_selected_in_context(document:&IfcSnapshot,cx:&mut semio_framework_job::StepContext<'_>,interaction:&semio_plugin::app::InteractionView<'_>,locale:semio_plugin::Locale)->semio_plugin::UiAssemblyResult<BuiltNode>{render_context_with_selection(document,cx,Some(interaction),locale)}
 
-fn render_context_with_selection(document:&IfcSnapshot,cx:&mut semio_framework_job::StepContext<'_>,interaction:Option<&semio_plugin::app::InteractionView<'_>>)->semio_plugin::UiAssemblyResult<BuiltNode>{
+fn render_context_with_selection(document:&IfcSnapshot,cx:&mut semio_framework_job::StepContext<'_>,interaction:Option<&semio_plugin::app::InteractionView<'_>>,locale:semio_plugin::Locale)->semio_plugin::UiAssemblyResult<BuiltNode>{
     let _ = cx.set_stage("ifc-geometry");
     let limits = geometry::GeometryLimits { work: geometry::GeometryLimits::default().work.min(cx.fuel_remaining() as usize), ..geometry::GeometryLimits::default() };
     let mut scene = geometry::project_controlled(document, limits, &mut |_| {
@@ -43,5 +43,5 @@ fn render_context_with_selection(document:&IfcSnapshot,cx:&mut semio_framework_j
     });
     if cx.is_cancelled() { scene.status = geometry::GeometryStatus::Cancelled; }
     else if cx.should_yield() { scene.status = geometry::GeometryStatus::Limited; }
-    render_scene(scene,interaction)
+    render_scene(scene,interaction,locale)
 }

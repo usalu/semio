@@ -85,6 +85,11 @@ fn enqueue_host_input(events: &mut ui_host::EventQueue, scheduler: &mut ui_rende
 
 #[cfg(target_arch = "wasm32")]
 impl OsHost {
+    /// 🔴️ Whether the document holds edits the store never acknowledged; the browser page asks before it unloads.
+    pub fn host_unsaved(&self) -> bool {
+        semio_renderer_wgpu_shell_window_actions::host_unsaved()
+    }
+
     /// 🧾️ Reserves the queue and generation credits for a validated browser wire page.
     pub fn prepare_browser_events(&mut self, events: usize, metrics: usize) -> bool {
         let transitions = events.saturating_add(metrics);
@@ -180,11 +185,6 @@ impl WindowDelegate for OsHost {
     fn redraw(&mut self, _reason: InvalidationReason) -> RedrawOutcome {
         let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_present", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::UiPresent);
         self.present_snapshot(self.clock.now_seconds())
-    }
-
-    /// 🔴️ Whether the document holds edits the store never acknowledged; the browser page asks before it unloads.
-    pub fn host_unsaved(&self) -> bool {
-        semio_renderer_wgpu_shell_window_actions::host_unsaved()
     }
 
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

@@ -63,12 +63,12 @@ macro_rules! receive{
    let result=(||->std::result::Result<(),store::NativeSnapshotFailure>{
     let mut control=settlement.control.borrow_mut();let mut port=Paid{control:&mut **control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<$output>())?;frame.result=Some(($operation)(source,database,frame,&mut port));let owned=port.owned();drop(port);drop(control);
     let operation=frame.result.take().unwrap().and_then(|()|($publish)(frame)).map_err(store::NativeSnapshotFailure::from);
-    *published=Some(match settlement.finish_body(owned){Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
+    *published=Some(match settlement.finish_body(owned){Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal:refusal.with_retained_progress(body.progress()),receipt:None})});
     Ok(())
    })();
    RetainedWorkOutcome{result,work:u128::from(settlement.control.borrow().performed_work().checked_sub(before_work).expect("original SQL producer work is monotone"))}
   }));
-  let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal,receipt:None}),None=>turn.result.map_err(Stage::Operation)};
+  let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal:refusal.with_retained_progress(owner.progress()),receipt:None}),None=>turn.result.map_err(Stage::Operation)};
   RetainedWorkOutcome{result,work:turn.work}
  }
  };

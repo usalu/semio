@@ -34,7 +34,7 @@ test("a unit built from the current tree is stored with its declaration and inst
   build("fresh","a".repeat(64),"b".repeat(64));
   expect(await drainUploadsV1(root,environment,{idleMilliseconds:0})).toMatchObject({uploaded:1,failed:0});
   const meta=await readRemoteCacheMetaV1(server.store.root,`main/ac/aa/${"a".repeat(64)}`);
-  expect(meta?.declaration).toMatchObject({version:1,kind:"rust-unit",sources:[{path:"core/src/lib.rs",sha256:sha("pub fn id()->u32{1}\n")}],externs:[sha("blob:dep")]});expect(meta?.declaration?.toolchain).toBe(sha("rustc test"));
+  expect(meta?.declaration).toMatchObject({version:2,self:"b".repeat(64),kind:"rust-unit",sources:[{path:"core/src/lib.rs",sha256:sha("pub fn id()->u32{1}\n")}],externs:[sha("blob:dep")]});expect(meta?.declaration?.toolchain).toBe(sha("rustc test"));
   const client=createFleetClientV1(readFleetSettingsV1(other,environment)!);
   expect(await installFleetUnitV1({client,root:other,localKey:"c".repeat(64),key:"a".repeat(64),slot:"2".repeat(64),platform,roots:portableRootsV1({cwd:tree,workspace:tree})}),"another machine installs it").toBe("hit");
   expect(newestEntryV1(other,"c".repeat(64))?.retention,"and keeps what it was built from").toEqual(newestEntryV1(root,"b".repeat(64))?.retention);
@@ -43,7 +43,7 @@ test("a unit built from the current tree is stored with its declaration and inst
   expect(await drainUploadsV1(root,environment,{idleMilliseconds:0})).toMatchObject({uploaded:0,failed:1});
   expect(readBuildCountersV1(tree).skipReasons).toMatchObject({"stale-on-arrival":1});
   expect(await client.hasResult("d".repeat(64)),"nothing was stored").toBe(false);
-  await server.store.collect();
+  await new Promise(done=>setTimeout(done,150));await server.store.collect();
   expect(server.store.stalenessStatus()?.refused).toEqual({"stale-on-arrival":1});
   expect(await client.hasResult("a".repeat(64)),"the unit of the old tree is retired").toBe(false);
   expect(JSON.parse(readFileSync(join(server.store.root,".retention","sweeps.jsonl"),"utf8").trim().split("\n").pop()!)).toMatchObject({mode:"enforce",retired:1,stale:{edited:1}});

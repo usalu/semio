@@ -1,5 +1,5 @@
 {
-  "contract": "window-contour-v1",
+  "contract": "window-contour",
   "cases": [
     {
       "name": "top-left",
@@ -7,12 +7,6 @@
       "size": [
         26,
         10
-      ],
-      "body": [
-        0,
-        2,
-        26,
-        8
       ],
       "focused": true,
       "emphasized": false,
@@ -46,12 +40,6 @@
         26,
         10
       ],
-      "body": [
-        0,
-        2,
-        26,
-        8
-      ],
       "focused": true,
       "emphasized": false,
       "active": 1,
@@ -83,12 +71,6 @@
       "size": [
         26,
         10
-      ],
-      "body": [
-        0,
-        0,
-        26,
-        8
       ],
       "focused": true,
       "emphasized": false,
@@ -122,12 +104,6 @@
         26,
         10
       ],
-      "body": [
-        0,
-        0,
-        26,
-        8
-      ],
       "focused": true,
       "emphasized": false,
       "active": 1,
@@ -159,12 +135,6 @@
       "size": [
         26,
         10
-      ],
-      "body": [
-        0,
-        2,
-        26,
-        6
       ],
       "focused": false,
       "emphasized": true,
@@ -204,12 +174,6 @@
         26,
         10
       ],
-      "body": [
-        0,
-        2,
-        26,
-        6
-      ],
       "focused": true,
       "emphasized": false,
       "active": 1,
@@ -248,12 +212,6 @@
         26,
         10
       ],
-      "body": [
-        0,
-        2,
-        26,
-        8
-      ],
       "focused": false,
       "emphasized": true,
       "active": 1,
@@ -283,12 +241,6 @@
       "name": "short-compact",
       "mode": "compact",
       "size": [
-        26,
-        3
-      ],
-      "body": [
-        0,
-        0,
         26,
         3
       ],
@@ -324,12 +276,6 @@
         26,
         6
       ],
-      "body": [
-        0,
-        0,
-        26,
-        6
-      ],
       "focused": false,
       "emphasized": true,
       "active": 2,
@@ -362,12 +308,6 @@
         4,
         5
       ],
-      "body": [
-        0,
-        0,
-        4,
-        5
-      ],
       "focused": true,
       "emphasized": true,
       "active": 0,
@@ -387,12 +327,6 @@
       "size": [
         18,
         10
-      ],
-      "body": [
-        0,
-        2,
-        18,
-        8
       ],
       "focused": false,
       "emphasized": true,

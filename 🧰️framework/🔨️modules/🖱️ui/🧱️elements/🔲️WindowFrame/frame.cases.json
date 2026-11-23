@@ -1,0 +1,670 @@
+[
+ {
+  "name": "plain rectangle without chips",
+  "metrics": {
+   "width": 100,
+   "height": 80,
+   "top": {
+    "depth": 0,
+    "chips": []
+   },
+   "bottom": {
+    "depth": 0,
+    "chips": []
+   }
+  },
+  "expected": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "width": 100,
+    "height": 80
+   },
+   "chipRegions": [],
+   "safeClearances": {
+    "top": 0,
+    "right": 0,
+    "bottom": 0,
+    "left": 0
+   },
+   "borderPath": "M1,1 H99 V79 H1 Z",
+   "contains": [
+    {
+     "x": 0,
+     "y": 0,
+     "inside": true
+    },
+    {
+     "x": 100,
+     "y": 80,
+     "inside": true
+    },
+    {
+     "x": 50,
+     "y": 40,
+     "inside": true
+    },
+    {
+     "x": 100.5,
+     "y": 40,
+     "inside": false
+    },
+    {
+     "x": 50,
+     "y": -1,
+     "inside": false
+    },
+    {
+     "x": -1,
+     "y": 40,
+     "inside": false
+    }
+   ]
+  }
+ },
+ {
+  "name": "one partial top chip stays inside the frame",
+  "metrics": {
+   "width": 100,
+   "height": 80,
+   "top": {
+    "depth": 20,
+    "chips": [
+     {
+      "left": 10,
+      "right": 40
+     }
+    ]
+   },
+   "bottom": {
+    "depth": 0,
+    "chips": []
+   }
+  },
+  "expected": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "width": 100,
+    "height": 80
+   },
+   "chipRegions": [
+    {
+     "x": 10,
+     "y": 0,
+     "width": 30,
+     "height": 20,
+     "dock": "top"
+    }
+   ],
+   "safeClearances": {
+    "top": 20,
+    "right": 0,
+    "bottom": 0,
+    "left": 0
+   },
+   "borderPath": "M1,1 H99 V79 H1 Z",
+   "contains": [
+    {
+     "x": 5,
+     "y": 5,
+     "inside": true
+    },
+    {
+     "x": 20,
+     "y": 10,
+     "inside": true
+    },
+    {
+     "x": 70,
+     "y": 10,
+     "inside": true
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "inside": true
+    },
+    {
+     "x": 100,
+     "y": 20,
+     "inside": true
+    }
+   ]
+  }
+ },
+ {
+  "name": "chip spanning the full width is one region",
+  "metrics": {
+   "width": 59,
+   "height": 80,
+   "top": {
+    "depth": 30,
+    "chips": [
+     {
+      "left": 0,
+      "right": 59
+     }
+    ]
+   },
+   "bottom": {
+    "depth": 0,
+    "chips": []
+   }
+  },
+  "expected": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "width": 59,
+    "height": 80
+   },
+   "chipRegions": [
+    {
+     "x": 0,
+     "y": 0,
+     "width": 59,
+     "height": 30,
+     "dock": "top"
+    }
+   ],
+   "safeClearances": {
+    "top": 30,
+    "right": 0,
+    "bottom": 0,
+    "left": 0
+   },
+   "borderPath": "M1,1 H58 V79 H1 Z",
+   "contains": [
+    {
+     "x": 0,
+     "y": 0,
+     "inside": true
+    },
+    {
+     "x": 59,
+     "y": 30,
+     "inside": true
+    },
+    {
+     "x": 30,
+     "y": 79,
+     "inside": true
+    }
+   ]
+  }
+ },
+ {
+  "name": "two top chips and one bottom chip",
+  "metrics": {
+   "width": 100,
+   "height": 100,
+   "top": {
+    "depth": 20,
+    "chips": [
+     {
+      "left": 0,
+      "right": 30
+     },
+     {
+      "left": 80,
+      "right": 100
+     }
+    ]
+   },
+   "bottom": {
+    "depth": 12,
+    "chips": [
+     {
+      "left": 20,
+      "right": 60
+     }
+    ]
+   }
+  },
+  "expected": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "width": 100,
+    "height": 100
+   },
+   "chipRegions": [
+    {
+     "x": 0,
+     "y": 0,
+     "width": 30,
+     "height": 20,
+     "dock": "top"
+    },
+    {
+     "x": 80,
+     "y": 0,
+     "width": 20,
+     "height": 20,
+     "dock": "top"
+    },
+    {
+     "x": 20,
+     "y": 88,
+     "width": 40,
+     "height": 12,
+     "dock": "bottom"
+    }
+   ],
+   "safeClearances": {
+    "top": 20,
+    "right": 0,
+    "bottom": 12,
+    "left": 0
+   },
+   "borderPath": "M1,1 H99 V99 H1 Z",
+   "contains": [
+    {
+     "x": 50,
+     "y": 10,
+     "inside": true
+    },
+    {
+     "x": 50,
+     "y": 95,
+     "inside": true
+    },
+    {
+     "x": 10,
+     "y": 95,
+     "inside": true
+    },
+    {
+     "x": 100,
+     "y": 100,
+     "inside": true
+    }
+   ]
+  }
+ },
+ {
+  "name": "touching and overlapping chips merge",
+  "metrics": {
+   "width": 100,
+   "height": 50,
+   "top": {
+    "depth": 10,
+    "chips": [
+     {
+      "left": 0,
+      "right": 30
+     },
+     {
+      "left": 30.25,
+      "right": 60
+     },
+     {
+      "left": 50,
+      "right": 70
+     }
+    ]
+   },
+   "bottom": {
+    "depth": 0,
+    "chips": []
+   }
+  },
+  "expected": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "width": 100,
+    "height": 50
+   },
+   "chipRegions": [
+    {
+     "x": 0,
+     "y": 0,
+     "width": 70,
+     "height": 10,
+     "dock": "top"
+    }
+   ],
+   "safeClearances": {
+    "top": 10,
+    "right": 0,
+    "bottom": 0,
+    "left": 0
+   },
+   "borderPath": "M1,1 H99 V49 H1 Z",
+   "contains": [
+    {
+     "x": 30.1,
+     "y": 5,
+     "inside": true
+    }
+   ]
+  }
+ },
+ {
+  "name": "chips are clamped to the frame",
+  "metrics": {
+   "width": 100,
+   "height": 50,
+   "top": {
+    "depth": 10,
+    "chips": [
+     {
+      "left": -10,
+      "right": 20
+     },
+     {
+      "left": 90,
+      "right": 140
+     }
+    ]
+   },
+   "bottom": {
+    "depth": 0,
+    "chips": []
+   }
+  },
+  "expected": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "width": 100,
+    "height": 50
+   },
+   "chipRegions": [
+    {
+     "x": 0,
+     "y": 0,
+     "width": 20,
+     "height": 10,
+     "dock": "top"
+    },
+    {
+     "x": 90,
+     "y": 0,
+     "width": 10,
+     "height": 10,
+     "dock": "top"
+    }
+   ],
+   "safeClearances": {
+    "top": 10,
+    "right": 0,
+    "bottom": 0,
+    "left": 0
+   },
+   "borderPath": "M1,1 H99 V49 H1 Z",
+   "contains": []
+  }
+ },
+ {
+  "name": "chips not wider than the epsilon are dropped",
+  "metrics": {
+   "width": 100,
+   "height": 50,
+   "top": {
+    "depth": 10,
+    "chips": [
+     {
+      "left": 10,
+      "right": 10.5
+     },
+     {
+      "left": 40,
+      "right": 41
+     }
+    ]
+   },
+   "bottom": {
+    "depth": 0,
+    "chips": []
+   }
+  },
+  "expected": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "width": 100,
+    "height": 50
+   },
+   "chipRegions": [
+    {
+     "x": 40,
+     "y": 0,
+     "width": 1,
+     "height": 10,
+     "dock": "top"
+    }
+   ],
+   "safeClearances": {
+    "top": 10,
+    "right": 0,
+    "bottom": 0,
+    "left": 0
+   },
+   "borderPath": "M1,1 H99 V49 H1 Z",
+   "contains": []
+  }
+ },
+ {
+  "name": "chips of a row without depth are ignored",
+  "metrics": {
+   "width": 100,
+   "height": 50,
+   "top": {
+    "depth": 0,
+    "chips": [
+     {
+      "left": 0,
+      "right": 50
+     }
+    ]
+   },
+   "bottom": {
+    "depth": 0.5,
+    "chips": [
+     {
+      "left": 0,
+      "right": 50
+     }
+    ]
+   }
+  },
+  "expected": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "width": 100,
+    "height": 50
+   },
+   "chipRegions": [],
+   "safeClearances": {
+    "top": 0,
+    "right": 0,
+    "bottom": 0.5,
+    "left": 0
+   },
+   "borderPath": "M1,1 H99 V49 H1 Z",
+   "contains": []
+  }
+ },
+ {
+  "name": "depths are limited to the height",
+  "metrics": {
+   "width": 80,
+   "height": 50,
+   "top": {
+    "depth": 80,
+    "chips": [
+     {
+      "left": 0,
+      "right": 80
+     }
+    ]
+   },
+   "bottom": {
+    "depth": 30,
+    "chips": [
+     {
+      "left": 0,
+      "right": 80
+     }
+    ]
+   }
+  },
+  "expected": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "width": 80,
+    "height": 50
+   },
+   "chipRegions": [
+    {
+     "x": 0,
+     "y": 0,
+     "width": 80,
+     "height": 50,
+     "dock": "top"
+    }
+   ],
+   "safeClearances": {
+    "top": 50,
+    "right": 0,
+    "bottom": 0,
+    "left": 0
+   },
+   "borderPath": "M1,1 H79 V49 H1 Z",
+   "contains": [
+    {
+     "x": 40,
+     "y": 25,
+     "inside": true
+    },
+    {
+     "x": 40,
+     "y": 50,
+     "inside": true
+    },
+    {
+     "x": 40,
+     "y": 51,
+     "inside": false
+    }
+   ]
+  }
+ },
+ {
+  "name": "empty frame",
+  "metrics": {
+   "width": 0,
+   "height": 0,
+   "top": {
+    "depth": 0,
+    "chips": []
+   },
+   "bottom": {
+    "depth": 0,
+    "chips": []
+   }
+  },
+  "expected": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "width": 0,
+    "height": 0
+   },
+   "chipRegions": [],
+   "safeClearances": {
+    "top": 0,
+    "right": 0,
+    "bottom": 0,
+    "left": 0
+   },
+   "borderPath": "",
+   "contains": [
+    {
+     "x": 0,
+     "y": 0,
+     "inside": true
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "inside": false
+    }
+   ]
+  }
+ },
+ {
+  "name": "negative size is empty",
+  "metrics": {
+   "width": -5,
+   "height": -3,
+   "top": {
+    "depth": 10,
+    "chips": [
+     {
+      "left": 0,
+      "right": 10
+     }
+    ]
+   },
+   "bottom": {
+    "depth": 0,
+    "chips": []
+   }
+  },
+  "expected": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "width": 0,
+    "height": 0
+   },
+   "chipRegions": [],
+   "safeClearances": {
+    "top": 0,
+    "right": 0,
+    "bottom": 0,
+    "left": 0
+   },
+   "borderPath": "",
+   "contains": []
+  }
+ },
+ {
+  "name": "frame thinner than twice the inset",
+  "metrics": {
+   "width": 1.5,
+   "height": 40,
+   "top": {
+    "depth": 0,
+    "chips": []
+   },
+   "bottom": {
+    "depth": 0,
+    "chips": []
+   }
+  },
+  "expected": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "width": 1.5,
+    "height": 40
+   },
+   "chipRegions": [],
+   "safeClearances": {
+    "top": 0,
+    "right": 0,
+    "bottom": 0,
+    "left": 0
+   },
+   "borderPath": "M0.75,0.75 H0.75 V39.25 H0.75 Z",
+   "contains": []
+  }
+ }
+]

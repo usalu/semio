@@ -32,7 +32,7 @@ name = "artifact_command_retirement"
 path = "../../🔨️modules/🏪️store/📬️command/♻️retirement/🧪️tests/🚪️public/🦀️.rs"
 
 [features]
-protocol-laws = ["record-codec-laws", "semio-os-spr/protocol-laws"]
+protocol-laws = ["record-codec-laws", "semio-os-spr/protocol-laws", "semio-os-store-snapshot-clone/law"]
 record-codec-laws = ["semio-os-pack/record-codec-laws"]
 durable-group-testing = ["semio-os-store-durable-group/durable-group-testing", "semio-os-store-durable-group-wire/durable-group-testing"]
 mutation-testing = ["semio-os-command/mutation-testing", "semio-os-spr/mutation-testing"]

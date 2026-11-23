@@ -38,6 +38,7 @@ impl<P: 'static> MemberSnapshotOpenOperation for UnsupportedMemberSnapshotOpen<P
 }
 
 impl<P: 'static> ErasedSnapshotRetirement for UnsupportedMemberSnapshotOpen<P> {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_os_store_read::retirement_owner_demands(&self.request, body) }
     fn next_computational_work(&self, body: usize) -> Result<u64, ValueError> { semio_os_store_read::retirement_owner_work_demand(&self.request, body) }
     fn close_step(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {

@@ -222,6 +222,10 @@ pub mod gumball;
 
 //#region 🧪️Tests
 #[cfg(test)]
+#[path = "🧪️tests/♻️retiring/🦀️.rs"]
+mod retiring;
+
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 

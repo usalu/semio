@@ -1,0 +1,181 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:cache-slots:v1",
+  "title": "Cache Slots And Supersession",
+  "description": "🪢️ A slot is the identity of a cached unit of work without its content inputs. Every cache entry may carry one slot id. The newest key stored in a slot is current; every older key of the slot is superseded, stays readable for a grace period and is then reclaimed. A read never makes an entry current again, only a store or an explicit claim of the key does. Entries without a slot keep the age and least-recently-used rules of their cache.",
+  "oneOf": [
+    { "$ref": "#/definitions/SlotId" },
+    { "$ref": "#/definitions/Retention" },
+    { "$ref": "#/definitions/Meta" },
+    { "$ref": "#/definitions/Claim" },
+    { "$ref": "#/definitions/AuditReport" },
+    { "$ref": "#/definitions/Declaration" },
+    { "$ref": "#/definitions/Staleness" },
+    { "$ref": "#/definitions/StalenessReport" },
+    { "$ref": "#/definitions/TextCatalogue" }
+  ],
+  "definitions": {
+    "SlotId": {
+      "description": "Lowercase hex SHA-256 of the canonical JSON array [\"semio-slot-v1\", domain, ...parts]. Rust unit: parts are toolchain, target triple, profile, package id, crate name, crate kind, sorted features and cfg. Nx task: parts are project, target, configuration (empty when none), platform (empty when the task hash carries none). It travels in the request header x-semio-slot, in the field slot of a unit cache entry and in the sidecar of a server entry.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Domain": {
+      "enum": ["rust-unit", "nx-task", "stage-output"]
+    },
+    "Retention": {
+      "description": "The authored retention of one cache: how long a superseded entry stays readable before it is reclaimed, in seconds. 0 reclaims at the next collection.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["graceSeconds"],
+      "properties": {
+        "graceSeconds": { "type": "integer", "minimum": 0, "maximum": 604800 }
+      }
+    },
+    "Meta": {
+      "description": "The sidecar of one server entry: its slot, the time (milliseconds since the epoch, server clock) it was stored or last claimed, and the content blobs (SHA-256 hex) it references.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "slot", "storedAt", "refs"],
+      "properties": {
+        "version": { "const": 1 },
+        "slot": { "$ref": "#/definitions/SlotId" },
+        "storedAt": { "type": "integer", "minimum": 0 },
+        "refs": { "type": "array", "maxItems": 100000, "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" } },
+        "declaration": { "$ref": "#/definitions/Declaration" }
+      }
+    },
+    "Claim": {
+      "description": "The body of POST /<instance>/v1/slots: entries that are current again (a remote hit of an older key after a revert, or an Nx task whose slot the client knows only after the run).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entries"],
+      "properties": {
+        "entries": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "key", "slot"],
+            "properties": {
+              "kind": { "enum": ["ac", "nx"] },
+              "key": { "type": "string", "pattern": "^[a-z0-9_-]{1,128}$" },
+              "slot": { "$ref": "#/definitions/SlotId" }
+            }
+          }
+        }
+      }
+    },
+    "AuditReport": {
+      "description": "What an audit of a cache against the keys the current worktree needs found: entries that are neither current nor within the grace. An empty list means the cache holds the synchronized state only.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "cache", "current", "grace", "stray", "unslotted"],
+      "properties": {
+        "version": { "const": 1 },
+        "cache": { "type": "string", "minLength": 1 },
+        "current": { "type": "integer", "minimum": 0 },
+        "grace": { "type": "integer", "minimum": 0 },
+        "stray": { "type": "array", "items": { "type": "string" } },
+        "unslotted": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Declaration": {
+      "description": "What a published entry was built from, so retention can decide against the coordinator's synchronized tree whether it is still current: the toolchain identity (SHA-256 of the compiler identity text the key carries), the workspace sources it read (portable path below the workspace root with forward slashes, and the SHA-256 of the file) and the SHA-256 digests of the files of other entries it consumed (every `--extern` file of a unit whatever its kind: rlib, rmeta, proc-macro library, host unit; input blobs of a stage), its own name `self` (the local key of the entry) and the names `units` of the entries it consumed whose bytes a digest cannot name (the producer of each extern file as the sidecar beside the file records it, the build script executable and the build script run whose OUT_DIR a unit reads): an entry is stale when an entry it names or whose file it consumed is stale, and an entry without workspace sources (registry, host, build script) is live while a live entry reaches it through either kind of edge. It is a field `retention` of the entry manifest, so it travels with the entry and the server reads it when the entry arrives.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "kind", "toolchain", "sources", "externs"],
+      "properties": {
+        "version": { "const": 2 },
+        "kind": { "enum": ["rust-unit", "build-script-run", "stage-output"] },
+        "self": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "toolchain": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "sources": {
+          "type": "array",
+          "maxItems": 20000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1, "maxLength": 1024 },
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+            }
+          }
+        },
+        "externs": { "type": "array", "maxItems": 20000, "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" } },
+        "units": { "type": "array", "maxItems": 20000, "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+      }
+    },
+    "Mode": {
+      "description": "off judges nothing; dry-run judges and only records what it would retire or refuse; enforce retires stale entries and refuses entries that are stale on arrival.",
+      "enum": ["off", "dry-run", "enforce"]
+    },
+    "Staleness": {
+      "description": "The authored staleness policy of one cache: the mode (the grace of the cache's own retention protects entries of builds in flight: an entry stored within it is never retired and a registry entry unreached for less than it stays), the seconds after which an entry that looks stale on arrival is looked at again (the replica of the synchronized tree may lag by about a second), the manifest names of an action result that carry a declaration, the first path segments that never belong to the synchronized tree and how many example lines a status keeps.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "recheckSeconds", "manifestNames", "generatedRoots", "examples"],
+      "properties": {
+        "mode": { "$ref": "#/definitions/Mode" },
+        "recheckSeconds": { "type": "integer", "minimum": 0, "maximum": 60 },
+        "manifestNames": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
+        "generatedRoots": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
+        "examples": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "StalenessReport": {
+      "description": "What the last staleness sweep of a cache found (and, in enforce mode, retired) and what the publish gate refused since the server started. Reasons: edited (a recorded source digest differs from the tree), deleted (a recorded source is gone), toolchain (not the fleet's), extern (an entry it consumed is stale or gone), unreached (no live entry consumes it and the grace passed), stale-on-arrival (refused at publish).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "mode", "sweptAt", "entries", "declared", "live", "grace", "stale", "unreached", "retired", "refused", "examples"],
+      "properties": {
+        "version": { "const": 1 },
+        "mode": { "$ref": "#/definitions/Mode" },
+        "sweptAt": { "type": "integer", "minimum": 0 },
+        "entries": { "type": "integer", "minimum": 0 },
+        "declared": { "type": "integer", "minimum": 0 },
+        "live": { "type": "integer", "minimum": 0 },
+        "grace": { "type": "integer", "minimum": 0 },
+        "stale": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "unreached": { "type": "integer", "minimum": 0 },
+        "retired": { "type": "integer", "minimum": 0 },
+        "refused": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "examples": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "TextCatalogue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["messages"],
+      "properties": {
+        "messages": { "type": "object" }
+      }
+    },
+    "Messages": {
+      "const": {
+        "audit.title": {
+          "en": "Cache audit {cache}: {current} current, {grace} within grace, {stray} stray, {unslotted} without slot.",
+          "de": "Cache-Prüfung {cache}: {current} aktuell, {grace} in Schonfrist, {stray} verwaist, {unslotted} ohne Slot."
+        },
+        "audit.stray": {
+          "en": "  stray: {key}",
+          "de": "  verwaist: {key}"
+        },
+        "staleness.title": {
+          "en": "Staleness ({mode}): {declared} declared entries, {live} live, {grace} within grace, {stale} stale, {unreached} unreached, {retired} retired.",
+          "de": "Veraltung ({mode}): {declared} deklarierte Einträge, {live} aktuell, {grace} in Schonfrist, {stale} veraltet, {unreached} unerreicht, {retired} entfernt."
+        },
+        "staleness.example": {
+          "en": "  would retire: {line}",
+          "de": "  würde entfernen: {line}"
+        },
+        "audit.unknown": {
+          "en": "The current key set cannot be enumerated here; nothing was audited.",
+          "de": "Die aktuelle Schlüsselmenge lässt sich hier nicht aufzählen; nichts wurde geprüft."
+        }
+      }
+    }
+  }
+}

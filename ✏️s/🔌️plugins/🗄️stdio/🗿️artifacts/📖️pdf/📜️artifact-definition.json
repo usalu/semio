@@ -34,13 +34,13 @@
       "id": "s.stdio.pdf.standard.1-4.profile.any",
       "standard": "s.stdio.pdf.standard.1-4",
       "profile": "any",
-      "status": "unimplemented"
+      "status": "implemented"
     },
     {
       "id": "s.stdio.pdf.standard.1-7.profile.any",
       "standard": "s.stdio.pdf.standard.1-7",
       "profile": "any",
-      "status": "unimplemented"
+      "status": "implemented"
     }
   ],
   "source_dialects": [
@@ -49,14 +49,14 @@
       "standard": "s.stdio.pdf.standard.1-4",
       "dialect": "source",
       "registered_code_points": [],
-      "status": "unimplemented"
+      "status": "implemented"
     },
     {
       "id": "s.stdio.pdf.standard.1-7.dialect.source",
       "standard": "s.stdio.pdf.standard.1-7",
       "dialect": "source",
       "registered_code_points": [],
-      "status": "unimplemented"
+      "status": "implemented"
     }
   ],
   "representations": [
@@ -124,8 +124,350 @@
       }
     }
   ],
-  "mutations": [],
-  "inferences": [],
+  "mutations": [
+    {
+      "id": "s.stdio.pdf.mutation.insert-page.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-page.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-page-media-box.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-page-crop-box.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.append-page-content.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-info.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.insert-object.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-object.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-object-value.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-dict-entry.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-dict-entry.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-trailer-entry.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-trailer-entry.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.move-page.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-page-content.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-page-rotation.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-page-box.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-page-user-unit.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.insert-content.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-content.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.replace-content.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.insert-annotation.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-annotation.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-annotation.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-font.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-font.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-image.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-image.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-form.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-form.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-ext-g-state.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-ext-g-state.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-shading.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-shading.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-pattern.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-pattern.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-color-space.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-color-space.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-properties.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-properties.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-embedded-file.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-embedded-file.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-outlines.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-named-destination.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-named-destination.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-page-labels.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-output-intents.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-acro-form.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-optional-content.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-page-layout.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-page-mode.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-viewer-preferences.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-open-action.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-language.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-mark-info.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-metadata.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-document-id.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-encryption.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.set-catalog-entry.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.remove-catalog-entry.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.replace-page.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.pdf14-insert-page.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.pdf14-remove-page.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.pdf14-move-page.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.pdf14-resize-page.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.mutation.pdf14-replace-page-text.v1",
+      "status": "implemented",
+      "executable_registration": false
+    }
+  ],
+  "inferences": [
+    {
+      "id": "s.stdio.pdf.inference.outline.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.pdf.inference.pdf14-outline.v1",
+      "status": "implemented",
+      "executable_registration": false
+    }
+  ],
   "resources": [
     {
       "id": "s.stdio.pdf.resource.external-references",
@@ -566,13 +908,83 @@
       "s.stdio.pdf.standard.1-7.profile.any"
     ],
     "registered_code_points": [],
-    "read": "unimplemented",
-    "write": "unimplemented",
-    "lossless": "unimplemented",
-    "canonical": "unimplemented",
+    "read": "opaque",
+    "write": "opaque",
+    "lossless": "opaque",
+    "canonical": "opaque",
     "validators": [],
-    "mutations": [],
-    "inferences": [],
+    "mutations": [
+      "s.stdio.pdf.mutation.insert-page.v1",
+      "s.stdio.pdf.mutation.remove-page.v1",
+      "s.stdio.pdf.mutation.set-page-media-box.v1",
+      "s.stdio.pdf.mutation.set-page-crop-box.v1",
+      "s.stdio.pdf.mutation.append-page-content.v1",
+      "s.stdio.pdf.mutation.set-info.v1",
+      "s.stdio.pdf.mutation.insert-object.v1",
+      "s.stdio.pdf.mutation.remove-object.v1",
+      "s.stdio.pdf.mutation.set-object-value.v1",
+      "s.stdio.pdf.mutation.set-dict-entry.v1",
+      "s.stdio.pdf.mutation.remove-dict-entry.v1",
+      "s.stdio.pdf.mutation.set-trailer-entry.v1",
+      "s.stdio.pdf.mutation.remove-trailer-entry.v1",
+      "s.stdio.pdf.mutation.move-page.v1",
+      "s.stdio.pdf.mutation.set-page-content.v1",
+      "s.stdio.pdf.mutation.set-page-rotation.v1",
+      "s.stdio.pdf.mutation.set-page-box.v1",
+      "s.stdio.pdf.mutation.set-page-user-unit.v1",
+      "s.stdio.pdf.mutation.insert-content.v1",
+      "s.stdio.pdf.mutation.remove-content.v1",
+      "s.stdio.pdf.mutation.replace-content.v1",
+      "s.stdio.pdf.mutation.insert-annotation.v1",
+      "s.stdio.pdf.mutation.remove-annotation.v1",
+      "s.stdio.pdf.mutation.set-annotation.v1",
+      "s.stdio.pdf.mutation.set-font.v1",
+      "s.stdio.pdf.mutation.remove-font.v1",
+      "s.stdio.pdf.mutation.set-image.v1",
+      "s.stdio.pdf.mutation.remove-image.v1",
+      "s.stdio.pdf.mutation.set-form.v1",
+      "s.stdio.pdf.mutation.remove-form.v1",
+      "s.stdio.pdf.mutation.set-ext-g-state.v1",
+      "s.stdio.pdf.mutation.remove-ext-g-state.v1",
+      "s.stdio.pdf.mutation.set-shading.v1",
+      "s.stdio.pdf.mutation.remove-shading.v1",
+      "s.stdio.pdf.mutation.set-pattern.v1",
+      "s.stdio.pdf.mutation.remove-pattern.v1",
+      "s.stdio.pdf.mutation.set-color-space.v1",
+      "s.stdio.pdf.mutation.remove-color-space.v1",
+      "s.stdio.pdf.mutation.set-properties.v1",
+      "s.stdio.pdf.mutation.remove-properties.v1",
+      "s.stdio.pdf.mutation.set-embedded-file.v1",
+      "s.stdio.pdf.mutation.remove-embedded-file.v1",
+      "s.stdio.pdf.mutation.set-outlines.v1",
+      "s.stdio.pdf.mutation.set-named-destination.v1",
+      "s.stdio.pdf.mutation.remove-named-destination.v1",
+      "s.stdio.pdf.mutation.set-page-labels.v1",
+      "s.stdio.pdf.mutation.set-output-intents.v1",
+      "s.stdio.pdf.mutation.set-acro-form.v1",
+      "s.stdio.pdf.mutation.set-optional-content.v1",
+      "s.stdio.pdf.mutation.set-page-layout.v1",
+      "s.stdio.pdf.mutation.set-page-mode.v1",
+      "s.stdio.pdf.mutation.set-viewer-preferences.v1",
+      "s.stdio.pdf.mutation.set-open-action.v1",
+      "s.stdio.pdf.mutation.set-language.v1",
+      "s.stdio.pdf.mutation.set-mark-info.v1",
+      "s.stdio.pdf.mutation.set-metadata.v1",
+      "s.stdio.pdf.mutation.set-document-id.v1",
+      "s.stdio.pdf.mutation.set-encryption.v1",
+      "s.stdio.pdf.mutation.set-catalog-entry.v1",
+      "s.stdio.pdf.mutation.remove-catalog-entry.v1",
+      "s.stdio.pdf.mutation.replace-page.v1",
+      "s.stdio.pdf.mutation.pdf14-insert-page.v1",
+      "s.stdio.pdf.mutation.pdf14-remove-page.v1",
+      "s.stdio.pdf.mutation.pdf14-move-page.v1",
+      "s.stdio.pdf.mutation.pdf14-resize-page.v1",
+      "s.stdio.pdf.mutation.pdf14-replace-page-text.v1"
+    ],
+    "inferences": [
+      "s.stdio.pdf.inference.outline.v1",
+      "s.stdio.pdf.inference.pdf14-outline.v1"
+    ],
     "fixtures": []
   }
 }

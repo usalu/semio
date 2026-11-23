@@ -57,25 +57,12 @@ def _path(node: dict, index: dict[str, dict]) -> list[dict]:
 
 
 def _contains(node: dict, point) -> bool:
-    """🎯 Test half-open bounds and optional absolute silhouette polygons."""
+    """🎯 Test half-open bounds; a frame is one rectangle, so the space between its chips hits its content."""
     if point is None or len(point) != 2 or not all(math.isfinite(value) for value in point):
         return False
     x, y = point
     rect = node["rect"]
-    if not (rect["x"] <= x < rect["x"] + rect["width"] and rect["y"] <= y < rect["y"] + rect["height"]):
-        return False
-    outline = node.get("outline")
-    if not outline:
-        return True
-    inside = False
-    previous = outline[-1]
-    for current in outline:
-        x1, y1 = previous
-        x2, y2 = current
-        if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1:
-            inside = not inside
-        previous = current
-    return inside
+    return rect["x"] <= x < rect["x"] + rect["width"] and rect["y"] <= y < rect["y"] + rect["height"]
 
 
 def hit_test(nodes: list[dict], point) -> dict | None:

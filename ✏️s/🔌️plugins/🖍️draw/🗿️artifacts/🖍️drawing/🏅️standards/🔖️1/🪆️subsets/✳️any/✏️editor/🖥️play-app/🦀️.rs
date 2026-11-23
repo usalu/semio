@@ -30,7 +30,7 @@ fn render_drawing_body(
     let active_utility = drawing_active_utility(view_state);
     let windows = semio_plugin::TreeWindows::for_body(view_state, body_key);
     let root = match body_key {
-        DRAWING_PLAY_BODY_COMPOSITE => semio_s_artifact_draw_drawing_scene_mounted::with_visual(doc.render_operation(),|plan,revision,fresh|{let idle=DrawingGesturePreview::default();canvas_window::render(plan,revision,document,config,if fresh{preview}else{&idle},active_utility,if fresh{selection}else{&[]},if fresh{point_selection}else{&[]})}),
+        DRAWING_PLAY_BODY_COMPOSITE => semio_s_artifact_draw_drawing_scene_mounted::with_visual(doc.render_operation(),|plan,revision,fresh|{let idle=DrawingGesturePreview::default();canvas_window::render(plan,revision,document,config,if fresh{preview}else{&idle},active_utility,if fresh{selection}else{&[]},if fresh{point_selection}else{&[]},view_state.locale)}),
         DRAWING_PLAY_BODY_LAYERS => layers_panel::render(document, labels, &windows),
         DRAWING_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels, &windows),
         DRAWING_PLAY_BODY_PROPERTIES => properties_panel::render(document, &[], labels, &windows),
@@ -143,6 +143,7 @@ impl ArtifactEditor for DrawingPlayApp {
     fn mounted_job_prepare_snapshot_read(operation: semio_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot, _windows: &semio_plugin::WindowConfigOwnerRegistry, _view: Option<&semio_plugin::ViewModel>, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_plugin::MountedSnapshotReadPreparation {
         semio_plugin::MountedSnapshotReadPreparation { ready: semio_s_artifact_draw_drawing_scene_mounted::prepare(operation, snapshot), progress: Default::default() }
     }
+    fn mounted_job_maintenance_phase(instance: u32) -> Option<semio_plugin::MountedOwnerPhaseV1> { semio_s_artifact_draw_drawing_scene_mounted::maintenance_pending(instance).then_some(semio_plugin::MountedOwnerPhaseV1::Maintenance) }
     fn mounted_job_maintenance_demands(instance:u32,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_s_artifact_draw_drawing_scene_mounted::maintenance_demands(instance,body)}
     fn mounted_job_maintenance_step(instance:u32,cx:&mut semio_framework_job::StepContext<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure>{semio_s_artifact_draw_drawing_scene_mounted::maintenance(instance,cx,grant)}
     fn mounted_job_close_demands(instance:u32,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_s_artifact_draw_drawing_scene_mounted::close_demands(instance,body)}

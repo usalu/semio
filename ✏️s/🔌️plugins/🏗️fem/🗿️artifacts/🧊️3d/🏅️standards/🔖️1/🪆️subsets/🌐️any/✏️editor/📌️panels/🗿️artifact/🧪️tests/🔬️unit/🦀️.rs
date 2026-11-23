@@ -60,8 +60,8 @@ use semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR;
 use semio_ui_contract::UI_BUILT_CHILDREN_MAX;
 
 //#region 🔖️Fixtures
-fn demo() -> Fem3dSnapshot {
-    semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot()
+fn demo() -> crate::context::Retiring<Fem3dSnapshot> {
+    crate::context::Retiring::new(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot"))
 }
 
 fn english() -> &'static Fem3dLabels {
@@ -160,8 +160,13 @@ fn viewing(requests: Vec<TreeWindowRequest>) -> ViewModel {
 }
 
 /// 🧱️ A document an order of magnitude past one viewport: 60 nodes and a 40-load wind case.
-fn oversized() -> Fem3dSnapshot {
-    let mut document = demo();
+fn oversized() -> crate::context::Retiring<Fem3dSnapshot> {
+    let mut document = demo().to_reference();
+    document.elements.clear();
+    document.supports.clear();
+    document.solids.clear();
+    document.load_cases.clear();
+    document.combinations.clear();
     document.nodes = (0..60).map(|index| FemNodeValue { id: format!("g{index}"), x: index as f64, y: 0.0, z: 0.0 }).collect();
     document.load_cases.push(FemLoadCase {
         id: "wind".into(),
@@ -169,15 +174,17 @@ fn oversized() -> Fem3dSnapshot {
         loads: (0..40).map(|index| FemLoad::Nodal { id: format!("wl{index}"), node_id: "g0".into(), dof: FemDof::Tx, value: 1000.0 }).collect(),
         self_weight: false,
     });
-    document
+    crate::context::Retiring::new(Fem3dSnapshot::from_reference(document).expect("persistent document"))
 }
 
 /// 🏠️ The document `📓️w3-browser-verification.md` §6.2 caught faulting the artifact panel surface at
 /// `nodes: 129 > max_nodes: 128`: 63 nodes, 63 supports, 8 solids and four load cases carrying twelve
 /// loads each, every one of them open at the same time. Per-container windowing bounds each
 /// CONTAINER; only the body-wide node ledger bounds the BODY.
-fn house() -> Fem3dSnapshot {
-    let mut document = demo();
+fn house() -> crate::context::Retiring<Fem3dSnapshot> {
+    let mut document = demo().to_reference();
+    document.elements.clear();
+    document.combinations.clear();
     document.nodes = (0..63).map(|index| FemNodeValue { id: format!("h{index}"), x: index as f64, y: 0.0, z: 0.0 }).collect();
     document.supports = (0..63).map(|index| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport { id: format!("hs{index}"), node_id: format!("h{index}"), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] }).collect();
     document.solids = (0..8)
@@ -202,7 +209,7 @@ fn house() -> Fem3dSnapshot {
             self_weight: false,
         })
         .collect();
-    document
+    crate::context::Retiring::new(Fem3dSnapshot::from_reference(document).expect("persistent document"))
 }
 
 /// 🧾️ Records the reconciler charges for a presented body — every node counts once, which is exactly
@@ -320,7 +327,7 @@ async fn scalars_and_overlong_labels_stay_inside_the_ui_text_envelope() {
     assert_eq!(fem3d_scalar(0.0), "0");
     assert_eq!(fem3d_coordinate(-4.0), "−4.00");
 
-    let mut document = Fem3dSnapshot::default();
+    let mut document = crate::context::Retiring::new(Fem3dSnapshot::default());
     document.solids.push(FemSolid { id: "s1".into(), name: "S".repeat(900), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], holes: Vec::new(), base_z: 0.0, height: 0.2, layers: 1, mesh_size: 1.0, material_id: "concrete".into(), axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::Z });
     let tree = build(&document, labels);
     let clipped = row_labels(section_node(&tree, "solids")).remove(0);
@@ -511,7 +518,7 @@ async fn a_house_sized_body_honours_every_capped_host_window() {
 /// 🌱️ An empty document is a readable tree of "(none)" placeholders, not a refusal.
 #[semio_framework_async_macros::async_test]
 async fn an_empty_document_renders_placeholders() {
-    let document = Fem3dSnapshot::default();
+    let document = crate::context::Retiring::new(Fem3dSnapshot::default());
     let tree = build(&document, english());
     for suffix in ["nodes", "elements", "solids", "supports", "load-cases", "combinations", "materials", "sections"] {
         assert_eq!(row_labels(section_node(&tree, suffix)), vec!["(none)".to_string()], "section {suffix}");

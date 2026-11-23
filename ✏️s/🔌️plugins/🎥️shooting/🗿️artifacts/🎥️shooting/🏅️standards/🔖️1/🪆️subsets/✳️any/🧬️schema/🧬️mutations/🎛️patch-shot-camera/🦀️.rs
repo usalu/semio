@@ -34,7 +34,7 @@ impl<Op> MutationKind<ShootingSnapshot, Op> for PatchShotCamera
 where
     Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<PatchShotCamera>,
 {
-    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "patch", entity: "shot-camera", kind: "patch-shot-camera", record: "PatchedShotCamera" };
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "shot-camera", kind: "patch-shot-camera", record: "PatchedShotCamera" };
 
     fn label(&self) -> semio_ui_locale::LocalizedLabel {
         semio_ui_locale::LocalizedLabel::native(&format!("Edit camera of shot \"{}\"", self.shot_id), &format!("Kamera von Aufnahme \"{}\" bearbeiten", self.shot_id))

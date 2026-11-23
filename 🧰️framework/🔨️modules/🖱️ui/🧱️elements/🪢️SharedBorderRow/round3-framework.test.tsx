@@ -72,7 +72,7 @@ describe("round 3 framework shared-border findings", () => {
     expect(read("../📌️WindowPane/🟦️.tsx")).toContain('bodyClassName = "ui-scrollbar-hidden overflow-y-auto p-single"');
     expect(css).toMatch(/\.ui-scrollbar-hidden \{\s*scrollbar-width: none;\s*&::-webkit-scrollbar \{\s*display: none;/);
   });
-  it("sizes unanchored panel tab strips like the chip row so they share the chrome silhouette line", () => {
+  it("sizes unanchored panel tab strips like the chip row so they share the chrome frame line", () => {
     expect(css).toMatch(/:root \{\s*--panel-header-height: var\(--chip-row-height\);/);
   });
   it("keeps element stories gapless: ribbon zones touch, panel bands carry the band slot, layered cards tile", () => {

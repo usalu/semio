@@ -1,0 +1,995 @@
+{
+ "dancer": {
+  "silhouette": [
+   [
+    500,
+    "elevation",
+    0.919,
+    32
+   ],
+   [
+    500,
+    "front",
+    0.906,
+    41
+   ],
+   [
+    500,
+    "plan",
+    0.889,
+    40
+   ],
+   [
+    200,
+    "front",
+    0.909,
+    41
+   ],
+   [
+    200,
+    "plan",
+    0.897,
+    38
+   ],
+   [
+    100,
+    "elevation",
+    0.929,
+    31
+   ],
+   [
+    100,
+    "front",
+    0.905,
+    41
+   ],
+   [
+    100,
+    "plan",
+    0.891,
+    45
+   ],
+   [
+    50,
+    "elevation",
+    0.927,
+    31
+   ],
+   [
+    50,
+    "front",
+    0.906,
+    42
+   ],
+   [
+    50,
+    "plan",
+    0.89,
+    45
+   ]
+  ],
+  "box": [],
+  "rules": {}
+ },
+ "painter-at-easel": {
+  "silhouette": [
+   [
+    100,
+    "elevation",
+    0.939,
+    66
+   ],
+   [
+    100,
+    "plan",
+    0.968,
+    37
+   ],
+   [
+    50,
+    "elevation",
+    0.941,
+    67
+   ],
+   [
+    50,
+    "front",
+    0.99,
+    24
+   ],
+   [
+    50,
+    "plan",
+    0.968,
+    36
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-structure-coverage": 5,
+   "volumes-connected": 7,
+   "volumes-thermal-coverage": 4
+  }
+ },
+ "parent-with-child-on-shoulders": {
+  "silhouette": [
+   [
+    100,
+    "front",
+    0.973,
+    34
+   ],
+   [
+    50,
+    "elevation",
+    0.992,
+    17
+   ],
+   [
+    50,
+    "front",
+    0.975,
+    34
+   ],
+   [
+    50,
+    "plan",
+    0.954,
+    30
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-connected": 1
+  }
+ },
+ "person-carrying-ladder": {
+  "silhouette": [
+   [
+    500,
+    "elevation",
+    0.864,
+    162
+   ],
+   [
+    500,
+    "front",
+    0.928,
+    199
+   ],
+   [
+    200,
+    "elevation",
+    0.878,
+    24
+   ],
+   [
+    100,
+    "plan",
+    0.932,
+    75
+   ],
+   [
+    50,
+    "elevation",
+    0.991,
+    19
+   ],
+   [
+    50,
+    "front",
+    0.974,
+    52
+   ],
+   [
+    50,
+    "plan",
+    0.932,
+    64
+   ]
+  ],
+  "box": [
+   [
+    100,
+    "depthM",
+    "0.516/0.49"
+   ],
+   [
+    50,
+    "depthM",
+    "0.516/0.49"
+   ]
+  ],
+  "rules": {
+   "volumes-views-disagree": 1,
+   "volumes-connected": 3,
+   "volumes-bounds": 2,
+   "volumes-structure-coverage": 2,
+   "volumes-thermal-coverage": 2
+  }
+ },
+ "person-carrying-shopping-bags": {
+  "silhouette": [
+   [
+    100,
+    "front",
+    0.986,
+    34
+   ],
+   [
+    50,
+    "elevation",
+    0.998,
+    49
+   ],
+   [
+    50,
+    "front",
+    0.989,
+    34
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-thermal-coverage": 3
+  }
+ },
+ "person-checking-watch": {
+  "silhouette": [
+   [
+    100,
+    "elevation",
+    0.989,
+    38
+   ],
+   [
+    50,
+    "elevation",
+    0.985,
+    27
+   ],
+   [
+    50,
+    "front",
+    0.979,
+    21
+   ],
+   [
+    50,
+    "plan",
+    0.94,
+    42
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-connected": 1
+  }
+ },
+ "person-drinking-coffee": {
+  "silhouette": [
+   [
+    500,
+    "elevation",
+    0.904,
+    41
+   ],
+   [
+    500,
+    "plan",
+    0.903,
+    23
+   ],
+   [
+    200,
+    "elevation",
+    0.902,
+    41
+   ],
+   [
+    100,
+    "front",
+    0.932,
+    40
+   ],
+   [
+    50,
+    "elevation",
+    0.98,
+    24
+   ],
+   [
+    50,
+    "front",
+    0.937,
+    142
+   ],
+   [
+    50,
+    "plan",
+    0.945,
+    23
+   ]
+  ],
+  "box": [
+   [
+    100,
+    "depthM",
+    "0.551/0.568"
+   ],
+   [
+    50,
+    "depthM",
+    "0.551/0.568"
+   ]
+  ],
+  "rules": {
+   "volumes-bounds": 2,
+   "volumes-thermal-coverage": 4,
+   "volumes-connected": 1
+  }
+ },
+ "person-eating-standing": {
+  "silhouette": [
+   [
+    500,
+    "plan",
+    0.938,
+    156
+   ],
+   [
+    100,
+    "elevation",
+    0.986,
+    38
+   ],
+   [
+    100,
+    "front",
+    0.978,
+    34
+   ],
+   [
+    100,
+    "plan",
+    0.941,
+    41
+   ],
+   [
+    50,
+    "elevation",
+    0.985,
+    35
+   ],
+   [
+    50,
+    "front",
+    0.983,
+    68
+   ],
+   [
+    50,
+    "plan",
+    0.94,
+    36
+   ]
+  ],
+  "box": [
+   [
+    50,
+    "heightM",
+    "1.798/1.806"
+   ]
+  ],
+  "rules": {}
+ },
+ "person-hanging-laundry": {
+  "silhouette": [
+   [
+    100,
+    "plan",
+    0.964,
+    57
+   ],
+   [
+    50,
+    "elevation",
+    0.966,
+    27
+   ],
+   [
+    50,
+    "front",
+    0.983,
+    32
+   ],
+   [
+    50,
+    "plan",
+    0.964,
+    49
+   ]
+  ],
+  "box": [
+   [
+    50,
+    "widthM",
+    "0.869/0.857"
+   ]
+  ],
+  "rules": {
+   "volumes-thermal-coverage": 4
+  }
+ },
+ "person-in-rain-poncho": {
+  "silhouette": [],
+  "box": [],
+  "rules": {
+   "volumes-thermal-coverage": 8,
+   "volumes-connected": 1
+  }
+ },
+ "person-in-winter-coat": {
+  "silhouette": [],
+  "box": [],
+  "rules": {
+   "volumes-thermal-coverage": 9
+  }
+ },
+ "person-queuing": {
+  "silhouette": [
+   [
+    100,
+    "elevation",
+    0.986,
+    32
+   ],
+   [
+    100,
+    "front",
+    0.961,
+    34
+   ],
+   [
+    50,
+    "elevation",
+    0.99,
+    26
+   ],
+   [
+    50,
+    "front",
+    0.966,
+    17
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-thermal-coverage": 2
+  }
+ },
+ "person-signing": {
+  "silhouette": [
+   [
+    500,
+    "elevation",
+    0.885,
+    40
+   ],
+   [
+    500,
+    "front",
+    0.918,
+    40
+   ],
+   [
+    500,
+    "plan",
+    0.889,
+    22
+   ],
+   [
+    200,
+    "elevation",
+    0.887,
+    40
+   ],
+   [
+    200,
+    "plan",
+    0.9,
+    16
+   ],
+   [
+    100,
+    "elevation",
+    0.963,
+    31
+   ],
+   [
+    50,
+    "elevation",
+    0.969,
+    27
+   ],
+   [
+    50,
+    "front",
+    0.936,
+    31
+   ],
+   [
+    50,
+    "plan",
+    0.926,
+    23
+   ]
+  ],
+  "box": [
+   [
+    200,
+    "depthM",
+    "0.523/0.555"
+   ],
+   [
+    100,
+    "widthM",
+    "0.547/0.565"
+   ],
+   [
+    100,
+    "depthM",
+    "0.523/0.555"
+   ],
+   [
+    50,
+    "widthM",
+    "0.547/0.565"
+   ],
+   [
+    50,
+    "depthM",
+    "0.523/0.555"
+   ]
+  ],
+  "rules": {
+   "volumes-bounds": 5
+  }
+ },
+ "person-sweeping": {
+  "silhouette": [
+   [
+    500,
+    "elevation",
+    0.898,
+    78
+   ],
+   [
+    500,
+    "front",
+    0.915,
+    63
+   ],
+   [
+    500,
+    "plan",
+    0.829,
+    64
+   ],
+   [
+    200,
+    "elevation",
+    0.895,
+    72
+   ],
+   [
+    200,
+    "plan",
+    0.847,
+    52
+   ],
+   [
+    100,
+    "elevation",
+    0.954,
+    68
+   ],
+   [
+    100,
+    "front",
+    0.933,
+    43
+   ],
+   [
+    100,
+    "plan",
+    0.854,
+    49
+   ],
+   [
+    50,
+    "elevation",
+    0.957,
+    71
+   ],
+   [
+    50,
+    "front",
+    0.933,
+    44
+   ],
+   [
+    50,
+    "plan",
+    0.836,
+    61
+   ]
+  ],
+  "box": [
+   [
+    200,
+    "widthM",
+    "1.343/1.39"
+   ],
+   [
+    100,
+    "widthM",
+    "1.327/1.39"
+   ],
+   [
+    100,
+    "heightM",
+    "1.665/1.688"
+   ],
+   [
+    100,
+    "depthM",
+    "0.628/0.644"
+   ],
+   [
+    50,
+    "widthM",
+    "1.326/1.39"
+   ],
+   [
+    50,
+    "heightM",
+    "1.665/1.688"
+   ],
+   [
+    50,
+    "depthM",
+    "0.628/0.644"
+   ]
+  ],
+  "rules": {
+   "volumes-connected": 2,
+   "volumes-bounds": 5,
+   "volumes-views-disagree": 2,
+   "volumes-thermal-coverage": 2
+  }
+ },
+ "person-taking-selfie": {
+  "silhouette": [
+   [
+    100,
+    "elevation",
+    0.98,
+    38
+   ],
+   [
+    50,
+    "elevation",
+    0.985,
+    19
+   ],
+   [
+    50,
+    "front",
+    0.982,
+    28
+   ],
+   [
+    50,
+    "plan",
+    0.953,
+    33
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-thermal-coverage": 1
+  }
+ },
+ "person-with-arm-sling": {
+  "silhouette": [
+   [
+    50,
+    "elevation",
+    0.997,
+    49
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-structure-coverage": 2
+  }
+ },
+ "person-with-guide-dog": {
+  "silhouette": [
+   [
+    200,
+    "front",
+    0.976,
+    97
+   ],
+   [
+    50,
+    "elevation",
+    0.99,
+    26
+   ],
+   [
+    50,
+    "front",
+    0.981,
+    27
+   ],
+   [
+    50,
+    "plan",
+    0.989,
+    19
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-connected": 1,
+   "volumes-thermal-coverage": 2
+  }
+ },
+ "photographer-with-camera": {
+  "silhouette": [
+   [
+    200,
+    "elevation",
+    0.96,
+    63
+   ],
+   [
+    50,
+    "elevation",
+    0.963,
+    36
+   ],
+   [
+    50,
+    "front",
+    0.963,
+    24
+   ],
+   [
+    50,
+    "plan",
+    0.962,
+    24
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-structure-coverage": 2,
+   "volumes-connected": 3
+  }
+ },
+ "picnicker-sitting-on-ground": {
+  "silhouette": [
+   [
+    200,
+    "elevation",
+    0.954,
+    109
+   ],
+   [
+    200,
+    "front",
+    0.925,
+    61
+   ],
+   [
+    100,
+    "elevation",
+    0.957,
+    34
+   ],
+   [
+    100,
+    "front",
+    0.925,
+    59
+   ],
+   [
+    50,
+    "elevation",
+    0.959,
+    40
+   ],
+   [
+    50,
+    "front",
+    0.927,
+    61
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-thermal-coverage": 4,
+   "volumes-views-disagree": 2
+  }
+ },
+ "postal-carrier": {
+  "silhouette": [
+   [
+    50,
+    "front",
+    0.993,
+    19
+   ],
+   [
+    50,
+    "plan",
+    0.981,
+    19
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-thermal-coverage": 2
+  }
+ },
+ "standing-violinist": {
+  "silhouette": [
+   [
+    100,
+    "elevation",
+    0.983,
+    31
+   ],
+   [
+    100,
+    "front",
+    0.96,
+    31
+   ],
+   [
+    50,
+    "elevation",
+    0.987,
+    24
+   ],
+   [
+    50,
+    "front",
+    0.965,
+    17
+   ],
+   [
+    50,
+    "plan",
+    0.968,
+    17
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-connected": 4,
+   "volumes-thermal-coverage": 3,
+   "volumes-structure-coverage": 2
+  }
+ },
+ "sunbather-on-towel": {
+  "silhouette": [
+   [
+    100,
+    "front",
+    0.9,
+    28
+   ],
+   [
+    50,
+    "front",
+    0.908,
+    28
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-thermal-coverage": 14,
+   "volumes-structure-coverage": 10,
+   "volumes-connected": 2
+  }
+ },
+ "waving-person": {
+  "silhouette": [
+   [
+    500,
+    "elevation",
+    0.905,
+    41
+   ],
+   [
+    500,
+    "plan",
+    0.879,
+    21
+   ],
+   [
+    200,
+    "elevation",
+    0.911,
+    35
+   ],
+   [
+    200,
+    "plan",
+    0.91,
+    20
+   ],
+   [
+    100,
+    "front",
+    0.946,
+    34
+   ],
+   [
+    50,
+    "elevation",
+    0.988,
+    27
+   ],
+   [
+    50,
+    "front",
+    0.949,
+    21
+   ],
+   [
+    50,
+    "plan",
+    0.932,
+    20
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-connected": 3,
+   "volumes-thermal-coverage": 1
+  }
+ },
+ "worker-with-pallet-jack": {
+  "silhouette": [
+   [
+    200,
+    "elevation",
+    0.994,
+    100
+   ],
+   [
+    50,
+    "elevation",
+    0.996,
+    16
+   ],
+   [
+    50,
+    "plan",
+    0.989,
+    30
+   ]
+  ],
+  "box": [],
+  "rules": {
+   "volumes-connected": 2,
+   "volumes-thermal-coverage": 5
+  }
+ }
+}

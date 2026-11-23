@@ -46,9 +46,9 @@ use framework_schema::ArtifactSchema;
 /// It is deliberately NOT font-decoded through a `/ToUnicode` CMap: this standard's writer shows
 /// the field back through a simple single-byte font, so what is read is exactly what any reader
 /// recovers, and decode→encode→decode is stable on it.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PageDoc {
     pub width: f64,
     pub height: f64,

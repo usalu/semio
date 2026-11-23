@@ -1,0 +1,25 @@
+# V1: native-build progress counters and offload infrastructure fallbacks (2026-11-23)
+
+## 1. Counters (`[native-build] N unit(s) compiled, R reused, L running locally · F on the fleet`)
+- `reused` came only from cargo `compiler-artifact` messages with `fresh:true` (component-pass `🟦️.ts` `reusedUnits`, `nativeBuildReusedUnitsV1`). A driver-lane unit served by the rustc wrapper from the unit cache (local `hit`, `script-hit`, fleet `remote-hit`) is a normal compiled artifact for cargo, so it was never counted: 0 reused in all 178 progress lines of the clone log, while `x/g.jsonl` holds 842 hit, 77 script-hit, 88 remote-hit events (213 local-hit + 80 fleet-hit lookups since 06:58).
+- `on the fleet` is NOT broken: `fleetRunning` = `lightSlotsHeldV1(SEMIO_UNIT_CACHE_ROOT, fleetLight)` counts held `light-N.lock` claims; the log shows 1 to 7 on the fleet in 14 lines (5x 4, 2x 7). The quoted line (`1 running locally · 0 on the fleet`) was taken while only a stage ran (no unit offloaded at that instant). The 472 `offload-run` are historical, not concurrent. No code change needed there.
+- Fix: new `createUnitReuseTallyV1(root, lane)` in `🧮️phase-ledger/🟦️.ts` (incremental tail of `x/<lane>.jsonl` from the size at creation, partial-line safe, restarts on shrink, bounded 16 MiB per read, one fd). The driver builds it at start (lane `SEMIO_UNIT_CACHE_LANE ?? "d"`, same as `recordCargoRunV1`) and prints `R reused (A local, B fleet)` = cargo-fresh + local hits + fleet hits (the parenthesis only when fleet > 0).
+- Test: `🧮️phase-ledger/🧪️tests/🟦️.ts` new "unit reuse tally" (lane filter, kinds, partial line, truncation, missing root): passes. File total 7 pass / 1 fail; the failure is the pre-existing real-cargo test (`cargo build --offline` exit 101 in the synthetic workspace, unrelated to this change, fails identically before it: the test never touches the tally).
+
+## 2. `offload-local-fallback` reason `infrastructure` (231 in clone `x/offload.jsonl` since 06:58 of 07:00-07:50)
+| class | n | detail | cause |
+|---|---|---|---|
+| content store 507 | 136 (14, 27, 32, 25, 8, 34 per 10 min, never stops) | `Content store answered 507 ... Insufficient storage` | CAS1 admission refusal (`🖥️server` `case "capacity"`, over effective cap after the 8 s admission budget). Server side, only fixed by the sidecar restart that loads CAS1; not a client defect, the local fallback is the correct answer. |
+| content store 503 | 62 + 4 (`Busy`) + 2 (`14 ...`) = 68 | `Content store answered 503 for cas/<h>` | server `active>=ceiling` returns `503 Busy` with `retry-after: 1`. Defect: offload built its content client with `retries:0`, so a momentary busy answer sent the unit to the local compiler. Peaks 07:00-07:30 (24/22/16 per 10 min), gone after 07:30. |
+| cache unreachable | 16 + 2 | `Content store unreachable` / `cache endpoint unreachable` / `memo cache endpoint unreachable` | 07:00-07:10 window: the cache server restart; the healthz probe (15 s reachable memo, 3 s decline memo) behaved as designed. No upload-timeout fallbacks (`upload`) occurred. |
+| other (not infrastructure) | 8 | `incomplete-inputs` 4, `unreadable-input` 4 | different reason classes, listed for completeness (module/crate not in the shipped input set, pinned clone path). |
+Historic 1,537 on main are the same classes (not re-read).
+
+## 3. Change
+- `🗄️content/🟦️.ts`: transient statuses (408, 429, 5xx except 507) now wait `max(backoff, Retry-After)` capped by option `retryAfterCapMilliseconds` (default 5000) before the retry.
+- `🚀️offload/🟦️.ts` + `🧬️schema/🔣️.json` (`policy.limits.contentRetries` 3, `contentRetryAfterCapMilliseconds` 2000): the offload content client uses them instead of `retries:0`. Worst case adds about 6 s to a unit that would anyway compile locally, bounded by the 300 s upload budget.
+- Not changed (open): streamed PUTs (large blobs) are still not retried (body cannot be replayed); 507 stays terminal (retrying a full store only repeats the refusal). A decline memo on 507 was considered and not added (2.5 refusals per minute, the refusal is cheap). CAS1's cap relief is what removes the 136.
+- Test: new `🧪️tests/🔁️content-retry/🟦️.ts` (policy bounds, 503 then 200 waits the Retry-After, retry count exhaustion, 507 single call): 3 pass. `🔎️refusal-reason` 3 pass, offload suite 41 pass / 0 fail.
+
+## 4. component-pass suite (touched driver file) - NOT clean
+`repo test-file component-pass/🧪️tests/🟦️.ts` (1135 s): 3 suites failed (native-queued-cancellation 2 pass / 5 fail, component-reclaim, native-artifacts "Original Script process deadline exhausted" after 950 s). All three are real-cargo suites; the same environment makes `cargo build --offline` in the phase-ledger synthetic workspace exit 101 although my code is not on that path. The new code is inert unless `SEMIO_UNIT_CACHE_ROOT` is set and every read is try/caught, but I did not prove the three failures pre-exist (no way to re-run the file at the old tree without git writes). Open item: re-run that file once the play chain has finished and the host is idle.

@@ -41,6 +41,3 @@ impl EmbeddedChildVectorSourceV1 for DrawingVectorSource{
  fn read_demand(&self)->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<VectorGraphAdvance<'static>>()*2+std::mem::size_of::<ChildAdmissionSource<'static>>(),depth:1,..Default::default()}}
  fn read<'a>(&self,source:ChildAdmissionSource<'a>,g:RetainedCloneGrant)->Result<VectorGraphAdvance<'a>,ValueError>{let d=self.read_demand();if !retained_clone_grant_admits(g,d){return Ok(VectorGraphAdvance{progress:Default::default(),done:false,graph:None})}let progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};let graph=source.get().downcast_ref::<DrawingSnapshot>().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"Drawing vector source requires its genuine native snapshot").with_retained_progress(progress))?;Ok(VectorGraphAdvance{progress,done:true,graph:Some(graph)})}
 }
-#[cfg(test)]#[path="🧪️tests.rs"]mod tests;
-
-#[cfg(test)]#[path="🧪️preparation.rs"]mod preparation_tests;

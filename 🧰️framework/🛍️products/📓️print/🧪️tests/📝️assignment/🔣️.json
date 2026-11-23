@@ -131,7 +131,7 @@
     "columnPaddingMillimetres": 2,
     "imageFitsCell": true
   },
-  "silhouette": {
+  "frame": {
     "component": "Table",
     "connectedOutline": true,
     "titleInsideTable": false,

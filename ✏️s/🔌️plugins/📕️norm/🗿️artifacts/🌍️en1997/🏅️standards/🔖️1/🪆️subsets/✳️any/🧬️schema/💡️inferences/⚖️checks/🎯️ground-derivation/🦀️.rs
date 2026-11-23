@@ -250,10 +250,8 @@ pub fn characteristic_check(layer: &SoilLayer, resolution: &Resolution, annex: A
     .ndp(SAMPLES_PER_SOUNDING_ID)
     .explanation(loc(&en, &de));
     if n < MIN_SAMPLES {
-        check = check.remedy(Remedy::at_least(
+        check = check.remedy(Remedy::advisory(
             subject,
-            Quantity::new(QuantityKind::Dimensionless, n as f64),
-            Quantity::new(QuantityKind::Dimensionless, MIN_SAMPLES as f64),
             loc(&format!("Add CPT/SPT investigation points that reach layer {} or declare the parameter on the layer.", layer.id), &format!("CPT/SPT-Aufschlusspunkte in Schicht {} ergänzen oder den Parameter auf der Schicht angeben.", layer.id)),
         ));
     }

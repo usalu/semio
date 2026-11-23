@@ -1,0 +1,12 @@
+{
+  "manifest": "🌎️hub/🧩️compositions/🪵️sourcing/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+  "variant": "sourcing",
+  "extensions": ["sourcing-module-beams", "sourcing-module-slabs", "sourcing-module-windows"],
+  "contribution": "sourcing.module",
+  "app": "s.sourcing.curation@1/*#editor",
+  "ports": {
+    "react": 6081,
+    "wgpu": 6181
+  },
+  "ownerRoot": "✏️s/🧑‍💻dev/🎭️variants/🪵️sourcing"
+}

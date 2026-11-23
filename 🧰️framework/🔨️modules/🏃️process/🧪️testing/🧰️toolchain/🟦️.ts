@@ -1,7 +1,7 @@
 import {noticeLanguagesV1} from "../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{spawnSync}from"node:child_process";
-import{chmodSync,lstatSync,readdirSync}from"node:fs";
-import{join,posix,win32}from"node:path";
+import{chmodSync,lstatSync,readFileSync,readdirSync}from"node:fs";
+import{dirname,join,posix,resolve,sep,win32}from"node:path";
 import protocol from"./🔣️.json"with{type:"json"};
 import{pinnedTestToolVariableV1}from"./📌️pinned/🟦️.ts";
 import { runtimeWhichV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
@@ -15,7 +15,7 @@ export type TestToolchainPortV1=Readonly<{platform:NodeJS.Platform;which(command
 /** 🛠️ The outcome: an absolute program path, or null with the candidates that were tried. */
 export type TestToolResolutionV1=Readonly<{tool:TestToolNameV1;path:string|null;tried:readonly string[]}>;
 
-const systemPort:TestToolchainPortV1=Object.freeze({platform:process.platform,which:command=>runtimeWhichV1(command),run:(command,args)=>{const result=spawnSync(command,[...args],{encoding:"utf8",timeout:10000,windowsHide:true});return{status:result.status,stdout:(result.stdout??"")+(result.stderr??"")};},environment:process.env,write:text=>{process.stderr.write(text+"\n");}});
+const systemPort:TestToolchainPortV1=Object.freeze({platform:process.platform,which:command=>runtimeWhichV1(command),run:(command,args)=>{const result=spawnSync(command,[...args],{encoding:"utf8",timeout:protocol.binding.probeTimeoutMilliseconds,windowsHide:true});return{status:result.status,stdout:(result.stdout??"")+(result.stderr??"")};},environment:process.env,write:text=>{process.stderr.write(text+"\n");}});
 
 /** 🔎️ Resolves one tool: the first declared candidate that exists on PATH and answers its probe like the wanted program (a Windows Store stub or a Python 2 answers differently and is skipped); a launcher such as `py -3` is turned into the interpreter it starts, so the answer is always one program path. */
 export function resolveTestToolV1(tool:TestToolNameV1,port:TestToolchainPortV1=systemPort):TestToolResolutionV1{
@@ -66,6 +66,25 @@ export const testRipgrepV1=():string|null=>testToolPathV1("ripgrep");
 /** 🚧️ Returns the tool path or throws the bilingual message, for a test that must not pass without it. */
 export function requireTestToolV1(tool:TestToolNameV1,port:TestToolchainPortV1=systemPort):string{
  const resolution=resolveTestToolV1(tool,port);if(resolution.path===null)throw Error(describeMissingTestToolV1(resolution,port.environment));return resolution.path;
+}
+
+const importPattern=/(?:from|import)\s*\(?\s*["'](\.{1,2}\/[^"']+\.ts)["']/gu;
+const readSource=(path:string):string|null=>{try{return readFileSync(path,"utf8");}catch{return null;}};
+/** 🔭️ Names the tools a source text asks for by the hints the protocol declares for each tool. */
+export function testToolsUsedByV1(text:string):readonly TestToolNameV1[]{
+ const hints=protocol.usage.hints as Readonly<Record<TestToolNameV1,readonly string[]>>;
+ return(Object.keys(hints) as TestToolNameV1[]).filter(tool=>hints[tool].some(hint=>text.includes(hint)));
+}
+/** 🧲️ Names the tools the given test files need: what each file asks for plus what the test helpers it imports ask for (relative imports into the protocol's closure directory, bounded), so a suite never has to declare by hand a tool its sources already name. A file that cannot be read asks for nothing. */
+export function testToolsUsedByFilesV1(files:readonly string[],read:(path:string)=>string|null=readSource):readonly TestToolNameV1[]{
+ const found=new Set<TestToolNameV1>(),seen=new Set<string>(),queue=files.map(file=>resolve(file)),inside=sep+protocol.usage.closure.directory+sep;
+ for(let path=queue.pop();path!==undefined;path=queue.pop()){
+  if(seen.has(path)||seen.size>=protocol.usage.closure.maximumFiles)continue;
+  seen.add(path);const text=read(path);if(text===null)continue;
+  for(const tool of testToolsUsedByV1(text))found.add(tool);
+  for(const match of text.matchAll(importPattern)){const next=resolve(dirname(path),match[1]!);if(next.includes(inside)&&!seen.has(next))queue.push(next);}
+ }
+ return[...found].sort();
 }
 
 const errorCode=(error:unknown)=>(error as NodeJS.ErrnoException)?.code;

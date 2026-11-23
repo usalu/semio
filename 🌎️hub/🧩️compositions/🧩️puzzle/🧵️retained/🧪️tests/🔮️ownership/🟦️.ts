@@ -22,8 +22,9 @@ describe("Puzzle retained laws belong to their actual selected owner", () => {
     test(`${artifact.name} local native wiring law retains its original assertions`, () => {
       expect(existsSync(resolve(root, artifact.leaf))).toBe(true);
       const source = read(artifact.leaf);
-      for (const assertion of artifact.positive) expect(source).toContain(`assert!(source.contains(${JSON.stringify(assertion)}));`);
-      for (const assertion of artifact.negative) expect(source).toContain(`assert!(!source.contains(${JSON.stringify(assertion)}));`);
+      const asserted = (polarity: "!" | "", assertion: string) => [`assert!(${polarity}source.contains(${JSON.stringify(assertion)}));`, `assert!(${polarity}framework.contains(${JSON.stringify(assertion)}));`];
+      for (const assertion of artifact.positive) expect(asserted("", assertion).some((line) => source.includes(line))).toBe(true);
+      for (const assertion of artifact.negative) expect(asserted("!", assertion).some((line) => source.includes(line))).toBe(true);
     });
 
     test(`${artifact.name} retains its actual fixture and full package route`, () => {

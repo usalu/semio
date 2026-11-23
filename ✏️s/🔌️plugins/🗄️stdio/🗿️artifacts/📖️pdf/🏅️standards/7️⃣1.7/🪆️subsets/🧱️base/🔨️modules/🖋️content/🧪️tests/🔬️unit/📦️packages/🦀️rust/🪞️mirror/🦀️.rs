@@ -46,6 +46,7 @@ pub mod standards {
                         pub mod mutations;
                     }
                     pub use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::io::error;
+                    pub use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::io::foreign_artifacts;
                 }
             }
             #[path = "."]

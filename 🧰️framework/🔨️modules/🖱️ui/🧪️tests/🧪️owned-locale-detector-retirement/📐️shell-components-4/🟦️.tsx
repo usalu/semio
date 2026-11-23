@@ -8,7 +8,7 @@ export async function registerShellComponents4Tests(vitest: Tests1Vitest, depend
 
 describe("Shell components", () => {
 
-    it("Mode dock-stack celebrated silhouette paints a spinning conic fill, not a solid stroke cycle", async () => {
+    it("Mode dock-stack celebrated frame paints a spinning conic fill, not a solid stroke cycle", async () => {
       const { container } = render(
         <div className="h-layout-story w-layout-story-md">
           <Mode
@@ -39,17 +39,16 @@ describe("Shell components", () => {
       };
       mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
       mockRect(stack.querySelector('[data-slot="mode-dock-tab-cap"]'), { left: 0, right: 60, width: 60, height: 24, bottom: 24 });
-      mockRect(stack.querySelector('[data-slot="mode-dock-tab-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="mode-dock-controls-cap"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="mode-dock-tabbar"]'), { height: 24, bottom: 24, width: 200, right: 200 });
-      stack.setAttribute("data-silhouette-remeasure", "celebrate");
+      stack.setAttribute("data-frame-remeasure", "celebrate");
       await waitFor(() => {
-        const border = container.querySelector('[data-slot="mode-dock-silhouette-border"]');
+        const border = container.querySelector('[data-slot="mode-dock-frame-border"]');
         expect(border?.getAttribute("data-kind")).toBe("celebrated");
-        expect(border?.querySelector(".window-silhouette-border-celebrated-fill")).toBeTruthy();
-        expect(border?.querySelector(".window-silhouette-border-celebrated-mask")).toBeTruthy();
+        expect(border?.querySelector(".window-frame-border-celebrated-fill")).toBeTruthy();
+        expect(border?.querySelector(".window-frame-border-celebrated-mask")).toBeTruthy();
         expect(border?.querySelector("path")?.getAttribute("stroke")).toBe("white");
-        expect(border?.querySelector("path.window-silhouette-border-celebrated")).toBeNull();
+        expect(border?.querySelector("path.window-frame-border-celebrated")).toBeNull();
       });
     });
 
@@ -85,19 +84,19 @@ describe("Shell components", () => {
       expect(container.querySelector('[data-slot="mode-body"]')?.getAttribute("data-level")).toBe("base");
       expect(container.querySelector('[data-slot="mode-body"]')?.className).toContain("ui-surface");
       expect(container.querySelector('[data-slot="mode-dock-canvas-label"]')).toBeNull();
-      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("flex-1");
       expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).not.toContain("ui-glass");
+      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("absolute");
+      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("pointer-events-none");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("pointer-events-auto");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.hasAttribute("data-window-frame-chip")).toBe(true);
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("ui-glass");
       expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
-      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass");
-      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-chrome");
-      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-surface");
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ml-auto");
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("justify-end");
       const tabbar = container.querySelector('[data-slot="mode-dock-tabbar"]');
       expect(tabbar?.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeTruthy();
       expect(tabbar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
-      expect([...(tabbar?.children ?? [])].map((child) => child.getAttribute("data-slot")).filter(Boolean)).toEqual(["mode-dock-tab-cap", "mode-dock-tab-gap"]);
+      expect([...(tabbar?.children ?? [])].map((child) => child.getAttribute("data-slot")).filter(Boolean)).toEqual(["mode-dock-tab-cap"]);
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ui-glass-chrome");
       expect(container.querySelector('[data-slot="mode-dock-tab-focus"]')?.className).not.toContain("text-muted-foreground");
       expect(container.querySelector('[data-slot="mode-dock-tab-close"]')?.className).not.toContain("text-muted-foreground");
@@ -106,27 +105,26 @@ describe("Shell components", () => {
       const layoutInactiveStack = [...container.querySelectorAll('[data-slot="mode-dock-stack"]')].find((stack) => !stack.querySelector('[data-slot="window"][data-active="true"]')) as HTMLElement;
       expect(layoutActiveStack?.className).toContain("z-window");
       expect(layoutInactiveStack?.className).toContain("z-window");
-      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
-      expect(layoutInactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("active");
+      expect(layoutInactiveStack?.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("normal");
       fireEvent.pointerDown(layoutActiveStack.querySelector('[data-slot="mode-dock-stack-body"]')!);
       await waitFor(() => {
         expect(layoutActiveStack.getAttribute("data-active")).toBe("true");
-        expect(layoutActiveStack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+        expect(layoutActiveStack.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("active");
       });
       expect(layoutActiveStack.querySelector('[data-slot="mode-dock-tab"][data-active="true"] [data-slot="mode-dock-tab-close"]')).toBeTruthy();
-      expect(layoutInactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
-      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
+      expect(layoutInactiveStack?.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("normal");
+      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-frame-border"]')?.className).toContain("z-[40]");
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-0");
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-focus"]')?.className).toContain("border-0");
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-0");
-      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-0");
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-cap-corner"]')).toBeNull();
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("border-emphasized");
     });
 
-    it("Mode exposes its top cutout to the canvas background from pointer down", async () => {
-      const onCanvasPointerDown = vi.fn();
+    it("Mode routes pointer down in the uncovered tab row to the window content, never to the floor behind", async () => {
+      const onContentPointerDown = vi.fn();
       const ControlledMode = () => {
         const [activeWindowId, setActiveWindowId] = reactHostPort.useState<string | null>("right");
         return (
@@ -138,7 +136,7 @@ describe("Shell components", () => {
                 title: uiDataLabel("Right"),
                 iconId: "app-window",
                 children: (
-                  <div data-testid="under-cutout-canvas" onPointerDown={onCanvasPointerDown}>
+                  <div data-testid="frame-content-probe" onPointerDown={onContentPointerDown}>
                     Right Body
                   </div>
                 ),
@@ -160,24 +158,22 @@ describe("Shell components", () => {
       const { container } = render(<ControlledMode />);
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-active="true"]')?.getAttribute("data-window-id")).toBe("right");
       fireEvent.pointerDown(container.querySelector('[data-slot="mode-dock-stack-body"]')!);
-      await waitFor(() => expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active"));
-      const gap = container.querySelector('[data-slot="mode-dock-tab-gap"]')!;
-      expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).toContain("pointer-events-none");
-      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("pointer-events-auto");
+      await waitFor(() => expect(container.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("active"));
+      expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("pointer-events-none");
       expect(container.querySelector('[data-slot="mode-dock-tab"]')?.className).toContain("pointer-events-auto");
-      expect(container.querySelector('[data-slot="mode-dock-tab"]')?.className).toContain("pointer-events-auto");
-      expect(gap.className).toContain("pointer-events-none");
-      expect(gap.className).not.toContain("cursor-grab");
-      vi.spyOn(gap, "getBoundingClientRect").mockReturnValue({ left: 60, right: 160, top: 0, bottom: 24, width: 100, height: 24, x: 60, y: 0, toJSON: () => ({}) } as DOMRect);
-      fireEvent.pointerDown(screen.getByTestId("under-cutout-canvas"), { clientX: 100, clientY: 12 });
-      expect(onCanvasPointerDown).toHaveBeenCalledOnce();
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-active="true"]')).toBeNull();
-      expect(container.querySelector('[data-slot="window"][data-active="true"]')).toBeNull();
+      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("pointer-events-none");
+      const content = screen.getByTestId("frame-content-probe");
+      expect(content.closest('[data-slot="mode-dock-stack-body"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.outerHTML).not.toContain("clip-path");
+      fireEvent.pointerDown(content, { clientX: 100, clientY: 12 });
+      expect(onContentPointerDown).toHaveBeenCalledOnce();
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-active="true"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window"][data-active="true"]')).toBeTruthy();
       expect(screen.getByText("Right Body")).toBeTruthy();
-      await waitFor(() => expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal"));
+      await waitFor(() => expect(container.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("active"));
     });
 
-    it("Mode dock-stack silhouette stays below Layout panels via z-window stacking context", () => {
+    it("Mode dock-stack frame stays below Layout panels via z-window stacking context", () => {
       const StubIcon = (): null => null;
       const { container } = render(
         <div className="h-layout-story w-layout-story-lg">
@@ -203,7 +199,7 @@ describe("Shell components", () => {
       const stack = container.querySelector('[data-slot="mode-dock-stack"]');
       const panel = container.querySelector('[data-slot="panel"]') as HTMLElement | null;
       expect(stack?.className).toContain("z-window");
-      expect(stack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
+      expect(stack?.querySelector('[data-slot="mode-dock-frame-border"]')?.className).toContain("z-[40]");
       expect(panel?.className).toContain("z-panel");
       expect(panel?.className).toContain("absolute");
       expect(panel?.style.zIndex).toBe("");
@@ -269,14 +265,14 @@ describe("Shell components", () => {
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("ui-glass");
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-focus"]')).toBeTruthy();
-      expect(activeStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("active");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("normal");
       fireEvent.pointerDown(activeStack.querySelector('[data-slot="mode-dock-stack-body"]')!);
       await waitFor(() => {
         expect(activeStack.getAttribute("data-active")).toBe("true");
-        expect(activeStack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+        expect(activeStack.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("active");
       });
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("normal");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeNull();
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeNull();
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')).toBeTruthy();
@@ -441,14 +437,11 @@ describe("Shell components", () => {
       expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).not.toContain("ui-glass");
       expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("ui-glass");
-      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass");
-      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-chrome");
-      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-0");
-      expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      expect(container.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("active");
       fireEvent.pointerDown(container.querySelector('[data-slot="mode-dock-stack-body"]')!);
       await waitFor(() => {
         expect(container.querySelector('[data-slot="mode-dock-stack"]')?.getAttribute("data-active")).toBe("true");
-        expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+        expect(container.querySelector('[data-slot="mode-dock-frame-border"]')?.getAttribute("data-kind")).toBe("active");
       });
       const tabOrder = () => [...container.querySelectorAll('[data-slot="mode-dock-tab"]')].map((tab) => tab.getAttribute("data-window-id"));
       expect(tabOrder()).toEqual(["a", "b"]);

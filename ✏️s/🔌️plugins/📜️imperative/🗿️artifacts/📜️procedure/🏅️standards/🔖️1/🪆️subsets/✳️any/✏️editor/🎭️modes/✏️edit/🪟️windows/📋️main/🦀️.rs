@@ -67,13 +67,13 @@ fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
     }
 }
 
-pub fn render(scene: &ProcedureScene, run_output_json: &str, labels: &ImperativeLabels) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &ProcedureScene, run_output_json: &str, labels: &ImperativeLabels, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let path = &scene.path;
     let mut rows = table_rows(&path.steps);
     if !run_output_json.is_empty() {
         rows.extend(run_output_rows(run_output_json, rows.len()));
     }
-    TableWindowKit::render(&TableView { columns: vec![labels.col_index.as_str().into(), labels.col_id.as_str().into(), labels.col_kind.as_str().into()], rows: rows.into_iter().map(TableRow::cells).collect() })
+    TableWindowKit::render(&TableView { columns: vec![labels.col_index.as_str().into(), labels.col_id.as_str().into(), labels.col_kind.as_str().into()], rows: rows.into_iter().map(TableRow::cells).collect() }, locale)
 }
 //#endregion 🔖️Render
 

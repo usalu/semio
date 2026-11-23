@@ -202,6 +202,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> ArtifactDerivedOperation<P,M>{
 }
 
 impl<P:Send+Sync+'static,M:Send+Sync+'static> ErasedSnapshotRetirement for ArtifactDerivedOperation<P,M>{
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn requires_original_control(&self)->bool{
         if self.base.is_some()||self.task.is_some(){return false}
         if let Some(close)=self.task_close.as_ref(){return !close.terminal_is_empty()}

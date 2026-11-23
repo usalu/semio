@@ -40,9 +40,9 @@ impl Puzzle2dPlayApp {
         let labels = puzzle2d_labels(view_state);
         let windows = semio_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
-            overview::BODY_KEY => overview::render(&document_json, &envelope)?,
-            detail::BODY_KEY => detail::render(&document_json, &envelope)?,
-            selection::BODY_KEY => selection::render(&document_json, &envelope)?,
+            overview::BODY_KEY => overview::render(&document_json, &envelope, labels)?,
+            detail::BODY_KEY => detail::render(&document_json, &envelope, labels)?,
+            selection::BODY_KEY => selection::render(&document_json, &envelope, labels)?,
             crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS => artifact::render(&envelope, labels, &windows)?,
             catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope, labels, &windows)?,
             crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels, &windows)?,

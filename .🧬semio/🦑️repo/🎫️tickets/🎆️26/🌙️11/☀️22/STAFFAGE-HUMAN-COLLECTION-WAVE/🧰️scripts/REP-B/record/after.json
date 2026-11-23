@@ -1,0 +1,391 @@
+{
+ "dancer": {
+  "silhouette": [
+   [
+    500,
+    "front",
+    0.906,
+    41
+   ],
+   [
+    500,
+    "plan",
+    0.893,
+    40
+   ],
+   [
+    200,
+    "plan",
+    0.902,
+    38
+   ],
+   [
+    100,
+    "front",
+    0.914,
+    37
+   ],
+   [
+    100,
+    "plan",
+    0.896,
+    37
+   ],
+   [
+    50,
+    "elevation",
+    0.934,
+    30
+   ],
+   [
+    50,
+    "front",
+    0.91,
+    42
+   ],
+   [
+    50,
+    "plan",
+    0.9,
+    33
+   ]
+  ],
+  "box": [],
+  "rules": {}
+ },
+ "painter-at-easel": {
+  "silhouette": [
+   [
+    50,
+    "elevation",
+    0.97,
+    17
+   ],
+   [
+    50,
+    "front",
+    0.991,
+    17
+   ],
+   [
+    50,
+    "plan",
+    0.97,
+    36
+   ]
+  ],
+  "box": [],
+  "rules": {}
+ },
+ "parent-with-child-on-shoulders": {
+  "silhouette": [],
+  "box": [],
+  "rules": {}
+ },
+ "person-carrying-ladder": {
+  "silhouette": [
+   [
+    500,
+    "elevation",
+    0.963,
+    162
+   ],
+   [
+    200,
+    "elevation",
+    0.908,
+    24
+   ],
+   [
+    50,
+    "front",
+    0.978,
+    19
+   ]
+  ],
+  "box": [
+   [
+    100,
+    "depthM",
+    "0.516/0.5"
+   ],
+   [
+    50,
+    "depthM",
+    "0.516/0.5"
+   ]
+  ],
+  "rules": {
+   "volumes-views-disagree": 1,
+   "volumes-bounds": 2
+  }
+ },
+ "person-carrying-shopping-bags": {
+  "silhouette": [
+   [
+    50,
+    "front",
+    0.985,
+    26
+   ]
+  ],
+  "box": [],
+  "rules": {}
+ },
+ "person-checking-watch": {
+  "silhouette": [
+   [
+    50,
+    "plan",
+    0.95,
+    28
+   ]
+  ],
+  "box": [],
+  "rules": {}
+ },
+ "person-drinking-coffee": {
+  "silhouette": [
+   [
+    50,
+    "front",
+    0.968,
+    16
+   ]
+  ],
+  "box": [
+   [
+    50,
+    "depthM",
+    "0.551/0.564"
+   ]
+  ],
+  "rules": {
+   "volumes-bounds": 1
+  }
+ },
+ "person-eating-standing": {
+  "silhouette": [
+   [
+    50,
+    "elevation",
+    0.99,
+    20
+   ],
+   [
+    50,
+    "front",
+    0.982,
+    27
+   ],
+   [
+    50,
+    "plan",
+    0.958,
+    31
+   ]
+  ],
+  "box": [],
+  "rules": {}
+ },
+ "person-hanging-laundry": {
+  "silhouette": [
+   [
+    100,
+    "plan",
+    0.953,
+    34
+   ],
+   [
+    50,
+    "plan",
+    0.963,
+    30
+   ]
+  ],
+  "box": [],
+  "rules": {}
+ },
+ "person-in-rain-poncho": {
+  "silhouette": [],
+  "box": [],
+  "rules": {}
+ },
+ "person-in-winter-coat": {
+  "silhouette": [],
+  "box": [],
+  "rules": {}
+ },
+ "person-queuing": {
+  "silhouette": [],
+  "box": [],
+  "rules": {}
+ },
+ "person-signing": {
+  "silhouette": [
+   [
+    50,
+    "elevation",
+    0.973,
+    27
+   ]
+  ],
+  "box": [
+   [
+    100,
+    "depthM",
+    "0.523/0.548"
+   ],
+   [
+    50,
+    "widthM",
+    "0.547/0.556"
+   ],
+   [
+    50,
+    "depthM",
+    "0.523/0.548"
+   ]
+  ],
+  "rules": {
+   "volumes-views-disagree": 1,
+   "volumes-bounds": 2
+  }
+ },
+ "person-sweeping": {
+  "silhouette": [],
+  "box": [
+   [
+    50,
+    "heightM",
+    "1.665/1.679"
+   ]
+  ],
+  "rules": {}
+ },
+ "person-taking-selfie": {
+  "silhouette": [
+   [
+    50,
+    "elevation",
+    0.987,
+    17
+   ],
+   [
+    50,
+    "front",
+    0.967,
+    16
+   ],
+   [
+    50,
+    "plan",
+    0.963,
+    17
+   ]
+  ],
+  "box": [],
+  "rules": {}
+ },
+ "person-with-arm-sling": {
+  "silhouette": [],
+  "box": [],
+  "rules": {
+   "volumes-structure-coverage": 2
+  }
+ },
+ "person-with-guide-dog": {
+  "silhouette": [
+   [
+    50,
+    "elevation",
+    0.99,
+    20
+   ],
+   [
+    50,
+    "front",
+    0.981,
+    27
+   ],
+   [
+    50,
+    "plan",
+    0.989,
+    19
+   ]
+  ],
+  "box": [],
+  "rules": {}
+ },
+ "photographer-with-camera": {
+  "silhouette": [
+   [
+    50,
+    "plan",
+    0.962,
+    20
+   ]
+  ],
+  "box": [],
+  "rules": {}
+ },
+ "picnicker-sitting-on-ground": {
+  "silhouette": [],
+  "box": [],
+  "rules": {}
+ },
+ "postal-carrier": {
+  "silhouette": [],
+  "box": [],
+  "rules": {}
+ },
+ "standing-violinist": {
+  "silhouette": [
+   [
+    100,
+    "front",
+    0.96,
+    31
+   ]
+  ],
+  "box": [],
+  "rules": {}
+ },
+ "sunbather-on-towel": {
+  "silhouette": [],
+  "box": [
+   [
+    100,
+    "widthM",
+    "1.800/1.827"
+   ]
+  ],
+  "rules": {
+   "volumes-structure-coverage": 10
+  }
+ },
+ "waving-person": {
+  "silhouette": [],
+  "box": [],
+  "rules": {}
+ },
+ "worker-with-pallet-jack": {
+  "silhouette": [
+   [
+    50,
+    "elevation",
+    0.996,
+    16
+   ],
+   [
+    50,
+    "plan",
+    0.987,
+    29
+   ]
+  ],
+  "box": [],
+  "rules": {}
+ }
+}

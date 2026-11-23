@@ -149,7 +149,7 @@ pub fn render_try_question(question: &FormQuestion, values: &Object, contributio
                 "editArguments": { "key": key, "windowId": window_id, "windowKindId": window_kind_id },
                 "label": label
             })));
-            semio_plugin::scene_surface(&format!("forms-try.{key}.input"), ui::SurfaceKind::TextEditor, &scene)?
+            semio_plugin::scene_surface(&format!("forms-try.{key}.input"), ui::SurfaceKind::TextEditor, &scene, label, None)?
         }
         "number" | "date" | "color" | "file" => {
             let kind = match question.kind.as_str() {

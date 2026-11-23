@@ -96,6 +96,8 @@ class CoolingAnimationTest(unittest.TestCase):
         class Driver:
             """🎭 Interpolate the actual submitted native animations without a full lesson render."""
 
+            mobjects = ()
+
             def play(self, *animations, **kwargs):
                 """⏯️ Drive each concurrent component with the same native animation lifecycle."""
                 for animation in animations:

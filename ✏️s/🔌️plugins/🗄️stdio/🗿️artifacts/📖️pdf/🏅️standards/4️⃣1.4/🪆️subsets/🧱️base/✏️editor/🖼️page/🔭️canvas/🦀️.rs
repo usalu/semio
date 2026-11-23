@@ -10,6 +10,7 @@ use semio_s_artifact_stdio_pdf_graph_projection::standards::v1_4::subsets::base:
 use semio_s_artifact_stdio_pdf_mut_base::standards::v1_4::subsets::base::schema::mutations::{InsertPage, MovePage, PdfMutation, RemovePage, ReplacePageText, ResizePage};
 use semio_s_artifact_stdio_pdf_mut_family_11::standards::v1_7::subsets::base::io::import::decode_pdf;
 use semio_s_artifact_stdio_pdf_page_editor::page;
+pub use page::{pdf_editor_labels, pdf_fault_notices, refuse, PdfFault};
 use semio_s_artifact_stdio_pdf_presence_lane::PresenceLane;
 use semio_s_artifact_stdio_pdf_snapshot::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot as Snapshot14};
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot as Snapshot17;
@@ -49,6 +50,7 @@ pub fn lens(snapshot: &Snapshot14) -> Result<Cow<'_, Snapshot17>, Fault> {
 pub fn window_definition() -> WindowKindDefinition {
     let mut definition = page::window_definition();
     definition.actions.retain(|action| CANVAS_ACTIONS.iter().chain(page::VIEW_ACTION_IDS.iter()).any(|id| action.id == *id));
+    definition.actions.extend(semio_s_artifact_stdio_pdf_presence_lane::presence_action_definitions());
     definition
 }
 

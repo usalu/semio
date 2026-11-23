@@ -99,7 +99,7 @@ fn the_scene_draws_the_files_own_triangles() {
     let snapshot = <ObjAnyEditor as ArtifactEditor>::decode_natural_file(include_bytes!("../🧫️fixtures/📂️natural/sample.obj")).expect("obj opens");
     let (positions, triangles, markers) = semio_s_artifact_stdio_obj_inferences::schema::inferences::scene_geometry(&snapshot);
     assert_eq!((positions, triangles, markers.len()), (vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], vec![0, 1, 2], 0));
-    assert!(main::render(&snapshot).is_ok());
+    assert!(main::render(&snapshot, semio_ui_locale::Locale::En).is_ok());
 }
 
 fn reference() -> semio_framework_value::DslValue {

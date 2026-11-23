@@ -10,14 +10,19 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapsh
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotRetiring;
 use std::collections::HashMap;
 
 const VORTEX_XY: [(f64, f64); 7] = [(4.05001, 4.676537), (6.75001, 4.676537), (9.45001, 4.676537), (6.75001, 0.0), (4.05001, 0.0), (1.35001, 0.0), (9.45001, 2.338269)];
 const COLUMN_XY: [(f64, f64); 2] = [(2.70001, 2.338269), (8.10001, 2.338269)];
 const GRAVITY: f64 = 9.81;
 
-fn document() -> Fem3dSnapshot {
-    parse_dsl(super::PRIMARY_TEXT).expect("concrete-forest example dsl parses")
+fn document() -> Fem3dSnapshotRetiring {
+    Fem3dSnapshotRetiring::new(parse_dsl(super::PRIMARY_TEXT).expect("concrete-forest example dsl parses"))
+}
+
+fn source(kind: &str, id: &str) -> String {
+    semio_s_fem_analyses_model::encode_result_source_parts(kind, id).unwrap()
 }
 
 fn node(doc: &Fem3dSnapshot, id: &str) -> [f64; 3] {
@@ -74,8 +79,8 @@ fn applied_vertical_load(doc: &Fem3dSnapshot, case_id: &str) -> f64 {
 fn primary_asset_parses_and_round_trips() {
     let doc = document();
     assert!(super::PRIMARY_TEXT.len() > 64, "dsl fixture must carry real payload");
-    let reparsed = parse_dsl(&print_dsl(&doc)).expect("printed dsl reparses");
-    assert_eq!(reparsed, doc, "print → parse must be the identity");
+    let reparsed = Fem3dSnapshotRetiring::new(parse_dsl(&print_dsl(&doc)).expect("printed dsl reparses"));
+    assert_eq!(*reparsed, *doc, "print → parse must be the identity");
     assert!(doc.solids.is_empty(), "nodes and line elements only — no meshed solids");
     assert!(doc.elements.iter().all(|element| matches!(element, FemElement::Frame { .. })), "every member is a 6-DOF frame");
 }
@@ -114,20 +119,20 @@ fn topology_is_two_stacked_pieces_on_the_puzzle_vortices() {
 fn deformation_solves_balanced_and_stacks() {
     let doc = document();
     let results = fem3d_solve_all(&doc).expect("stacked concrete forest solves");
-    for case_id in ["dead", "live", "uls", "sls"] {
-        assert!(results.contains_key(case_id), "result for {case_id}");
+    for (kind, id) in [("loadCase", "dead"), ("loadCase", "live"), ("combination", "uls"), ("combination", "sls")] {
+        assert!(results.contains_key(&source(kind, id)), "result for {id}");
     }
     for (case_id, result) in &results {
         assert!(result.displacements.iter().all(|row| row.values.iter().all(|value| value.is_finite())), "{case_id}: finite displacements");
         assert!(result.checks.residual_norm < 1e-6, "{case_id}: residual {}", result.checks.residual_norm);
     }
     for case_id in ["dead", "live"] {
-        let result = &results[case_id];
+        let result = &results[&source("loadCase", case_id)];
         let reaction_z: f64 = result.reactions.iter().filter(|reaction| reaction.dof == Dof::Tz).map(|reaction| reaction.value).sum();
         let applied = applied_vertical_load(&doc, case_id);
         assert!(((reaction_z + applied) / applied).abs() < 1e-6, "{case_id}: vertical reactions {reaction_z} balance the applied load {applied}");
     }
-    let sls = &results["sls"];
+    let sls = &results[&source("combination", "sls")];
     let row = |id: &str| sls.displacements.iter().find(|row| row.node_id == id).unwrap_or_else(|| panic!("displacement {id}")).values;
     for head in ["lc1t", "lc2t", "uc1t", "uc2t"] {
         assert!(tz(sls, head) < 0.0, "column head {head} shortens under gravity");
@@ -154,9 +159,9 @@ fn deformation_solves_balanced_and_stacks() {
     }
     let max_sls = sls.displacements.iter().map(|row| row.values[2].abs()).fold(0.0, f64::max);
     assert!(max_sls > 1e-4 && max_sls < 0.05, "SLS peak vertical deflection {max_sls} m is millimetres, not noise and not a mechanism");
-    let uls = &results["uls"];
-    let dead = &results["dead"];
-    let live = &results["live"];
+    let uls = &results[&source("combination", "uls")];
+    let dead = &results[&source("loadCase", "dead")];
+    let live = &results[&source("loadCase", "live")];
     let expected = 1.35 * tz(dead, "uv5") + 1.5 * tz(live, "uv5");
     assert!((tz(uls, "uv5") - expected).abs() < 1e-12, "ULS superposes the solved cases linearly");
     for row in &sls.displacements {

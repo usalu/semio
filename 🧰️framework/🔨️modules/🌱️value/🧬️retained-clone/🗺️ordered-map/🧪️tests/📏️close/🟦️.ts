@@ -17,5 +17,5 @@ test("ordered map cold close retains whole backing independently of logical text
       expect(Math.max(7, row.capacity)).toBeLessThanOrEqual(fixture.maximumAdmissionBytes);
     }
   }
-  expect(readFileSync(new URL("../../♻️retirement/🦀️.rs", import.meta.url), "utf8").includes("fn next_close_byte_demand")).toBe(true);
+  expect(readFileSync(new URL("../../✏️edit/♻️retirement/🦀️.rs", import.meta.url), "utf8").includes("fn next_close_byte_demand")).toBe(true);
 });

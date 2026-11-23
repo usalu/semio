@@ -79,11 +79,27 @@ fn run_import_free(core: &mut CoreInstance, fuel: u64, remaining: &mut u64, prog
                 *remaining -= fuel_used;
                 return Ok(values);
             }
-            CoreStepOutcome::HostCall { call, .. } => return Err(CoreError::Host(format!("actor preparation requested {}::{}", call.module, call.name))),
+            CoreStepOutcome::HostCall { call, .. } => {
+                if let Some(values) = preparation_host_reply(core, &call)? {
+                    core.resume_host(call.id, Ok(values))?;
+                    continue;
+                }
+                return Err(CoreError::Host(format!("actor preparation requested {}::{}", call.module, call.name)));
+            },
             CoreStepOutcome::Fault { error, .. } => return Err(error),
             _ => return Err(CoreError::State("actor preparation made no progress".into())),
         }
     }
+}
+
+fn preparation_host_reply(core: &mut CoreInstance, call: &HostCall) -> Result<Option<Vec<Value>>, CoreError> {
+    if call.name == "insecure-seed" {
+        let Some(Value::I32(pointer)) = call.arguments.first() else { return Ok(None) };
+        core.write_preparation_seed(*pointer)?;
+        return Ok(Some(Vec::new()));
+    }
+    if call.name == "get-random-u64" { return Ok(Some(vec![Value::I64(0x5345_4d49_4f50_5245)])); }
+    Ok(None)
 }
 
 #[cfg(test)]

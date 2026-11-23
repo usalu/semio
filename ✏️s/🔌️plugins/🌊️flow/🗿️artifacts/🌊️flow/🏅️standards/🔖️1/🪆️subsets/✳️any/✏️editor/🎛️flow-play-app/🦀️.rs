@@ -374,12 +374,12 @@ impl ArtifactEditor for FlowPlayApp {
         let transient = main::transient::FlowWindowTransient::default();
         let labels = flow_play_labels(view_state);
         let render=|source:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,session:&mut FlowEvalSession| match body_key {
-            FLOW_PLAY_BODY_MAIN => main::render_source(source, &config, session, &[]).map(semio_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_COMPILED => compiled::render_source(source, &config, session).map(semio_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_MAIN => main::render_source(source, &config, session, &[], view_state.locale).map(semio_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_COMPILED => compiled::render_source(source, &config, session, view_state.locale).map(semio_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_GENERATIONS => generations::render(&transient, view_state.locale, view_state.terminology, &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS))
                 .map(semio_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_GENERATE_FORM => form::render_source(source, &config, &transient, labels).map(semio_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient, view_state.locale).map(semio_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_ARTIFACT => document_panel::render_live(source, labels, &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(&config, labels, &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_INSPECTOR)).map(semio_plugin::built_to_component_tree),
@@ -412,14 +412,14 @@ impl ArtifactEditor for FlowPlayApp {
         owner
             .with_original_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_scene_session(doc,|source,session| match body_key {
-                    FLOW_PLAY_BODY_MAIN => main::render_source(source, &config, session, &graph_selection).map(semio_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_COMPILED => compiled::render_source(source, &config, session).map(semio_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_MAIN => main::render_source(source, &config, session, &graph_selection, view_state.locale).map(semio_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_COMPILED => compiled::render_source(source, &config, session, view_state.locale).map(semio_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_GENERATIONS => {
                         generations::render(&transient, view_state.locale, view_state.terminology, &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS))
                             .map(semio_plugin::built_to_component_tree)
                     }
                     FLOW_PLAY_BODY_GENERATE_FORM => form::render_source(source, &config, &transient, flow_play_labels(view_state)).map(semio_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient, view_state.locale).map(semio_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_ARTIFACT => document_panel::render_live(source, flow_play_labels(view_state), &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_CATALOGUE => {
                         catalogue_panel::render(&config, flow_play_labels(view_state), &semio_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_plugin::built_to_component_tree)

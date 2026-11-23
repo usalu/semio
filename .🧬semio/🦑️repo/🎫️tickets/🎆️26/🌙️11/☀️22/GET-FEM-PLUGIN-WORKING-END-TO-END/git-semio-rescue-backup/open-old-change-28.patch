@@ -1,0 +1,432 @@
+diff --git "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpftioz4tx\\b.lf" "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpftioz4tx\\o.lf"
+index fc1341b..78367ff 100644
+--- "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpftioz4tx\\b.lf"
++++ "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpftioz4tx\\o.lf"
+@@ -40,4 +40,5 @@ from types import SimpleNamespace
+ _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+ P_PRIMARY = _manim_module.P_PRIMARY
++reference_chip = _manim_module.reference_chip
+ section_material = _manim_module.section_material
+ window_chip = _manim_module.window_chip
+@@ -71,6 +72,6 @@ swap_caption = _manim_module.swap_caption
+ hold_for = _manim_module.hold_for
+ subtitle_text = _manim_module.subtitle_text
+-set_vo_language = _manim_module.set_vo_language
+ tr = _manim_module.tr
++_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
+ unit_text = _manim_module.unit_text
+ load_vo_timing = _manim_module.load_vo_timing
+@@ -87,6 +88,5 @@ TRANSITIONS = _Path(__file__).resolve().parent / "🔀️transitions" / "🔣️
+ color_ramp = _manim_module.color_ramp
+ 
+-# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
+-set_vo_language("de")
++# 🗣️ Measured clause durations live in vo_timing.json.
+ _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
+ if _VO_TIMING.is_file():
+@@ -98,5 +98,7 @@ TITLE_DE = "Mechanische Lüftung und Wärmerückgewinnung"
+ 
+ #region Shared numbers
++_example = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📏️running-example.🐍️")
+ Q_V_WINTER, Q_V_SENS_SUMMER, Q_V_LAT_SUMMER = 1500.0, 450.0, 810.0
++Q_V_LAT_WINTER = round(_example.Q_LAT_WINTER_W, -1)
+ ETA_WRG = 0.8
+ V_DOT_M3H = 220.0
+@@ -108,20 +110,4 @@ THETA_I_SUMMER, THETA_E_SUMMER = 26.0, 32.0
+ 
+ 
+-#region DIN citation
+-def _din_ref(text: str):
+-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+-
+-    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
+-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
+-    that never competes with the diagram. The chapter title is wide, so the
+-    footnote sits one line lower, level with the beat subtitle.
+-    """
+-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+-    ref.set_opacity(0.72)
+-    ref.to_corner(UR, buff=0.30).shift(DOWN * 0.6)
+-    return ref
+-#endregion
+-
+-
+ #region Shared visual motifs
+ 
+@@ -253,12 +239,12 @@ class Beat1_Grundtypen(Scene):
+          "Ventilatorgestützte Lüftung hat drei Grundtypen — sie\nunterscheiden sich nur darin, wer einen Ventilator bekommt."),
+         ("exhaust",
+-         "Exhaust-only: a fan extracts air; fresh air enters unfiltered through passive wall vents, with slight room suction.",
+-         "Die Abluftanlage saugt mechanisch ab — die Zuluft kommt\nungefiltert nach, im Raum herrscht leichter Unterdruck."),
++         "Exhaust-only: a fan high up extracts air; fresh air enters unfiltered through a passive vent low on the opposite wall, with slight room suction.",
++         "Die Abluftanlage saugt oben mechanisch ab — die Zuluft strömt\nungefiltert unten gegenüber nach, im Raum herrscht leichter Unterdruck."),
+         ("supply",
+-         "The supply-only system does the opposite. Treated air is pushed in and leaks back out through joints and gaps, at a slight positive pressure.",
+-         "Die Zuluftanlage macht es umgekehrt: aufbereitete Luft\nwird eingeblasen und entweicht über Fugen — Überdruck."),
++         "The supply-only system does the opposite: treated air is pushed in low and leaks out high through joints, at slight positive pressure.",
++         "Die Zuluftanlage macht es umgekehrt: aufbereitete Luft wird unten\neingeblasen und entweicht oben über Fugen — Überdruck."),
+         ("balanced",
+-         "The balanced supply and exhaust system ducts both streams. The pressures cancel out, and both volume flows are known quantities.",
+-         "Die Zu-/Abluftanlage führt beide Ströme — die Drücke\ngleichen sich aus, beide Volumenströme sind bekannt."),
++         "The balanced system ducts both streams: supply low, extract high on the opposite side. The air crosses the occupied zone.",
++         "Die Zu-/Abluftanlage führt beide Ströme: Zuluft unten, Abluft oben gegenüber — die Luft durchquert den Aufenthaltsbereich."),
+         ("verdict",
+          "Only the third type controls both air streams, enabling filtering, humidity control and heat recovery in both seasons.",
+@@ -267,9 +253,9 @@ class Beat1_Grundtypen(Scene):
+ 
+     CENTERS = (
+-        np.array([-4.55, 0.35, 0.0]),
++        np.array([-4.35, 0.35, 0.0]),
+         np.array([0.0, 0.35, 0.0]),
+-        np.array([4.55, 0.35, 0.0]),
++        np.array([4.35, 0.35, 0.0]),
+     )
+-    ROOM_W, ROOM_H = 3.70, 1.90
++    ROOM_W, ROOM_H = 3.50, 1.90
+ 
+     def construct(self):
+@@ -277,5 +263,5 @@ class Beat1_Grundtypen(Scene):
+ 
+         subtitle = section_heading(tr("Three basic mechanical types", "Drei mechanische Grundtypen"))
+-        din = _din_ref("DIN EN 16798-3")
++        din = reference_chip(_references.cite("din-en-16798-3"), lower=0.6)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -284,9 +270,10 @@ class Beat1_Grundtypen(Scene):
+ 
+         c0, c1, c2 = self.CENTERS
+-        shells = [_room(c, self.ROOM_W, self.ROOM_H, window_side=side, window_y=0.70, window_h=0.50)
+-                  for c, side in zip(self.CENTERS, ("left", "right", "none"))]
++        shells = [_room(c, self.ROOM_W, self.ROOM_H) for c in self.CENTERS]
+         rooms = VGroup(*[s[0] for s in shells])
+         floors = VGroup(*[s[1] for s in shells])
+-        wall_y = rooms[0].get_top()[1]
++        people = VGroup(*[_stand(c, self.ROOM_H, c[0]) for c in self.CENTERS])
++        y_lo, y_hi = c0[1] - 0.52, c0[1] + 0.58
++        half = self.ROOM_W / 2
+ 
+         headers = VGroup(*[
+@@ -303,47 +290,37 @@ class Beat1_Grundtypen(Scene):
+                          max_tip_length_to_length_ratio=0.26)
+ 
+-        exh_fan = _fan(np.array([c0[0] + 1.25, wall_y, 0.0]))
+-        exh_out = _duct_arrow(np.array([c0[0] + 1.58, wall_y, 0.0]),
+-                              np.array([c0[0] + 2.10, wall_y, 0.0]), P_ORANGE)
+-        ald = _port(np.array([c0[0] - self.ROOM_W / 2, 0.70, 0.0]))
+-        exh_paths = VGroup(*[
+-            smooth_path([
+-                ald.get_right(),
+-                c0 + LEFT * 0.6 + UP * (dy * 0.5),
+-                c0 + RIGHT * 0.8 + UP * (dy * 0.35 + 0.25),
+-                np.array([c0[0] + 1.25, wall_y - 0.08, 0.0]),
+-            ])
+-            for dy in (-0.6, 0.0, 0.55)
+-        ])
++        def _low_left(c):
++            return np.array([c[0] - half, y_lo, 0.0])
+ 
+-        sup_fan = _fan(np.array([c1[0] - 1.25, wall_y, 0.0]))
+-        sup_in = _duct_arrow(np.array([c1[0] - 2.10, wall_y, 0.0]),
+-                             np.array([c1[0] - 1.58, wall_y, 0.0]), P_CYAN)
+-        leak = _port(np.array([c1[0] + self.ROOM_W / 2, 0.70, 0.0]))
+-        sup_paths = VGroup(*[
+-            smooth_path([
+-                np.array([c1[0] - 1.25, wall_y - 0.08, 0.0]),
+-                c1 + LEFT * 0.8 + UP * (dy * 0.35 + 0.25),
+-                c1 + RIGHT * 0.6 + UP * (dy * 0.5),
+-                leak.get_left(),
+-            ])
+-            for dy in (-0.6, 0.0, 0.55)
+-        ])
++        def _high_right(c):
++            return np.array([c[0] + half, y_hi, 0.0])
+ 
+-        bal_sup = _fan(np.array([c2[0] - 1.25, wall_y, 0.0]))
+-        bal_exh = _fan(np.array([c2[0] + 1.25, wall_y, 0.0]))
+-        bal_in = _duct_arrow(np.array([c2[0] - 2.10, wall_y, 0.0]),
+-                             np.array([c2[0] - 1.58, wall_y, 0.0]), P_CYAN)
+-        bal_out = _duct_arrow(np.array([c2[0] + 1.58, wall_y, 0.0]),
+-                              np.array([c2[0] + 2.10, wall_y, 0.0]), P_ORANGE)
+-        bal_paths = VGroup(*[
+-            smooth_path([
+-                np.array([c2[0] - 1.25, wall_y - 0.08, 0.0]),
+-                c2 + LEFT * 0.7 + UP * (dy * 0.4 + 0.1),
+-                c2 + RIGHT * 0.7 + UP * (dy * 0.4 - 0.05),
+-                np.array([c2[0] + 1.25, wall_y - 0.08, 0.0]),
++        def _crossing(c):
++            start, end = _low_left(c) + RIGHT * 0.10, _high_right(c) + LEFT * 0.10
++            return VGroup(*[
++                smooth_path([
++                    start,
++                    np.array([c[0] - 0.75, y_lo + 0.30 + 0.45 * dy, 0.0]),
++                    np.array([c[0] + 0.75, y_hi - 0.30 + 0.45 * dy, 0.0]),
++                    end,
++                ])
++                for dy in (-0.5, 0.0, 0.5)
+             ])
+-            for dy in (-0.6, 0.0, 0.55)
+-        ])
++
++        ald = _port(_low_left(c0))
++        exh_fan = _fan(_high_right(c0))
++        exh_out = _duct_arrow(_high_right(c0) + RIGHT * 0.30, _high_right(c0) + RIGHT * 0.68, P_ORANGE)
++        exh_paths = _crossing(c0)
++
++        sup_fan = _fan(_low_left(c1))
++        sup_in = _duct_arrow(_low_left(c1) + LEFT * 0.68, _low_left(c1) + LEFT * 0.30, P_CYAN)
++        leak = _port(_high_right(c1))
++        sup_paths = _crossing(c1)
++
++        bal_sup = _fan(_low_left(c2))
++        bal_exh = _fan(_high_right(c2))
++        bal_in = _duct_arrow(_low_left(c2) + LEFT * 0.68, _low_left(c2) + LEFT * 0.30, P_CYAN)
++        bal_out = _duct_arrow(_high_right(c2) + RIGHT * 0.30, _high_right(c2) + RIGHT * 0.68, P_ORANGE)
++        bal_paths = _crossing(c2)
+ 
+         signs = VGroup(*[
+@@ -368,4 +345,11 @@ class Beat1_Grundtypen(Scene):
+         ])
+ 
++        def _zone_tag(text, color, c, high):
++            return Text(text, font_size=LABEL_FONT_SIZE, color=color).move_to(
++                np.array([c[0] + (half - 0.7 if high else 0.7 - half), 1.55 if high else -0.92, 0.0]))
++
++        zone_out = [_zone_tag(tr("extract high", "Abluft oben"), P_ORANGE, c, True) for c in (c0, c2)]
++        zone_in = [_zone_tag(tr("supply low", "Zuluft unten"), P_CYAN, c, False) for c in (c1, c2)]
++
+         verdict = Text(
+             tr("only with both flows ducted → filtering, humidity control, heat recovery possible", "erst beide Ströme geführt → Filter, Feuchte, Wärmerückgewinnung möglich"),
+@@ -373,6 +357,6 @@ class Beat1_Grundtypen(Scene):
+         ).move_to(np.array([0.0, -2.18, 0.0]))
+ 
+-        scaffold = VGroup(rooms, floors, headers, exh_fan, exh_out, ald, sup_fan, sup_in, leak,
+-                          bal_sup, bal_exh, bal_in, bal_out, signs, sign_tags, port_tags, verdict)
++        scaffold = VGroup(rooms, floors, people, headers, exh_fan, exh_out, ald, sup_fan, sup_in, leak,
++                          bal_sup, bal_exh, bal_in, bal_out, signs, sign_tags, port_tags, verdict, *zone_out, *zone_in)
+         fit_band(scaffold)
+ 
+@@ -387,4 +371,5 @@ class Beat1_Grundtypen(Scene):
+             LaggedStart(*[Create(r) for r in rooms], lag_ratio=0.22),
+             LaggedStart(*[Create(f) for f in floors], lag_ratio=0.22),
++            LaggedStart(*[FadeIn(p) for p in people], lag_ratio=0.22),
+             LaggedStart(*[FadeIn(h, shift=DOWN * 0.1) for h in headers], lag_ratio=0.22),
+             run_time=2.0,
+@@ -393,9 +378,9 @@ class Beat1_Grundtypen(Scene):
+ 
+         for key, new_fans, extras, guide, stream, sign in (
+-            ("exhaust", [exh_fan], [GrowArrow(exh_out), FadeIn(ald), FadeIn(port_tags[0])],
++            ("exhaust", [exh_fan], [GrowArrow(exh_out), FadeIn(ald), FadeIn(port_tags[0]), FadeIn(zone_out[0])],
+              (exh_paths, P_ORANGE), (exh_paths, P_WHITE, P_ORANGE), 0),
+-            ("supply", [sup_fan], [GrowArrow(sup_in), FadeIn(leak), FadeIn(port_tags[1])],
++            ("supply", [sup_fan], [GrowArrow(sup_in), FadeIn(leak), FadeIn(port_tags[1]), FadeIn(zone_in[0])],
+              (sup_paths, P_CYAN), (sup_paths, P_CYAN, P_WHITE), 1),
+-            ("balanced", [bal_sup, bal_exh], [GrowArrow(bal_in), GrowArrow(bal_out), FadeIn(port_tags[2])],
++            ("balanced", [bal_sup, bal_exh], [GrowArrow(bal_in), GrowArrow(bal_out), FadeIn(port_tags[2]), FadeIn(zone_out[1]), FadeIn(zone_in[1])],
+              (bal_paths, P_GREEN), (bal_paths, P_CYAN, P_ORANGE), 2),
+         ):
+@@ -431,21 +416,24 @@ class Beat2_Waermerueckgewinnung(Scene):
+          "Im Winter gibt die 20 °C warme Abluft Wärme an die 0 °C\nkalte Außenluft ab — die Zuluft steigt auf 16 °C."),
+         ("formula",
+-         "η divides the achieved supply-air warming by the available exhaust-to-outdoor temperature difference.",
+-         "Der Temperaturänderungsgrad η: erreichte Erwärmung der Zuluft,\ngeteilt durch die verfügbare Differenz Abluft − Außenluft."),
++         r"The temperature change ratio $\eta$ divides the achieved supply-air warming by the available exhaust-to-outdoor temperature difference.",
++         r"Der Temperaturänderungsgrad $\eta$: erreichte Erwärmung der Zuluft, geteilt durch die verfügbare Differenz Abluft − Außenluft."),
+         ("winter_bars",
+-         "Only the share one minus eta stays as a loss: at eta equal to zero point eight, fifteen hundred watts shrink to three hundred.",
+-         "Nur der Anteil 1 − η bleibt als Verlust: bei η = 0,8\nsinken 1500 W auf 300 W."),
++         r"Only the share $1-\eta$ stays as a loss: at $\eta = 0.8$, $1500\,\mathrm{W}$ shrink to $300\,\mathrm{W}$.",
++         r"Nur der Anteil $1-\eta$ bleibt als Verlust: bei $\eta = 0{,}8$ sinken $1500\,\mathrm{W}$ auf $300\,\mathrm{W}$."),
+         ("summer",
+-         "Summer: 32 °C outdoors, 26 °C exhaust; about 5 of 6 K recovered. The same ratio turns heat recovery into cold recovery.",
+-         "Im Sommer gilt dieselbe Definition: Außenluft 32 °C, Abluft 26 °C —\nfast fünf von sechs Kelvin, die WRG wird zur Kälterückgewinnung."),
++         r"Summer: $32\,\mathrm{°C}$ outdoors, $26\,\mathrm{°C}$ exhaust; about $5\,\mathrm{K}$ of $6\,\mathrm{K}$ recovered. The same ratio turns heat recovery into cold recovery.",
++         r"Im Sommer gilt dieselbe Definition: Außenluft $32\,\mathrm{°C}$, Abluft $26\,\mathrm{°C}$ — fast $5\,\mathrm{K}$ von $6\,\mathrm{K}$, die WRG wird zur Kälterückgewinnung."),
+         ("summer_bars",
+-         "The sensible cooling load drops from four hundred fifty to about ninety watts.",
+-         "Die fühlbare Last sinkt von 450 W auf rund 90 W."),
++         r"The sensible load $\dot{Q}_{V,sens}$ drops from $450\,\mathrm{W}$ to about $90\,\mathrm{W}$.",
++         r"Die fühlbare Last $\dot{Q}_{V,sens}$ sinkt von $450\,\mathrm{W}$ auf rund $90\,\mathrm{W}$."),
+         ("latent",
+-         "A plate exchanger transfers sensible heat only. The latent load of 810 watts stays, which is why cooling will later have to dehumidify.",
+-         "Der Plattenübertrager überträgt nur fühlbare Wärme: die latente\nLast von 810 W bleibt — die Kühlung muss später entfeuchten."),
++         r"A plate exchanger transfers sensible heat only. The latent part $\dot{Q}_{V,lat}$ stays in both seasons: $810\,\mathrm{W}$ in summer, $770\,\mathrm{W}$ in winter.",
++         r"Der Plattenübertrager überträgt nur fühlbare Wärme: der latente Anteil $\dot{Q}_{V,lat}$ bleibt in beiden Jahreszeiten — $810\,\mathrm{W}$ im Sommer, $770\,\mathrm{W}$ im Winter."),
++        ("latent_use",
++         "Cooling must dehumidify it. The heating load counts by convention only the sensible part; humidifying would have to pay the winter share.",
++         "Die Kühltechnik muss entfeuchten. Die Heizlast rechnet nach Konvention nur den fühlbaren Teil; Befeuchten müsste den Winteranteil bezahlen."),
+         ("close",
+-         "One definition, two seasons: heating will calculate with 300 watts, cooling with 90 watts sensible plus 810 watts latent.",
+-         "Eine Definition, zwei Jahreszeiten: die Heizung rechnet mit 300 W,\ndie Kühlung mit 90 W fühlbar plus 810 W latent."),
++         r"One definition, two seasons: heating calculates with $300\,\mathrm{W}$, cooling with $90\,\mathrm{W}$ sensible plus $810\,\mathrm{W}$ latent.",
++         r"Eine Definition, zwei Jahreszeiten: die Heizung rechnet mit $300\,\mathrm{W}$, die Kühltechnik mit $90\,\mathrm{W}$ fühlbar plus $810\,\mathrm{W}$ latent."),
+     ]
+ 
+@@ -456,5 +444,5 @@ class Beat2_Waermerueckgewinnung(Scene):
+ 
+         subtitle = section_heading(tr("Heat recovery in a plate heat exchanger", "Wärmerückgewinnung im Plattenübertrager"))
+-        din = _din_ref("DIN EN 308")
++        din = reference_chip(_references.cite("din-en-308"), lower=0.6)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -649,5 +637,5 @@ class Beat2_Waermerueckgewinnung(Scene):
+         caption = swap_caption(self, caption, subtitle_text(N, "summer_bars"))
+         sens_w, lat_w = Q_V_SENS_SUMMER * unit, Q_V_LAT_SUMMER * unit
+-        s_head = head(tr("Summer · Cooling", "Sommer · Kühlung"), P_CYAN, y_s)
++        s_head = head(tr("Summer · Cooling", "Sommer · Kühltechnik"), P_CYAN, y_s)
+         s_name = name(r"\dot{Q}_{\mathrm{V,sens}}", bx0 + sens_w / 2, y_s, P_RED)
+         l_name = name(r"\dot{Q}_{\mathrm{V,lat}}", bx0 + sens_w + lat_w / 2, y_s, P_CYAN)
+@@ -695,5 +683,13 @@ class Beat2_Waermerueckgewinnung(Scene):
+         self.play(stage.transition("ventilation.mechanical.heat-recovery.sensible-to-latent-formula", source=sp[0], target=lp2[0]), stage.transition("ventilation.mechanical.heat-recovery.sensible-to-latent-box", source=sp[1], target=lp2[1]), FadeIn(keep),
+                   Indicate(l_full, color=P_CYAN, scale_factor=1.06), *exchanger(1.6), run_time=1.6)
+-        hold_for(self, N, "latent", during=exchanger)
++        lat_note = window_chip(math_label(
++            tr(rf"\dot{{Q}}_{{\mathrm{{V,lat}}}}:\;\text{{winter}}\;{label_number(Q_V_LAT_WINTER)}\,\mathrm{{W}}\quad\text{{summer}}\;{label_number(Q_V_LAT_SUMMER)}\,\mathrm{{W}}",
++               rf"\dot{{Q}}_{{\mathrm{{V,lat}}}}:\;\text{{Winter}}\;{label_number(Q_V_LAT_WINTER)}\,\mathrm{{W}}\quad\text{{Sommer}}\;{label_number(Q_V_LAT_SUMMER)}\,\mathrm{{W}}"),
++            size=LABEL_FONT_SIZE, color=P_CYAN), color=P_CYAN).move_to(np.array([-3.0, -1.27, 0.0]))
++        self.play(FadeIn(lat_note), *exchanger(0.8), run_time=0.8)
++        hold_for(self, N, "latent", used=0.8, during=exchanger)
++
++        caption = swap_caption(self, caption, subtitle_text(N, "latent_use"))
++        hold_for(self, N, "latent_use", during=exchanger)
+ 
+         caption = swap_caption(self, caption, subtitle_text(N, "close"))
+@@ -710,15 +706,15 @@ class Beat3_Anlagenvergleich(Scene):
+     NARRATION = [
+         ("window",
+-         "Window ventilation is a free air change without any recovery: the full ventilation loss of fifteen hundred watts remains, eta equals zero.",
+-         "Fensterlüftung ist freier Luftwechsel ohne Rückgewinnung — der\nvolle Lüftungsverlust von 1500 W bleibt, η = 0."),
++         r"Window ventilation is a free air change without any recovery: the full ventilation loss of $1500\,\mathrm{W}$ remains, $\eta = 0$.",
++         r"Fensterlüftung ist freier Luftwechsel ohne Rückgewinnung — der volle Lüftungsverlust von $1500\,\mathrm{W}$ bleibt, $\eta = 0$."),
+         ("central",
+-         "A central unit with heat recovery reaches an eta of about zero point eight to zero point nine and cuts the loss to between 300 and 150 watts.",
+-         "Eine zentrale Anlage mit WRG erreicht η von etwa 0,8 bis 0,9 —\nder Verlust sinkt auf 300 bis 150 W."),
++         r"A central unit with heat recovery reaches $\eta \approx 0.8 \dots 0.9$ and cuts the loss to between $300\,\mathrm{W}$ and $150\,\mathrm{W}$.",
++         r"Eine zentrale Anlage mit WRG erreicht $\eta \approx 0{,}8 \dots 0{,}9$ — der Verlust sinkt auf $300\,\mathrm{W}$ bis $150\,\mathrm{W}$."),
+         ("decentral",
+          "Decentralised ceramic push-pull units store the heat alternately and recover seventy to ninety percent, room by room.",
+          "Dezentrale Keramik-Pendellüfter speichern die Wärme abwechselnd\nund gewinnen raumweise 70 bis 90 % zurück."),
+         ("outro",
+-         "DIN 1946-6: recovery cuts winter ventilation heat loss by up to 90%. In summer the same unit recovers cold.",
+-         "DIN 1946-6: WRG senkt den Winter-Lüftungswärmeverlust um bis zu 90 %. Im Sommer gewinnt dieselbe Technik Kälte zurück."),
++         r"Recovery leaves only the share $1-\eta$ of the winter loss: at $\eta = 0.9$ just $10\,\%$. In summer it recovers cold.",
++         r"Die WRG lässt nur den Anteil $1-\eta$ des Winterverlusts übrig: bei $\eta = 0{,}9$ nur $10\,\%$. Im Sommer gewinnt sie Kälte zurück."),
+         ("passivhaus",
+          "Open windows recover nothing. The Passivhaus uses ducts and a heat-recovery unit as its main ventilation path.",
+@@ -730,5 +726,5 @@ class Beat3_Anlagenvergleich(Scene):
+ 
+         subtitle = section_heading(tr("Ventilation systems compared", "Lüftungssysteme im Vergleich"))
+-        din = _din_ref("DIN 1946-6")
++        din = reference_chip(_references.cite("din-1946-6"), lower=0.6)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -810,6 +806,7 @@ class Beat3_Anlagenvergleich(Scene):
+         fresh2 = [path((p2 - 1.95, 1.0), (p2 - 1.0, 0.95), (mvhr_box.get_left()[0] + 0.02, 0.62))]
+         fort2 = [path((mvhr_box.get_right()[0] - 0.02, 0.62), (p2 + 1.5, 0.95), (p2 + 1.95, 1.05))]
+-        sup2 = [path((x_s, 0.33), (x_s, -0.3), (p2 - 0.6, -0.85), (p2 - 0.45, -1.3))]
+-        ext2 = [path((p2 + 0.45, -1.25), (x_e, -0.6), (x_e, 0.33))]
++        sup2 = [path((x_s, 0.33), (x_s, -0.3), (p2 - 0.6, -0.85), (p2 - 0.62, -1.32))]
++        mix2 = [path((p2 - 0.62, -1.32), (p2 - 0.05, -1.22), (p2 + 0.65, -0.85), (p2 + 1.3, -0.34))]
++        ext2 = [path((p2 + 1.3, -0.34), (p2 + 0.9, -0.27), (x_e, -0.1), (x_e, 0.33))]
+         lbl_supply = legend([tr("preheated", "vorgewärmte"), tr("supply air (16 °C)", "Zuluft (16 °C)")], P_GREEN, 0.62, [p2 - 1.53, -0.75, 0])
+         col2 = VGroup(card2, hdr2, room2["shell"], room2["glass"], person2, ducts2, mvhr_box, lbl_mvhr, lbl_supply,
+@@ -829,5 +826,5 @@ class Beat3_Anlagenvergleich(Scene):
+         col3 = VGroup(card3, hdr3, room3["shell"], room3["glass"], person3, unit3, lbl_cyc1, lbl_cyc2, box3_stat)
+ 
+-        paths = VGroup(*in1, *out1, *fresh2, *fort2, *sup2, *ext2, *ab3, *zu3)
++        paths = VGroup(*in1, *out1, *fresh2, *fort2, *sup2, *mix2, *ext2, *ab3, *zu3)
+         fills = VGroup(*[b[k] for b in (bar1, bar2, bar3) for k in ("upper", "lower")])
+         place(VGroup(col1, col2, col3), paths, fills)
+@@ -835,5 +832,6 @@ class Beat3_Anlagenvergleich(Scene):
+         guides1 = VGroup(flow_guides(in1, P_BLUE, opacity=0.2), flow_guides(out1, P_ORANGE, opacity=0.2))
+         guides2 = VGroup(flow_guides(fresh2, P_BLUE, opacity=0.2), flow_guides(fort2, GREY_B, opacity=0.2),
+-                         flow_guides(sup2, P_GREEN, opacity=0.2), flow_guides(ext2, P_ORANGE, opacity=0.2))
++                         flow_guides(sup2, P_GREEN, opacity=0.2), flow_guides(mix2, P_GREEN, opacity=0.2),
++                         flow_guides(ext2, P_ORANGE, opacity=0.2))
+         guides3 = VGroup(flow_guides(ab3, P_ORANGE, opacity=0.2, tips=False))
+         active = []
+@@ -844,5 +842,5 @@ class Beat3_Anlagenvergleich(Scene):
+ 
+         def central_air(rt):
+-            return [_streams([(fresh2, P_BLUE), (fort2, GREY_B), (sup2, P_GREEN), (ext2, P_ORANGE)], rt,
++            return [_streams([(fresh2, P_BLUE), (fort2, GREY_B), (sup2, P_GREEN), (mix2, P_GREEN, P_ORANGE), (ext2, P_ORANGE)], rt,
+                              speed=0.55, waves=3), *_spin([mvhr_box], rt)]
+ 
+@@ -907,24 +905,24 @@ class Beat4_Kanalquerschnitt(Scene):
+     NARRATION = [
+         ("intro",
+-         "The system has to deliver the hygiene airflow of zero point zero six one cubic metres per second. Which duct cross-section does that take?",
+-         "Die Anlage muss den Hygieneluftstrom von 0,061 m³/s fördern —\nwelchen Kanalquerschnitt braucht sie dafür?"),
++         r"The system has to deliver the hygiene airflow of $0.061\,\mathrm{m^3/s}$. Which duct cross-section does that take?",
++         r"Die Anlage muss den Hygieneluftstrom von $0{,}061\,\mathrm{m^3/s}$ fördern — welchen Kanalquerschnitt braucht sie dafür?"),
+         ("continuity",
+-         "Continuity links the three quantities: the volume flow is the mean velocity times the cross-sectional area.",
+-         "Die Kontinuität verknüpft sie: Der Volumenstrom ist die mittlere\nGeschwindigkeit mal die Querschnittsfläche."),
++         r"Continuity links the three quantities: the volume flow $q_{v,R}$ is the mean velocity $v_m$ times the cross-sectional area $A$.",
++         r"Die Kontinuität verknüpft sie: Der Volumenstrom $q_{v,R}$ ist die mittlere Geschwindigkeit $v_m$ mal die Querschnittsfläche $A$."),
+         ("vm",
+-         "To keep the duct quiet, the mean velocity is limited to about two point five metres per second. This small duct is far too fast.",
+-         "Für einen leisen Kanal wird die Geschwindigkeit auf etwa 2,5 m/s\nbegrenzt — der kleine Kanal hier ist viel zu schnell."),
++         r"To keep the duct quiet, the mean velocity is limited to about $2.5\,\mathrm{m/s}$. This small duct is far too fast.",
++         r"Für einen leisen Kanal wird die Geschwindigkeit auf etwa $2{,}5\,\mathrm{m/s}$ begrenzt — der kleine Kanal hier ist viel zu schnell."),
+         ("area",
+-         "For the same flow, more area means less speed. At 2.5 m/s, area = flow ÷ speed ≈ 0.0244 m².",
+-         "Mehr Fläche bremst denselben Strom: bei 2,5 m/s ist A gleich\nVolumenstrom durch Geschwindigkeit — rund 0,0244 m²."),
++         r"For the same flow, more area means less speed. At $2.5\,\mathrm{m/s}$: $A = q_{v,R} / v_m \approx 0.0244\,\mathrm{m^2}$.",
++         r"Mehr Fläche bremst denselben Strom: bei $2{,}5\,\mathrm{m/s}$ ist $A = q_{v,R} / v_m \approx 0{,}0244\,\mathrm{m^2}$."),
+         ("radius",
+-         "For a round duct the radius is the square root of the area over pi: about nine centimetres, a diameter of roughly eighteen centimetres.",
+-         "Beim runden Kanal ist r die Wurzel aus A durch π: rund 9 cm,\nalso ein Durchmesser von etwa 18 cm."),
++         r"For a round duct the radius is $r = \sqrt{A/\pi}$: about $9\,\mathrm{cm}$, a diameter of roughly $18\,\mathrm{cm}$.",
++         r"Beim runden Kanal ist $r = \sqrt{A/\pi}$: rund $9\,\mathrm{cm}$, also ein Durchmesser von etwa $18\,\mathrm{cm}$."),
+         ("cooling",
+-         "Cooling will need several times more air for its load. The method stays the same, only the duct gets bigger.",
+-         "Die Kühlung braucht für ihre Last ein Vielfaches an Luft —\ndieselbe Methode, nur ein größerer Kanal."),
++         "Cooling technology will need several times more air for its load. The method stays the same, only the duct gets bigger.",
++         "Die Kühltechnik braucht für ihre Last ein Vielfaches an Luft — dieselbe Methode, nur ein größerer Kanal."),
+         ("handover",
+-         "Heating takes over eta for its ventilation loss, and cooling takes the airflow for its duct sizing.",
+-         "Die Heizung übernimmt η für ihren Lüftungsverlust, die Kühlung\nden Luftstrom für ihre Kanalauslegung."),
++         r"Heating takes over $\eta$ for its ventilation loss $\dot{Q}_V$, and cooling technology takes the airflow for its duct sizing.",
++         r"Die Heizung übernimmt $\eta$ für ihren Lüftungsverlust $\dot{Q}_V$, die Kühltechnik den Luftstrom für ihre Kanalauslegung."),
+     ]
+ 
+@@ -935,5 +933,5 @@ class Beat4_Kanalquerschnitt(Scene):
+ 
+         subtitle = section_heading(tr("From airflow to duct cross-section", "Vom Luftstrom zum Kanalquerschnitt"))
+-        din = _din_ref("VDI 2087")
++        din = reference_chip(_references.cite("vdi-2087"), lower=0.6)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -983,7 +981,7 @@ class Beat4_Kanalquerschnitt(Scene):
+             return np.array([rx, y, 0.0])
+ 
+-        q_read = math_readout(lambda: rf"q_{{v,\mathrm{{R}}}} = {label_number(Q_VR * shown.get_value(), 3)}\,\mathrm{{m^{{3}}/s}}",
++        q_read = math_readout(lambda: rf"q_{{v,\mathrm{{R}}}} = {label_number(Q_VR * shown.get_value(), 3)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{s}}}}",
+                               line_at(1.95), size=BODY_FONT_SIZE, color=P_YELLOW)
+-        v_read = math_readout(lambda: rf"v_{{m}} = {label_number(vel(), 1)}\,\mathrm{{m/s}}", line_at(1.25),
++        v_read = math_readout(lambda: rf"v_{{m}} = {label_number(vel(), 1)}\,\frac{{\mathrm{{m}}}}{{\mathrm{{s}}}}", line_at(1.25),
+                               size=BODY_FONT_SIZE, color=P_CYAN)
+         a_read = math_readout(lambda: rf"A = {label_number(area(), 4)}\,\mathrm{{m^{{2}}}}", line_at(0.55),
+@@ -1018,5 +1016,5 @@ class Beat4_Kanalquerschnitt(Scene):
+                 ("frac", rf"\frac{{\textcolor{{{P_YELLOW}}}{{q_{{v,\mathrm{{R}}}}}}}}{{\textcolor{{{P_CYAN}}}{{v_{{m}}}}}}", P_WHITE),
+                 (None, "=", P_WHITE),
+-                ("val", tr(r"\frac{0.061\,\mathrm{m^{3}/s}}{2.5\,\mathrm{m/s}} \approx 0.0244\,\mathrm{m^{2}}", r"\frac{0{,}061\,\mathrm{m^{3}/s}}{2{,}5\,\mathrm{m/s}} \approx 0{,}0244\,\mathrm{m^{2}}"), P_BLUE),
++                ("val", tr(r"\frac{0.061\,\frac{\mathrm{m^{3}}}{\mathrm{s}}}{2.5\,\frac{\mathrm{m}}{\mathrm{s}}} \approx 0.0244\,\mathrm{m^{2}}", r"\frac{0{,}061\,\frac{\mathrm{m^{3}}}{\mathrm{s}}}{2{,}5\,\frac{\mathrm{m}}{\mathrm{s}}} \approx 0{,}0244\,\mathrm{m^{2}}"), P_BLUE),
+             ], color=P_BLUE)
+ 
+@@ -1083,5 +1081,5 @@ class Beat4_Kanalquerschnitt(Scene):
+                          stroke_width=3) for s in (-1, 1)],
+         )
+-        ghost_tag = Text(tr("Cooling: more air, larger duct", "Kühlung: mehr Luft, größerer Kanal"), font_size=LABEL_FONT_SIZE, color=P_CYAN)
++        ghost_tag = Text(tr("Cooling: more air, larger duct", "Kühltechnik: mehr Luft, größerer Kanal"), font_size=LABEL_FONT_SIZE, color=P_CYAN)
+         ghost_tag.move_to(np.array([-2.6, cy - r_big - 0.3, 0.0]))
+         self.play(FadeOut(rp), FadeOut(rp_box), Create(ghost), FadeIn(ghost_tag), *duct_air(1.8), run_time=1.8)
+@@ -1089,6 +1087,6 @@ class Beat4_Kanalquerschnitt(Scene):
+ 
+         caption = swap_caption(self, caption, subtitle_text(N, "handover"))
+-        heat_chip = _math_chip(tr(r"\text{→ Heating:}\;\eta_{\mathrm{WRG}}\;\to\;\Phi_{\mathrm{V}}", r"\text{→ Heizung:}\;\eta_{\mathrm{WRG}}\;\to\;\Phi_{\mathrm{V}}"), P_ORANGE)
+-        cool_chip = _math_chip(tr(r"\text{→ Cooling:}\;q_{v,\mathrm{R}}\;\to\;A,\,r", r"\text{→ Kühlung:}\;q_{v,\mathrm{R}}\;\to\;A,\,r"), P_CYAN)
++        heat_chip = _math_chip(tr(r"\text{→ Heating:}\;\eta_{\mathrm{WRG}}\;\to\;\dot{Q}_{\mathrm{V}}", r"\text{→ Heizung:}\;\eta_{\mathrm{WRG}}\;\to\;\dot{Q}_{\mathrm{V}}"), P_ORANGE)
++        cool_chip = _math_chip(tr(r"\text{→ Cooling:}\;q_{v,\mathrm{R}}\;\to\;A,\,r", r"\text{→ Kühltechnik:}\;q_{v,\mathrm{R}}\;\to\;A,\,r"), P_CYAN)
+         VGroup(heat_chip, cool_chip).arrange(RIGHT, buff=0.5).move_to(np.array([0.9, -1.95, 0.0]))
+         self.play(FadeIn(heat_chip, shift=UP * 0.1), FadeIn(cool_chip, shift=UP * 0.1), *duct_air(1.2), run_time=1.2)

@@ -116,7 +116,8 @@ impl DagGraphState {
         self.handle_id_for_channel(node_id, port_id, Some(direction))
     }
 
-    pub(super) fn handle_id_for_channel(&self, node_id: &str, port_id: &str, direction: Option<DagChannelDirection>) -> Option<HandleId> {
+    /// 🔌️ Resolves the physical handle of a typed channel `port_id` of node `node_id` (`None` direction: either side).
+    pub fn handle_id_for_channel(&self, node_id: &str, port_id: &str, direction: Option<DagChannelDirection>) -> Option<HandleId> {
         self.handle_key_map
             .iter()
             .filter(|(_, key)| key.strip_prefix(node_id).and_then(|suffix| suffix.strip_prefix('@')) == Some(port_id))

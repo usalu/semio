@@ -15,7 +15,7 @@ fn mode(name: &str) -> IfcValueReceiveMode {
 }
 
 fn receive(input: DslValue, mode: IfcValueReceiveMode, cancel_at: Option<usize>, refused: bool) -> (Option<IfcValue>, usize) {
-    let mut caller = semio_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
+    let mut caller = semio_plugin::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
     let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
     let mut cx = caller.context().with_original_decoder(&mut decoder);
     let policy = editing::fixture_mounted_owner_policy();
@@ -77,7 +77,7 @@ fn receive(input: DslValue, mode: IfcValueReceiveMode, cancel_at: Option<usize>,
             maximum_release_bytes: demand.release_bytes,
             maximum_depth: demand.depth,
         };
-        cx.with_retained_loan(grant, |cx| semio_framework_job::close_original_retained_step(cx, demand, |grant| receiver.close_step(grant))).unwrap();
+        cx.with_retained_loan(grant, |cx| crate::details::closed_in(cx, demand, |effect| receiver.close_step(effect))).unwrap();
     }
     assert!(receiver.terminal_is_empty());
     let fuel = cx.fuel_remaining();

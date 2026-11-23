@@ -261,22 +261,6 @@
     \color{semio-chrome-text-normal}%
   \fi
 }
-% Chrome-row right edge: width phantom only (no ink). A full-height border@R
-% here becomes a vertical stem in the air on title-only chrome (TOC / glossary
-% ? no number chip). When a number chip exists it already paints its own right
-% wall via the muted open cap; body rows supply border@R below the baseline.
-\newcommand{\semio@table@border@R@chrome}{%
-  \vrule width\arrayrulewidth height\z@ depth\z@
-}
-% Chrome-row left edge: same phantom. A live border@L behind the title chip
-% hid a 1-device-pixel inset of the chip's own left stroke (outer L looked flush
-% because border@L ink was continuous, but the chip top-left corner sat inside
-% ? tiny gap/jog). Body rows still paint \semio@table@border@L; the muted chip
-% paints L only in the chrome band, pulled onto the same x.
-\newcommand{\semio@table@border@L@chrome}{%
-  \vrule width\arrayrulewidth height\z@ depth\z@
-}
-
 \newcommand{\semio@table@colspec@register@long}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill}m{\dimexpr0.12\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr0.78\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfillR}m{\dimexpr0.10\semio@table@long@inner@w\relax}<{\semio@register@lastclose}@{\semio@table@padendR}@{\semio@table@border@R}}
 
 \newcommand{\semio@table@colspec@glossary@long}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill}m{\dimexpr0.22\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr0.56\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfillR}m{\dimexpr0.22\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}@{\semio@table@border@R}}
@@ -469,23 +453,12 @@
 \newcommand{\semio@table@long@title@chrome@prepare}{}
 
 \newcommand{\semio@table@long@title@chrome@row@render}[2]{%
-  % 🩹 Chrome spans the full table width with flush muted chips (no side
-  % border slots, no shrink, no hairline pull). Body rows keep @{\border@L};
-  % chip L then shares that same outer x. Phantom-L + hspace* pull still left a
-  % ~0.5pt inset at the chip top-left (measured dark Zugang).
-  \multicolumn{#1}{@{}l@{}}{%
-    \begingroup
-      \semio@window@header@flushtrue
-      #2%
-      \semio@window@header@flushfalse
-    \endgroup
-  }%
+  % 🪟 The chrome row is the table rectangle's top band: top rule, side strokes
+  % and the chips inside, spanning every column.
+  \multicolumn{#1}{@{}l@{}}{#2}%
   \\%
-  % Weld the next row onto the chip baseline. Without this pull, longtable /
-  % tabular leaves a cream/page gap under the chips. Cancel only the \\ strut
-  % (\extrarowheight + \dp\@arstrutbox). Do NOT also pull \lineskip or an
-  % extra hairline ? that overlaps into the next row and eats project-band
-  % toppad / cell struttop.
+  % Cancel only the \\ strut (\extrarowheight + \dp\@arstrutbox) so the next row
+  % follows the band directly; no further pull, which would overlap that row.
   \noalign{\vskip\dimexpr-\extrarowheight-\dp\@arstrutbox\relax}%
 }
 
@@ -495,7 +468,7 @@
 
 \newcommand{\semio@table@long@title@chrome@row@pageparts}[1]{%
   \semio@table@long@title@chrome@row@render{#1}{%
-    \semio@window@header@muted{}{\semio@window@header@title}%
+    \semio@window@chiprow{}{\semio@window@header@title}%
   }%
 }
 
@@ -507,12 +480,12 @@
 % 🧩 longtable stores its head as a box and copies that same box onto every
 % page, so a hierarchy chip inside the stored head can never advance from :1 to
 % :2. Store a title-only chrome row in \LT@head to reserve the exact repeated
-% head height, then overlay the numbered cap live whenever longtable inserts that
+% head height, then overlay the numbered chip live whenever longtable inserts that
 % box. The page-part counter advances once per physical table page while the
 % register key remains unsuffixed.
 \newcommand{\semio@table@long@part@number}{%
   \ifnum\semio@table@long@part=1\relax
-    \semio@window@header@number@page1
+    \semio@window@header@number@first
   \else
     \semio@window@header@number:\the\semio@table@long@part
   \fi
@@ -522,13 +495,14 @@
 \newcommand{\semio@table@long@part@overlay}{%
   \begingroup
     \sbox{\semio@table@long@part@chip@box}{%
-      \semio@heading@cap@muted@open{\semio@table@long@part@number}%
+      \semio@chip@muted{lb}{\semio@table@long@part@number}%
     }%
     \nointerlineskip
     \hbox to 0pt{%
       \hbox to \linewidth{%
         \hfil
-        \raisebox{-\height}[0pt][0pt]{\usebox{\semio@table@long@part@chip@box}}%
+        \raisebox{\dimexpr\ht\LT@head+\dp\LT@head-\semio@stroke@hairline-\semio@chip@h\relax}[0pt][0pt]{\usebox{\semio@table@long@part@chip@box}}%
+        \hskip\semio@stroke@hairline
       }%
       \hss
     }%
@@ -540,10 +514,14 @@
   \ifnum\semio@table@long@mode>0\relax
     \ifsemio@table@long@pageparts
       \global\advance\semio@table@long@part\@ne
-      \semio@table@long@part@overlay
     \fi
   \fi
   \copy\LT@head
+  \ifnum\semio@table@long@mode>0\relax
+    \ifsemio@table@long@pageparts
+      \semio@table@long@part@overlay
+    \fi
+  \fi
 }
 
 \newcommand{\semio@table@long@parts@record}{%
@@ -1064,7 +1042,7 @@
 % Reuses the shared \semio@table@long@render underneath (one continuous border,
 % page-break header repeat). The title chrome is driven from the *section* key
 % (\thesubsection ? P.K.x), NOT from \begin{Table}'s `semiotable` counter, so no
-% "Tabelle: P.K.x.b/c" number tabs are emitted. This region calls the shared
+% "Tabelle: P.K.x.b/c" number chips are emitted. This region calls the shared
 % primitives and defines only \semio@project@? / \SemioProject? names; it
 % redefines nothing, so every other table in the report is untouched.
 
@@ -1095,7 +1073,7 @@
 % other canvas-filled long table (\semio@table@padcp / padendL / padendR): interior
 % gaps get one cellpad-wide canvas rule from each side; outer edges net
 % chrome+cellpad so the fill reaches the border and the card is exactly
-% \linewidth (matching \semio@table@rule and the P.K.x title tab). The older
+% \linewidth (matching \semio@table@rule and the P.K.x title chip). The older
 % project-only "net chrome" edge pads left a page-coloured strip inside the right
 % border because body width was 2?cellpad short of \linewidth while the band
 % multicolumns were full width.
@@ -1136,14 +1114,11 @@
 % Silent-but-registered project heading: steps the subsection counter (? P.K.x),
 % writes the TOC/running-header/register entries and the \label, but draws no
 % visible heading bar (the name is shown once, in the table's title-chrome row).
-% Only the two visual chip renderers are blanked (inside a group); the hierarchy
+% Only the visual heading frame is blanked (inside a group); the hierarchy
 % path ? consumed by the register ? is re-established explicitly afterwards.
 \newcommand{\SemioProjectHeadingSilent}[2]{%
   \begingroup
-    \long\def\semio@heading@pair@outline##1##2##3##4##5{}%
-    \long\def\semio@heading@title@end@outline##1##2##3{}%
-    \long\def\semio@heading@pair##1##2##3##4##5{}%
-    \long\def\semio@heading@title@end##1##2##3{}%
+    \long\def\semio@heading@frame##1##2##3##4##5{}%
     \subsection{#1}\label{#2}%
   \endgroup
   \@ifundefined{semio@hierarchy@path@set}{}{\semio@hierarchy@path@set{\thesubsection}}%
@@ -1385,7 +1360,7 @@
 % back there like every other hierarchy key chip. This number reaches the title
 % chrome raw rather than through \semio_kind_chip_number:nn, so both the link and
 % the colour are attached here: the explicit \textcolor restates the muted tone
-% \semio@heading@cap@muted@core applies anyway, which hyperref's colorlinks would
+% \semio@chip@muted applies anyway, which hyperref's colorlinks would
 % otherwise override. Robust, because the key is carried to the chrome row
 % through a \protected@edef and a further \edef before it is ever typeset.
 \NewDocumentCommand \semio@project@key@chip { m } {%

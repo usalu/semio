@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Windows Allocation Unit Fact",
+  "definitions": {
+    "Policy": { "const": { "maximumVolumeUnits": 256, "maximumSectorBytes": 65536, "maximumSectorsPerCluster": 1048576, "maximumAllocationBytes": 16777216 } },
+    "Case": {
+      "type": "object", "additionalProperties": false, "required": ["name", "sectors", "sectorBytes", "accepted"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "sectors": { "type": "integer", "minimum": 0 },
+        "sectorBytes": { "type": "integer", "minimum": 0 },
+        "accepted": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -38,6 +38,7 @@ semio-s-artifact-stdio-xlsx-strict = { workspace = true }
 semio-s-artifact-stdio-xlsx-transitional = { workspace = true }
 
 [dev-dependencies]
+serde_json = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }

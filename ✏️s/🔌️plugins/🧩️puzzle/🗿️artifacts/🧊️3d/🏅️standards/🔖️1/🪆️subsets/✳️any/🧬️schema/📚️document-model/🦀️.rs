@@ -176,7 +176,7 @@ impl semio_framework_dsl_record::DslField for Puzzle3dScale {
                 semio_framework_dsl_record::FieldValue::Float(scale) => Ok(Puzzle3dScale::Uniform(*scale)),
                 other => Err(format!("expected Float, found {other:?}")),
             },
-            semio_framework_dsl_record::FieldValue::List(items) if items.len() >= 3 => {
+            semio_framework_dsl_record::FieldValue::List(items) if items.len() == 3 => {
                 let axis = |i: usize| match &items[i] {
                     semio_framework_dsl_record::FieldValue::Float(v) => Ok(*v),
                     other => Err(format!("expected Float, found {other:?}")),

@@ -207,6 +207,7 @@
               "busy-reader",
               "busy-writer",
               "exact-task-missing",
+              "pack-unproven",
               "optional-release",
               "optional-new-reference"
             ]

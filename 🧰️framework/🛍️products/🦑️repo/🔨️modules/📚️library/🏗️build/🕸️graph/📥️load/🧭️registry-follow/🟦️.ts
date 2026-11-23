@@ -3,7 +3,8 @@ import {reconcileBuildOwnerRegistry} from "../../🧾️registry-consistency/�
 import {GRAPH_LIMITS_V1} from "../../🔐️authority/🟦️.ts";
 import {readBuildOwnerRegistryV1} from "../../🚪️admission/🟦️.ts";
 import graphSchema from "../../🧬️schema/🔣️.json" with{type:"json"};
-import {emitGraphPassNoticeV1} from "../♻️pass-reuse/🟦️.ts";
+import {createReadTakenMemoV1,emitGraphPassNoticeV1} from "../♻️pass-reuse/🟦️.ts";
+import type {TakenMemoV1} from "../../📥️inference/📦️project-nodes/♻️taken-memo/🟨️.mjs";
 import {isOwnerFailureV1,registryFaultReasonV1} from "../🛟️owner-isolation/🟦️.ts";
 
 /** 🪪️ The native roots a refused inference names because no registry row owns them yet (the two refusals of the native closure), whatever wrapper carried the message across the worker farm. */
@@ -70,12 +71,16 @@ export async function withOwnerRegistryCustodyV1<T>(signal:AbortSignal,hold:(con
   return outcome.value;
 }
 
-/** 🧭️ Retries a refused native-owner lookup when the registry changed or reconciliation repaired the named roots. */
-export async function settleOwnerRegistryV1<T>(root:string,attempt:()=>Promise<T>,options:{aborted?:()=>boolean;say?:(line:string)=>void}={}):Promise<T>{
-  const {readBuildOwnerRegistrySourceV1}=await import("../../📥️inference/🟨️.mjs");
+/** 🧠️ What the attempts of one registry follow share: the taken memo of the read, so a restart keeps every owner the earlier passes took (each is answered again only while its job and every row it consumed still hold).
+ * @see ../♻️pass-reuse/🟦️.ts */
+export type RegistryCarryV1=Readonly<{takenMemo:TakenMemoV1}>;
+
+/** 🧭️ Retries a refused native-owner lookup when the registry changed or reconciliation repaired the named roots, carrying the taken memo of the read from one attempt to the next. */
+export async function settleOwnerRegistryV1<T>(root:string,attempt:(carried:RegistryCarryV1)=>Promise<T>,options:{aborted?:()=>boolean;say?:(line:string)=>void}={}):Promise<T>{
+  const {readBuildOwnerRegistrySourceV1}=await import("../../📥️inference/🟨️.mjs"),carried:RegistryCarryV1=Object.freeze({takenMemo:createReadTakenMemoV1()});
   for(let round=0;;round++){
     const before=readBuildOwnerRegistrySourceV1(root);
-    try{return await attempt();}
+    try{return await attempt(carried);}
     catch(error){
       if(!(error instanceof ClosedOwnerRegistryInvalidationV1))throw error;
       const fault=error.fault,message=registryFaultTextV1(fault)??fault.message,pending=pendingOwnerRootsV1(message),vanished=vanishedOwnerRootsV1(message);

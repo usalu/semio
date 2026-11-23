@@ -13,6 +13,8 @@ import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 import { runtimeSupportsV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { runtimeTestArgumentsV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 const contract=structuredClone(schema);
+/** 🛑️ The longest per-test timeout a selection admits, read from its schema. */
+export const OWNED_BUN_TIMEOUT_CEILING_MILLISECONDS_V1:number=contract.definitions.Selection.properties.timeoutMilliseconds.maximum;
 
 /** 🧮️ Bounds actual file concurrency and both per-child and complete-cohort output. */
 export interface OwnedBunFilesPolicyV1{readonly version:1;readonly maximumParallelFiles:number;readonly maximumFileOutputBytes:number;readonly maximumFileOutputLines:number;readonly maximumTotalOutputBytes:number}
@@ -33,7 +35,7 @@ export function runOwnedBunFilesV1(options:OwnedBunFilesRequestV1):Promise<reado
  try{
   const invocation=options.invocation,control=options.control;requireIssuedResourceControlInvocationV1(control,invocation);
   const onFileResult=options.onFileResult;if(typeof onFileResult!=="function")throw Error("Actual owned Bun terminal result sink required");
-  const policy=readOwnedBunFilesPolicyV1(options.policy),selection=Object.freeze({version:1,cwd:options.cwd,files:Object.freeze([...options.files]),arguments:Object.freeze([...options.arguments]),...(options.timeoutMilliseconds===undefined?{}:{timeoutMilliseconds:options.timeoutMilliseconds}),...(options.capabilities===undefined?{}:{capabilities:Object.freeze({...options.capabilities})})}),environment=Object.freeze({...options.environment});
+  const policy=readOwnedBunFilesPolicyV1(options.policy),selection=Object.freeze({version:1,cwd:options.cwd,files:Object.freeze([...options.files]),arguments:Object.freeze([...options.arguments]),...(options.timeoutMilliseconds===undefined?{}:{timeoutMilliseconds:Math.min(options.timeoutMilliseconds,OWNED_BUN_TIMEOUT_CEILING_MILLISECONDS_V1)}),...(options.capabilities===undefined?{}:{capabilities:Object.freeze({...options.capabilities})})}),environment=Object.freeze({...options.environment});
   if(validateJsonSchemaSubset(contract.definitions.Selection,selection,contract).length||!runtimeSupportsV1("test")||!isAbsolute(selection.cwd)||[selection.cwd,...selection.files].some(path=>path.length>contract.definitions.Protocol.const.maximumPathCodeUnits||path.includes("\0")))throw Error("Explicit finite owned Bun file selection required");
   const cwd=resolve(selection.cwd),files=selection.files.map(file=>{const local=relative(cwd,file);if(!isAbsolute(file)||local===".."||local.startsWith(".."+sep)||isAbsolute(local))throw Error("Bun file must belong to the actual working directory");return resolve(file);});
   if(new Set(files).size!==files.length)throw Error("Unique actual Bun files required");

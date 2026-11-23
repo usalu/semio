@@ -57,10 +57,10 @@
       "properties": { "state": { "enum": ["released", "absent"] } }
     },
     "Counters": {
-      "description": "What one front did: `claimed` tasks it computes, `waited` tasks it waited for, `served` waits that ended in the holder's result, `taken` leases it took over, `duplicated` tasks it computed although another holder was alive (wait budget spent), `unclaimed` misses it let through because claims were unavailable.",
+      "description": "What one front did: `claimed` tasks it computes, `waited` tasks it waited for, `served` waits that ended in the holder's result, `taken` leases it took over, `duplicated` tasks it computed although another holder was alive (wait budget spent), `unclaimed` misses it let through because claims were unavailable, `dropped` answers of an unreachable, busy or full cache turned into a miss or an accepted upload (the cache tier never fails a build).",
       "type": "object",
       "additionalProperties": false,
-      "required": ["hits", "misses", "claimed", "waited", "served", "taken", "duplicated", "unclaimed", "puts", "released", "guarded"],
+      "required": ["hits", "misses", "claimed", "waited", "served", "taken", "duplicated", "unclaimed", "puts", "released", "guarded", "dropped"],
       "properties": {
         "hits": { "type": "integer", "minimum": 0 },
         "misses": { "type": "integer", "minimum": 0 },
@@ -72,7 +72,8 @@
         "unclaimed": { "type": "integer", "minimum": 0 },
         "puts": { "type": "integer", "minimum": 0 },
         "released": { "type": "integer", "minimum": 0 },
-        "guarded": { "type": "integer", "minimum": 0 }
+        "guarded": { "type": "integer", "minimum": 0 },
+        "dropped": { "type": "integer", "minimum": 0 }
       }
     },
     "Messages": {

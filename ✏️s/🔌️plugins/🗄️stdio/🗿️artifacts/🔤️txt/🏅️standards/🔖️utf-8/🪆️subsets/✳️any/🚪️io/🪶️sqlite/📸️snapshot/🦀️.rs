@@ -65,6 +65,7 @@ impl ArtifactSqliteSnapshotHost for TxtSnapshot {
             *published=Some(match settled{Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
             RetainedWorkOutcome{result:Ok(()),work:native.actual_work().checked_sub(before_work).expect("original native work is monotone")}
         }));
+        store::space_history::io::sqlite::snapshot::settlement::stamp_published_failure(output,native_owner.progress());
         let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal,receipt:None}),None=>turn.result.map_err(Stage::Operation)};
         RetainedWorkOutcome{result,work:turn.work}
     }

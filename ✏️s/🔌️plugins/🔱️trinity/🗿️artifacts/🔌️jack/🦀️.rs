@@ -33,6 +33,9 @@ macro_rules! test_identity {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚪️io/🦀️.rs"]
+mod sqlite_snapshot_declaration_tests;
 // #endregion 🧪️Tests
 
 #[path = "."]

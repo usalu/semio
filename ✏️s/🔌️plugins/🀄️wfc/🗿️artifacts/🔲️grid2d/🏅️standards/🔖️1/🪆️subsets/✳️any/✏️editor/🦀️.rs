@@ -807,8 +807,8 @@ impl ArtifactEditor for Grid2dEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let config = window::config_from_view(cfg);
         match body_key {
-            grid::BODY_KEY => grid::render(doc.snapshot, &config, grid2d_active_utility(view_state)).map(semio_plugin::built_to_component_tree),
-            preview::BODY_KEY => preview::render(doc.snapshot, &config, doc.tool_run(), doc.render_operation_ref().map(|operation| operation.canonical_base_revision)).map(semio_plugin::built_to_component_tree),
+            grid::BODY_KEY => grid::render(doc.snapshot, &config, grid2d_active_utility(view_state), view_state.locale).map(semio_plugin::built_to_component_tree),
+            preview::BODY_KEY => preview::render(doc.snapshot, &config, doc.tool_run(), doc.render_operation_ref().map(|operation| operation.canonical_base_revision), view_state.locale).map(semio_plugin::built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

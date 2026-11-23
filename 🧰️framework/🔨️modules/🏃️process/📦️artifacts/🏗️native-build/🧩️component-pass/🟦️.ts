@@ -4,6 +4,7 @@ import{withCompilerCapacityConsumptionV1}from"../../../🏗️build/🎟️capac
 import{withNativeBuildStageCapacityV1,readNativeBuildStageCapacityV1,type NativeBuildStageCapacityV1}from"./🎟️stage/🟦️.ts";
 import{admitNativeBuildPipelineV1,admitNativeBuildPlanV1,type NativeBuildPackageV1,type NativeBuildPassV1,type NativeBuildJobV1,type NativeBuildPipelineJobV1,type NativeBuildPipelineV1,type NativeBuildPlanV1,type NativeBuildGenerationKindV1,type NativeBuildGenerationV1}from"./📋️contract/🟦️.ts";
 import {CargoGraphOperationsV1} from "./📥️planning/🟦️.ts";
+import {createUnitReuseTallyV1} from "../🧮️phase-ledger/🟦️.ts";
 import {admitWarmCargoRetryGraphV1,classifyCargoGraphObservationFailureV1,failedCompilerMessageFilesV1,failedDependencyDriftV1,failedPassConcurrentEditV1,retryableWarmComponentPassV1,runCargoPassAttemptsV1,watchWarmCargoAttemptV1} from "./🔁️failure-churn/🟦️.ts";
 import failureChurn from "./🔁️failure-churn/🔣️.json" with {type:"json"};
 import {readPhysicalFileV1} from "../../../../📁️filesystem/🧾️observation/🟦️.ts";
@@ -160,9 +161,9 @@ export function nativeBuildSchedulerInputRequestV1(options: Readonly<{ cwd: stri
 /** 📁️ Names finite generation-owned component bytes without granting filesystem custody. */
 export function nativeBuildComponentStagePathV1(generation:Pick<NativeBuildGenerationV1,"root">,pass:Pick<NativeBuildPassV1,"id"|"manifest"|"profile">,row:NativeBuildPackageV1):string{const key=createHash("sha256").update(JSON.stringify([pass.id,pass.manifest,pass.profile,row.name,row.manifest])).digest("hex").slice(0,24);return requireMaterializedPathV1(join(generation.root,"w",key,"component.wasm"));}
 
-/** 🧲️ Names the observation of an actual admitted pass from its exact configured command arguments. */
+/** 🧲️ Names the observation of an actual admitted pass from its exact configured command arguments and the run that observes it. The receipt records when and what that run built, and pooled lanes (hence their build directories) are reused by later runs, so a name that ignored the run would meet the bytes of an earlier run in the shared ledger; the report directory is private to one run and makes the name one run's own. */
 export function nativeBuildPassObservationPathV1(generation:Pick<NativeBuildGenerationV1,"report"|"build">,pass:Pick<NativeBuildPassV1,"manifest">,arguments_:readonly string[]):string{
- const key=createHash("sha256").update(JSON.stringify([pass.manifest,arguments_,generation.build])).digest("hex").slice(0,32);return requireMaterializedPathV1(join(generation.report,NATIVE_BUILD_DRIVER_POLICY_V1.provenanceDirectory,`cargo-unit-provenance-release-${key}.json`));
+ const key=createHash("sha256").update(JSON.stringify([pass.manifest,arguments_,generation.build,generation.report])).digest("hex").slice(0,32);return requireMaterializedPathV1(join(generation.report,NATIVE_BUILD_DRIVER_POLICY_V1.provenanceDirectory,`cargo-unit-provenance-release-${key}.json`));
 }
 
 /** 🕸️ The arguments that print one pass's unit graph without compiling anything. */
@@ -478,6 +479,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   const passRecords: { id: string; manifest: string; profile: string; target: string; startMs: number; endMs: number; exit: number; failed: string[] }[] = [];
   const failureLines: string[] = [], echoed = new Set<string>(), errorCaptures: { pass: string; capture: ErrorCaptureV1 }[] = [], stderrTails: { pass: string; lines: string[] }[] = [], components = plan.passes.flatMap((pass) => pass.packages.map((row) => row.name));
   const jobWatches = new Map<string, NativeBuildJobWatchV1>();
+  const unitReuse = options.environment.SEMIO_UNIT_CACHE_ROOT ? createUnitReuseTallyV1(options.environment.SEMIO_UNIT_CACHE_ROOT, options.environment.SEMIO_UNIT_CACHE_LANE ?? "d") : undefined;
   let reusedUnits = 0, stagesRunning = 0, stagesWaiting = 0, lastMessageMs = Date.now(), stallReason: string | null = null;
   log(`[native-build] ${generation.kind} generation ${generation.root}: ${plan.passes.length} pass(es), ${components.length} component build(s), ${jobs.length} job(s)`);
   let primaryFailed=false,dispose:undefined|(()=>Promise<void>);
@@ -696,8 +698,8 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   }, completion(`job:${job.id}`), job.workerProtocol==="jobserver"?"jobserver":job.workerProtocol==="exclusive"?"whole-host":"available");
 
   const progress = setInterval(() => {
-    const stats = broker.stats(), row = timeline.rows().at(-1), cached = cache.stats();
-    log(`[native-build] ${broker.units().length} unit(s) compiled, ${reusedUnits} reused, ${stats.running} running${fleetRemote > 0 ? ` locally · ${options.fleetRunning?.() ?? 0} on the fleet` : ""} · ${new Set(staged).size}/${components.length} component(s) staged · ${stagesRunning} stage(s) running · stage cache ${cached.hits} local / ${cached.fleetHits} fleet hit(s) / ${cached.misses} miss(es) · cpu ${row?.cpuPercent ?? 0} % · rustc RSS ${(stats.actualRunningBytes / 1024 ** 3).toFixed(1)} GiB · charged ${(stats.chargedRunningBytes / 1024 ** 3).toFixed(1)}/${(stats.budgetBytes / 1024 ** 3).toFixed(1)} GiB · admitted-wait ${stats.waiting}${stats.frozen ? " · frozen" : ""} · ${((Date.now() - startedMs) / 60000).toFixed(1)} min`);
+    const stats = broker.stats(), row = timeline.rows().at(-1), cached = cache.stats(), reuse = unitReuse?.read();
+    log(`[native-build] ${broker.units().length} unit(s) compiled, ${reusedUnits + (reuse ? reuse.local + reuse.fleet : 0)} reused${reuse && reuse.fleet > 0 ? ` (${reuse.local} local, ${reuse.fleet} fleet)` : ""}, ${stats.running} running${fleetRemote > 0 ? ` locally · ${options.fleetRunning?.() ?? 0} on the fleet` : ""} · ${new Set(staged).size}/${components.length} component(s) staged · ${stagesRunning} stage(s) running · stage cache ${cached.hits} local / ${cached.fleetHits} fleet hit(s) / ${cached.misses} miss(es) · cpu ${row?.cpuPercent ?? 0} % · rustc RSS ${(stats.actualRunningBytes / 1024 ** 3).toFixed(1)} GiB · charged ${(stats.chargedRunningBytes / 1024 ** 3).toFixed(1)}/${(stats.budgetBytes / 1024 ** 3).toFixed(1)} GiB · admitted-wait ${stats.waiting}${stats.frozen ? " · frozen" : ""} · ${((Date.now() - startedMs) / 60000).toFixed(1)} min`);
   }, options.progressMs ?? policy.progressMs);
   let stallWork:Promise<void>|undefined;
   const watchdog = setInterval(() => {

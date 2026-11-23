@@ -31,6 +31,10 @@ for (const file of args.filter(arg => !arg.startsWith("--target="))) {
   const manifest = resolve(root, file);
   const manifestDirectory = dirname(manifest);
   const spec = parse(await readFile(manifest, "utf8"));
+  if (!spec.package?.name) {
+    console.log(`skip ${file} virtual-workspace`);
+    continue;
+  }
   const entry = resolve(manifestDirectory, spec.lib?.path ?? spec.bin?.[0]?.path ?? "src/lib.rs");
   for (const test of [false, true]) {
     const inputs = await readRustSourceClosureV1([entry], root, test ? [...cfg, "test"] : cfg, read, {manifestDirectory, generated: () => {}}, analysis);

@@ -1,8 +1,9 @@
 {
   "title": "Architectural Staffage Archive",
   "emoji": "🧍",
-  "status": "open",
+  "status": "closed",
   "description": "Build a complete architectural staffage archive website (48+ handcrafted assets across humans, vegetation, animals, furniture/objects, vehicles/machines, building components) with typed versioned schema, SI dimensions and drawing scales, seven synchronized views, rigs/poses/clips, asset-specific thermal and structural models, editorial website with viewer/compare/playground, and genuine SVG/PDF/DXF/DWG(if available)/video exports. Brief: staffage-launch-kit/prompt.txt. Coordinator model: Opus 5.5 (not in ticket llm registry).",
+  "summary": "The archive of 2026-10-29/30 (107 assets, schema v2, seven views, thermal, transport and structural models, website, exports) is the base of everything since. Measured on 2026-11-23 the catalog has 375 authored assets in nine categories, every one with poses, clips, thermal and structural models; the schema, seven-mode, view-synchrony, sheet and DWG suites are green and the site was seen running in the browser. Website, exports and catalog validity are carried by the later tickets. Video exports were not re-measured. Evidence: older-tickets.md and browser-check.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS.",
   "goal": "🎯runningdrawing",
   "sessions": [
     "40352115-dc23-4de7-9508-581a9386465f"
@@ -16,6 +17,15 @@
       "client": "claude-code",
       "checkpoint": "82dd1da20064a425cd3683d591cae50f86b68da5",
       "prompt": "Build a complete architectural staffage archive website (48+ handcrafted assets across humans, vegetation, animals, furniture/objects, vehicles/machines, building components) with typed versioned schema, SI dimensions and drawing scales, seven synchronized views, rigs/poses/clips, asset-specific thermal and structural models, editorial website with viewer/compare/playground, and genuine SVG/PDF/DXF/DWG(if available)/video exports. Brief: staffage-launch-kit/prompt.txt. Coordinator model: Opus 5.5 (not in ticket llm registry)."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 12:38:37",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "508f457ff1e1b2e344827fe80c57ec46a04af505",
+      "summary": "The archive of 2026-10-29/30 (107 assets, schema v2, seven views, thermal, transport and structural models, website, exports) is the base of everything since. Measured on 2026-11-23 the catalog has 375 authored assets in nine categories, every one with poses, clips, thermal and structural models; the schema, seven-mode, view-synchrony, sheet and DWG suites are green and the site was seen running in the browser. Website, exports and catalog validity are carried by the later tickets. Video exports were not re-measured. Evidence: older-tickets.md and browser-check.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS."
     }
   ]
 }

@@ -97,7 +97,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn creating_a_flat_grid_publishes_and_replays_only_the_elevation_source() {
-        let fixture: Value = serde_json::from_str(include_str!("🧪️tests/🔣️.json")).unwrap();
+        let fixture: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../🎮️commands/🏔️elevation-source/➕️create-grid/🧪️tests/🔣️.json")).unwrap();
         let args = |key: &str| from_json_str::<DslValue>(&fixture[key].to_string(), JsonMemberPolicy::Reject).unwrap();
         assert!(CreateElevationGrid::from_action(&args("invalidOrder")).is_err());
         assert!(CreateElevationGrid::from_action(&args("invalidHeight")).is_err());

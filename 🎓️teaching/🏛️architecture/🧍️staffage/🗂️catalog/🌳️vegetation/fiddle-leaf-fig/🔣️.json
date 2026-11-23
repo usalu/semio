@@ -5810,6 +5810,36 @@
       "part": "mass"
      },
      {
+      "id": "m-root-ball",
+      "kind": "revolve",
+      "bone": "pot",
+      "material": "potting-compost",
+      "role": "body",
+      "tone": 0.5,
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "profile": [
+       [
+        0.03,
+        0.06
+       ],
+       [
+        0.2,
+        0.06
+       ]
+      ],
+      "member": "pot",
+      "part": "member"
+     },
+     {
       "id": "m-trunk-1",
       "of": "trunk-1",
       "member": "trunk-1",
@@ -5825,6 +5855,12 @@
       "id": "m-trunk-3",
       "of": "trunk-3",
       "member": "trunk-3",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-01",
+      "of": "petiole-01",
+      "member": "petiole-01",
       "part": "member"
      },
      {
@@ -5860,6 +5896,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-02",
+      "of": "petiole-02",
+      "member": "petiole-02",
+      "part": "member"
+     },
+     {
       "id": "m-blade-02",
       "kind": "extrude",
       "bone": "blade-02",
@@ -5889,6 +5931,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-02",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-03",
+      "of": "petiole-03",
+      "member": "petiole-03",
       "part": "member"
      },
      {
@@ -5924,6 +5972,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-04",
+      "of": "petiole-04",
+      "member": "petiole-04",
+      "part": "member"
+     },
+     {
       "id": "m-blade-04",
       "kind": "extrude",
       "bone": "blade-04",
@@ -5953,6 +6007,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-04",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-05",
+      "of": "petiole-05",
+      "member": "petiole-05",
       "part": "member"
      },
      {
@@ -5988,6 +6048,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-06",
+      "of": "petiole-06",
+      "member": "petiole-06",
+      "part": "member"
+     },
+     {
       "id": "m-blade-06",
       "kind": "extrude",
       "bone": "blade-06",
@@ -6017,6 +6083,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-06",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-07",
+      "of": "petiole-07",
+      "member": "petiole-07",
       "part": "member"
      },
      {
@@ -6052,6 +6124,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-08",
+      "of": "petiole-08",
+      "member": "petiole-08",
+      "part": "member"
+     },
+     {
       "id": "m-blade-08",
       "kind": "extrude",
       "bone": "blade-08",
@@ -6081,6 +6159,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-08",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-09",
+      "of": "petiole-09",
+      "member": "petiole-09",
       "part": "member"
      },
      {
@@ -6116,6 +6200,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-10",
+      "of": "petiole-10",
+      "member": "petiole-10",
+      "part": "member"
+     },
+     {
       "id": "m-blade-10",
       "kind": "extrude",
       "bone": "blade-10",
@@ -6145,6 +6235,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-10",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-11",
+      "of": "petiole-11",
+      "member": "petiole-11",
       "part": "member"
      },
      {
@@ -6180,6 +6276,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-12",
+      "of": "petiole-12",
+      "member": "petiole-12",
+      "part": "member"
+     },
+     {
       "id": "m-blade-12",
       "kind": "extrude",
       "bone": "blade-12",
@@ -6209,6 +6311,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-12",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-13",
+      "of": "petiole-13",
+      "member": "petiole-13",
       "part": "member"
      },
      {
@@ -6244,6 +6352,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-14",
+      "of": "petiole-14",
+      "member": "petiole-14",
+      "part": "member"
+     },
+     {
       "id": "m-blade-14",
       "kind": "extrude",
       "bone": "blade-14",
@@ -6273,6 +6387,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-14",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-15",
+      "of": "petiole-15",
+      "member": "petiole-15",
       "part": "member"
      },
      {
@@ -6308,6 +6428,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-16",
+      "of": "petiole-16",
+      "member": "petiole-16",
+      "part": "member"
+     },
+     {
       "id": "m-blade-16",
       "kind": "extrude",
       "bone": "blade-16",
@@ -6337,6 +6463,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-16",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-17",
+      "of": "petiole-17",
+      "member": "petiole-17",
       "part": "member"
      },
      {
@@ -6372,6 +6504,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-18",
+      "of": "petiole-18",
+      "member": "petiole-18",
+      "part": "member"
+     },
+     {
       "id": "m-blade-18",
       "kind": "extrude",
       "bone": "blade-18",
@@ -6401,6 +6539,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-18",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-19",
+      "of": "petiole-19",
+      "member": "petiole-19",
       "part": "member"
      },
      {
@@ -6436,6 +6580,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-20",
+      "of": "petiole-20",
+      "member": "petiole-20",
+      "part": "member"
+     },
+     {
       "id": "m-blade-20",
       "kind": "extrude",
       "bone": "blade-20",
@@ -6468,6 +6618,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-21",
+      "of": "petiole-21",
+      "member": "petiole-21",
+      "part": "member"
+     },
+     {
       "id": "m-blade-21",
       "kind": "extrude",
       "bone": "blade-21",
@@ -6497,6 +6653,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-21",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-22",
+      "of": "petiole-22",
+      "member": "petiole-22",
       "part": "member"
      },
      {
@@ -10417,6 +10579,36 @@
       "part": "mass"
      },
      {
+      "id": "m-root-ball",
+      "kind": "revolve",
+      "bone": "pot",
+      "material": "potting-compost",
+      "role": "body",
+      "tone": 0.5,
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "profile": [
+       [
+        0.03,
+        0.06
+       ],
+       [
+        0.2,
+        0.06
+       ]
+      ],
+      "member": "pot",
+      "part": "member"
+     },
+     {
       "id": "m-trunk-1",
       "of": "trunk-1",
       "member": "trunk-1",
@@ -10432,6 +10624,12 @@
       "id": "m-trunk-3",
       "of": "trunk-3",
       "member": "trunk-3",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-01",
+      "of": "petiole-01",
+      "member": "petiole-01",
       "part": "member"
      },
      {
@@ -10467,6 +10665,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-02",
+      "of": "petiole-02",
+      "member": "petiole-02",
+      "part": "member"
+     },
+     {
       "id": "m-blade-02",
       "kind": "extrude",
       "bone": "blade-02",
@@ -10496,6 +10700,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-02",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-03",
+      "of": "petiole-03",
+      "member": "petiole-03",
       "part": "member"
      },
      {
@@ -10531,6 +10741,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-04",
+      "of": "petiole-04",
+      "member": "petiole-04",
+      "part": "member"
+     },
+     {
       "id": "m-blade-04",
       "kind": "extrude",
       "bone": "blade-04",
@@ -10560,6 +10776,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-04",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-05",
+      "of": "petiole-05",
+      "member": "petiole-05",
       "part": "member"
      },
      {
@@ -10595,6 +10817,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-06",
+      "of": "petiole-06",
+      "member": "petiole-06",
+      "part": "member"
+     },
+     {
       "id": "m-blade-06",
       "kind": "extrude",
       "bone": "blade-06",
@@ -10624,6 +10852,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-06",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-07",
+      "of": "petiole-07",
+      "member": "petiole-07",
       "part": "member"
      },
      {
@@ -10659,6 +10893,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-08",
+      "of": "petiole-08",
+      "member": "petiole-08",
+      "part": "member"
+     },
+     {
       "id": "m-blade-08",
       "kind": "extrude",
       "bone": "blade-08",
@@ -10688,6 +10928,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-08",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-09",
+      "of": "petiole-09",
+      "member": "petiole-09",
       "part": "member"
      },
      {
@@ -10723,6 +10969,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-10",
+      "of": "petiole-10",
+      "member": "petiole-10",
+      "part": "member"
+     },
+     {
       "id": "m-blade-10",
       "kind": "extrude",
       "bone": "blade-10",
@@ -10752,6 +11004,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-10",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-11",
+      "of": "petiole-11",
+      "member": "petiole-11",
       "part": "member"
      },
      {
@@ -10787,6 +11045,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-12",
+      "of": "petiole-12",
+      "member": "petiole-12",
+      "part": "member"
+     },
+     {
       "id": "m-blade-12",
       "kind": "extrude",
       "bone": "blade-12",
@@ -10816,6 +11080,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-12",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-13",
+      "of": "petiole-13",
+      "member": "petiole-13",
       "part": "member"
      },
      {
@@ -10851,6 +11121,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-14",
+      "of": "petiole-14",
+      "member": "petiole-14",
+      "part": "member"
+     },
+     {
       "id": "m-blade-14",
       "kind": "extrude",
       "bone": "blade-14",
@@ -10880,6 +11156,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-14",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-15",
+      "of": "petiole-15",
+      "member": "petiole-15",
       "part": "member"
      },
      {
@@ -10915,6 +11197,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-16",
+      "of": "petiole-16",
+      "member": "petiole-16",
+      "part": "member"
+     },
+     {
       "id": "m-blade-16",
       "kind": "extrude",
       "bone": "blade-16",
@@ -10944,6 +11232,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-16",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-17",
+      "of": "petiole-17",
+      "member": "petiole-17",
       "part": "member"
      },
      {
@@ -10979,6 +11273,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-18",
+      "of": "petiole-18",
+      "member": "petiole-18",
+      "part": "member"
+     },
+     {
       "id": "m-blade-18",
       "kind": "extrude",
       "bone": "blade-18",
@@ -11008,6 +11308,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-18",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-19",
+      "of": "petiole-19",
+      "member": "petiole-19",
       "part": "member"
      },
      {
@@ -11043,6 +11349,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-20",
+      "of": "petiole-20",
+      "member": "petiole-20",
+      "part": "member"
+     },
+     {
       "id": "m-blade-20",
       "kind": "extrude",
       "bone": "blade-20",
@@ -11075,6 +11387,12 @@
       "part": "member"
      },
      {
+      "id": "m-petiole-21",
+      "of": "petiole-21",
+      "member": "petiole-21",
+      "part": "member"
+     },
+     {
       "id": "m-blade-21",
       "kind": "extrude",
       "bone": "blade-21",
@@ -11104,6 +11422,12 @@
       "from": -0.0006,
       "to": 0.0006,
       "member": "blade-21",
+      "part": "member"
+     },
+     {
+      "id": "m-petiole-22",
+      "of": "petiole-22",
+      "member": "petiole-22",
       "part": "member"
      },
      {
@@ -11145,8 +11469,8 @@
       "de": "Körper bei 1:100: die Blätter auf gröberem Umriss, Blattstiele mit dem Merkmal von 15 mm, Stamm wie bei 1:50, die Topfschale auf weniger Umrisspunkten ihres Untersetzers."
      },
      {
-      "en": "Thermal and structure at 1:100 as at 1:50 on the coarser solids.",
-      "de": "Thermik und Tragwerk bei 1:100 wie bei 1:50 auf den gröberen Körpern."
+      "en": "Minimal: thermal and structure at 1:100 are those of 1:50 on the coarser solids; the structure is one member per bone, and leaving one out would leave a leaf or a stalk without its load path.",
+      "de": "Minimal: Thermik und Tragwerk bei 1:100 sind die von 1:50 auf den gröberen Körpern; das Tragwerk ist ein Stab je Knochen, und einen wegzulassen ließe ein Blatt oder einen Stiel ohne Lastpfad."
      }
     ]
    },
@@ -13770,6 +14094,36 @@
       },
       "member": "pot",
       "part": "mass"
+     },
+     {
+      "id": "m-root-ball",
+      "kind": "revolve",
+      "bone": "pot",
+      "material": "potting-compost",
+      "role": "body",
+      "tone": 0.5,
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "profile": [
+       [
+        0.03,
+        0.06
+       ],
+       [
+        0.2,
+        0.06
+       ]
+      ],
+      "member": "pot",
+      "part": "member"
      },
      {
       "id": "m-trunk-1",
@@ -16589,6 +16943,36 @@
       },
       "member": "pot",
       "part": "mass"
+     },
+     {
+      "id": "m-root-ball",
+      "kind": "revolve",
+      "bone": "pot",
+      "material": "potting-compost",
+      "role": "body",
+      "tone": 0.5,
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "profile": [
+       [
+        0.03,
+        0.06
+       ],
+       [
+        0.2,
+        0.06
+       ]
+      ],
+      "member": "pot",
+      "part": "member"
      },
      {
       "id": "m-trunk-1",
@@ -30698,6 +31082,7 @@
        "tone": 0.435,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.001,
        "kind": "poly",
        "points": [
@@ -30814,6 +31199,7 @@
        "tone": 0.548,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.002,
        "kind": "poly",
        "points": [
@@ -31970,10 +32356,11 @@
        "id": "blade-21",
        "bone": "blade-21",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.521,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.012,
        "kind": "poly",
        "points": [
@@ -32090,6 +32477,7 @@
        "tone": 0.421,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.013,
        "kind": "poly",
        "points": [
@@ -34650,10 +35038,11 @@
        "id": "blade-20",
        "bone": "blade-20",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.452,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.008,
        "kind": "poly",
        "points": [
@@ -34835,10 +35224,11 @@
        "id": "blade-19",
        "bone": "blade-19",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.511,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.012,
        "kind": "poly",
        "points": [
@@ -35112,10 +35502,11 @@
        "id": "blade-14",
        "bone": "blade-14",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.548,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.02,
        "kind": "poly",
        "points": [
@@ -40270,6 +40661,7 @@
        "tone": 0.435,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.001,
        "kind": "poly",
        "points": [
@@ -40366,6 +40758,7 @@
        "tone": 0.548,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.002,
        "kind": "poly",
        "points": [
@@ -40458,10 +40851,11 @@
        "id": "blade-19",
        "bone": "blade-19",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.511,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.003,
        "kind": "poly",
        "points": [
@@ -40558,6 +40952,7 @@
        "tone": 0.425,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.004,
        "kind": "poly",
        "points": [
@@ -40654,6 +41049,7 @@
        "tone": 0.341,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.005,
        "kind": "poly",
        "points": [
@@ -40846,6 +41242,7 @@
        "tone": 0.374,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.007,
        "kind": "poly",
        "points": [
@@ -40942,6 +41339,7 @@
        "tone": 0.443,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.008,
        "kind": "poly",
        "points": [
@@ -41038,6 +41436,7 @@
        "tone": 0.495,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.009,
        "kind": "poly",
        "points": [
@@ -41230,6 +41629,7 @@
        "tone": 0.547,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.011,
        "kind": "poly",
        "points": [
@@ -41326,6 +41726,7 @@
        "tone": 0.521,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.012,
        "kind": "poly",
        "points": [
@@ -41422,6 +41823,7 @@
        "tone": 0.421,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.013,
        "kind": "poly",
        "points": [
@@ -41587,6 +41989,7 @@
        "tone": 0.452,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.017,
        "kind": "poly",
        "points": [
@@ -41775,10 +42178,11 @@
        "id": "blade-15",
        "bone": "blade-15",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.56,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.019,
        "kind": "poly",
        "points": [
@@ -41875,6 +42279,7 @@
        "tone": 0.519,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.02,
        "kind": "poly",
        "points": [
@@ -42067,6 +42472,7 @@
        "tone": 0.42,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.022,
        "kind": "poly",
        "points": [
@@ -42502,10 +42908,11 @@
        "id": "blade-07",
        "bone": "blade-07",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.443,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.001,
        "kind": "poly",
        "points": [
@@ -42602,6 +43009,7 @@
        "tone": 0.551,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.002,
        "kind": "poly",
        "points": [
@@ -42694,10 +43102,11 @@
        "id": "blade-17",
        "bone": "blade-17",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.547,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.003,
        "kind": "poly",
        "points": [
@@ -42794,6 +43203,7 @@
        "tone": 0.421,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.004,
        "kind": "poly",
        "points": [
@@ -42890,6 +43300,7 @@
        "tone": 0.498,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.005,
        "kind": "poly",
        "points": [
@@ -42986,6 +43397,7 @@
        "tone": 0.42,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.006,
        "kind": "poly",
        "points": [
@@ -43082,6 +43494,7 @@
        "tone": 0.56,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.007,
        "kind": "poly",
        "points": [
@@ -43178,6 +43591,7 @@
        "tone": 0.452,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.008,
        "kind": "poly",
        "points": [
@@ -43274,6 +43688,7 @@
        "tone": 0.511,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.009,
        "kind": "poly",
        "points": [
@@ -43393,6 +43808,7 @@
        "tone": 0.548,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.011,
        "kind": "poly",
        "points": [
@@ -43512,6 +43928,7 @@
        "tone": 0.435,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.013,
        "kind": "poly",
        "points": [
@@ -43608,6 +44025,7 @@
        "tone": 0.473,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.014,
        "kind": "poly",
        "points": [
@@ -43727,6 +44145,7 @@
        "tone": 0.543,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.016,
        "kind": "poly",
        "points": [
@@ -43823,6 +44242,7 @@
        "tone": 0.521,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.017,
        "kind": "poly",
        "points": [
@@ -43919,6 +44339,7 @@
        "tone": 0.519,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.018,
        "kind": "poly",
        "points": [
@@ -44015,6 +44436,7 @@
        "tone": 0.498,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.019,
        "kind": "poly",
        "points": [
@@ -44107,10 +44529,11 @@
        "id": "blade-16",
        "bone": "blade-16",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.495,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.02,
        "kind": "poly",
        "points": [
@@ -44207,6 +44630,7 @@
        "tone": 0.456,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.021,
        "kind": "poly",
        "points": [
@@ -44303,6 +44727,7 @@
        "tone": 0.397,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.022,
        "kind": "poly",
        "points": [
@@ -44395,10 +44820,11 @@
        "id": "blade-01",
        "bone": "blade-01",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.341,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.023,
        "kind": "poly",
        "points": [
@@ -44756,10 +45182,11 @@
        "id": "blade-01",
        "bone": "blade-01",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.341,
        "region": "leaves-lower",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.001,
        "kind": "poly",
        "points": [
@@ -46411,10 +46838,11 @@
        "id": "blade-18",
        "bone": "blade-18",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.543,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.019,
        "kind": "poly",
        "points": [
@@ -46795,10 +47223,11 @@
        "id": "blade-22",
        "bone": "blade-22",
        "role": "body",
-       "filled": true,
+       "filled": false,
        "tone": 0.421,
        "region": "leaves-upper",
        "material": "ficus-leaf",
+       "penMm": 0.1,
        "z": 1.023,
        "kind": "poly",
        "points": [
@@ -52159,7 +52588,7 @@
      "kind": "bark",
      "model": "passive",
      "material": "ficus-wood",
-     "areaM2": 0.1269,
+     "areaM2": 0.105,
      "characteristicLengthM": 0.02,
      "geometry": "cylinder",
      "skyViewFactor": 0.4,
@@ -52195,7 +52624,7 @@
      "kind": "surface",
      "model": "passive",
      "material": "terracotta",
-     "areaM2": 0.22,
+     "areaM2": 0.185,
      "characteristicLengthM": 0.36,
      "geometry": "horizontal-plate-up",
      "skyViewFactor": 0.25,

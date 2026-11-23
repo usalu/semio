@@ -257,11 +257,10 @@ fn a_mode_change_reseeds_the_dock_with_the_new_modes_windows() {
     assert_eq!(back, edit_windows, "switching back restores edit's own windows");
 }
 
-/// 📐️ `stack_body_rects` is `stack_frame_rects` minus the tab cap and nothing else — the separation
-/// that lets the fixture state geometry without pinning a theme metric, and the reason the fixture's
-/// rects are the frames the chrome walk then insets.
+/// 📐️ `stack_body_rects` IS `stack_frame_rects` — the content plane fills the frame, chips are laid out inside it — the
+/// separation that lets the fixture state geometry without pinning a theme metric.
 #[test]
-fn every_painted_body_is_its_solved_frame_minus_the_tab_cap() {
+fn every_painted_body_is_its_solved_frame() {
     let fixture = fixture();
     let canvas = Rect::new(fixture.canvas.x, fixture.canvas.y, fixture.canvas.w, fixture.canvas.h);
     let theme = Theme::default();
@@ -277,8 +276,7 @@ fn every_painted_body_is_its_solved_frame_minus_the_tab_cap() {
         assert_eq!(frames.len(), bodies.len(), "{}: one body per frame", case.id);
         for ((frame_path, frame, _), (body_path, body, _)) in frames.iter().zip(bodies.iter()) {
             assert_eq!(frame_path, body_path, "{}: bodies and frames walk in the same order", case.id);
-            assert!(body.w <= frame.w + 0.01 && body.h <= frame.h + 0.01, "{}: body {body:?} escapes its frame {frame:?}", case.id);
-            assert!(body.x >= frame.x - 0.01 && body.y >= frame.y - 0.01, "{}: body {body:?} starts before its frame {frame:?}", case.id);
+            assert_eq!(body, frame, "{}: body {body:?} is not its frame {frame:?}", case.id);
             assert!(body.w > 0.0 && body.h > 0.0, "{}: body {body:?} is empty — nothing would be laid out in it", case.id);
         }
     }

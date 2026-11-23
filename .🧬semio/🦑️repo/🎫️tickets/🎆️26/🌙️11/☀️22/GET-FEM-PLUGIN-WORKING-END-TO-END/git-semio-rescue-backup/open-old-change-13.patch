@@ -1,0 +1,489 @@
+diff --git "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpvv_jn2kf\\b.lf" "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpvv_jn2kf\\o.lf"
+index 55fcf1f..8d12cdf 100644
+--- "a/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpvv_jn2kf\\b.lf"
++++ "b/C:\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️11\\☀️22\\GET-FEM-PLUGIN-WORKING-END-TO-END\\🗑️generated\\rescue-conflicts\\tmpvv_jn2kf\\o.lf"
+@@ -27,4 +27,5 @@ _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡
+ room_metre = _manim_module.room_metre
+ P_PRIMARY = _manim_module.P_PRIMARY
++reference_chip = _manim_module.reference_chip
+ section_material = _manim_module.section_material
+ section_assembly = _manim_module.section_assembly
+@@ -80,9 +81,8 @@ swap_caption = _manim_module.swap_caption
+ hold_for = _manim_module.hold_for
+ subtitle_text = _manim_module.subtitle_text
+-set_vo_language = _manim_module.set_vo_language
+ tr = _manim_module.tr
++_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
+ load_vo_timing = _manim_module.load_vo_timing
+ 
+-set_vo_language("de")
+ _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+ TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
+@@ -104,4 +104,5 @@ VENT_BLUE = semio_color("secondary")
+ CHAIN_E_FACTORS = (1.04, 1.08, 1.06, 1.18)
+ CHAIN_E_FACTORS_WP = (1.04, 1.08, 1.06, 0.26)
++UNIT_INLINE = r"\frac{\mathrm{kWh}}{\mathrm{m^{2}\,a}}"
+ CHAIN_FP_GAS, CHAIN_FP_STROM = 1.1, 1.8
+ CHAIN_NUTZ = 100
+@@ -110,4 +111,5 @@ CHAIN_PRIM = int(CHAIN_END * CHAIN_FP_GAS + 0.5)
+ CHAIN_END_WP = round(CHAIN_NUTZ * float(np.prod(CHAIN_E_FACTORS_WP)))
+ CHAIN_PRIM_WP = int(CHAIN_END_WP * CHAIN_FP_STROM + 0.5)
++CHAIN_E_E = CHAIN_END / CHAIN_NUTZ
+ CHAIN_CLASSES = (
+     ("A+", 30, "#1D7A3E"), ("A", 50, "#3FA34D"), ("B", 75, "#8DC63F"),
+@@ -117,4 +119,10 @@ CHAIN_CLASSES = (
+ 
+ 
++def _num(value: float, digits: int = 0, language: str = "en") -> str:
++    """🔢 Number for narration TeX: decimal point in en, braced decimal comma in de."""
++    text = f"{value:.{digits}f}"
++    return text.replace(".", "{,}") if language == "de" else text
++
++
+ def _class_of(end_energy: float):
+     """🔤 Efficiency class (letter, colour) an end-energy value earns — GEG Anlage 10, as Chapter 6 looks it up."""
+@@ -130,14 +138,4 @@ CHAIN_CLASS_WP = _class_of(CHAIN_END_WP)[0]
+ 
+ 
+-#region DIN citation
+-def _din_ref(text: str):
+-    """📖 Standards citation for the beat, pinned to the empty top-right corner."""
+-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+-    ref.set_opacity(0.72)
+-    ref.to_corner(UR, buff=0.30)
+-    return ref
+-#endregion
+-
+-
+ #region Shared visual motifs
+ 
+@@ -251,12 +249,12 @@ class Beat1_BerechnungVsAbrechnung(Scene):
+     NARRATION = [
+         ("intro",
+-         "Does the calculated demand match the bill? Rarely exactly.",
+-         "Stimmt der berechnete Bedarf mit der Rechnung überein? Selten genau."),
++         "Does the calculated final-energy demand match the measured consumption on the bill? Rarely exactly.",
++         "Stimmt der berechnete Endenergiebedarf mit dem gemessenen Verbrauch auf der Rechnung überein? Selten genau."),
+         ("norm",
+          "That is because the calculation deliberately uses standardised conditions.",
+          "Das liegt daran, dass die Berechnung bewusst Normbedingungen nutzt."),
+         ("normen_temp",
+-         "The calculation fixes the use. First, a setpoint of twenty degrees.",
+-         "Die Berechnung legt die Nutzung fest: zuerst zwanzig Grad als Sollwert."),
++         r"The calculation fixes the use. First, a setpoint of $20\,\mathrm{°C}$.",
++         r"Die Berechnung legt die Nutzung fest: zuerst $20\,\mathrm{°C}$ als Sollwert."),
+         ("normen_luft",
+          "Second, a standard air change.",
+@@ -269,6 +267,6 @@ class Beat1_BerechnungVsAbrechnung(Scene):
+          "Und viertens ein Referenzklima statt des echten Wetters."),
+         ("real_heizen",
+-         "Real households heat unevenly — often a little warmer than twenty degrees.",
+-         "Echte Haushalte heizen ungleichmäßig — oft etwas wärmer als zwanzig Grad."),
++         r"Real households heat unevenly — often a little warmer than $20\,\mathrm{°C}$.",
++         r"Echte Haushalte heizen ungleichmäßig — oft etwas wärmer als $20\,\mathrm{°C}$."),
+         ("real_lueften",
+          "They air unevenly — a window tilted for hours, or wide open for a minute.",
+@@ -281,18 +279,18 @@ class Beat1_BerechnungVsAbrechnung(Scene):
+          "Und der echte Winter ist nie das Referenzklima — Wolken mindern die Sonnengewinne."),
+         ("real_punkt",
+-         "Each household becomes one point: calculated on one axis, measured on the other.",
+-         "Jeder Haushalt wird zu einem Punkt: berechnet auf der einen Achse, gemessen auf der anderen."),
++         "Each household becomes one point: calculated demand on one axis, measured consumption on the other.",
++         "Jeder Haushalt wird zu einem Punkt: berechneter Bedarf auf der einen Achse, gemessener Verbrauch auf der anderen."),
+         ("streuung",
+-         "So the measured points scatter around the diagonal where calculation equals measurement.",
+-         "Die Messpunkte streuen deshalb um die Diagonale, auf der Rechnung und Messung übereinstimmen."),
++         "So the measured points scatter around the diagonal where demand equals consumption.",
++         "Die Messpunkte streuen deshalb um die Diagonale, auf der Bedarf und Verbrauch übereinstimmen."),
+         ("prebound",
+-         "The scatter is not symmetric: poorly insulated buildings consume less than calculated on average.",
+-         "Die Streuung ist nicht symmetrisch: Schlecht gedämmte Gebäude verbrauchen im Mittel weniger als berechnet."),
++         "The scatter is not symmetric: poorly insulated buildings consume less than calculated on average. This is called the prebound effect.",
++         "Die Streuung ist nicht symmetrisch: Schlecht gedämmte Gebäude verbrauchen im Mittel weniger als berechnet. Das heißt Prebound-Effekt."),
+         ("prebound_grund",
+          "The people there heat more sparingly than the standard assumes.",
+          "Dort heizt man sparsamer, als die Norm annimmt."),
+         ("rebound",
+-         "In efficient buildings the consumption is on average above the calculation.",
+-         "In effizienten Gebäuden liegt der Verbrauch im Mittel über dem berechneten Wert."),
++         "In efficient buildings the consumption is on average above the calculation: the rebound effect.",
++         "In effizienten Gebäuden liegt der Verbrauch im Mittel über dem berechneten Wert: der Rebound-Effekt."),
+         ("rebound_grund",
+          "For instance, because people choose higher comfort temperatures there.",
+@@ -311,5 +309,5 @@ class Beat1_BerechnungVsAbrechnung(Scene):
+ 
+         subtitle = section_heading(tr("Why calculation and billing diverge", "Warum Rechnung und Abrechnung auseinanderlaufen"))
+-        din = _din_ref("DIN V 18599-10:2018-09")
++        din = reference_chip(_references.cite(("din-ts-18599-10", "nutzungsprofile")), subtitle)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -419,6 +417,6 @@ class Beat1_BerechnungVsAbrechnung(Scene):
+ 
+         calc_total = sum(SEG_NORM)
+-        calc_lbl = _bar_label(tr("calculated", "berechnet"), CALC_CYAN, BAR_Y_CALC + 0.36)
+-        meas_lbl = _bar_label(tr("measured", "gemessen"), REAL_ORANGE, BAR_Y_MEAS + 0.36)
++        calc_lbl = _bar_label(tr("Demand (calculated)", "Bedarf (berechnet)"), CALC_CYAN, BAR_Y_CALC + 0.36)
++        meas_lbl = _bar_label(tr("Consumption (measured)", "Verbrauch (gemessen)"), REAL_ORANGE, BAR_Y_MEAS + 0.36)
+         calc_bar = _bar(calc_total, CALC_CYAN, BAR_Y_CALC)
+         meas_bar = _bar(0.68, REAL_ORANGE, BAR_Y_MEAS)
+@@ -434,5 +432,5 @@ class Beat1_BerechnungVsAbrechnung(Scene):
+             _legend(tr(r"\text{Indoor temperature}\;20\,\mathrm{°C}\;\text{setpoint}", r"\text{Innentemperatur}\;20\,\mathrm{°C}\;\text{Sollwert}"), SEG_COLOURS[0]),
+             _legend(tr(r"\text{Standardised air change}", r"\text{Luftwechsel genormt}"), SEG_COLOURS[1]),
+-            _legend(tr(r"\text{Hot water flat rate per}\;\mathrm{m^{2}}", r"\text{Warmwasser pauschal je}\;\mathrm{m^{2}}"), SEG_COLOURS[2]),
++            _legend(tr(r"\text{Hot water flat rate per}\,\mathrm{m^{2}}", r"\text{Warmwasser pauschal je}\,\mathrm{m^{2}}"), SEG_COLOURS[2]),
+             _legend(tr(r"\text{Reference climate}", r"\text{Referenzklima}"), SEG_COLOURS[3]),
+         ]
+@@ -507,9 +505,9 @@ class Beat1_BerechnungVsAbrechnung(Scene):
+         hold_for(self, self.NARRATION, "real_wetter", during=heat)
+ 
+-        axes = labeled_axes(AX_ORIGIN, x_len=AX_X_LEN, y_len=AX_Y_LEN, x_label=tr("calculated  →", "berechnet  →"), color=P_WHITE)
+-        y_cap = body_text(tr("measured", "gemessen"), font_size=LABEL_FONT_SIZE - 2, color=P_WHITE)
++        axes = labeled_axes(AX_ORIGIN, x_len=AX_X_LEN, y_len=AX_Y_LEN, x_label=tr("final-energy demand, calculated  →", "Endenergiebedarf, berechnet  →"), color=P_WHITE)
++        y_cap = body_text(tr("final-energy consumption, measured", "Endenergieverbrauch, gemessen"), font_size=LABEL_FONT_SIZE - 2, color=P_WHITE)
+         y_cap.set_opacity(0.85).rotate(PI / 2).next_to(axes["y_axis"], LEFT, buff=0.14)
+         diagonal = DashedLine(axes["pt"](0.0, 0.0), axes["pt"](1.0, 1.0), color=P_WHITE, stroke_width=2, stroke_opacity=0.55)
+-        diag_tag = body_text(tr("Calculation = measurement", "Rechnung = Messung"), font_size=LABEL_FONT_SIZE - 4, color=P_WHITE)
++        diag_tag = body_text(tr("Demand = consumption", "Bedarf = Verbrauch"), font_size=LABEL_FONT_SIZE - 4, color=P_WHITE)
+         diag_tag.set_opacity(0.6).next_to(axes["pt"](0.88, 0.88), UL, buff=0.06)
+         schematic_tag = body_text(tr("schematic diagram", "schematische Darstellung"), font_size=LABEL_FONT_SIZE - 4, color=P_PRIMARY)
+@@ -565,9 +563,10 @@ class Beat1_BerechnungVsAbrechnung(Scene):
+         trend = Line(axes["pt"](0.10, 0.352), axes["pt"](0.96, 0.799), color=REAL_ORANGE, stroke_width=3)
+         pre_zone = _zone(0.62, 1.0, GOOD_GREEN)
+-        pre_card = stat_card(tr("poorly insulated · on average", "schlecht gedämmt · im Mittel"), tr("measured < calculated", "gemessen < berechnet"), color=GOOD_GREEN,
++        pre_card = stat_card(tr("poorly insulated · on average", "schlecht gedämmt · im Mittel"), tr("consumption < demand", "Verbrauch < Bedarf"), color=GOOD_GREEN,
+                              caption_size=LABEL_FONT_SIZE - 2, value_size=LABEL_FONT_SIZE).move_to(CARD_AT)
+         pre_dot = axes["pt"](0.85, 0.70)
++        din_pre = reference_chip(_references.cite("sunikka-galvin-2012"))
+         self.play(FadeOut(x_seg), FadeOut(y_seg), FadeOut(proj), FadeIn(pre_zone), Create(trend), FadeIn(pre_card),
+-                  me_dot.animate.move_to(pre_dot), run_time=1.6)
++                  FadeOut(din), FadeIn(din_pre), me_dot.animate.move_to(pre_dot), run_time=1.6)
+         ring = Circle(radius=0.17, color=P_WHITE, stroke_width=2.5).move_to(me_dot.get_center())
+         self.play(Create(ring), run_time=0.8)
+@@ -583,5 +582,5 @@ class Beat1_BerechnungVsAbrechnung(Scene):
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "rebound"))
+         re_zone = _zone(0.0, 0.45, WARM_RED)
+-        re_card = stat_card(tr("efficient · on average", "effizient · im Mittel"), tr("measured > calculated", "gemessen > berechnet"), color=WARM_RED,
++        re_card = stat_card(tr("efficient · on average", "effizient · im Mittel"), tr("consumption > demand", "Verbrauch > Bedarf"), color=WARM_RED,
+                             caption_size=LABEL_FONT_SIZE - 2, value_size=LABEL_FONT_SIZE).move_to(CARD_AT)
+         re_dot = axes["pt"](0.20, 0.47)
+@@ -687,15 +686,15 @@ class Beat2_HydraulischerAbgleich(Scene):
+          "Beim hydraulischen Abgleich wird jedes Ventil voreingestellt."),
+         ("abgleich_ventil",
+-         "Each valve then passes exactly the flow that its room's calculated heat load needs.",
+-         "Jedes Ventil lässt dann genau den Durchfluss durch, den die berechnete Raumheizlast braucht."),
++         r"Each valve then passes exactly the flow that the calculated heat load $\dot{Q}_{\mathrm{H}}$ of its room needs.",
++         r"Jedes Ventil lässt dann genau den Durchfluss durch, den die berechnete Raumheizlast $\dot{Q}_{\mathrm{H}}$ braucht."),
+         ("gewinn",
+-         "The flow temperature can then come down.",
+-         "Danach kann die Vorlauftemperatur sinken."),
++         r"The flow temperature $\theta_{\mathrm{VL}}$ can then come down.",
++         r"Danach kann die Vorlauftemperatur $\theta_{\mathrm{VL}}$ sinken."),
+         ("gewinn_jaz",
+-         "That is an important condition for a heat pump to reach a good seasonal performance factor.",
+-         "Das ist eine wichtige Voraussetzung dafür, dass eine Wärmepumpe eine gute Jahresarbeitszahl erreicht."),
++         "That is a key condition for a good seasonal performance factor, the German JAZ: delivered heat per electricity.",
++         "Das ist eine wichtige Voraussetzung für eine gute Jahresarbeitszahl (JAZ): abgegebene Wärme je Strom."),
+         ("pflicht",
+-         "For many heating systems the balancing is even mandatory.",
+-         "Für viele Heizungsanlagen ist der Abgleich sogar verpflichtend."),
++         "For a new water-based heating system in a building with at least six units the balancing is even mandatory (§ 60c).",
++         "Für eine neue wassergeführte Heizung in einem Gebäude mit mindestens sechs Einheiten ist der Abgleich sogar verpflichtend (§ 60c)."),
+     ]
+ 
+@@ -704,5 +703,5 @@ class Beat2_HydraulischerAbgleich(Scene):
+ 
+         subtitle = section_heading(tr("Hydraulic balancing", "Hydraulischer Abgleich"))
+-        din = _din_ref("GEG § 60c · VOB/C DIN 18380")
++        din = reference_chip(_references.cite(("gmodg", "p60c"), ("din-18380", "abgleich")), subtitle)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -749,5 +748,5 @@ class Beat2_HydraulischerAbgleich(Scene):
+         vl_gate = ValueTracker(0.0)
+         vl_th = thermometer_glyph(np.array([-6.45, -0.92, 0.0]), height=1.0, tracker=vl, ramp=THERMO_RAMP, gate=vl_gate, tick_color=CALC_CYAN)
+-        vl_tag = math_label(r"\vartheta_{\mathrm{VL}}", at=np.array([-6.45, 0.28, 0.0]), size=BODY_FONT_SIZE, color=WATER_HOT)
++        vl_tag = math_label(r"\theta_{\mathrm{VL}}", at=np.array([-6.45, 0.28, 0.0]), size=BODY_FONT_SIZE, color=WATER_HOT)
+ 
+         flows = [ValueTracker(1.0) for _ in xs]
+@@ -794,5 +793,5 @@ class Beat2_HydraulischerAbgleich(Scene):
+             readouts.append(read)
+             halves.append(half)
+-        gauge_title = math_label(r"\dot{V}/\dot{V}_{\mathrm{soll}}", at=np.array([-5.30, gauge_y - 0.09, 0.0]),
++        gauge_title = math_label(tr(r"\dot{V}/\dot{V}_{\mathrm{design}}", r"\dot{V}/\dot{V}_{\mathrm{soll}}"), at=np.array([-5.30, gauge_y - 0.09, 0.0]),
+                                  size=LABEL_FONT_SIZE, color=CALC_CYAN)
+         gauge_set = VGroup(gauge_title, *gauges)
+@@ -881,14 +880,15 @@ class Beat2_HydraulischerAbgleich(Scene):
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gewinn_jaz"))
+         jaz = ValueTracker(0.25)
+-        jaz_meter = meter("JAZ", length=1.8, thickness=0.40, color=GOOD_GREEN)
++        jaz_meter = meter(tr("SPF", "JAZ"), length=1.8, thickness=0.40, color=GOOD_GREEN)
+         jaz_meter["group"].move_to(np.array([6.25, 0.10, 0.0]))
+         bind_meter(jaz_meter, jaz)
+         panel, box, items = math_panel([
+             ("ab", tr(r"\text{Balancing}", r"\text{Abgleich}"), GOOD_GREEN), (None, r"\to", P_WHITE),
+-            ("vl", tr(r"\vartheta_{\mathrm{VL}}\;\text{drops}", r"\vartheta_{\mathrm{VL}}\;\text{sinkt}"), WATER_HOT), (None, r"\to", P_WHITE),
+-            ("jaz", tr(r"\mathrm{SPF}\uparrow", r"\mathrm{JAZ}\uparrow"), GOOD_GREEN),
++            ("vl", tr(r"\theta_{\mathrm{VL}}\;\text{drops}", r"\theta_{\mathrm{VL}}\;\text{sinkt}"), WATER_HOT), (None, r"\to", P_WHITE),
++            ("jaz", tr(r"\text{SPF}\uparrow", r"\text{JAZ}\uparrow"), GOOD_GREEN),
+         ])
+-        duty = note_line(tr("mandatory for many heating systems — GEG § 60c", "für viele Heizungsanlagen verpflichtend — GEG § 60c"), color=P_PRIMARY)
+-        self.play(Create(box), FadeIn(panel), FadeIn(jaz_meter["group"]), run_time=1.2)
++        duty = note_line(tr("mandatory for new water-based systems with 6+ units — § 60c", "Pflicht bei neuen wassergeführten Anlagen ab 6 Einheiten — § 60c"), color=P_PRIMARY)
++        jaz_def = note_line(tr("SPF (JAZ, VDI 4650 Blatt 1:2024-02) = delivered heat / electricity used", "JAZ (VDI 4650 Blatt 1:2024-02) = abgegebene Wärme / eingesetzter Strom"), color=GOOD_GREEN)
++        self.play(Create(box), FadeIn(panel), FadeIn(jaz_meter["group"]), FadeIn(jaz_def), run_time=1.2)
+         ring_vl = highlight_param(items, "vl", color=WATER_HOT)
+         self.play(Create(ring_vl), *heat(1.4), run_time=1.4)
+@@ -898,5 +898,5 @@ class Beat2_HydraulischerAbgleich(Scene):
+ 
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "pflicht"))
+-        self.play(FadeOut(ring_jaz), FadeIn(duty), run_time=1.0)
++        self.play(FadeOut(ring_jaz), FadeOut(jaz_def), FadeIn(duty), run_time=1.0)
+         hold_for(self, self.NARRATION, "pflicht", during=heat)
+ 
+@@ -912,4 +912,5 @@ class Beat2_HydraulischerAbgleich(Scene):
+ 
+ COL_NUTZ, COL_END, COL_PRIM = semio_color("secondary"), semio_color("danger"), semio_color("info")
++COL_END_TXT = interpolate_color(ManimColor(COL_END), ManimColor("#FFFFFF"), 0.4)
+ LOSS_COLOURS = (semio_color("warning"), semio_color("tertiary"), semio_color("primary"), semio_color("danger"))
+ LOSS_VALUES = tuple(int(v) for v in np.diff(np.concatenate([[CHAIN_NUTZ], np.round(CHAIN_NUTZ * np.cumprod(CHAIN_E_FACTORS))])))
+@@ -1016,33 +1017,36 @@ class Beat3_SerienAbschluss(Scene):
+          "Das Heizen gab uns die Wärmeströme über die Hülle im Winter."),
+         ("kette_kuehlen",
+-         "Cooling gave us the summer flows, with the sun as the big load.",
+-         "Das Kühlen gab uns die Ströme im Sommer, mit der Sonne als großer Last."),
++         "Cooling gave us the summer flows, the sun being the big load.",
++         "Das Kühlen gab uns die Sommerströme, mit der Sonne als großer Last."),
+         ("bilanz",
+-         "This video closed the balance — first in the room, with the useful heat.",
+-         "Dieses Video schloss die Bilanz — zuerst im Raum, bei der Nutzwärme."),
++         r"This video closed the balance — first in the room: useful energy $Q_{h}$.",
++         r"Dieses Video schloss die Bilanz — zuerst im Raum: Nutzenergie $Q_{h}$."),
+         ("bilanz_zaehler",
+-         "Then it walked the balance out to the meter.",
+-         "Dann führte es sie hinaus bis zum Zähler."),
++         r"Then it walked the balance out to the meter: the final energy $Q_{E}$.",
++         r"Dann führte es sie hinaus bis zum Zähler: zur Endenergie $Q_{E}$."),
+         ("bilanz_quelle",
+-         "Further out to the source.",
+-         "Weiter hinaus bis zur Quelle."),
++         r"Further out to the source: the primary energy $Q_{P}$.",
++         r"Weiter hinaus bis zur Quelle: zur Primärenergie $Q_{P}$."),
+         ("bilanz_ausweis",
+-         "And finally onto the certificate.",
+-         "Und schließlich auf den Ausweis."),
++         "And finally onto the certificate, which prints the class of the final energy.",
++         "Und schließlich auf den Ausweis, der die Klasse der Endenergie ausweist."),
+         ("zahlen_nutz",
+-         "We start with a hundred kilowatt-hours of useful heat in the room.",
+-         "Wir starten mit hundert Kilowattstunden Nutzwärme im Raum."),
++         rf"We start with $Q_{{h}}={CHAIN_NUTZ}\,\mathrm{{kWh/(m^2\,a)}}$ of useful energy in the room.",
++         rf"Wir starten mit $Q_{{h}}={CHAIN_NUTZ}\,\mathrm{{kWh/(m^2\,a)}}$ Nutzenergie im Raum."),
+         ("zahlen_zaehler",
+-         "On the gas path they become a hundred and forty at the meter.",
+-         "Auf dem Gasweg werden daraus hundertvierzig am Zähler."),
++         rf"On the gas path the meter reads $Q_{{E}}={CHAIN_END}\,\mathrm{{kWh/(m^2\,a)}}$, with the dimensionless factor $e_{{E}}={_num(CHAIN_E_E, 2)}$.",
++         rf"Auf dem Gasweg zeigt der Zähler $Q_{{E}}={CHAIN_END}\,\mathrm{{kWh/(m^2\,a)}}$, mit dem einheitenlosen Faktor $e_{{E}}={_num(CHAIN_E_E, 2, 'de')}$."),
+         ("zahlen_quelle",
+-         "At the source it is a hundred and fifty-four.",
+-         "An der Quelle sind es hundertvierundfünfzig."),
++         rf"At the source the primary energy is $Q_{{P}}={CHAIN_PRIM}\,\mathrm{{kWh/(m^2\,a)}}$, with the dimensionless factor $f_{{P}}={_num(CHAIN_FP_GAS, 1)}$.",
++         rf"An der Quelle sind es $Q_{{P}}={CHAIN_PRIM}\,\mathrm{{kWh/(m^2\,a)}}$ Primärenergie, mit dem einheitenlosen Faktor $f_{{P}}={_num(CHAIN_FP_GAS, 1, 'de')}$."),
+         ("zahlen_buchstabe",
+-         "And from that number follows one letter on the certificate.",
+-         "Und aus dieser Zahl folgt ein Buchstabe auf dem Ausweis."),
++         r"And from the final energy $Q_{E}$ alone follows one letter on the certificate.",
++         r"Und allein aus der Endenergie $Q_{E}$ folgt ein Buchstabe auf dem Ausweis."),
+         ("zahlen_wp",
+-         "The heat pump path needs only thirty-one at the meter and fifty-six at the source.",
+-         "Der Wärmepumpenweg braucht nur einunddreißig am Zähler und sechsundfünfzig an der Quelle."),
++         rf"The heat pump delivers the same useful energy $Q_{{h}}={CHAIN_NUTZ}\,\mathrm{{kWh/(m^2\,a)}}$ as heat, but buys only $Q_{{E}}={CHAIN_END_WP}\,\mathrm{{kWh/(m^2\,a)}}$ of electricity.",
++         rf"Die Wärmepumpe liefert dieselbe Nutzenergie $Q_{{h}}={CHAIN_NUTZ}\,\mathrm{{kWh/(m^2\,a)}}$ als Wärme, kauft aber nur $Q_{{E}}={CHAIN_END_WP}\,\mathrm{{kWh/(m^2\,a)}}$ Strom."),
++        ("zahlen_wp_quelle",
++         rf"At the source that is $Q_{{P}}={CHAIN_PRIM_WP}\,\mathrm{{kWh/(m^2\,a)}}$, with $f_{{P}}={_num(CHAIN_FP_STROM, 1)}$ for electricity.",
++         rf"An der Quelle sind das $Q_{{P}}={CHAIN_PRIM_WP}\,\mathrm{{kWh/(m^2\,a)}}$, mit $f_{{P}}={_num(CHAIN_FP_STROM, 1, 'de')}$ für Strom."),
+         ("zahlen_wp_buchstabe",
+          "So the heat pump writes a different letter.",
+@@ -1050,8 +1054,8 @@ class Beat3_SerienAbschluss(Scene):
+         ("outro_wand",
+          "That is the complete path — it begins with a cold wall in January.",
+-         "Das ist der vollständige Weg — er beginnt mit einer kalten Wand im Januar."),
++         "Das ist der ganze Weg — er beginnt mit einer kalten Wand im Januar."),
+         ("outro_zahl",
+-         "And it ends with the number a landlord shows a new tenant.",
+-         "Und er endet bei der Zahl, die ein Vermieter einem neuen Mieter zeigt."),
++         "And it ends with the efficiency class a landlord shows a new tenant.",
++         "Und er endet bei der Effizienzklasse, die ein Vermieter einem neuen Mieter zeigt."),
+     ]
+ 
+@@ -1061,5 +1065,5 @@ class Beat3_SerienAbschluss(Scene):
+ 
+         subtitle = section_heading(tr("The series in review", "Die Serie im Rückblick"))
+-        din = _din_ref("GEG · DIN V 18599:2018-09")
++        din = reference_chip(_references.cite(("din-ts-18599-1", "primaerenergie"), ("gmodg", "p22")), subtitle)
+         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+ 
+@@ -1091,9 +1095,9 @@ class Beat3_SerienAbschluss(Scene):
+                     for y in (float(hs_vent["windows"][1]["center"][1]),)]
+         tiles = VGroup(
+-            _tile(xs[0], tr("1 · Fundamentals", "1 · Grundlagen"), math_label(r"\mathrm{W},\;\mathrm{J},\;\Delta T", size=LABEL_FONT_SIZE, color=P_WHITE), P_YELLOW),
+-            _tile(xs[1], tr("2 · Ventilation", "2 · Lüftung"), math_label(r"\dot{V},\;Q_{V}", size=LABEL_FONT_SIZE, color=P_WHITE), VENT_BLUE),
+-            _tile(xs[2], tr("3 · Heating", "3 · Heizen"), body_text(tr("Losses & gains", "Verluste & Gewinne"), font_size=LABEL_FONT_SIZE, color=P_WHITE), P_ORANGE),
+-            _tile(xs[3], tr("4 · Cooling", "4 · Kühlen"), body_text(tr("Summer loads", "Sommerlasten"), font_size=LABEL_FONT_SIZE, color=P_WHITE), P_CYAN),
+-            _tile(xs[4], tr("5 · Energy balance", "5 · Energiebilanz"), body_text(tr("Law & certificate", "Gesetz & Ausweis"), font_size=LABEL_FONT_SIZE, color=P_WHITE), P_PRIMARY),
++            _tile(xs[0], tr("1 · Fundamentals", "1 · Grundlagen"), math_label(r"\Phi,\;Q,\;\Delta\theta", size=LABEL_FONT_SIZE, color=P_WHITE), P_YELLOW),
++            _tile(xs[1], tr("2 · Ventilation", "2 · Lüftung"), math_label(r"\dot{V},\;\dot{Q}_{\mathrm{V}}", size=LABEL_FONT_SIZE, color=P_WHITE), VENT_BLUE),
++            _tile(xs[2], tr("3 · Heating", "3 · Heizen"), body_text(tr("Losses & gains", "Verluste & Gewinne"), font_size=LABEL_FONT_SIZE - 3, color=P_WHITE), P_ORANGE),
++            _tile(xs[3], tr("4 · Cooling", "4 · Kühlen"), body_text(tr("Summer loads", "Sommerlasten"), font_size=LABEL_FONT_SIZE - 3, color=P_WHITE), P_CYAN),
++            _tile(xs[4], tr("5 · Energy balance", "5 · Energiebilanz"), body_text(tr("Law & certificate", "Gesetz & Ausweis"), font_size=LABEL_FONT_SIZE - 3, color=P_WHITE), P_PRIMARY),
+         )
+         line_y = -1.18
+@@ -1158,8 +1162,8 @@ class Beat3_SerienAbschluss(Scene):
+         cuts = VGroup(*[DashedLine(np.array([x, STAGE_Y + 0.02, 0.0]), np.array([x, 1.70, 0.0]), color=c, stroke_width=2.2,
+                                    dash_length=0.12)
+-                        for x, c in zip(CUT_X, (COL_NUTZ, COL_END, COL_PRIM))])
++                        for x, c in zip(CUT_X, (COL_NUTZ, COL_END_TXT, COL_PRIM))])
+         names = VGroup(*[body_text(t, font_size=LABEL_FONT_SIZE, color=c).move_to(np.array([x, 1.92, 0.0]))
+-                         for x, t, c in zip(CUT_X, (tr("Room", "Raum"), tr("Meter", "Zähler"), tr("Source", "Quelle")), (COL_NUTZ, COL_END, COL_PRIM))])
+-        ausweis = body_text(tr("Certificate", "Ausweis"), font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to(np.array([CLASS_X, STAGE_Y + 2.20, 0.0]))
++                         for x, t, c in zip(CUT_X, (tr("Room", "Raum"), tr("Meter", "Zähler"), tr("Source", "Quelle")), (COL_NUTZ, COL_END_TXT, COL_PRIM))])
++        ausweis = body_text(tr("Certificate", "Ausweis"), font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to(np.array([CLASS_X, STAGE_Y + 2.38, 0.0]))
+         warm_spots = [rad.get_top() + UP * 0.02, person.get_top() + UP * 0.04]
+ 
+@@ -1203,18 +1207,21 @@ class Beat3_SerienAbschluss(Scene):
+                            dash_length=0.10, stroke_opacity=0.5)
+ 
+-        def ratio(num, den):
+-            return num() / den() if den() > 1e-6 else 0.0
+-
+-        row, box, items = math_panel([
+-            ("qh", r"Q_{h}", COL_NUTZ), (None, r"\cdot", P_WHITE), ("ep", r"e_{p}", COL_END), (None, r"\cdot", P_WHITE),
+-            ("fp", r"f_{p}", COL_PRIM), (None, "=", P_WHITE), ("qp", r"Q_{P}", COL_PRIM),
+-            (None, r"\;[\mathrm{kWh/(m^{2}\cdot a)}]", P_PRIMARY),
+-        ], size=24, edge_buff=2.32)
++        e_gas_txt, f_gas_txt = label_number(CHAIN_END / CHAIN_NUTZ, 2), label_number(CHAIN_FP_GAS, 1)
++        frac = r"\frac{\mathrm{kWh}}{\mathrm{m^{2}\,a}}"
+ 
+-        def e_p():
+-            return ratio(stack_b["total"], stack_a["total"])
++        def _step_panel(parts):
++            return math_panel(parts, size=24, edge_buff=2.32)
+ 
+-        def f_p():
+-            return ratio(stack_c["total"], stack_b["total"])
++        panel_h = _step_panel([
++            ("qh", r"Q_{h}", COL_NUTZ), (None, "=", P_WHITE), (None, rf"{CHAIN_NUTZ}\,{frac}", COL_NUTZ),
++        ])
++        panel_e = _step_panel([
++            ("qe", r"Q_{E}=Q_{h}\cdot e_{E}", COL_END_TXT), (None, "=", P_WHITE),
++            (None, rf"{CHAIN_NUTZ}\,{frac}\cdot {e_gas_txt}={CHAIN_END}\,{frac}", COL_END_TXT),
++        ])
++        panel_p = _step_panel([
++            ("qp", r"Q_{P}=Q_{E}\cdot f_{P}", COL_PRIM), (None, "=", P_WHITE),
++            (None, rf"{CHAIN_END}\,{frac}\cdot {f_gas_txt}={CHAIN_PRIM}\,{frac}", COL_PRIM),
++        ])
+ 
+         def top_read(expr, stack, x_left, colour, y_min=-9.0):
+@@ -1223,16 +1230,26 @@ class Beat3_SerienAbschluss(Scene):
+ 
+         qh_read = top_read(lambda: rf"Q_{{h}}={label_number(stack_a['total']())}", stack_a, X_A - 0.25, COL_NUTZ)
+-        qe_read = top_read(lambda: rf"Q_{{E}}={label_number(stack_a['total']())}\cdot {label_number(e_p(), 2)}={label_number(stack_b['total']())}",
+-                           stack_b, X_B - 0.25, COL_END, y_min=1.40)
+-        qp_read = top_read(lambda: rf"Q_{{P}}={label_number(stack_b['total']())}\cdot {label_number(f_p(), 1)}={label_number(stack_c['total']())}",
+-                           stack_c, X_C - 0.25, COL_PRIM, y_min=1.40)
+-        wp_e_read = math_readout(lambda: label_number(stack_bw["total"]()), lambda: np.array([X_B_WP, stack_bw["top"]() + 0.28, 0.0]),
+-                                 size=LABEL_FONT_SIZE, color=COL_END, edge="center")
+-        wp_p_read = math_readout(lambda: label_number(stack_cw["total"]()), lambda: np.array([X_C_WP, stack_cw["top"]() + 0.28, 0.0]),
+-                                 size=LABEL_FONT_SIZE, color=COL_PRIM, edge="center")
++        qe_read = top_read(lambda: rf"Q_{{E}}={label_number(stack_b['total']())}", stack_b, X_B - 0.25, COL_END_TXT, y_min=1.40)
++        qp_read = top_read(lambda: rf"Q_{{P}}={label_number(stack_c['total']())}", stack_c, X_C - 0.25, COL_PRIM, y_min=1.40)
++        wp_e_read = math_readout(lambda: rf"Q_{{E}}={label_number(stack_bw['total']())}", lambda: np.array([X_B_WP + 0.24, stack_bw["top"]() + 0.12, 0.0]),
++                                 size=LABEL_FONT_SIZE - 2, color=COL_END_TXT, edge="left")
++        wp_p_read = math_readout(lambda: rf"Q_{{P}}={label_number(stack_cw['total']())}", lambda: np.array([X_C_WP + 0.24, stack_cw["top"]() + 0.12, 0.0]),
++                                 size=LABEL_FONT_SIZE - 2, color=COL_PRIM, edge="left")
++        wp_tags = VGroup(*[
++            body_text(tr("Heat pump", "Wärmepumpe"), font_size=LABEL_FONT_SIZE - 5, color=COL_END_TXT).move_to(
++                np.array([X_B_WP + 0.24, STAGE_Y + CHAIN_END_WP * STAGE_UNIT - 0.14, 0.0]), aligned_edge=LEFT),
++            body_text(tr("Heat pump", "Wärmepumpe"), font_size=LABEL_FONT_SIZE - 5, color=COL_PRIM).move_to(
++                np.array([X_C_WP + 0.24, STAGE_Y + CHAIN_PRIM_WP * STAGE_UNIT - 0.14, 0.0]), aligned_edge=LEFT),
++        ])
+         unit_note = VGroup(
+-            body_text(tr("Gas boiler variant, schematic example, in", "Gaskessel-Variante, schematisches Beispiel, in"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
+-            math_label(r"\mathrm{kWh/(m^{2}\cdot a)}", size=LABEL_FONT_SIZE, color=P_PRIMARY),
++            body_text(tr("Gas boiler variant, schematic example:", "Gaskessel-Variante, schematisches Beispiel:"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
++            math_label(rf"Q\;\text{{in}}\;{UNIT_INLINE}", size=LABEL_FONT_SIZE, color=P_PRIMARY),
+         ).arrange(RIGHT, buff=0.14, aligned_edge=DOWN).move_to(np.array([0.0, 2.30, 0.0]))
++        form_names = VGroup(*[
++            body_text(t, font_size=LABEL_FONT_SIZE - 3, color=c).move_to(np.array([x, STAGE_Y - 0.22, 0.0]))
++            for x, t, c in zip((X_A, X_B, X_C),
++                               (tr("Useful energy", "Nutzenergie"), tr("Final energy", "Endenergie"), tr("Primary energy", "Primärenergie")),
++                               (COL_NUTZ, COL_END_TXT, COL_PRIM))
++        ])
+         gas_class, gas_colour = _class_of(CHAIN_END)
+         wp_class, wp_colour = _class_of(CHAIN_END_WP)
+@@ -1242,6 +1259,6 @@ class Beat3_SerienAbschluss(Scene):
+         link_gas = Line(chip_gas.get_right(), np.array([CLASS_X - 0.31, y_gas, 0.0]), color=gas_colour, stroke_width=2.4)
+         link_wp = Line(chip_wp.get_right(), np.array([CLASS_X - 0.31, y_wp, 0.0]), color=wp_colour, stroke_width=2.4)
+-        tag_gas = body_text(tr("Gas boiler", "Gaskessel"), font_size=LABEL_FONT_SIZE, color=gas_colour).next_to(chip_gas, LEFT, buff=0.16)
+-        tag_wp = body_text(tr("Heat pump", "Wärmepumpe"), font_size=LABEL_FONT_SIZE, color=wp_colour).next_to(chip_wp, LEFT, buff=0.16)
++        tag_gas = body_text(tr("Gas boiler", "Gaskessel"), font_size=LABEL_FONT_SIZE - 3, color=gas_colour).next_to(chip_gas, UP, buff=0.05)
++        tag_wp = body_text(tr("Heat pump", "Wärmepumpe"), font_size=LABEL_FONT_SIZE - 3, color=wp_colour).next_to(chip_wp, UP, buff=0.05)
+ 
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zahlen_nutz"))
+@@ -1251,14 +1268,13 @@ class Beat3_SerienAbschluss(Scene):
+         self.play(FadeOut(stage), run_time=1.2)
+         self.add(stack_a["mob"], stack_b["mob"], stack_c["mob"], stack_bw["mob"], stack_cw["mob"], qh_read)
+-        self.play(FadeIn(row), Create(box), FadeIn(unit_note), stack_a["heights"][0].animate.set_value(CHAIN_NUTZ),
+-                  run_time=1.6)
+-        ring_h = highlight_param(items, "qh", color=COL_NUTZ)
+-        self.play(Create(ring_h), Create(guide), run_time=0.8)
++        self.play(FadeIn(panel_h[0]), Create(panel_h[1]), FadeIn(unit_note), FadeIn(form_names[0]),
++                  stack_a["heights"][0].animate.set_value(CHAIN_NUTZ), run_time=1.6)
++        self.play(Create(guide), run_time=0.8)
+         hold_for(self, self.NARRATION, "zahlen_nutz")
+ 
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zahlen_zaehler"))
+         self.add(qe_read)
+-        ring_e = highlight_param(items, "ep", color=COL_END)
+-        self.play(FadeOut(ring_h), Create(ring_e), stack_b["heights"][0].animate.set_value(CHAIN_NUTZ), run_time=1.0)
++        self.play(FadeOut(panel_h[0]), FadeOut(panel_h[1]), FadeIn(panel_e[0]), Create(panel_e[1]), FadeIn(form_names[1]),
++                  stack_b["heights"][0].animate.set_value(CHAIN_NUTZ), run_time=1.0)
+         for h, value in zip(stack_b["heights"][1:], LOSS_VALUES):
+             self.play(h.animate.set_value(value), run_time=0.8)
+@@ -1267,6 +1283,5 @@ class Beat3_SerienAbschluss(Scene):
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zahlen_quelle"))
+         self.add(qp_read)
+-        ring_f = highlight_param(items, "fp", color=COL_PRIM)
+-        self.play(FadeOut(ring_e), Create(ring_f),
++        self.play(FadeOut(panel_e[0]), FadeOut(panel_e[1]), FadeIn(panel_p[0]), Create(panel_p[1]), FadeIn(form_names[2]),
+                   *[h.animate.set_value(v) for h, v in zip(stack_c["heights"][:-1], (CHAIN_NUTZ, *LOSS_VALUES))], run_time=1.2)
+         self.play(stack_c["heights"][-1].animate.set_value(CHAIN_PRIM - CHAIN_END), run_time=1.2)
+@@ -1274,14 +1289,18 @@ class Beat3_SerienAbschluss(Scene):
+ 
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zahlen_buchstabe"))
+-        self.play(FadeOut(ring_f), FadeIn(link_gas), FadeIn(chip_gas, shift=LEFT * 0.2), FadeIn(tag_gas), run_time=1.4)
++        self.play(FadeIn(link_gas), FadeIn(chip_gas, shift=LEFT * 0.2), FadeIn(tag_gas), run_time=1.4)
+         hold_for(self, self.NARRATION, "zahlen_buchstabe")
+ 
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zahlen_wp"))
+-        self.add(wp_e_read, wp_p_read)
++        self.add(wp_e_read, wp_tags[0])
+         self.play(stack_bw["heights"][0].animate.set_value(CHAIN_END_WP), run_time=1.4)
++        hold_for(self, self.NARRATION, "zahlen_wp")
++
++        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zahlen_wp_quelle"))
++        self.add(wp_p_read, wp_tags[1])
+         self.play(stack_cw["heights"][0].animate.set_value(CHAIN_END_WP),
+                   stack_cw["heights"][1].animate.set_value(CHAIN_PRIM_WP - CHAIN_END_WP),
+                   run_time=1.4)
+-        hold_for(self, self.NARRATION, "zahlen_wp")
++        hold_for(self, self.NARRATION, "zahlen_wp_quelle")
+ 
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zahlen_wp_buchstabe"))
+@@ -1308,6 +1327,6 @@ class Beat3_SerienAbschluss(Scene):
+         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro_wand"))
+         self.play(FadeOut(VGroup(stack_a["mob"], stack_b["mob"], stack_c["mob"], stack_bw["mob"], stack_cw["mob"], qh_read,
+-                                 qe_read, qp_read, wp_e_read, wp_p_read, unit_note, tag_gas, tag_wp, link_wp, chip_wp,
+-                                 chip_gas, link_gas, row, box, guide, cuts, names, scale["bands"], ausweis)),
++                                 qe_read, qp_read, wp_e_read, wp_p_read, wp_tags, unit_note, tag_gas, tag_wp, link_wp, chip_wp,
++                                 chip_gas, link_gas, panel_p[0], panel_p[1], form_names, guide, cuts, names, scale["bands"], ausweis)),
+                   run_time=1.2)
+         self.play(Create(ho["group"]), run_time=1.4)

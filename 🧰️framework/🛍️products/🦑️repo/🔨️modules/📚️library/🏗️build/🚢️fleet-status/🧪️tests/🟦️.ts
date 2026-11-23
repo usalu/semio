@@ -277,3 +277,48 @@ test("a machine the fleet cache refuses is an alert and every machine lists why 
  const quiet=summarizeFleetV1({...facts,fleet:{...facts.fleet!,machines:[machine("g1-m01")] as never}},"en");
  expect(quiet.findings.some(row=>row.id.startsWith("unit-cache-"))).toBe(false);expect(formatFleetReportV1("en",quiet,20).join("\n")).not.toContain("did not share");
 });
+
+test("the one-machine visibility sections (host store, fleet cache retention, offload) carry the numbers of the facts, in both languages, under both validators, and an unreported retention is explicit",()=>{
+ const visible=report("one-machine-visible-en"),german=cases.find(row=>row.id==="one-machine-visible-de")!;
+ expect([visible.cas.usedBytes,visible.cas.usedBasisPoints,visible.cas.lastCollection.ageSeconds,visible.cas.leases.leasedBytes]).toEqual([22*2**30,6666,600,1.5*2**30]);
+ expect([visible.retention.mode,visible.retention.ageSeconds,visible.retention.judged,visible.retention.stale,visible.retention.unreached,visible.retention.undeclared,visible.retention.retired]).toEqual(["dry-run",300,700,150,50,300,0]);
+ expect([visible.offload.local,visible.offload.fleet,visible.offload.builds.map((row:any)=>row.pid),visible.offload.deadline,visible.offload.lost,visible.offload.silent,visible.offload.fellBack]).toEqual([6,40,[4000,4100],4,2,1,9]);
+ const english=formatFleetReportV1("en",summarizeFleetV1(cases.find(row=>row.id==="one-machine-visible-en")!.facts,"en"),20),deutsch=formatFleetReportV1("de",summarizeFleetV1(german.facts,"de"),20);
+ expect(english).toContain("Host store: 22.0 of 33.0 GiB used (66 %), cap 50.0 GiB, high water 29.7 GiB, low water 24.8 GiB");
+ expect(english).toContain("  input leases: 120 live (1.5 GiB), 30 expired (0.5 GiB); last collection 10 min ago, 22.0 GiB left");
+ expect(english).toContain("Fleet cache retention dry-run: swept 5 min ago; 1000 entries, 700 judged, 150 stale, 50 unreachable, 300 undeclared, 0 retired");
+ expect(english).toContain("  stale by: edited 120, extern 30");expect(english).toContain("  refused at publish: would-refuse-stale-on-arrival 3");
+ expect(english).toContain("Offload: 6 running locally, 40 on the fleet; 500 offloaded, 7 refused, 9 fell back (4 deadline, 2 lost operation, 1 silent)");
+ expect(english).toContain("  build 4100: 2 locally, 30 on the fleet");
+ expect(deutsch).toContain("Host-Speicher: 22.0 von 33.0 GiB belegt (66 %), Obergrenze 50.0 GiB, Hochwasser 29.7 GiB, Niedrigwasser 24.8 GiB");
+ expect(deutsch).toContain("Flottencache-Aufbewahrung dry-run: geprüft vor 5 min; 1000 Einträge, 700 beurteilt, 150 veraltet, 50 unerreichbar, 300 ohne Deklaration, 0 entfernt");
+ expect(deutsch).toContain("Auslagerung: 6 laufen lokal, 40 auf der Flotte; 500 ausgelagert, 7 abgelehnt, 9 lokal nachgeholt (4 Frist, 2 verlorene Operation, 1 still)");
+ for(const line of [...english,...deutsch])expect(/\{[A-Za-z]+\}/u.test(line),line).toBe(false);
+ const bare=cases.find(row=>row.id==="one-machine-unreported")!,lines=formatFleetReportV1("en",summarizeFleetV1(bare.facts,"en"),20);
+ expect(bare.report.retention).toBeNull();expect(lines).toContain("Fleet cache retention: no report from the cache host");
+ expect(lines).toContain("Host store: n/a of 0.0 GiB used (? %), cap 50.0 GiB, high water 0.0 GiB, low water 0.0 GiB");expect(lines).toContain("  input leases: 0 live (0.0 GiB), 5000 expired (? GiB); no collection recorded");
+ const reports=validator("Report"),facts=validator("Facts"),mutations:Record<string,(value:any)=>void>={"unknown retention mode":value=>{value.fleet.retention.mode="loud";},"negative lease bytes":value=>{value.cas.leases.leasedBytes=-1;},"unknown offload property":value=>{value.offload.extra=1;},"build without pid":value=>{delete value.offload.builds[0].pid;}};
+ for(const [name,mutate] of Object.entries(mutations)){const copy=plain(cases.find(row=>row.id==="one-machine-visible-en")!.facts);mutate(copy);expect(facts(copy),name).toBe(false);expect(validateFleetFactsV1(copy).length>0,name).toBe(true);}
+ const badReport=plain(visible);badReport.retention.mode="loud";expect(reports(badReport)).toBe(false);expect(validateFleetReportV1(badReport).length>0).toBe(true);
+});
+
+test("the offload reader counts compile slots as local and light slots as running on the fleet per build and reads the counters with the deadline and lost-operation reasons; the host store reader reads the hint and the lease ledger without walking the objects",async()=>{
+ const {readFleetCasV1,readFleetOffloadV1}=await import("../📥️readers/🟦️.ts"),{bumpOffloadCountersV1}=await import("../../🌐️remote-execution/🚀️offload/📊️counters/🟦️.ts"),{leaseCasTransientV1}=await import("../../🗄️cas/📌️pins/🟦️.ts"),{casObjectPathV1}=await import("../../🗄️cas/🗃️store/🟦️.ts");
+ const root=mkdtempSync(join(tmpdir(),"fleet-one-machine-")),now=Date.now();
+ try{
+  const unit=join(root,"unit"),slots=join(unit,"s");mkdirSync(slots,{recursive:true});
+  for(const name of ["0.lock","light-0.lock","light-1.lock"])writeFileSync(join(slots,name),JSON.stringify({pid:process.pid,token:"t",atMs:now}));
+  bumpOffloadCountersV1(root,{out:2,fellBack:1},"deadline");bumpOffloadCountersV1(root,{fellBack:1},"operation-lost");
+  const offload=(await readFleetOffloadV1({root,environment:{SEMIO_UNIT_CACHE_ROOT:unit},language:"en",now:()=>now})).offload!;
+  expect([offload.local,offload.fleet,offload.builds,offload.out,offload.fellBack,offload.reasons.deadline,offload.reasons["operation-lost"]]).toEqual([1,2,[{pid:process.ppid,local:1,fleet:2}],2,2,1,1]);
+  expect(validateFleetFactsV1({version:1,atMs:now,workspace:root,offload,sources:[{id:"offload",ok:true,milliseconds:1}]})).toEqual([]);
+  const home=join(root,"home"),store=join(home,".cache","semio","cas"),digest="a".repeat(64);
+  mkdirSync(join(store,"v1"),{recursive:true});mkdirSync(join(casObjectPathV1(store,digest),".."),{recursive:true});writeFileSync(casObjectPathV1(store,digest),"0123456789");
+  writeFileSync(join(store,"v1","usage.json"),JSON.stringify({version:1,bytes:12345,atMs:now-1000}));
+  await leaseCasTransientV1(store,{transientLeaseMs:1_800_000},"w1",[digest],now);
+  const cas=(await readFleetCasV1({root,environment:{HOME:home},language:"en",now:()=>now})).cas!;
+  expect([cas.root,cas.lastCollection,cas.leases]).toEqual([store,{atMs:now-1000,bytes:12345},{leased:1,expired:0,leasedBytes:10,expiredBytes:0}]);
+  expect([cas.highWatermarkBytes,cas.lowWatermarkBytes]).toEqual([Math.floor(cas.effectiveCapBytes*0.9),Math.floor(cas.effectiveCapBytes*0.75)]);
+  expect(validateFleetFactsV1({version:1,atMs:now,workspace:root,cas,sources:[{id:"cas",ok:true,milliseconds:1}]})).toEqual([]);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

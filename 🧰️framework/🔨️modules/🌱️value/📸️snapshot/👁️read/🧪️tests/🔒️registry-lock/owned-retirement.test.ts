@@ -19,5 +19,5 @@ test("owned retirement keeps its source until the complete transfer is funded", 
   const quote = source.slice(source.indexOf("pub fn artifact_retirement_owned_birth_demands"), source.indexOf("pub fn artifact_retirement_admit_owned"));
   const admission = source.slice(source.indexOf("pub fn artifact_retirement_admit_owned"), source.indexOf("pub fn artifact_retirement_shared_lease_birth_demands"));
   expect(quote).toContain("controlled_retirement_birth_demand");
-  expect(admission).toContain("grant.maximum_copy_bytes < demand.copy_bytes");
+  expect(admission).toContain("retained_clone_grant_admits(grant, demand)");
 });

@@ -9,6 +9,7 @@ members = [
     "🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🖼️page/🔭️canvas/📦️packages/🦀️rust",
     "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/📦️packages/🦀️rust",
+    "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧪️tests/🔄️mutation-round-trip/📦️packages/🦀️rust",
     "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust",
     "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust",

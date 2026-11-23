@@ -79,8 +79,8 @@ impl GrowBuffer {
 ///
 /// **Same simplification as Metal's `FrameBuffers` vs. the wgpu target's**: `RenderPacket::
 /// quad_instances`/`vector_vertices` are already flat arrays covering every batch (backdrop,
-/// foreground, overlay, and the silhouette-mask quads `Scene::finish` appended), and every
-/// `DrawBatch::instance_range`/`mask_range` is already an offset into that same shared array. So this
+/// foreground, overlay), and every
+/// `DrawBatch::instance_range` is already an offset into that same shared array. So this
 /// backend uploads each array **once per frame** and binds each batch's slice by
 /// `D3D12_VERTEX_BUFFER_VIEW::BufferLocation` offset — no per-batch-group re-collection.
 #[derive(Default)]

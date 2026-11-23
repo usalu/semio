@@ -177,6 +177,8 @@ pub use tickets::*;
 /// ⏱️ Records the defining bounded operation through its original performed receipt.
 pub fn record_retirement_work(effect:&mut crate::RetainedAllocationEffect<'_>,delta:u64)->Result<u128,(crate::ValueError,u128)>{let before=effect.performed_work();let result=effect.performed(delta);let work=effect.performed_work()-before;match result{Ok(true)=>Ok(work),Ok(false)=>Err((crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"retirement operation exceeded its original work action"),work)),Err(error)=>Err((error,work))}}
 
+#[path="🔒️slot/🦀️.rs"]mod slot;
+pub use slot::{Slot,SlotGuard};
 #[path="🎟️header/🦀️.rs"]mod header_release;
 pub use header_release::RetirementHeaderRelease;
 

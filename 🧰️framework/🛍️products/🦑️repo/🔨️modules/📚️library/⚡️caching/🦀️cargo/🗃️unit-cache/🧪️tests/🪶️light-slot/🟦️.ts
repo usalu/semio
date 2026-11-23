@@ -15,11 +15,11 @@ test("light slots are not charged against the local compile slots: every local s
  expect(lightSlotsHeldV1(root,3)).toBe(0);expect(readdirSync(join(root,"s")).filter(name=>name.endsWith(".lock"))).toEqual([]);
 });
 test("a unit waits for a light slot instead of failing and gets it the moment one is released",async()=>{
- const root=fresh(),first=await acquireLightSlotV1(root,1);let waited=0;
- const second=acquireLightSlotV1(root,1,{onWait:milliseconds=>{waited=milliseconds;}});
+ const root=fresh(),first=await acquireLightSlotV1(root,1),second=acquireLightSlotV1(root,1);
+
  const pending=await Promise.race([second.then(()=>"granted"),new Promise<string>(done=>setTimeout(()=>done("waiting"),400))]);
  expect(pending).toBe("waiting");first.release();
- const claim=await second;expect(lightSlotsHeldV1(root,1)).toBe(1);expect(waited).toBeGreaterThan(0);claim.release();expect(lightSlotsHeldV1(root,1)).toBe(0);
+ const claim=await second;expect(lightSlotsHeldV1(root,1)).toBe(1);expect(claim.waitedMs).toBeGreaterThanOrEqual(300);claim.release();expect(lightSlotsHeldV1(root,1)).toBe(0);
 });
 test("a light slot count below one is refused and a cancelled wait leaves nothing behind",async()=>{
  const root=fresh();await expect(acquireLightSlotV1(root,0)).rejects.toThrow("Positive light slot count required");

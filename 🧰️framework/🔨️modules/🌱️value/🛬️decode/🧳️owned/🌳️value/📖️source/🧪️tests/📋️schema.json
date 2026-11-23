@@ -4,83 +4,112 @@
   "additionalProperties": false,
   "required": [
     "cases",
-    "storage"
+    "storage",
+    "stock",
+    "ownershipCopyBytes",
+    "deniedWork",
+    "bindingObservation"
   ],
   "properties": {
     "cases": {
-      "type": "array",
-      "minItems": 2,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "kind",
-          "input",
-          "expected"
-        ],
-        "properties": {
-          "kind": {
-            "enum": [
-              "sequence",
-              "record"
-            ]
-          },
+      "const": [
+        {
+          "kind": "sequence",
+          "input": [
+            1,
+            2
+          ],
+          "expected": [
+            1,
+            2
+          ]
+        },
+        {
+          "kind": "record",
           "input": {
-            "oneOf": [
-              {
-                "type": "array"
-              },
-              {
-                "type": "object"
-              }
-            ]
+            "alpha": 1,
+            "beta": 2
           },
-          "expected": {
-            "type": "array"
-          }
+          "expected": [
+            [
+              "alpha",
+              1
+            ],
+            [
+              "beta",
+              2
+            ]
+          ]
         }
-      }
+      ]
     },
     "storage": {
-      "type": "array",
-      "minItems": 5,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "kind",
-          "capacity",
-          "index",
-          "occupied",
-          "value",
-          "accepted"
-        ],
-        "properties": {
-          "kind": {
-            "enum": [
-              "vector",
-              "array"
-            ]
-          },
-          "capacity": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "index": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "occupied": {
-            "type": "boolean"
-          },
-          "value": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "accepted": {
-            "type": "boolean"
-          }
+      "const": [
+        {
+          "kind": "vector",
+          "capacity": 0,
+          "index": 0,
+          "occupied": false,
+          "value": 7,
+          "accepted": false
+        },
+        {
+          "kind": "vector",
+          "capacity": 1,
+          "index": 0,
+          "occupied": false,
+          "value": 7,
+          "accepted": true
+        },
+        {
+          "kind": "array",
+          "capacity": 2,
+          "index": 0,
+          "occupied": true,
+          "value": 7,
+          "accepted": false
+        },
+        {
+          "kind": "array",
+          "capacity": 2,
+          "index": 2,
+          "occupied": false,
+          "value": 7,
+          "accepted": false
+        },
+        {
+          "kind": "array",
+          "capacity": 2,
+          "index": 1,
+          "occupied": false,
+          "value": 7,
+          "accepted": true
         }
+      ]
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 64,
+        "fuel": 100000
+      }
+    },
+    "ownershipCopyBytes": {
+      "const": 0
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "bindingObservation": {
+      "const": {
+        "foreignEveryActivePhase": true,
+        "source": "same-value-distinct-owned-source",
+        "refusalWork": 0,
+        "refusalHeapBytes": 0,
+        "unchangedBothInputs": true
       }
     }
   }

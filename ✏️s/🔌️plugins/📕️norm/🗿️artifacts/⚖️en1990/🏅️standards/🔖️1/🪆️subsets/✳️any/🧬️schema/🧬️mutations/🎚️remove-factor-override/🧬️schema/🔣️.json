@@ -17,7 +17,7 @@
       "minimum": 0,
       "x-semio-ui": {
         "widget": "stepper",
-        "role": "target",
+        "role": "value",
         "label": {
           "en": "Position",
           "de": "Position"

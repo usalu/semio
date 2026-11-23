@@ -163,6 +163,8 @@ def main():
     document = json.load(open(SOURCE, encoding="utf-8"))
     volumes = document["volumes"]
     fine = volumes["50"]
+    if "nut-beam-top" not in by_id(volumes["100"]["body"]):
+        raise SystemExit("already applied: the coarse scales no longer carry the 1:50 parts list")
     for scale, build in (("100", scale_100), ("200", scale_200), ("500", scale_500)):
         build(volumes[scale], fine)
         volumes[scale]["decisions"] = DECISIONS[scale]

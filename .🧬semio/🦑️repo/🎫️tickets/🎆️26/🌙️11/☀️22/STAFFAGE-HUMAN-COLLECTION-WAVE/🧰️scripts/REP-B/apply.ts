@@ -2,7 +2,7 @@
  *  bun apply.ts <slug>… [--ops <file>] [--in <file>] [--out <file>]
  * @see ./ops.ts — the ops */
 import { parseArgs } from "node:util";
-import { applyOp, type Op } from "./ops.ts";
+import { applyOps, type Op } from "./ops.ts";
 import { catalogFile, opsFile, WORKER } from "./people.ts";
 
 const { values, positionals } = parseArgs({ allowPositionals: true, options: { ops: { type: "string" }, in: { type: "string" }, out: { type: "string" } } });
@@ -14,7 +14,7 @@ for (const slug of positionals) {
   const indent = second.length - second.trimStart().length;
   const doc = JSON.parse(text);
   const ops = JSON.parse(await Bun.file(values.ops ?? opsFile(slug)).text()) as Op[];
-  for (const o of ops) applyOp(doc.asset, o);
+  const skipped = applyOps(doc.asset, ops);
   await Bun.write(values.out ?? catalogFile(slug), JSON.stringify(doc, null, indent) + "\n");
-  console.log(`${slug}: ${ops.length} ops applied`);
+  console.log(`${slug}: ${ops.length} ops applied${skipped.length > 0 ? `, ${skipped.length} already in place` : ""}`);
 }

@@ -1,7 +1,7 @@
 """🩹️ Last stage of the generator chain of a person of HW-01 … HW-09: applies the authored repair ops `ops/<slug>*.json` (sorted by
 name) to the generator output and writes the catalog file. The ops are design inputs: a drawn shape replaced, added, changed or
 removed (`shape`, `shape-add`, `shape-set`, `shape-delete` with `scale`, `view`), a volume solid changed, added or removed
-(`solid-set`, `solid-add`, `solid-delete` with `scale`, `list`) and a value set by path (`set`, path segments, `id=<x>` picks a
+(`solid-set`, `solid-add`, `solid-delete` with `scale`, `list`; `solid-radii` multiplies the radii of the capsules whose id matches `match` by `factor`) and a value set by path (`set`, path segments, `id=<x>` picks a
 list item by id). The files are staged by the number after the slug (`<slug>.<stage>-<name>.json`); `--upto n` applies the stages below n.
 python3 apply.py <slug> <generator-output.json> <catalog-file.json> [--upto n]"""
 import glob, json, os, sys
@@ -43,6 +43,14 @@ def apply(a, o):
                     s.pop(k, None)
                 else:
                     s[k] = v
+        elif kind == "solid-radii":
+            import re
+            hit = [x for x in l if re.fullmatch(o["match"], x["id"])]
+            assert hit, o
+            for x in hit:
+                for k in ("r0", "r1", "radius"):
+                    if k in x:
+                        x[k] = round(x[k] * o["factor"], 5)
         elif kind == "solid-delete":
             n = len(l)
             l[:] = [x for x in l if x["id"] != o["id"]]

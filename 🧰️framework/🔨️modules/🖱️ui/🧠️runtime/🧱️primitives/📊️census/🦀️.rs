@@ -2,7 +2,7 @@
 
 use std::mem::{size_of, take};
 use semio_ui_runtime_presentation::TreeNode;
-use crate::{SURFACE_RECONCILE_PAGE_BYTES, SURFACE_RECONCILE_SEMANTIC_COPIES, SURFACE_RECONCILE_VALUE_DEPTH, SurfaceReconcileFault};
+use crate::{SURFACE_RECONCILE_FIXED_NODES, SURFACE_RECONCILE_PAGE_BYTES, SURFACE_RECONCILE_SEMANTIC_COPIES, SURFACE_RECONCILE_VALUE_DEPTH, SurfaceReconcileFault};
 
 //#region ⏭️ResumableReconcile
 
@@ -66,9 +66,13 @@ pub const SURFACE_RECONCILE_ALLOCATION_ITEMS_PER_CENSUS_ITEM: (usize, usize) = (
 /// `subtree_item_census_bounds_the_items_a_fresh_reconciliation_consumes`.
 pub fn surface_subtree_items(node: &TreeNode) -> Result<usize, SurfaceReconcileFault> {
     let mut items = 0usize;
-    let mut pending = vec![node];
+    let mut pending = [node; SURFACE_RECONCILE_FIXED_NODES];
+    let mut len = 1usize;
     let mut census = SurfaceSemanticCensusCursor::default();
-    while let Some(next) = pending.pop() {
+    for _ in 0..SURFACE_RECONCILE_FIXED_NODES {
+        if len == 0 { break; }
+        len -= 1;
+        let next = pending[len];
         census.restart();
         let mut record = 0usize;
         loop {
@@ -79,8 +83,13 @@ pub fn surface_subtree_items(node: &TreeNode) -> Result<usize, SurfaceReconcileF
             }
         }
         items = items.checked_add(record.div_ceil(SURFACE_RECONCILE_ALLOCATION_ITEMS_PER_CENSUS_ITEM.1).saturating_mul(SURFACE_RECONCILE_ALLOCATION_ITEMS_PER_CENSUS_ITEM.0)).and_then(|items| items.checked_add(record)).and_then(|items| items.checked_add(census.oversized_pages)).ok_or(SurfaceReconcileFault::CounterOverflow)?;
-        pending.extend(next.children.iter());
+        for child in next.children.iter() {
+            if len == SURFACE_RECONCILE_FIXED_NODES { return Err(SurfaceReconcileFault::CounterOverflow); }
+            pending[len] = child;
+            len += 1;
+        }
     }
+    if len != 0 { return Err(SurfaceReconcileFault::CounterOverflow); }
     Ok(items)
 }
 

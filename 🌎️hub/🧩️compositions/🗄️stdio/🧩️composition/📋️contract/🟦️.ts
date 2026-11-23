@@ -1,14 +1,14 @@
 /** 🧩️ Admits owner-authored Stdio composition contributions without a concrete roster. */
 export type CompositionAppV1 = { owner: string; order: number; variant: string; role: "editor" | "viewer"; type: string; factory: string; mutationRoster: boolean; laws: { editing: string; sqliteSnapshot: string } | null };
-export type CompositionPlaygroundV1 = { owner: string; variant: string; app: string; aliases: string[]; ports: { react: number; wgpu: number } };
+export type CompositionPlaygroundV1 = { owner: string; variant: string; app: string; aliases: string[]; ports: { react: number; wgpu: number }; devContribution?: string };
 export type CompositionContributionV1 = { schema: "semio.stdio.composition-contribution/v1"; artifact: string; package: string; order: number; selections: string[]; apps: CompositionAppV1[]; nativeFactories: { factoryId: string; definitionPath: string; protocolPath: string }[]; openTargets: Record<string, string>[]; catalogPackage: string | null; symbolPackages: string[]; playgrounds: CompositionPlaygroundV1[]; mutationDescriptors: { name: string; snapshot: string; mutation: string }[]; mutationCoordinates: { artifact: string; standard: string; subset: string; surface: string; owner: string; prefix: string }[] };
 
 const atom = /^[a-z][a-z0-9-]*$/;
 const rust = /^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$/;
 const variant = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
-function object(value: unknown, fields: readonly string[]): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== fields.length || fields.some((field) => !Object.hasOwn(value, field))) throw new Error("composition contribution has an invalid closed object");
+function object(value: unknown, fields: readonly string[], optional: readonly string[] = []): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).some((key) => !fields.includes(key)) || fields.some((field) => !optional.includes(field) && !Object.hasOwn(value, field))) throw new Error("composition contribution has an invalid closed object");
   return value as Record<string, unknown>;
 }
 
@@ -57,12 +57,12 @@ export function admitCompositionContributionV1(value: unknown): CompositionContr
   const symbolPackages = array(row.symbolPackages).map((value) => text(value, atom));
   if (new Set([packageName, ...symbolPackages, ...(catalogPackage === null ? [] : [catalogPackage])]).size !== symbolPackages.length + 1 + (catalogPackage === null ? 0 : 1)) throw new Error("Composition contribution repeats a package");
   const playgrounds = array(row.playgrounds).map((value): CompositionPlaygroundV1 => {
-    const playground = object(value, ["owner", "variant", "app", "aliases", "ports"]);
+    const playground = object(value, ["owner", "variant", "app", "aliases", "ports", "devContribution"], ["devContribution"]);
     const ports = object(playground.ports, ["react", "wgpu"]);
     for (const value of Object.values(ports)) if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 65535) throw new Error("Invalid contribution playground port");
     const aliases = array(playground.aliases).map((value) => text(value, /^.+$/));
     if (new Set(aliases).size !== aliases.length) throw new Error("Repeated contribution playground alias");
-    return { owner: text(playground.owner, atom), variant: text(playground.variant, atom), app: text(playground.app, /^.+$/), aliases, ports: ports as { react: number; wgpu: number } };
+    return { owner: text(playground.owner, atom), variant: text(playground.variant, atom), app: text(playground.app, /^.+$/), aliases, ports: ports as { react: number; wgpu: number }, ...(playground.devContribution === undefined ? {} : { devContribution: text(playground.devContribution, /^[^\\]+\/🧬️schema\/🔣️\.json$/u) }) };
   });
   const mutationDescriptors = array(row.mutationDescriptors).map((value) => {
     const descriptor = object(value, ["name", "snapshot", "mutation"]);

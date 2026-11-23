@@ -31,6 +31,7 @@ depends-on = [
 
 [[package.metadata.semio.playground]]
 variant = "generation2d"
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/🌀️procedural/🧬️schema/🔣️.json"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.procedural.generation2d@1/*#editor"
 aliases = ["procedural 2d"]
@@ -38,6 +39,7 @@ ports = { react = 6021, wgpu = 6121 }
 
 [[package.metadata.semio.playground]]
 variant = "generation3d"
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/🌀️procedural/🧬️schema/🔣️.json"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.procedural.generation3d@1/*#editor"
 aliases = ["procedural 3d"]

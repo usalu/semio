@@ -26,13 +26,13 @@ pub fn definition() -> WindowKindDefinition {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 /// 👁️ Pure `PptxSnapshot -> BuiltNode` read: one `DocumentPage` per slide.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &PptxSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &PptxSnapshot, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let pages = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(document)
         .map_err(|error| semio_plugin::PluginAssemblyError::new("pptx.projection", error))?
         .into_iter()
         .map(|slide| DocumentPage { text: slide.shapes.into_iter().filter_map(|shape| shape.text).collect::<Vec<_>>().join("\n") })
         .collect();
-    DocumentWindowKit::render(&DocumentView { pages })
+    DocumentWindowKit::render(&DocumentView { pages }, locale)
 }
 //#endregion 🔖️Render
 

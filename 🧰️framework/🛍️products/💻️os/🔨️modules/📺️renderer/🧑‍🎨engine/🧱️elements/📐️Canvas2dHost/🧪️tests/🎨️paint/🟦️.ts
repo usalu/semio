@@ -100,12 +100,13 @@ it("paints a PDF text layer through its explicit face and affine baseline", () =
   const expected = pdfTextFixture.expected;
   const node = {
     ...expected,
-    text: {...expected.text, fontFamily: expected.text.fontFamily as "Anta"},
+    y: -expected.text.size,
+    text: {...expected.text, fontFamily: "Anta" as const},
     fill: {color: [0, 0, 0, 1]},
   };
   drawSceneNode(ctx as unknown as CanvasRenderingContext2D, node, new Map());
   expect(ctx.transform).toHaveBeenCalledWith(...expected.transform);
-  expect(ctx.font).toBe(`${expected.text.size}px "${expected.text.fontFamily}"`);
+  expect(ctx.font).toBe(`${expected.text.size}px "${node.text.fontFamily}"`);
   expect(ctx.fillText).toHaveBeenCalledWith(expected.text.content, 0, 0);
 });
 

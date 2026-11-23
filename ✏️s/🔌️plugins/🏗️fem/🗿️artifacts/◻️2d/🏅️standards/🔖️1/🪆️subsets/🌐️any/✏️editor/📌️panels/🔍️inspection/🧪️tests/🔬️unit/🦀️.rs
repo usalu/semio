@@ -69,8 +69,8 @@ use semio_ui_locale::Terminology;
 use semio_plugin::ViewModel;
 use pack::snapshot::ArtifactDsl;
 
-fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
+fn demo() -> semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring {
+    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("the bundled demo fixture parses"))
 }
 
 fn selecting(ids: &[&str]) -> Fem2dInteractionSnapshot {
@@ -109,6 +109,7 @@ fn carries_a_tree(json: &str) -> bool {
 
 #[semio_framework_async_macros::async_test]
 async fn a_selected_node_renders_bound_ordinate_inputs_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = english(&demo(), &["scope:1:4:node2:n1"]);
     assert!(json.contains("fem2d-play-inspection.node.x.input"), "{json}");
     assert!(json.contains("fem2d-play-inspection.node.y.input"));
@@ -122,6 +123,7 @@ async fn a_selected_node_renders_bound_ordinate_inputs_2d() {
 /// 🧾️ Editable fields are `treeItem` rows whose inline control stays bound to its patch command.
 #[semio_framework_async_macros::async_test]
 async fn a_node_section_carries_a_number_input_bound_to_patch_node_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = english(&demo(), &["scope:1:4:node2:n1"]);
     let tree: serde_json::Value = serde_json::from_str(&json).expect("the inspector projection is JSON");
     let control = node_at(&tree, "fem2d-play-inspection.node.x.input").unwrap_or_else(|| panic!("{json}"));
@@ -136,6 +138,7 @@ async fn a_node_section_carries_a_number_input_bound_to_patch_node_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_selected_element_offers_its_reference_selects_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = english(&demo(), &["scope:1:7:element2:e3"]);
     for row in ["element.kind", "element.start", "element.end", "element.material", "element.section"] {
         assert!(json.contains(&format!("fem2d-play-inspection.{row}.select")), "{row} missing from {json}");
@@ -147,6 +150,7 @@ async fn a_selected_element_offers_its_reference_selects_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_selected_material_mixes_inputs_and_a_bounded_slider_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = english(&demo(), &["scope:1:8:material6:timber"]);
     assert!(json.contains("fem2d-play-inspection.material.nu.slider"), "{json}");
     assert!(json.contains("fem2d-play-inspection.material.e.input"));
@@ -157,6 +161,7 @@ async fn a_selected_material_mixes_inputs_and_a_bounded_slider_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_selected_support_renders_one_toggle_per_planar_dof_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = english(&demo(), &["scope:1:7:support2:s1"]);
     for row in ["support.tx", "support.ty", "support.rz"] {
         assert!(json.contains(&format!("fem2d-play-inspection.{row}.toggle")), "{row} missing from {json}");
@@ -167,6 +172,7 @@ async fn a_selected_support_renders_one_toggle_per_planar_dof_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_selected_region_shows_its_polygon_read_only_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = english(&demo(), &["scope:1:6:region2:r1"]);
     assert!(json.contains("fem2d-play-inspection.region.thickness.slider"), "{json}");
     assert!(json.contains("fem2d-play-inspection.region.outline"), "the polygon is reported, never offered as a text box");
@@ -176,6 +182,7 @@ async fn a_selected_region_shows_its_polygon_read_only_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_selected_load_names_its_owning_case_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = english(&demo(), &["scope:1:4:load4:live2:l6"]);
     assert!(json.contains("fem2d-play-inspection.load.dof.select"), "{json}");
     assert!(json.contains("fem2d-play-inspection.load.value.input"));
@@ -188,6 +195,7 @@ async fn a_selected_load_names_its_owning_case_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_selected_load_case_lists_its_loads_as_picks_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = english(&demo(), &["scope:1:8:loadCase4:live"]);
     assert!(json.contains("fem2d-play-inspection.load-case.self-weight.toggle"), "{json}");
     assert!(json.contains("patchLoadCase"));
@@ -199,6 +207,7 @@ async fn a_selected_load_case_lists_its_loads_as_picks_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_selected_combination_renders_one_factor_input_per_term_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = english(&demo(), &["scope:1:11:combination3:uls"]);
     assert!(json.contains("fem2d-play-inspection.combination.term.dead.input"), "{json}");
     assert!(json.contains("fem2d-play-inspection.combination.term.live.input"));
@@ -210,6 +219,7 @@ async fn a_selected_combination_renders_one_factor_input_per_term_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_combination_missing_a_case_offers_the_add_term_select_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut doc = demo();
     doc.combinations[0].terms.retain(|term| term.case_id == "dead");
     let json = english(&doc, &["scope:1:11:combination3:uls"]);
@@ -220,10 +230,11 @@ async fn a_combination_missing_a_case_offers_the_add_term_select_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_multi_selection_headers_the_count_and_inspects_the_first_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = english(&demo(), &["scope:1:4:node2:n1", "scope:1:4:node2:n2", "scope:1:4:node2:p8"]);
     assert!(json.contains("3 Selected"), "{json}");
     for id in ["scope:1:4:node2:n1", "scope:1:4:node2:n2", "scope:1:4:node2:p8"] {
-        assert!(json.contains(&format!("\"{id}\"")));
+        assert!(json.contains(&format!("\"fem2d-play-inspection.selection.{id}\"")), "{json}");
     }
     assert!(json.contains("fem2d-play-inspection.node.x.input"), "the fields belong to the first selected id");
 }
@@ -231,6 +242,7 @@ async fn a_multi_selection_headers_the_count_and_inspects_the_first_2d() {
 /// 🎯️ Focus and delete are activatable tree rows in the Actions section.
 #[semio_framework_async_macros::async_test]
 async fn the_actions_group_binds_focus_and_delete_as_tree_items_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = english(&demo(), &["scope:1:4:node2:n1"]);
     assert_eq!(component_at(&json, "fem2d-play-inspection.actions.focus"), "treeItem", "{json}");
     assert_eq!(component_at(&json, "fem2d-play-inspection.actions.delete"), "treeItem");
@@ -260,6 +272,7 @@ async fn an_id_no_collection_owns_falls_back_to_the_summary_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn german_resolves_every_field_label_the_inspector_binds_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let view_state = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::new(Locale::De, Terminology::Native) };
     let doc = demo();
     assert!(panel(&doc, &["scope:1:8:material6:timber"], &view_state).contains("Querdehnzahl"));

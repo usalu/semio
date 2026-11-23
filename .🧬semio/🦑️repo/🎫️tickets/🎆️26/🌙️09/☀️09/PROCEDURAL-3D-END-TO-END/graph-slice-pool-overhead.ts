@@ -1,0 +1,12 @@
+import {readFileSync} from "node:fs";
+import {heapStats} from "bun:jsc";
+const G="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build";
+const {createRowPoolV1}=await import(G+"/👁️observation/🔢️row-table/🟨️.mjs");
+const mb=()=>{Bun.gc(true);const m=process.memoryUsage();return Math.round(m.heapUsed/1048576)+"MB"};
+let memo:any=JSON.parse(readFileSync(process.argv[2],"utf8"));
+const rows=memo.observations as any[];memo=null;
+console.log("distinct rows parsed",mb(),rows.length,"objects",heapStats().objectCount);
+const pool=createRowPoolV1();
+const shared=pool.rows(rows.slice());
+console.log("after pool.rows (same instances)",mb(),"pool",pool.size(),"objects",heapStats().objectCount);
+const kinds=new Map<string,number>();for(const r of rows)kinds.set(r.kind,(kinds.get(r.kind)??0)+JSON.stringify(r).length);console.log("chars by kind",JSON.stringify([...kinds]));

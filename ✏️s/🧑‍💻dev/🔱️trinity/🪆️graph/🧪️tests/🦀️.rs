@@ -4,6 +4,7 @@ use super::*;
 #[path="🪆️content/🦀️.rs"]mod content_laws;
 #[path="✏️editor/🦀️.rs"]mod editor_laws;
 #[path="🗂️layout/🦀️.rs"]mod layout_laws;
+#[path="📏️app-size/🦀️.rs"]mod app_size_laws;
 use semio_s_artifact_trinity_jack_graph_query::{JackContentVisual, JackGraphQuery};
 use jack::standards::v1::subsets::any::schema::content_read::JackContentProjection;
 use pack::snapshot::ArtifactPack;

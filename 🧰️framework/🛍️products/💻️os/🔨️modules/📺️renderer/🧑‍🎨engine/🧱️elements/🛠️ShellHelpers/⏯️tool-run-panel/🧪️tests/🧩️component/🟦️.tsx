@@ -8,7 +8,8 @@ import { createElement, Fragment } from "react";
 import { cleanup, render, screen } from "@semio-tech/ui-react/test";
 import panelFixture from "@semio-tech/framework-plugin/testing/fixtures/tool-run/panel-running.json";
 import "../../../../🐚️Shell/🟦️.tsx";
-import { actionBindingToActionDescriptor, uiNodeToTreePanelConfig } from "../../../🌳️tree-windows/🟦️.tsx";
+import { uiNodeToTreePanelConfig } from "../../../🌳️tree-windows/🟦️.tsx";
+import { actionBindingToActionDescriptor } from "../../../../🗣️Interpreter/🎬️intent-descriptor/🟦️.ts";
 import { toolRunPanelReveal, toolRunPanelTasksV1 } from "../../🟦️.ts";
 
 const STYLE = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };

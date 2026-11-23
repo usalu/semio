@@ -103,9 +103,9 @@ fn column_value(id: &str, label: &str) -> DslValue {
     DslValue::object([("id".to_string(), DslValue::String(id.into())), ("label".to_string(), DslValue::String(label.into())), ("sortable".to_string(), DslValue::Bool(false))])
 }
 
-fn table(columns: Vec<DslValue>, rows: Vec<DslValue>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+fn table(columns: Vec<DslValue>, rows: Vec<DslValue>, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let scene = semio_plugin::TableScene::base(semio_framework_pack_json::to_json_string(&DslValue::Array(columns)), semio_framework_pack_json::to_json_string(&DslValue::Array(rows)));
-    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Table, &scene)
+    semio_plugin::scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Table, &scene, semio_plugin::surface_name(locale, "Family", "Familie"), None)
 }
 //#endregion 🔖️Cells
 
@@ -210,12 +210,12 @@ pub fn columns(labels: &BimLabels) -> Vec<DslValue> {
 }
 
 /// 🧬️ Renders the family editor: the table of the selected family, or the hint to select one when the model has none.
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[String], library: &[String], labels: &BimLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[String], library: &[String], labels: &BimLabels, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let Some(family) = selected(snapshot, elements, library) else {
         let hint = row("none", vec![("part", text(labels.fam_none.as_str())), ("item", text("")), ("formula", text("")), ("value", text("")), ("issue", text("")), ("actions", TableCell::Buttons { buttons: Vec::new() })]);
-        return table(columns(labels), vec![hint]);
+        return table(columns(labels), vec![hint], locale);
     };
-    table(columns(labels), rows(snapshot, inference, &family, labels))
+    table(columns(labels), rows(snapshot, inference, &family, labels), locale)
 }
 //#endregion 🔖️Rows
 
@@ -271,9 +271,9 @@ pub fn view_scene(snapshot: &ModelSnapshot, inference: &ModelInference, id: &str
 }
 
 /// 🧊️ Renders the family preview: the selected family in 3D, an empty scene when the model has none.
-pub fn view_render(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[String], library: &[String]) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn view_render(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[String], library: &[String], locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let id = selected(snapshot, elements, library).unwrap_or_default();
-    semio_plugin::scene_surface(VIEW_SURFACE_ID, semio_ui_contract::SurfaceKind::World3d, &view_scene(snapshot, inference, &id))
+    semio_plugin::scene_surface(VIEW_SURFACE_ID, semio_ui_contract::SurfaceKind::World3d, &view_scene(snapshot, inference, &id), semio_plugin::surface_name(locale, "Family preview", "Familienvorschau"), None)
 }
 //#endregion 🔖️Preview
 

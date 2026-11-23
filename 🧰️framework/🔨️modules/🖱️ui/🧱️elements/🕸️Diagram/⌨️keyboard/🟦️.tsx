@@ -97,7 +97,7 @@ export function diagramReadingOrderPosition(nodes: readonly DiagramNavigableNode
   return ordered.findIndex((node) => node.id === id) + 1;
 }
 
-/** ⭕️ The visible keyboard-focus silhouette on the focused node, painted by the border compositor — the sighted twin of what the live region
+/** ⭕️ The visible keyboard-focus outline on the focused node, painted by the border compositor — the sighted twin of what the live region
  * speaks. (React Flow reserves a node's DOM `id`, so there is no `aria-activedescendant` target: the
  * {@link DiagramLiveRegion} sentence is the assistive-technology channel.) */
 export const DIAGRAM_KEYBOARD_FOCUS_ATTRIBUTES = { ...sharedBorderlessBoxProps, "data-shared-border-state": "focus", "data-keyboard-focused": "" } as const;

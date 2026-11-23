@@ -12,7 +12,7 @@ async fn definition_declares_the_canvas_2d_surface_and_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn renders_canvas_scene_for_the_empty_document() {
-    let node = render(&crate::wires_composed(&crate::empty_wires_snapshot(), &crate::empty_wires_content())).expect("viewer canvas");
+    let node = render(&crate::wires_composed(&crate::empty_wires_snapshot(), &crate::empty_wires_content()), semio_plugin::Locale::En).expect("viewer canvas");
     let semio_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
     let scene: Canvas2dScene = semio_ui_scene::decode(props).expect("packed canvas");
     let json = scene.layers_json;
@@ -24,7 +24,7 @@ async fn renders_canvas_scene_for_the_empty_document() {
 async fn renders_canvas_scene_for_the_metabolism_example() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
     let (_, content) = crate::wires_bundled_contents().iter().find(|(id, _)| *id == document.content.child_id).expect("the demo names its bundled board");
-    let node = render(&crate::wires_composed(&document, content)).expect("viewer canvas");
+    let node = render(&crate::wires_composed(&document, content), semio_plugin::Locale::En).expect("viewer canvas");
     let semio_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
     let scene: Canvas2dScene = semio_ui_scene::decode(props).expect("packed canvas");
     let json = scene.layers_json;

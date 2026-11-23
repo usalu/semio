@@ -93,7 +93,13 @@
         },
         "fov": {
           "type": "number",
-          "format": "double"
+          "format": "double",
+          "x-semio-ui": {
+            "label": {
+              "en": "Perspective field of view (°)",
+              "de": "Perspektivischer Bildwinkel (°)"
+            }
+          }
         },
         "up": {
           "type": "array",
@@ -102,10 +108,22 @@
             "format": "double"
           },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "x-semio-ui": {
+            "label": {
+              "en": "Camera up",
+              "de": "Kamera-Hochachse"
+            }
+          }
         },
         "projection": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Projection",
+              "de": "Projektion"
+            }
+          }
         }
       }
     },
@@ -231,7 +249,17 @@
         },
         "autoFit": {
           "type": "boolean",
-          "description": "Absent inherits the scene auto-fit setting."
+          "x-semio-ui": {
+            "label": {
+              "en": "Auto fit",
+              "de": "Automatische Einpassung"
+            },
+            "widget": "toggle",
+            "description": {
+              "en": "Absent inherits the scene auto-fit setting.",
+              "de": "Ohne Angabe gilt die automatische Einpassung der Szene."
+            }
+          }
         }
       }
     },
@@ -453,61 +481,138 @@
       "properties": {
         "background": {
           "type": "boolean",
-          "default": true
+          "default": true,
+          "x-semio-ui": {
+            "label": {
+              "en": "Background layer",
+              "de": "Hintergrundebene"
+            },
+            "widget": "toggle"
+          }
         },
         "fill": {
           "type": "boolean",
-          "default": true
-        },
-        "visibleLines": {
-          "type": "boolean",
-          "default": true
-        },
-        "hiddenLines": {
-          "type": "boolean",
-          "default": false
-        },
-        "visibleColor": {
-          "type": "string",
-          "default": "#000000",
-          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
-        },
-        "hiddenColor": {
-          "type": "string",
-          "default": "#808080",
-          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
-        },
-        "visibleWidth": {
-          "type": "number",
-          "default": 1,
-          "exclusiveMinimum": 0,
-          "maximum": 64
-        },
-        "hiddenWidth": {
-          "type": "number",
-          "default": 1,
-          "exclusiveMinimum": 0,
-          "maximum": 64
-        },
-        "lineEasing": {
-          "type": "number",
-          "default": 0,
-          "minimum": 0,
-          "maximum": 10
-        },
-        "mergeLines": {
-          "type": "boolean",
-          "default": false
+          "default": true,
+          "x-semio-ui": {
+            "label": {
+              "en": "Face fills",
+              "de": "Flächenfüllungen"
+            },
+            "widget": "toggle"
+          }
         },
         "fillColor": {
           "type": "string",
-          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
+          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fill color",
+              "de": "Füllfarbe"
+            }
+          }
         },
         "fillOpacity": {
           "type": "number",
           "minimum": 0,
           "maximum": 1,
-          "default": 1
+          "default": 1,
+          "x-semio-ui": {
+            "label": {
+              "en": "Fill opacity",
+              "de": "Deckkraft der Füllung"
+            }
+          }
+        },
+        "visibleLines": {
+          "type": "boolean",
+          "default": true,
+          "x-semio-ui": {
+            "label": {
+              "en": "Visible lines",
+              "de": "Sichtbare Linien"
+            },
+            "widget": "toggle"
+          }
+        },
+        "hiddenLines": {
+          "type": "boolean",
+          "default": false,
+          "x-semio-ui": {
+            "label": {
+              "en": "Hidden lines",
+              "de": "Verdeckte Linien"
+            },
+            "widget": "toggle"
+          }
+        },
+        "visibleColor": {
+          "type": "string",
+          "default": "#000000",
+          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$",
+          "x-semio-ui": {
+            "label": {
+              "en": "Visible line color",
+              "de": "Farbe sichtbarer Linien"
+            }
+          }
+        },
+        "hiddenColor": {
+          "type": "string",
+          "default": "#808080",
+          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$",
+          "x-semio-ui": {
+            "label": {
+              "en": "Hidden line color",
+              "de": "Farbe verdeckter Linien"
+            }
+          }
+        },
+        "visibleWidth": {
+          "type": "number",
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "maximum": 64,
+          "x-semio-ui": {
+            "label": {
+              "en": "Visible line width (px)",
+              "de": "Sichtbare Linienbreite (px)"
+            }
+          }
+        },
+        "hiddenWidth": {
+          "type": "number",
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "maximum": 64,
+          "x-semio-ui": {
+            "label": {
+              "en": "Hidden line width (px)",
+              "de": "Verdeckte Linienbreite (px)"
+            }
+          }
+        },
+        "lineEasing": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 10,
+          "x-semio-ui": {
+            "label": {
+              "en": "Corner radius (px)",
+              "de": "Eckenradius (px)"
+            }
+          }
+        },
+        "mergeLines": {
+          "type": "boolean",
+          "default": false,
+          "x-semio-ui": {
+            "label": {
+              "en": "Merge connected lines",
+              "de": "Verbundene Linien zusammenführen"
+            },
+            "widget": "toggle"
+          }
         }
       }
     },
@@ -518,42 +623,107 @@
       "required": [],
       "properties": {
         "background": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Background layer",
+              "de": "Hintergrundebene"
+            },
+            "widget": "toggle"
+          }
         },
         "fill": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Face fills",
+              "de": "Flächenfüllungen"
+            },
+            "widget": "toggle"
+          }
         },
         "visibleLines": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Visible lines",
+              "de": "Sichtbare Linien"
+            },
+            "widget": "toggle"
+          }
         },
         "hiddenLines": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Hidden lines",
+              "de": "Verdeckte Linien"
+            },
+            "widget": "toggle"
+          }
         },
         "visibleColor": {
           "type": "string",
-          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
+          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$",
+          "x-semio-ui": {
+            "label": {
+              "en": "Visible line color",
+              "de": "Farbe sichtbarer Linien"
+            }
+          }
         },
         "hiddenColor": {
           "type": "string",
-          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
+          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$",
+          "x-semio-ui": {
+            "label": {
+              "en": "Hidden line color",
+              "de": "Farbe verdeckter Linien"
+            }
+          }
         },
         "visibleWidth": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 64
+          "maximum": 64,
+          "x-semio-ui": {
+            "label": {
+              "en": "Visible line width (px)",
+              "de": "Sichtbare Linienbreite (px)"
+            }
+          }
         },
         "hiddenWidth": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "maximum": 64
+          "maximum": 64,
+          "x-semio-ui": {
+            "label": {
+              "en": "Hidden line width (px)",
+              "de": "Verdeckte Linienbreite (px)"
+            }
+          }
         },
         "lineEasing": {
           "type": "number",
           "minimum": 0,
-          "maximum": 10
+          "maximum": 10,
+          "x-semio-ui": {
+            "label": {
+              "en": "Corner radius (px)",
+              "de": "Eckenradius (px)"
+            }
+          }
         },
         "mergeLines": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Merge connected lines",
+              "de": "Verbundene Linien zusammenführen"
+            },
+            "widget": "toggle"
+          }
         },
         "fillColor": {
           "type": "object",
@@ -567,17 +737,42 @@
                 "string",
                 "null"
               ],
-              "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
+              "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Fill color",
+                  "de": "Füllfarbe"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Fill color",
+              "de": "Füllfarbe"
             }
           }
         },
         "fillOpacity": {
           "type": "number",
           "minimum": 0,
-          "maximum": 1
+          "maximum": 1,
+          "x-semio-ui": {
+            "label": {
+              "en": "Fill opacity",
+              "de": "Deckkraft der Füllung"
+            }
+          }
         },
         "restoreAbsent": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Restore absent fields",
+              "de": "Fehlende Felder wiederherstellen"
+            },
+            "widget": "toggle"
+          }
         }
       }
     }

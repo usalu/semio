@@ -44,16 +44,16 @@ async fn patch_load_edits_each_variant_through_its_owning_case_3d() {
 /// 👥️ Same-base field commands preserve both nodal edits and undo only their authored field.
 #[test]
 fn sibling_load_commands_preserve_independent_intent(){
-    let base=semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base=crate::context::Retiring::new(semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let first=emit(&base,PatchLoad{id:semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_target("lc1", "l1").unwrap(),field:"value".into(),value:"20".into()}).unwrap().artifact_mutations.remove(0);
     let second=emit(&base,PatchLoad{id:semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_target("lc1", "l1").unwrap(),field:"nodeId".into(),value:"n2".into()}).unwrap().artifact_mutations.remove(0);
-    let combined=vcs::apply_mutation(&vcs::apply_mutation(&base,&first).unwrap().0,&second).unwrap().0;
-    assert_eq!(combined,vcs::apply_mutation(&vcs::apply_mutation(&base,&second).unwrap().0,&first).unwrap().0);
+    let combined=crate::context::applied(&crate::context::applied(&base,&first),&second);
+    assert_eq!(combined,crate::context::applied(&crate::context::applied(&base,&second),&first));
     let FemLoad::Nodal{node_id,value,..}=&combined.load_cases[0].loads[0] else{panic!("nodal variant preserved")};
     assert_eq!(node_id,"n2");assert_eq!(*value,20.0);
-    let mut undone=combined.clone();for inverse in protocol::ColdMutation::inverse(&first,&base).unwrap().iter().rev(){undone=vcs::apply_mutation(&undone,inverse).unwrap().0;}
-    assert_eq!(undone,vcs::apply_mutation(&base,&second).unwrap().0);
-    let mut sum=protocol::ColdMutation::diff(&first,&base).into_parts().0;protocol::ColdMutationDiff::absorb(&mut sum,protocol::ColdMutation::diff(&second,&base).into_parts().0);
-    assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);
-    assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
+    let mut undone=crate::context::Retiring::new(combined.clone());for inverse in protocol::ColdMutation::inverse(&first,&*base).unwrap().iter().rev(){undone=crate::context::applied(&undone,inverse);}
+    assert_eq!(undone,crate::context::applied(&base,&second));
+    let mut sum=protocol::ColdMutation::diff(&first,&*base).into_parts().0;protocol::ColdMutationDiff::<Fem3dSnapshot>::absorb(&mut sum,protocol::ColdMutation::diff(&second,&*base).into_parts().0);
+    assert_eq!(crate::context::Retiring::new(protocol::apply_diff_cold(&sum,&*base).unwrap()),combined);
+    assert_eq!(crate::context::Retiring::new(protocol::apply_diff_cold(&protocol::ColdDiffAlgebra::inverse(&sum,&*base),&*combined).unwrap()),base);
 }

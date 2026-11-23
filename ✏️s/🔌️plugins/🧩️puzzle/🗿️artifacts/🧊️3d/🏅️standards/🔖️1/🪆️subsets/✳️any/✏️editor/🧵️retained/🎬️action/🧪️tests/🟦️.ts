@@ -45,7 +45,7 @@ test("Puzzle native app and brush fixtures preserve original close custody", asy
   expect(app).toContain("scope: semio_plugin::artifact_app_laws::OriginalFixtureScope");
   expect(app).toContain("pub fn close_witness(app: &mut Puzzle3dApp)");
   expect(app).not.toContain("std::mem::forget(raw)");
-  expect(app).toContain("PluginApp::maintenance_step(raw, cx, loan)");
+  expect(app).toContain("raw.mounted_owner_maintenance_step(&mut turn)");
   expect(app).toContain("artifact_app_laws::close_registered_fixture_app(");
   expect(brush).toContain("cx.with_original_work_loan(fuel, deadline");
   expect(brush).not.toContain("StepContext::new");

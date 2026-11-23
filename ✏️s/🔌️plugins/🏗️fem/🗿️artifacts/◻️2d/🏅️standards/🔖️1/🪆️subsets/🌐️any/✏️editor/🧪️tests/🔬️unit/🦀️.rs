@@ -145,10 +145,10 @@ async fn every_command_matches_declared_wire_bytes() {
         ),
         ("010c010464656164020006000102", Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true })),
         ("010d000200040502050000000000003e40", Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None, window_id: None })),
-        ("010e021573636f70653a313a373a656c656d656e74323a65311273636f70653a313a343a6e6f6465323a6e3101000c0206010600", Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["scope:1:4:node2:n1".into(), "scope:1:7:element2:e1".into()] })),
+        ("010e021273636f70653a313a343a6e6f6465323a6e311573636f70653a313a373a656c656d656e74323a653101000c0206000601", Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["scope:1:4:node2:n1".into(), "scope:1:7:element2:e1".into()] })),
         ("010f010764656661756c7401000600", Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() })),
         ("011000030005000000000000f03f010500000000000000400205000000000000f83f", Fem2dCommand::SetCamera(set_camera::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 })),
-        ("0111021873636f70653a313a383a6c6f616443617365343a64656164056d6f64616c03000600010601020400", Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").expect("source")), mode: "modal".into(), mode_index: 0, field: None, value: None, window_id: None })),
+        ("011102056d6f64616c1873636f70653a313a383a6c6f616443617365343a6465616403000601010600020400", Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").expect("source")), mode: "modal".into(), mode_index: 0, field: None, value: None, window_id: None })),
     ];
     for (expected, command) in rows {
         let bytes = command.encode_op().expect("encode");
@@ -400,12 +400,13 @@ async fn two_actors_reconnect_after_local_edits_without_freezing_or_duplicate_re
     use semio_plugin::artifact_app_laws::settle_registered_typed_operation;
     use semio_plugin::artifact_app_laws::close_registered_fixture_app;
     use semio_plugin::PluginApp;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring as Retiring;
     let row: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).expect("portable reconnect fixture");
     let policy = fixture_mounted_policy();
     let mut identity = fixture_identity();
     let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let (mut a, mut b) = paired_registered_apps::<EditorApp<Fem2dPlayApp>, _, _>("mem://fem2d-reconnect-initial", || async { context::manifest() }, policy, &mut identity).await;
-    let before = a.snapshot().expect("initial projection").nodes.len();
+    let before = Retiring::new(a.snapshot().expect("initial projection")).nodes.len();
     a.detach_backbone().await.expect("short disconnect a");
     b.detach_backbone().await.expect("short disconnect b");
     for (app, actor, key) in [(&mut a, "actor-a", "a"), (&mut b, "actor-b", "b")] {
@@ -413,7 +414,7 @@ async fn two_actors_reconnect_after_local_edits_without_freezing_or_duplicate_re
         let action = meta(actor);
         semio_plugin::artifact_app_laws::dispatch_original_fixture_command(app, &Fem2dCommand::AddNode(add_node::AddNode { x: point["x"].as_f64().expect("x"), y: point["y"].as_f64().expect("y") }), &action, policy, &mut identity, scope.cx()).await.expect("local command remains responsive");
         settle_registered_typed_operation(app, action.instance_id, policy, &mut identity, scope.cx()).await.expect("local persisted publication");
-        assert_eq!(app.snapshot().expect("disconnected local projection").nodes.len(), before + 1);
+        assert_eq!(Retiring::new(app.snapshot().expect("disconnected local projection")).nodes.len(), before + 1);
     }
     let (near, far) = store::os_store::backbone::MemoryBackbone::pair("mem://fem2d-reconnect-resumed", "mem://fem2d-reconnect-resumed").await;
     a.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("reconnect a");
@@ -422,17 +423,17 @@ async fn two_actors_reconnect_after_local_edits_without_freezing_or_duplicate_re
         a.tick_backbone(&mut identity, scope.cx()).await.expect("a folds queued events");
         b.tick_backbone(&mut identity, scope.cx()).await.expect("b folds queued events");
     }
-    let left = a.snapshot().expect("a converged projection");
-    let right = b.snapshot().expect("b converged projection");
-    assert_eq!(left, right);
+    let left = Retiring::new(a.snapshot().expect("a converged projection"));
+    let right = Retiring::new(b.snapshot().expect("b converged projection"));
+    assert_eq!(*left, *right);
     assert_eq!(left.nodes.len(), before + row["expectedAddedNodes"].as_u64().expect("expected extent") as usize);
     for key in ["a", "b"] {
         assert!(left.nodes.iter().any(|node| node.x == row[key]["x"].as_f64().unwrap() && node.y == row[key]["y"].as_f64().unwrap()));
     }
     a.tick_backbone(&mut identity, scope.cx()).await.expect("duplicate pump a");
     b.tick_backbone(&mut identity, scope.cx()).await.expect("duplicate pump b");
-    assert_eq!(a.snapshot().expect("idempotent a"), left);
-    assert_eq!(b.snapshot().expect("idempotent b"), right);
+    assert_eq!(*Retiring::new(a.snapshot().expect("idempotent a")), *left);
+    assert_eq!(*Retiring::new(b.snapshot().expect("idempotent b")), *right);
     a.detach_backbone().await.expect("release a");
     b.detach_backbone().await.expect("release b");
     close_registered_fixture_app(&mut a, policy, scope.cx()).expect("original caller paid close a");
@@ -470,7 +471,7 @@ async fn mounted_camera_and_interaction_presence_reach_peers_without_document_ed
     let mut scope = OriginalFixtureScope::admit();
     let mut source = new_app_with_registry_boxed::<EditorApp<Fem2dPlayApp>>(context::manifest, ActorId(LOCAL_ACTOR_ID.into()), policy, &mut identity).await;
     let mut peer = new_app_with_registry_boxed::<EditorApp<Fem2dPlayApp>>(context::manifest, ActorId(LOCAL_ACTOR_ID.into()), policy, &mut identity).await;
-    let mut action = meta("fem2d-source");
+    let mut action = meta(LOCAL_ACTOR_ID);
     source.bind_instance_id(action.instance_id).await;
     peer.bind_instance_id(action.instance_id + 1).await;
     let source_before = source.document_pack().await.expect("source document");
@@ -498,7 +499,8 @@ async fn mounted_camera_and_interaction_presence_reach_peers_without_document_ed
         ("method".into(), DslValue::String("pick".into())),
         ("targets".into(), DslValue::String(selection)),
     ]);
-    dispatch_fixture_action(&mut *source, INTERACTION_SELECT_ACTION_ID, Some(args), &action, &mut identity, scope.cx(), policy.maintenance).await.expect("select model node");
+    let admitted = dispatch_fixture_action(&mut *source, INTERACTION_SELECT_ACTION_ID, Some(args), &action, &mut identity, scope.cx(), policy.maintenance).await.expect("select model node");
+    semio_plugin::artifact_app_laws::settle_framework_reserved_admission(&mut *source, admitted, scope.cx()).await.expect("settle model node selection");
     let local = source.ephemeral_snapshot().await;
     let interaction = protocol::decode_presence_interaction(&local.interaction, &mut 0).await.expect("source interaction is published");
     assert!(interaction.domains.iter().any(|domain| domain.domain == FEM2D_INTERACTION_DOMAIN && domain.selected == [selected.clone()]));

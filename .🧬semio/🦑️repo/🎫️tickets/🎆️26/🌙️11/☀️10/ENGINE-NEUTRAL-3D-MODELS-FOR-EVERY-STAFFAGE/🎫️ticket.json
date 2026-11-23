@@ -1,9 +1,9 @@
 {
   "title": "Engine Neutral 3D Models for Every Staffage",
   "emoji": "🧊",
-  "status": "open",
+  "status": "closed",
   "description": "Extend every staffage with 3D models: procedural declarative data models, exported GLB for static poses and FBX for models with motion, through engine-neutral mechanisms, and extend the thermodynamic, structural and other representations to 3D by the same principle.",
-  "summary": "Volumes for all 152 assets, neutral model kernel, GLB and FBX encoders, viewer, seven views, axonometric, batch export and site integration are in; direct tests green except dwg-reopen; repo run never completed. See summary.md.",
+  "summary": "The four gaps of the reopening are closed: the DWG writer builds staffage_dwg.wasm (dwg-reopen 5 of 5, re-measured 2026-11-23), real manim ran the consumer tests on 2026-11-12, the 15 silhouette misses were removed at the gate of this ticket, and the five repo run targets completed with exit 0 on 2026-11-12. The silhouette and model guards in the tree are stricter today and are the acceptance of the open 3D ticket of 2026-11-14, which carries them. Not re-measured to the end on 2026-11-23: the course Python environment is not provisioned on the host and repo run did not reach the tests within 300 s. Evidence: older-tickets.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS.",
   "goal": "animate",
   "sessions": [
     "bd52a2e6-c416-4e13-bd7a-fcdd3d0aa0ba",
@@ -51,6 +51,15 @@
       "client": "claude-code",
       "checkpoint": "ff42158b9733c2ef40b30b1a47fdba2c7c77ace2",
       "prompt": "Close the remaining verification gaps: DWG wasm build, Python consumer against real manim, the 15 silhouette misses, and repo run for the 3D and staffage test targets."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 12:38:44",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "508f457ff1e1b2e344827fe80c57ec46a04af505",
+      "summary": "The four gaps of the reopening are closed: the DWG writer builds staffage_dwg.wasm (dwg-reopen 5 of 5, re-measured 2026-11-23), real manim ran the consumer tests on 2026-11-12, the 15 silhouette misses were removed at the gate of this ticket, and the five repo run targets completed with exit 0 on 2026-11-12. The silhouette and model guards in the tree are stricter today and are the acceptance of the open 3D ticket of 2026-11-14, which carries them. Not re-measured to the end on 2026-11-23: the course Python environment is not provisioned on the host and repo run did not reach the tests within 300 s. Evidence: older-tickets.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS."
     }
   ]
 }

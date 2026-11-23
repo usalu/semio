@@ -49,8 +49,8 @@ const projection = renderCatalogFiles(workspace, {
   ...inputView,
   readText: (path: string) => path === fixture.manifest ? text : inputView.readText(path),
   readBytes: (path: string) => path === fixture.manifest ? Buffer.from(text) : inputView.readBytes(path),
-}, "exclude", specificCatalogPublicationV1(path => readFileSync(resolve(workspace, path), "utf8")));
-const projected = projection.playgrounds.find(row => row.variant === fixture.variant);
+}, "exclude", specificCatalogPublicationV1((path: string) => readFileSync(resolve(workspace, path), "utf8")));
+const projected = projection.playgrounds.find((row: {variant: string}) => row.variant === fixture.variant);
 assert.equal(projected?.devContribution, fixture.contribution);
 assert.equal(projected?.app, fixture.app);
 assert.deepEqual(runtimeComponentClosure(projection.entries, roots), [...fixture.dependsOn, fixture.plugin].sort());
@@ -59,10 +59,10 @@ const renderer = "🧰️framework/🛍️products/💻️os/🔨️modules/📺
 const { routePickedFileV1 } = await import(resolve(workspace, renderer, "🧱️elements/🏛️ShellHost/📂️picked-file-opening/🟦️.ts"));
 const { S_FORMAT_CATALOG_V1 } = await import(resolve(workspace, "✏️s/🧑‍💻dev/🚀️entry/🧭️format-catalog/🟦️.ts"));
 const specimen = readFileSync(resolve(workspace, fixture.input));
-const picked = await routePickedFileV1(S_FORMAT_CATALOG_V1, {name: "input.pdf", type: "application/pdf"}, async size => specimen.subarray(0, size));
+const picked = await routePickedFileV1(S_FORMAT_CATALOG_V1, {name: "input.pdf", type: "application/pdf"}, async (size: number) => specimen.subarray(0, size));
 assert.ok(picked.kind === "routed");
 assert.equal(picked.artifactRef, fixture.artifactRef);
-assert.deepEqual(await routePickedFileV1(undefined, {name: "input.pdf"}, async size => specimen.subarray(0, size)),
+assert.deepEqual(await routePickedFileV1(undefined, {name: "input.pdf"}, async (size: number) => specimen.subarray(0, size)),
   {kind: "refused", reason: "format-catalog-unavailable"});
 
 const entrySource = readFileSync(resolve(workspace, declaration.browserEntry), "utf8");

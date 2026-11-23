@@ -317,7 +317,7 @@ fn only_the_innermost_interactive_node_owns_the_hover_while_the_chain_stays_hove
     assert_eq!([root, group, first, second].map(|id| owner(&tree, id)), [false; 4]);
 }
 #[test]
-fn a_card_owns_its_silhouette_while_its_control_owns_hover() {
+fn a_card_owns_its_frame_while_its_control_owns_hover() {
     use semio_ui_declaration::ui::{UiCardStackNode, UiOverviewCardNode};
     let mut tree = UiTree::new();
     let stack = UiNode::CardStack(UiCardStackNode { id: "stack".into(), presence: Default::default(), menu: None, children: Vec::new() });

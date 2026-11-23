@@ -42,7 +42,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowConfig) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowConfig, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let register = cfg.active_register.as_str();
     let entities = register_entities(program, register);
     if entities.is_empty() {
@@ -59,7 +59,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowCo
         .collect();
     let palette=vec![BlockListPaletteEntry {block_kind:register.into(),label:register.into(),icon_id:"square".into()}];
     let scene = BlockListScene { steps, palette, selected_id: None, dragging_id: None, domain_id: None };
-    semio_plugin::scene_surface(ARCHITECT_BODY_REGISTER, semio_ui_contract::SurfaceKind::BlockList, &scene)
+    semio_plugin::scene_surface(ARCHITECT_BODY_REGISTER, semio_ui_contract::SurfaceKind::BlockList, &scene, semio_plugin::surface_name(locale, "Register", "Register"), None)
 }
 //#endregion 🔖️Render
 

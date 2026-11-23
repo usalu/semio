@@ -13,6 +13,7 @@ pub const PORT: &str = "artifact:native";
 pub const TOOL: &str = "export-media:artifact:native";
 pub const FORMAT: &str = "s.stdio.pdf@1.7";
 pub const MIME: &str = "application/pdf";
+pub(crate) const REFERENCE_REQUIRED: &str = "the PDF object graph is outside the bounded native Save qualification and no reference writer is registered for Save";
 pub(crate) const MEDIA_TYPE: MediaType = MediaType { class: MediaClass::Data, form: MediaForm::Document };
 
 /// 📜️ The graph planner binds the authoritative source and proves coverage, total extent and the ordinary-object bound.
@@ -136,13 +137,23 @@ impl PdfSaveProducer {
             return Err(ValueError::invariant("PDF reference qualification reached the emission frontier").into());
         }
         if self.pending.is_none() && !self.published {
-            let retained = cx.retained_grant();
-            let bytes = size_of::<Result<ArtifactMediaExportResult, MediaError>>();
-            if cx.should_yield() || cx.is_cancelled() || retained.maximum_items == 0
-                || retained.maximum_depth == 0 || retained.maximum_copy_bytes < bytes { return Ok(false); }
-            *self.pending = Some(Err(MediaError::NotImplemented));
-            cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
-            cx.consume_fuel(1);
+            if cx.should_yield() || cx.is_cancelled() { return Ok(false); }
+            let capacity = PORT.len() + REFERENCE_REQUIRED.len();
+            let bytes = size_of::<Result<ArtifactMediaExportResult, MediaError>>() + capacity;
+            self.construction.built(cx, &mut self.pending, OriginalConstructionDemand {
+                items: 1, copy_bytes: bytes, capacity_bytes: capacity, release_bytes: 0, depth: 1,
+            }, || {
+                let mut port = String::new();
+                let mut reason = String::new();
+                port.try_reserve_exact(PORT.len()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "PDF export refusal allocation refused"))?;
+                reason.try_reserve_exact(REFERENCE_REQUIRED.len()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "PDF export refusal allocation refused"))?;
+                port.push_str(PORT);
+                reason.push_str(REFERENCE_REQUIRED);
+                let retained_capacity_bytes = port.capacity() + reason.capacity();
+                Ok((Err(MediaError::Payload(port, reason)), RetainedCloneProgress {
+                    copied_items: 1, copied_bytes: bytes, retained_capacity_bytes, ..Default::default()
+                }))
+            })?;
             return Ok(false);
         }
         request.completion.complete_original(&mut self.pending, &mut self.published, cx)

@@ -34300,7 +34300,7 @@
      "kind": "surface",
      "model": "passive",
      "material": "steel-powder",
-     "areaM2": 0.8869,
+     "areaM2": 1.184,
      "characteristicLengthM": 0.0728,
      "geometry": "vertical-plate",
      "skyViewFactor": 0.5,

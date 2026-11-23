@@ -10,10 +10,10 @@ import {executeOffloadRidingThroughV1,offloadExecuteBudgetMillisecondsV1,readOff
 import {classifyOffloadExitV1,offloadIncompleteDetailV1} from "./🩺️failure/🟦️.ts";
 import {resolveRemoteExecutionEndpointV1} from "../🧭️endpoint/🟦️.ts";
 import {offloadRealTextV1,planOffloadV1} from "./🗺️paths/🟦️.ts";
-import {OFFLOAD_POLICY_V1,offloadActionSecondsV1,offloadCrateTypesOfV1,offloadLinksNativelyV1,offloadPeakMegabytesV1,offloadPinV1,offloadTextV1,offloadTextsV1,type OffloadReasonV1} from "./📐️policy/🟦️.ts";
+import {OFFLOAD_POLICY_V1,offloadActionSecondsV1,offloadDeadlineMillisecondsV1,offloadCrateTypesOfV1,offloadLinksNativelyV1,offloadPeakMegabytesV1,offloadPinV1,offloadTextV1,offloadTextsV1,type OffloadReasonV1} from "./📐️policy/🟦️.ts";
 import {remoteExecutionOriginV1} from "../🌡️load/🟦️.ts";
 import {bumpOffloadCountersV1} from "./📊️counters/🟦️.ts";
-import {readOffloadMemoV1,writeOffloadMemoV1} from "./🚦️admission/🟦️.ts";
+import {readOffloadMemoV1,readUnitCostV1,writeOffloadMemoV1} from "./🚦️admission/🟦️.ts";
 import {releaseImplicitTokenV1} from "./🎟️token/🟦️.ts";
 import {offloadSdkIdentityV1,rustcVersionTextV1} from "./🧰️toolchain/🟦️.ts";
 import {COMMAND_POLICY_V1,commandProgramV1,commandTextsV1,commandToolPeakMegabytesV1,commandToolPropertyV1,commandToolSourceV1} from "./🧰️command/📐️policy/🟦️.ts";
@@ -65,6 +65,7 @@ function offloadRecorderV1(input:Readonly<{root:string;lane?:string;crate:string
   }
   const workspace_=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||fleetCacheRootV1(environment);
   if(workspace_!==undefined)bumpOffloadCountersV1(workspace_,outcome.kind==="done"?{out:1}:outcome.reason==="no-idle-machine"||outcome.reason==="queue-timeout"?{refused:1}:outcome.reason==="infrastructure"||outcome.reason==="incomplete-inputs"||outcome.reason==="path-dependent-output"||outcome.reason==="worker-policy"||outcome.reason==="pin-failed"?{fellBack:1}:{},outcome.kind==="local"&&outcome.reason!=="cancelled"?outcome.reason:undefined);
+  if(workspace_!==undefined&&outcome.kind==="local"&&outcome.reason==="infrastructure"){const cause=/^deadline\b/u.test(outcome.detail)?"deadline":outcome.detail==="operation lost"?"operation-lost":/^silent\b/u.test(outcome.detail)?"silent":undefined;if(cause!==undefined)bumpOffloadCountersV1(workspace_,{},cause);}
   if(outcome.kind==="done"){
    const shown=origin??outcome.origin,progress=line("offloaded",{crate:input.crate,origin:shown,milliseconds:Math.round(outcome.milliseconds)});
    emitOffloadEventV1(input.root,{...input.lane?{lane:input.lane}:{},kind:"offload-run",crate:input.crate,key:input.key,origin:shown,milliseconds:outcome.milliseconds,...bytes.shipped!==undefined?{bytesShipped:bytes.shipped,bytesUploaded:bytes.uploaded??0,bytesReturned:bytes.returned??0}:{},...marks.length>=3?{detail:`plan ${marks[0]!-started} ms, upload ${marks[1]!-marks[0]!} ms, queue and execute ${marks[2]!-marks[1]!} ms, download and write ${Date.now()-marks[2]!} ms`}:{},...progress===undefined?{}:{progress}});
@@ -99,7 +100,7 @@ export async function openOffloadSessionV1(input:Readonly<{root:string;environme
   if(!reachable){writeOffloadMemoV1(input.root,"declined",{atMs:Date.now(),reason:"infrastructure",detail:"cache endpoint unreachable"});return{decline:"infrastructure",detail:"cache endpoint unreachable"};}
   writeOffloadMemoV1(input.root,"reachable",{atMs:Date.now(),endpoint:cacheEndpoint!});
  }
- const content=ports?.content??httpRemoteExecutionContentV1({endpoint:cacheEndpoint!,token,...(workspace===undefined||cache===undefined?{}:{fetch:remoteCacheFetchV1({...environment,...cache.environment,SEMIO_WORKSPACE_ROOT:workspace},{root:workspace})}),timeoutSeconds:Math.ceil(policy.timeouts.requestMilliseconds/1000),retries:0});
+ const content=ports?.content??httpRemoteExecutionContentV1({endpoint:cacheEndpoint!,token,...(workspace===undefined||cache===undefined?{}:{fetch:remoteCacheFetchV1({...environment,...cache.environment,SEMIO_WORKSPACE_ROOT:workspace},{root:workspace})}),timeoutSeconds:Math.ceil(policy.timeouts.requestMilliseconds/1000),retries:policy.limits.contentRetries,retryAfterCapMilliseconds:policy.limits.contentRetryAfterCapMilliseconds});
  return{endpoint,content,instance:instance!,token,workspace};
 }
 
@@ -128,7 +129,7 @@ export async function offloadRustcUnitV1(input:Readonly<{args:readonly string[];
   const lease=releaseImplicitTokenV1(environment);
   let execution,seen:OffloadStageV1|undefined;
   const staged=(stage:OffloadStageV1):void=>{if(stage===seen)return;seen=stage;emitOffloadStageV1(input.root,input.crate,stage);try{input.onStage?.(stage);}catch{}};
-  try{execution=await executeOffloadRidingThroughV1({executeMilliseconds:offloadExecuteBudgetMillisecondsV1(offloadActionSecondsV1(types,plan.target))+waitMs,...queue?{queueMilliseconds:waitMs}:{},endpoint,token,...(workspace===undefined||token!==undefined?{}:{sign:(method,content)=>fleetHeadersV1(workspace,"submit","execution","POST",`http://x/${method}`,content)}),instance,action:built.digest,signal:cancelled,onStage:staged},policy.timeouts.rideThroughMilliseconds);}
+  try{execution=await executeOffloadRidingThroughV1({deadlineMilliseconds:offloadDeadlineMillisecondsV1(readUnitCostV1(input.root,input.crate),peak>0),executeMilliseconds:offloadExecuteBudgetMillisecondsV1(offloadActionSecondsV1(types,plan.target))+waitMs,...queue?{queueMilliseconds:waitMs}:{},endpoint,token,...(workspace===undefined||token!==undefined?{}:{sign:(method,content)=>fleetHeadersV1(workspace,"submit","execution","POST",`http://x/${method}`,content)}),instance,action:built.digest,signal:cancelled,onStage:staged},policy.timeouts.rideThroughMilliseconds);}
   finally{await lease?.reacquire();lease?.close();}
   if(execution.kind==="declined"){
    if(!queue&&peak<=0&&(execution.reason==="no-idle-machine"||execution.reason==="queue-timeout"||execution.reason==="worker-policy"))writeOffloadMemoV1(input.root,"declined",{atMs:Date.now(),reason:execution.reason,detail:execution.detail.slice(0,120)});
@@ -175,7 +176,7 @@ export function offloadCommandPlatformV1(host:readonly RemoteExecutionPropertyV1
 /** 🛠️ One non-rustc build step to run on another machine: the allow-listed tool (name, the sha-256 of its file and, for a shipped tool, the real file to send), its arguments with `@root/<relative path>` for every path, the input files (relative path in the worker's private root, real file), the output files (`out/<name>`, the real file the result is written to) and the output directories (`out/<name>`, the real directory every file the tool wrote below it is written to; a directory the tool left empty or absent is a missing output). */
 export type OffloadCommandInputV1=Readonly<{
  tool:Readonly<{name:string;digest:string;file?:string}>;arguments:readonly string[];inputs:ReadonlyMap<string,string>;outputs:ReadonlyMap<string,string>;directories?:ReadonlyMap<string,string>;variables?:readonly (readonly [string,string])[];
- root:string;environment:Environment;lane?:string;label:string;key:string|null;seconds?:number;peakMegabytes?:number;digest?:(path:string)=>string|null;signal?:AbortSignal;onStage?:(stage:OffloadStageV1)=>void;ports?:OffloadPortsV1;
+ root:string;environment:Environment;lane?:string;label:string;key:string|null;seconds?:number;predictedMilliseconds?:number;peakMegabytes?:number;digest?:(path:string)=>string|null;signal?:AbortSignal;onStage?:(stage:OffloadStageV1)=>void;ports?:OffloadPortsV1;
 }>;
 
 /** 🚀️ Hands one non-rustc build step to another machine and writes its declared outputs where a local run would: the same plan, headroom check, placement, progress, cancel, timeouts and decline memo as the rustc unit offload (one session, one recorder, one shipping path, one execution and ride-through client), and the same promise: it never throws and never leaves a half-written output; every fault, a refusal of the worker, a missing output or a non-zero exit of the tool is a reason to run the step here, where its own diagnostics are produced. The caller publishes the result under its own key, so the entry exists once. */
@@ -208,7 +209,7 @@ export async function offloadCommandV1(input:OffloadCommandInputV1):Promise<Offl
    if(stage==="QUEUED"||stage==="EXECUTING")emitOffloadProgressV1(input.root,commandTextsV1(stage==="QUEUED"?"stage.queued":"stage.executing",{crate:input.label}));
    try{input.onStage?.(stage);}catch{}
   };
-  try{execution=await executeOffloadRidingThroughV1({executeMilliseconds:offloadExecuteBudgetMillisecondsV1(seconds),endpoint,token,...(workspace===undefined||token!==undefined?{}:{sign:(method,body)=>fleetHeadersV1(workspace,"submit","execution","POST",`http://x/${method}`,body)}),instance,action:built.digest,signal:cancelled,onStage:staged},policy.timeouts.rideThroughMilliseconds);}
+  try{execution=await executeOffloadRidingThroughV1({deadlineMilliseconds:offloadDeadlineMillisecondsV1(input.predictedMilliseconds??readUnitCostV1(input.root,input.label),peak>0),executeMilliseconds:offloadExecuteBudgetMillisecondsV1(seconds),endpoint,token,...(workspace===undefined||token!==undefined?{}:{sign:(method,body)=>fleetHeadersV1(workspace,"submit","execution","POST",`http://x/${method}`,body)}),instance,action:built.digest,signal:cancelled,onStage:staged},policy.timeouts.rideThroughMilliseconds);}
   finally{await lease?.reacquire();lease?.close();}
   if(execution.kind==="declined"){
    if(peak<=0&&(execution.reason==="no-idle-machine"||execution.reason==="queue-timeout"||execution.reason==="worker-policy"))writeOffloadMemoV1(input.root,"declined",{atMs:Date.now(),reason:execution.reason,detail:execution.detail.slice(0,120)});

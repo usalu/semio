@@ -35,8 +35,8 @@ pub fn scene(spec: &PlaybookSpec) -> TextEditorScene {
     TextEditorScene::base(semio_framework_pack_json::to_json_string(spec), Some("json".into()), None)
 }
 
-pub fn render(spec: &PlaybookSpec) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    semio_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_SOURCE, semio_ui_contract::SurfaceKind::TextEditor, &scene(spec))
+pub fn render(spec: &PlaybookSpec, labels: &crate::editor::playbook::terminology::PlaybookPlayLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    semio_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_SOURCE, semio_ui_contract::SurfaceKind::TextEditor, &scene(spec), labels.surface_source.as_str(), None)
 }
 
 

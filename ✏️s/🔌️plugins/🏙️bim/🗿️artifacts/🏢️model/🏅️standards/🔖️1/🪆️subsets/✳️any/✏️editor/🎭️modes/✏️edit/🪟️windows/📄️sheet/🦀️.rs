@@ -208,18 +208,18 @@ pub fn records(layout: Option<&SheetLayout>, inference: &ModelInference, selecti
 //#region 🔖️Render
 /// 🎨️ Renders the sheet window.
 #[allow(clippy::too_many_arguments)]
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSheetWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    render_over(snapshot, inference, config, selection, utility, revision, labels, &[])
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSheetWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    render_over(snapshot, inference, config, selection, utility, revision, labels, locale, &[])
 }
 
 /// 🎨️ [`render`] with the records of the authoring overlay (the handles of the selected viewports, the gesture preview) painted last, over everything.
 #[allow(clippy::too_many_arguments)]
-pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSheetWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSheetWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels, locale: semio_plugin::Locale, overlay: &[DslValue]) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let layout = active_sheet(snapshot, config).and_then(|id| inference.sheet_layouts.get(&id));
     let framing = layout.filter(|_| !config.framed).map(|layout| semio_plugin::Canvas2dFraming { revision, bounds: [0.0, 0.0, layout.width, layout.height], padding: FRAMING_PADDING });
     let mut records = records(layout, inference, selection, utility, labels);
     records.extend(overlay.iter().cloned());
-    canvas_surface(SURFACE_ID, config.viewport, framing, &records)
+    canvas_surface(SURFACE_ID, config.viewport, framing, &records, semio_plugin::surface_name(locale, "Sheet", "Blatt"))
 }
 //#endregion 🔖️Render
 

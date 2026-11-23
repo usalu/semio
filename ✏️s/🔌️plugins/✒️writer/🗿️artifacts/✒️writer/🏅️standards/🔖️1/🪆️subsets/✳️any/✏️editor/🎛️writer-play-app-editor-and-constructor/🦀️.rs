@@ -250,7 +250,7 @@ impl ArtifactEditor for WriterPlayApp {
         let window_config = main::config::current(cfg).cloned().unwrap_or_default();
         let window_transient = WriterMainWindowTransient::default();
         let node = match body_key {
-            WRITER_PLAY_BODY_MAIN => main::render(document, &window_config, &window_transient),
+            WRITER_PLAY_BODY_MAIN => main::render(document, &window_config, &window_transient, view_state.locale),
             WRITER_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_plugin::TreeWindows::for_body(view_state, WRITER_PLAY_BODY_ARTIFACT)),
             WRITER_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             WRITER_PLAY_BODY_INSPECTION => inspection_panel::render(document, labels, &semio_plugin::TreeWindows::for_body(view_state, WRITER_PLAY_BODY_INSPECTION)),
@@ -273,7 +273,7 @@ impl ArtifactEditor for WriterPlayApp {
         if body_key == WRITER_PLAY_BODY_MAIN {
             let config = main::config::current(cfg).cloned().unwrap_or_default();
             let transient = main::transient::current(transient).cloned().unwrap_or_default();
-            let node = main::render(doc.snapshot, &config, &transient)?;
+            let node = main::render(doc.snapshot, &config, &transient, view_state.locale)?;
             return Ok(semio_plugin::built_to_component_tree(node));
         }
         Self::render(body_key, doc, cfg, view_state)

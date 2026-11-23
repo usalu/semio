@@ -15,8 +15,8 @@ import{nativeImageSparseGrowArgumentsV1}from"../../🪶️sparse/🟦️.ts";
 import{nativeImageAttachArgumentsV1,nativeImageAttachProgramV1}from"../../👤️owners/🟦️.ts";
 import{nativeImageContainerFreeBytesSyncV1,nativeImageContainerFreeBytesV1,nativeImageEffectiveAvailableBytesV1,nativeImageRealAvailableBytesV1}from"../../⚖️availability/🟦️.ts";
 import{nativeImageHdiutilCommandV1,nativeImageHdiutilProgramV1}from"../../🛠️hdiutil/🟦️.ts";
-import{nativeImageVolumeLatchedV1}from"../../⚖️availability/🟦️.ts";
-import{createNativeImageLinuxReclaimPortV1,createNativeImageReclaimPortV1,createNativeImageWindowsReclaimPortV1,createNativeImageDarwinReclaimPortV1,nativeImageReclaimDueV1,nativeImageReclaimMechanismV1,reclaimNativeImageV1,type NativeImageReclaimPortV1}from"../🟦️.ts";
+import{nativeImageVolumeLatchedV1,nativeImageRefreshDueV1,nativeImageRefreshProbeDueV1,nativeImageRefreshMechanismV1}from"../../⚖️availability/🟦️.ts";
+import{createNativeImageLinuxReclaimPortV1,createNativeImageReclaimPortV1,createNativeImageWindowsReclaimPortV1,createNativeImageDarwinReclaimPortV1,nativeImageReclaimDueV1,nativeImageReclaimMechanismV1,reclaimNativeImageV1,refreshNativeImageV1,type NativeImageReclaimPortV1}from"../🟦️.ts";
 const protocol=imageSchema.definitions.ImageProtocol.const,MiB=1048576;
 const env={PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"};
 const run=(program:string,args:readonly string[])=>{const row=spawnSync(program,[...args],{encoding:"utf8",env});if(row.status!==0)throw Error(program+" "+args.join(" ")+": "+row.stderr);return row.stdout;};
@@ -332,4 +332,73 @@ test("a cancellation right after the prior detach still remounts a canonical ima
  const log:string[]=[];let checks=0;
  await expect(reclaimNativeImageV1(canonicalFake(log,{attached:true}),{check:()=>{if(++checks>=2)throw Error("cancelled");},sleep:async()=>{}})).rejects.toThrow("cancelled");
  expect(log).toEqual(["detach /dev/disk1","attach cleanup","dispose"]);
+});
+
+test("refresh corpus: the probe and cycle decisions equal the independent oracle on every case",()=>{
+ expect(validateJsonSchemaSubset(schema.definitions.Corpus,fixture,schema)).toEqual([]);
+ const ours=fixture.refresh.map(row=>{const container=(row as{containerFreeBytes?:number}).containerFreeBytes;return[nativeImageRefreshProbeDueV1(row.volumeAvailableBytes,row.hostFreeBytes),nativeImageRefreshDueV1(row.volumeAvailableBytes,container,row.hostFreeBytes)];});
+ expect(ours).toEqual(fixture.refresh.map(row=>[row.probeDue,row.due]));
+ expect(JSON.parse(oracle("refresh",join(import.meta.dir,"🔣️.json")))).toEqual(ours);
+});
+test("refresh mechanism: only macOS has a volume that can go stale",()=>{
+ expect(nativeImageRefreshMechanismV1("darwin")).toEqual({forceUnmountProgram:"/usr/sbin/diskutil",forceUnmountArguments:["unmount","force"]});
+ for(const platform of["linux","win32","windows","freebsd"])expect(nativeImageRefreshMechanismV1(platform)).toBeNull();
+});
+const ladderPlist=(attached:boolean)=>`<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>images</key><array>${attached?"<dict><key>image-path</key><string>/i/fixed.dmg</string><key>system-entities</key><array><dict><key>dev-entry</key><string>/dev/d</string><key>mount-point</key><string>/m</string></dict></array></dict>":""}</array></dict></plist>`;
+for(const row of fixture.ladder)test("refresh ladder corpus: "+row.name,async()=>{
+ const seen:string[]=[],runs=new Map<string,number>(),failures=row.failures as Record<string,string>;let gone=false;
+ const port=createNativeImageDarwinReclaimPortV1({image:"/i/fixed.dmg",cwd:"/",quiescent:row.quiescent,latched:()=>row.latched,run:async(_program,args)=>{
+  const key=args.join(" ");
+  if(args[0]==="info")return ladderPlist(!gone);
+  seen.push(key);const count=(runs.get(key)??0)+1;runs.set(key,count);
+  const message=failures[key+"#"+count]??failures[key];
+  if(message!==undefined)throw Error(message);
+  if(key===row.goneAfter)gone=true;
+  return"";
+ }});
+ const device=await port.attachedDevice();expect(device).toBe("/dev/d");
+ let thrown=false;await port.detach(device!).catch(()=>{thrown=true;});
+ expect(seen).toEqual(row.expected);expect(thrown).toBe(row.throws);
+});
+const refreshPort=(log:string[],options:{attached?:boolean;canonical?:boolean;detach?:Error;attach?:Error;available?:number[]}={}):NativeImageReclaimPortV1=>{
+ let attached=options.attached===false?null:"/dev/disk1",reads=0,attaches=0;
+ return{
+  async attachedDevice(phase){log.push("attached"+(phase?"("+phase+")":""));return attached;},
+  async detach(device,phase){log.push("detach "+device+(phase?"("+phase+")":""));if(options.detach)throw options.detach;attached=null;},
+  async attach(phase){log.push("attach"+(phase?"("+phase+")":""));attaches++;if(options.attach&&attaches===1)throw options.attach;attached="/dev/disk2";},
+  allocatedBytes(){return 0;},
+  volumeAvailableBytes(){return options.available?.[Math.min(reads++,options.available.length-1)];},
+  dispose(){log.push("dispose");},
+  mountsCanonically:options.canonical!==false
+ };
+};
+test("a refresh cycle releases the reserve, detaches, attaches again, restores the reserve and reports both figures",async()=>{
+ const log:string[]=[],steps:number[]=[];
+ const outcome=await refreshNativeImageV1(refreshPort(log,{available:[0,60*MiB]}),{check:()=>{},progress:done=>steps.push(done),before:()=>{log.push("release-reserve");},after:()=>{log.push("ensure-reserve");}});
+ expect(outcome).toEqual({beforeAvailableBytes:0,afterAvailableBytes:60*MiB,refreshed:true});
+ expect(log).toEqual(["attached","release-reserve","detach /dev/disk1","attach","attached(cleanup)","dispose","ensure-reserve"]);
+ expect(steps).toEqual([0,1,2,3]);
+});
+test("a refresh of an image that is not attached has no stale figure and touches nothing",async()=>{
+ const log:string[]=[];
+ const outcome=await refreshNativeImageV1(refreshPort(log,{attached:false,available:[7]}),{check:()=>{},before:()=>{log.push("release-reserve");},after:()=>{log.push("ensure-reserve");}});
+ expect(outcome.refreshed).toBe(false);expect(log).toEqual(["attached"]);
+});
+test("a refresh refuses a port that does not mount canonically before any effect",async()=>{
+ const log:string[]=[];
+ await expect(refreshNativeImageV1(refreshPort(log,{canonical:false}),{check:()=>{}})).rejects.toThrow("Canonical image mount required");
+ expect(log).toEqual([]);
+});
+test("a refused detach leaves the image attached and still restores the reserve",async()=>{
+ const log:string[]=[];
+ await expect(refreshNativeImageV1(refreshPort(log,{detach:Error("busy")}),{check:()=>{},before:()=>{log.push("release-reserve");},after:()=>{log.push("ensure-reserve");}})).rejects.toThrow("busy");
+ expect(log).toEqual(["attached","release-reserve","detach /dev/disk1","attached(cleanup)","dispose","ensure-reserve"]);
+});
+test("a failed attach and a cancellation after the detach both give the image back attached",async()=>{
+ const failed:string[]=[];
+ await expect(refreshNativeImageV1(refreshPort(failed,{attach:Error("attach failed")}),{check:()=>{}})).rejects.toThrow("attach failed");
+ expect(failed).toEqual(["attached","detach /dev/disk1","attach","attached(cleanup)","attach(cleanup)","dispose"]);
+ const cancelled:string[]=[];let checks=0;
+ await expect(refreshNativeImageV1(refreshPort(cancelled),{check:()=>{if(++checks===3)throw Error("cancelled");}})).rejects.toThrow("cancelled");
+ expect(cancelled).toEqual(["attached","detach /dev/disk1","attached(cleanup)","attach(cleanup)","dispose"]);
 });

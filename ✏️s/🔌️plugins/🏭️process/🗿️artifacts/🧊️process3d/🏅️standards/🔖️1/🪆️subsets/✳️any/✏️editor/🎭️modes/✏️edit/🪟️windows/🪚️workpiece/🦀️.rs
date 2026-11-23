@@ -198,12 +198,12 @@ fn preview_readout(snapshot: &Process3dSnapshot, resolved_up_to: Option<usize>) 
 //#endregion 🔖️PreviewCache
 
 //#region 🔖️Render
-pub fn render(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, selected_ids: &[String]) -> UiAssemblyResult<BuiltNode> {
-    render_with_placement(snapshot, config, active_utility, selected_ids, None, None)
+pub fn render(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, selected_ids: &[String], locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
+    render_with_placement(snapshot, config, active_utility, selected_ids, None, None, locale)
 }
 
 /// 👆️ Renders the same workpiece with an optional local placement wireframe.
-pub fn render_with_placement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, selected_ids: &[String], position: Option<[f64; 3]>, chosen: Option<(&str, &str)>) -> UiAssemblyResult<BuiltNode> {
+pub fn render_with_placement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, selected_ids: &[String], position: Option<[f64; 3]>, chosen: Option<(&str, &str)>, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let placement_active = if active_utility == placement::PLACE_CAPABILITY_UTILITY {
         chosen.is_some()
     } else {
@@ -221,7 +221,7 @@ pub fn render_with_placement(snapshot: &Process3dSnapshot, config: &Process3dCon
     scene.engagement_preview_json = position.and_then(|position| placement::preview_json(snapshot, active_utility, chosen, position));
     scene.domain_id = Some(PROCESS3D_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(PROCESS3D_GRANULARITY_OBJECT.into());
-    scene_surface(PROCESS_3D_PLAY_WINDOW_MAIN, semio_plugin::app::SurfaceKind::World3d, &scene)
+    scene_surface(PROCESS_3D_PLAY_WINDOW_MAIN, semio_plugin::app::SurfaceKind::World3d, &scene, semio_plugin::surface_name(locale, "Workpiece", "Werkstück"), None)
 }
 //#endregion 🔖️Render
 

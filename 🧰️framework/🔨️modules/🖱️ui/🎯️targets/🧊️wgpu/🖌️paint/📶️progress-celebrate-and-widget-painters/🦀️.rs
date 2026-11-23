@@ -16,7 +16,7 @@ use semio_ui_theme::{Rgba, Theme};
 /// `paint_node` after that variant's own paint: `previewed`/`disabled` fills underneath nothing extra
 /// (disabled reads as a scrim so it composes over whatever the variant already drew), a `status` ring
 /// (loading spin / waiting dash / finished solid — mutually exclusive, `idle` draws nothing), a
-/// closed on-seam accent silhouette for `selected`, and a breathing pulse ring for `introducing`. `hover` has no
+/// closed on-seam accent outline for `selected`, and a breathing pulse ring for `introducing`. `hover` has no
 /// dedicated draw call here — it's folded into `flags` before dispatch (see `paint_node`) so every
 /// variant's own hover-aware fill (already reading `NodeFlags::HOVERED`) picks it up for free.
 pub fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: &UiPresence, selected: bool) {
@@ -38,7 +38,7 @@ pub fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presen
     paint_presence_accent_effect(draw, bounds, theme, presence.state);
 }
 
-/// 🎉️ Animates the accent of an introducing or celebrating silhouette at the base border thickness.
+/// 🎉️ Animates the accent of an introducing or celebrating outline at the base border thickness.
 pub fn paint_presence_accent_effect(draw: &mut DrawList, bounds: Rect, theme: &Theme, state: UiState) {
     use semio_ui_draw_contract::SharedBorderState;
     let (color, border_state) = match state {

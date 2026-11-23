@@ -73,12 +73,12 @@ fn step_node(step: &SequenceStep) -> NodeGraphNodeRecord {
 /// 👁️ Pure `SequenceSnapshot -> UiAssemblyResult<BuiltNode>` read: default viewport (a viewer has no persisted
 /// per-session camera), no selection/drag overlay, `editable: Some(false)` (contract §2.2's
 /// structural read-only guarantee, mirrored here at the scene level too).
-pub fn render(scene: &SequenceWorkingScene) -> UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &SequenceWorkingScene, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let nodes: Vec<NodeGraphNodeRecord> = scene.steps.iter().map(step_node).collect();
     let edges: Vec<NodeGraphEdgeRecord> =
         scene.edges.iter().map(|edge| NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id: edge.from.clone(), source_port_id: String::new(), target_node_id: edge.to.clone(), target_port_id: String::new(), label: None }).collect();
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
-    semio_plugin::scene_surface(SEQUENCE_VIEW_SURFACE_MAIN, semio_ui_contract::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
+    semio_plugin::scene_surface(SEQUENCE_VIEW_SURFACE_MAIN, semio_ui_contract::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) }, semio_plugin::surface_name(locale, "Sequence graph", "Sequenzgraph"), None)
 }
 //#endregion 🔖️Render
 

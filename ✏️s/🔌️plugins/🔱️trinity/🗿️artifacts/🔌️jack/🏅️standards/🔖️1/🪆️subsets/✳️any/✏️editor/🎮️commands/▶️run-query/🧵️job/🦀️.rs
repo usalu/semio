@@ -21,6 +21,9 @@ use semio_plugin::app::ChildEmitPreparation;
 mod mutation_source;
 use mutation_source::QueryMutationSource;
 
+#[path = "✏️graph-edit/🦀️.rs"]
+pub mod graph_edit;
+
 pub type Owner<C> = EditorApp<TrinityJackPlayApp<C>>;
 pub const JACK_QUERY_TOOL_IDS: &[&str] = &["runQuery", "loadExampleQuery"];
 const RAW_BYTES: usize = 16_384;
@@ -256,7 +259,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         }
         if let Some(source) = self.mutations.as_mut().filter(|source| source.pending()) {
             if let Some((result, preparations, root)) = source.advance(input, cx)? {
-                return Ok(self.complete(input, Some(result), None, preparations, root));
+                return Ok(self.complete(input, result, None, preparations, root));
             }
             return Ok(self.progress("query-prepare-edit", br#"{"en":"Preparing graph edit","de":"Graphbearbeitung wird vorbereitet"}"#));
         }
@@ -286,7 +289,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
                     return Ok(self.complete(input, Some(result), None, Vec::new(), None));
                 }
                 let root = clear_deleted_root(input.snapshot, &effects);
-                self.mutations.as_mut().ok_or_else(|| Fault::from("Jack graph edits require the original query source"))?.stage(result, effects, root);
+                self.mutations.as_mut().ok_or_else(|| Fault::from("Jack graph edits require the original query source"))?.stage(Some(result), effects, root);
                 Ok(self.progress("query-prepare-edit", br#"{"en":"Preparing graph edit","de":"Graphbearbeitung wird vorbereitet"}"#))
             }
             Ok(None) => Ok(self.progress("query-evaluate", br#"{"en":"Evaluating query","de":"Abfrage wird ausgewertet"}"#)),

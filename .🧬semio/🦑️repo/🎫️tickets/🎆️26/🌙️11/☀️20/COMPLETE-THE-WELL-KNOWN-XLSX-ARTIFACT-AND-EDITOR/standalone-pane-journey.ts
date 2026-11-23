@@ -181,7 +181,7 @@ async function refusal(browser: Browser) {
   }
 }
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({args: ["--js-flags=--experimental-wasm-jspi", "--use-angle=swiftshader", "--in-process-gpu", "--disable-accelerated-2d-canvas"]});
 try {
   for (const step of steps) {
     try {

@@ -15,7 +15,7 @@ import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/�
 import { loadingBorderStateClass, waitingBorderStateClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional, NULL_SHELL_ROOT_REF, useShellKeydown } from "../🐚️ShellScope/🟦️.tsx";
-import { SurfaceScope, isSurfaceActiveBackgroundPointer, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
+import { SurfaceScope, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
 import { measureWindowChromeScrollClearancePx, windowChromeScrollClearanceVar, windowContentDeadLineVar } from "../🚧️WindowContentDeadLine/🟦️.tsx";
 import { interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { type UiStatus, uiSpacingPx } from "@semio-tech/ui-styling";
@@ -338,9 +338,7 @@ const Window: React.FC<WindowProps> = ({
         data-elevation-root=""
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
-        onPointerDownCapture={(event) => {
-          if (!isSurfaceActiveBackgroundPointer(event)) onActivate?.();
-        }}
+        onPointerDownCapture={() => onActivate?.()}
         className={cn(
           "relative flex w-full min-w-0 flex-col overflow-hidden",
           fill ? "h-full min-h-0" : "h-auto max-h-full self-start",

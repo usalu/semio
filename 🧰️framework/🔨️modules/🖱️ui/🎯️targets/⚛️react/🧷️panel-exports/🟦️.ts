@@ -1,11 +1,11 @@
 import { UIDialog, type UIDialogProps, type UIDialogFieldBinding } from "@semio-tech/ui/elements/UIDialog";
-import { type Level, LEVELS, LevelProvider, useLevel, getLevelZClass, type SurfaceFill, surfaceFillClass, type SurfaceScopeValue, SurfaceScope, useSurface, type SurfaceProps, Surface, isSurfaceActiveBackgroundPointer, type SurfaceActiveBindProps, useSurfaceActive, setSurfaceActiveRoot } from "@semio-tech/ui/elements/Surface";
+import { type Level, LEVELS, LevelProvider, useLevel, getLevelZClass, type SurfaceFill, surfaceFillClass, type SurfaceScopeValue, SurfaceScope, useSurface, type SurfaceProps, Surface, type SurfaceActiveBindProps, useSurfaceActive, setSurfaceActiveRoot } from "@semio-tech/ui/elements/Surface";
 import { MenuItem, menuItemClassName, type MenuItemProps } from "@semio-tech/ui/elements/MenuItem";
 import { DragHandle, HANDLE_HOVER_SCOPE_ATTR } from "@semio-tech/ui/elements/DragHandle";
 import { reconcileActivePath, singleTreeLeaf, panelTabChildren, findPanelTabNode, findPanelTabPath, resolvePanelBranchBodyLeaf, progressPanelTabSelection, usePanelTabSelection, dockSkeletonOf, dockSkeletonsEqual, applyDockSkeleton, PanelTabBar, type PanelTabBarVariant, type PanelTreeUnit, type PanelTabLeaf, type PanelTabBranch, type PanelTabNode, type PanelTabSelectionResult, type PanelTabSelectionOptions, type PanelDock, type PanelTabBarProps } from "@semio-tech/ui/elements/PanelTabBar";
 import { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow } from "@semio-tech/ui/modules/flow-direction-context";
-import { WINDOW_CHROME_BODY_PLANE_STYLE, WINDOW_CHROME_CHIP_ROW_STYLE, WINDOW_SILHOUETTE_BORDER_KINDS, WindowChrome, WindowChromeSilhouetteBorder, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, resolveWindowSilhouetteBorderKind, useWindowSilhouetteGeometry, windowCapFrameClass, windowChromeTitleChipClass, windowControlsCapClass, windowGapFrameClass, windowSilhouetteBorderPaint, type WindowChromeControlAction, type WindowChromeProps, type WindowSilhouetteBorderKind } from "@semio-tech/ui/elements/WindowChrome";
-import { CardGrid, CardGridCell, CardStack, resolveCardBands, useCardInterlock, type CardBand, type CardBandCard, type CardBandSpan, type CardGridCellProps, type CardGridProps, type CardStackProps } from "@semio-tech/ui/elements/CardStack";
+import { WINDOW_CHROME_BODY_PLANE_STYLE, WINDOW_CHROME_CHIP_ROW_STYLE, WINDOW_FRAME_BORDER_KINDS, WindowChrome, WindowChromeFrameBorder, isWindowChromeIntroducedTarget, measureWindowFrameMetrics, resolveWindowFrameBorderKind, useWindowFrameGeometry, windowCapFrameClass, windowChromeTitleChipClass, windowControlsCapClass, windowFrameBorderPaint, type WindowChromeControlAction, type WindowChromeProps, type WindowFrameBorderKind } from "@semio-tech/ui/elements/WindowChrome";
+import { CardGrid, CardGridCell, CardStack, useCardInterlock, type CardGridCellProps, type CardGridProps, type CardStackProps } from "@semio-tech/ui/elements/CardStack";
 import { OverviewCard, OverviewCardAction, OverviewCardOpenChip, overviewCardChipClass, type OverviewCardActionProps, type OverviewCardBaseProps, type OverviewCardButtonProps, type OverviewCardProps, type OverviewCardSectionProps } from "@semio-tech/ui/elements/OverviewCard";
 import { windowChromeScrollClearanceVar, windowContentDeadLineVar, windowContentDeadLineScrollClass, readWindowChromeScrollClearancePx, measureWindowChromeScrollClearancePx, isWindowContentDeadLineHost, readWindowContentDeadLinePx, readScrollerContentOverflows, useWindowContentDeadLineInset } from "@semio-tech/ui/elements/WindowContentDeadLine";
 import type { ElementProps } from "@semio-tech/ui/modules/element-identity";
@@ -35,7 +35,6 @@ export {
   useSurface,
   type SurfaceProps,
   Surface,
-  isSurfaceActiveBackgroundPointer,
   type SurfaceActiveBindProps,
   useSurfaceActive,
   setSurfaceActiveRoot,
@@ -70,8 +69,8 @@ export { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow };
 /** 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
 
 export { ResponsiveLabel, shellChromeTitleClassName } from "../🪟️chrome/🏷️responsive-label/🟦️.tsx";
-export { WINDOW_CHROME_BODY_PLANE_STYLE, WINDOW_CHROME_CHIP_ROW_STYLE, WINDOW_SILHOUETTE_BORDER_KINDS, WindowChrome, WindowChromeSilhouetteBorder, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, resolveWindowSilhouetteBorderKind, useWindowSilhouetteGeometry, windowCapFrameClass, windowChromeTitleChipClass, windowControlsCapClass, windowGapFrameClass, windowSilhouetteBorderPaint, type WindowChromeControlAction, type WindowChromeProps, type WindowSilhouetteBorderKind };
-export { CardGrid, CardGridCell, CardStack, resolveCardBands, useCardInterlock, type CardBand, type CardBandCard, type CardBandSpan, type CardGridCellProps, type CardGridProps, type CardStackProps };
+export { WINDOW_CHROME_BODY_PLANE_STYLE, WINDOW_CHROME_CHIP_ROW_STYLE, WINDOW_FRAME_BORDER_KINDS, WindowChrome, WindowChromeFrameBorder, isWindowChromeIntroducedTarget, measureWindowFrameMetrics, resolveWindowFrameBorderKind, useWindowFrameGeometry, windowCapFrameClass, windowChromeTitleChipClass, windowControlsCapClass, windowFrameBorderPaint, type WindowChromeControlAction, type WindowChromeProps, type WindowFrameBorderKind };
+export { CardGrid, CardGridCell, CardStack, useCardInterlock, type CardGridCellProps, type CardGridProps, type CardStackProps };
 export { OverviewCard, OverviewCardAction, OverviewCardOpenChip, overviewCardChipClass, type OverviewCardActionProps, type OverviewCardBaseProps, type OverviewCardButtonProps, type OverviewCardProps, type OverviewCardSectionProps };
 
 export { LayeredOverview, type LayeredDirection } from "@semio-tech/ui/elements/LayeredOverview";

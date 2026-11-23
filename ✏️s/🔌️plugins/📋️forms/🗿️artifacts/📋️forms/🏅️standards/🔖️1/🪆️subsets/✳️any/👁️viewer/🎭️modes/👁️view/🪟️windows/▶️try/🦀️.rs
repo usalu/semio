@@ -69,7 +69,7 @@ fn read_only_field(question: &FormQuestion, value_text: &str) -> UiAssemblyResul
             "readOnly": true,
             "label": question.label
         })));
-        semio_plugin::scene_surface(&format!("forms-view-try.{}.value", question.id), ui::SurfaceKind::TextEditor, &scene)?
+        semio_plugin::scene_surface(&format!("forms-view-try.{}.value", question.id), ui::SurfaceKind::TextEditor, &scene, &question.label, None)?
     } else {
         text(&format!("forms-view-try.{}.value", question.id), value_text, false)?
     };

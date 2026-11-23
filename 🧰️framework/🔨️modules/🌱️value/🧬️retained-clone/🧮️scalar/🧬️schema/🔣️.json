@@ -22,7 +22,9 @@
     "lifecycle",
     "compounds",
     "childClose",
-    "depthAdmission"
+    "depthAdmission",
+    "closeWork",
+    "advanceWork"
   ],
   "properties": {
     "version": {
@@ -195,6 +197,57 @@
           "releasedBytes": 0
         }
       ]
+    },
+    "closeWork": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumCpu",
+        "deniedCpu",
+        "cachedCpu"
+      ],
+      "properties": {
+        "maximumCpu": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deniedCpu": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cachedCpu": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "advanceWork": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deniedCpu",
+        "bindingCpu",
+        "payloadCpu",
+        "cachedCpu"
+      ],
+      "properties": {
+        "deniedCpu": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bindingCpu": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "payloadCpu": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cachedCpu": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
   }
 }

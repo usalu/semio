@@ -1,6 +1,6 @@
 Feature: Floating menu placement
   Scenario: Window chrome opens a flush menu
-    Given the trigger belongs to a window silhouette
+    Given the trigger belongs to a window frame
     When no explicit gap is supplied
     Then the menu touches the trigger and participates in shared border geometry
   Scenario: Explicit gaps and collision flips remain detached

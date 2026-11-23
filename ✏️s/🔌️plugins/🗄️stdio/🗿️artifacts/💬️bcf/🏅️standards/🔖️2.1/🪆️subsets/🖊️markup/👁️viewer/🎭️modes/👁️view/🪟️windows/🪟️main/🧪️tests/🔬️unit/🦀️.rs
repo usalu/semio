@@ -11,7 +11,7 @@ async fn definition_declares_the_shared_table_window_kit() {
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_table_node_for_the_default_document() {
     let document = BcfSnapshot::default();
-    let _node = render(&document);
+    let _node = render(&document, semio_plugin::Locale::En);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -29,6 +29,6 @@ async fn render_lists_one_row_per_topic() {
         comments: Vec::new(),
         viewpoints: Vec::new(),
     });
-    let _node = render(&document);
+    let _node = render(&document, semio_plugin::Locale::En);
     assert_eq!(document.topics.len(), 1);
 }

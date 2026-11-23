@@ -112,8 +112,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "About 100 W: 1 met = 58 W per m² of skin × 1.8 m² (ISO 7730, ISO 8996). The matching energy is the daily food intake of about 2,300 kcal ≈ 2.7 kWh.",
-            "de": "Rund 100 W: 1 met = 58 W pro m² Haut × 1,8 m² (ISO 7730, ISO 8996). Die dazugehörige Energie ist die tägliche Nahrung von etwa 2.300 kcal ≈ 2,7 kWh."
+            "en": "About 100 W: 1 met = 58 W per m² of skin × 1.8 m² (ISO 7730:2025, ISO 8996:2021). The matching energy is the daily food intake of about 2,300 kcal ≈ 2.7 kWh.",
+            "de": "Rund 100 W: 1 met = 58 W pro m² Haut × 1,8 m² (ISO 7730:2025, ISO 8996:2021). Die dazugehörige Energie ist die tägliche Nahrung von etwa 2.300 kcal ≈ 2,7 kWh."
           }
         },
         {
@@ -144,8 +144,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "About 18 kW for an unrenovated 1960s single-family house (110 m² × 160 W/m²): the heat flow needed on the coldest design day (DIN EN 12831).",
-            "de": "Rund 18 kW für ein unsaniertes Einfamilienhaus der 1960er-Jahre (110 m² × 160 W/m²): der Wärmestrom, der am kältesten Auslegungstag nötig ist (DIN EN 12831)."
+            "en": "About 18 kW for an unrenovated 1960s single-family house (110 m² × 160 W/m²): the heat flow needed on the coldest design day (DIN EN 12831-1:2017-09).",
+            "de": "Rund 18 kW für ein unsaniertes Einfamilienhaus der 1960er-Jahre (110 m² × 160 W/m²): der Wärmestrom, der am kältesten Auslegungstag nötig ist (DIN EN 12831-1:2017-09)."
           }
         },
         {
@@ -260,8 +260,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "About 10 kWh: net calorific value of heating oil EL ≈ 42.6 MJ/kg × 0.845 kg/l (DIN 51603-1).",
-            "de": "Rund 10 kWh: Heizwert von Heizöl EL ≈ 42,6 MJ/kg × 0,845 kg/l (DIN 51603-1)."
+            "en": "About 10 kWh: net calorific value of heating oil EL ≈ 42.6 MJ/kg × 0.845 kg/l (DIN 51603-1:2024-11).",
+            "de": "Rund 10 kWh: Heizwert von Heizöl EL ≈ 42,6 MJ/kg × 0,845 kg/l (DIN 51603-1:2024-11)."
           }
         },
         {
@@ -280,8 +280,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "About 33,000 kWh per year for a 1960s house (110 m² × 303 kWh/(m²·a); IWU, the Institute for Housing and Environment, German residential building typology 2015, type EFH_E): an annual amount, i.e. an energy demand.",
-            "de": "Rund 33.000 kWh pro Jahr für ein Haus der 1960er-Jahre (110 m² × 303 kWh/(m²·a); IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_E): eine Jahresmenge, also Arbeit über ein Jahr."
+            "en": "About 33,000 kWh per year for a 1960s house (110 m² × 303 kWh/(m²·a); IWU, the Institute for Housing and Environment, IWU residential building typology (2015), type EFH_E): an annual amount, i.e. an energy demand.",
+            "de": "Rund 33.000 kWh pro Jahr für ein Haus der 1960er-Jahre (110 m² × 303 kWh/(m²·a); IWU Wohngebäudetypologie (2015), Typ EFH_E): eine Jahresmenge, also Arbeit über ein Jahr."
           }
         },
         {
@@ -356,8 +356,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "Given in kWh per m² and year (German Buildings Energy Act, GEG, § 85): an energy demand related to floor area and one year, not a power.",
-            "de": "Angegeben in kWh pro m² und Jahr (GEG § 85): Arbeit bezogen auf Fläche und Jahr, keine Leistung."
+            "en": "Given in kWh per m² and year (GModG, formerly GEG, § 85): an energy demand related to floor area and one year, not a power.",
+            "de": "Angegeben in kWh pro m² und Jahr (GModG § 85): Arbeit bezogen auf Fläche und Jahr, keine Leistung."
           }
         },
         {
@@ -1480,8 +1480,8 @@
           "value": 100,
           "familiar": true,
           "explanation": {
-            "en": "About 100 W: 1 met = 58 W/m² × 1.8 m² of skin (ISO 7730). A lecture hall with 100 students is a 10 kW heater.",
-            "de": "Rund 100 W: 1 met = 58 W/m² × 1,8 m² Haut (ISO 7730). Ein Hörsaal mit 100 Studierenden ist eine 10-kW-Heizung."
+            "en": "About 100 W: 1 met = 58 W/m² × 1.8 m² of skin (ISO 7730:2025). A lecture hall with 100 students is a 10 kW heater.",
+            "de": "Rund 100 W: 1 met = 58 W/m² × 1,8 m² Haut (ISO 7730:2025). Ein Hörsaal mit 100 Studierenden ist eine 10-kW-Heizung."
           }
         },
         {
@@ -1554,8 +1554,8 @@
           },
           "value": 18000,
           "explanation": {
-            "en": "About 18 kW: 110 m² × 160 W/m² (envelope of IWU type EFH_E, −12 °C design temperature, DIN EN 12831) – the power of nine kettles.",
-            "de": "Rund 18 kW: 110 m² × 160 W/m² (Hülle des IWU-Typs EFH_E, −12 °C Auslegungstemperatur, DIN EN 12831) – die Leistung von neun Wasserkochern."
+            "en": "About 18 kW: 110 m² × 160 W/m² (envelope of IWU type EFH_E, −12 °C design temperature, DIN EN 12831-1:2017-09) – the power of nine kettles.",
+            "de": "Rund 18 kW: 110 m² × 160 W/m² (Hülle des IWU-Typs EFH_E, −12 °C Auslegungstemperatur, DIN EN 12831-1:2017-09) – die Leistung von neun Wasserkochern."
           }
         },
         {
@@ -2267,8 +2267,8 @@
           },
           "value": 46109589041.095894,
           "explanation": {
-            "en": "About 46 GW: electricity accounts for approximately 27% of France’s 1,496 TWh of final energy in 2023 (SDES). 1,496 × 0.27 / 8,760 gives the average in TW.",
-            "de": "Rund 46 GW: Strom macht näherungsweise 27 % von Frankreichs 1.496 TWh Endenergie 2023 aus (SDES). 1.496 × 0,27 / 8.760 ergibt den Mittelwert in TW."
+            "en": "About 46 GW: electricity accounts for approximately 27% of France’s 1,496 TWh of final energy in 2023 (SDES). 1,496 TWh × 0.27 / 8,760 h ≈ 0.046 TW = 46 GW gives the average power.",
+            "de": "Rund 46 GW: Strom macht näherungsweise 27 % von Frankreichs 1.496 TWh Endenergie 2023 aus (SDES). 1.496 TWh × 0,27 / 8.760 h ≈ 0,046 TW = 46 GW ergibt die mittlere Leistung."
           },
           "short": {
             "en": "France’s final electric power in 2023",
@@ -2724,8 +2724,8 @@
           "value": 10000,
           "familiar": true,
           "explanation": {
-            "en": "About 10 kWh: net calorific value 42.6 MJ/kg × 0.845 kg/l (DIN 51603-1).",
-            "de": "Rund 10 kWh: Heizwert 42,6 MJ/kg × 0,845 kg/l (DIN 51603-1)."
+            "en": "About 10 kWh: net calorific value 42.6 MJ/kg × 0.845 kg/l (DIN 51603-1:2024-11).",
+            "de": "Rund 10 kWh: Heizwert 42,6 MJ/kg × 0,845 kg/l (DIN 51603-1:2024-11)."
           }
         },
         {
@@ -2806,8 +2806,8 @@
           },
           "value": 33000000,
           "explanation": {
-            "en": "About 33 MWh: 110 m² × 303 kWh/(m²·a) (IWU German residential building typology 2015, type EFH_E), thirteen times the household electricity.",
-            "de": "Rund 33 MWh: 110 m² × 303 kWh/(m²·a) (IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_E), dreizehnmal der Haushaltsstrom."
+            "en": "About 33 MWh: 110 m² × 303 kWh/(m²·a) (IWU residential building typology (2015), type EFH_E), thirteen times the household electricity.",
+            "de": "Rund 33 MWh: 110 m² × 303 kWh/(m²·a) (IWU Wohngebäudetypologie (2015), Typ EFH_E), dreizehnmal der Haushaltsstrom."
           }
         },
         {
@@ -3442,8 +3442,8 @@
           },
           "value": 2525000000000000,
           "explanation": {
-            "en": "2.525 PWh. National annual energy is in terawatt-hours. France 2023: primary 2,525 TWh, final energy for energy use 1,496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023",
-            "de": "2,525 PWh. Landesjahresenergie liegt bei Terawattstunden. Frankreich 2023: primär 2.525 TWh, energetische Endenergie 1.496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023"
+            "en": "2.525 PWh. National annual energy is in terawatt-hours. France 2023: primary 2,525 TWh, final energy for energy use 1,496 TWh; SDES, Bilan énergétique de la France pour 2023: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023",
+            "de": "2,525 PWh. Landesjahresenergie liegt bei Terawattstunden. Frankreich 2023: primär 2.525 TWh, energetische Endenergie 1.496 TWh; SDES, Bilan énergétique de la France pour 2023: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023"
           },
           "short": {
             "en": "France’s primary energy in 2023",
@@ -3462,8 +3462,8 @@
           },
           "value": 1496000000000000,
           "explanation": {
-            "en": "1.496 PWh. National annual energy is in terawatt-hours. France 2023: primary 2,525 TWh, final energy for energy use 1,496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023",
-            "de": "1,496 PWh. Landesjahresenergie liegt bei Terawattstunden. Frankreich 2023: primär 2.525 TWh, energetische Endenergie 1.496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023"
+            "en": "1.496 PWh. National annual energy is in terawatt-hours. France 2023: primary 2,525 TWh, final energy for energy use 1,496 TWh; SDES, Bilan énergétique de la France pour 2023: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023",
+            "de": "1,496 PWh. Landesjahresenergie liegt bei Terawattstunden. Frankreich 2023: primär 2.525 TWh, energetische Endenergie 1.496 TWh; SDES, Bilan énergétique de la France pour 2023: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023"
           },
           "short": {
             "en": "France’s final energy use in 2023",
@@ -3482,8 +3482,8 @@
           },
           "value": 527000000000000,
           "explanation": {
-            "en": "527 TWh. National annual energy is in terawatt-hours. France 2023: primary 2,525 TWh, final energy for energy use 1,496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023",
-            "de": "527 TWh. Landesjahresenergie liegt bei Terawattstunden. Frankreich 2023: primär 2.525 TWh, energetische Endenergie 1.496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023"
+            "en": "527 TWh. National annual energy is in terawatt-hours. France 2023: primary 2,525 TWh, final energy for energy use 1,496 TWh; SDES, Bilan énergétique de la France pour 2023: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023",
+            "de": "527 TWh. Landesjahresenergie liegt bei Terawattstunden. Frankreich 2023: primär 2.525 TWh, energetische Endenergie 1.496 TWh; SDES, Bilan énergétique de la France pour 2023: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023"
           },
           "short": {
             "en": "Germany’s annual electricity in 2024",
@@ -3502,8 +3502,8 @@
           },
           "value": 403920000000000,
           "explanation": {
-            "en": "403.9 TWh. National annual energy is in terawatt-hours. France 2023: primary 2,525 TWh, final energy for energy use 1,496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023",
-            "de": "403,9 TWh. Landesjahresenergie liegt bei Terawattstunden. Frankreich 2023: primär 2.525 TWh, energetische Endenergie 1.496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023"
+            "en": "403.9 TWh. National annual energy is in terawatt-hours. France 2023: primary 2,525 TWh, final energy for energy use 1,496 TWh; SDES, Bilan énergétique de la France pour 2023: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023",
+            "de": "403,9 TWh. Landesjahresenergie liegt bei Terawattstunden. Frankreich 2023: primär 2.525 TWh, energetische Endenergie 1.496 TWh; SDES, Bilan énergétique de la France pour 2023: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023"
           },
           "short": {
             "en": "France’s final electricity in 2023",
@@ -3674,3 +3674,4 @@
     "de": "Physik"
   }
 }
+               

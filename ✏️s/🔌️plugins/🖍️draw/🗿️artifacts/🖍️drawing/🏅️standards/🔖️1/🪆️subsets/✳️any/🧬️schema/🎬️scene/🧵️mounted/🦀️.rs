@@ -186,6 +186,8 @@ impl GeometryOwner{
 }
 fn demand_of(demands:[usize;4])->RetirementDemand{RetirementDemand{copy_bytes:demands[0],capacity_bytes:demands[1],release_bytes:demands[2],depth:demands[3]}}
 fn lifecycle(step:RetainedCloneStep)->PluginLifecycleStep{match step{RetainedCloneStep::Complete(progress)=>PluginLifecycleStep::Complete(progress),RetainedCloneStep::Progress(progress)=>PluginLifecycleStep::Progress(progress)}}
+/// 🧹️ True while any retained scene shell of the instance still owns cleanup work, including its store read lease.
+pub fn maintenance_pending(instance:u32)->bool{MOUNTED.with(|r|r.borrow().shells.iter().any(|shell|shell.try_borrow().is_ok_and(|owner|owner.as_ref().is_some_and(|state|state.identity.instance==instance&&state.cleanup_pending()))))}
 /// 📏️ Quotes the next retained scene cleanup turn from the source owner.
 pub fn maintenance_demands(instance:u32,body:usize)->Result<RetirementDemand,ValueError>{GeometryOwner::new(instance).demands(body).map(demand_of)}
 /// 🧹️ Pays the original cleanup action for a finished or superseded scene job.

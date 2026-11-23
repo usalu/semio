@@ -226,3 +226,8 @@ pub fn guest_linear_memory_percent(bytes: usize) -> usize {
 #[path = "🧪️tests/🔬️memory/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+static DEBUG_TAGS:[std::sync::atomic::AtomicU64;64]=[const{std::sync::atomic::AtomicU64::new(0)};64];
+static DEBUG_TURNS:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
+pub fn debug_tag(index:usize){DEBUG_TAGS[index].fetch_add(1,std::sync::atomic::Ordering::Relaxed);}
+pub fn debug_turn(){if DEBUG_TURNS.fetch_add(1,std::sync::atomic::Ordering::Relaxed)==3000{let tags:[u64;64]=std::array::from_fn(|i|DEBUG_TAGS[i].load(std::sync::atomic::Ordering::Relaxed));eprintln!("[DEBUG] tags {tags:?}");}}

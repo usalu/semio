@@ -18,7 +18,7 @@ fn leaves(node: &CommandNode, found: &mut Vec<Leaf>) {
 fn playground_renderers_and_examples_select_actual_nx_targets() {
     let root = temp_root("playgrounds");
     fs::create_dir_all(root.join("catalog")).unwrap();
-    fs::write(root.join("catalog").join("🚀️playgrounds.json"), r#"[{"variant":"demo","pluginId":"plugin","cratePath":"plugin/rs","aliases":[],"ports":{"react":3100,"wgpu":3200},"examples":["🎬️first","🎬️second"]}]"#).unwrap();
+    fs::write(root.join("catalog").join("🚀️playgrounds.json"), r#"[{"variant":"demo","pluginId":"plugin","cratePath":"plugin/rs","aliases":[],"ports":{"react":3100,"wgpu":3200},"examples":["first","second"]}]"#).unwrap();
     let registry = crate::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
     let tree = tree(&registry, true);
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🗣️launch-axes/🔣️.json")).unwrap();

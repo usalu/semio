@@ -1,10 +1,16 @@
-Feature: Card interlock responds to changes in seam geometry
-  Scenario: A translation preserves the existing interlock
-    Given a settled stack of cards with a shared cap and footer band
-    When the entire stack moves as one
-    Then the lift and band styles are left untouched
+Feature: Stacked cards abut as rectangles
+  Scenario: Chips live inside each card
+    Given a stack of cards with title and footer chips
+    When the stack is rendered
+    Then every card is one rectangle with its chips overlaid inside it
+    And no lift, band or margin separates two cards
 
-  Scenario: A footer gains a chip without growing
-    Given a settled stack of cards with a footer row
-    When a chip is added to the footer
-    Then the chip is measured and the shared band is resolved again
+  Scenario: Heights snap to device pixels
+    Given a card whose natural height falls between device pixels
+    When the stack is measured
+    Then the card is raised to the next whole device pixel so abutting lines coincide
+
+  Scenario: A settled stack stays untouched
+    Given a settled stack of cards
+    When the window resizes without changing any card
+    Then no style is written

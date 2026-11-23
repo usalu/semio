@@ -11,10 +11,15 @@ use delete_widget_position::DeleteWidgetPosition;
 use disconnect_synapse::DisconnectSynapse;
 use move_widget::MoveWidget;
 use protocol::{ColdMutation, Mutation};
-use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_playbook_playbook::GenerationMutation;
+use semio_s_artifact_procedural_3d_model::widget_id;
+use semio_s_artifact_procedural_3d_mut_generations::{change_generation_preview, select_generation};
+use semio_s_artifact_procedural_3d_mut_transforms::{drag_transforms, rotate_transforms, scale_transforms};
+use semio_s_artifact_procedural_3d_mut_widgets::{change_slider_value, change_widget_input, move_nodes};
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 
-use semio_s_artifact_procedural_3d_editor_commands::rename_generation::RenameGeneration;
+use semio_s_artifact_procedural_3d_mut_generations::rename_generation::RenameGeneration;
 use update_camera::UpdateCamera;
 use update_synapse::UpdateSynapse;
 use update_widget::UpdateWidget;

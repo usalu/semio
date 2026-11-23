@@ -4,7 +4,12 @@ use crate::standards::v1::subsets::any::io::export::serializers::artifacts::obj:
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::stl::v_ascii::any::stl_text;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
 use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
+use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text as parse_dsl_text;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring;
+
+fn from_dsl_text(text: &str) -> Result<Fem2dSnapshotRetiring, semio_framework::io_schema::IoError> {
+    parse_dsl_text(text).map(Fem2dSnapshotRetiring::new)
+}
 
 /// 📄️ This subset's handcrafted `.semio` DSL example asset — the same bytes the shipped example
 /// serves to the shell.
@@ -14,13 +19,13 @@ const EXAMPLE: &str = crate::examples::demo::PRIMARY_TEXT;
 async fn txt_round_trips_the_example() {
     let snapshot = from_dsl_text(EXAMPLE).expect("the shipped example must parse");
     let printed = dsl_text(&snapshot);
-    assert_eq!(from_dsl_text(&printed).unwrap(), snapshot, "txt is not a fixed point");
+    assert_eq!(*from_dsl_text(&printed).unwrap(), *snapshot, "txt is not a fixed point");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn json_round_trips_the_example() {
     let snapshot = from_dsl_text(EXAMPLE).expect("the shipped example must parse");
-    assert_eq!(from_json_text(&json_text(&snapshot)).expect("json must read back"), snapshot, "json is not a lossless round trip");
+    assert_eq!(*Fem2dSnapshotRetiring::new(from_json_text(&json_text(&snapshot)).expect("json must read back")), *snapshot, "json is not a lossless round trip");
 }
 
 /// 🔮️ The third-party `csv` reader (test-only) reads the node table back coordinate for coordinate.
@@ -90,12 +95,12 @@ fn example_fixture_parses_and_solves() {
 }
 // #endregion 🔖️ExampleFixture
 
-/// 📐️ Every vector of the portable region surface corpus runs through the installed OBJ and ASCII STL exports beside the neutral kernel; the rows are handed to the owning TypeScript oracle through `SEMIO_FEM_SURFACE_RESULTS`.
+/// 📐️ Every vector of the portable region surface corpus runs through the installed OBJ and ASCII STL exports beside the neutral kernel; the rows are handed to the owning TypeScript oracle through `SEMIO_FEM_SURFACE_RESULTS`, or land in the system temp directory when a plain test run declares no oracle.
 /// Links: the corpus `✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🧫️fixtures/🔣️.json`.
 #[semio_framework_async_macros::async_test]
 async fn surface_corpus_exports_obj_and_stl_beside_the_neutral_surface() {
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
-    let path = std::env::var_os("SEMIO_FEM_SURFACE_RESULTS").expect("owning surface contract command must declare its output path");
+    let path = std::env::var_os("SEMIO_FEM_SURFACE_RESULTS").unwrap_or_else(|| std::env::temp_dir().join("semio-fem-2d-surface-results.json").into_os_string());
     let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::repo_text!("✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🧫️fixtures/🔣️.json")).expect("surface corpus");
     let vectors = fixture["vectors"].as_array().expect("vectors");
     assert_eq!(vectors.len(), 9);

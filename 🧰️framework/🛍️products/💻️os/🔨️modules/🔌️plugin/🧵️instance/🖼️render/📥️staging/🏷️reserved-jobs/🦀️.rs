@@ -75,7 +75,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         owner.validate(self.stores.store.content_revision(),cx)?;if owner.input.is_some(){return if media.is_none(){Ok(true)}else{Err(semio_framework_value::ValueError::invariant("reserved media source was replaced after donation").into())}}
         if !owner.header_ready(4){return Ok(false)}
         if !Self::media_donation_funded(cx){return Ok(false)}
-        if media.is_none(){return Err(semio_framework_value::ValueError::invariant("reserved media source is absent").into())}
+        if media.is_none(){return Ok(false)}
         if owner.raw_wire.is_some(){return Err(semio_framework_value::ValueError::invariant("reserved media wire receiver is occupied").into())}
         let bytes=Self::MEDIA_DONATION_BYTES;
         let headers=owner.headers.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("reserved media port was already donated"))?;

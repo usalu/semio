@@ -16,7 +16,14 @@ const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const modulesRoot = join(repoRoot, ".cache/b/p/m/browser/prototype/modules");
 const catalog = JSON.parse(readFileSync(join(repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json"), "utf8")) as {pluginId: string; packageId: string; cratePath: string; packageName: string; wasmOut: string; directoryName: string}[];
 const work = join(import.meta.dir, "🗑️generated/claude-full-s/work");
-const toolchain = JSON.parse(readFileSync(join(modulesRoot, "📏️layout/🧾️receipt.json"), "utf8")).toolchain as string;
+const layoutReceipt = join(modulesRoot, "📏️layout/🧾️receipt.json");
+const toolchain = existsSync(layoutReceipt) ? JSON.parse(readFileSync(layoutReceipt, "utf8")).toolchain as string : (() => {
+  const probed = spawnSync("rustc", ["-vV"], {encoding: "utf8"});
+  const commit = probed.stdout.match(/^commit-hash: ([0-9a-f]+)$/m)?.[1];
+  const release = probed.stdout.match(/^release: (.+)$/m)?.[1];
+  if (probed.status !== 0 || !commit || !release) throw new Error(`rustc -vV did not name a toolchain: ${probed.stderr}`);
+  return `rustc ${release} (${commit})`;
+})();
 const sha = (b: Uint8Array | string) => createHash("sha256").update(b).digest("hex");
 
 function files(dir: string, base = dir): string[] {

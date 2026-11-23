@@ -1,0 +1,56 @@
+{
+  "id": "black-alder",
+  "category": "vegetation",
+  "title": {
+    "en": "Black Alder",
+    "de": "Schwarz-Erle"
+  },
+  "heightM": 20,
+  "widthM": 7.9611,
+  "powerW": 0,
+  "poses": [
+    "summer-calm",
+    "fresh-breeze",
+    "gale",
+    "summer-flood",
+    "early-wet-snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "black-alder-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A tall riverbank tree with one straight dark stem running through a conical, open crown of short spiral limbs; the only plant of the archive with a flood pose, in which the stem base stands in flowing water (contact with the water and a hydrodynamic drag load).",
+    "de": "Ein hoher Ufergehölzbaum mit einem geraden dunklen Stamm, der durch eine kegelige, offene Krone aus kurzen Spiralästen läuft; die einzige Pflanze des Archivs mit einer Hochwasserpose, in der der Stammfuß in fließendem Wasser steht (Kontakt mit dem Wasser und eine Strömungslast)."
+  },
+  "completion": "authored"
+}

@@ -43,5 +43,6 @@
 {"op":"set","path":["poses",{"id":"passing-left"},"thermal","regions","wellies","exposedFraction"],"value":0.3205},
 {"op":"set","path":["poses",{"id":"contact-right"},"thermal","regions","wellies","exposedFraction"],"value":0.3205},
 {"op":"set","path":["poses",{"id":"loading-right"},"thermal","regions","wellies","exposedFraction"],"value":0.3205},
-{"op":"set","path":["poses",{"id":"passing-right"},"thermal","regions","wellies","exposedFraction"],"value":0.3205}
+{"op":"set","path":["poses",{"id":"passing-right"},"thermal","regions","wellies","exposedFraction"],"value":0.3205},
+{"op":"solid-set","scale":"200","list":"body","id":"hand-r","set":{"transform":{"translation":[0.06806,0.00575,0.01199]}}}
 ]
