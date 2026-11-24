@@ -57,7 +57,8 @@ pub(super) fn push_annex_b_dsl_il(report: &mut CheckReport, document: &En1990Sna
         let subject = SubjectRef::new(document.project_id.clone(), path, copy(title_en, title_de));
         let builder = CheckResult::assess(id, "EN 1990 Annex B", ClauseId::new("EN 1990", "Annex B", clause), subject.clone(), copy(title_en, title_de)).annex(document.annex);
         let recommendation = format!("{prefix}{required}");
-        let remedy = |text_en: String, text_de: String| Remedy::one_of(subject.clone(), vec![recommendation.clone()], copy(text_en, text_de));
+        let wire = recommendation.to_lowercase();
+        let remedy = |text_en: String, text_de: String| Remedy::one_of(subject.clone(), vec![wire.clone()], copy(text_en, text_de));
         let built = match parse_level(declared, prefix) {
             None => builder
                 .status(CheckStatus::Fail)

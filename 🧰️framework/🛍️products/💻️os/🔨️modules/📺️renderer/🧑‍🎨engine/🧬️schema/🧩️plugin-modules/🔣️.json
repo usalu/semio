@@ -206,6 +206,35 @@
         }
       ]
     },
+    "onDemandEmission": {
+      "description": "How a guest parks on a node kind no active extension serves: it publishes ONE onDemandRequest per leading namespace on the onDemandRequestTopic, again only when the flow registry generation or the set of unserved kinds changed, and keeps its nodes pending (queued, never faulted) until the extension's contributions push moves the registry generation and owes the attached previews an evaluation.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "topic",
+        "latch",
+        "surfaces"
+      ],
+      "properties": {
+        "topic": {
+          "const": "os.on-demand.request"
+        },
+        "latch": {
+          "const": "registry-generation-and-unserved-kinds"
+        },
+        "surfaces": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "flow.flowEvalTick",
+              "procedural.generation3d.pending_effects"
+            ]
+          }
+        }
+      }
+    },
     "onDemandStatus": {
       "type": "object",
       "additionalProperties": false,

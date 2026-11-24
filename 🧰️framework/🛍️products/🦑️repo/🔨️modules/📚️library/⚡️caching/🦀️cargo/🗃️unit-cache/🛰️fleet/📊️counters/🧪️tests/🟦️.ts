@@ -3,7 +3,7 @@ import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {spawnSync} from "node:child_process";
-import {countSkipV1,countUnitV1,readBuildCountersV1,unitLedgerLinesV1,unitLedgerV1,type UnitCountKindV1} from "../🟦️.ts";
+import {countSkipV1,countUnitV1,noteSpoolV1,readBuildCountersV1,readSpoolV1,unitLedgerLinesV1,unitLedgerV1,type UnitCountKindV1} from "../🟦️.ts";
 
 const python=`
 import json,sys
@@ -43,5 +43,18 @@ describe("🧮️ unit ledger of a run",()=>{
    expect(run.status).toBe(0);
    expect(unitLedgerLinesV1(unitLedgerV1(before,after))).toEqual(JSON.parse(run.stdout));
   }
+ });
+});
+
+describe("upload spool depth",()=>{
+ test("the depth the upload worker noted travels with the build counters, an unchanged depth is not rewritten within five seconds and a depth that moved is",()=>{
+  const root=mkdtempSync(join(tmpdir(),"counters-spool-"));
+  try{
+   expect(readSpoolV1(root)).toBeUndefined();expect(readBuildCountersV1(root).spool).toBeUndefined();
+   noteSpoolV1(root,7,4096,true);
+   expect(readSpoolV1(root)).toMatchObject({depth:7,bound:4096});expect(readBuildCountersV1(root).spool).toMatchObject({depth:7,bound:4096});
+   const first=readSpoolV1(root)!.atMs;noteSpoolV1(root,7,4096);expect(readSpoolV1(root)!.atMs,"the same depth within five seconds is not rewritten").toBe(first);
+   noteSpoolV1(root,0,4096);expect(readSpoolV1(root)).toMatchObject({depth:0});
+  }finally{rmSync(root,{recursive:true,force:true});}
  });
 });

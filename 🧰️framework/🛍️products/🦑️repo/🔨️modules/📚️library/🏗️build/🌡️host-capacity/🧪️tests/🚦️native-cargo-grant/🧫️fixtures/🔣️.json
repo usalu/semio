@@ -1,0 +1,324 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "the incident host with 5022 MB available waits for memory instead of starting",
+   "preferredJobs": 8,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 5022,
+    "cores": 10,
+    "load": 10.95,
+    "pressure": "normal",
+    "swapUsedMegabytes": 1832,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "wait",
+    "jobs": 0,
+    "reason": "memory"
+   }
+  },
+  {
+   "name": "eight asked on 8000 MB available run with two",
+   "preferredJobs": 8,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 8000,
+    "cores": 10,
+    "load": 1,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "admit",
+    "jobs": 2,
+    "reason": "reduced"
+   }
+  },
+  {
+   "name": "eight asked on 14000 MB available run with five",
+   "preferredJobs": 8,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 14000,
+    "cores": 10,
+    "load": 1,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "admit",
+    "jobs": 5,
+    "reason": "reduced"
+   }
+  },
+  {
+   "name": "one asked on 6000 MB available runs with one",
+   "preferredJobs": 1,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 6000,
+    "cores": 10,
+    "load": 1,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "admit",
+    "jobs": 1,
+    "reason": "fits"
+   }
+  },
+  {
+   "name": "four asked on a 64 GB host run with four",
+   "preferredJobs": 4,
+   "host": {
+    "totalMegabytes": 65536,
+    "availableMegabytes": 50000,
+    "cores": 10,
+    "load": 1,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "admit",
+    "jobs": 4,
+    "reason": "fits"
+   }
+  },
+  {
+   "name": "critical pressure waits whatever is free",
+   "preferredJobs": 2,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 14000,
+    "cores": 10,
+    "load": 1,
+    "pressure": "critical",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "wait",
+    "jobs": 0,
+    "reason": "pressure-critical"
+   }
+  },
+  {
+   "name": "warning pressure waits when memory fits",
+   "preferredJobs": 2,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 14000,
+    "cores": 10,
+    "load": 1,
+    "pressure": "warn",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "wait",
+    "jobs": 0,
+    "reason": "pressure-warn"
+   }
+  },
+  {
+   "name": "worked swap while memory is short waits",
+   "preferredJobs": 2,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3500,
+    "cores": 10,
+    "load": 1,
+    "pressure": "normal",
+    "swapUsedMegabytes": 6000,
+    "swapOutMegabytesPerSecond": 5,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "wait",
+    "jobs": 0,
+    "reason": "swap"
+   }
+  },
+  {
+   "name": "saturated swap traffic waits whatever is free",
+   "preferredJobs": 2,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 12000,
+    "cores": 10,
+    "load": 1,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 100,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "wait",
+    "jobs": 0,
+    "reason": "swap-activity"
+   }
+  },
+  {
+   "name": "a busy two-core host admits one job beside its load",
+   "preferredJobs": 4,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 6000,
+    "cores": 2,
+    "load": 3.9,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "admit",
+    "jobs": 1,
+    "reason": "reduced"
+   }
+  },
+  {
+   "name": "cores bound the jobs memory would carry",
+   "preferredJobs": 8,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 14000,
+    "cores": 2,
+    "load": 3,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "admit",
+    "jobs": 1,
+    "reason": "reduced"
+   }
+  },
+  {
+   "name": "an open file table above its share waits",
+   "preferredJobs": 2,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 14000,
+    "cores": 10,
+    "load": 1,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 900000,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "wait",
+    "jobs": 0,
+    "reason": "files"
+   }
+  },
+  {
+   "name": "as many attached images as the maximum waits",
+   "preferredJobs": 2,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 14000,
+    "cores": 10,
+    "load": 1,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 32
+   },
+   "expected": {
+    "verdict": "wait",
+    "jobs": 0,
+    "reason": "attaches"
+   }
+  },
+  {
+   "name": "an unmeasured load and swap admit the jobs memory carries",
+   "preferredJobs": 3,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "cores": 10,
+    "load": null,
+    "pressure": "normal",
+    "swapUsedMegabytes": null,
+    "swapOutMegabytesPerSecond": null,
+    "openFiles": null,
+    "openFilesMaximum": null,
+    "attachedImages": null
+   },
+   "expected": {
+    "verdict": "admit",
+    "jobs": 2,
+    "reason": "reduced"
+   }
+  },
+  {
+   "name": "memory below the least one job needs waits",
+   "preferredJobs": 1,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3500,
+    "cores": 10,
+    "load": 1,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "wait",
+    "jobs": 0,
+    "reason": "memory"
+   }
+  }
+ ],
+ "waiting": {
+  "availableMegabytes": 3000,
+  "cancelAfterMilliseconds": 400
+ }
+}

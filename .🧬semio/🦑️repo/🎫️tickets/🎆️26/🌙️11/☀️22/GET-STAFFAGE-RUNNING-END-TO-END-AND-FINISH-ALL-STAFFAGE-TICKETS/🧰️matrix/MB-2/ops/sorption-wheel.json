@@ -1,0 +1,8 @@
+[
+{"op": "shape-add", "scale": "50", "view": "plan", "after": "casing", "shape": {"id": "belt-strip-edges", "bone": "casing", "role": "detail", "z": 3.3, "filled": false, "tone": 0.1, "region": "motor", "material": "painted-steel", "kind": "path", "d": "M -0.31 0.022 L 0.31 0.022 M -0.31 0.038 L 0.31 0.038"}},
+{"op": "shape-add", "scale": "50", "view": "front", "after": "casing", "shape": {"id": "belt-strip-edges", "bone": "casing", "role": "detail", "z": 3.3, "filled": false, "tone": 0.1, "region": "motor", "material": "painted-steel", "kind": "path", "d": "M 0.022 0.235125 L 0.022 0.62 M 0.038 0.235125 L 0.038 0.62"}},
+{"op": "note", "scale": "50", "decision": "retained", "en": "Top and front view: the two seams of the 16 mm belt strip in the casing band.", "de": "Draufsicht und Vorderansicht: die zwei Nähte des 16 mm breiten Riemenstreifens im Gehäuseband."},
+{"op": "shape-add", "scale": "100", "view": "plan", "after": "casing", "shape": {"id": "belt-strip-line", "bone": "casing", "role": "detail", "z": 3.3, "filled": false, "tone": 0.1, "region": "motor", "material": "painted-steel", "kind": "poly", "points": [[-0.31, 0.03], [0.31, 0.03]], "closed": false}},
+{"op": "shape-add", "scale": "100", "view": "front", "after": "casing", "shape": {"id": "belt-strip-line", "bone": "casing", "role": "detail", "z": 3.3, "filled": false, "tone": 0.1, "region": "motor", "material": "painted-steel", "kind": "poly", "points": [[0.03, 0.235125], [0.03, 0.62]], "closed": false}},
+{"op": "note", "scale": "100", "decision": "retained", "en": "Top and front view: the belt strip of the casing band as one line (16 mm, 0.16 mm on paper).", "de": "Draufsicht und Vorderansicht: der Riemenstreifen des Gehäusebands als eine Linie (16 mm, 0,16 mm auf dem Papier)."}
+]

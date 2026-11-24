@@ -42,14 +42,15 @@ await send("browsingContext.setViewport", { context, viewport: { width: 1440, he
 if (process.env.PRELOAD) await send("script.addPreloadScript", { functionDeclaration: process.env.PRELOAD });
 await send("browsingContext.navigate", { context, url, wait: "complete" });
 const timeline: string[] = [];
-const evaluate = async (expression: string, timeoutMs = 20000): Promise<string> => { const r = await Promise.race([send("script.evaluate", { target: { context }, awaitPromise: true, expression }), wait(timeoutMs).then(() => ({ result: { value: "[timeout]" } }))]); return String(r.result?.result?.value ?? r.result?.value ?? JSON.stringify(r).slice(0, 300)); };
+const evaluate = async (expression: string, timeoutMs = 20000): Promise<string> => { const r = await Promise.race([send("script.evaluate", { target: { context }, awaitPromise: true, expression }), wait(timeoutMs).then(() => ({ result: { value: "[timeout]" } }))]); if (r.result?.type === "exception") return `[exception] ${String(r.result.exceptionDetails?.text ?? "")} ${String(r.result.exceptionDetails?.exception?.value ?? "")}`.trim(); return String(r.result?.result?.value ?? r.result?.value ?? JSON.stringify(r).slice(0, 300)); };
 const probeState = `JSON.stringify([document.title,document.querySelectorAll("canvas").length,(document.body.innerText.match(/has not answered[^\\n]*/i)||[""])[0]])`;
 for (let t = 0; t < Number(process.env.SETTLE_MS ?? 45000); t += 5000) { await wait(5000); const state = await evaluate(probeState); timeline.push(`${(t + 5000) / 1000}s ${state}`); const canvases = (() => { try { return Number(JSON.parse(state)[1]); } catch { return 0; } })(); if (canvases >= 1 && process.env.UNTIL_CANVAS !== "0") break; }
-const scenario: { name: string; js: string; keys?: string[]; settleMs?: number }[] = process.env.STEPS ? JSON.parse(process.env.STEPS) : JSON.parse(readFileSync(join(import.meta.dir, "process-interactions.json"), "utf8"));
+const scenario: { name: string; js: string; keys?: string[]; pointer?: string; settleMs?: number }[] = process.env.STEPS ? JSON.parse(process.env.STEPS) : JSON.parse(readFileSync(join(import.meta.dir, "process-interactions.json"), "utf8"));
 const stepResults: { name: string; result: string; newErrors: string[] }[] = [];
 if (process.env.INTERACT !== "0") for (const step of scenario) {
   const before = logs.filter(l => l.level === "error" && !l.text.startsWith("[DEBUG]")).length;
   const result = await evaluate(step.js);
+  if (step.pointer) { const at = JSON.parse(await evaluate(step.pointer)) as [number, number]; await send("input.performActions", { context, actions: [{ type: "pointer", id: "mouse", parameters: { pointerType: "mouse" }, actions: [{ type: "pointerMove", x: Math.round(at[0]), y: Math.round(at[1]) }, { type: "pointerDown", button: 0 }, { type: "pointerUp", button: 0 }] }] }); }
   if (step.keys?.length) await send("input.performActions", { context, actions: [{ type: "key", id: "keyboard", actions: step.keys.flatMap(value => [{ type: "keyDown", value }, { type: "keyUp", value }]) }] });
   await wait(step.settleMs ?? 4000);
   stepResults.push({ name: step.name, result: result.slice(0, 3000), newErrors: logs.filter(l => l.level === "error" && !l.text.startsWith("[DEBUG]")).slice(before).map(l => l.text.slice(0, 400)) });
@@ -66,5 +67,5 @@ writeFileSync(join(out, "e2e-report.json"), JSON.stringify(report, null, 2));
 console.log(JSON.stringify(report, null, 2).slice(0, 6000));
 await send("session.end").catch(() => {});
 firefox.kill();
-if (consoleErrors.length || (report.probe as { canvases?: number }).canvases === 0 || stepResults.some(step => step.newErrors.length)) { console.error(`[FAIL] ${consoleErrors.length} console error(s) other than [DEBUG] lines; canvases=${(report.probe as { canvases?: number }).canvases}`); for (const e of consoleErrors) console.error(`  ${e.text.slice(0, 300)}`); process.exit(1); }
+if (consoleErrors.length || (report.probe as { canvases?: number }).canvases === 0 || stepResults.some(step => step.newErrors.length || /^\[(exception|timeout)\]/.test(step.result))) { console.error(`[FAIL] ${consoleErrors.length} console error(s) other than [DEBUG] lines; canvases=${(report.probe as { canvases?: number }).canvases}`); for (const e of consoleErrors) console.error(`  ${e.text.slice(0, 300)}`); process.exit(1); }
 process.exit(0);

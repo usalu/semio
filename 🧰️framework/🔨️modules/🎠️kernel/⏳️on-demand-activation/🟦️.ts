@@ -87,6 +87,8 @@ export type OnDemandActivatorOptions = {
 
 export interface OnDemandActivator {
   request(request: OnDemandRequest, signal?: AbortSignal): Promise<OnDemandOutcome>;
+  /** 🔎️ The deferred plugins `request` would start right now, ascending by id: the owners of the request that are not active yet. A host that mounts through its own install path (the wgpu shell) asks this, installs each owner itself, and so owns the progress band and the cancel. */
+  owners(request: OnDemandRequest): readonly string[];
   cancel(pluginId?: string): number;
   statuses(): readonly OnDemandStatus[];
   subscribe(listener: (status: OnDemandStatus) => void): () => void;
@@ -156,6 +158,7 @@ export function createOnDemandActivator(options: OnDemandActivatorOptions): OnDe
         cancelled: statuses.filter((status) => status.phase === "cancelled").map((status) => status.pluginId),
       };
     },
+    owners: (request) => resolveOnDemandOwners(options.candidates(), request).filter((pluginId) => !activeIds().has(pluginId)),
     cancel(pluginId) {
       const targets = pluginId === undefined ? [...running.values()] : running.has(pluginId) ? [running.get(pluginId)!] : [];
       for (const target of targets) target.abort.abort();

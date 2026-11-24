@@ -417,7 +417,7 @@ pub use original_follow::{OriginalToolMachineFollow,OriginalToolMachineFollowSlo
 
 #[path="🧵️settlement/🦀️.rs"]
 mod original_press_settlement;
-pub use original_press_settlement::OriginalPressSettlement;
+pub use original_press_settlement::{OriginalPressSettlement,PressWait};
 
 #[path="🏷️tag/🧵️original/🦀️.rs"]
 mod original_tool_tag;

@@ -4420,6 +4420,75 @@
      "info": 0
     }
    }
+  },
+  {
+   "name": "a mounted image below the declared need of its platform is an error",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "storage": {
+     "hostFreeBytes": 107374182400,
+     "hostTotalBytes": 536870912000,
+     "partitions": [
+      {
+       "id": "dependencies",
+       "state": "mounted",
+       "capacityBytes": 8180000000,
+       "freeBytes": 4294967296,
+       "imageBytes": 8180040960,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok",
+       "needBytes": 29177675776
+      },
+      {
+       "id": "graph",
+       "state": "mounted",
+       "capacityBytes": 12884901888,
+       "freeBytes": 6442450944,
+       "imageBytes": 12884942848,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok",
+       "needBytes": null
+      },
+      {
+       "id": "rust",
+       "state": "mounted",
+       "capacityBytes": 29177675776,
+       "freeBytes": 14588837888,
+       "imageBytes": 29177675776,
+       "backing": "present",
+       "publication": "none",
+       "publicationAgeSeconds": null,
+       "image": "ok",
+       "needBytes": 29177675776
+      }
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "storage.image-below-need",
+      "error",
+      "dependencies"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "blocked",
+    "counts": {
+     "error": 1,
+     "warn": 0,
+     "info": 0
+    }
+   }
   }
  ]
 }

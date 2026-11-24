@@ -1,0 +1,308 @@
+[
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "sleeve-r",
+  "rebuild": true,
+  "why": "arm-r: half profiles in elevation (0.20 m deep at the shoulder) and front (0.10 m wide): the plan body of revolution takes the mean radius of both"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "why": "hand-l: sww/None/swu: the body of the elevation in every view"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "hand-r: sww/swv/swu: the body of the elevation in every view"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "sleeve-r",
+  "rebuild": true,
+  "why": "arm-r: half profiles in elevation (0.20 m deep at the shoulder) and front (0.10 m wide): the plan body of revolution takes the mean radius of both"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "hand-l",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "why": "hand-l: sww/None/swu: the body of the elevation in every view"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "hand-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "hand-r: sww/swv/swu: the body of the elevation in every view"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "shank-l",
+  "why": "shank-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "shank-r",
+  "why": "shank-r: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-l: flat/None/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat/None/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shank-l",
+  "why": "shank-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shank-r",
+  "why": "shank-r: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "mirror",
+  "scale": "200",
+  "id": "forearm-r",
+  "views": [
+   "front"
+  ],
+  "why": "half profile of a revolved limb: the front drew it as a sheet on edge (8 mm high) when the forearm points at the viewer in the cane poses; the whole body of revolution instead"
+ },
+ {
+  "op": "mirror",
+  "scale": "200",
+  "id": "hand-r",
+  "views": [
+   "front"
+  ],
+  "why": "half profile of a revolved limb: the front drew it as a sheet on edge (8 mm high) when the forearm points at the viewer in the cane poses; the whole body of revolution instead"
+ },
+ {
+  "op": "mirror",
+  "scale": "500",
+  "id": "forearm-r",
+  "views": [
+   "front"
+  ],
+  "why": "half profile of a revolved limb: the front drew it as a sheet on edge (8 mm high) when the forearm points at the viewer in the cane poses; the whole body of revolution instead"
+ },
+ {
+  "op": "mirror",
+  "scale": "500",
+  "id": "hand-r",
+  "views": [
+   "front"
+  ],
+  "why": "half profile of a revolved limb: the front drew it as a sheet on edge (8 mm high) when the forearm points at the viewer in the cane poses; the whole body of revolution instead"
+ }
+]

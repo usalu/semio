@@ -1313,6 +1313,21 @@
               "h": 0.3,
               "regions": ["carcass", "back-panel"],
               "material": "melamine-chipboard"
+            },
+            {
+              "id": "plinth",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "plinth",
+              "material": "melamine-chipboard",
+              "kind": "rect",
+              "x": 0.018,
+              "y": -0.12,
+              "w": 0.764,
+              "h": 0.03
             }
           ]
         },
@@ -1842,6 +1857,21 @@
               "region": "carcass",
               "material": "melamine-chipboard",
               "penMm": 0.25
+            },
+            {
+              "id": "plinth",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "plinth",
+              "material": "melamine-chipboard",
+              "kind": "rect",
+              "x": 0.018,
+              "y": -0.12,
+              "w": 0.764,
+              "h": 0.018
             }
           ]
         },
@@ -2659,6 +2689,36 @@
               "region": "carcass",
               "material": "melamine-chipboard",
               "penMm": 0.25
+            },
+            {
+              "id": "back",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.9,
+              "region": "back-panel",
+              "material": "hardboard-back",
+              "kind": "rect",
+              "x": 0.018,
+              "y": 0.1375,
+              "w": 0.764,
+              "h": 0.003
+            },
+            {
+              "id": "plinth",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "plinth",
+              "material": "melamine-chipboard",
+              "kind": "rect",
+              "x": 0.018,
+              "y": -0.12,
+              "w": 0.764,
+              "h": 0.018
             }
           ]
         },

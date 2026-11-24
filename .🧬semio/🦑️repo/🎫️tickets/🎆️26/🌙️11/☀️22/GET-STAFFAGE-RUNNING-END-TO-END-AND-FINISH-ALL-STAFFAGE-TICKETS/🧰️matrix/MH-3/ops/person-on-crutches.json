@@ -1,0 +1,10 @@
+[
+  {"op": "front-sweep", "scale": "200", "id": "shank-g-r"},
+  {"op": "plan-revolve", "scale": "200", "id": "shank-g-r"},
+  {"op": "front-sweep", "scale": "500", "id": "shank-g-r"},
+  {"op": "plan-revolve", "scale": "500", "id": "shank-g-r"},
+  {"op": "extrude", "scale": "500", "id": "crutch-tube-l", "view": "front"},
+  {"op": "copy", "scale": "500", "id": "crutch-tube-l", "from": "front", "to": ["plan"]},
+  {"op": "extrude", "scale": "500", "id": "crutch-tube-r", "view": "front"},
+  {"op": "copy", "scale": "500", "id": "crutch-tube-r", "from": "front", "to": ["plan"]}
+]

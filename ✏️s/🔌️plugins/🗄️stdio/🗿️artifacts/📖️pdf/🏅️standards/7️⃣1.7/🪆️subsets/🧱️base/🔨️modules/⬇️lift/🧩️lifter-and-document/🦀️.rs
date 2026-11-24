@@ -1,7 +1,7 @@
 //! 🧩️ The lifter state, the resource categories, the document entry points and the document-level lanes of the lift.
 
 use crate::standards::v1_7::subsets::base::modules::colour::{extra_entries, lift_colour_space, rect_of};
-use crate::standards::v1_7::subsets::base::modules::content::parse_content;
+use crate::standards::v1_7::subsets::base::modules::content::{parse_content, FontTable};
 use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_f64, dict_get, dict_i64, dict_name, CosGrant};
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;

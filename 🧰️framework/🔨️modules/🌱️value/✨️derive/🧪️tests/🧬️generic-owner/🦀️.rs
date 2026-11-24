@@ -122,3 +122,16 @@ fn wide_record_retires_in_field_order_within_the_original_depth() {
     assert_eq!(released, expected);
     assert_eq!(released_bytes - admitted_bytes, amount("totalReleased"));
 }
+
+#[derive(semio_framework_value_derive::RetireOwned)]
+#[value(send_only)]
+struct ErasedHolder{close:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>}
+#[derive(semio_framework_value_derive::RetireOwned)]
+#[value(send_only)]
+struct ErasedOuter{inner:Option<ErasedHolder>,label:String}
+#[test]
+fn send_only_owners_holding_erased_retirement_derive_without_sync(){
+ fn require_send<T:Send+RetireOwned>(){}
+ require_send::<ErasedHolder>();require_send::<ErasedOuter>();
+ assert!(ErasedOuter{inner:Some(ErasedHolder{close:None}),label:String::new()}.inner.is_some());
+}

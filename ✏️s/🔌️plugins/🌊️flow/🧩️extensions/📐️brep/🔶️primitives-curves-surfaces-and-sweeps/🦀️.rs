@@ -17,11 +17,11 @@ macro_rules! original_geometry {
             }
 
             fn step_plan(&self, input: Dictionary, grant: semio_framework_value::RetainedCloneGrant) -> Result<(neural_engine::OperatorPlanAdmission, semio_framework_value::RetainedCloneProgress), (EvalError, Dictionary)> {
-                super::original_curves::OriginalGeometryJob::admit(super::original_curves::GeometryOperation::$kind, &self.0, input, grant)
+                super::original_jobs::OriginalGeometryJob::admit(super::original_jobs::GeometryOperation::$kind, &self.0, input, grant)
             }
 
             fn next_plan_copy_byte_demand(&self, _: &Dictionary) -> Result<usize, semio_framework_value::ValueError> { Ok(std::mem::size_of::<Session>()) }
-            fn next_plan_capacity_byte_demand(&self, _: &Dictionary, _: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(std::mem::size_of::<super::original_curves::OriginalGeometryJob>()) }
+            fn next_plan_capacity_byte_demand(&self, _: &Dictionary, _: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(std::mem::size_of::<super::original_jobs::OriginalGeometryJob>()) }
             fn next_plan_release_byte_demand(&self, _: &Dictionary) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
             fn next_plan_depth_demand(&self, _: &Dictionary) -> Result<usize, semio_framework_value::ValueError> { Ok(1) }
         }

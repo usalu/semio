@@ -118,6 +118,25 @@ fn binary_breaches<M: OpBinary + PartialEq + Debug>(bundle: &Path, mutation: &M)
     }
 }
 
+/// 🔁️ The committed diff alone, never the produced one, turns the committed before-snapshot into the committed after-snapshot, and its inverse turns the after-snapshot back.
+fn committed_diff_breaches<S, M>(name: &str, committed: &M::ReferenceDiff, before: &S, after: &S) -> Vec<String>
+where
+    S: Clone + PartialEq,
+    M: ColdMutation<S>,
+    M::ReferenceDiff: semio_os_kernel::ColdDiffAlgebra<S>,
+{
+    use semio_os_kernel::ColdDiffAlgebra;
+    let mut breaches = Vec::new();
+    if apply_diff_cold(committed, before).ok().as_ref() != Some(after) {
+        breaches.push(format!("{name}: the committed diff does not turn the committed before-snapshot into the committed after-snapshot"));
+    }
+    let inverse = committed.inverse(before);
+    if apply_diff_cold(&inverse, after).ok().as_ref() != Some(before) {
+        breaches.push(format!("{name}: the inverse of the committed diff does not turn the committed after-snapshot into the committed before-snapshot"));
+    }
+    breaches
+}
+
 /// 🖨️ When `SEMIO_MUTATION_VECTORS_PRODUCED_DIR` is set, a diff that differs from its committed twin lands there as `<leaf>__<case>.json`, the input of the vector regeneration.
 fn record_produced(bundle: &Path, produced: &str) {
     let Ok(dir) = std::env::var("SEMIO_MUTATION_VECTORS_PRODUCED_DIR") else { return };
@@ -130,7 +149,7 @@ fn vector_breaches<S, M>(bundle: &Path, mutation: &M, reached: &mut BTreeSet<Str
 where
     S: Clone + PartialEq + Debug + FromValue,
     M: Mutation<S> + ColdMutation<S>,
-    M::ReferenceDiff: ToValue,
+    M::ReferenceDiff: ToValue + semio_os_kernel::ColdDiffAlgebra<S> + FromValue,
 {
     let name = bundle.display();
     let step = |document: &S, operation: &M| apply(document, operation).unwrap_or_else(|error| panic!("{name}: {error}"));
@@ -151,6 +170,7 @@ where
     }
     let diff = bundle.join(DIFF);
     if diff.is_file() {
+        breaches.extend(committed_diff_breaches::<S, M>(&name.to_string(), &decode::<M::ReferenceDiff>(&diff), &before, &after));
         let raised = mutation.diff(&before);
         let matches = json(&semio_framework_pack_json::to_json_string(raised.diff())) == json(&read(&diff));
         let (owned, _) = raised.into_parts();

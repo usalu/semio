@@ -121,7 +121,7 @@ fn buckling(c: &Ctx) -> Option<Diagram2d> {
         let utilisation = check.map(|x| x.utilization);
         markers.push(Marker {
             id: format!("marker-{axis_name}"),
-            at: Vec2::new(lambda.min(LAMBDA_MAX), chi),
+            at: Vec2::new(lambda.min(LAMBDA_MAX), part_1_1::chi_from_lambda(lambda.min(LAMBDA_MAX), alpha, lambda_0)),
             shape: MarkerShape::Circle,
             tone: utilisation.map_or(Tone::Neutral, utilisation_tone),
             label: loc(&format!("{axis_name}–{axis_name}: λ̄ = {lambda:.2}, χ = {chi:.3}"), &format!("{axis_name}–{axis_name}: λ̄ = {lambda:.2}, χ = {chi:.3}")),
@@ -174,7 +174,7 @@ fn ltb(c: &Ctx) -> Option<Vec<Diagram2d>> {
         description: loc("Reduction factor χ_LT over λ̄_LT for the section classes 1/2 (α = 0.10, λ̄₀ = 0.6) and 3/4 (α = 0.20, λ̄₀ = 0.4) of EN 1999-1-1, 6.3.2.2; the marker is this member.", "Abminderungsfaktor χ_LT über λ̄_LT für die Querschnittsklassen 1/2 (α = 0,10, λ̄₀ = 0,6) und 3/4 (α = 0,20, λ̄₀ = 0,4) nach EN 1999-1-1, 6.3.2.2; der Marker ist dieses Bauteil."),
         axes: vec![axis("Relative slenderness λ̄_LT", "Bezogener Schlankheitsgrad λ̄_LT", QuantityKind::Dimensionless, "1", AxisScale::Linear, Some((0.0, LAMBDA_MAX))), axis("Reduction factor χ_LT", "Abminderungsfaktor χ_LT", QuantityKind::Dimensionless, "1", AxisScale::Linear, Some((0.0, 1.1)))],
         series: vec![series_12, series_34],
-        markers: vec![Marker { id: "marker-ltb".into(), at: Vec2::new(lambda_lt.min(LAMBDA_MAX), chi_lt), shape: MarkerShape::Diamond, tone: utilisation.map_or(Tone::Neutral, utilisation_tone), label: loc(&format!("λ̄_LT = {lambda_lt:.2}, χ_LT = {chi_lt:.3}"), &format!("λ̄_LT = {lambda_lt:.2}, χ_LT = {chi_lt:.3}")), utilisation, bound_check: check.map(|x| x.id.clone()), binding: None }],
+        markers: vec![Marker { id: "marker-ltb".into(), at: Vec2::new(lambda_lt.min(LAMBDA_MAX), part_1_1::chi_from_lambda(lambda_lt.min(LAMBDA_MAX), alpha_lt, lambda_0_lt)), shape: MarkerShape::Diamond, tone: utilisation.map_or(Tone::Neutral, utilisation_tone), label: loc(&format!("λ̄_LT = {lambda_lt:.2}, χ_LT = {chi_lt:.3}"), &format!("λ̄_LT = {lambda_lt:.2}, χ_LT = {chi_lt:.3}")), utilisation, bound_check: check.map(|x| x.id.clone()), binding: None }],
         annotations: Vec::new(),
         focus: member_focus(&c.member.id),
         legend: true,

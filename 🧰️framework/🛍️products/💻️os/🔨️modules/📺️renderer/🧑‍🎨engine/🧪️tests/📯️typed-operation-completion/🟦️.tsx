@@ -234,7 +234,7 @@ export async function registerTypedOperationCompletionTests(vitest: PluginRuntim
     for (const row of fixture.addressed) {
       const command = encodePackValue({ address: row.address, arguments: {} });
       const event = encodeAppCommand({ Command: { seq: 9, command: Array.from(command), view_state: [] } });
-      expect(inspectEncodedAppCommand([event])).toEqual({ seq: 9, actionId: row.id, lane: row.lane });
+      expect(inspectEncodedAppCommand([event])).toEqual({ seq: 9, actionId: row.id, lane: row.lane, operation: row.id });
     }
     for (const row of fixture.stamps) {
       expect(commandIngressNeedsReplyStampV1(row.replySequences, row.seq), row.id).toBe(row.stamp);

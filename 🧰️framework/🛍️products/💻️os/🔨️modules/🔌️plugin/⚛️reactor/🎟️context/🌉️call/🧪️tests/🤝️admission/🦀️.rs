@@ -32,6 +32,7 @@ fn original_public_actor_guest_entry_keeps_same_fault_and_raw_receipts_through_p
 
 #[test]
 fn original_plugin_bootstrap_births_table_and_publisher_in_one_chain_under_the_whole_grant(){
+ let _serial=semio_ui_contract_values::testkit::ui_arena_serial();
  let law:serde_json::Value=serde_json::from_str(include_str!("ui-funded.json")).unwrap();
  let native=&law["native"];let bytes=native["bytes"].as_u64().unwrap()as usize;
  let stock=RetainedCloneGrant{maximum_items:native["items"].as_u64().unwrap()as usize,maximum_copy_bytes:bytes,maximum_capacity_bytes:bytes,maximum_release_bytes:bytes,maximum_depth:64};let mut input=RetainedTurnInput{operation:8852,generation:1,epoch:1,work:OriginalActorTurnWork{clock_binding:8852,absolute_deadline_us:10000,fuel:native["fuel"].as_u64().unwrap()},grant:stock};let mut entry=guest_context::OriginalActorGuestEntry::new();let mut ready=false;let mut installs=0;
@@ -115,4 +116,18 @@ fn original_core_wire_scope_withholds_real_reserve(){
  let demand=OriginalEscrowPublisher::core_wire_reserve(144).unwrap();let stock=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1048576,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:64};let mut caller=OriginalJobFixtureCaller::admit(OperationId(8860),Generation(10),stock,||Some(1),10000,10000);let mut called=false;
  let denied=RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..stock};caller.turn(denied,|cx|{let before=cx.retained_progress();assert!(guest_context::with_core_wire_reserve(cx,144,|_|{called=true;Ok(())}).is_err());assert_eq!(cx.retained_progress(),before);Ok(())}).unwrap();assert!(!called);
  caller.turn(stock,|cx|{let before=cx.retained_progress();let grant=cx.retained_grant();let fuel=cx.fuel_remaining();guest_context::with_core_wire_reserve(cx,144,|inner|{called=true;assert_eq!(inner.retained_grant().maximum_items,grant.maximum_items-demand.items);assert_eq!(inner.retained_grant().maximum_copy_bytes,grant.maximum_copy_bytes-demand.copy_bytes);assert!(inner.fuel_remaining()<=fuel-demand.work);Ok(())})?;assert_eq!(cx.retained_progress(),before);Ok(())}).unwrap();assert!(called);caller.retire(stock);
+}
+
+#[test]
+fn original_frame_admission_registers_the_ui_arena_before_any_ui_list_is_built(){
+ let _serial=semio_ui_contract_values::testkit::ui_arena_serial();
+ let law:serde_json::Value=serde_json::from_str(include_str!("ui-funded.json")).unwrap();let native=&law["native"];let bytes=native["bytes"].as_u64().unwrap()as usize;
+ let stock=RetainedCloneGrant{maximum_items:native["items"].as_u64().unwrap()as usize,maximum_copy_bytes:bytes,maximum_capacity_bytes:bytes,maximum_release_bytes:bytes,maximum_depth:64};let mut input=RetainedTurnInput{operation:8853,generation:1,epoch:1,work:OriginalActorTurnWork{clock_binding:8853,absolute_deadline_us:10000,fuel:native["fuel"].as_u64().unwrap()},grant:stock};let mut entry=guest_context::OriginalActorGuestEntry::new();
+ assert!(semio_ui_contract_values::ui_value_arena_registry().borrow().is_err());
+ let mut ready=false;for _ in 0..256{let call=entry.admit_frame_step(input,semio_framework_job::StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,input.grant),||Some(1));assert!(call.result.is_ok());ready=matches!(&call.result,Ok(admission) if admission.ready);let returned=input.return_original(call.receipt_spent,call.work_units_spent).unwrap();input.epoch+=1;input.grant=returned.remaining;input.work.fuel=returned.remaining_fuel;if ready{break}}assert!(ready);
+ assert!(semio_ui_contract_values::ui_value_arena_registry().borrow().unwrap().is_some());
+ let mut builder=semio_ui_contract_values::UiListBuilder::try_new().expect("registered arena builds a UiList");builder.push(semio_ui_contract_values::UiValue::Bool(true)).expect("registered arena accepts a UiList page");let list=builder.finish();assert_eq!(list.len(),1);drop(list);
+ for _ in 0..native["maximumRetirementSteps"].as_u64().unwrap(){if semio_ui_contract_values::close_ui_value_page_one(){break}}
+ for _ in 0..native["maximumRetirementSteps"].as_u64().unwrap(){if entry.terminal_is_empty(){break}let call=entry.close_plugin_step(semio_framework_actor::OriginalJobBudget{input,retained_policy:input.grant,fuel:input.work.fuel,deadline_us:input.work.absolute_deadline_us,cancelled:true});assert!(call.result.is_ok());let returned=input.return_original(call.receipt_spent,call.work_units_spent).unwrap();input.epoch+=1;input.grant=returned.remaining;input.work.fuel=returned.remaining_fuel}assert!(entry.terminal_is_empty());
+ assert!(semio_ui_contract_values::ui_value_arena_registry().borrow().is_err());
 }

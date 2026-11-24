@@ -67,13 +67,13 @@ export type RecallRequestV1 = Readonly<{ v: 1; op: "recall"; pass: string; crate
 export type UnitCeilingVerdictV1 = Readonly<{ version: 1; ceilingMegabytes: number; exceeded: readonly Readonly<{ key: string; crate: string; target: string; peakMegabytes: number; listed: boolean }>[]; resolved: readonly Readonly<{ crate: string; target: string; peakMegabytes: number }>[]; ok: boolean }>;
 
 /** 📒️ One recorded observation of a unit key (`ObservationV1`), the scheduling knowledge `units.jsonl` keeps. */
-export type UnitObservationV1 = Readonly<{ v: 1; key: string; peakRssBytes: number; outputBytes: number; wallMs: number; cpuMs: number; remainingMs: number; atMs: number }>;
+export type UnitObservationV1 = Readonly<{ v: 1; key: string; peakRssBytes: number; outputBytes: number; wallMs: number; cpuMs: number; remainingMs: number; atMs: number; lines?: number }>;
 
 /** 🔗️ One dependency of a unit by the artifact identities it may name and what it consumes: metadata only (pipelined) or the complete library. */
 export type UnitEdgeV1 = Readonly<{ artifacts: readonly string[]; edge: "rmeta" | "full" }>;
 
 /** 🧾️ One admitted rustc unit as the broker measured it. */
-export type UnitRecordV1 = Readonly<{ key: string; pass: string; profile: string; target: string; crate: string; package: string; version: string; crateTypes: readonly string[]; primary: boolean; artifact: string; dependencies: readonly UnitEdgeV1[]; buildScriptOutDir: string | null; predictedBytes: number; requestMs: number; admittedMs: number; startMs: number; endMs: number; rmetaMs: number | null; peakRssBytes: number; userMs: number; sysMs: number; exit: number; cache?: Readonly<{ key: string; recorded: boolean }> | null }>;
+export type UnitRecordV1 = Readonly<{ key: string; pass: string; profile: string; target: string; crate: string; package: string; version: string; crateTypes: readonly string[]; primary: boolean; artifact: string; dependencies: readonly UnitEdgeV1[]; buildScriptOutDir: string | null; lines?: number; predictedBytes: number; requestMs: number; admittedMs: number; startMs: number; endMs: number; rmetaMs: number | null; peakRssBytes: number; userMs: number; sysMs: number; exit: number; cache?: Readonly<{ key: string; recorded: boolean }> | null }>;
 
 /** 🧳️ A unit waiting for admission, as the ordering and decision laws see it. */
 export type AdmissionWaiterV1 = Readonly<{ predictedBytes: number; expectedWallMs: number | null; remainingMs: number; arrival: number }>;
@@ -180,6 +180,12 @@ export function predictPeakBytesV1(peaks: readonly number[], cold: Readonly<{ kl
   if (peaks.length) return Math.max(Math.ceil(policy.headroom * quantileR7V1(peaks.slice(-policy.window), policy.quantile)), policy.floorBytes);
   if (cold.component === null) return Math.max(Math.ceil(policy.coldBaseBytes + policy.coldBytesPerKloc * cold.kloc), policy.floorBytes);
   return cold.component.length < policy.componentColdMinimumRows ? policy.componentFinalBytes : Math.max(Math.ceil(policy.headroom * quantileR7V1(cold.component, policy.componentColdQuantile)), policy.floorBytes);
+}
+
+/** 🧬️ The rows of a unit key's history that were recorded for a source of comparable size (`lines` within the policy tolerance of the current `lines`): the forecast follows the unit's inputs, so a crate that was split or grown is predicted from its size, not from a peak measured for other sources; rows without a recorded size are stale. */
+export function forecastHistoryV1(history: readonly UnitObservationV1[], lines: number): UnitObservationV1[] {
+  const bound = 1 + ADMISSION_POLICY_V1.forecastSizeToleranceBasisPoints / 10000;
+  return history.filter((row) => row.lines !== undefined && (lines === 0 || row.lines === 0 ? row.lines === lines : Math.max(row.lines, lines) <= bound * Math.min(row.lines, lines)));
 }
 
 /** ⏳️ Expected wall time of a key: the median of its recorded walls in the window, rounded half up; `null` without history. */
@@ -368,7 +374,7 @@ export interface AdmissionBrokerV1 {
   close(): Promise<void>;
 }
 
-type Entry = { request: AdmitRequestV1; key: string; profile: string; predictedBytes: number; expectedWallMs: number | null; remainingMs: number; arrival: number; requestMs: number; admittedMs: number; rssBytes: number; chargedBytes: number; cancelled: boolean; heldLoggedMs: number; socket: Socket };
+type Entry = { request: AdmitRequestV1; key: string; lines: number; profile: string; predictedBytes: number; expectedWallMs: number | null; remainingMs: number; arrival: number; requestMs: number; admittedMs: number; rssBytes: number; chargedBytes: number; cancelled: boolean; heldLoggedMs: number; socket: Socket };
 
 /** ▶️ Starts the admission broker: wrappers connect, ask for admission, stream resident memory and report completion.
  * The budget is `physical − reserve − rolling maximum of the driver's other children`; measured overshoot or swap-out freezes admission. */
@@ -424,12 +430,12 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
     schedule();
   };
   const componentPeaks = new Map<string, readonly number[]>();
-  const predict = async (request: AdmitRequestV1, pass: BrokerPassV1): Promise<Readonly<{ key: string; history: readonly UnitObservationV1[]; predictedBytes: number; cancelled: boolean }>> => {
-    const key = unitKeyV1(request, pass.profile), history = options.history.get(key) ?? [], componentFinal = request.crateTypes.includes("cdylib") && request.target !== "host";
+  const predict = async (request: AdmitRequestV1, pass: BrokerPassV1): Promise<Readonly<{ key: string; history: readonly UnitObservationV1[]; lines: number; predictedBytes: number; cancelled: boolean }>> => {
+    const key = unitKeyV1(request, pass.profile), kloc = await sourceKlocV1(request.source), lines = Math.round(kloc * 1000), history = forecastHistoryV1(options.history.get(key) ?? [], lines), componentFinal = request.crateTypes.includes("cdylib") && request.target !== "host";
     if (componentFinal && !componentPeaks.has(pass.profile)) componentPeaks.set(pass.profile, componentFinalPeaksV1(options.history, pass.profile));
-    const predicted = predictPeakBytesV1(history.map((row) => row.peakRssBytes), { kloc: history.length || componentFinal ? 0 : await sourceKlocV1(request.source), component: componentFinal ? componentPeaks.get(pass.profile)! : null });
+    const predicted = predictPeakBytesV1(history.map((row) => row.peakRssBytes), { kloc: history.length || componentFinal ? 0 : kloc, component: componentFinal ? componentPeaks.get(pass.profile)! : null });
     const records = await Promise.resolve().then(() => readCancels(now() - availablePolicy.cancelledMemoryMilliseconds)).catch(() => []), needle = `--crate-name ${request.crate} `, named = records.filter((record) => record.command.includes(needle));
-    return { key, history, cancelled: named.length > 0, predictedBytes: named.length ? Math.max(predicted, Math.ceil(Math.max(...named.map((record) => record.megabytes)) * 1048576 * availablePolicy.cancelledFactorBasisPoints / 10000)) : predicted };
+    return { key, history, lines, cancelled: named.length > 0, predictedBytes: named.length ? Math.max(predicted, Math.ceil(Math.max(...named.map((record) => record.megabytes)) * 1048576 * availablePolicy.cancelledFactorBasisPoints / 10000)) : predicted };
   };
   const server = createServer((socket) => {
     let entry: Entry | undefined, finished = false, chain = Promise.resolve();
@@ -470,8 +476,8 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
         if (message.op === "admit" && !entry) {
           const request = admitDefinition<AdmitRequestV1>("AdmitRequestV1", message), pass = passes.get(request.pass);
           if (!pass) throw Error(`Unknown build pass ${request.pass}`);
-          const { key, history, predictedBytes, cancelled } = await predict(request, pass);
-          entry = { request, key, profile: pass.profile, predictedBytes, expectedWallMs: expectedWallMsV1(history), remainingMs: history.at(-1)?.remainingMs ?? 0, arrival: arrivals++, requestMs: now(), admittedMs: 0, rssBytes: 0, chargedBytes: 0, cancelled, heldLoggedMs: -Infinity, socket };
+          const { key, history, lines, predictedBytes, cancelled } = await predict(request, pass);
+          entry = { request, key, lines, profile: pass.profile, predictedBytes, expectedWallMs: expectedWallMsV1(history), remainingMs: history.at(-1)?.remainingMs ?? 0, arrival: arrivals++, requestMs: now(), admittedMs: 0, rssBytes: 0, chargedBytes: 0, cancelled, heldLoggedMs: -Infinity, socket };
           waiting.push(entry);
           lastActivityMs = entry.requestMs;
           schedule();
@@ -487,7 +493,7 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
           running.delete(entry);
           lastActivityMs = now();
           socket.end();
-          completed.push(Object.freeze({ key: entry.key, pass: request.pass, profile: entry.profile, target: request.target, crate: request.crate, package: request.package, version: request.version, crateTypes: request.crateTypes, primary: request.primary, artifact: unitArtifactV1(request), dependencies: request.externs.map((path) => { const extern = externArtifactsV1(path); return { artifacts: extern.candidates, edge: extern.edge }; }), buildScriptOutDir: request.buildScriptOutDir, predictedBytes: entry.predictedBytes, requestMs: entry.requestMs, admittedMs: entry.admittedMs, startMs: done.startMs, endMs: done.endMs, rmetaMs: done.rmetaMs, peakRssBytes: done.peakRssBytes, userMs: done.userMs, sysMs: done.sysMs, exit: done.exit }));
+          completed.push(Object.freeze({ key: entry.key, pass: request.pass, profile: entry.profile, target: request.target, crate: request.crate, package: request.package, version: request.version, crateTypes: request.crateTypes, primary: request.primary, artifact: unitArtifactV1(request), dependencies: request.externs.map((path) => { const extern = externArtifactsV1(path); return { artifacts: extern.candidates, edge: extern.edge }; }), buildScriptOutDir: request.buildScriptOutDir, lines: entry.lines, predictedBytes: entry.predictedBytes, requestMs: entry.requestMs, admittedMs: entry.admittedMs, startMs: done.startMs, endMs: done.endMs, rmetaMs: done.rmetaMs, peakRssBytes: done.peakRssBytes, userMs: done.userMs, sysMs: done.sysMs, exit: done.exit }));
           try { options.onCompleted?.(completed[completed.length - 1]!); } catch (error) { console.error(`[admission] ${error instanceof Error ? error.message : String(error)}`); }
           schedule();
         } else throw Error(`Unexpected broker message ${line.slice(0, 200)}`);
@@ -521,7 +527,7 @@ export function compilerWrapperEnvironmentV1(scheduler: string, laneRoot: string
 
 /** 🪜️ The observation of one successful compiled unit, `null` for a failed or cached one: peak, measured output footprint, wall, CPU and remaining critical path, at the time the unit ended. */
 export function unitObservationV1(unit: UnitRecordV1, remainingMs: number, outputBytes: number): UnitObservationV1 | null {
-  return unit.exit === 0 && !unit.cache ? { v: 1, key: unit.key, peakRssBytes: unit.peakRssBytes, outputBytes, wallMs: Math.max(0, unit.endMs - unit.startMs), cpuMs: unit.userMs + unit.sysMs, remainingMs: Math.max(0, Math.round(remainingMs)), atMs: unit.endMs } : null;
+  return unit.exit === 0 && !unit.cache ? { v: 1, key: unit.key, peakRssBytes: unit.peakRssBytes, outputBytes, wallMs: Math.max(0, unit.endMs - unit.startMs), cpuMs: unit.userMs + unit.sysMs, remainingMs: Math.max(0, Math.round(remainingMs)), atMs: unit.endMs, ...unit.lines === undefined ? {} : { lines: unit.lines } } : null;
 }
 
 /** 🪜️ Recorded observations of a finished build: every successful unit's observation with its remaining critical path by unit artifact; they refine the rows recorded as the units completed (same key and time). */

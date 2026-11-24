@@ -22,6 +22,13 @@ export function wire(registry) {
   ({ loaded } = registry.bootstrap);
 }
 
+/** 🏷️ The names of the tasks {@link printDocumentTargets} synthesizes from a Print catalogue, read without resolving any command closure. */
+export function printDocumentTargetNamesV1(project, workspaceRoot) {
+  const path = project.metadata?.printCatalog;
+  if (!path) return new Set();
+  return new Set(["build", "build-viz", ...JSON.parse(readFileSync(join(workspaceRoot, path), "utf8")).documents.flatMap(document => [`build-${document.id}`, `watch-${document.id}`])]);
+}
+
 /** 📄️ Projects a document catalog into separately owned PDF tasks without executing a compiler. */
 export async function printDocumentTargets(project, root, workspaceRoot, scripts, intern = (inputs) => inputs) {
   const path = project.metadata?.printCatalog;

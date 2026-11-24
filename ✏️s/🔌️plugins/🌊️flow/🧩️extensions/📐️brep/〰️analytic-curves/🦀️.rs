@@ -1007,6 +1007,7 @@ impl GeometryOutput {
 }
 
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct GeometryOutputData {
     input: Dictionary,
     geometry: Option<Dictionary>,
@@ -1976,7 +1977,7 @@ fn loft_profiles(input: &Dictionary) -> Result<[&str; 2], ValueError> {
     let invalid = || ValueError::literal(ValueRefusalKind::InvalidValue, "original Loft requires two profiles in a geometry list");
     let list = input.get("profiles").and_then(Value::as_dictionary)
         .filter(|list| list.schema() == Some("list") && list.len() == 3).ok_or_else(invalid)?;
-    let read = |rank| {
+    let read = |rank: usize| {
         let (key, value) = list.entry_at_rank(rank + 1).ok_or_else(invalid)?;
         let index = key.parse::<usize>().map_err(|_| invalid())?;
         Ok::<_, ValueError>((index, geometry_atom_handle(Some(value))?))

@@ -20,6 +20,7 @@ semio-s-artifact-norm-en1991-scene-members-projection = { workspace = true }
 semio-s-artifact-norm-en1991-scene-members = { workspace = true }
 semio-s-artifact-norm-en1991-checks = { workspace = true }
 semio-s-artifact-norm-en1991-model = { workspace = true }
+semio-s-artifact-norm-en1991-scene-diagrams = { workspace = true }
 semio-s-artifact-norm-en1991-scene-fields = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-plugin-norm-mechanics = { workspace = true }

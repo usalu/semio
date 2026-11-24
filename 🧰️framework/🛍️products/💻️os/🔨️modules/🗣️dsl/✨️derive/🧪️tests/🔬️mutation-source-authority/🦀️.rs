@@ -106,7 +106,7 @@ pub(super) fn materialize(case: &str, fixture: &serde_json::Value) -> (PathBuf, 
             fs::rename(workspace.join("domain"), nested.join("domain")).unwrap();
             return (workspace.clone(), workspace, nested.join("domain/🧬️mutations/🆕️insert-page/🦀️.rs"));
         }
-        "dependency-scope-anchor" => {
+        "lockfile-nested-anchor" => {
             let nested = workspace.join("nested");
             fs::create_dir_all(&nested).unwrap();
             fs::write(nested.join("package.json"), r#"{"workspaces":[]}"#).unwrap();
@@ -170,7 +170,7 @@ fn validates_mutation_source_authority_fixture() {
         if name == "raw-nonutf8" {
             assert!(result.as_ref().unwrap_err().contains("not UTF-8"));
         }
-        if name == "nested-workspace-anchor" {
+        if name == "nested-workspace-anchor" || name == "lockfile-nested-anchor" {
             assert!(result.as_ref().unwrap_err().contains("lacks paired"));
         }
         if name == "file-parent-erasure" {

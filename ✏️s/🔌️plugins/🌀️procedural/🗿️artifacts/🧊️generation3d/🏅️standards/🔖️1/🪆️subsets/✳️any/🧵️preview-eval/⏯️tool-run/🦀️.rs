@@ -302,6 +302,8 @@ pub struct PreviewEvalRunLink {
     /// nothing extra; a move owes every attached window exactly one fresh evaluation, whichever route
     /// moved it.
     pub(crate) document: Option<PreviewEvalDocumentStamp>,
+    /// 🧭️ The unserved node kinds the host was last asked to activate extensions for, with the flow registry generation that answered them. A poll that finds the same kinds under the same generation asks nothing, so a parked document costs one request per generation instead of one per refresh; a moved generation (an extension mounted, another still missing) or a changed kind set asks again, and a servable graph clears it.
+    pub(crate) activation_asked: Option<(u64, Vec<String>)>,
 }
 
 /// 🧾️ What an evaluation is computed from, read off the poll's committed inputs and independent of the
@@ -374,6 +376,21 @@ pub(crate) const PREVIEW_EVAL_BOOKKEEPING_GRANT: semio_framework_value::Retained
 
 pub(crate) fn run_action_effect(action: &str, args: semio_framework_value::DslValue) -> Effect {
     Effect::DispatchAction { req: semio_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: action.into(), args: Some(args), delay_ms: 0 }
+}
+
+/// 🧭️ The typed requests that park a document on its unserved kinds: one [`Effect::PublishEvent`] on [`semio_os_flow::ON_DEMAND_REQUEST_TOPIC`] per namespace, carrying the UTF-8 JSON `{"kind":"node-kind","nodeKind":…}` the host's on-demand activator admits (`$defs.onDemandRequest`). The Rust twin of the kernel's `nodeKindRequests`; the flow editor's `on_demand_effects` is the same projection for its own surface.
+pub fn on_demand_effects(unserved: &[String]) -> Vec<Effect> {
+    semio_os_flow::on_demand_node_kind_requests(unserved).into_iter().map(|request| Effect::PublishEvent { topic: semio_os_flow::ON_DEMAND_REQUEST_TOPIC.into(), payload: request.into_bytes() }).collect()
+}
+
+/// 🧭️ What a surface's `pending_effects` owes the host while an attached preview parks on `unserved` node kinds (empty when no window is attached or the graph is servable): the activation requests of [`on_demand_effects`], once per registry generation and kind set ([`PreviewEvalRunLink::activation_asked`]). The window stays parked, never faulted; the activated extension's contributions push moves the generation, owes every attached preview an evaluation and the run starts by itself.
+pub fn on_demand_run_effects(link: &mut PreviewEvalRunLink, unserved: Vec<String>) -> Vec<Effect> {
+    let asked = (!unserved.is_empty()).then(|| (semio_os_flow::flow_extension_registry_generation(), unserved));
+    if link.activation_asked == asked {
+        return Vec::new();
+    }
+    link.activation_asked = asked.clone();
+    asked.map(|(_, unserved)| on_demand_effects(&unserved)).unwrap_or_default()
 }
 
 /// 🚦️ What a surface's `pending_effects` owes the run for the attached `windows`: start a run once a
@@ -642,7 +659,14 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
         let grant = cx.retained_grant();
         let turn = self.owner.with_mut::<O, _>(|held| {
             let (session, link) = held.preview_eval_parts().ok_or_else(preview_eval_session_closing)?;
-            let hop = if session.resume_preview_evaluation() { next_preview_eval_hop(session, &link.windows) } else { PreviewEvalHop::Wait };
+            let lifted = session.preview_cancelled();
+            let resumed = session.resume_preview_evaluation();
+            if lifted && resumed {
+                for (window_id, _) in &link.windows {
+                    session.note_window_tick_outcome(window_id, true, grant).map_err(|error| Fault::from(error.to_string()))?;
+                }
+            }
+            let hop = if resumed { next_preview_eval_hop(session, &link.windows) } else { PreviewEvalHop::Wait };
             match hop {
                 PreviewEvalHop::Dispatch(index) => {
                     let (window_id, kind) = &link.windows[index];

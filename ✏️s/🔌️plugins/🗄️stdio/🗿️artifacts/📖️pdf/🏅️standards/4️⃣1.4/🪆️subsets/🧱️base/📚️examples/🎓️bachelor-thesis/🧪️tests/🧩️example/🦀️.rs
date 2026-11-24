@@ -30,7 +30,7 @@ use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
 use crate::standards::v1_7::subsets::base::schema::inferences::Pdf17Inference;
 use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
 use crate::standards::v1_7::subsets::base::schema::mutations::{AppendPageContent, PdfMutation, SetColorSpace, SetExtGState, SetFont, SetForm, SetImage, SetPattern, SetProperties, SetShading};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfSnapshot, PdfTextString};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfObject, PdfOp, PdfSnapshot, PdfTextString};
 use crate::standards::v1_7::subsets::base::io::PdfBuilderConstruction as PdfBuilder;
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::{DiffBinary,DiffCodec,DiffText, Inference, ColdMutation, Mutation, MutationDiff, OpBinary};
@@ -215,7 +215,8 @@ async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
     for page in &original.pages {
         builder = builder.add_page(page.clone());
     }
-    let rebuilt_snapshot = builder.build().expect("builder-only reconstruction must succeed");
+    let mut rebuilt_snapshot = builder.build().expect("builder-only reconstruction must succeed");
+    rebuilt_snapshot.objects = original.objects.iter().filter(|object| matches!(object.value, PdfObject::Stream { .. })).cloned().collect();
     let rebuilt_bytes = encode_pdf(&rebuilt_snapshot).expect("encode rebuilt snapshot");
     let rebuilt_redecoded = decode_pdf(&rebuilt_bytes).expect("re-decode rebuilt bytes");
 

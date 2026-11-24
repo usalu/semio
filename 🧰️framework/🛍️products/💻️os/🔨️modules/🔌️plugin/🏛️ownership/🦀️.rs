@@ -518,7 +518,14 @@ impl<T> Drop for ArtifactFixedRegistry<T> {
 
 /// 💰️ Whether a retirement grant funds one whole retirement demand on every axis (items, copy, capacity, release, depth).
 pub fn plugin_grant_funds(demand: RetirementDemand, grant: RetainedCloneGrant) -> bool {
-    grant.maximum_items != 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
+    plugin_grant_shortfall(demand, grant).is_none()
+}
+
+/// 📏️ The first resource of `demand` that `grant` cannot cover, as its name, the demanded and the granted figure.
+pub fn plugin_grant_shortfall(demand: RetirementDemand, grant: RetainedCloneGrant) -> Option<(&'static str, u64, u64)> {
+    if grant.maximum_items == 0 { return Some(("items", 1, 0)); }
+    [("copy bytes", demand.copy_bytes, grant.maximum_copy_bytes), ("capacity bytes", demand.capacity_bytes, grant.maximum_capacity_bytes), ("release bytes", demand.release_bytes, grant.maximum_release_bytes), ("depth", demand.depth, grant.maximum_depth)]
+        .into_iter().find(|(_, needed, granted)| needed > granted).map(|(resource, needed, granted)| (resource, needed as u64, granted as u64))
 }
 
 /// 📬️ Forwards the original grant once and validates the actual owner receipt and terminal witness.
@@ -541,6 +548,19 @@ mod typed_owner_work_tests {
         assert!(plugin_grant_funds(demand, grant));
         let large = RetirementDemand { copy_bytes: PLUGIN_SELF_FUNDED_BODY_BYTES + 1, depth: 3, ..Default::default() };
         assert_eq!(plugin_self_funded_grant(large, PLUGIN_SELF_FUNDED_BODY_BYTES), plugin_demand_grant(large));
+    }
+
+    /// 📏️ LAW: a grant shortfall names the first resource a demand overruns with both figures, and a covering grant has none.
+    #[test]
+    fn a_grant_shortfall_names_the_first_unfunded_resource_with_its_demand_and_grant() {
+        let grant = RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 100, maximum_capacity_bytes: 200, maximum_release_bytes: 300, maximum_depth: 2 };
+        let covered = RetirementDemand { copy_bytes: 100, capacity_bytes: 200, release_bytes: 300, depth: 2, ..Default::default() };
+        assert_eq!(plugin_grant_shortfall(covered, grant), None);
+        assert!(plugin_grant_funds(covered, grant));
+        assert_eq!(plugin_grant_shortfall(RetirementDemand { copy_bytes: 101, ..covered }, grant), Some(("copy bytes", 101, 100)));
+        assert_eq!(plugin_grant_shortfall(RetirementDemand { capacity_bytes: 201, release_bytes: 301, ..covered }, grant), Some(("capacity bytes", 201, 200)));
+        assert_eq!(plugin_grant_shortfall(RetirementDemand { depth: 3, ..covered }, grant), Some(("depth", 3, 2)));
+        assert_eq!(plugin_grant_shortfall(covered, RetainedCloneGrant { maximum_items: 0, ..grant }), Some(("items", 1, 0)));
     }
 
     fn run(caller: &mut semio_framework_job::OriginalJobFixtureCaller, original: &mut Option<String>, active: &mut Option<ControlledRetirement<String>>, grant: RetainedCloneGrant) -> (RetainedCloneStep, u128) {

@@ -161,7 +161,7 @@ pub fn entity_kind_of(document: &model::En1998Snapshot, id: &str) -> Option<&'st
     found.iter().find(|(_, hit)| *hit).and_then(|(collection, _)| ENTITY_KINDS.iter().find(|k| k.collection == *collection))
 }
 
-/// 🔗️ The entities a projection of `id` reads besides itself, so a change of any of them re-projects `id`.
+/// 🔗️ The entities a projection of `id` reads besides itself, so a change of any of them re-projects `id`. A building reads no other building: where it stands and the seismic joint it draws to the next one are stamps of its pose ([`layout_stamps`]), not dependencies, which would chain every building to every other transitively.
 pub fn entity_dependencies(document: &model::En1998Snapshot, id: &str) -> Vec<String> {
     let base = base_id(id);
     let d = document;
@@ -191,9 +191,6 @@ pub fn entity_dependencies(document: &model::En1998Snapshot, id: &str) -> Vec<St
         out.insert(bridge.to_owned());
         out.extend(d.piers.iter().filter(|e| e.bridge_id == bridge).map(|e| e.id.clone()));
         out.extend(d.bearings.iter().filter(|e| e.bridge_id == bridge).map(|e| e.id.clone()));
-    }
-    if d.buildings.iter().any(|e| e.id == base) {
-        out.extend(d.buildings.iter().filter(|e| e.id != base).map(|e| e.id.clone()));
     }
     out.remove(base);
     out.into_iter().collect()
@@ -397,7 +394,7 @@ fn owner_ref(collection: &str, id: &str) -> EntityRef {
 }
 
 /// 🗂️ The ids of every drawn collection of the document, in outliner order; placements are outliner and palette rows keyed by the entity they move, not entities of their own.
-fn rows_of(d: &model::En1998Snapshot) -> [(&'static str, Vec<&str>); 18] {
+fn rows_of(d: &model::En1998Snapshot) -> [(&'static str, Vec<&str>); 19] {
     [
         ("buildings", d.buildings.iter().map(|e| e.id.as_str()).collect()),
         ("bridges", d.bridges.iter().map(|e| e.id.as_str()).collect()),
@@ -417,6 +414,7 @@ fn rows_of(d: &model::En1998Snapshot) -> [(&'static str, Vec<&str>); 18] {
         ("slopes", d.slopes.iter().map(|e| e.id.as_str()).collect()),
         ("isolationSystems", d.isolation_systems.iter().map(|e| e.id.as_str()).collect()),
         ("pierBases", d.pier_bases.iter().map(|e| e.id.as_str()).collect()),
+        ("criticalRegions", d.critical_regions.iter().map(|e| e.id.as_str()).collect()),
     ]
 }
 
@@ -425,11 +423,28 @@ pub fn entities_of(document: &model::En1998Snapshot) -> Vec<EntityRef> {
     rows_of(document).into_iter().flat_map(|(collection, ids)| ids.into_iter().map(move |id| owner_ref(collection, id))).collect()
 }
 
-/// 📍️ What an entity's pose derives from other entities: its origin (default slots follow the row index and the widths of the buildings before it) and, for a foundation, the footing centre under its building.
+/// 📍️ What an entity's pose derives from other entities: its origin (default slots follow the row index and the widths of the buildings before it) for a foundation, a soil layer or a tie beam, the footing centre under its building, for a row a building hosts, the origin of that building and, for a building, what its seismic joint to the next building reads (origin and length of the next one, the required gap), which is no dependency: a joint is drawn with the building before it, so a dependency would chain every building to the last.
 pub fn layout_stamps(document: &model::En1998Snapshot, layout: &super::Layout) -> std::collections::BTreeMap<String, String> {
     let foundations = document.foundations.iter().map(|f| (f.id.clone(), format!("{:?}", foundation_centre(document, layout, f))));
     let origins = rows_of(document).into_iter().filter(|(collection, _)| !matches!(*collection, "foundations" | "assessments" | "soilLayers" | "diaphragms" | "accelerograms" | "piers" | "bearings" | "joints" | "tieBeams" | "isolationSystems" | "pierBases")).flat_map(|(_, ids)| ids).map(|id| (id.to_owned(), format!("{:?}", layout.origin(id))));
-    foundations.chain(origins).collect()
+    let mut stamps: std::collections::BTreeMap<String, String> = foundations.chain(origins).collect();
+    let at = |id: &str| format!("{:?}", layout.origin(id));
+    let centre_of = |id: &str| document.foundations.iter().find(|f| f.id == id).map_or_else(String::new, |f| format!("{:?}", foundation_centre(document, layout, f)));
+    let d = document;
+    stamps.extend(d.assessments.iter().map(|e| (e.id.clone(), at(&e.supported_building_id))));
+    stamps.extend(d.critical_regions.iter().map(|e| (e.id.clone(), at(&e.building_id))));
+    stamps.extend(d.joints.iter().map(|e| (e.id.clone(), at(&e.building_id))));
+    stamps.extend(d.diaphragms.iter().map(|e| (e.id.clone(), at(&e.building_id))));
+    stamps.extend(d.accelerograms.iter().map(|e| (e.id.clone(), at(&e.building_id))));
+    stamps.extend(d.isolation_systems.iter().map(|e| (e.id.clone(), format!("{}|{}", at(&e.building_id), at(&e.bridge_id)))));
+    stamps.extend(d.soil_layers.iter().map(|e| (e.id.clone(), centre_of(&e.foundation_id))));
+    stamps.extend(d.tie_beams.iter().map(|e| (e.id.clone(), format!("{}|{}", centre_of(&e.foundation_a_id), centre_of(&e.foundation_b_id)))));
+    for pair in document.buildings.windows(2) {
+        if let Some(stamp) = stamps.get_mut(&pair[0].id) {
+            stamp.push_str(&format!("|joint:{:?}:{}:{}", layout.origin(&pair[1].id), pair[1].plan_length_m, super::response::joint_demand(&pair[0], &pair[1])));
+        }
+    }
+    stamps
 }
 
 /// 🏁️ The global parts of the merged scene: used layers, the utilisation and role legends in front of the field legends of the fragments, the description and the mode and phase tracks.

@@ -1,0 +1,22 @@
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json
+@@ -213,6 +213,8 @@
+             "maximumReceiptBytes": 512,
+             "retainMilliseconds": 43200000
+           },
++          "recentMilliseconds": 43200000,
++          "flavourPattern": "^[a-z0-9-]{1,16}$",
+           "catalogClaim": "pool-catalog"
+         },
+         "retention": {
+@@ -237,6 +239,10 @@
+         "trimmed": {
+           "en": "[repo cargo] lane pool trimmed to its bound ({count} lanes, {quotaMib} MiB): removed {removed} idle lane(s)",
+           "de": "[repo cargo] Lane-Pool auf seine Grenze gekürzt ({count} Lanes, {quotaMib} MiB): {removed} ruhende Lane(s) entfernt"
++        },
++        "poolCannotHold": {
++          "en": "[repo cargo] the lanes of build flavour {flavour} need {needMib} MiB but the compiler image holds {imageMib} MiB below its high-water mark; no lane was removed, the build continues and refills from the shared unit cache (enlarge the image or build a smaller flavour)",
++          "de": "[repo cargo] Die Lanes der Build-Variante {flavour} brauchen {needMib} MiB, das Compiler-Image fasst unterhalb seiner Hochwassermarke aber nur {imageMib} MiB; es wurde keine Lane entfernt, der Build läuft weiter und füllt sich aus dem gemeinsamen Unit-Cache (Image vergrößern oder eine kleinere Variante bauen)"
+         },
+         "poolBusy": {
+           "en": "[repo cargo] all {live} live lanes are claimed (maximum {maximum}); held by {holders}; waiting for a free lane",

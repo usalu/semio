@@ -107,6 +107,9 @@ function homeSwipeQuery(scale: number): string {
   return `(max-width: ${narrow}px), (pointer: coarse) and (max-width: 960px) and (max-height: 480px)`;
 }
 
+/** 🩹️ What a swiped page keeps clear on a phone: nothing at the top, where the page picker already stands below the navigation band, and the footer band at the bottom, beneath which the overview runs. The neighbour hints stand on these insets. */
+const SWIPE_INSETS = { top: "0px", bottom: "var(--course-clear-bottom)" } as const;
+
 interface HomeProps {
   readonly introductionPage?: string;
   /** 🪪️ Whether the identity dialog is open above home: what a visitor asked for before signing in runs once it closes with a learner, and is forgotten when it closes without one. */
@@ -340,6 +343,7 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
         overlayClassName="course-home-grid ui-scrollbar-hidden"
         overlayStyle={{ "--course-home-columns": homeTrackTemplate(tracks?.columns, strip.columns), "--course-home-rows": homeTrackTemplate(tracks?.rows, strip.rows, `min(${container === HOME_PAGES.clips ? HOME_CLIP_ROW_HEIGHT_PX : HOME_GRID_ROW_HEIGHT_PX}px, 100%)`) } as CSSProperties}
         mode={layout.mode}
+        insets={layout.mode === "swipe" ? SWIPE_INSETS : undefined}
         routing="none"
         interactive={interactive}
         openedId={opened}

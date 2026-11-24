@@ -51,6 +51,8 @@ message Din16798ZonePatch {
   optional double turbulence_intensity_percent = 18;
   optional string vent_method = 19;
   optional string vent_system_id = 20;
+  optional bytes unoccupied_ventilation = 21;
+  optional bool clear_unoccupied_ventilation = 22;
 }
 
 message Din16798VentSystemRemoval {

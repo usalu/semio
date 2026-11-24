@@ -61,17 +61,18 @@ impl FixtureTurnV1 {
     /// 🎟️ Closes the owned surfaces, running `host` after every close turn so the caller can serve the component close requests the engine hands its host.
     fn close_with(&mut self,host:&mut dyn FnMut()){
         if self.caller.is_none(){return}
+        let rounds:usize=if std::thread::panicking(){256}else{65_536};
         for surface in &self.surfaces{semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(surface);}
-        for _ in 0..65_536{if !self.surfaces.iter().any(|surface|semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface)){break}self.turn_funded(CLOSE_TURN_WORK,semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one).expect("original fixture surface retirement");host();}
+        for _ in 0..rounds{if !self.surfaces.iter().any(|surface|semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface)){break}self.turn_funded(CLOSE_TURN_WORK,semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one).expect("original fixture surface retirement");host();}
         assert!(!self.surfaces.iter().any(|surface|semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface)));
         let caller=self.caller.as_mut().unwrap();let stock=caller.stock();
-        for _ in 0..65_536{if self.decoder.terminal_is_empty(){break}caller.turn(stock,|cx|{self.decoder.close_on_source(cx)?;Ok(())}).expect("same original renderer decoder close");}
+        for _ in 0..rounds{if self.decoder.terminal_is_empty(){break}caller.turn(stock,|cx|{self.decoder.close_on_source(cx)?;Ok(())}).expect("same original renderer decoder close");}
         assert!(self.decoder.terminal_is_empty());self.caller.take().unwrap().retire(stock);
     }
     pub fn finish(mut self){self.close();}
     pub fn finish_with(mut self,host:&mut dyn FnMut()){self.close_with(host);}
 }
-impl Drop for FixtureTurnV1{fn drop(&mut self){if !std::thread::panicking(){self.close();}}}
+impl Drop for FixtureTurnV1{fn drop(&mut self){if std::thread::panicking(){let _=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||self.close()));}else{self.close();}}}
 
 #[cfg(test)]
 mod arena_lifetime_laws{

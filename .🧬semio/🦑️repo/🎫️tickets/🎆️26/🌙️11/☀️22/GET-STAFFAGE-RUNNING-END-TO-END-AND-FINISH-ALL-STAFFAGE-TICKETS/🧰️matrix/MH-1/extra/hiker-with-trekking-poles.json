@@ -1,0 +1,58 @@
+[
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "foot-l",
+  "view": "front",
+  "twins": [
+   "boot-l",
+   "boot-sole-l"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "foot-r",
+  "view": "front",
+  "twins": [
+   "boot-r",
+   "boot-sole-r"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "foot-l",
+  "view": "front",
+  "twins": [
+   "boot-l"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "foot-r",
+  "view": "front",
+  "twins": [
+   "boot-r"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "foot-l",
+  "view": "front",
+  "twins": [
+   "boot-l"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "foot-r",
+  "view": "front",
+  "twins": [
+   "boot-r"
+  ]
+ }
+]

@@ -1,6 +1,7 @@
 //! 🥅️ Render-independent framework facade: explicit re-exports of the carved producer crates under the module paths the framework always exposed (`kernel`, `manifest`, `action_bus`, `interaction`, `onboarding`, `history_edit`, `io_schema`, `sqlite_snapshot`, `mesh_io`).
 
 pub mod kernel {
+    pub use semio_framework_actor::OriginalActorSuccession;
     pub use semio_framework_kernel::{
         NATURAL_SOURCE_COMMAND_KIND, ActorInstanceOpenPurpose, FolderArchiveLoadEvent, NaturalSourcePrepare, NaturalSourceControlEvent, NaturalSourceWireDeclaration, NaturalSourceWireLoan, NaturalSourceWireControl, NaturalSourceWirePhase, NaturalSourceWireResult, NaturalSourceWireAck,
         ORIGINAL_MEDIA_COMMAND_KIND, OriginalMediaControlEvent, OriginalMediaWireAck,

@@ -217,10 +217,6 @@ pub struct PresencePresentation {
     #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "present")]
     pub leaderboard_at: Option<Timestamp>,
     #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "present")]
-    pub overall: Option<Leaderboard>,
-    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "present")]
-    pub overall_at: Option<Timestamp>,
-    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "present")]
     pub crowd: Option<CrowdView>,
     #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "present")]
     pub awards: Option<Vec<Slug>>,

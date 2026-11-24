@@ -1,0 +1,5 @@
+[
+{"op": "shape-remove", "scale": "500", "view": "plan", "id": "sand-fill"},
+{"op": "shape-remove", "scale": "500", "view": "plan", "id": "flange"},
+{"op": "note", "scale": "500", "decision": "omitted", "en": "Plan: the sand ring and the flange ring (0.1 and 0.08 mm on paper).", "de": "Draufsicht: der Sandring und der Flanschring (0,1 und 0,08 mm auf dem Papier)."}
+]

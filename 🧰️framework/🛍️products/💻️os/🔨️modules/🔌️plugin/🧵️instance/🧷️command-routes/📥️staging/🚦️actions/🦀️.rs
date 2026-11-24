@@ -60,7 +60,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         if source.original_press_selected&&source.original_press_result.is_none(){
             let mut render=semio_plugin_instance_render::render_bundle::RenderCtx::<A,M,X>{app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
-            if !render.settle_press(&mut source.original_press_tag,self.original_emission.host_base.as_ref().unwrap(),&meta.actor,self.original_emission.host_emit.as_mut().unwrap(),cx,&mut source.original_press_result)?{return Ok(None)}
+            if render.settle_press(&mut source.original_press_tag,self.original_emission.host_base.as_ref().unwrap(),&meta.actor,self.original_emission.host_emit.as_mut().unwrap(),cx,&mut source.original_press_result)?!=semio_plugin_retained_command::typed_operation::ToolSettlementUnit::Complete{return Ok(None)}
         }
         if !self.original_emission.finish_host(if source.original_press_selected{source.original_press_result}else{Some(false)},metadata,cx)?{return Ok(None)}
         let previous=self.host_events.invocation_kind.replace(kind);
@@ -181,7 +181,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         if let Some(turn)=self.drive_host_events(action,source,source_meta,identity,cx).await?{return Ok(turn)}
         if !self.prepare_action_typing_before(action,source,source_meta,identity,cx).await?{return Ok(None)}
-        if source.original_tool_dispatch==Some(true){self.original_emission.admit_empty(action,source_meta,cx)?;return Ok(None)}
+        if source.original_tool_dispatch==Some(true)&&self.tools.original_scrub_dispatch.is_none(){self.original_emission.admit_empty(action,source_meta,cx)?;return Ok(None)}
         let meta=source_meta.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing restored no action metadata"))?;
         let args=source.assembled.as_ref().or(source.prepared.as_ref()).or(source.args.as_ref());
         if matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::EXPORT_MEDIA_FILE_ACTION_ID | semio_framework::EXPORT_SNAPSHOT_FILE_ACTION_ID | semio_framework::NODE_GRAPH_FIT_ACTION_ID) {

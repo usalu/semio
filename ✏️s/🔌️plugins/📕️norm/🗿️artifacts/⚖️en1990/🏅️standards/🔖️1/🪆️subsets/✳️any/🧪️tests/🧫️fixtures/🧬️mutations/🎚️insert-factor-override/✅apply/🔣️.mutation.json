@@ -3,7 +3,7 @@
   "index": 1,
   "item": {
     "id": "fac-1-new",
-    "factor": "normal",
+    "factor": "gamma",
     "target": "normal",
     "value": 1.0,
     "justification": "normal"

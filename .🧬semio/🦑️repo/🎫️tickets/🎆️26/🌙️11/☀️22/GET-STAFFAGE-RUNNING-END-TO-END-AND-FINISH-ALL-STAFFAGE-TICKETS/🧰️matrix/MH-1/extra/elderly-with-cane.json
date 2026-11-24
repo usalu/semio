@@ -1,0 +1,96 @@
+[
+ {
+  "drop": {
+   "op": "front-sweep",
+   "id": "shoe-rear-l"
+  }
+ },
+ {
+  "drop": {
+   "op": "front-sweep",
+   "id": "shoe-rear-r"
+  }
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "shoe-rear-l",
+  "view": "front",
+  "span": [
+   0.038,
+   0.1412
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "shoe-rear-r",
+  "view": "front",
+  "span": [
+   -0.142,
+   -0.0388
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "shoe-rear-l",
+  "view": "front",
+  "span": [
+   0.0392,
+   0.1418
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "shoe-rear-r",
+  "view": "front",
+  "span": [
+   -0.1408,
+   -0.0382
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "shoe-rear-l",
+  "view": "front",
+  "span": [
+   0.0413,
+   0.1417
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "shoe-rear-r",
+  "view": "front",
+  "span": [
+   -0.1387,
+   -0.0383
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "hand-r",
+  "view": "plan",
+  "span": [
+   -0.192,
+   -0.15
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "hand-r",
+  "view": "plan"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "hand-r",
+  "view": "plan"
+ }
+]

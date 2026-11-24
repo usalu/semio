@@ -233,9 +233,9 @@ pub trait PdfArtifactResourcePort {
     fn resolve(&self,reference:&ArtifactRef)->PResult<PdfObject>;
 }
 
-/// 📚️ Owns foreign native resources independently of every semantic role body.
+/// 📚️ Owns foreign native resources independently of every semantic role body. Graph streams are identified once per kind (one hash pass over the graph), so resolving many references costs one scan, not one scan per reference.
 #[derive(Default)]
-pub struct NativePdfArtifactResources<'a> {resources:Vec<(ArtifactRef,PdfObject)>,graph:&'a [PdfIndirectObject]}
+pub struct NativePdfArtifactResources<'a> {resources:Vec<(ArtifactRef,PdfObject)>,graph:&'a [PdfIndirectObject],identities:std::cell::RefCell<std::collections::HashMap<String,std::collections::HashMap<String,usize>>>}
 fn identity(kind:&str,object:&PdfObject)->PResult<ArtifactRef> {
     let PdfObject::Stream {dict,data,filters}=object else{return Err(PdfEngineError::Unsupported("foreign PDF artifact requires a native stream".into()));};
     let mut hash=semio_framework_hash::Sha256::new();hash.update(kind.as_bytes());{let mut page=[0u8;4096];let mut at=0;while at<data.len(){let count=(data.len()-at).min(page.len());if semio_framework_value::ByteReadSource::read_bytes(data,at,&mut page[..count])!=count{return Err(PdfEngineError::Malformed("foreign PDF artifact lost a stream byte".into()))}hash.update(&page[..count]);at+=count;}}
@@ -246,7 +246,7 @@ fn identity(kind:&str,object:&PdfObject)->PResult<ArtifactRef> {
 impl<'a> NativePdfArtifactResources<'a> {
     /// 📚️ Admits the native graph's existing foreign resources without semantic decoding.
     pub fn into_objects(self)->Vec<PdfIndirectObject>{self.resources.into_iter().enumerate().map(|(index,(_,value))|PdfIndirectObject{id:ObjRef{num:index as u32+1,gen:0},value}).collect()}
-    pub fn from_objects(objects:&'a [PdfIndirectObject])->Self {Self {resources:Vec::new(),graph:objects}}
+    pub fn from_objects(objects:&'a [PdfIndirectObject])->Self {Self {resources:Vec::new(),graph:objects,identities:Default::default()}}
 
 }
 impl PdfArtifactResourcePort for NativePdfArtifactResources<'_> {
@@ -259,7 +259,13 @@ impl PdfArtifactResourcePort for NativePdfArtifactResources<'_> {
         }
         if let Some((_,object))=self.resources.iter().find(|(current,_)|current==reference){return Ok(object.clone());}
         let kind=reference.artifact_id.strip_prefix("pdf:").and_then(|id|id.split_once(":sha256:")).map(|(kind,_)|kind).ok_or_else(||PdfEngineError::Unsupported("foreign PDF artifact identity is invalid".into()))?;
-        for object in self.graph {if matches!(object.value,PdfObject::Stream {..})&&identity(kind,&object.value)?==*reference{return Ok(object.value.clone());}}
+        if !self.identities.borrow().contains_key(kind) {
+            let mut index=std::collections::HashMap::new();
+            for (position,object) in self.graph.iter().enumerate() {if matches!(object.value,PdfObject::Stream {..}){index.entry(identity(kind,&object.value)?.artifact_id).or_insert(position);}}
+            self.identities.borrow_mut().insert(kind.to_string(),index);
+        }
+        let native=reference.dialect.artifact_kind==RAW_KIND&&reference.dialect.standard==RAW_STANDARD&&reference.dialect.subset==RAW_SUBSET;
+        if let Some(position)=self.identities.borrow().get(kind).filter(|_|native).and_then(|index|index.get(&reference.artifact_id)).copied(){return Ok(self.graph[position].value.clone());}
         Err(PdfEngineError::Unsupported(format!("foreign PDF artifact {} has not been admitted",reference.artifact_id)))
     }
 

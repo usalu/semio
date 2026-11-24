@@ -3,7 +3,7 @@
 # the `…:wasm` target publishes into the products store. Output: $OUT (see serve-generation3d-wgpu-native.sh).
 cd /Users/ueli/Documents/semio || exit 1
 TF="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️09/PROCEDURAL-3D-END-TO-END"
-export PATH="$HOME/.cargo/bin:$PATH" CARGO_HOME=/Users/ueli/Documents/semio/.cache/b/r/m/cargo/home CARGO_PROFILE_DEV_DEBUG=false CARGO_PROFILE_DEV_OPT_LEVEL=1
+export PATH="$HOME/.cargo/bin:$PATH" CARGO_HOME=/Users/ueli/Documents/semio/.cache/b/r/m/cargo/home CARGO_PROFILE_DEV_DEBUG=false CARGO_PROFILE_DEV_OPT_LEVEL=1 CARGO_INCREMENTAL=0
 TGT=/Users/ueli/Documents/semio/.cache/g3d-native/t
 OUT=/Users/ueli/Documents/semio/.cache/g3d-native/wasm-dev
 mkdir -p "$TGT" "$OUT"

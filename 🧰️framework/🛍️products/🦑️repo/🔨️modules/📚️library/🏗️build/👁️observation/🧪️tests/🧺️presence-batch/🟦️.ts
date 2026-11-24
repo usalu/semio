@@ -169,7 +169,7 @@ test("the actual check runs the names of a batch under one storage consumer with
  const source=readFileSync(new URL("../../📥️reuse/🟨️.mjs",import.meta.url),"utf8"),tree=ts.createSourceFile("reuse.mjs",source,ts.ScriptTarget.Latest,true),functions=new Map(tree.statements.filter(ts.isFunctionDeclaration).map(row=>[row.name?.text,row.body?.getText(tree)??""]));
  const check=functions.get("missingInventoryNamesV1")??"",entry=functions.get("inferenceInventoryReferencesHoldV1")??"";
  expect(check).toContain("held!==undefined?await body(held.store,held.actual):await withRepositoryBuildGraphConsumerV1(");expect(check.indexOf("const body=")).toBeLessThan(check.indexOf("inventoryRecordStillHoldsV1("));
- const session=functions.get("presenceSessionV1")??"";expect(session).toContain("withRepositoryBuildGraphConsumerV1(");expect(session).toContain("state.held=Object.freeze({store,actual})");
+ const session=functions.get("presenceSessionV1")??"";expect(session).toContain("withRepositoryBuildGraphConsumerV1(");expect(session).toContain("Object.freeze({store,actual})");expect(session).toContain("if(state.held===mine)state.held=undefined");
  expect(check).toContain("await store.recheck()");expect(check).toContain("Inference inventory leaf changed before delivery");
  expect(check.lastIndexOf("requireCurrentInferenceInventoryReuseV1()")).toBeGreaterThan(check.indexOf("Inference inventory leaf changed before delivery"));
  expect(entry).toContain("requireIssuedResourceControlV1(control)");expect(entry).toContain("presenceCoalescerV1(root,control).ask(names,observationRoundV1(),withdraw)");expect(entry).not.toContain("withRepositoryBuildGraphConsumerV1(");
@@ -256,4 +256,51 @@ test("the shipped session policy lengthens a session only in proportion to its o
  const policy=timingSchema.definitions.Policy.const as {sessionMaximumMilliseconds:number;sessionOverheadFactor:number;sessionCeilingMilliseconds:number};
  expect(policy.sessionOverheadFactor).toBeGreaterThan(0);
  expect(policy.sessionCeilingMilliseconds).toBeGreaterThanOrEqual(policy.sessionMaximumMilliseconds);
+});
+
+const sleep=(milliseconds:number)=>new Promise<void>(done=>setTimeout(done,milliseconds));
+const settleSoon=async(check:()=>boolean,milliseconds:number)=>{const end=Date.now()+milliseconds;while(!check()&&Date.now()<end)await sleep(2);return check();};
+
+test("the next ask is served by a new session while the previous session's tail still verifies",async()=>{
+ let release!:()=>void;const tail=new Promise<void>(done=>{release=done;}),opened:number[]=[];
+ const coalescer=createPresenceCoalescerV1({run:async names=>new Set<string>(),session:async work=>{opened.push(opened.length);await work();if(opened.length===1)await tail;}});
+ expect(await coalescer.ask(["a"],{})).toBe(true);
+ const second=coalescer.ask(["b"],{});
+ expect(await Promise.race([second,sleep(1000).then(()=>"stalled")]),"the second ask waited for the first session's tail").toBe(true);
+ expect(opened.length).toBe(2);
+ release();
+});
+
+test("a failing tail rejects nobody who is waiting for another session and tails are bounded",async()=>{
+ let failTail!:()=>void;const gate=new Promise<void>((_,no)=>{failTail=()=>no(Error("post verify refused"));});gate.catch(()=>{});
+ const coalescer=createPresenceCoalescerV1({run:async()=>new Set<string>(),session:async work=>{await work();await gate;}});
+ expect(await coalescer.ask(["a"],{})).toBe(true);
+ const second=coalescer.ask(["b"],{});
+ expect(await second).toBe(true);
+ failTail();await sleep(20);
+ expect(await coalescer.ask(["c"],{})).toBe(true);
+ let free!:()=>void;const hold=new Promise<void>(done=>{free=done;});let sessions=0;
+ const bounded=createPresenceCoalescerV1({maximumTails:1,run:async()=>new Set<string>(),session:async work=>{sessions++;await work();await hold;}});
+ expect(await bounded.ask(["a"],{})).toBe(true);
+ expect(await bounded.ask(["b"],{})).toBe(true);
+ const third=bounded.ask(["c"],{});
+ expect(await Promise.race([third,sleep(150).then(()=>"queued")]),"one tail is allowed, the next session keeps the queue").toBe("queued");
+ expect(sessions).toBe(2);
+ free();expect(await third).toBe(true);
+});
+
+test("a take pass of 600 owners finishes in bounded time while a stub exclusive mapping holder cycles, and overlapping tails beat the serial session",async()=>{
+ const period=80,heldFor=40,pre=5,start=performance.now();
+ const grant=async()=>{for(;;){const phase=(performance.now()-start)%period;if(phase>=heldFor)return;await sleep(heldFor-phase);}};
+ const pass=async(maximumTails:number)=>{
+  const coalescer=createPresenceCoalescerV1({maximumTails,lingerMilliseconds:0,run:async names=>new Set<string>(),session:async work=>{await sleep(pre);await work();await grant();await sleep(1);}});
+  const began=performance.now();
+  await Promise.all(Array.from({length:8},async(_,lane)=>{for(let at=lane;at<600;at+=8)expect(await coalescer.ask(["owner-"+at],{})).toBe(true);}));
+  return performance.now()-began;
+ };
+ const serial=await pass(0),overlapped=await pass(3);
+ console.log("[bench] 600 owners, stub exclusive holder 40 of every 80 ms: serial tail "+Math.round(serial)+" ms, overlapped tails "+Math.round(overlapped)+" ms");
+ expect(overlapped).toBeLessThan(serial*0.7);
+ expect(overlapped).toBeLessThan(6000);
+ expect(await settleSoon(()=>true,1)).toBe(true);
 });

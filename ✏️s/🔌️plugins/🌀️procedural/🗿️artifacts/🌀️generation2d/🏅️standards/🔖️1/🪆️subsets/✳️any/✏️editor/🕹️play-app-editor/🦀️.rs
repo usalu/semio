@@ -355,7 +355,8 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// `setContributions` can move it.
     fn pending_effects(owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_plugin::ArtifactPendingView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, view: Option<&semio_plugin::ViewModel>) -> Vec<Effect> {
         let windows = generation2d_preview_windows(view);
-        let servable = semio_s_artifact_procedural_2d_preview_eval::may_rearm(&doc.snapshot.host_snapshot);
+        let unserved = if windows.is_empty() { Vec::new() } else { semio_os_flow::unserved_flow_operator_kinds(&doc.snapshot.host_snapshot, &semio_os_flow::flow_operator_registry()) };
+        let servable = unserved.is_empty();
         let mut targets: Vec<PreviewEvalTarget> = windows.iter().map(|(_, _, target)| *target).collect();
         targets.sort_unstable();
         targets.dedup();
@@ -363,7 +364,9 @@ impl ArtifactEditor for Generation2dPlayApp {
         owner
             .with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
                 let (sessions, link) = owner.parts()?;
-                Ok(semio_s_artifact_procedural_2d_preview_eval::preview_eval_run_effects(sessions, link, &windows, &current, doc.tool_run(), servable))
+                let mut effects = semio_s_artifact_procedural_2d_preview_eval::preview_eval_run_effects(sessions, link, &windows, &current, doc.tool_run(), servable);
+                effects.extend(semio_s_artifact_procedural_2d_preview_eval::on_demand_run_effects(link, unserved));
+                Ok(effects)
             })
             .unwrap_or_default()
     }

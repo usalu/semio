@@ -262,15 +262,23 @@ pub fn cancel_js_plugin_install(plugin_id: &str) -> bool {
     door.call1(&JsValue::NULL, &JsValue::from_str(plugin_id)).ok().and_then(|value| value.as_bool()).unwrap_or(false)
 }
 
-/// 🧭️ Hands one guest-published activation request (`$defs.onDemandRequest` JSON, topic `os.on-demand.request`) to the frame
-/// Worker's on-demand activator and returns at once: the activator loads the deferred extension with its own progress and
-/// cancellation (`semioWgpuCancelOnDemand`) and never rejects, so the shell neither awaits nor owns the outcome. The
-/// activated extension's contributions push moves the registry generation and resumes the parked document. A page-hosted
-/// boot installs no door and answers an error the caller only logs.
+/// 🧭️ The deferred plugins one guest-published activation request (`$defs.onDemandRequest` JSON, topic `os.on-demand.request`) would start, ascending, as the frame Worker's activator resolves them (`semioWgpuResolveOnDemand`). The shell installs each through [`install_js_plugin`] so the install band shows the progress and its cancel stops the load; the contributions push that follows moves the flow registry generation and resumes the parked document. A page-hosted boot installs no door and answers an error the caller only logs.
 #[cfg(target_arch = "wasm32")]
-pub fn request_on_demand_activation(request_json: &str) -> Result<(), String> {
-    let door = js_plugin_install_door("semioWgpuActivateOnDemand").ok_or_else(|| "this isolate installs no semioWgpuActivateOnDemand door".to_string())?;
-    door.call1(&JsValue::NULL, &JsValue::from_str(request_json)).map(|_| ()).map_err(|error| describe_js_rejection(&error))
+pub fn resolve_on_demand_owners(request_json: &str) -> Result<Vec<String>, String> {
+    let door = js_plugin_install_door("semioWgpuResolveOnDemand").ok_or_else(|| "this isolate installs no semioWgpuResolveOnDemand door".to_string())?;
+    let answer = door.call1(&JsValue::NULL, &JsValue::from_str(request_json)).map_err(|error| describe_js_rejection(&error))?;
+    let text = answer.as_string().ok_or_else(|| "semioWgpuResolveOnDemand answered no text".to_string())?;
+    serde_json::from_str::<Vec<String>>(&text).map_err(|error| error.to_string())
+}
+
+/// 📣️ The localized state text of one on-demand activation and whether it must interrupt (`alert`, an unavailable extension) or may wait its turn (`status`), read from the frame Worker's activator (`semioWgpuOnDemandStatuses`, English or German by `locale`, no default language); `None` while the activator has no state for `plugin_id`.
+#[cfg(target_arch = "wasm32")]
+pub fn on_demand_status_notice(plugin_id: &str, locale: &str) -> Option<(String, bool)> {
+    let door = js_plugin_install_door("semioWgpuOnDemandStatuses")?;
+    let text = door.call1(&JsValue::NULL, &JsValue::from_str(locale)).ok()?.as_string()?;
+    let statuses = serde_json::from_str::<Vec<serde_json::Value>>(&text).ok()?;
+    let status = statuses.iter().find(|status| status["pluginId"].as_str() == Some(plugin_id))?;
+    Some((status["label"].as_str()?.to_string(), status["announcement"]["role"].as_str() == Some("alert")))
 }
 
 //#region 🏠️🧳️PluginHostConfig

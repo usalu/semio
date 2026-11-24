@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
 import {mkdir,readFile,rename,stat,writeFile} from "node:fs/promises";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
-import {requireSlotShapeV1,type DeclarationV1,type StalenessModeV1} from "../../../🪢️slots/🟦️.ts";
+import {requireSlotShapeV1,type DeclarationV1,type StaleCauseV1,type StalenessModeV1} from "../../../🪢️slots/🟦️.ts";
 
 /** 🧾️ One stored entry as the staleness judge sees it: its key, when it was stored (server clock), the blobs it references and what it declared it was built from (`undefined` for entries that declared nothing). */
 export type StalenessEntryV1=Readonly<{key:string;storedAt:number;refs:readonly string[];declaration:DeclarationV1|undefined}>;
@@ -9,56 +9,61 @@ export type StalenessEntryV1=Readonly<{key:string;storedAt:number;refs:readonly 
 /** 🥀️ Why an entry is out: a recorded source digest differs from the tree (`edited`), a recorded source is gone (`deleted`), its toolchain is not the fleet's (`toolchain`), an entry it consumed is stale or gone (`extern`), no live entry consumes it any more (`unreached`). */
 export type StalenessReasonV1="edited"|"deleted"|"toolchain"|"extern"|"unreached";
 
-/** 🚦️ The verdict on one entry: `live` (current against the tree), `grace` (stored within the grace, never retired), `stale`, `unreached` (a registry or standard library entry no live entry consumes) or `undeclared` (not judged here). */
-export type StalenessVerdictV1=Readonly<{state:"live"|"grace"|"stale"|"unreached"|"undeclared";reason?:StalenessReasonV1;detail?:string}>;
+/** 🚦️ The verdict on one entry: `live` (current against the tree), `grace` (stored within the grace, never retired), `stale` with the cause at the root of its chain (the source or toolchain that went stale), `unreached` (a registry or standard library entry no live entry consumes) or `undeclared` (not judged here). */
+export type StalenessVerdictV1=Readonly<{state:"live"|"grace"|"stale"|"unreached"|"undeclared";reason?:StalenessReasonV1;detail?:string;cause?:StaleCauseV1}>;
 
-/** 🗂️ The inputs of one judgement: the clock and grace, the digest of a tree file (`null` when it is gone), the toolchain identities that are the fleet's (`undefined` judges no toolchain) and the output blobs of entries retired earlier (an extern that names one is gone). */
-export type StalenessInputV1=Readonly<{now:number;graceMilliseconds:number;digest:(path:string)=>Promise<string|null>;toolchains?:ReadonlySet<string>|undefined;retired?:ReadonlySet<string>|undefined;signal?:AbortSignal|undefined}>;
+/** 🗂️ The inputs of one judgement: the clock and grace, the digest of a tree file (`null` when it is gone), the toolchain identities that are the fleet's (`undefined` judges no toolchain) and the tombstones: the output blobs enforce retired for stale content, each with the cause that keeps it stale. */
+export type StalenessInputV1=Readonly<{now:number;graceMilliseconds:number;digest:(path:string)=>Promise<string|null>;toolchains?:ReadonlySet<string>|undefined;retired?:ReadonlyMap<string,StaleCauseV1>|undefined;signal?:AbortSignal|undefined}>;
 
-/** 🧮️ Judges every entry against the synchronized tree, as a function of the entries and the tree alone: an entry is stale when a recorded source digest differs from the tree or the file is gone, its toolchain is not the fleet's, or every entry that produced one of the blobs it consumed is stale (a blob nobody holds that an earlier retirement took counts as stale; one nobody ever held is unknown and ignored); entries that are no root (anything without workspace sources: registry crates, host units, proc-macro libraries, build script executables and build script runs; only stage outputs are roots whatever they read) are live while a live entry reaches them, transitively, through the digest of a file it consumed or the name of an entry it consumed (`units`: the producer of each extern file, the build script run of its OUT_DIR, the build script executable of a run), and unreached otherwise. A declaration that is not of the current version is not judged (the entry counts as undeclared and only the age and the budget retire it). An entry stored within the grace is never stale or unreached. Entries without a declaration are `undeclared`. */
+type Stale=Readonly<{reason:StalenessReasonV1;detail:string;cause:StaleCauseV1}>;
+
+/** 🧮️ Judges every entry against the synchronized tree, as a function of the entries and the tree alone: an entry is stale when a recorded source digest differs from the tree or the file is gone, its toolchain is not the fleet's, or every entry that produced one of the blobs it consumed is stale (a blob nobody holds that an earlier retirement took for stale content counts as stale while the cause of its tombstone still holds against the tree; one nobody ever held, one retired only because nothing consumed it and one whose cause no longer holds are unknown and ignored); entries that are no root (anything without workspace sources: registry crates, host units, proc-macro libraries, build script executables and build script runs; only stage outputs are roots whatever they read) are live while a live entry reaches them, transitively, through the digest of a file it consumed or the name of an entry it consumed (`units`: the producer of each extern file, the build script run of its OUT_DIR, the build script executable of a run), and unreached otherwise. A declaration that is not of the current version is not judged (the entry counts as undeclared and only the age and the budget retire it). An entry stored within the grace is never stale or unreached. Entries without a declaration are `undeclared`. */
 export async function judgeStalenessV1(all:readonly StalenessEntryV1[],input:StalenessInputV1):Promise<Map<string,StalenessVerdictV1>>{
  const entries=all.map(entry=>entry.declaration===undefined||entry.declaration.version===2?entry:{...entry,declaration:undefined});
  const digests=new Map<string,string|null>(),paths=new Set<string>();
  for(const entry of entries)for(const row of entry.declaration?.sources??[])paths.add(row.path);
+ for(const cause of input.retired?.values()??[])if("path" in cause)paths.add(cause.path);
  const queue=[...paths];let next=0;
  await Promise.all(Array.from({length:Math.min(32,queue.length)},async()=>{for(;;){input.signal?.throwIfAborted();const path=queue[next++];if(path===undefined)return;digests.set(path,await input.digest(path));}}));
  const owners=new Map<string,string[]>(),named=new Map<string,string[]>(),byKey=new Map(entries.map(entry=>[entry.key,entry]));
  for(const entry of entries){const self=entry.declaration?.self;if(self===undefined)continue;const list=named.get(self);if(list)list.push(entry.key);else named.set(self,[entry.key]);}
  for(const entry of entries)for(const hash of entry.refs){const list=owners.get(hash);if(list)list.push(entry.key);else owners.set(hash,[entry.key]);}
- const own=new Map<string,Readonly<{reason:StalenessReasonV1;detail:string}>>();
+ const own=new Map<string,Stale>(),holds=(cause:StaleCauseV1):boolean=>"path" in cause?digests.get(cause.path)!==cause.sha256:input.toolchains!==undefined&&!input.toolchains.has(cause.toolchain);
  for(const entry of entries){
   const declaration=entry.declaration;if(declaration===undefined)continue;
-  if(input.toolchains!==undefined&&!input.toolchains.has(declaration.toolchain)){own.set(entry.key,{reason:"toolchain",detail:declaration.toolchain.slice(0,12)});continue;}
+  if(input.toolchains!==undefined&&!input.toolchains.has(declaration.toolchain)){own.set(entry.key,{reason:"toolchain",detail:declaration.toolchain.slice(0,12),cause:{toolchain:declaration.toolchain}});continue;}
   for(const row of declaration.sources){
    const current=digests.get(row.path);
-   if(current===null||current===undefined){own.set(entry.key,{reason:"deleted",detail:row.path});break;}
-   if(current!==row.sha256){own.set(entry.key,{reason:"edited",detail:row.path});break;}
+   if(current===null||current===undefined){own.set(entry.key,{reason:"deleted",detail:row.path,cause:{path:row.path,sha256:row.sha256}});break;}
+   if(declaration.kind==="input-manifest")continue;
+   if(current!==row.sha256){own.set(entry.key,{reason:"edited",detail:row.path,cause:{path:row.path,sha256:row.sha256}});break;}
   }
  }
- const settled=new Map<string,Readonly<{reason:StalenessReasonV1;detail:string}>|false>(),visiting=new Set<string>();
- const staleOf=(key:string):Readonly<{reason:StalenessReasonV1;detail:string}>|false=>{
+ const settled=new Map<string,Stale|false>(),visiting=new Set<string>();
+ const staleOf=(key:string):Stale|false=>{
   const known=settled.get(key);if(known!==undefined)return known;
   const entry=byKey.get(key);if(entry?.declaration===undefined)return false;
   const direct=own.get(key);if(direct){settled.set(key,direct);return direct;}
   if(visiting.has(key))return false;
-  visiting.add(key);let verdict:Readonly<{reason:StalenessReasonV1;detail:string}>|false=false;
+  visiting.add(key);let verdict:Stale|false=false;
   for(const hash of entry.declaration.externs){
    const holders=(owners.get(hash)??[]).filter(other=>other!==key);
-   if(holders.length===0){if(input.retired?.has(hash)){verdict={reason:"extern",detail:hash.slice(0,12)+" gone"};break;}continue;}
-   if(holders.every(other=>staleOf(other)!==false)){verdict={reason:"extern",detail:hash.slice(0,12)+" "+holders[0]!.slice(-12)};break;}
+   if(holders.length===0){const cause=input.retired?.get(hash);if(cause!==undefined&&holds(cause)){verdict={reason:"extern",detail:hash.slice(0,12)+" gone",cause};break;}continue;}
+   if(holders.every(other=>staleOf(other)!==false)){verdict={reason:"extern",detail:hash.slice(0,12)+" "+holders[0]!.slice(-12),cause:(staleOf(holders[0]!) as Stale).cause};break;}
   }
   if(verdict===false)for(const name of entry.declaration.units??[]){
    const holders=(named.get(name)??[]).filter(other=>other!==key);
-   if(holders.length>0&&holders.every(other=>staleOf(other)!==false)){verdict={reason:"extern",detail:"unit "+name.slice(0,12)};break;}
+   if(holders.length>0&&holders.every(other=>staleOf(other)!==false)){verdict={reason:"extern",detail:"unit "+name.slice(0,12),cause:(staleOf(holders[0]!) as Stale).cause};break;}
   }
   visiting.delete(key);settled.set(key,verdict);return verdict;
  };
- const rooted=(declaration:DeclarationV1):boolean=>declaration.sources.length>0||declaration.kind==="stage-output"||declaration.kind==="graph",verdicts=new Map<string,StalenessVerdictV1>(),young=(entry:StalenessEntryV1):boolean=>input.now-entry.storedAt<input.graceMilliseconds,reached=new Set<string>(),pending:string[]=[];
+ const rooted=(declaration:DeclarationV1):boolean=>declaration.sources.length>0||declaration.kind==="stage-output"||declaration.kind==="graph"||declaration.kind==="input-manifest",verdicts=new Map<string,StalenessVerdictV1>(),young=(entry:StalenessEntryV1):boolean=>input.now-entry.storedAt<input.graceMilliseconds,reached=new Set<string>(),pending:string[]=[];
  for(const entry of entries){
   if(entry.declaration===undefined){verdicts.set(entry.key,{state:"undeclared"});continue;}
   if(entry.declaration.kind==="graph"){verdicts.set(entry.key,{state:"live"});pending.push(entry.key);continue;}
+  if(entry.declaration.kind==="input-manifest"&&entry.declaration.sources.length===0&&!own.has(entry.key)){verdicts.set(entry.key,{state:"live"});continue;}
   const stale=staleOf(entry.key);
-  if(stale!==false&&!young(entry)){verdicts.set(entry.key,{state:"stale",reason:stale.reason,detail:stale.detail});continue;}
+  if(stale!==false&&!young(entry)){verdicts.set(entry.key,{state:"stale",reason:stale.reason,detail:stale.detail,cause:stale.cause});continue;}
   if(rooted(entry.declaration)){verdicts.set(entry.key,{state:young(entry)&&stale!==false?"grace":"live"});pending.push(entry.key);}
  }
  for(let at=0;at<pending.length;at++){
@@ -146,7 +151,7 @@ export function stalenessReportV1(input:Readonly<{mode:StalenessModeV1;now:numbe
 export async function stalenessOnArrivalV1(declaration:DeclarationV1,input:Readonly<{digest:(path:string)=>Promise<string|null>;recheckMilliseconds:number;toolchains?:ReadonlySet<string>|undefined;wait?:(milliseconds:number)=>Promise<void>}>):Promise<Readonly<{reason:StalenessReasonV1;detail:string}>|undefined>{
  if(input.toolchains!==undefined&&!input.toolchains.has(declaration.toolchain))return {reason:"toolchain",detail:declaration.toolchain.slice(0,12)};
  const differing=async():Promise<Readonly<{reason:StalenessReasonV1;detail:string}>|undefined>=>{
-  for(const row of declaration.sources){const current=await input.digest(row.path);if(current===null)return {reason:"deleted",detail:row.path};if(current!==row.sha256)return {reason:"edited",detail:row.path};}
+  for(const row of declaration.sources){const current=await input.digest(row.path);if(current===null)return {reason:"deleted",detail:row.path};if(declaration.kind!=="input-manifest"&&current!==row.sha256)return {reason:"edited",detail:row.path};}
   return undefined;
  };
  const first=await differing();if(first===undefined)return undefined;

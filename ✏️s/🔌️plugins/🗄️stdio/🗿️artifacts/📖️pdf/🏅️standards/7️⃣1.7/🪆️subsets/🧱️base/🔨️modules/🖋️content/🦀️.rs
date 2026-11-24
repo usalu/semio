@@ -26,6 +26,10 @@ pub trait FontTable {
     fn font(&self, name: &str) -> Option<&FontCodec>;
     /// 🔡 Supplies the qualified Type1 encoding for measured content turns.
     fn controlled_type1(&self, _name: &str) -> Option<PdfBaseEncoding> { None }
+    /// 🔤️ Decodes one reversible code of a qualified Type1 font, honouring its `/Differences`.
+    fn controlled_type1_text(&self, name: &str, byte: u8) -> Option<&'static str> {
+        crate::standards::v1_7::subsets::base::modules::fonts::controlled_type1_text(self.controlled_type1(name)?, byte)
+    }
     /// 🔒️ Supplies a separately admitted codespace whose physical codes must be retained.
     fn controlled_code_width(&self, _name: &str) -> Option<PdfFixedCodeWidth> { None }
     fn content_artifact(&self,_reference:&semio_framework_artifact_reference::ArtifactRef)->PResult<PdfObject>{Err(PdfEngineError::Unsupported("content artifact resolution is unavailable".into()))}

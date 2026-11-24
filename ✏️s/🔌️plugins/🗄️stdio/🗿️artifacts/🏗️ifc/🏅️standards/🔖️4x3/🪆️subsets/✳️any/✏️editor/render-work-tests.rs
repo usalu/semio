@@ -40,7 +40,32 @@ fn contextual_details_body_uses_original_retained_work_only() {
 
 fn ifc4x3_header()->semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcHeader{use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcHeader,IfcValue};IfcHeader{file_schema:vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4X3_ADD2".into())])],..IfcHeader::default()}}
 fn staged_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:256}}
-fn retire_staged<T:semio_framework_value::retirement::RetireOwned>(caller:&mut OriginalWorkFixture,owner:&mut Option<T>){if let Some(value)=owner.take(){caller.retire_owned(value,staged_grant());}}
+fn retire_staged<T:semio_framework_value::retirement::RetireOwned>(caller:&mut OriginalWorkFixture,owner:&mut Option<T>){
+    use semio_framework_value::retirement::controlled::ControlledRetirement;
+    use semio_framework_value::ErasedSnapshotRetirement;
+    let Some(value)=owner.take()else{return};
+    let mut owner=ControlledRetirement::retain(value);
+    for _ in 0..2_000_000{
+        if owner.terminal_is_empty(){break}
+        semio_ui_contract::close_built_node_page_one();
+        caller.turn(staged_grant(),|cx|{
+            let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;
+            let body=cx.retained_grant().maximum_copy_bytes;
+            let birth=owner.requires_original_birth();
+            if cx.retirement_should_yield()||!cx.retained_work_can_enter(demand){return Ok(())}
+            let grant=cx.retained_grant();
+            let Some((poll,_))=cx.with_original_source_effect(grant,|cx,effect|cx.with_native_retirement(|native|native.with_original_close(|original|Ok::<_,semio_framework_value::ValueError>(
+                if birth{owner.step_original_birth(original,grant)}else{ErasedSnapshotRetirement::close_original_step(&mut owner,original,body,effect)}))))? else{return Ok(())};
+            let turn=match poll?{
+                semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work},
+                semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn,
+            };
+            semio_framework_job::receive_original_retained_work(cx,turn)?;
+            Ok(())
+        }).expect("staged owner retirement under its original Source");
+    }
+    assert!(owner.terminal_is_empty(),"staged owner retires within its finite Source stock");
+}
 fn staged_view()->semio_plugin::ViewModel{let mut view=semio_plugin::ViewModel::new(semio_ui_locale::Locale::De,semio_ui_locale::Terminology::Native);view.window_id=Some("actual-details".into());view}
 fn staged_request(application:&serde_json::Value)->semio_plugin::action_staging::StagedFormRequest{let parsed=semio_framework_pack_json::parse(&application.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();semio_plugin::action_staging::StagedFormRequest{token:semio_plugin::action_staging::StagedFormToken{action:APPLY_TEMPLATE_ACTION.into(),generation:"1".into(),revision:"0".repeat(64),window:"actual-details".into()},args:semio_framework_pack_json::to_dsl_value(&parsed),locale:semio_ui_locale::Locale::De,page:None}}
 #[test]

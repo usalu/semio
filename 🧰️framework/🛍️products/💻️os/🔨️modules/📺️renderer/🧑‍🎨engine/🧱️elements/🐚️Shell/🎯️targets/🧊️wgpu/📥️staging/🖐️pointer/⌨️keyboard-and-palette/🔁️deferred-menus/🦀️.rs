@@ -231,7 +231,7 @@ impl<'ctx> PointerCtx<'ctx> {
         let armed_work = !self.settle.deferred_actions.is_empty() || !self.settle.touch_gestures.is_empty() || !self.settle.suggestion_holds.is_empty() || self.opening.pending_shell_uri_apply || parked || host_window_blur_pending() || semio_renderer_wgpu_shell_window_actions::host_window_lifecycle_pending() || self.sync.close_guard.is_some() || !self.opening.import_transfers.is_empty()
             || self.input.suggestion_search.is_some() || self.settle.deferred_document_load.is_some() || !self.settle.held_host_effects.is_empty();
         let computing = self.surfaces.live_compute_surfaces().any(|(surface_id, _)| !self.settle.settle_pump.watches.get(&surface_id).is_some_and(|watch| watch.standing));
-        self.opening.icon_export.as_ref().is_some_and(IconExportBatch::running) || self.opening.video_render_running() || semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() || settle_pump_owes(self.settle.settling, self.docs.session.is_some(), armed_work, &self.settle.owed_refresh_scope, self.settle.settle_pump.owed, computing)
+        self.opening.icon_export.as_ref().is_some_and(|batch|batch.running()) || self.opening.video_render_running() || semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() || settle_pump_owes(self.settle.settling, self.docs.session.is_some(), armed_work, &self.settle.owed_refresh_scope, self.settle.settle_pump.owed, computing)
     }
 
     /// 🫀️ ONE settle step, and the whole of what the frame loop asks of this shell per frame.

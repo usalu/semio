@@ -26,22 +26,25 @@ export type CasCollectOptionsV1=Readonly<{
  completedAutomatic?(hint:CasUsageHintV1):void;
  beforeEvict?(path:string):void|Promise<void>;
  openLock?(path:string):Promise<FileHandle>;
- role?:string;unreferencedOnly?:boolean;waitMs?:number;
+ role?:string;unreferencedOnly?:boolean;unreferencedStepBytes?:number;waitMs?:number;
 }>;
 /** 🌡️ What a collection saw of the partition that holds the store: its share in use before it, and the bytes it was above its low share. */
 export type CasCollectedPartitionV1=Readonly<{partition:string;totalBytes:number;usedFraction:number;needBytes:number}>;
 /** 🫂️ What the registered reference holders (unit-cache roots) cost a collection: how many objects and bytes their live entries keep, and what the capacity stage took from them when the unreferenced objects did not cover the need (entries together with the objects only they referenced, `reason` is always `capacity`). */
 export type CasHolderEvictionV1=Readonly<{holders:number;entries:number;heldBlobs:number;heldBytes:number;evictedEntries:number;evictedBlobs:number;freedBytes:number;protectedEntries:number;reason:"capacity"}>;
+/** 🔒️ Who holds the collection lock of a store and how long ago it last made progress. */
+export type CasLockHolderV1=Readonly<{pid:number;beatMs:number}>;
 /** 🧾️ What a collection did; `locked` is a collection that found another one running, `lockless` one that ran without the lock because the disk was too full to create it. */
-export type CasCollectionV1=Readonly<{status:"idle"|"collected"|"locked";partial:boolean;dryRun:boolean;scanned:number;evicted:number;freedBytes:number;busy:number;skipped:number;totals:CasPlanTotalsV1;byReason:Readonly<Record<CasReasonV1,number>>;graphClosureBytes?:number;holders?:CasHolderEvictionV1;unreferencedOnly?:true;lockless?:true;partition?:CasCollectedPartitionV1}>;
+export type CasCollectionV1=Readonly<{status:"idle"|"collected"|"locked";partial:boolean;dryRun:boolean;scanned:number;evicted:number;freedBytes:number;busy:number;skipped:number;totals:CasPlanTotalsV1;byReason:Readonly<Record<CasReasonV1,number>>;graphClosureBytes?:number;holders?:CasHolderEvictionV1;unreferencedOnly?:true;lockless?:true;lockedBy?:CasLockHolderV1;partition?:CasCollectedPartitionV1}>;
 
+const reconciledAt=new Map<string,number>();
 const STORE="store",zero:CasPlanTotalsV1={totalBytes:0,protectedBytes:0,candidateBytes:0,plannedBytes:0,keptBytes:0,shortfallBytes:0,capShortfallBytes:0,partitionShortfallBytes:0,needBytes:0};
 const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
 const sorted=(names:string[]):string[]=>names.sort((left,right)=>left<right?-1:left>right?1:0);
 const LOCK_POLL_MS=100;
 const TEMPORARY=/(^\.)|(\.tmp$)/u;
 
-type Entry={area:string;path:string;size:number;access:number;protectedEntry:boolean;expired?:boolean;shard?:string;hash?:string;pin?:string;held?:boolean;freeable?:boolean};
+type Entry={area:string;path:string;size:number;access:number;protectedEntry:boolean;expired?:boolean;shard?:string;hash?:string;pin?:string;held?:boolean;freeable?:boolean;kind?:CasObjectClassV1};
 const pinOfFileV1=(path:string):string|undefined=>{const name=basename(path);return /^[0-9a-f]{64}\.json$/u.test(name)?name.slice(0,64):undefined;};
 
 const fullDisk=(error:unknown):boolean=>["ENOSPC","EDQUOT"].includes((error as NodeJS.ErrnoException)?.code??"");
@@ -78,6 +81,10 @@ async function acquire(root:string,policy:CasPolicyV1,nowMs:number,pid:number,op
  return undefined;
 }
 
+async function readLockHolderV1(root:string,nowMs:number):Promise<CasLockHolderV1|undefined>{
+ try{const row=JSON.parse(await readFile(join(root,"v1","gc.lock"),"utf8")) as {pid:number;atMs:number};return typeof row.pid==="number"&&typeof row.atMs==="number"?{pid:row.pid,beatMs:Math.max(0,nowMs-row.atMs)}:undefined;}catch{return undefined;}
+}
+
 async function* walk(directory:string,skip:RegExp,signal?:AbortSignal):AsyncGenerator<{path:string;size:number;mtimeMs:number;atimeMs:number;nlink:number}>{
  let names:string[];try{names=sorted(await readdir(directory));}catch{return;}
  for(const name of names){
@@ -103,7 +110,8 @@ async function* entries(options:CasCollectOptionsV1,policy:CasPolicyV1,pins:Read
    const isHeld=held.has(hash),links=info.nlink-(isHeld?casKeeperCountSyncV1(options.root,policy,hash):0);
    const until=transients.get(hash),leased=until!==undefined&&until>nowMs,expired=until!==undefined&&until<=nowMs&&access<=until&&!pins.has(hash)&&links<=1;
    const free=!pins.has(hash)&&links<=1&&!leased&&nowMs-access>=policy.minAgeMs;
-   yield{area:STORE,path,size:info.size,access,protectedEntry:pins.has(hash)||links>1||leased||isHeld||(!expired&&nowMs-access<policy.minAgeMs),expired,shard,hash,held:isHeld,freeable:isHeld&&free};
+   const kind:CasObjectClassV1=pins.has(hash)?"pinned":isHeld?"held":leased?"leased":links>1?"linked":expired?"expired":nowMs-access<policy.minAgeMs?"young":"unreferenced";
+   yield{area:STORE,path,size:info.size,access,protectedEntry:pins.has(hash)||links>1||leased||isHeld||(!expired&&nowMs-access<policy.minAgeMs),expired,shard,hash,held:isHeld,freeable:isHeld&&free,kind};
   }
  }
  for(const area of options.areas??[]){
@@ -122,7 +130,7 @@ const holderSummary=(held:CasHeldV1,blobs:ReadonlyMap<string,CasHolderPlanBlobV1
 /** 🫂️ The capacity stage, only for the store's own cap: when every object nobody references is gone and the cap still needs `need` bytes, the least recently used entries of the registered holders are removed, never below the protected share `holderProtectedShare` of the cap per live holder (their files first, recorded in the holder's own eviction log with the reason `capacity`, the pid and the role of the evicting process), then the objects no remaining entry references, a pin, a lease or a hard link keeps, and the minimum age protects, so no holder is ever left with an entry whose objects were taken behind its back. A dry run only counts. */
 async function evictHolders(options:CasCollectOptionsV1,policy:CasPolicyV1,held:CasHeldV1,blobs:ReadonlyMap<string,CasHolderPlanBlobV1&{access:number}>,need:number,now:()=>number):Promise<CasHolderEvictionV1>{
  const rows=held.entries.map(entry=>({id:entry.file,holder:entry.holder,access:entry.digests.reduce((latest,digest)=>Math.max(latest,blobs.get(digest)?.access??0),entry.digests.some(digest=>blobs.has(digest))?0:entry.mtimeMs),digests:entry.digests}));
- const floor=Math.floor(policy.holderProtectedShare*policy.capBytes),plan=planCasHolderEvictionV1(rows,blobs,need,new Map(held.holders.map(holder=>[holder.holder,floor]))),summary={...holderSummary(held,blobs),protectedEntries:plan.protectedEntries};
+ const floor=Math.floor(policy.holderProtectedShare*(policy.heldCapBytes??policy.capBytes)),plan=planCasHolderEvictionV1(rows,blobs,need,new Map(held.holders.map(holder=>[holder.holder,floor]))),summary={...holderSummary(held,blobs),protectedEntries:plan.protectedEntries};
  if(plan.entries.length===0)return summary;
  if(options.dryRun)return{...summary,evictedEntries:plan.entries.length,evictedBlobs:plan.digests.length,freedBytes:plan.freedBytes};
  const owner=new Map(held.entries.map(entry=>[entry.file,entry.holder])),counts=new Map<string,{entries:number;bytes:number}>();
@@ -159,8 +167,8 @@ async function acquireWithin(root:string,policy:CasPolicyV1,now:()=>number,pid:n
 export async function collectCasV1(options:CasCollectOptionsV1):Promise<CasCollectionV1>{
  const policy=requireCasPolicyV1(options.policy??CAS_POLICY_V1),now=options.now??Date.now,pid=options.pid??process.pid,signal=options.signal;
  if(!options.dryRun)await sweepTemporary(options.root,policy,now());
- const lock=await acquireWithin(options.root,policy,now,pid,options.openLock??(path=>open(path,"wx")),options.waitMs??0,signal),release=lock?.release;
- if(!lock||!release)return{status:"locked",partial:false,dryRun:options.dryRun===true,scanned:0,evicted:0,freedBytes:0,busy:0,skipped:0,totals:zero,byReason:{age:0,area:0,host:0}};
+ const lock=await acquireWithin(options.root,policy,now,pid,options.openLock??(path=>open(path,"wx")),options.waitMs??0,signal)??(options.unreferencedOnly===true?{release:withoutLock,beat:noBeat,lockless:true}:undefined),release=lock?.release;
+ if(!lock||!release){const lockedBy=await readLockHolderV1(options.root,now());return{status:"locked",partial:false,dryRun:options.dryRun===true,scanned:0,evicted:0,freedBytes:0,busy:0,skipped:0,totals:zero,byReason:{age:0,area:0,host:0},...lockedBy?{lockedBy}:{}};}
  const views=new Map<string,CasShardViewV1>();let scanned=0,evicted=0,freed=0,busy=0,skipped=0,used=0,graphClosureBytes=0,lastReport=-Infinity,partial=false;const byReason:Record<CasReasonV1,number>={age:0,area:0,host:0};
  const report=async(stage:CasProgressV1["stage"],force=false):Promise<void>=>{
   signal?.throwIfAborted();const at=now();
@@ -177,12 +185,12 @@ export async function collectCasV1(options:CasCollectOptionsV1):Promise<CasColle
   };
   const started=now(),partitionNeed=casPartitionNeedBytesV1(options.partition,policy),partition=options.partition?Object.freeze({partition:options.partition.partition,totalBytes:options.partition.totalBytes,usedFraction:casPartitionUsedFractionV1(options.partition),needBytes:partitionNeed}):undefined,lockless=lock.lockless?{lockless:true as const}:{};
   const bounds=[{id:STORE,capBytes:null,maxAgeMs:null},...(options.areas??[]).map(area=>{const row=policy.areas.find(candidate=>candidate.id===area.id);return{id:area.id,capBytes:row?.capBytes??null,maxAgeMs:row?.maxAgeMs??null};})];
-  const planner=createCasPlannerV1({policy,incremental:options.incremental===true,areas:bounds,externalBytes:options.externalBytes??0,nowMs:started,partitionNeedBytes:partitionNeed,unreferencedOnly:options.unreferencedOnly});
+  const planner=createCasPlannerV1({policy,incremental:options.incremental===true,areas:bounds,externalBytes:options.externalBytes??0,nowMs:started,partitionNeedBytes:partitionNeed,unreferencedOnly:options.unreferencedOnly,unreferencedStepBytes:options.unreferencedStepBytes});
   let pins=await readCasPinsV1(options.root,started),transients=await readCasTransientsV1(options.root);
-  resetCasHeldCacheV1();let held:CasHeldV1=await readCasHeldV1(options.root,started,signal);if(!options.dryRun)await reconcileCasKeepersV1(options.root,policy,held,signal).catch(()=>undefined);const heldBlobs=new Map<string,CasHolderPlanBlobV1&{access:number}>();
+  const scannedEntries:CensusRowV1[]=[];resetCasHeldCacheV1();let held:CasHeldV1=await readCasHeldV1(options.root,started,signal);if(!options.dryRun&&!lock.lockless&&options.unreferencedOnly!==true&&!(started-(reconciledAt.get(options.root)??Number.NEGATIVE_INFINITY)<policy.holderRenewMs)){await reconcileCasKeepersV1(options.root,policy,held,signal).catch(()=>undefined);reconciledAt.set(options.root,started);}const heldBlobs=new Map<string,CasHolderPlanBlobV1&{access:number}>();
   try{
    for await(const entry of entries(options,policy,pins,started,views,transients,held.digests)){
-    planner.add(entry.area,entry.access,entry.size,entry.protectedEntry,entry.expired);scanned++;used+=entry.size;
+    planner.add(entry.area,entry.access,entry.size,entry.protectedEntry,entry.expired);scanned++;used+=entry.size;if(entry.kind!==undefined&&entry.hash!==undefined)scannedEntries.push({hash:entry.hash,size:entry.size,kind:entry.kind});
     if(entry.held&&entry.hash!==undefined)heldBlobs.set(entry.hash,{size:entry.size,access:entry.access,freeable:entry.freeable===true});
     if(entry.area===CAS_GRAPH_CLOSURE_AREA_V1)graphClosureBytes+=entry.size;
     if(scanned%policy.checkEvery===0)await report("scan");
@@ -191,34 +199,47 @@ export async function collectCasV1(options:CasCollectOptionsV1):Promise<CasColle
   const plan=partial?undefined:planner.finish();
   if(!plan)return{status:"collected",partial:true,dryRun:options.dryRun===true,scanned,evicted,freedBytes:freed,busy,skipped,totals:zero,byReason,...lockless,...partition?{partition}:{}};
   const totals=plan.totals,graphClosures=graphClosureBytes>0?{graphClosureBytes}:{};
+  const census=partial||options.dryRun?undefined:censusOf(scannedEntries,pins,held,started);
   const heldNeed=options.unreferencedOnly!==true&&totals.capShortfallBytes>0&&heldBlobs.size>0;let holders:CasHolderEvictionV1|undefined=held.holders.length>0?holderSummary(held,heldBlobs):undefined;
   if(totals.plannedBytes<=0&&!heldNeed){
-   await compactAll(options,policy,started,views,progress=>lock.beat(scanned+evicted+progress,now()));await finishUsage(totals.keptBytes-(options.externalBytes??0));
+   await compactAll(options,policy,started,views,progress=>lock.beat(scanned+evicted+progress,now()));await finishUsage(totals.keptBytes-(options.externalBytes??0));if(census)await writeCasCensusV1(options.root,census);
    return{status:"idle",partial:false,dryRun:options.dryRun===true,scanned,evicted,freedBytes:freed,busy,skipped,totals,byReason,...graphClosures,...holders?{holders}:{},...options.unreferencedOnly?{unreferencedOnly:true as const}:{},...lockless,...partition?{partition}:{}};
   }
   const evaluator=plan.evaluator();if(totals.plannedBytes>0)held=await readCasHeldV1(options.root,now(),signal);pins=await readCasPinsV1(options.root,now());let transientStamp=await stampCasTransientsV1(options.root);transients=await readCasTransientsV1(options.root);let currentShard:string|undefined,view:CasShardViewV1|undefined,pinStamp=(await stat(casPinDirectoryV1(options.root)).catch(()=>undefined))?.mtimeMs??0;
   try{
+   const pending:{entry:Entry;reason:CasReasonV1;view:CasShardViewV1|undefined}[]=[];
+   const flush=async():Promise<void>=>{
+    if(pending.length===0)return;
+    const batch=pending.splice(0);
+    for(const shardView of new Set(batch.map(row=>row.view)))await shardView?.refresh();
+    {const next=await stampCasTransientsV1(options.root);if(next!==transientStamp){transientStamp=next;transients=await readCasTransientsV1(options.root);}}const stamp=(await stat(casPinDirectoryV1(options.root)).catch(()=>undefined))?.mtimeMs??0;if(stamp!==pinStamp){pinStamp=stamp;pins=await readCasPinsV1(options.root,now());}
+    for(const {entry,reason,view:shardView} of batch){
+     const fresh=entry.hash?Math.max((await lstat(entry.path).catch(()=>undefined))?.mtimeMs??-1,shardView?.latest(entry.hash)??0):(await lstat(entry.path).catch(()=>undefined))?.atimeMs??-1;
+     if(fresh<0)continue;
+     if(entry.hash!==undefined&&(transients.get(entry.hash)??0)>now()){skipped++;continue;}
+     if(fresh>entry.access||fresh>=started||((entry.hash??entry.pin)!==undefined&&pins.has((entry.hash??entry.pin)!))){skipped++;continue;}
+     try{await unlink(entry.path);evicted++;freed+=entry.size;used-=entry.size;byReason[reason]++;if(census&&entry.kind)forgetCensusV1(census,entry.kind,entry.size);}
+     catch(error){const code=(error as NodeJS.ErrnoException).code;if(code==="ENOENT")continue;if(code==="EBUSY"||code==="EPERM"||code==="EACCES"){busy++;continue;}throw error;}
+    }
+    await report("evict");
+   };
    for await(const entry of totals.plannedBytes>0?entries(options,policy,pins,started,views,transients,held.digests):nothing()){
-    if(entry.shard!==currentShard){currentShard=entry.shard;pins=await readCasPinsV1(options.root,now());{const next=await stampCasTransientsV1(options.root);if(next!==transientStamp){transientStamp=next;transients=await readCasTransientsV1(options.root);}}view=entry.shard?views.get(entry.shard):undefined;}
+    if(entry.shard!==currentShard){await flush();currentShard=entry.shard;pins=await readCasPinsV1(options.root,now());{const next=await stampCasTransientsV1(options.root);if(next!==transientStamp){transientStamp=next;transients=await readCasTransientsV1(options.root);}}view=entry.shard?views.get(entry.shard):undefined;}
     if(entry.protectedEntry)continue;
     const reason=evaluator.decide(entry.area,entry.access,entry.size,entry.expired);
     if(reason===null)continue;
     if(options.dryRun){evicted++;freed+=entry.size;byReason[reason]++;continue;}
     await options.beforeEvict?.(entry.path);
-    await view?.refresh();const stamp=(await stat(casPinDirectoryV1(options.root)).catch(()=>undefined))?.mtimeMs??0;if(stamp!==pinStamp){pinStamp=stamp;pins=await readCasPinsV1(options.root,now());}const fresh=entry.hash?Math.max((await lstat(entry.path).catch(()=>undefined))?.mtimeMs??-1,view?.latest(entry.hash)??0):(await lstat(entry.path).catch(()=>undefined))?.atimeMs??-1;
-    if(fresh<0)continue;
-    if(entry.hash!==undefined&&(transients.get(entry.hash)??0)>now()){skipped++;continue;}
-    if(fresh>entry.access||fresh>=started||((entry.hash??entry.pin)!==undefined&&pins.has((entry.hash??entry.pin)!))){skipped++;continue;}
-    try{await unlink(entry.path);evicted++;freed+=entry.size;used-=entry.size;byReason[reason]++;}
-    catch(error){const code=(error as NodeJS.ErrnoException).code;if(code==="ENOENT")continue;if(code==="EBUSY"||code==="EPERM"||code==="EACCES"){busy++;continue;}throw error;}
-    if(evicted%policy.checkEvery===0)await report("evict");
+    pending.push({entry,reason,view});
+    if(pending.length>=policy.checkEvery)await flush();
    }
+   await flush();
   }catch(error){if(signal?.aborted)partial=true;else throw error;}
   if(!partial&&heldNeed)try{
    const row=await evictHolders(options,policy,held,heldBlobs,totals.capShortfallBytes,now);
    holders=row;evicted+=row.evictedBlobs;freed+=row.freedBytes;used-=row.freedBytes;
   }catch(error){if(signal?.aborted)partial=true;else throw error;}
-  if(!partial&&!options.dryRun){await compactAll(options,policy,started,views,progress=>lock.beat(scanned+evicted+progress,now()));await finishUsage(used);}
+  if(!partial&&!options.dryRun){await compactAll(options,policy,started,views,progress=>lock.beat(scanned+evicted+progress,now()));await finishUsage(used);if(census&&!holders?.evictedBlobs)await writeCasCensusV1(options.root,census);}
   await options.progress?.({stage:"evict",entries:scanned,usedBytes:used,freedBytes:freed});
   return{status:"collected",partial,dryRun:options.dryRun===true,scanned,evicted,freedBytes:freed,busy,skipped,totals,byReason,...graphClosures,...holders?{holders}:{},...options.unreferencedOnly?{unreferencedOnly:true as const}:{},...lockless,...partition?{partition}:{}};
  }finally{await release();}
@@ -256,18 +277,53 @@ async function recordUsage(options:CasCollectOptionsV1,bytes:number,atMs:number,
  catch{await unlink(temporary).catch(()=>undefined);return false;}
 }
 
+/** 🏷️ Why an object of the store is still there: a live pin, a live entry of a registered holder, a live input lease, a foreign hard link, an ended lease (first to go), the in-flight grace, or nothing at all. */
+export type CasObjectClassV1="pinned"|"held"|"leased"|"linked"|"expired"|"young"|"unreferenced";
+/** 📊️ The counters of the store as its last complete scan found them, minus what that collection removed: objects and bytes per class and per holder (an object counts for the first holder naming it), so a status answers in milliseconds without walking the store. @see ../🧬️schema/🔣️.json */
+export type CasCensusV1=Readonly<{version:1;atMs:number;objects:number;bytes:number;classes:Record<CasObjectClassV1,{objects:number;bytes:number}>;holders:{kind:"pin"|"unit-cache";holder:string;label:string;entries:number;objects:number;bytes:number}[]}>;
+type CensusRowV1={hash:string;size:number;kind:CasObjectClassV1};
+const CAS_OBJECT_CLASSES_V1:readonly CasObjectClassV1[]=["pinned","held","leased","linked","expired","young","unreferenced"];
+
+function censusOf(rows:readonly CensusRowV1[],pins:ReadonlyMap<string,string>,held:CasHeldV1,atMs:number):CasCensusV1{
+ const classes=Object.fromEntries(CAS_OBJECT_CLASSES_V1.map(kind=>[kind,{objects:0,bytes:0}])) as CasCensusV1["classes"],holders=new Map<string,CasCensusV1["holders"][number]>();
+ for(const holder of held.holders)holders.set(holder.holder,{kind:"unit-cache",holder:holder.holder,label:holder.root,entries:held.entries.filter(entry=>entry.holder===holder.holder).length,objects:0,bytes:0});
+ let objects=0,bytes=0;
+ for(const row of rows){
+  objects++;bytes+=row.size;classes[row.kind].objects++;classes[row.kind].bytes+=row.size;
+  const owner=row.kind==="pinned"?pins.get(row.hash):row.kind==="held"?held.digests.get(row.hash):undefined;if(owner===undefined)continue;
+  let total=holders.get(owner);if(total===undefined)holders.set(owner,total={kind:"pin",holder:owner,label:owner,entries:0,objects:0,bytes:0});
+  total.objects++;total.bytes+=row.size;
+ }
+ return{version:1,atMs,objects,bytes,classes,holders:[...holders.values()].sort((left,right)=>right.bytes-left.bytes)};
+}
+function forgetCensusV1(census:CasCensusV1,kind:CasObjectClassV1,size:number):void{
+ const row=census.classes[kind];row.objects--;row.bytes-=size;(census as {objects:number}).objects--;(census as {bytes:number}).bytes-=size;
+}
+
+/** 📊️ Where the census of a store lives. */
+export const casCensusPathV1=(root:string):string=>join(root,"v1","census.json");
+/** 📊️ Writes the census atomically; best effort, a full disk only loses the counters. */
+export async function writeCasCensusV1(root:string,census:CasCensusV1):Promise<void>{
+ const target=casCensusPathV1(root),temporary=`${target}.${process.pid}.tmp`;
+ try{await writeFile(temporary,JSON.stringify(census));await rename(temporary,target);}catch{await unlink(temporary).catch(()=>undefined);}
+}
+/** 📊️ Reads the census of the last complete scan; `undefined` when none was written or it is unreadable. */
+export async function readCasCensusV1(root:string):Promise<CasCensusV1|undefined>{
+ try{const row=JSON.parse(await readFile(casCensusPathV1(root),"utf8")) as CasCensusV1;return row.version===1&&Number.isSafeInteger(row.atMs)&&Number.isSafeInteger(row.bytes)&&CAS_OBJECT_CLASSES_V1.every(kind=>typeof row.classes?.[kind]?.bytes==="number")&&Array.isArray(row.holders)?row:undefined;}catch{return undefined;}
+}
+
 /** 📣️ The one-line report of a collection in the requested language. */
 export function formatCasCollectionV1(result:CasCollectionV1,policy:CasPolicyV1,language:"en"|"de"):string{
  const percent=(fraction:number):number=>Math.round(fraction*1000)/10;
  const mib=(bytes:number):number=>Math.round(bytes/1048576*10)/10,gib=(bytes:number):number=>Math.round(bytes/1073741824*100)/100;
- if(result.status==="locked")return casTextV1("locked",language);
+ if(result.status==="locked")return result.lockedBy?casTextV1("lockedBy",language,{pid:result.lockedBy.pid,beatSeconds:Math.round(result.lockedBy.beatMs/1000)}):casTextV1("locked",language);
  if(result.unreferencedOnly)return casTextV1(result.dryRun?"previewUnreferenced":"doneUnreferenced",language,{objects:result.evicted,gib:gib(result.freedBytes),kept:Math.max(0,result.scanned-result.evicted),graceSeconds:Math.round(policy.minAgeMs/1000),partial:result.partial?casTextV1("partial",language):""});
  const partition=result.partition&&result.partition.needBytes>0?result.partition:undefined,policyLine=partition?casTextV1("partitionState",language,{partition:partition.partition,usedPercent:percent(partition.usedFraction),highPercent:percent(policy.partition.highUsedFraction),lowPercent:percent(policy.partition.lowUsedFraction)}):"";
  if(result.status==="idle"&&!partition&&result.totals.shortfallBytes<=0)return casTextV1("idle",language,{usedGib:gib(result.totals.totalBytes),capGib:gib(policy.capBytes)});
  const text=casTextV1(result.dryRun?"previewCollection":"done",language,{evicted:result.evicted,freedMib:mib(result.freedBytes),keptGib:gib(result.totals.keptBytes),protectedMib:mib(result.totals.protectedBytes),partial:result.partial?casTextV1("partial",language):""})+policyLine;
  const evicted=result.holders&&result.holders.evictedEntries>0?" "+casTextV1("holderEvicted",language,{entries:result.holders.evictedEntries,holders:result.holders.holders,blobs:result.holders.evictedBlobs,mib:mib(result.holders.freedBytes)}):"";
  const remaining=Math.max(0,result.totals.capShortfallBytes-(result.holders?.freedBytes??0));
- const shielded=result.holders&&result.holders.protectedEntries>0&&remaining>0?" "+casTextV1("holderProtected",language,{entries:result.holders.protectedEntries,floorGib:gib(Math.floor(policy.holderProtectedShare*policy.capBytes))}):"";
+ const shielded=result.holders&&result.holders.protectedEntries>0&&remaining>0?" "+casTextV1("holderProtected",language,{entries:result.holders.protectedEntries,floorGib:gib(Math.floor(policy.holderProtectedShare*(policy.heldCapBytes??policy.capBytes)))}):"";
  const pressure=result.partition&&result.totals.partitionShortfallBytes>0?" "+casTextV1("partitionNotStore",language,{usedPercent:percent(result.partition.usedFraction),storeGib:gib(result.totals.keptBytes),sharePercent:percent(result.totals.keptBytes/result.partition.totalBytes),overGib:gib(result.totals.partitionShortfallBytes)}):"";
  if(remaining<=0)return text+evicted+pressure;
  return text+evicted+shielded+" "+casTextV1("shortfall",language,{overMib:mib(remaining)})+(result.graphClosureBytes?casTextV1("graphClosures",language,{protectedMib:mib(result.graphClosureBytes)}):"")+pressure;

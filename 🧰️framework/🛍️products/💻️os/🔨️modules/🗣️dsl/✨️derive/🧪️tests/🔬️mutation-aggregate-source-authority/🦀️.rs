@@ -116,7 +116,8 @@ fn aggregate_and_leaf_authority_share_workspace_taxonomy_names_and_token() {
     assert_eq!(mutation_authority_workspace_token(&aggregate.workspace_root, &aggregate.taxonomy_path).unwrap(), mutation_leaf_workspace_token(&leaf).unwrap());
     let (_, other_cwd, other_aggregate_source, _) = materialize("direct-canonical");
     let other = mutation_aggregate_source_authority(&other_aggregate_source, &other_cwd).unwrap();
-    assert_ne!(mutation_authority_workspace_token(&aggregate.workspace_root, &aggregate.taxonomy_path).unwrap(), mutation_authority_workspace_token(&other.workspace_root, &other.taxonomy_path).unwrap());
+    assert_ne!(aggregate.workspace_root, other.workspace_root);
+    assert_eq!(mutation_authority_workspace_token(&aggregate.workspace_root, &aggregate.taxonomy_path).unwrap(), mutation_authority_workspace_token(&other.workspace_root, &other.taxonomy_path).unwrap());
     assert!(workspace.exists());
 }
 

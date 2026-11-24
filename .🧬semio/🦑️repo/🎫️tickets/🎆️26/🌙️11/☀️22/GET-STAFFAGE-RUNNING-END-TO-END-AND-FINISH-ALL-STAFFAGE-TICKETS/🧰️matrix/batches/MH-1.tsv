@@ -1,0 +1,12 @@
+humans	barista	4 / 7; flat+solid; 2 extent				
+humans	basketball-player	0 / 8; solid; 2 extent	2; descendant 2			
+humans	child-on-kick-scooter	17 / 739; flat+followTip+solid; 756 other id; 12 extent	47; descendant 47			
+humans	construction-worker-with-shovel	15 / 36; flat+solid				
+humans	courier-with-hand-truck	0 / 13; flat+followTip; 3 other id	24; off 16, descendant 8			
+humans	cyclist	3 / 22; flat+solid; 1 extent	112; descendant 64, other bone 48			
+humans	dancer	5 / 47; solid; 38 other id; 3 extent	9; descendant 5, other bone 4			
+humans	doctor-with-clipboard	2 / 20; flat				
+humans	e-scooter-rider	5 / 60; solid	128; descendant 128			
+humans	elderly-person-knitting	1 / 34; flat+solid				
+humans	elderly-with-cane	3 / 135; flat+solid	14; descendant 12, off 2			
+humans	hiker-with-trekking-poles	0 / 11; flat+followTip; 4 other id	1; descendant 1			

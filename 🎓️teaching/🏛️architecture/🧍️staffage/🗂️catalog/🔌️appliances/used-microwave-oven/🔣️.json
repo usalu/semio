@@ -90,8 +90,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -106,8 +106,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "incropera-2018"
    },
@@ -122,8 +122,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -138,8 +138,8 @@
     "densityKgM3": 1050,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1400,
-    "elasticModulusPa": 2300000000.0,
-    "strengthPa": 40000000.0,
+    "elasticModulusPa": 2300000000,
+    "strengthPa": 40000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -154,8 +154,8 @@
     "densityKgM3": 1050,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1400,
-    "elasticModulusPa": 2300000000.0,
-    "strengthPa": 40000000.0,
+    "elasticModulusPa": 2300000000,
+    "strengthPa": 40000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -168,10 +168,10 @@
     "emissivity": 0.84,
     "solarAbsorptivity": 0.55,
     "densityKgM3": 2500,
-    "conductivityWmK": 1.0,
+    "conductivityWmK": 1,
     "specificHeatJKgK": 750,
-    "elasticModulusPa": 70000000000.0,
-    "strengthPa": 120000000.0,
+    "elasticModulusPa": 70000000000,
+    "strengthPa": 120000000,
     "source": "literature",
     "reference": "en-12150-1"
    },
@@ -186,8 +186,8 @@
     "densityKgM3": 2230,
     "conductivityWmK": 1.14,
     "specificHeatJKgK": 830,
-    "elasticModulusPa": 64000000000.0,
-    "strengthPa": 40000000.0,
+    "elasticModulusPa": 64000000000,
+    "strengthPa": 40000000,
     "source": "literature",
     "reference": "iso-3585"
    },
@@ -202,8 +202,8 @@
     "densityKgM3": 905,
     "conductivityWmK": 0.22,
     "specificHeatJKgK": 1900,
-    "elasticModulusPa": 1500000000.0,
-    "strengthPa": 30000000.0,
+    "elasticModulusPa": 1500000000,
+    "strengthPa": 30000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -218,8 +218,8 @@
     "densityKgM3": 1900,
     "conductivityWmK": 0.3,
     "specificHeatJKgK": 1000,
-    "elasticModulusPa": 50000000.0,
-    "strengthPa": 15000000.0,
+    "elasticModulusPa": 50000000,
+    "strengthPa": 15000000,
     "source": "authored-estimate",
     "reference": "en-50525-2-11"
    },
@@ -234,8 +234,8 @@
     "densityKgM3": 130,
     "conductivityWmK": 0.065,
     "specificHeatJKgK": 1340,
-    "elasticModulusPa": 300000000.0,
-    "strengthPa": 3000000.0,
+    "elasticModulusPa": 300000000,
+    "strengthPa": 3000000,
     "source": "authored-estimate",
     "reference": "iso-10456-2007"
    },
@@ -250,8 +250,8 @@
     "densityKgM3": 7800,
     "conductivityWmK": 40,
     "specificHeatJKgK": 450,
-    "elasticModulusPa": 200000000000.0,
-    "strengthPa": 200000000.0,
+    "elasticModulusPa": 200000000000,
+    "strengthPa": 200000000,
     "source": "authored-estimate",
     "reference": "iec-60335-2-25"
    }
@@ -267,8 +267,8 @@
       "en": "Floor reference",
       "de": "Bodenbezug"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0,
      "joint": {
@@ -283,7 +283,7 @@
       "de": "Wellpappenunterlage unter dem Gerät"
      },
      "x": -0.02,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0.48000000000000004,
      "joint": {
@@ -302,7 +302,7 @@
      },
      "section": {
       "areaM2": 0.00316,
-      "secondMomentM4": 1.6853e-08,
+      "secondMomentM4": 1.6853e-8,
       "extremeFibreM": 0.004,
       "material": "corrugated-board",
       "title": {
@@ -318,7 +318,7 @@
       "en": "Lift of the oven off its base",
       "de": "Anheben des Geräts von seiner Unterlage"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.008,
      "angleDeg": 0,
      "lengthM": 0,
@@ -336,8 +336,8 @@
       "en": "Housing, tilt about the lower left edge",
       "de": "Gehäuse, Neigung um die untere linke Kante"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0.44,
      "joint": {
@@ -355,7 +355,7 @@
      },
      "section": {
       "areaM2": 0.000546,
-      "secondMomentM4": 5.7978e-06,
+      "secondMomentM4": 0.0000057978,
       "extremeFibreM": 0.1235,
       "material": "painted-steel",
       "title": {
@@ -371,7 +371,7 @@
       "en": "Base pan with the transformer",
       "de": "Bodenwanne mit dem Transformator"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.0105,
      "angleDeg": 0,
      "lengthM": 0.44,
@@ -414,7 +414,7 @@
      "mass": {
       "kg": 0.291,
       "comX": 0.1235,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "iec-60705"
@@ -447,7 +447,7 @@
      "mass": {
       "kg": 0.291,
       "comX": 0.1235,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "iec-60705"
@@ -480,7 +480,7 @@
      "mass": {
       "kg": 0.517,
       "comX": 0.2195,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "iec-60705"
@@ -520,7 +520,7 @@
      },
      "section": {
       "areaM2": 0.0005075,
-      "secondMomentM4": 4.1299e-06,
+      "secondMomentM4": 0.0000041299,
       "extremeFibreM": 0.1065,
       "material": "cavity-paint",
       "title": {
@@ -547,14 +547,14 @@
      "mass": {
       "kg": 0.536,
       "comX": 0.1305,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "iec-60705"
      },
      "section": {
       "areaM2": 0.00075,
-      "secondMomentM4": 1.2378e-06,
+      "secondMomentM4": 0.0000012378,
       "extremeFibreM": 0.06,
       "material": "abs-aged",
       "title": {
@@ -570,7 +570,7 @@
       "en": "Door, hinged on the left at the front of the housing",
       "de": "Tür, links an der Gehäusefront angeschlagen"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.0115,
      "z": -0.135,
      "angleDeg": 90,
@@ -592,7 +592,7 @@
      },
      "section": {
       "areaM2": 0.0017425,
-      "secondMomentM4": 1.7207e-05,
+      "secondMomentM4": 0.000017207,
       "extremeFibreM": 0.159,
       "material": "abs-aged",
       "title": {
@@ -609,7 +609,7 @@
       "de": "Drehteller aus Glas auf seinem Rollenring"
      },
      "x": 0.1575,
-     "y": 0.0,
+     "y": 0,
      "z": 0.0125,
      "angleDeg": 90,
      "lengthM": 0.027,
@@ -620,14 +620,14 @@
      "mass": {
       "kg": 0.582,
       "comX": 0.0167,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "iec-60705"
      },
      "section": {
       "areaM2": 0.001225,
-      "secondMomentM4": 2.5521e-09,
+      "secondMomentM4": 2.5521e-9,
       "extremeFibreM": 0.0025,
       "material": "borosilicate",
       "title": {
@@ -655,8 +655,8 @@
      },
      "mass": {
       "kg": 0.013,
-      "comX": 0.0,
-      "comY": 0.0,
+      "comX": 0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "iec-60705"
@@ -681,8 +681,8 @@
      },
      "mass": {
       "kg": 0.016,
-      "comX": 0.0,
-      "comY": 0.0,
+      "comX": 0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "iec-60705"
@@ -712,7 +712,7 @@
       "reference": "iec-60705"
      },
      "section": {
-      "areaM2": 2.8274e-05,
+      "areaM2": 0.000028274,
       "secondMomentM4": 6.3617e-11,
       "extremeFibreM": 0.003,
       "material": "pvc-cord",
@@ -729,7 +729,7 @@
     "id": "foot-left",
     "bone": "housing",
     "x": 0.035,
-    "y": 0.0,
+    "y": 0,
     "z": 0.015,
     "kind": "contact",
     "title": {
@@ -746,7 +746,7 @@
     "id": "foot-right",
     "bone": "housing",
     "x": 0.405,
-    "y": 0.0,
+    "y": 0,
     "z": 0.015,
     "kind": "contact",
     "title": {
@@ -762,7 +762,7 @@
    {
     "id": "grip-left",
     "bone": "housing",
-    "x": 0.0,
+    "x": 0,
     "y": 0.01,
     "z": 0.015,
     "kind": "support",
@@ -793,7 +793,7 @@
     "id": "pad-floor",
     "bone": "pad",
     "x": 0.24,
-    "y": 0.0,
+    "y": 0,
     "z": 0.0075,
     "kind": "contact",
     "title": {
@@ -845,8 +845,8 @@
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.48,
        "h": 0.008,
        "region": "pad",
@@ -861,7 +861,7 @@
        "tone": 0.15,
        "kind": "rect",
        "x": 0.023,
-       "y": 0.0,
+       "y": 0,
        "w": 0.024,
        "h": 0.01,
        "region": "casing",
@@ -876,7 +876,7 @@
        "tone": 0.15,
        "kind": "rect",
        "x": 0.393,
-       "y": 0.0,
+       "y": 0,
        "w": 0.024,
        "h": 0.01,
        "region": "casing",
@@ -890,7 +890,7 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0005,
        "w": 0.44,
        "h": 0.001,
@@ -905,7 +905,7 @@
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.00025,
        "w": 0.247,
        "h": 0.0005,
@@ -920,7 +920,7 @@
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.00025,
        "w": 0.247,
        "h": 0.0005,
@@ -935,7 +935,7 @@
        "filled": true,
        "tone": 0.9,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.00025,
        "w": 0.439,
        "h": 0.0005,
@@ -995,7 +995,7 @@
        "points": [
         [
          0.012,
-         0.0
+         0
         ],
         [
          0.012,
@@ -1015,7 +1015,7 @@
         ],
         [
          0.017,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -1040,11 +1040,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          -0.011
         ],
         [
@@ -1053,7 +1053,7 @@
         ],
         [
          0.012,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -1072,7 +1072,7 @@
        "id": "door-frame",
        "bone": "door",
        "role": "body",
-       "z": 7.0,
+       "z": 7,
        "filled": true,
        "tone": 0.92,
        "kind": "path",
@@ -1115,7 +1115,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.009,
        "w": 0.015,
        "h": 0.008,
@@ -1157,7 +1157,7 @@
        "filled": true,
        "tone": 0.9,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 0.247,
        "h": 0.12,
@@ -1183,14 +1183,14 @@
        "id": "knob-power",
        "bone": "knob-power",
        "role": "body",
-       "z": 8.0,
+       "z": 8,
        "filled": true,
        "tone": 0.12,
        "kind": "poly",
        "points": [
         [
          0.016,
-         0.0
+         0
         ],
         [
          0.015455,
@@ -1213,7 +1213,7 @@
          0.015455
         ],
         [
-         0.0,
+         0,
          0.016
         ],
         [
@@ -1238,7 +1238,7 @@
         ],
         [
          -0.016,
-         0.0
+         0
         ],
         [
          -0.015455,
@@ -1261,7 +1261,7 @@
          -0.015455
         ],
         [
-         0.0,
+         0,
          -0.016
         ],
         [
@@ -1299,14 +1299,14 @@
        "id": "knob-timer",
        "bone": "knob-timer",
        "role": "body",
-       "z": 8.0,
+       "z": 8,
        "filled": true,
        "tone": 0.85,
        "kind": "poly",
        "points": [
         [
          0.019,
-         0.0
+         0
         ],
         [
          0.018353,
@@ -1329,7 +1329,7 @@
          0.018353
         ],
         [
-         0.0,
+         0,
          0.019
         ],
         [
@@ -1354,7 +1354,7 @@
         ],
         [
          -0.019,
-         0.0
+         0
         ],
         [
          -0.018353,
@@ -1377,7 +1377,7 @@
          -0.018353
         ],
         [
-         0.0,
+         0,
          -0.019
         ],
         [
@@ -1434,7 +1434,7 @@
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.003,
        "w": 0.283,
        "h": 0.006,
@@ -2025,7 +2025,7 @@
        "tone": 0.62,
        "kind": "rect",
        "x": -0.19,
-       "y": 0.0,
+       "y": 0,
        "w": 0.395,
        "h": 0.008,
        "region": "pad",
@@ -2038,13 +2038,34 @@
        "z": 6.17,
        "filled": true,
        "tone": 0.15,
-       "kind": "rect",
-       "x": -0.117,
-       "y": 0.008,
-       "w": 0.024,
-       "h": 0.01,
        "region": "casing",
-       "material": "pp-plastic"
+       "material": "pp-plastic",
+       "kind": "poly",
+       "points": [
+        [
+         0.393,
+         0
+        ],
+        [
+         0.417,
+         0
+        ],
+        [
+         0.417,
+         0.01
+        ],
+        [
+         0.393,
+         0.01
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.117,
+        "z1": -0.093
+       }
       },
       {
        "id": "foot-4",
@@ -2053,13 +2074,34 @@
        "z": 6.17,
        "filled": true,
        "tone": 0.15,
-       "kind": "rect",
-       "x": 0.123,
-       "y": 0.008,
-       "w": 0.024,
-       "h": 0.01,
        "region": "casing",
-       "material": "pp-plastic"
+       "material": "pp-plastic",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.123
+        ],
+        [
+         0,
+         0.147
+        ],
+        [
+         0.01,
+         0.147
+        ],
+        [
+         0.01,
+         0.123
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.415,
+        "z1": 0.417
+       }
       },
       {
        "id": "base",
@@ -2068,13 +2110,34 @@
        "z": 6.4,
        "filled": true,
        "tone": 0.5,
-       "kind": "rect",
-       "x": -0.135,
-       "y": 0.018,
-       "w": 0.3,
-       "h": 0.001,
        "region": "casing",
-       "material": "galv-steel"
+       "material": "galv-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.0005
+        ],
+        [
+         0.44,
+         -0.0005
+        ],
+        [
+         0.44,
+         0.0005
+        ],
+        [
+         0,
+         0.0005
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.135,
+        "z1": 0.165
+       }
       },
       {
        "id": "side-l",
@@ -2083,13 +2146,34 @@
        "z": 2.005,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": -0.135,
-       "y": 0.019,
-       "w": 0.3,
-       "h": 0.247,
        "region": "casing",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.00025
+        ],
+        [
+         0.247,
+         -0.00025
+        ],
+        [
+         0.247,
+         0.00025
+        ],
+        [
+         0,
+         0.00025
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.135,
+        "z1": 0.165
+       }
       },
       {
        "id": "side-r",
@@ -2098,13 +2182,34 @@
        "z": 6.4,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": -0.135,
-       "y": 0.019,
-       "w": 0.3,
-       "h": 0.247,
        "region": "casing",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.00025
+        ],
+        [
+         0.247,
+         -0.00025
+        ],
+        [
+         0.247,
+         0.00025
+        ],
+        [
+         0,
+         0.00025
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.135,
+        "z1": 0.165
+       }
       },
       {
        "id": "top",
@@ -2113,13 +2218,34 @@
        "z": 6.395,
        "filled": true,
        "tone": 0.9,
-       "kind": "rect",
-       "x": -0.135,
-       "y": 0.2655,
-       "w": 0.3,
-       "h": 0.0005,
        "region": "casing",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.00025
+        ],
+        [
+         0.439,
+         -0.00025
+        ],
+        [
+         0.439,
+         0.00025
+        ],
+        [
+         0,
+         0.00025
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.135,
+        "z1": 0.165
+       }
       },
       {
        "id": "back",
@@ -2128,13 +2254,34 @@
        "z": 6.395,
        "filled": true,
        "tone": 0.8,
-       "kind": "rect",
-       "x": 0.1645,
-       "y": 0.019,
-       "w": 0.0005,
-       "h": 0.2465,
        "region": "casing",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         0.011
+        ],
+        [
+         0.4395,
+         0.011
+        ],
+        [
+         0.4395,
+         0.2575
+        ],
+        [
+         0.0005,
+         0.2575
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1645,
+        "z1": 0.165
+       }
       },
       {
        "id": "liner",
@@ -2143,13 +2290,34 @@
        "z": 5.255,
        "filled": true,
        "tone": 0.72,
-       "kind": "rect",
-       "x": -0.135,
-       "y": 0.0355,
-       "w": 0.295,
-       "h": 0.213,
        "region": "cavity",
-       "material": "cavity-paint"
+       "material": "cavity-paint",
+       "kind": "poly",
+       "points": [
+        [
+         -0.0005,
+         -0.135
+        ],
+        [
+         -0.0005,
+         0.16
+        ],
+        [
+         0.2125,
+         0.16
+        ],
+        [
+         0.2125,
+         -0.135
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": -0.0005,
+        "z1": 0.3155
+       }
       },
       {
        "id": "liner-back",
@@ -2158,13 +2326,34 @@
        "z": 5.255,
        "filled": true,
        "tone": 0.66,
-       "kind": "rect",
-       "x": 0.16,
-       "y": 0.0355,
-       "w": 0.0005,
-       "h": 0.213,
        "region": "cavity",
-       "material": "cavity-paint"
+       "material": "cavity-paint",
+       "kind": "poly",
+       "points": [
+        [
+         -0.0005,
+         -0.0005
+        ],
+        [
+         0.3155,
+         -0.0005
+        ],
+        [
+         0.3155,
+         0.2125
+        ],
+        [
+         -0.0005,
+         0.2125
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.16,
+        "z1": 0.1605
+       }
       },
       {
        "id": "plate",
@@ -2177,7 +2366,7 @@
        "points": [
         [
          0.012,
-         0.0
+         0
         ],
         [
          0.012,
@@ -2197,7 +2386,7 @@
         ],
         [
          0.017,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -2222,11 +2411,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          -0.011
         ],
         [
@@ -2235,7 +2424,7 @@
         ],
         [
          0.012,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -2254,7 +2443,7 @@
        "id": "door-frame",
        "bone": "door",
        "role": "body",
-       "z": 7.0,
+       "z": 7,
        "filled": true,
        "tone": 0.92,
        "kind": "path",
@@ -2297,7 +2486,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.009,
        "w": 0.015,
        "h": 0.008,
@@ -2338,13 +2527,34 @@
        "z": 6.4,
        "filled": true,
        "tone": 0.9,
-       "kind": "rect",
-       "x": -0.17,
-       "y": 0.019,
-       "w": 0.035,
-       "h": 0.247,
        "region": "panel",
-       "material": "abs-aged"
+       "material": "abs-aged",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.06
+        ],
+        [
+         0.247,
+         -0.06
+        ],
+        [
+         0.247,
+         0.06
+        ],
+        [
+         0,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.135
+       }
       },
       {
        "id": "button",
@@ -2353,13 +2563,34 @@
        "z": 6.1,
        "filled": true,
        "tone": 0.75,
-       "kind": "rect",
-       "x": -0.178,
-       "y": 0.048,
-       "w": 0.008,
-       "h": 0.022,
        "region": "panel",
-       "material": "abs-aged"
+       "material": "abs-aged",
+       "kind": "poly",
+       "points": [
+        [
+         0.029,
+         -0.03
+        ],
+        [
+         0.051,
+         -0.03
+        ],
+        [
+         0.051,
+         0.03
+        ],
+        [
+         0.029,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.178,
+        "z1": -0.17
+       }
       },
       {
        "id": "knob-power",
@@ -2372,7 +2603,7 @@
        "points": [
         [
          0.016,
-         0.0
+         0
         ],
         [
          0.015455,
@@ -2395,7 +2626,7 @@
          0.015455
         ],
         [
-         0.0,
+         0,
          0.016
         ],
         [
@@ -2420,7 +2651,7 @@
         ],
         [
          -0.016,
-         0.0
+         0
         ],
         [
          -0.015455,
@@ -2443,7 +2674,7 @@
          -0.015455
         ],
         [
-         0.0,
+         0,
          -0.016
         ],
         [
@@ -2488,7 +2719,7 @@
        "points": [
         [
          0.019,
-         0.0
+         0
         ],
         [
          0.018353,
@@ -2511,7 +2742,7 @@
          0.018353
         ],
         [
-         0.0,
+         0,
          0.019
         ],
         [
@@ -2536,7 +2767,7 @@
         ],
         [
          -0.019,
-         0.0
+         0
         ],
         [
          -0.018353,
@@ -2559,7 +2790,7 @@
          -0.018353
         ],
         [
-         0.0,
+         0,
          -0.019
         ],
         [
@@ -2600,13 +2831,34 @@
        "z": 3.12,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": 0.171,
-       "y": 0.008,
-       "w": 0.028,
-       "h": 0.028,
        "region": "casing",
-       "material": "pvc-cord"
+       "material": "pvc-cord",
+       "kind": "poly",
+       "points": [
+        [
+         -0.052,
+         -0.003
+        ],
+        [
+         0,
+         -0.003
+        ],
+        [
+         0,
+         0.025
+        ],
+        [
+         -0.052,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.171,
+        "z1": 0.199
+       }
       },
       {
        "id": "cord-drop",
@@ -2615,15 +2867,122 @@
        "z": 6.045,
        "filled": true,
        "tone": 0.88,
-       "kind": "capsule",
-       "x0": 0.1665,
-       "y0": 0.036,
-       "x1": 0.185,
-       "y1": 0.0135,
-       "r0": 0.0045,
-       "r1": 0.0035,
        "region": "casing",
-       "material": "pvc-cord"
+       "material": "pvc-cord",
+       "kind": "poly",
+       "points": [
+        [
+         0.000186,
+         -0.002626
+        ],
+        [
+         -0.000404,
+         -0.001954
+        ],
+        [
+         -0.000804,
+         -0.001155
+        ],
+        [
+         -0.000989,
+         -0.00028
+        ],
+        [
+         -0.000946,
+         0.000613
+        ],
+        [
+         -0.000678,
+         0.001466
+        ],
+        [
+         -0.000203,
+         0.002223
+        ],
+        [
+         0.000448,
+         0.002835
+        ],
+        [
+         0.001233,
+         0.003263
+        ],
+        [
+         0.0021,
+         0.003477
+        ],
+        [
+         0.002994,
+         0.003465
+        ],
+        [
+         0.003856,
+         0.003227
+        ],
+        [
+         0.004629,
+         0.002778
+        ],
+        [
+         0.027737,
+         -0.014928
+        ],
+        [
+         0.028584,
+         -0.015779
+        ],
+        [
+         0.029176,
+         -0.016823
+        ],
+        [
+         0.029471,
+         -0.017986
+        ],
+        [
+         0.029447,
+         -0.019186
+        ],
+        [
+         0.029108,
+         -0.020337
+        ],
+        [
+         0.028476,
+         -0.021358
+        ],
+        [
+         0.027597,
+         -0.022175
+        ],
+        [
+         0.026533,
+         -0.022731
+        ],
+        [
+         0.02536,
+         -0.022986
+        ],
+        [
+         0.024161,
+         -0.022921
+        ],
+        [
+         0.023023,
+         -0.022542
+        ],
+        [
+         0.022024,
+         -0.021876
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.281,
+        "z1": 0.283
+       }
       },
       {
        "id": "vent-slot-1",
@@ -2632,11 +2991,32 @@
        "z": 6.5,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.06,
-       "y": 0.158,
-       "w": 0.012,
-       "h": 0.08
+       "kind": "poly",
+       "points": [
+        [
+         0.139,
+         -0.06
+        ],
+        [
+         0.139,
+         -0.048
+        ],
+        [
+         0.219,
+         -0.048
+        ],
+        [
+         0.219,
+         -0.06
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.00025,
+        "z1": 0.00175
+       }
       },
       {
        "id": "vent-slot-2",
@@ -2645,11 +3025,32 @@
        "z": 6.5,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.038,
-       "y": 0.158,
-       "w": 0.012,
-       "h": 0.08
+       "kind": "poly",
+       "points": [
+        [
+         0.139,
+         -0.038
+        ],
+        [
+         0.139,
+         -0.026
+        ],
+        [
+         0.219,
+         -0.026
+        ],
+        [
+         0.219,
+         -0.038
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.00025,
+        "z1": 0.00175
+       }
       },
       {
        "id": "vent-slot-3",
@@ -2658,11 +3059,32 @@
        "z": 6.5,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.016,
-       "y": 0.158,
-       "w": 0.012,
-       "h": 0.08
+       "kind": "poly",
+       "points": [
+        [
+         0.139,
+         -0.016
+        ],
+        [
+         0.139,
+         -0.004
+        ],
+        [
+         0.219,
+         -0.004
+        ],
+        [
+         0.219,
+         -0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.00025,
+        "z1": 0.00175
+       }
       },
       {
        "id": "vent-slot-4",
@@ -2671,11 +3093,32 @@
        "z": 6.5,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": 0.006,
-       "y": 0.158,
-       "w": 0.012,
-       "h": 0.08
+       "kind": "poly",
+       "points": [
+        [
+         0.139,
+         0.006
+        ],
+        [
+         0.139,
+         0.018
+        ],
+        [
+         0.219,
+         0.018
+        ],
+        [
+         0.219,
+         0.006
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.00025,
+        "z1": 0.00175
+       }
       },
       {
        "id": "vent-slot-5",
@@ -2684,11 +3127,32 @@
        "z": 6.5,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": 0.028,
-       "y": 0.158,
-       "w": 0.012,
-       "h": 0.08
+       "kind": "poly",
+       "points": [
+        [
+         0.139,
+         0.028
+        ],
+        [
+         0.139,
+         0.04
+        ],
+        [
+         0.219,
+         0.04
+        ],
+        [
+         0.219,
+         0.028
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.00025,
+        "z1": 0.00175
+       }
       },
       {
        "id": "vent-slot-6",
@@ -2697,11 +3161,32 @@
        "z": 6.5,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": 0.05,
-       "y": 0.158,
-       "w": 0.012,
-       "h": 0.08
+       "kind": "poly",
+       "points": [
+        [
+         0.139,
+         0.05
+        ],
+        [
+         0.139,
+         0.062
+        ],
+        [
+         0.219,
+         0.062
+        ],
+        [
+         0.219,
+         0.05
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.00025,
+        "z1": 0.00175
+       }
       },
       {
        "id": "side-dent",
@@ -2710,11 +3195,144 @@
        "z": 6.5,
        "filled": false,
        "tone": 0.4,
-       "kind": "ellipse",
-       "cx": 0.11,
-       "cy": 0.088,
-       "rx": 0.018,
-       "ry": 0.012
+       "kind": "poly",
+       "points": [
+        [
+         0.069,
+         0.128
+        ],
+        [
+         0.071341,
+         0.127654
+        ],
+        [
+         0.073592,
+         0.12663
+        ],
+        [
+         0.075667,
+         0.124966
+        ],
+        [
+         0.077485,
+         0.122728
+        ],
+        [
+         0.078978,
+         0.12
+        ],
+        [
+         0.080087,
+         0.116888
+        ],
+        [
+         0.080769,
+         0.113512
+        ],
+        [
+         0.081,
+         0.11
+        ],
+        [
+         0.080769,
+         0.106488
+        ],
+        [
+         0.080087,
+         0.103112
+        ],
+        [
+         0.078978,
+         0.1
+        ],
+        [
+         0.077485,
+         0.097272
+        ],
+        [
+         0.075667,
+         0.095034
+        ],
+        [
+         0.073592,
+         0.09337
+        ],
+        [
+         0.071341,
+         0.092346
+        ],
+        [
+         0.069,
+         0.092
+        ],
+        [
+         0.066659,
+         0.092346
+        ],
+        [
+         0.064408,
+         0.09337
+        ],
+        [
+         0.062333,
+         0.095034
+        ],
+        [
+         0.060515,
+         0.097272
+        ],
+        [
+         0.059022,
+         0.1
+        ],
+        [
+         0.057913,
+         0.103112
+        ],
+        [
+         0.057231,
+         0.106488
+        ],
+        [
+         0.057,
+         0.11
+        ],
+        [
+         0.057231,
+         0.113512
+        ],
+        [
+         0.057913,
+         0.116888
+        ],
+        [
+         0.059022,
+         0.12
+        ],
+        [
+         0.060515,
+         0.122728
+        ],
+        [
+         0.062333,
+         0.124966
+        ],
+        [
+         0.064408,
+         0.12663
+        ],
+        [
+         0.066659,
+         0.127654
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.00025,
+        "z1": 0.00175
+       }
       }
      ],
      "plan": [
@@ -2740,13 +3358,34 @@
        "z": 2.19,
        "filled": true,
        "tone": 0.5,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.135,
-       "w": 0.44,
-       "h": 0.3,
        "region": "casing",
-       "material": "galv-steel"
+       "material": "galv-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.0005
+        ],
+        [
+         0.44,
+         -0.0005
+        ],
+        [
+         0.44,
+         0.0005
+        ],
+        [
+         0,
+         0.0005
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.135,
+        "z1": 0.165
+       }
       },
       {
        "id": "side-l",
@@ -2755,13 +3394,34 @@
        "z": 4.66,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.135,
-       "w": 0.0005,
-       "h": 0.3,
        "region": "casing",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.00025
+        ],
+        [
+         0.247,
+         -0.00025
+        ],
+        [
+         0.247,
+         0.00025
+        ],
+        [
+         0,
+         0.00025
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.135,
+        "z1": 0.165
+       }
       },
       {
        "id": "side-r",
@@ -2770,13 +3430,34 @@
        "z": 4.66,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": 0.4395,
-       "y": -0.135,
-       "w": 0.0005,
-       "h": 0.3,
        "region": "casing",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.00025
+        ],
+        [
+         0.247,
+         -0.00025
+        ],
+        [
+         0.247,
+         0.00025
+        ],
+        [
+         0,
+         0.00025
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.135,
+        "z1": 0.165
+       }
       },
       {
        "id": "top",
@@ -2785,13 +3466,34 @@
        "z": 4.66,
        "filled": true,
        "tone": 0.9,
-       "kind": "rect",
-       "x": 0.0005,
-       "y": -0.135,
-       "w": 0.439,
-       "h": 0.3,
        "region": "casing",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.00025
+        ],
+        [
+         0.439,
+         -0.00025
+        ],
+        [
+         0.439,
+         0.00025
+        ],
+        [
+         0,
+         0.00025
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.135,
+        "z1": 0.165
+       }
       },
       {
        "id": "back",
@@ -2800,13 +3502,34 @@
        "z": 4.655,
        "filled": true,
        "tone": 0.8,
-       "kind": "rect",
-       "x": 0.0005,
-       "y": 0.1645,
-       "w": 0.439,
-       "h": 0.0005,
        "region": "casing",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         0.011
+        ],
+        [
+         0.4395,
+         0.011
+        ],
+        [
+         0.4395,
+         0.2575
+        ],
+        [
+         0.0005,
+         0.2575
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1645,
+        "z1": 0.165
+       }
       },
       {
        "id": "liner",
@@ -2815,13 +3538,34 @@
        "z": 4.405,
        "filled": true,
        "tone": 0.72,
-       "kind": "rect",
-       "x": 0.0095,
-       "y": -0.135,
-       "w": 0.316,
-       "h": 0.295,
        "region": "cavity",
-       "material": "cavity-paint"
+       "material": "cavity-paint",
+       "kind": "poly",
+       "points": [
+        [
+         -0.0005,
+         -0.135
+        ],
+        [
+         0.3155,
+         -0.135
+        ],
+        [
+         0.3155,
+         0.16
+        ],
+        [
+         -0.0005,
+         0.16
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0005,
+        "z1": 0.2125
+       }
       },
       {
        "id": "liner-back",
@@ -2830,13 +3574,34 @@
        "z": 4.485,
        "filled": true,
        "tone": 0.66,
-       "kind": "rect",
-       "x": 0.0095,
-       "y": 0.16,
-       "w": 0.316,
-       "h": 0.0005,
        "region": "cavity",
-       "material": "cavity-paint"
+       "material": "cavity-paint",
+       "kind": "poly",
+       "points": [
+        [
+         -0.0005,
+         -0.0005
+        ],
+        [
+         0.3155,
+         -0.0005
+        ],
+        [
+         0.3155,
+         0.2125
+        ],
+        [
+         -0.0005,
+         0.2125
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.16,
+        "z1": 0.1605
+       }
       },
       {
        "id": "plate",
@@ -2849,7 +3614,7 @@
        "points": [
         [
          0.012,
-         0.0
+         0
         ],
         [
          0.012,
@@ -2869,7 +3634,7 @@
         ],
         [
          0.017,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -2894,11 +3659,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          -0.011
         ],
         [
@@ -2907,7 +3672,7 @@
         ],
         [
          0.012,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -2926,7 +3691,7 @@
        "id": "door-frame",
        "bone": "door",
        "role": "body",
-       "z": 7.0,
+       "z": 7,
        "filled": true,
        "tone": 0.92,
        "kind": "path",
@@ -2969,7 +3734,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.009,
        "w": 0.015,
        "h": 0.008,
@@ -3010,13 +3775,34 @@
        "z": 4.66,
        "filled": true,
        "tone": 0.9,
-       "kind": "rect",
-       "x": 0.32,
-       "y": -0.17,
-       "w": 0.12,
-       "h": 0.035,
        "region": "panel",
-       "material": "abs-aged"
+       "material": "abs-aged",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.06
+        ],
+        [
+         0.247,
+         -0.06
+        ],
+        [
+         0.247,
+         0.06
+        ],
+        [
+         0,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.135
+       }
       },
       {
        "id": "button",
@@ -3025,13 +3811,34 @@
        "z": 2.7,
        "filled": true,
        "tone": 0.75,
-       "kind": "rect",
-       "x": 0.35,
-       "y": -0.178,
-       "w": 0.06,
-       "h": 0.008,
        "region": "panel",
-       "material": "abs-aged"
+       "material": "abs-aged",
+       "kind": "poly",
+       "points": [
+        [
+         0.029,
+         -0.03
+        ],
+        [
+         0.051,
+         -0.03
+        ],
+        [
+         0.051,
+         0.03
+        ],
+        [
+         0.029,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.178,
+        "z1": -0.17
+       }
       },
       {
        "id": "knob-power",
@@ -3044,7 +3851,7 @@
        "points": [
         [
          0.016,
-         0.0
+         0
         ],
         [
          0.015455,
@@ -3067,7 +3874,7 @@
          0.015455
         ],
         [
-         0.0,
+         0,
          0.016
         ],
         [
@@ -3092,7 +3899,7 @@
         ],
         [
          -0.016,
-         0.0
+         0
         ],
         [
          -0.015455,
@@ -3115,7 +3922,7 @@
          -0.015455
         ],
         [
-         0.0,
+         0,
          -0.016
         ],
         [
@@ -3160,7 +3967,7 @@
        "points": [
         [
          0.019,
-         0.0
+         0
         ],
         [
          0.018353,
@@ -3183,7 +3990,7 @@
          0.018353
         ],
         [
-         0.0,
+         0,
          0.019
         ],
         [
@@ -3208,7 +4015,7 @@
         ],
         [
          -0.019,
-         0.0
+         0
         ],
         [
          -0.018353,
@@ -3231,7 +4038,7 @@
          -0.018353
         ],
         [
-         0.0,
+         0,
          -0.019
         ],
         [
@@ -3272,13 +4079,34 @@
        "z": 2.36,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": 0.06,
-       "y": 0.171,
-       "w": 0.052,
-       "h": 0.028,
        "region": "casing",
-       "material": "pvc-cord"
+       "material": "pvc-cord",
+       "kind": "poly",
+       "points": [
+        [
+         -0.052,
+         -0.003
+        ],
+        [
+         0,
+         -0.003
+        ],
+        [
+         0,
+         0.025
+        ],
+        [
+         -0.052,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.171,
+        "z1": 0.199
+       }
       },
       {
        "id": "cord-run",
@@ -3287,13 +4115,34 @@
        "z": 2.06,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": 0.112,
-       "y": 0.182,
-       "w": 0.283,
-       "h": 0.006,
        "region": "casing",
-       "material": "pvc-cord"
+       "material": "pvc-cord",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.003
+        ],
+        [
+         0.283,
+         -0.003
+        ],
+        [
+         0.283,
+         0.003
+        ],
+        [
+         0,
+         0.003
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.182,
+        "z1": 0.188
+       }
       },
       {
        "id": "cord-drop",
@@ -3302,13 +4151,34 @@
        "z": 2.325,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": 0.3925,
-       "y": 0.162,
-       "w": 0.012,
-       "h": 0.0265,
        "region": "casing",
-       "material": "pvc-cord"
+       "material": "pvc-cord",
+       "kind": "poly",
+       "points": [
+        [
+         0.2805,
+         -0.023
+        ],
+        [
+         0.2925,
+         -0.023
+        ],
+        [
+         0.2925,
+         0.0035
+        ],
+        [
+         0.2805,
+         0.0035
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.001,
+        "z1": 0.003
+       }
       },
       {
        "id": "cord-tape",
@@ -3317,11 +4187,32 @@
        "z": 2.07,
        "filled": true,
        "tone": 0.2,
-       "kind": "rect",
-       "x": 0.25,
-       "y": 0.1813,
-       "w": 0.022,
-       "h": 0.0074
+       "kind": "poly",
+       "points": [
+        [
+         0.138,
+         -0.0037
+        ],
+        [
+         0.16,
+         -0.0037
+        ],
+        [
+         0.16,
+         0.0037
+        ],
+        [
+         0.138,
+         0.0037
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.001,
+        "z1": 0.003
+       }
       },
       {
        "id": "price-sticker",
@@ -3330,11 +4221,32 @@
        "z": 4.68,
        "filled": true,
        "tone": 0.97,
-       "kind": "rect",
-       "x": 0.25,
-       "y": -0.09,
-       "w": 0.07,
-       "h": 0.05
+       "kind": "poly",
+       "points": [
+        [
+         0.2495,
+         -0.09
+        ],
+        [
+         0.3195,
+         -0.09
+        ],
+        [
+         0.3195,
+         -0.04
+        ],
+        [
+         0.2495,
+         -0.04
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.00175,
+        "z1": 0.00025
+       }
       },
       {
        "id": "sticker-line",
@@ -3363,11 +4275,144 @@
        "z": 4.68,
        "filled": false,
        "tone": 0.4,
-       "kind": "ellipse",
-       "cx": 0.11,
-       "cy": 0.07,
-       "rx": 0.025,
-       "ry": 0.015
+       "kind": "poly",
+       "points": [
+        [
+         0.1345,
+         0.07
+        ],
+        [
+         0.13402,
+         0.072926
+        ],
+        [
+         0.132597,
+         0.07574
+        ],
+        [
+         0.130287,
+         0.078334
+        ],
+        [
+         0.127178,
+         0.080607
+        ],
+        [
+         0.123389,
+         0.082472
+        ],
+        [
+         0.119067,
+         0.083858
+        ],
+        [
+         0.114377,
+         0.084712
+        ],
+        [
+         0.1095,
+         0.085
+        ],
+        [
+         0.104623,
+         0.084712
+        ],
+        [
+         0.099933,
+         0.083858
+        ],
+        [
+         0.095611,
+         0.082472
+        ],
+        [
+         0.091822,
+         0.080607
+        ],
+        [
+         0.088713,
+         0.078334
+        ],
+        [
+         0.086403,
+         0.07574
+        ],
+        [
+         0.08498,
+         0.072926
+        ],
+        [
+         0.0845,
+         0.07
+        ],
+        [
+         0.08498,
+         0.067074
+        ],
+        [
+         0.086403,
+         0.06426
+        ],
+        [
+         0.088713,
+         0.061666
+        ],
+        [
+         0.091822,
+         0.059393
+        ],
+        [
+         0.095611,
+         0.057528
+        ],
+        [
+         0.099933,
+         0.056142
+        ],
+        [
+         0.104623,
+         0.055288
+        ],
+        [
+         0.1095,
+         0.055
+        ],
+        [
+         0.114377,
+         0.055288
+        ],
+        [
+         0.119067,
+         0.056142
+        ],
+        [
+         0.123389,
+         0.057528
+        ],
+        [
+         0.127178,
+         0.059393
+        ],
+        [
+         0.130287,
+         0.061666
+        ],
+        [
+         0.132597,
+         0.06426
+        ],
+        [
+         0.13402,
+         0.067074
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.00175,
+        "z1": 0.00025
+       }
       },
       {
        "id": "top-scratch-1",
@@ -3404,7 +4449,7 @@
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -3471,8 +4516,8 @@
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.48,
        "h": 0.008,
        "region": "pad",
@@ -3487,7 +4532,7 @@
        "tone": 0.15,
        "kind": "rect",
        "x": 0.023,
-       "y": 0.0,
+       "y": 0,
        "w": 0.024,
        "h": 0.01,
        "region": "casing",
@@ -3502,7 +4547,7 @@
        "tone": 0.15,
        "kind": "rect",
        "x": 0.393,
-       "y": 0.0,
+       "y": 0,
        "w": 0.024,
        "h": 0.01,
        "region": "casing",
@@ -3516,7 +4561,7 @@
        "filled": true,
        "tone": 0.86,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.01,
        "w": 0.44,
        "h": 0.248,
@@ -3534,7 +4579,7 @@
        "points": [
         [
          -0.004,
-         0.0
+         0
         ],
         [
          -0.004,
@@ -3562,7 +4607,7 @@
         ],
         [
          0.017,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3581,7 +4626,7 @@
        "id": "door-frame",
        "bone": "door",
        "role": "body",
-       "z": 7.0,
+       "z": 7,
        "filled": true,
        "tone": 0.92,
        "kind": "path",
@@ -3624,7 +4669,7 @@
        "filled": true,
        "tone": 0.9,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 0.247,
        "h": 0.12,
@@ -3635,14 +4680,14 @@
        "id": "knob-power",
        "bone": "knob-power",
        "role": "body",
-       "z": 8.0,
+       "z": 8,
        "filled": true,
        "tone": 0.12,
        "kind": "poly",
        "points": [
         [
          0.016,
-         0.0
+         0
         ],
         [
          0.015455,
@@ -3665,7 +4710,7 @@
          0.015455
         ],
         [
-         0.0,
+         0,
          0.016
         ],
         [
@@ -3690,7 +4735,7 @@
         ],
         [
          -0.016,
-         0.0
+         0
         ],
         [
          -0.015455,
@@ -3713,7 +4758,7 @@
          -0.015455
         ],
         [
-         0.0,
+         0,
          -0.016
         ],
         [
@@ -3751,14 +4796,14 @@
        "id": "knob-timer",
        "bone": "knob-timer",
        "role": "body",
-       "z": 8.0,
+       "z": 8,
        "filled": true,
        "tone": 0.85,
        "kind": "poly",
        "points": [
         [
          0.019,
-         0.0
+         0
         ],
         [
          0.018353,
@@ -3781,7 +4826,7 @@
          0.018353
         ],
         [
-         0.0,
+         0,
          0.019
         ],
         [
@@ -3806,7 +4851,7 @@
         ],
         [
          -0.019,
-         0.0
+         0
         ],
         [
          -0.018353,
@@ -3829,7 +4874,7 @@
          -0.018353
         ],
         [
-         0.0,
+         0,
          -0.019
         ],
         [
@@ -3888,7 +4933,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.003
         ],
         [
@@ -3900,7 +4945,7 @@
          0.028
         ],
         [
-         0.0,
+         0,
          0.003
         ]
        ],
@@ -3934,7 +4979,7 @@
        "tone": 0.62,
        "kind": "rect",
        "x": -0.19,
-       "y": 0.0,
+       "y": 0,
        "w": 0.395,
        "h": 0.008,
        "region": "pad",
@@ -3947,13 +4992,34 @@
        "z": 6.17,
        "filled": true,
        "tone": 0.15,
-       "kind": "rect",
-       "x": -0.117,
-       "y": 0.008,
-       "w": 0.024,
-       "h": 0.01,
        "region": "casing",
-       "material": "pp-plastic"
+       "material": "pp-plastic",
+       "kind": "poly",
+       "points": [
+        [
+         0.393,
+         0
+        ],
+        [
+         0.417,
+         0
+        ],
+        [
+         0.417,
+         0.01
+        ],
+        [
+         0.393,
+         0.01
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.117,
+        "z1": -0.093
+       }
       },
       {
        "id": "foot-4",
@@ -3962,13 +5028,34 @@
        "z": 6.17,
        "filled": true,
        "tone": 0.15,
-       "kind": "rect",
-       "x": 0.123,
-       "y": 0.008,
-       "w": 0.024,
-       "h": 0.01,
        "region": "casing",
-       "material": "pp-plastic"
+       "material": "pp-plastic",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.123
+        ],
+        [
+         0,
+         0.147
+        ],
+        [
+         0.01,
+         0.147
+        ],
+        [
+         0.01,
+         0.123
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.415,
+        "z1": 0.417
+       }
       },
       {
        "id": "shell",
@@ -3977,13 +5064,34 @@
        "z": 6.4,
        "filled": true,
        "tone": 0.86,
-       "kind": "rect",
-       "x": -0.135,
-       "y": 0.018,
-       "w": 0.3,
-       "h": 0.248,
        "region": "casing",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.01
+        ],
+        [
+         0.44,
+         0.01
+        ],
+        [
+         0.44,
+         0.258
+        ],
+        [
+         0,
+         0.258
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.135,
+        "z1": 0.165
+       }
       },
       {
        "id": "plate",
@@ -3996,7 +5104,7 @@
        "points": [
         [
          -0.004,
-         0.0
+         0
         ],
         [
          -0.004,
@@ -4024,7 +5132,7 @@
         ],
         [
          0.017,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4043,7 +5151,7 @@
        "id": "door-frame",
        "bone": "door",
        "role": "body",
-       "z": 7.0,
+       "z": 7,
        "filled": true,
        "tone": 0.92,
        "kind": "path",
@@ -4085,13 +5193,34 @@
        "z": 6.4,
        "filled": true,
        "tone": 0.9,
-       "kind": "rect",
-       "x": -0.17,
-       "y": 0.019,
-       "w": 0.035,
-       "h": 0.247,
        "region": "panel",
-       "material": "abs-aged"
+       "material": "abs-aged",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.06
+        ],
+        [
+         0.247,
+         -0.06
+        ],
+        [
+         0.247,
+         0.06
+        ],
+        [
+         0,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.135
+       }
       },
       {
        "id": "knob-power",
@@ -4104,7 +5233,7 @@
        "points": [
         [
          0.016,
-         0.0
+         0
         ],
         [
          0.015455,
@@ -4127,7 +5256,7 @@
          0.015455
         ],
         [
-         0.0,
+         0,
          0.016
         ],
         [
@@ -4152,7 +5281,7 @@
         ],
         [
          -0.016,
-         0.0
+         0
         ],
         [
          -0.015455,
@@ -4175,7 +5304,7 @@
          -0.015455
         ],
         [
-         0.0,
+         0,
          -0.016
         ],
         [
@@ -4220,7 +5349,7 @@
        "points": [
         [
          0.019,
-         0.0
+         0
         ],
         [
          0.018353,
@@ -4243,7 +5372,7 @@
          0.018353
         ],
         [
-         0.0,
+         0,
          0.019
         ],
         [
@@ -4268,7 +5397,7 @@
         ],
         [
          -0.019,
-         0.0
+         0
         ],
         [
          -0.018353,
@@ -4291,7 +5420,7 @@
          -0.018353
         ],
         [
-         0.0,
+         0,
          -0.019
         ],
         [
@@ -4332,13 +5461,34 @@
        "z": 3.12,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": 0.171,
-       "y": 0.008,
-       "w": 0.028,
-       "h": 0.028,
        "region": "casing",
-       "material": "pvc-cord"
+       "material": "pvc-cord",
+       "kind": "poly",
+       "points": [
+        [
+         -0.052,
+         -0.003
+        ],
+        [
+         0,
+         -0.003
+        ],
+        [
+         0,
+         0.025
+        ],
+        [
+         -0.052,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.171,
+        "z1": 0.199
+       }
       },
       {
        "id": "cord-run",
@@ -4347,28 +5497,34 @@
        "z": 6.03,
        "filled": true,
        "tone": 0.88,
+       "region": "casing",
+       "material": "pvc-cord",
        "kind": "poly",
        "points": [
         [
-         0.1635,
-         0.036
+         0.025,
+         -0.0215
         ],
         [
-         0.1695,
-         0.036
+         0.025,
+         -0.0155
         ],
         [
-         0.188,
-         0.011
+         0,
+         0.003
         ],
         [
-         0.182,
-         0.011
+         0,
+         -0.003
         ]
        ],
        "closed": true,
-       "region": "casing",
-       "material": "pvc-cord"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.288
+       }
       }
      ],
      "plan": [
@@ -4394,13 +5550,34 @@
        "z": 4.58,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.135,
-       "w": 0.44,
-       "h": 0.3,
        "region": "casing",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.01
+        ],
+        [
+         0.44,
+         0.01
+        ],
+        [
+         0.44,
+         0.258
+        ],
+        [
+         0,
+         0.258
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.135,
+        "z1": 0.165
+       }
       },
       {
        "id": "plate",
@@ -4413,7 +5590,7 @@
        "points": [
         [
          -0.004,
-         0.0
+         0
         ],
         [
          -0.004,
@@ -4441,7 +5618,7 @@
         ],
         [
          0.017,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4460,7 +5637,7 @@
        "id": "door-frame",
        "bone": "door",
        "role": "body",
-       "z": 7.0,
+       "z": 7,
        "filled": true,
        "tone": 0.92,
        "kind": "path",
@@ -4502,13 +5679,34 @@
        "z": 4.66,
        "filled": true,
        "tone": 0.9,
-       "kind": "rect",
-       "x": 0.32,
-       "y": -0.17,
-       "w": 0.12,
-       "h": 0.035,
        "region": "panel",
-       "material": "abs-aged"
+       "material": "abs-aged",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.06
+        ],
+        [
+         0.247,
+         -0.06
+        ],
+        [
+         0.247,
+         0.06
+        ],
+        [
+         0,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.135
+       }
       },
       {
        "id": "knob-power",
@@ -4521,7 +5719,7 @@
        "points": [
         [
          0.016,
-         0.0
+         0
         ],
         [
          0.015455,
@@ -4544,7 +5742,7 @@
          0.015455
         ],
         [
-         0.0,
+         0,
          0.016
         ],
         [
@@ -4569,7 +5767,7 @@
         ],
         [
          -0.016,
-         0.0
+         0
         ],
         [
          -0.015455,
@@ -4592,7 +5790,7 @@
          -0.015455
         ],
         [
-         0.0,
+         0,
          -0.016
         ],
         [
@@ -4637,7 +5835,7 @@
        "points": [
         [
          0.019,
-         0.0
+         0
         ],
         [
          0.018353,
@@ -4660,7 +5858,7 @@
          0.018353
         ],
         [
-         0.0,
+         0,
          0.019
         ],
         [
@@ -4685,7 +5883,7 @@
         ],
         [
          -0.019,
-         0.0
+         0
         ],
         [
          -0.018353,
@@ -4708,7 +5906,7 @@
          -0.018353
         ],
         [
-         0.0,
+         0,
          -0.019
         ],
         [
@@ -4749,13 +5947,34 @@
        "z": 2.36,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": 0.06,
-       "y": 0.171,
-       "w": 0.052,
-       "h": 0.028,
        "region": "casing",
-       "material": "pvc-cord"
+       "material": "pvc-cord",
+       "kind": "poly",
+       "points": [
+        [
+         -0.052,
+         -0.003
+        ],
+        [
+         0,
+         -0.003
+        ],
+        [
+         0,
+         0.025
+        ],
+        [
+         -0.052,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.171,
+        "z1": 0.199
+       }
       },
       {
        "id": "cord-run",
@@ -4764,28 +5983,34 @@
        "z": 2.31,
        "filled": true,
        "tone": 0.88,
+       "region": "casing",
+       "material": "pvc-cord",
        "kind": "poly",
        "points": [
         [
-         0.112,
-         0.182
+         0,
+         -0.003
         ],
         [
-         0.4,
-         0.1635
+         0.288,
+         -0.0215
         ],
         [
-         0.4,
-         0.1695
+         0.288,
+         -0.0155
         ],
         [
-         0.112,
-         0.188
+         0,
+         0.003
         ]
        ],
        "closed": true,
-       "region": "casing",
-       "material": "pvc-cord"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.003,
+        "z1": 0.028
+       }
       }
      ]
     },
@@ -4890,40 +6115,40 @@
      },
      "regions": {
       "casing": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.01,
         "tempC": 18
        }
       },
       "door": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "window": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "panel": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "cavity": {
        "exposedFraction": 0.3,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "turntable": {
        "exposedFraction": 0.3,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "electronics": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "pad": {
        "exposedFraction": 0.45,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.55,
         "tempC": 18
@@ -4966,40 +6191,40 @@
      },
      "regions": {
       "casing": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.01,
         "tempC": 18
        }
       },
       "door": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "window": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "panel": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "cavity": {
        "exposedFraction": 0.3,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "turntable": {
        "exposedFraction": 0.3,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "electronics": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "pad": {
        "exposedFraction": 0.45,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.55,
         "tempC": 18
@@ -5042,40 +6267,40 @@
      },
      "regions": {
       "casing": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.01,
         "tempC": 21
        }
       },
       "door": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "window": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "panel": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "cavity": {
        "exposedFraction": 0.3,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "turntable": {
        "exposedFraction": 0.3,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "electronics": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "pad": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.5,
         "tempC": 21
@@ -5096,7 +6321,7 @@
       },
       "bone": "turntable",
       "x": 0.027,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0,
       "fyN": -5.88,
       "source": "authored-estimate",
@@ -5137,40 +6362,40 @@
      },
      "regions": {
       "casing": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.01,
         "tempC": 21
        }
       },
       "door": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "window": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "panel": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "cavity": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "turntable": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "electronics": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "pad": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.5,
         "tempC": 21
@@ -5191,7 +6416,7 @@
       },
       "bone": "turntable",
       "x": 0.027,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0,
       "fyN": -5.88,
       "source": "authored-estimate",
@@ -5206,9 +6431,9 @@
       },
       "bone": "door",
       "x": 0.12,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0,
-      "fyN": -20.0,
+      "fyN": -20,
       "source": "authored-estimate",
       "reference": "iec-60335-2-25"
      }
@@ -5245,40 +6470,40 @@
      },
      "regions": {
       "casing": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.01,
         "tempC": 21
        }
       },
       "door": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "window": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "panel": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "cavity": {
        "exposedFraction": 0.3,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "turntable": {
        "exposedFraction": 0.3,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "electronics": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "pad": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.5,
         "tempC": 21
@@ -5299,7 +6524,7 @@
       },
       "bone": "turntable",
       "x": 0.027,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0,
       "fyN": -5.88,
       "source": "authored-estimate",
@@ -5319,7 +6544,7 @@
      "en": "One person takes hold under both bottom edges, lifts the oven off the cardboard and tilts it slightly towards the heavy transformer side as it is carried away; the cardboard stays behind.",
      "de": "Eine Person fasst unter beide Unterkanten, hebt das Gerät von der Pappe und neigt es beim Wegtragen leicht zur schweren Transformatorseite; die Pappe bleibt liegen."
     },
-    "durationS": 6.0,
+    "durationS": 6,
     "fps": 25,
     "loop": false,
     "rootMotion": "none",
@@ -5330,12 +6555,12 @@
       "ease": "smooth"
      },
      {
-      "t": 1.0,
+      "t": 1,
       "pose": "stored",
       "ease": "smooth"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "pose": "carried",
       "ease": "smooth",
       "bones": {
@@ -5345,12 +6570,12 @@
       }
      },
      {
-      "t": 5.0,
+      "t": 5,
       "pose": "carried",
       "ease": "smooth"
      },
      {
-      "t": 6.0,
+      "t": 6,
       "pose": "carried",
       "ease": "smooth"
      }
@@ -5359,34 +6584,34 @@
      {
       "anchor": "foot-left",
       "fromS": 0,
-      "toS": 1.0
+      "toS": 1
      },
      {
       "anchor": "foot-right",
       "fromS": 0,
-      "toS": 1.0
+      "toS": 1
      },
      {
       "anchor": "grip-left",
-      "fromS": 1.0,
-      "toS": 6.0
+      "fromS": 1,
+      "toS": 6
      },
      {
       "anchor": "grip-right",
-      "fromS": 1.0,
-      "toS": 6.0
+      "fromS": 1,
+      "toS": 6
      },
      {
       "anchor": "pad-floor",
       "fromS": 0,
-      "toS": 6.0
+      "toS": 6
      }
     ],
     "phases": [
      {
       "id": "take-hold",
       "fromS": 0,
-      "toS": 1.0,
+      "toS": 1,
       "title": {
        "en": "Taking hold",
        "de": "Anfassen"
@@ -5394,8 +6619,8 @@
      },
      {
       "id": "lift",
-      "fromS": 1.0,
-      "toS": 3.0,
+      "fromS": 1,
+      "toS": 3,
       "title": {
        "en": "Lifting off the cardboard",
        "de": "Von der Pappe heben"
@@ -5403,8 +6628,8 @@
      },
      {
       "id": "tilt",
-      "fromS": 3.0,
-      "toS": 5.0,
+      "fromS": 3,
+      "toS": 5,
       "title": {
        "en": "Tilting to the heavy side",
        "de": "Zur schweren Seite neigen"
@@ -5412,8 +6637,8 @@
      },
      {
       "id": "carry",
-      "fromS": 5.0,
-      "toS": 6.0,
+      "fromS": 5,
+      "toS": 6,
       "title": {
        "en": "Carrying",
        "de": "Tragen"
@@ -5422,7 +6647,7 @@
     ],
     "events": [
      {
-      "t": 1.0,
+      "t": 1,
       "kind": "contact-off",
       "title": {
        "en": "Off the cardboard",
@@ -5431,7 +6656,7 @@
       "target": "foot-left"
      },
      {
-      "t": 1.0,
+      "t": 1,
       "kind": "contact-on",
       "title": {
        "en": "Hands take the load",
@@ -5440,7 +6665,7 @@
       "target": "grip-left"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "kind": "motion",
       "title": {
        "en": "Lifted 0.30 m",
@@ -5460,7 +6685,7 @@
      "en": "The door is opened and closed again over the plate, the timer is turned to half a minute, the magnetron runs at full power while the turntable makes two and a half turns and the timer runs back, the bell rings and the door is opened.",
      "de": "Die Tür wird über dem Teller geöffnet und wieder geschlossen, der Zeitschalter auf eine halbe Minute gedreht, das Magnetron läuft mit voller Leistung, während der Drehteller zweieinhalb Umdrehungen macht und der Zeitschalter zurückläuft, die Glocke klingelt und die Tür wird geöffnet."
     },
-    "durationS": 40.0,
+    "durationS": 40,
     "fps": 10,
     "loop": false,
     "rootMotion": "none",
@@ -5476,7 +6701,7 @@
       "ease": "smooth"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "pose": "door-open",
       "ease": "smooth"
      },
@@ -5496,7 +6721,7 @@
       }
      },
      {
-      "t": 6.0,
+      "t": 6,
       "pose": "in-use",
       "ease": "linear",
       "bones": {
@@ -5509,7 +6734,7 @@
       }
      },
      {
-      "t": 36.0,
+      "t": 36,
       "pose": "in-use",
       "ease": "smooth",
       "bones": {
@@ -5522,7 +6747,7 @@
       }
      },
      {
-      "t": 37.0,
+      "t": 37,
       "pose": "idle",
       "ease": "smooth",
       "bones": {
@@ -5542,7 +6767,7 @@
       }
      },
      {
-      "t": 40.0,
+      "t": 40,
       "pose": "door-open",
       "ease": "smooth",
       "bones": {
@@ -5556,17 +6781,17 @@
      {
       "anchor": "foot-left",
       "fromS": 0,
-      "toS": 40.0
+      "toS": 40
      },
      {
       "anchor": "foot-right",
       "fromS": 0,
-      "toS": 40.0
+      "toS": 40
      },
      {
       "anchor": "pad-floor",
       "fromS": 0,
-      "toS": 40.0
+      "toS": 40
      }
     ],
     "phases": [
@@ -5582,7 +6807,7 @@
      {
       "id": "set",
       "fromS": 4.5,
-      "toS": 6.0,
+      "toS": 6,
       "title": {
        "en": "Setting the timer",
        "de": "Zeit einstellen"
@@ -5590,8 +6815,8 @@
      },
      {
       "id": "heat",
-      "fromS": 6.0,
-      "toS": 36.0,
+      "fromS": 6,
+      "toS": 36,
       "title": {
        "en": "Heating with the turntable turning",
        "de": "Heizen mit drehendem Teller"
@@ -5599,8 +6824,8 @@
      },
      {
       "id": "ready",
-      "fromS": 36.0,
-      "toS": 40.0,
+      "fromS": 36,
+      "toS": 40,
       "title": {
        "en": "Bell and door open",
        "de": "Glocke und Tür auf"
@@ -5609,7 +6834,7 @@
     ],
     "events": [
      {
-      "t": 0.0,
+      "t": 0,
       "kind": "motion",
       "title": {
        "en": "Door opens",
@@ -5618,7 +6843,7 @@
       "target": "door"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "kind": "motion",
       "title": {
        "en": "Door closes",
@@ -5627,7 +6852,7 @@
       "target": "door"
      },
      {
-      "t": 6.0,
+      "t": 6,
       "kind": "operating",
       "title": {
        "en": "Magnetron on",
@@ -5636,7 +6861,7 @@
       "target": "magnetron"
      },
      {
-      "t": 36.0,
+      "t": 36,
       "kind": "shutdown",
       "title": {
        "en": "Bell rings, magnetron off",
@@ -5645,7 +6870,7 @@
       "target": "magnetron"
      },
      {
-      "t": 37.0,
+      "t": 37,
       "kind": "motion",
       "title": {
        "en": "Door opens",
@@ -5664,15 +6889,15 @@
         "v": 0
        },
        {
-        "t": 6.0,
+        "t": 6,
         "v": 1
        },
        {
-        "t": 36.0,
+        "t": 36,
         "v": 0
        },
        {
-        "t": 40.0,
+        "t": 40,
         "v": 0
        }
       ]
@@ -5741,7 +6966,7 @@
        "kind": "metal",
        "material": "painted-steel",
        "thicknessM": 0.0005,
-       "resistanceM2KW": 1e-05,
+       "resistanceM2KW": 0.00001,
        "heatCapacityJM2K": 1805.5,
        "source": "literature",
        "reference": "iso-10456-2007"
@@ -5781,12 +7006,12 @@
        "material": "abs-aged",
        "thicknessM": 0.0025,
        "resistanceM2KW": 0.01470588,
-       "heatCapacityJM2K": 3675.0,
+       "heatCapacityJM2K": 3675,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 3675.0,
+     "heatCapacityJM2K": 3675,
      "operating": {
       "key": "magnetron",
       "heatW": 10
@@ -5818,12 +7043,12 @@
        "material": "door-glass",
        "thicknessM": 0.004,
        "resistanceM2KW": 0.004,
-       "heatCapacityJM2K": 7500.0,
+       "heatCapacityJM2K": 7500,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 7500.0,
+     "heatCapacityJM2K": 7500,
      "operating": {
       "key": "magnetron",
       "heatW": 5
@@ -5855,12 +7080,12 @@
        "material": "abs-aged",
        "thicknessM": 0.0025,
        "resistanceM2KW": 0.01470588,
-       "heatCapacityJM2K": 3675.0,
+       "heatCapacityJM2K": 3675,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 3675.0,
+     "heatCapacityJM2K": 3675,
      "source": "authored-estimate",
      "reference": "iec-60335-2-25",
      "ratedPowerW": 0,
@@ -5878,7 +7103,7 @@
      "areaM2": 0.88,
      "characteristicLengthM": 0.212,
      "geometry": "horizontal-plate-up",
-     "skyViewFactor": 0.0,
+     "skyViewFactor": 0,
      "layers": [
       {
        "id": "cavity-sheet",
@@ -5889,7 +7114,7 @@
        "kind": "metal",
        "material": "cavity-paint",
        "thicknessM": 0.0005,
-       "resistanceM2KW": 1e-05,
+       "resistanceM2KW": 0.00001,
        "heatCapacityJM2K": 1805.5,
        "source": "literature",
        "reference": "iso-10456-2007"
@@ -5915,7 +7140,7 @@
      "areaM2": 0.12,
      "characteristicLengthM": 0.245,
      "geometry": "horizontal-plate-up",
-     "skyViewFactor": 0.0,
+     "skyViewFactor": 0,
      "layers": [
       {
        "id": "plate-glass",
@@ -5952,7 +7177,7 @@
      "areaM2": 0.105,
      "characteristicLengthM": 0.09,
      "geometry": "vertical-plate",
-     "skyViewFactor": 0.0,
+     "skyViewFactor": 0,
      "layers": [
       {
        "id": "iron-core",
@@ -5964,12 +7189,12 @@
        "material": "electrical-iron",
        "thicknessM": 0.01,
        "resistanceM2KW": 0.00025,
-       "heatCapacityJM2K": 35100.0,
+       "heatCapacityJM2K": 35100,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 35100.0,
+     "heatCapacityJM2K": 35100,
      "operating": {
       "key": "magnetron",
       "heatW": 40
@@ -6112,7 +7337,7 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
+        0,
         0.012
        ],
        [
@@ -6121,7 +7346,7 @@
        ],
        [
         0.01,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -6131,7 +7356,7 @@
       ],
       "origin": [
        0.035,
-       0.0,
+       0,
        -0.105
       ]
      },
@@ -6144,7 +7369,7 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
+        0,
         0.012
        ],
        [
@@ -6153,7 +7378,7 @@
        ],
        [
         0.01,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -6163,7 +7388,7 @@
       ],
       "origin": [
        0.405,
-       0.0,
+       0,
        -0.105
       ]
      },
@@ -6176,7 +7401,7 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
+        0,
         0.012
        ],
        [
@@ -6185,7 +7410,7 @@
        ],
        [
         0.01,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -6195,7 +7420,7 @@
       ],
       "origin": [
        0.035,
-       0.0,
+       0,
        0.135
       ]
      },
@@ -6208,7 +7433,7 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
+        0,
         0.012
        ],
        [
@@ -6217,7 +7442,7 @@
        ],
        [
         0.01,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -6227,7 +7452,7 @@
       ],
       "origin": [
        0.405,
-       0.0,
+       0,
        0.135
       ]
      },
@@ -6246,7 +7471,7 @@
       "transform": {
        "translation": [
         0.22,
-        -0.0,
+        0,
         0.015
        ]
       },
@@ -6267,7 +7492,7 @@
       "transform": {
        "translation": [
         0.1235,
-        0.0,
+        0,
         0.015
        ]
       },
@@ -6288,7 +7513,7 @@
       "transform": {
        "translation": [
         0.1235,
-        0.0,
+        0,
         0.015
        ]
       },
@@ -6309,7 +7534,7 @@
       "transform": {
        "translation": [
         0.2195,
-        0.0,
+        0,
         0.015
        ]
       },
@@ -6367,19 +7592,19 @@
       "holes": [
        [
         [
-         0.0,
-         -0.0
+         0,
+         0
         ],
         [
          0.315,
-         -0.0
+         0
         ],
         [
          0.315,
          0.212
         ],
         [
-         0.0,
+         0,
          0.212
         ]
        ]
@@ -6436,7 +7661,7 @@
       "profile": [
        [
         0.012,
-        0.0
+        0
        ],
        [
         0.012,
@@ -6456,7 +7681,7 @@
        ],
        [
         0.017,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -6465,9 +7690,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -6479,11 +7704,11 @@
       "tone": 0.4,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.011
        ],
        [
@@ -6492,7 +7717,7 @@
        ],
        [
         0.012,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -6501,9 +7726,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -6563,7 +7788,7 @@
         0.082704
        ],
        [
-        0.0,
+        0,
         0.085
        ],
        [
@@ -6589,9 +7814,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true
      },
@@ -6604,11 +7829,11 @@
       "tone": 0.92,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         -0.3185
        ],
        [
@@ -6617,12 +7842,12 @@
        ],
        [
         0.245,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
       "from": -0.035,
-      "to": 0.0,
+      "to": 0,
       "holes": [
        [
         [
@@ -6681,7 +7906,7 @@
        "translation": [
         0.0075,
         -0.005,
-        0.0
+        0
        ]
       }
      },
@@ -6701,7 +7926,7 @@
        "translation": [
         0.2375,
         -0.005,
-        0.0
+        0
        ]
       }
      },
@@ -6720,8 +7945,8 @@
       "transform": {
        "translation": [
         0.1235,
-        0.0,
-        -0.0
+        0,
+        0
        ]
       }
      },
@@ -6740,7 +7965,7 @@
       "transform": {
        "translation": [
         0.04,
-        0.0,
+        0,
         -0.0215
        ]
       }
@@ -6754,7 +7979,7 @@
       "tone": 0.12,
       "profile": [
        [
-        0.0,
+        0,
         0.016
        ],
        [
@@ -6763,7 +7988,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -6772,9 +7997,9 @@
        -1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -6786,7 +8011,7 @@
       "tone": 0.85,
       "profile": [
        [
-        0.0,
+        0,
         0.019
        ],
        [
@@ -6803,7 +8028,7 @@
        ],
        [
         0.017,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -6812,9 +8037,9 @@
        -1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -6833,7 +8058,7 @@
        "translation": [
         -0.026,
         0.011,
-        0.0
+        0
        ]
       }
      },
@@ -6852,7 +8077,7 @@
       "p1": [
        0.285,
        0.0025,
-       0.0
+       0
       ],
       "r0": 0.0045,
       "r1": 0.0035
@@ -6866,13 +8091,13 @@
       "tone": 0.88,
       "p0": [
        0.283,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "r0": 0.003,
       "r1": 0.003,
@@ -6887,13 +8112,13 @@
       "tone": 0.2,
       "p0": [
        0.138,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.16,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0037,
       "r1": 0.0037,
@@ -7073,7 +8298,7 @@
        "translation": [
         0.179,
         -0.0005,
-        0.0
+        0
        ]
       },
       "region": "casing",
@@ -7119,7 +8344,7 @@
        "translation": [
         0.37275,
         0.1675,
-        0.0
+        0
        ]
       },
       "region": "electronics"
@@ -7393,7 +8618,7 @@
       "tone": 0.86,
       "profile": [
        [
-        0.0,
+        0,
         0.01
        ],
        [
@@ -7405,7 +8630,7 @@
         0.258
        ],
        [
-        0.0,
+        0,
         0.258
        ]
       ],
@@ -7481,7 +8706,7 @@
       "profile": [
        [
         -0.004,
-        0.0
+        0
        ],
        [
         -0.004,
@@ -7509,7 +8734,7 @@
        ],
        [
         0.017,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -7518,9 +8743,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -7532,11 +8757,11 @@
       "tone": 0.92,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         -0.3185
        ],
        [
@@ -7545,12 +8770,12 @@
        ],
        [
         0.245,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
       "from": -0.035,
-      "to": 0.0,
+      "to": 0,
       "holes": [
        [
         [
@@ -7608,8 +8833,8 @@
       "transform": {
        "translation": [
         0.1235,
-        0.0,
-        -0.0
+        0,
+        0
        ]
       }
      },
@@ -7622,7 +8847,7 @@
       "tone": 0.12,
       "profile": [
        [
-        0.0,
+        0,
         0.016
        ],
        [
@@ -7631,7 +8856,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -7640,9 +8865,9 @@
        -1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -7654,7 +8879,7 @@
       "tone": 0.85,
       "profile": [
        [
-        0.0,
+        0,
         0.019
        ],
        [
@@ -7663,7 +8888,7 @@
        ],
        [
         0.017,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -7672,9 +8897,9 @@
        -1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -7693,7 +8918,7 @@
        "translation": [
         -0.026,
         0.011,
-        0.0
+        0
        ]
       }
      },
@@ -7710,9 +8935,9 @@
        -0.0185
       ],
       "p1": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "r0": 0.003,
       "r1": 0.003,
@@ -7764,19 +8989,19 @@
       "tone": 0.72,
       "profile": [
        [
-        0.0,
-        -0.0
+        0,
+        0
        ],
        [
         0.315,
-        -0.0
+        0
        ],
        [
         0.315,
         0.212
        ],
        [
-        0.0,
+        0,
         0.212
        ]
       ],
@@ -7883,7 +9108,7 @@
        "translation": [
         0.179,
         -0.0005,
-        0.0
+        0
        ]
       },
       "region": "casing",
@@ -7929,7 +9154,7 @@
        "translation": [
         0.37275,
         0.1675,
-        0.0
+        0
        ]
       },
       "region": "electronics"

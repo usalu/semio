@@ -36,6 +36,41 @@
         "request",
         "command",
         "operation",
+        "generation"
+      ],
+      "properties": {
+        "kind": {
+          "const": "original-stock-request"
+        },
+        "version": {
+          "const": 1
+        },
+        "request": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "command": {
+          "const": "succeed"
+        },
+        "operation": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "version",
+        "request",
+        "command",
+        "operation",
         "generation",
         "receipt"
       ],
@@ -209,6 +244,10 @@
                   "maximum": 9007199254740991
                 }
               }
+            },
+            "successor": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
             }
           }
         }

@@ -1,0 +1,508 @@
+{
+ "cases": [
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "keepWorkBytes": 5905580032,
+    "hostReserveBytes": 0
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 9663676416,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 0
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 42949672960,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 214748364800,
+    "hostReserveBytes": 39771397160
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "workFreeBytes": 1073741824,
+    "keepWorkBytes": 5905580032,
+    "hostReserveBytes": 0
+   },
+   "bound": 0
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "workFreeBytes": 1073741824,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 9663676416,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 0
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "workFreeBytes": 1073741824,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 42949672960,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 0
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "workFreeBytes": 1073741824,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 214748364800,
+    "hostReserveBytes": 39771397160
+   },
+   "bound": 0
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "workFreeBytes": 6442450944,
+    "keepWorkBytes": 5905580032,
+    "hostReserveBytes": 0
+   },
+   "bound": 536870912
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "workFreeBytes": 6442450944,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 9663676416,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 0
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "workFreeBytes": 6442450944,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 42949672960,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 536870912
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "workFreeBytes": 6442450944,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 214748364800,
+    "hostReserveBytes": 39771397160
+   },
+   "bound": 536870912
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "workFreeBytes": 21474836480,
+    "keepWorkBytes": 5905580032,
+    "hostReserveBytes": 0
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "workFreeBytes": 21474836480,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 9663676416,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 0
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "workFreeBytes": 21474836480,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 42949672960,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 0,
+    "workFreeBytes": 21474836480,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 214748364800,
+    "hostReserveBytes": 39771397160
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "keepWorkBytes": 5905580032,
+    "hostReserveBytes": 0
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 9663676416,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 3951369913
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 42949672960,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 214748364800,
+    "hostReserveBytes": 39771397160
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "workFreeBytes": 1073741824,
+    "keepWorkBytes": 5905580032,
+    "hostReserveBytes": 0
+   },
+   "bound": 0
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "workFreeBytes": 1073741824,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 9663676416,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 0
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "workFreeBytes": 1073741824,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 42949672960,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 0
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "workFreeBytes": 1073741824,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 214748364800,
+    "hostReserveBytes": 39771397160
+   },
+   "bound": 0
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "workFreeBytes": 6442450944,
+    "keepWorkBytes": 5905580032,
+    "hostReserveBytes": 0
+   },
+   "bound": 4831838208
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "workFreeBytes": 6442450944,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 9663676416,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 3951369913
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "workFreeBytes": 6442450944,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 42949672960,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 4831838208
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "workFreeBytes": 6442450944,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 214748364800,
+    "hostReserveBytes": 39771397160
+   },
+   "bound": 4831838208
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "workFreeBytes": 21474836480,
+    "keepWorkBytes": 5905580032,
+    "hostReserveBytes": 0
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "workFreeBytes": 21474836480,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 9663676416,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 3951369913
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "workFreeBytes": 21474836480,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 42949672960,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 4294967296,
+    "workFreeBytes": 21474836480,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 214748364800,
+    "hostReserveBytes": 39771397160
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "keepWorkBytes": 5905580032,
+    "hostReserveBytes": 0
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 9663676416,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 10393820857
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 42949672960,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 214748364800,
+    "hostReserveBytes": 39771397160
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "workFreeBytes": 1073741824,
+    "keepWorkBytes": 5905580032,
+    "hostReserveBytes": 0
+   },
+   "bound": 5905580032
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "workFreeBytes": 1073741824,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 9663676416,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 5905580032
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "workFreeBytes": 1073741824,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 42949672960,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 5905580032
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "workFreeBytes": 1073741824,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 214748364800,
+    "hostReserveBytes": 39771397160
+   },
+   "bound": 5905580032
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "workFreeBytes": 6442450944,
+    "keepWorkBytes": 5905580032,
+    "hostReserveBytes": 0
+   },
+   "bound": 11274289152
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "workFreeBytes": 6442450944,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 9663676416,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 10393820857
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "workFreeBytes": 6442450944,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 42949672960,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 11274289152
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "workFreeBytes": 6442450944,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 214748364800,
+    "hostReserveBytes": 39771397160
+   },
+   "bound": 11274289152
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "workFreeBytes": 21474836480,
+    "keepWorkBytes": 5905580032,
+    "hostReserveBytes": 0
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "workFreeBytes": 21474836480,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 9663676416,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 10393820857
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "workFreeBytes": 21474836480,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 42949672960,
+    "hostReserveBytes": 10007273799
+   },
+   "bound": 12884901888
+  },
+  {
+   "input": {
+    "maximumBytes": 12884901888,
+    "cacheBytes": 10737418240,
+    "workFreeBytes": 21474836480,
+    "keepWorkBytes": 5905580032,
+    "hostFreeBytes": 214748364800,
+    "hostReserveBytes": 39771397160
+   },
+   "bound": 12884901888
+  }
+ ]
+}

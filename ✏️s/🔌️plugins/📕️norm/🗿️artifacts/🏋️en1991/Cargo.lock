@@ -9098,6 +9098,7 @@ dependencies = [
  "semio-s-artifact-norm-en1991-checks",
  "semio-s-artifact-norm-en1991-inferences",
  "semio-s-artifact-norm-en1991-model",
+ "semio-s-artifact-norm-en1991-scene-diagrams",
  "semio-s-artifact-norm-en1991-scene-fields",
  "semio-s-artifact-norm-en1991-scene-members",
  "semio-s-artifact-norm-en1991-scene-members-projection",
@@ -9106,6 +9107,19 @@ dependencies = [
  "semio-s-plugin-norm-results-config",
  "semio-s-plugin-norm-structural-scene",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1991-scene-diagrams"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1991-checks",
+ "semio-s-artifact-norm-en1991-model",
+ "semio-s-artifact-norm-en1991-scene-fields",
+ "semio-s-artifact-norm-en1991-scene-members",
+ "semio-s-artifact-norm-en1991-scene-members-projection",
+ "semio-s-plugin-norm-compliance",
+ "semio-s-plugin-norm-structural-scene",
 ]
 
 [[package]]

@@ -34,6 +34,9 @@ semio-framework-schema-registry = { workspace = true }
 test-support = ["dep:serde", "semio-s-artifact-norm-vdi3805-diff/test-support", "semio-s-artifact-norm-vdi3805-model/test-support", "semio-s-artifact-norm-vdi3805-mutations/test-support"]
 
 [dev-dependencies]
+semio-s-artifact-norm-vdi3805-diff = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-vdi3805-model = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-vdi3805-mutations = { workspace = true, features = ["test-support"] }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde = { workspace = true }

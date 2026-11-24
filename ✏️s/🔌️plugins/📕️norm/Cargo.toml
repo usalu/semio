@@ -137,7 +137,7 @@ features = [ "derive" ]
 
 [workspace.dependencies.serde_json]
 version = "1.0.149"
-features = [ "raw_value" ]
+features = [ "raw_value", "float_roundtrip" ]
 
 [workspace.dependencies.semio-framework-diagnostic]
 path = "../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"

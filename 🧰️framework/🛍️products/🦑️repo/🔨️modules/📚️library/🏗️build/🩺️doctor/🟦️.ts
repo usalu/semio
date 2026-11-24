@@ -26,7 +26,7 @@ export type DoctorPolicyV1=Readonly<{
  leases:Readonly<{waitWarnSeconds:number;waitErrorSeconds:number;holdWarnSeconds:number;holdErrorSeconds:number;queueDepthWarn:number;registryOrphanFoldersWarn:number;violationsLimit:number}>;
  capacity:Readonly<{waitWarnSeconds:number;waitErrorSeconds:number;idleGrantSeconds:number;idleObservedPercent:number}>;
  host:Readonly<{lowMemoryHeadroomPercent:number;swapWarnMegabytes:number;swapOutWarnMegabytesPerSecond:number;loadPerCoreWarn:number;loadPerCoreError:number;openFilesWarnPercent:number;imagesWarn:number;imagesError:number}>;
- storage:Readonly<{freePercentWarn:number;freePercentError:number;floorBytes:Readonly<Record<string,number>>;hostFreeWarnBytes:number;hostFreeErrorBytes:number;publicationErrorSeconds:number}>;
+ storage:Readonly<{freePercentWarn:number;freePercentError:number;floorBytes:Readonly<Record<string,number>>;hostFreeWarnBytes:number;hostFreeErrorBytes:number;publicationErrorSeconds:number;imageTrailerBytes:number;imageUnitBytes:number}>;
  tools:Readonly<{essential:readonly string[]}>;sessions:Readonly<{crowdedLive:number}>;
  graph:Readonly<{implementationRoots:readonly string[];implementationSkip:readonly string[];walkEntries:number}>;
  dependencies:Readonly<{orphanCountWarn:number;unreadyAgeSeconds:number}>;
@@ -38,7 +38,7 @@ export type DoctorPolicyV1=Readonly<{
 export type DoctorProbeStatusV1="ok"|"unavailable"|"failed"|"timeout"|"skipped";
 export type DoctorProbeRowV1=Readonly<{area:DoctorAreaV1;status:DoctorProbeStatusV1;durationMs:number;reason?:string}>;
 export type HostFactsV1=Readonly<{cores:number;totalMegabytes:number;availableMegabytes:number;floorMegabytes:number;pressure:"normal"|"warn"|"critical";swapUsedMegabytes:number|null;swapOutMegabytesPerSecond:number|null;load:number|null;openFiles:number|null;openFilesMaximum:number|null;attachedImages:number|null;governor:"on"|"off"}>;
-export type PartitionFactsV1=Readonly<{id:string;state:"mounted"|"detached"|"misplaced"|"directory"|"absent";attachedAt?:string|null;device?:string|null;capacityBytes:number|null;freeBytes:number|null;imageBytes:number|null;backing:"present"|"missing"|"none";publication:"none"|"intent"|"receipt";publicationAgeSeconds:number|null;image:"ok"|"damaged"|"none"}>;
+export type PartitionFactsV1=Readonly<{id:string;state:"mounted"|"detached"|"misplaced"|"directory"|"absent";attachedAt?:string|null;device?:string|null;capacityBytes:number|null;freeBytes:number|null;imageBytes:number|null;backing:"present"|"missing"|"none";publication:"none"|"intent"|"receipt";publicationAgeSeconds:number|null;image:"ok"|"damaged"|"none";needBytes?:number|null}>;
 export type StorageFactsV1=Readonly<{hostFreeBytes:number|null;hostTotalBytes:number|null;loaderBlocked?:boolean;partitions:readonly PartitionFactsV1[]}>;
 export type ToolRowFactsV1=Readonly<{id:string;state:"ok"|"missing"|"drift"|"unprobed";pin:string|null;found:string|null}>;
 /** 🔒️ One lockfile a wasm build resolves against: the `wasm-bindgen` crate version it locks (null when unreadable) and the version of the pinned binding generator. */

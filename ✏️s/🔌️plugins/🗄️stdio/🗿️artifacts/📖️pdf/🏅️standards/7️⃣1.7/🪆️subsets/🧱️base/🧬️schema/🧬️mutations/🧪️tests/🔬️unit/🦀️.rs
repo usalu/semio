@@ -132,6 +132,16 @@ fn a_details_edit_dispatches_the_concrete_kind_of_the_field_it_names() {
     let set = |path: &str, value: semio_framework_value::DslValue| resolved(&SnapshotEditEvent::SetValue { path: path.to_string(), value }, &base);
     assert!(matches!(set("/language", Some("de-CH".to_string()).to_value()).unwrap().as_slice(), [PdfMutation::SetLanguage(SetLanguage { language: Some(_) })]));
     assert!(matches!(set("/info/title", "net".to_string().to_value()).unwrap().as_slice(), [PdfMutation::SetInfo(_)]));
+    let mut titled = base.clone();
+    titled.info.title = Some("net".to_string());
+    assert!(matches!(resolved(&SnapshotEditEvent::RemoveValue { path: "/info/title".to_string() }, &titled).unwrap().as_slice(), [PdfMutation::SetInfo(SetInfo { info })] if info.title.is_none()), "an optional field present is removable");
+    assert!(resolved(&SnapshotEditEvent::RemoveValue { path: "/info/title".to_string() }, &base).is_err(), "an absent field has nothing to remove");
+    let unknown = set("/info/titel", "net".to_string().to_value()).unwrap_err();
+    assert!(unknown.contains("stdio.pdf.unknown-field") && unknown.contains("titel"), "a mistyped field is refused by name: {unknown}");
+    let fault = special_edit(&SnapshotEditEvent::SetValue { path: "/info/titel".to_string(), value: "net".to_string().to_value() }, &base).unwrap_err();
+    assert_eq!(fault.code.as_str(), "stdio.pdf.unknown-field");
+    assert!(format!("{fault:?}").contains("titel"), "the fault names the field as its {{field}} parameter");
+    assert!(matches!(set("/info/title", "net".to_string().to_value()).unwrap().as_slice(), [PdfMutation::SetInfo(SetInfo { info })] if info.title.as_deref() == Some("net")), "an absent optional field is created");
     assert!(matches!(set("/pages/1/rotate", 90i64.to_value()).unwrap().as_slice(), [PdfMutation::ReplacePage(ReplacePage { index: 1, .. })]));
     assert!(set("/language", None::<String>.to_value()).unwrap().is_empty(), "an unchanged lane needs no leaf");
     assert!(matches!(set("/colorSpaces/1", space("B2").to_value()).unwrap().as_slice(), [PdfMutation::RemoveColorSpace(RemoveColorSpace { name }), PdfMutation::SetColorSpace(SetColorSpace { index: Some(1), .. })] if name == "B"), "a renamed row keeps its position");

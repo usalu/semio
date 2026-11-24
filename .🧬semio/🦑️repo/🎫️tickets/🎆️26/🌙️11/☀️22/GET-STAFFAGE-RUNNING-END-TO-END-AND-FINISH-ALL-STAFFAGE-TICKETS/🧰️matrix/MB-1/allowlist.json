@@ -1,0 +1,476 @@
+{
+  "bandCopyAllowlist": [
+    {
+      "asset": "etics-brick-wall-12",
+      "view": "front",
+      "bands": [
+        "50",
+        "100"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "etics-brick-wall-12",
+      "view": "front",
+      "bands": [
+        "50",
+        "200"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "etics-brick-wall-12",
+      "view": "front",
+      "bands": [
+        "50",
+        "500"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "etics-brick-wall-12",
+      "view": "front",
+      "bands": [
+        "100",
+        "200"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "etics-brick-wall-12",
+      "view": "front",
+      "bands": [
+        "100",
+        "500"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "etics-brick-wall-12",
+      "view": "front",
+      "bands": [
+        "200",
+        "500"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "etics-brick-wall-30",
+      "view": "front",
+      "bands": [
+        "50",
+        "100"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "etics-brick-wall-30",
+      "view": "front",
+      "bands": [
+        "50",
+        "200"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "etics-brick-wall-30",
+      "view": "front",
+      "bands": [
+        "50",
+        "500"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "etics-brick-wall-30",
+      "view": "front",
+      "bands": [
+        "100",
+        "200"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "etics-brick-wall-30",
+      "view": "front",
+      "bands": [
+        "100",
+        "500"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "etics-brick-wall-30",
+      "view": "front",
+      "bands": [
+        "200",
+        "500"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "solid-brick-wall-1960",
+      "view": "front",
+      "bands": [
+        "50",
+        "100"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "solid-brick-wall-1960",
+      "view": "front",
+      "bands": [
+        "50",
+        "200"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "solid-brick-wall-1960",
+      "view": "front",
+      "bands": [
+        "50",
+        "500"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "solid-brick-wall-1960",
+      "view": "front",
+      "bands": [
+        "100",
+        "200"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "solid-brick-wall-1960",
+      "view": "front",
+      "bands": [
+        "100",
+        "500"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "solid-brick-wall-1960",
+      "view": "front",
+      "bands": [
+        "200",
+        "500"
+      ],
+      "reason": {
+        "en": "The front is the rendered face of a 1.0 m by 1.0 m wall sample: one plain square at every scale, with no joint, fitting or edge a finer band could add.",
+        "de": "Die Vorderansicht ist die verputzte Fläche eines Wandmusters von 1,0 m mal 1,0 m: in jedem Massstab ein glattes Quadrat ohne Fuge, Beschlag oder Kante, die ein feineres Band zeigen könnte."
+      }
+    },
+    {
+      "asset": "solid-brick-wall-1960",
+      "view": "plan",
+      "bands": [
+        "200",
+        "500"
+      ],
+      "reason": {
+        "en": "Seen from above the wall is one rectangle in both bands: the bond bands of 1:200 lie above each other and the 20 mm render is 0.1 mm on paper.",
+        "de": "Von oben ist die Wand in beiden Bändern ein Rechteck: die Verbandsbänder von 1:200 liegen übereinander und der 20 mm dicke Putz misst 0,1 mm auf dem Papier."
+      }
+    },
+    {
+      "asset": "spiral-stair",
+      "view": "front",
+      "bands": [
+        "100",
+        "200"
+      ],
+      "reason": {
+        "en": "The parts of the two bands differ only by the stiffening flange under the landing, which lies inside the drawn depth of the tread in the front; treads, column and balustrade are the same.",
+        "de": "Die Teile der beiden Bänder unterscheiden sich nur durch den Aussteifungsflansch unter dem Podest, der in der Vorderansicht innerhalb der gezeichneten Stufenhöhe liegt; Stufen, Spindel und Geländer sind gleich."
+      }
+    },
+    {
+      "asset": "stair-flight",
+      "view": "front",
+      "bands": [
+        "100",
+        "200"
+      ],
+      "reason": {
+        "en": "Seen from ahead both bands show the same treads, riser guards, stringer face and balustrades; the flanges of the stringer, the only added parts of 1:100, are not visible from ahead.",
+        "de": "Von vorn zeigen beide Bänder dieselben Stufen, Setzstufenleisten, die Wangenfläche und die Geländer; die Flansche der Wange, die einzigen zusätzlichen Teile von 1:100, sind von vorn nicht sichtbar."
+      }
+    },
+    {
+      "asset": "spiral-stair",
+      "view": "plan",
+      "bands": [
+        "100",
+        "200"
+      ],
+      "reason": {
+        "en": "From above both bands show the same treads, column, handrails and walking line; the flange of the landing lies under its tread.",
+        "de": "Von oben zeigen beide Bänder dieselben Stufen, die Spindel, die Handläufe und die Lauflinie; der Flansch des Podests liegt unter seiner Stufe."
+      }
+    },
+    {
+      "asset": "bookshelf",
+      "view": "plan",
+      "bands": [
+        "50",
+        "100"
+      ],
+      "reason": {
+        "en": "From above the bookshelf is its top board between the two side panels; back panel, plinth and shelves lie under it at every scale.",
+        "de": "Von oben ist das Regal sein Deckbrett zwischen den beiden Seitenwänden; Rückwand, Sockel und Böden liegen in jedem Massstab darunter."
+      }
+    },
+    {
+      "asset": "bookshelf",
+      "view": "plan",
+      "bands": [
+        "200",
+        "500"
+      ],
+      "reason": {
+        "en": "From above the bookshelf is its top board between the two side panels; back panel, plinth and shelves lie under it at every scale.",
+        "de": "Von oben ist das Regal sein Deckbrett zwischen den beiden Seitenwänden; Rückwand, Sockel und Böden liegen in jedem Massstab darunter."
+      }
+    },
+    {
+      "asset": "dining-table",
+      "view": "plan",
+      "bands": [
+        "50",
+        "100"
+      ],
+      "reason": {
+        "en": "From above the table is its two top halves and the leaf; legs and aprons lie under the top at every scale.",
+        "de": "Von oben ist der Tisch seine zwei Plattenhälften und die Einlegeplatte; Beine und Zargen liegen in jedem Massstab unter der Platte."
+      }
+    },
+    {
+      "asset": "dining-table",
+      "view": "plan",
+      "bands": [
+        "200",
+        "500"
+      ],
+      "reason": {
+        "en": "From above the table is its two top halves and the leaf; legs and aprons lie under the top at every scale.",
+        "de": "Von oben ist der Tisch seine zwei Plattenhälften und die Einlegeplatte; Beine und Zargen liegen in jedem Massstab unter der Platte."
+      }
+    },
+    {
+      "asset": "single-bed",
+      "view": "plan",
+      "bands": [
+        "50",
+        "100"
+      ],
+      "reason": {
+        "en": "From above the bed is its frame, posts and mattress in both bands; the centre leg and the cross beam lie under the mattress.",
+        "de": "Von oben ist das Bett in beiden Bändern Rahmen, Pfosten und Matratze; Mittelfuss und Querträger liegen unter der Matratze."
+      }
+    },
+    {
+      "asset": "hot-water-cylinder",
+      "view": "plan",
+      "bands": [
+        "200",
+        "500"
+      ],
+      "reason": {
+        "en": "From above the cylinder is its round cap with the side stubs and the hot outlet in both bands; the base ring lies under the jacket.",
+        "de": "Von oben ist der Speicher in beiden Bändern sein runder Deckel mit den seitlichen Stutzen und dem Warmwasserabgang; der Standring liegt unter dem Mantel."
+      }
+    },
+    {
+      "asset": "external-venetian-blind",
+      "view": "plan",
+      "bands": [
+        "100",
+        "200"
+      ],
+      "reason": {
+        "en": "From above the three bands show the wall head, its insulation and the closed blind box; guides, slats, window and sill lie under them.",
+        "de": "Von oben zeigen die drei Bänder Wandkopf, Dämmung und den geschlossenen Storenkasten; Führungen, Lamellen, Fenster und Fensterbank liegen darunter."
+      }
+    },
+    {
+      "asset": "external-venetian-blind",
+      "view": "plan",
+      "bands": [
+        "100",
+        "500"
+      ],
+      "reason": {
+        "en": "From above the three bands show the wall head, its insulation and the closed blind box; guides, slats, window and sill lie under them.",
+        "de": "Von oben zeigen die drei Bänder Wandkopf, Dämmung und den geschlossenen Storenkasten; Führungen, Lamellen, Fenster und Fensterbank liegen darunter."
+      }
+    },
+    {
+      "asset": "external-venetian-blind",
+      "view": "plan",
+      "bands": [
+        "200",
+        "500"
+      ],
+      "reason": {
+        "en": "From above the three bands show the wall head, its insulation and the closed blind box; guides, slats, window and sill lie under them.",
+        "de": "Von oben zeigen die drei Bänder Wandkopf, Dämmung und den geschlossenen Storenkasten; Führungen, Lamellen, Fenster und Fensterbank liegen darunter."
+      }
+    },
+    {
+      "asset": "reclaimed-steel-column",
+      "view": "plan",
+      "bands": [
+        "50",
+        "100"
+      ],
+      "reason": {
+        "en": "From above the lying column shows its upper flange, plates, stiffeners, sling and bearers in both bands; the web lies under the flange and the plate thicknesses differ by 10 to 15 mm.",
+        "de": "Von oben zeigt die liegende Stütze in beiden Bändern ihren oberen Flansch, Platten, Steifen, Schlinge und Lagerhölzer; der Steg liegt unter dem Flansch und die Plattendicken unterscheiden sich um 10 bis 15 mm."
+      }
+    },
+    {
+      "asset": "used-trench-convector",
+      "view": "front",
+      "bands": [
+        "200",
+        "500"
+      ],
+      "reason": {
+        "en": "Seen from the end both bands show the closed trough, the bearers and the rolled grille; fin pack and pipe tails lie behind the end plate.",
+        "de": "Von der Stirnseite zeigen beide Bänder die geschlossene Wanne, die Lagerhölzer und den aufgerollten Rost; Lamellenpaket und Rohrenden liegen hinter der Stirnplatte."
+      }
+    }
+  ],
+  "derivedViewAllowlist": [
+    {
+      "asset": "etics-brick-wall-12",
+      "scale": "500",
+      "view": "plan",
+      "against": "elevation",
+      "reason": {
+        "en": "At 1:500 the wall is one homogeneous block of square face: its top view and its cross-section are the same rectangle.",
+        "de": "Bei 1:500 ist die Wand ein homogener Block mit quadratischer Ansichtsfläche: Aufsicht und Querschnitt sind dasselbe Rechteck."
+      }
+    },
+    {
+      "asset": "etics-brick-wall-30",
+      "scale": "500",
+      "view": "plan",
+      "against": "elevation",
+      "reason": {
+        "en": "At 1:500 the wall is one homogeneous block of square face: its top view and its cross-section are the same rectangle.",
+        "de": "Bei 1:500 ist die Wand ein homogener Block mit quadratischer Ansichtsfläche: Aufsicht und Querschnitt sind dasselbe Rechteck."
+      }
+    },
+    {
+      "asset": "solid-brick-wall-1960",
+      "scale": "500",
+      "view": "plan",
+      "against": "elevation",
+      "reason": {
+        "en": "At 1:500 the wall is one homogeneous block of square face: its top view and its cross-section are the same rectangle.",
+        "de": "Bei 1:500 ist die Wand ein homogener Block mit quadratischer Ansichtsfläche: Aufsicht und Querschnitt sind dasselbe Rechteck."
+      }
+    },
+    {
+      "asset": "steel-column",
+      "scale": "200",
+      "view": "front",
+      "against": "elevation",
+      "reason": {
+        "en": "An HEB 200 is 200 mm in both directions; from 1:200 on its two side views differ only by 20 mm of plate overhang per side, 0.1 mm on paper.",
+        "de": "Ein HEB 200 misst in beiden Richtungen 200 mm; ab 1:200 unterscheiden sich seine beiden Seitenansichten nur um 20 mm Plattenüberstand je Seite, 0,1 mm auf dem Papier."
+      }
+    },
+    {
+      "asset": "steel-column",
+      "scale": "500",
+      "view": "front",
+      "against": "elevation",
+      "reason": {
+        "en": "An HEB 200 is 200 mm in both directions; from 1:200 on its two side views differ only by 20 mm of plate overhang per side, 0.1 mm on paper.",
+        "de": "Ein HEB 200 misst in beiden Richtungen 200 mm; ab 1:200 unterscheiden sich seine beiden Seitenansichten nur um 20 mm Plattenüberstand je Seite, 0,1 mm auf dem Papier."
+      }
+    }
+  ],
+  "open": [
+    {
+      "asset": "steel-column",
+      "scale": "100",
+      "view": "front",
+      "against": "elevation",
+      "distance": 0.02522,
+      "reason": {
+        "en": "Not the same drawing: the side shows the stiffeners at the flange edges and the anchors beside them, the front one stiffener edge in the middle; the threshold 0.03 of the 3 m column is 90 mm and no part of an HEB 200 differs by that much.",
+        "de": "Nicht dieselbe Zeichnung: die Seitenansicht zeigt die Steifen an den Flanschkanten und die Anker daneben, die Vorderansicht eine Steifenkante in der Mitte; die Schwelle 0,03 der 3 m hohen Stütze beträgt 90 mm, und kein Teil eines HEB 200 unterscheidet sich um so viel."
+      }
+    },
+    {
+      "asset": "glulam-beam",
+      "scale": "500",
+      "view": "plan",
+      "against": "elevation",
+      "distance": 0.02875,
+      "reason": {
+        "en": "Not the same drawing: the plan is 160 mm wide, the side 620 mm (0.32 against 1.24 mm on paper); the threshold 0.03 of the 8 m beam is 240 mm, more than the two differ.",
+        "de": "Nicht dieselbe Zeichnung: der Grundriss ist 160 mm breit, die Seitenansicht 620 mm (0,32 gegen 1,24 mm auf dem Papier); die Schwelle 0,03 des 8 m langen Trägers beträgt 240 mm, mehr als der Unterschied."
+      }
+    }
+  ]
+}

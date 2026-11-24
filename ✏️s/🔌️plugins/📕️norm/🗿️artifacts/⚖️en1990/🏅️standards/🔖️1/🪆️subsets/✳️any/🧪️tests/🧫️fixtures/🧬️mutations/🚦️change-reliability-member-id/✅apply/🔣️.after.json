@@ -13,13 +13,13 @@
   "betaComputed": -3.75,
   "permanents": [
     {
-      "id": "G",
+      "id": "G-sup",
       "kind": "gSup",
       "gk": 80000.5
     },
     {
-      "id": "G",
-      "kind": "gSup",
+      "id": "G-inf",
+      "kind": "gInf",
       "gk": -20000.25
     }
   ],
@@ -131,7 +131,7 @@
       "secondOrderAnalysis": 0.0
     },
     {
-      "id": "duplicate",
+      "id": "duplicate-2",
       "labelEn": "",
       "labelDe": "B",
       "rdStr": 21.25,
@@ -186,7 +186,7 @@
       "dampingRatio": 0.0
     },
     {
-      "id": "B",
+      "id": "B-2",
       "memberId": "missing",
       "deckAcceleration": 11.25,
       "deckAccelerationLimit": 12.5,
@@ -230,7 +230,7 @@
       "cycles": 2000000.0
     },
     {
-      "id": "F",
+      "id": "F-2",
       "memberId": "duplicate",
       "detailCategory": 90000000.0,
       "stressRange": -1.5,
@@ -275,7 +275,7 @@
       "theoryMean": 0.0
     },
     {
-      "id": "T",
+      "id": "T-2",
       "quantity": "",
       "distribution": "normal",
       "sampleSize": 4294967295,

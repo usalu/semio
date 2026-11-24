@@ -1,0 +1,5 @@
+[
+{"op": "shape-add", "scale": "100", "view": "elevation", "after": "door-r", "shape": {"id": "door-l", "bone": "flap-l", "role": "body", "z": 3.9, "filled": true, "tone": 0.85, "kind": "rect", "x": 0, "y": -0.016, "w": 0.3915, "h": 0.016, "regions": ["fronts", "handles"], "material": "chipboard-white-foil", "penMm": 0.25}},
+{"op": "shape-add", "scale": "200", "view": "elevation", "after": "door-r", "shape": {"id": "door-l", "bone": "flap-l", "role": "body", "z": 3.9, "filled": true, "tone": 0.85, "kind": "rect", "x": 0, "y": -0.016, "w": 0.3915, "h": 0.016, "regions": ["fronts", "handles"], "material": "chipboard-white-foil"}},
+{"op": "shape-add", "scale": "500", "view": "elevation", "after": "door-r", "shape": {"id": "door-l", "bone": "flap-l", "role": "body", "z": 3.9, "filled": true, "tone": 0.85, "kind": "rect", "x": 0, "y": -0.016, "w": 0.3915, "h": 0.016, "regions": ["fronts", "handles"], "material": "chipboard-white-foil"}}
+]

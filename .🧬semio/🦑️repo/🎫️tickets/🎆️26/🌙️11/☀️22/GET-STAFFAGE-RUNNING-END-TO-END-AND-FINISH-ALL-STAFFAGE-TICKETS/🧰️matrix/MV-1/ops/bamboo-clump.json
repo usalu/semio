@@ -1,0 +1,11 @@
+[
+  {"op":"anchor","id":"tp-sun-1","set":{"bone":"fol-1","x":0.7985,"y":0.1875,"z":0.2479}},
+  {"op":"anchor","id":"tp-shade-1","set":{"bone":"fol-1","x":0.0209,"y":-0.059,"z":0.069}},
+  {"op":"anchor","id":"tp-shade-2","set":{"bone":"fol-2","x":0.1504,"y":-0.0693,"z":0.0539}},
+  {"op":"anchor","id":"tp-sun-3","set":{"bone":"fol-3","x":0.8725,"y":-0.1183,"z":0.1561}},
+  {"op":"anchor","id":"tp-shade-3","set":{"bone":"fol-3","x":0.0797,"y":-0.0468,"z":-0.0706}},
+  {"op":"anchor","id":"tp-sun-4","set":{"bone":"fol-4","x":0.8986,"y":-0.1294,"z":-0.0766}},
+  {"op":"anchor","id":"tp-shade-4","set":{"bone":"fol-4","x":0.0669,"y":0.0532,"z":-0.1104}},
+  {"op":"anchor","id":"tp-shade-5","set":{"bone":"fol-5","x":0.0799,"y":0.0909,"z":0.09}},
+  {"op":"anchor","id":"tp-shade-6","set":{"bone":"fol-6","x":0.0463,"y":-0.0107,"z":0.0088}}
+]

@@ -1,0 +1,9 @@
+{
+  "ops": [
+    { "op": "contact-split", "anchor": "stand-feet", "parts": [
+      { "id": "stand-foot-left", "y": 0, "z": 0.27, "footprintLengthM": 0.032, "footprintWidthM": 0.032, "title": { "en": "Rubber foot of the tripod on the floor, left", "de": "Gummifuß des Dreibeins auf dem Boden, links" } },
+      { "id": "stand-foot-front", "y": -0.233827, "z": -0.135, "footprintLengthM": 0.032, "footprintWidthM": 0.032, "title": { "en": "Rubber foot of the tripod on the floor, front right", "de": "Gummifuß des Dreibeins auf dem Boden, vorn rechts" } },
+      { "id": "stand-foot-rear", "y": 0.233827, "z": -0.135, "footprintLengthM": 0.032, "footprintWidthM": 0.032, "title": { "en": "Rubber foot of the tripod on the floor, rear right", "de": "Gummifuß des Dreibeins auf dem Boden, hinten rechts" } }
+    ] }
+  ]
+}

@@ -374,8 +374,10 @@ try {
       assert.equal(Number(await x.inputValue()), 0);
       await x.fill("1.5");
       await x.press("Enter");
-      await artifact.click();
+      if (!(await page.getByText(/^n1 · \(/).first().isVisible())) await artifact.click();
       await page.getByText(/^n1 · \(1[.,]50,/).first().waitFor({ state: "visible" });
+      await artifact.click();
+      await page.getByText(/^n1 · \(/).first().waitFor({ state: "hidden" });
     }
     if (probeEdit) {
       console.log("[DEBUG] FEM 2D Artifact n1 X updated to 1.5", JSON.stringify(await page.evaluate(() => ({
@@ -396,7 +398,7 @@ try {
         const updated = await solved(original.deformation);
         console.log("[DEBUG] Updated FEM 2D", updated.label);
       }
-      await results.click({ position: { x: 16, y: 16 } });
+      await results.click({ position: { x: 40, y: 200 } });
       await page.getByRole("button", { name: "Results", exact: true }).first().click();
       await page.getByRole("combobox", { name: "Source", exact: true }).click();
       await page.getByRole("option", { name: "Live Load", exact: true }).click();

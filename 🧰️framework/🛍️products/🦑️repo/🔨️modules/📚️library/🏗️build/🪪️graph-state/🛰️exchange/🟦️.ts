@@ -53,8 +53,17 @@ export function graphEntryKeyV1(state:GraphStateV1):string{return sha256(JSON.st
 /** 🪢️ The retention slot of an entry: a newer state of the same kind, platform and tooling supersedes older ones. */
 export function graphEntrySlotV1(state:GraphStateV1):string{return slotIdV1(policy.slotDomain as never,graphStateSlotParts(state.frame));}
 
-/** 🗜️ Compresses a neutral document into the blobs the cache stores (one per 32 MiB of compressed output), named `<name>.br` or `<name>.br.<n>`. */
+/** 🗜️ Compresses a neutral document into the blobs the cache stores (one per 32 MiB of compressed output), named `<name>.br` or `<name>.br.<n>`; the same bytes object is compressed once (a shared entry is offered again with every entry that refers to it) and its blobs are hashed once. */
 export function packGraphDocumentV1(document:GraphDocumentV1):readonly GraphDocumentV1[]{
+ const known=packedDocuments.get(document.bytes);
+ if(known!==undefined&&known.name===document.name)return known.parts;
+ const parts=packGraphDocumentUncachedV1(document);
+ packedDocuments.set(document.bytes,{name:document.name,parts});
+ return parts;
+}
+const packedDocuments=new WeakMap<Uint8Array,Readonly<{name:string;parts:readonly GraphDocumentV1[]}>>(),blobHashes=new WeakMap<Uint8Array,string>();
+const blobHashV1=(bytes:Uint8Array):string=>{let hash=blobHashes.get(bytes);if(hash===undefined){hash=sha256(bytes);blobHashes.set(bytes,hash);}return hash;};
+function packGraphDocumentUncachedV1(document:GraphDocumentV1):readonly GraphDocumentV1[]{
  const packed=brotliCompressSync(document.bytes,{params:{[constants.BROTLI_PARAM_QUALITY]:5,[constants.BROTLI_PARAM_LGWIN]:22,[constants.BROTLI_PARAM_SIZE_HINT]:document.bytes.length}}),part=policy.blobMaximumBytes;
  if(packed.length<=part)return [{name:document.name+".br",bytes:packed}];
  const parts:GraphDocumentV1[]=[];
@@ -273,7 +282,7 @@ export async function publishGraphEntryOutcomeV1(input:Readonly<{client:GraphFle
   if(hold?.lost()===true)return refused("claim-lost");
   const limit=graphDocumentLimitV1(input.documents);
   if(limit!==undefined)return refused(limit.code,limit.text);
-  const blobs=input.documents.flatMap(document=>packGraphDocumentV1(document)).map(blob=>({name:blob.name,bytes:blob.bytes,hash:sha256(blob.bytes)}));
+  const blobs=input.documents.flatMap(document=>packGraphDocumentV1(document)).map(blob=>({name:blob.name,bytes:blob.bytes,hash:blobHashV1(blob.bytes)}));
   if(blobs.length>policy.entryMaximumDocuments)return refused("limit-documents",`${blobs.length} blobs, above ${policy.entryMaximumDocuments} / ${blobs.length} Blobs, mehr als ${policy.entryMaximumDocuments}`);
   let failure:GraphPutV1|undefined;
   await each(blobs,3,async blob=>{if(failure!==undefined)return;if(await client.hasBlob(blob.hash)===true)return;const put=await client.putBlob(blob.hash,blob.bytes);if(!put.stored)failure=put;});

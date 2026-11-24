@@ -32,3 +32,4 @@ semio-s-artifact-stdio-semio-flow = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }

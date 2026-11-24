@@ -1,0 +1,12 @@
+humans	jogger	0 / 16; flat+solid; 8 other id				
+humans	kneeling-gardener	2 / 7; solid; 1 other id	24; descendant 24			
+humans	leaning-person	1 / 29; flat+solid; 6 other id; 6 extent	24; other bone 20, off 4			
+humans	mobility-scooter-user	1 / 1; flat	64; descendant 32, off 32			
+humans	nurse-walking	2 / 241; flat; 37 extent	11; descendant 9, other bone 1, off 1			
+humans	office-worker-carrying-laptop	2 / 182; flat; 14 extent	24; descendant 18, off 4, other bone 2			
+humans	painter-at-easel	2 / 4; solid				
+humans	parent-carrying-toddler	0 / 57; solid	20; off 20			
+humans	parent-with-child-on-shoulders	2 / 74; flat; 6 extent	20; descendant 12, off 8			
+humans	parent-with-stroller	6 / 83; flat+solid; 2 extent	224; descendant 220, off 4			
+humans	patient-with-iv-pole	2 / 162; flat; 6 extent	24; descendant 18, off 4, other bone 2			
+humans	person-carrying-ladder	8 / 108; flat+solid; 33 other id; 1 extent	28; descendant 28			

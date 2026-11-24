@@ -37,7 +37,7 @@ const work = join(scratch, "work", name), out = join(scratch, "out", name);
 rmSync(work, { recursive: true, force: true });
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
-copy(join(print, "🖋️latex"), join(work, "semio-latex"));
+copy(process.env.SEMIO_PRINT_LATEX ?? join(print, "🖋️latex"), join(work, "semio-latex"));
 copy(join(print, "🖼️assets"), join(work, "assets"));
 copy(join(print, "🔨️modules/🕸️graph"), join(work, "modules/graph"));
 copy(isAbsolute(source) ? source : join(repo, source), work);
@@ -49,7 +49,7 @@ for (let pass = 0; pass < passes; pass++) {
   result = spawnSync(tectonic, ["--keep-logs", "--keep-intermediates", "--reruns", "0", "-Z", "deterministic-mode", ...search.flatMap(path => ["-Z", `search-path=${path}`]), "--outdir", work, staged(main)], {
     cwd: work,
     encoding: "utf8",
-    timeout: 240000,
+    timeout: Number(process.env.SEMIO_PRINT_TIMEOUT ?? "240000"),
     env: { ...process.env, SOURCE_DATE_EPOCH: "1782864000", TZ: "UTC" },
   });
   if (result.status !== 0) break;

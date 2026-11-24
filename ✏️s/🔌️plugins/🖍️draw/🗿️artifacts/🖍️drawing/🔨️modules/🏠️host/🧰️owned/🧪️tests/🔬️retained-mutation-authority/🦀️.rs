@@ -40,7 +40,6 @@ use semio_s_artifact_draw_drawing_style::set_layer_fill_rule::mutation::SetLayer
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_host_arena::native_retirement::DrawingRetirementOwner;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_host_arena::initialization_catalog_close::{close_initialization_catalog, initialization_catalog_close_demands};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_host::owned::mutation_candidate::*;
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_host::owned::initialization_turn::*;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_host::owned::*;
 use semio_s_artifact_draw_drawing_structure::create_layer::mutation::CreateLayer;
 use semio_s_artifact_draw_drawing_structure::delete_layer::mutation::DeleteLayer;

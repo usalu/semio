@@ -134,6 +134,18 @@
           "de": "Die Toolchain-Dateien jedes nativen Blatts: das Cargo-Ausführungsskript sowie die Rust-Format-, Bun- und TypeScript-Konfiguration des Arbeitsbereichs."
         }
       },
+      "cargo-execution": {
+        "entries": [
+          "../🦀️cargo/🏃️execution/📜️script.ts"
+        ],
+        "resources": [],
+        "view": "native",
+        "selection": "included",
+        "contract": {
+          "en": "The cargo execution script with everything it imports, as a module a target declares as an input (every component target lists it): the target names this tool by one reference and its own entry holds none of the files, so an edit inside the build library moves this group and no entry of any component target.",
+          "de": "Das Cargo-Ausführungsskript mit allem, was es importiert, als Modul, das ein Target als Eingabe deklariert (jedes Komponenten-Target führt es auf): das Target nennt dieses Werkzeug durch einen Verweis und sein eigener Eintrag hält keine der Dateien, sodass eine Änderung in der Build-Bibliothek diese Gruppe bewegt und keinen Eintrag eines Komponenten-Targets."
+        }
+      },
       "normalization-digests": {
         "entries": [
           "../../🧹️normalization/🧵️digests/🟦️.ts"

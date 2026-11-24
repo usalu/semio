@@ -34,12 +34,27 @@ pub fn closed_in_source(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl
 struct Binding{original:OriginalSourceBinding,pointer:usize,revision:[u8;32]}
 semio_framework_value::artifact_retire_leaf!(Binding);
 type Admission=super::source_staging::SourceStaging<IfcSnapshot,SnapshotLease>;
+/// 🧳️ The published source custody, closed through its own paid `close_step`.
+#[derive(Default)]
+pub struct SourceCustody{source:Option<SnapshotSource>,closing:bool}
+impl SourceCustody{
+    fn begin_close(&mut self){self.closing=true;}
+    fn empty(&self)->bool{self.source.as_ref().is_none_or(SnapshotSource::terminal_is_empty)}
+    fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{match self.source.as_ref().filter(|source|!source.terminal_is_empty()){Some(source)=>source.next_close_demand(body),None=>Ok(Default::default())}}
+    fn close_owned(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
+        let Some(source)=self.source.as_mut()else{return super::idle_step(RetainedCloneStep::Complete(Default::default()))};
+        let turn=super::settled(source.close_step(body,effect));
+        if source.terminal_is_empty(){self.source=None;}
+        turn
+    }
+}
+semio_s_artifact_stdio_ifc_details_profile::retire_self!([] SourceCustody);
 #[derive(Default,semio_framework_value::RetireOwned)]
-pub struct SourceLoan{admission:Option<Admission>,source:Option<SnapshotSource>,binding:Option<Binding>}
+pub struct SourceLoan{admission:Option<Admission>,source:SourceCustody,binding:Option<Binding>}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"staging.original-source-loan")}
 impl SourceLoan{
     fn metadata_bytes()->usize{2*size_of::<Self>()+size_of::<SnapshotLease>()}
-    fn ready(&self)->bool{self.admission.is_none()&&self.source.is_some()}
+    fn ready(&self)->bool{self.admission.is_none()&&self.source.source.is_some()}
     pub fn demands(&self)->Result<RetirementDemand,ValueError>{
         if self.ready(){return Ok(Default::default());}
         match self.admission.as_ref(){
@@ -47,7 +62,7 @@ impl SourceLoan{
             None=>Ok(RetirementDemand{copy_bytes:Self::metadata_bytes(),depth:1,..Default::default()}),
         }
     }
-    pub fn source(&self)->Option<&SnapshotSource>{if self.ready(){self.source.as_ref()}else{None}}
+    pub fn source(&self)->Option<&SnapshotSource>{if self.ready(){self.source.source.as_ref()}else{None}}
     pub fn advance(&mut self,owner:&Arc<IfcSnapshot>,expected:&IfcSnapshot,revision:[u8;32],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         let pointer=expected as *const _ as usize;
         if !std::ptr::eq(owner.as_ref(),expected)||self.binding.is_some_and(|binding|!binding.original.matches(cx)||binding.pointer!=pointer||binding.revision!=revision){return Err(invalid().into());}
@@ -63,12 +78,12 @@ impl SourceLoan{
             return Ok(false);
         };
         if admission.terminal_is_empty(){
-            if self.source.is_none(){return Err(invalid().into());}
+            if self.source.source.is_none(){return Err(invalid().into());}
             self.admission=None;
             cx.consume_retained(progress)?;cx.consume_fuel(1);
             return Ok(true);
         }
-        let source=&mut self.source;
+        let source=&mut self.source.source;
         funded_turn(cx,|effect|admission.advance(source,effect))?;
         Ok(false)
     }

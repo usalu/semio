@@ -1,0 +1,55 @@
+{
+ "version": 1,
+ "policy": {"productPrefix": "q", "retainMilliseconds": 43200000},
+ "retained": [
+  {"id": "p1a2b3c", "lastUsedMs": 99000000, "nowMs": 100000000, "holdUntilMs": 100000001, "expect": true},
+  {"id": "p1a2b3c", "lastUsedMs": 99000000, "nowMs": 100000000, "holdUntilMs": 100000000, "expect": false},
+  {"id": "p1a2b3c", "lastUsedMs": 99000000, "nowMs": 100000000, "expect": false},
+  {"id": "q1a2b3", "lastUsedMs": 0, "nowMs": 100000000, "holdUntilMs": 100000001, "expect": true},
+  {"id": "q1a2b3", "lastUsedMs": 99000000, "nowMs": 100000000, "expect": true}
+ ],
+ "trim": [
+  {
+   "id": "a held lane neither counts nor is a victim, the unheld lanes are trimmed least recently used first",
+   "nowMs": 100000000,
+   "bounds": {"maximumLanes": 1, "maximumLiveLanes": 5, "quotaBytes": 100},
+   "lanes": [
+    {"id": "p000001", "claimed": false, "lastUsedMs": 10, "crateKey": "hub", "bytes": 5000, "held": true},
+    {"id": "p000002", "claimed": false, "lastUsedMs": 20, "crateKey": "a", "bytes": 60},
+    {"id": "p000003", "claimed": false, "lastUsedMs": 30, "crateKey": "b", "bytes": 60}
+   ],
+   "expect": ["p000002"]
+  }
+ ],
+ "acquire": [
+  {
+   "id": "the held lane of the same crate set is taken again whatever the bounds say",
+   "bounds": {"maximumLanes": 1, "maximumLiveLanes": 5, "quotaBytes": 100},
+   "request": {"crateKey": "hub"},
+   "lanes": [
+    {"id": "p000001", "claimed": false, "lastUsedMs": 10, "crateKey": "hub", "bytes": 5000, "held": true},
+    {"id": "p000002", "claimed": false, "lastUsedMs": 20, "crateKey": "a", "bytes": 60}
+   ],
+   "expect": {"kind": "warm", "id": "p000001"}
+  },
+  {
+   "id": "another crate set never takes the held lane, neither as a new lane's slot nor as the least recently used one",
+   "bounds": {"maximumLanes": 1, "maximumLiveLanes": 5, "quotaBytes": 100},
+   "request": {"crateKey": "other"},
+   "lanes": [
+    {"id": "p000001", "claimed": false, "lastUsedMs": 10, "crateKey": "hub", "bytes": 5000, "held": true}
+   ],
+   "expect": {"kind": "new"}
+  },
+  {
+   "id": "an unheld lane over the bounds is still the least recently used victim of another crate set",
+   "bounds": {"maximumLanes": 1, "maximumLiveLanes": 5, "quotaBytes": 100},
+   "request": {"crateKey": "other"},
+   "lanes": [
+    {"id": "p000001", "claimed": false, "lastUsedMs": 10, "crateKey": "hub", "bytes": 5000, "held": true},
+    {"id": "p000002", "claimed": false, "lastUsedMs": 20, "crateKey": "a", "bytes": 60}
+   ],
+   "expect": {"kind": "lru", "id": "p000002"}
+  }
+ ]
+}

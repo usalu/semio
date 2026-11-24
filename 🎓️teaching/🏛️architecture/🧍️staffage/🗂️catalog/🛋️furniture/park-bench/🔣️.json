@@ -219,36 +219,72 @@
     },
     "anchors": [
       {
-        "id": "contact-left",
+        "id": "contact-left-front",
         "bone": "end-left",
         "x": 0,
         "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Left foot",
-          "de": "Linker Fuß"
+          "en": "Left foot, front pad",
+          "de": "Linker Fuß, vordere Platte"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.07,
-        "footprintWidthM": 0.583,
-        "frictionCoefficient": 0.6
+        "footprintWidthM": 0.07,
+        "frictionCoefficient": 0.6,
+        "z": -0.268
       },
       {
-        "id": "contact-right",
+        "id": "contact-left-rear",
+        "bone": "end-left",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Left foot, rear pad",
+          "de": "Linker Fuß, hintere Platte"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.07,
+        "footprintWidthM": 0.07,
+        "frictionCoefficient": 0.6,
+        "z": 0.245
+      },
+      {
+        "id": "contact-right-front",
         "bone": "end-right",
         "x": 0,
         "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Right foot",
-          "de": "Rechter Fuß"
+          "en": "Right foot, front pad",
+          "de": "Rechter Fuß, vordere Platte"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.07,
-        "footprintWidthM": 0.583,
-        "frictionCoefficient": 0.6
+        "footprintWidthM": 0.07,
+        "frictionCoefficient": 0.6,
+        "z": -0.268
+      },
+      {
+        "id": "contact-right-rear",
+        "bone": "end-right",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right foot, rear pad",
+          "de": "Rechter Fuß, hintere Platte"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.07,
+        "footprintWidthM": 0.07,
+        "frictionCoefficient": 0.6,
+        "z": 0.245
       }
     ],
     "representations": {
@@ -2702,6 +2738,36 @@
               "material": "steel-painted"
             },
             {
+              "id": "l-pads-rear",
+              "bone": "end-left",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.3,
+              "region": "steel-frame",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": 0.085,
+              "y": 0.21,
+              "w": 0.07,
+              "h": 0.07
+            },
+            {
+              "id": "l-pads",
+              "bone": "end-left",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.3,
+              "region": "steel-frame",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": 0.085,
+              "y": -0.2991,
+              "w": 0.07,
+              "h": 0.0661
+            },
+            {
               "id": "l-frame",
               "bone": "end-left",
               "role": "body",
@@ -2730,6 +2796,36 @@
               "h": 0.5992,
               "region": "steel-frame",
               "material": "steel-painted"
+            },
+            {
+              "id": "r-pads-rear",
+              "bone": "end-right",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.3,
+              "region": "steel-frame",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": 1.645,
+              "y": 0.21,
+              "w": 0.07,
+              "h": 0.07
+            },
+            {
+              "id": "r-pads",
+              "bone": "end-right",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.3,
+              "region": "steel-frame",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": 1.645,
+              "y": -0.2991,
+              "w": 0.07,
+              "h": 0.0661
             },
             {
               "id": "r-frame",
@@ -3144,8 +3240,10 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "contact-left",
-          "contact-right"
+          "contact-left-front",
+          "contact-left-rear",
+          "contact-right-front",
+          "contact-right-rear"
         ],
         "thermal": {
           "regions": {
@@ -3179,8 +3277,10 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "contact-left",
-          "contact-right"
+          "contact-left-front",
+          "contact-left-rear",
+          "contact-right-front",
+          "contact-right-rear"
         ],
         "thermal": {
           "regions": {
@@ -3237,8 +3337,10 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "contact-left",
-          "contact-right"
+          "contact-left-front",
+          "contact-left-rear",
+          "contact-right-front",
+          "contact-right-rear"
         ],
         "thermal": {
           "regions": {
@@ -3331,12 +3433,22 @@
         ],
         "contacts": [
           {
-            "anchor": "contact-left",
+            "anchor": "contact-left-front",
             "fromS": 0,
             "toS": 2
           },
           {
-            "anchor": "contact-right",
+            "anchor": "contact-left-rear",
+            "fromS": 0,
+            "toS": 2
+          },
+          {
+            "anchor": "contact-right-front",
+            "fromS": 0,
+            "toS": 2
+          },
+          {
+            "anchor": "contact-right-rear",
             "fromS": 0,
             "toS": 2
           }
@@ -3435,12 +3547,22 @@
         ],
         "contacts": [
           {
-            "anchor": "contact-left",
+            "anchor": "contact-left-front",
             "fromS": 0,
             "toS": 60
           },
           {
-            "anchor": "contact-right",
+            "anchor": "contact-left-rear",
+            "fromS": 0,
+            "toS": 60
+          },
+          {
+            "anchor": "contact-right-front",
+            "fromS": 0,
+            "toS": 60
+          },
+          {
+            "anchor": "contact-right-rear",
             "fromS": 0,
             "toS": 60
           }
@@ -3675,13 +3797,15 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "contact-left",
-        "contact-right"
+        "contact-left-front",
+        "contact-left-rear",
+        "contact-right-front",
+        "contact-right-rear"
       ],
       "assumptions": [
         {
-          "en": "The bench is a rigid body on two foot contacts; each cast end frame stands on a front and a rear foot pad and carries the seat slats on its raked rail and the back slats on its back post.",
-          "de": "Die Bank ist ein starrer Körper auf zwei Fußkontakten; jedes gegossene Endgestell steht auf einer vorderen und einer hinteren Fußplatte und trägt die Sitzlatten auf seiner geneigten Zarge und die Rückenlatten auf seinem Rückenpfosten."
+          "en": "The bench is a rigid body on four foot-pad contacts; each cast end frame stands on a front and a rear foot pad and carries the seat slats on its raked rail and the back slats on its back post.",
+          "de": "Die Bank ist ein starrer Körper auf vier Fußplattenkontakten; jedes gegossene Endgestell steht auf einer vorderen und einer hinteren Fußplatte und trägt die Sitzlatten auf seiner geneigten Zarge und die Rückenlatten auf seinem Rückenpfosten."
         },
         {
           "en": "Occupant masses are point loads on the seat; no member bending is checked.",
@@ -6847,7 +6971,7 @@
             "part": "joint"
           },
           {
-            "id": "support-contact-left",
+            "id": "support-contact-left-front",
             "kind": "box",
             "bone": "end-left",
             "material": "steel-painted",
@@ -6861,24 +6985,39 @@
             "transform": {
               "translation": [
                 0.00375,
-                0,
+                0.0,
                 -0.268
-              ]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [
-                0,
-                0,
-                0.513
               ]
             },
             "member": "end-left",
             "part": "support",
-            "anchor": "contact-left"
+            "anchor": "contact-left-front"
           },
           {
-            "id": "support-contact-right",
+            "id": "support-contact-left-rear",
+            "kind": "box",
+            "bone": "end-left",
+            "material": "steel-painted",
+            "role": "ground",
+            "tone": 0.2,
+            "size": [
+              0.0075,
+              0.07,
+              0.07
+            ],
+            "transform": {
+              "translation": [
+                0.00375,
+                0.0,
+                0.245
+              ]
+            },
+            "member": "end-left",
+            "part": "support",
+            "anchor": "contact-left-rear"
+          },
+          {
+            "id": "support-contact-right-front",
             "kind": "box",
             "bone": "end-right",
             "material": "steel-painted",
@@ -6892,21 +7031,36 @@
             "transform": {
               "translation": [
                 0.00375,
-                0,
+                0.0,
                 -0.268
-              ]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [
-                0,
-                0,
-                0.513
               ]
             },
             "member": "end-right",
             "part": "support",
-            "anchor": "contact-right"
+            "anchor": "contact-right-front"
+          },
+          {
+            "id": "support-contact-right-rear",
+            "kind": "box",
+            "bone": "end-right",
+            "material": "steel-painted",
+            "role": "ground",
+            "tone": 0.2,
+            "size": [
+              0.0075,
+              0.07,
+              0.07
+            ],
+            "transform": {
+              "translation": [
+                0.00375,
+                0.0,
+                0.245
+              ]
+            },
+            "member": "end-right",
+            "part": "support",
+            "anchor": "contact-right-rear"
           },
           {
             "id": "mass-end-left",
@@ -8347,7 +8501,7 @@
             "part": "joint"
           },
           {
-            "id": "support-contact-left",
+            "id": "support-contact-left-front",
             "kind": "box",
             "bone": "end-left",
             "material": "steel-painted",
@@ -8361,24 +8515,39 @@
             "transform": {
               "translation": [
                 0.0075,
-                0,
+                0.0,
                 -0.268
-              ]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [
-                0,
-                0,
-                0.513
               ]
             },
             "member": "end-left",
             "part": "support",
-            "anchor": "contact-left"
+            "anchor": "contact-left-front"
           },
           {
-            "id": "support-contact-right",
+            "id": "support-contact-left-rear",
+            "kind": "box",
+            "bone": "end-left",
+            "material": "steel-painted",
+            "role": "ground",
+            "tone": 0.2,
+            "size": [
+              0.015,
+              0.07,
+              0.07
+            ],
+            "transform": {
+              "translation": [
+                0.0075,
+                0.0,
+                0.245
+              ]
+            },
+            "member": "end-left",
+            "part": "support",
+            "anchor": "contact-left-rear"
+          },
+          {
+            "id": "support-contact-right-front",
             "kind": "box",
             "bone": "end-right",
             "material": "steel-painted",
@@ -8392,21 +8561,36 @@
             "transform": {
               "translation": [
                 0.0075,
-                0,
+                0.0,
                 -0.268
-              ]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [
-                0,
-                0,
-                0.513
               ]
             },
             "member": "end-right",
             "part": "support",
-            "anchor": "contact-right"
+            "anchor": "contact-right-front"
+          },
+          {
+            "id": "support-contact-right-rear",
+            "kind": "box",
+            "bone": "end-right",
+            "material": "steel-painted",
+            "role": "ground",
+            "tone": 0.2,
+            "size": [
+              0.015,
+              0.07,
+              0.07
+            ],
+            "transform": {
+              "translation": [
+                0.0075,
+                0.0,
+                0.245
+              ]
+            },
+            "member": "end-right",
+            "part": "support",
+            "anchor": "contact-right-rear"
           },
           {
             "id": "mass-end-left",
@@ -9395,7 +9579,7 @@
             "part": "joint"
           },
           {
-            "id": "support-contact-left",
+            "id": "support-contact-left-front",
             "kind": "box",
             "bone": "end-left",
             "material": "steel-painted",
@@ -9409,24 +9593,39 @@
             "transform": {
               "translation": [
                 0.015,
-                0,
+                0.0,
                 -0.268
-              ]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [
-                0,
-                0,
-                0.513
               ]
             },
             "member": "end-left",
             "part": "support",
-            "anchor": "contact-left"
+            "anchor": "contact-left-front"
           },
           {
-            "id": "support-contact-right",
+            "id": "support-contact-left-rear",
+            "kind": "box",
+            "bone": "end-left",
+            "material": "steel-painted",
+            "role": "ground",
+            "tone": 0.2,
+            "size": [
+              0.03,
+              0.07,
+              0.07
+            ],
+            "transform": {
+              "translation": [
+                0.015,
+                0.0,
+                0.245
+              ]
+            },
+            "member": "end-left",
+            "part": "support",
+            "anchor": "contact-left-rear"
+          },
+          {
+            "id": "support-contact-right-front",
             "kind": "box",
             "bone": "end-right",
             "material": "steel-painted",
@@ -9440,21 +9639,36 @@
             "transform": {
               "translation": [
                 0.015,
-                0,
+                0.0,
                 -0.268
-              ]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [
-                0,
-                0,
-                0.513
               ]
             },
             "member": "end-right",
             "part": "support",
-            "anchor": "contact-right"
+            "anchor": "contact-right-front"
+          },
+          {
+            "id": "support-contact-right-rear",
+            "kind": "box",
+            "bone": "end-right",
+            "material": "steel-painted",
+            "role": "ground",
+            "tone": 0.2,
+            "size": [
+              0.03,
+              0.07,
+              0.07
+            ],
+            "transform": {
+              "translation": [
+                0.015,
+                0.0,
+                0.245
+              ]
+            },
+            "member": "end-right",
+            "part": "support",
+            "anchor": "contact-right-rear"
           },
           {
             "id": "mass-end-left",
@@ -10507,7 +10721,7 @@
             "part": "joint"
           },
           {
-            "id": "support-contact-left",
+            "id": "support-contact-left-front",
             "kind": "box",
             "bone": "end-left",
             "material": "steel-painted",
@@ -10521,24 +10735,39 @@
             "transform": {
               "translation": [
                 0.0375,
-                0,
+                0.0,
                 -0.268
-              ]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [
-                0,
-                0,
-                0.513
               ]
             },
             "member": "end-left",
             "part": "support",
-            "anchor": "contact-left"
+            "anchor": "contact-left-front"
           },
           {
-            "id": "support-contact-right",
+            "id": "support-contact-left-rear",
+            "kind": "box",
+            "bone": "end-left",
+            "material": "steel-painted",
+            "role": "ground",
+            "tone": 0.2,
+            "size": [
+              0.075,
+              0.075,
+              0.075
+            ],
+            "transform": {
+              "translation": [
+                0.0375,
+                0.0,
+                0.245
+              ]
+            },
+            "member": "end-left",
+            "part": "support",
+            "anchor": "contact-left-rear"
+          },
+          {
+            "id": "support-contact-right-front",
             "kind": "box",
             "bone": "end-right",
             "material": "steel-painted",
@@ -10552,21 +10781,36 @@
             "transform": {
               "translation": [
                 0.0375,
-                0,
+                0.0,
                 -0.268
-              ]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [
-                0,
-                0,
-                0.513
               ]
             },
             "member": "end-right",
             "part": "support",
-            "anchor": "contact-right"
+            "anchor": "contact-right-front"
+          },
+          {
+            "id": "support-contact-right-rear",
+            "kind": "box",
+            "bone": "end-right",
+            "material": "steel-painted",
+            "role": "ground",
+            "tone": 0.2,
+            "size": [
+              0.075,
+              0.075,
+              0.075
+            ],
+            "transform": {
+              "translation": [
+                0.0375,
+                0.0,
+                0.245
+              ]
+            },
+            "member": "end-right",
+            "part": "support",
+            "anchor": "contact-right-rear"
           },
           {
             "id": "mass-end-left",

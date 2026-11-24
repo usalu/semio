@@ -550,6 +550,56 @@ pub struct Placement {
     pub yaw: f64,
 }
 
+/// 🏷️ Annex factor a project override replaces: γ, ψ₀, ψ₁, ψ₂, ξ or K_FI (EN 1990 Annex A1/B).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub enum FactorKind {
+    Gamma,
+    Psi0,
+    Psi1,
+    Psi2,
+    Xi,
+    #[dsl(key = "k_fi")]
+    #[value(rename = "k_fi")]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename = "k_fi"))]
+    KFi,
+}
+
+impl FactorKind {
+    pub const ALL: [Self; 6] = [Self::Gamma, Self::Psi0, Self::Psi1, Self::Psi2, Self::Xi, Self::KFi];
+
+    /// 🏷️ The wire id (`k_fi`) of the factor.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Gamma => "gamma",
+            Self::Psi0 => "psi0",
+            Self::Psi1 => "psi1",
+            Self::Psi2 => "psi2",
+            Self::Xi => "xi",
+            Self::KFi => "k_fi",
+        }
+    }
+
+    /// 🔎️ The factor of a wire id, `None` outside gamma, psi0, psi1, psi2, xi and k_fi.
+    pub fn from_id(id: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|kind| kind.as_str() == id)
+    }
+
+    /// 🎯️ Whether the factor acts per action (γ, ψ₀, ψ₁, ψ₂) instead of globally (ξ, K_FI).
+    pub fn per_action(self) -> bool {
+        matches!(self, Self::Gamma | Self::Psi0 | Self::Psi1 | Self::Psi2)
+    }
+}
+
+impl std::fmt::Display for FactorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 /// 🎚️ Project override of one annex factor (γ, ψ₀/ψ₁/ψ₂, ξ or K_FI): applied by the combination generator only where the annex allows it; every row deviates from the National Annex and carries its justification.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -559,7 +609,7 @@ pub struct Placement {
 pub struct FactorOverride {
     pub id: String,
     /// 🏷️ `gamma`, `psi0`, `psi1`, `psi2`, `xi` or `k_fi`.
-    pub factor: String,
+    pub factor: FactorKind,
     /// 🎯️ Action id, exclusive group id or ψ category; empty = every action.
     pub target: String,
     /// 🔢️ The replacement value.

@@ -98,7 +98,7 @@ fn worker_now_ms() -> f64 {
 #[wasm_bindgen]
 pub struct BrowserRendererWorker {
     host: Option<semio_renderer_wgpu_host_winit::os_host::OsHost>,
-    original_frame:Option<semio_plugin::reactor::original_actor_context::OriginalActorGuestEntry>,
+    original_frame:Option<Box<semio_plugin::reactor::original_actor_context::OriginalActorGuestEntry>>,
     original_receipt:semio_plugin::reactor::original_actor_context::OriginalActorFixedReceipt,
     original_output:Option<OriginalBrowserOutput>,
     original_failure_output:Option<semio_framework_job::JobOutcomeDescriptor>,
@@ -222,6 +222,15 @@ extern "C"{#[wasm_bindgen(catch,js_name=semioOriginalFrameClockUs)]fn original_f
 fn original_frame_now_us()->Option<u64>{original_frame_clock().ok()}
 const FRAME_SCALAR_RECEIPT_ESCROW: OriginalEscrowExtent = OriginalEscrowExtent { pointer: 0, length: 0 };
 
+/// 🏟️ One funded admission turn of the frame entry, shared by the bootstrap that registers the UI arena before any shell value exists and the finished Worker that continues the same entry.
+fn admit_original_frame_turn(entry:&mut semio_plugin::reactor::original_actor_context::OriginalActorGuestEntry,receipt:&mut semio_plugin::reactor::original_actor_context::OriginalActorFixedReceipt,input:semio_framework_actor::RetainedTurnInput,fuel:u64,deadline_us:u64)->bool{
+    let original=entry.admit_frame_step(input,semio_framework_job::StepBudget::new(fuel,deadline_us,input.grant),original_frame_now_us);
+    let reply=semio_framework_actor::retained_context::OriginalActorAdmissionReply::borrow_original(&original);receipt.write_admission(&reply, FRAME_SCALAR_RECEIPT_ESCROW).expect("same-worker original admission scalar receipt");reply.ready
+}
+
+/// 🧾️ Scalar ordinal `index` of the inline native admission tuple.
+fn original_receipt_scalar(receipt:&semio_plugin::reactor::original_actor_context::OriginalActorFixedReceipt,index:usize)->Result<u64,JsValue>{let bytes=receipt.bytes();if index>=16{return Err(js_error("original-frame-receipt","original scalar ordinal is absent"))}Ok(u64::from_le_bytes(bytes[8+index*8..16+index*8].try_into().unwrap()))}
+
 fn original_frame_input(operation:u64,generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize,fuel:u64,deadline_us:u64)->semio_framework_actor::RetainedTurnInput {
     semio_framework_actor::RetainedTurnInput {
         operation, generation, epoch,
@@ -240,12 +249,11 @@ impl BrowserRendererWorker {
     #[wasm_bindgen(js_name=admitOriginalFrame)]
     pub fn admit_original_frame(&mut self,operation:u64,generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize,fuel:u64,deadline_us:u64)->bool{
         let input=original_frame_input(operation,generation,epoch,items,copy,capacity,release,depth,fuel,deadline_us);
-        let original=self.original_frame.as_mut().expect("original frame entry available").admit_step(input,semio_framework_job::StepBudget::new(fuel,deadline_us,input.grant),original_frame_now_us);
-        let reply=semio_framework_actor::retained_context::OriginalActorAdmissionReply::borrow_original(&original);self.original_receipt.write_admission(&reply, FRAME_SCALAR_RECEIPT_ESCROW).expect("same-worker original admission scalar receipt");reply.ready
+        admit_original_frame_turn(self.original_frame.as_mut().expect("original frame entry available"),&mut self.original_receipt,input,fuel,deadline_us)
     }
     /// 🧾️ Scalar reads borrow the same inline native tuple without an output allocation.
     #[wasm_bindgen(js_name=originalFrameReceiptScalar)]
-    pub fn original_frame_receipt_scalar(&self,index:usize)->Result<u64,JsValue>{let bytes=self.original_receipt.bytes();if index>=16{return Err(js_error("original-frame-receipt","original scalar ordinal is absent"))}Ok(u64::from_le_bytes(bytes[8+index*8..16+index*8].try_into().unwrap()))}
+    pub fn original_frame_receipt_scalar(&self,index:usize)->Result<u64,JsValue>{original_receipt_scalar(&self.original_receipt,index)}
     #[wasm_bindgen(js_name=originalFrameReceiptRefusal)]
     pub fn original_frame_receipt_refusal(&self)->u8{self.original_receipt.bytes()[6]}
     /// 📦️ Scalar wire reads expose the retained original buffer without a wasm-bindgen Vec copy.
@@ -774,10 +782,23 @@ pub struct BrowserRendererBootstrap {
     entries: Option<Vec<ProgramBridgeEntry>>,
     shell: Option<ShellState>,
     phase: u8,
+    original_frame:Option<Box<semio_plugin::reactor::original_actor_context::OriginalActorGuestEntry>>,
+    original_receipt:semio_plugin::reactor::original_actor_context::OriginalActorFixedReceipt,
 }
 
 #[wasm_bindgen]
 impl BrowserRendererBootstrap {
+    /// 🌱️ The initiating frame stock registers the UI arena here, before the shell boot builds its first UI value.
+    #[wasm_bindgen(js_name=admitOriginalFrame)]
+    pub fn admit_original_frame(&mut self,operation:u64,generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize,fuel:u64,deadline_us:u64)->bool{
+        let input=original_frame_input(operation,generation,epoch,items,copy,capacity,release,depth,fuel,deadline_us);
+        admit_original_frame_turn(self.original_frame.as_mut().expect("original frame entry available"),&mut self.original_receipt,input,fuel,deadline_us)
+    }
+    #[wasm_bindgen(js_name=originalFrameReceiptScalar)]
+    pub fn original_frame_receipt_scalar(&self,index:usize)->Result<u64,JsValue>{original_receipt_scalar(&self.original_receipt,index)}
+    #[wasm_bindgen(js_name=originalFrameReceiptRefusal)]
+    pub fn original_frame_receipt_refusal(&self)->u8{self.original_receipt.bytes()[6]}
+
     pub fn step(&mut self) -> Result<String, JsValue> {
         let started_at = worker_now_ms();
         let phase = match self.phase {
@@ -891,8 +912,8 @@ impl BrowserRendererBootstrap {
         host.scheduler.invalidate(InvalidationReason::STRUCTURE);
         Ok(BrowserRendererWorker {
             host: Some(host),
-            original_frame:Some(semio_plugin::reactor::original_actor_context::OriginalActorGuestEntry::new()),
-            original_receipt:semio_plugin::reactor::original_actor_context::OriginalActorFixedReceipt::empty(),
+            original_frame:self.original_frame.take(),
+            original_receipt:std::mem::replace(&mut self.original_receipt,semio_plugin::reactor::original_actor_context::OriginalActorFixedReceipt::empty()),
             original_output:None,
             original_failure_output:None,
             retired_host: None,
@@ -955,7 +976,7 @@ pub fn semio_wgpu_worker_bootstrap(canvas: web_sys::OffscreenCanvas, plugins: Js
         canvas.set_width(width.max(1));
         canvas.set_height(height.max(1));
         let gpu = ui_gpu::platform::BrowserSurfaceCapture::capture(canvas, css_width, css_height, dpr).prepare().await.map_err(|error| js_error("gpu-boot", &error))?;
-        Ok(JsValue::from(BrowserRendererBootstrap { gpu: Some(gpu), plugins, plugin_filter, width, height, dpr, wake, atlas: None, icons: None, entries: None, shell: None, phase: 0 }))
+        Ok(JsValue::from(BrowserRendererBootstrap { gpu: Some(gpu), plugins, plugin_filter, width, height, dpr, wake, atlas: None, icons: None, entries: None, shell: None, phase: 0, original_frame: Some(Box::new(semio_plugin::reactor::original_actor_context::OriginalActorGuestEntry::new())), original_receipt: semio_plugin::reactor::original_actor_context::OriginalActorFixedReceipt::empty() }))
     })
 }
 //#endregion 🚀️Boot

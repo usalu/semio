@@ -182,7 +182,7 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
    pinRust(root);const directory=join(root,declared.directory);mkdirSync(directory,{recursive:true});
    if(row.receipt!==null)writeFileSync(join(directory,"image.json"),typeof row.receipt==="string"?row.receipt:JSON.stringify(row.receipt));
    expect(pinnedCapacityV1(directory,declared.capacityBytes),row.id).toBe(row.expected);expect(independent[row.id],row.id).toBe(row.expected);
-   const budget=repositoryCacheBudgetV1(root),partition=budget.partitions.dependencies,born=row.id==="no-receipt"?hostShareCapacityV1(declared.capacityBytes,declared.hostSharePercent,privateRepositoryHostFreeBytesV1):row.expected;
+   const budget=repositoryCacheBudgetV1(root),partition=budget.partitions.dependencies,born=row.id==="no-receipt"?hostShareCapacityV1(declared.capacityBytes,declared.hostSharePercent,privateRepositoryHostFreeBytesV1,partitionNeedBytesV1(policy as never,"dependencies")):row.expected;
    expect(partition.capacityBytes,row.id).toBe(born);expect(partition.filesystemBytes,row.id).toBe(born-unit);
    expect(budget.partitionBytes-base.partitionBytes,row.id).toBe(born-base.partitions.dependencies.capacityBytes);
    expect(budget.maximumBytes-base.maximumBytes,row.id).toBe(born-base.partitions.dependencies.capacityBytes);
@@ -279,8 +279,8 @@ test("every partition has a bloat rule, the common one is schema-valid, and the 
 });
 
 /** 🧮️ The disk policy is declared as fractions of the host: no absolute minimum exceeds what the host can create, every logical limit fits its capacity, and the images born on a 16 GB / 60 GB, a 32 GB / 200 GB and a Windows 256 GB / 5 GB-free machine add up to less than the host's free bytes; the elastic minimum agrees with an independent Python model. */
-test("the declared disk policy fits the host: logical limits within capacity, shares within the host, born images within free bytes on the three profiles",()=>{
- const GiB=2**30,unit=1048576,profiles=[{id:"16 GB RAM, 60 GB free",free:56*GiB},{id:"32 GB RAM, 200 GB free",free:186*GiB},{id:"Windows 256 GB disk, 5 GB free",free:5*10**9},{id:"tiny 1 GB free",free:GiB}];
+test("the declared disk policy fits the host: logical limits within capacity, shares within the host, born images within free bytes from 90 GiB free on and the 60 GB profile is named too small for a build worker",()=>{
+ const GiB=2**30,unit=1048576,profiles=[{id:"16 GB RAM, 60 GB free",free:56*GiB},{id:"16 GB RAM, 100 GB free",free:93*GiB},{id:"32 GB RAM, 200 GB free",free:186*GiB},{id:"Windows 256 GB disk, 5 GB free",free:5*10**9},{id:"tiny 1 GB free",free:GiB}];
  for(const[id,row]of Object.entries(policy.partitions)){expect(row.maximumLogicalBytes,id).toBeLessThanOrEqual(row.capacityBytes-unit);expect(readRepositoryCacheBudgetV1(policy).partitions[id as keyof typeof policy.partitions].maximumLogicalBytes,id).toBe(row.maximumLogicalBytes);}
  for(const[id,rule]of Object.entries(policy.elastic)){expect(rule.minimumBytes,id).toBeLessThanOrEqual(rule.maximumBytes);}
  const shares=Object.keys(policy.partitions).map(id=>hostSharePercentV1(policy as never,id));
@@ -312,7 +312,7 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
    const rule=(policy.elastic as Record<string,typeof policy.elastic.rust>)[id],born=rule?elasticCapacityV1(rule,elasticMinimumV1(rule,rule.minimumBytes,profile.free),profile.free):hostShareCapacityV1(row.capacityBytes,(row as {hostSharePercent:number}).hostSharePercent,profile.free,partitionNeedBytesV1(policy as never,id,"darwin"));
    expect(born%unit,profile.id+" "+id).toBe(0);expect(born,profile.id+" "+id).toBeLessThanOrEqual(rule?rule.maximumBytes:row.capacityBytes);total+=born;
   }
-  expect(total,profile.id).toBe(independent[profile.id]);if(profile.free>=40*GiB)expect(total,profile.id).toBeLessThanOrEqual(profile.free);
+  expect(total,profile.id).toBe(independent[profile.id]);if(profile.free>=90*GiB)expect(total,profile.id).toBeLessThanOrEqual(profile.free);if(profile.free===56*GiB)expect(total,profile.id).toBeGreaterThan(profile.free);
  }
  expect(elasticMinimumV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,56*GiB)).toBeLessThan(policy.elastic.rust.minimumBytes);
  expect(elasticMinimumV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,186*GiB)).toBe(policy.elastic.rust.minimumBytes);
@@ -345,19 +345,19 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,String(decl
 
 /** 🛑️ The ledger share is part of the need: what the dependencies store keeps after the nested areas of its partition still holds the install of every platform's backend, and the declared capacity is the smallest that does (compared with an independent Python search over the image overhead). */
 test("the declared dependencies need leaves the store its install after the ledger's nested shares and is the smallest such capacity",async()=>{
- const {cacheLedgerV1}=await import("../../../🧾️ledger/🟦️.ts"),{concurrentRequiredImageBytesV1}=await import("../../../../🚀️bootstrap/📦️dependencies/🚦️concurrent/🟦️.ts"),{nativeImageUsableBytesV1}=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📏️capacity/🟦️.ts"),
- shares=cacheLedgerV1().areas.filter(area=>area.partition==="dependencies"&&area.kind==="nested").reduce((sum,area)=>sum+(area.budget&&"basisPoints" in area.budget?area.budget.basisPoints:0),0),needs=policy.partitions.dependencies.needBytes as Record<string,number>,backends={darwin:true,linux:false,win32:false};
- expect(shares).toBeGreaterThan(0);
+ const {cacheLedgerV1}=await import("../../../🧾️ledger/🟦️.ts"),{concurrentRequiredImageBytesV1,concurrentWorkDirectoryBytesV1}=await import("../../../../🚀️bootstrap/📦️dependencies/🚦️concurrent/🟦️.ts"),{nativeImageUsableBytesV1}=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📏️capacity/🟦️.ts"),
+ nested=cacheLedgerV1().areas.filter(area=>area.partition==="dependencies"&&area.kind==="nested"),shares=nested.reduce((sum,area)=>sum+(area.budget&&"basisPoints" in area.budget?area.budget.basisPoints:0),0),workBytes=nested.reduce((sum,area)=>sum+(area.budget&&"bytes" in area.budget?area.budget.bytes:0),0),needs=policy.partitions.dependencies.needBytes as Record<string,number>,backends={darwin:true,linux:false,win32:false};
+ expect(workBytes).toBe(concurrentWorkDirectoryBytesV1("worker"));expect(workBytes).toBeGreaterThanOrEqual(concurrentWorkDirectoryBytesV1("builder"));expect(workBytes).toBeGreaterThanOrEqual(concurrentWorkDirectoryBytesV1("cache-host"));
  for(const[platform,sharing]of Object.entries(backends)){
   const required=concurrentRequiredImageBytesV1(sharing),need=needs[platform]!;
   expect(need%mib,platform).toBe(0);expect(need,platform).toBeLessThanOrEqual(policy.partitions.dependencies.capacityBytes);
-  expect(nativeImageUsableBytesV1(need-mib)*(10000-shares)/10000,platform).toBeGreaterThanOrEqual(required);
-  expect(nativeImageUsableBytesV1(need-2*mib)*(10000-shares)/10000,platform).toBeLessThan(required);
+  expect(nativeImageUsableBytesV1(need-mib)*(10000-shares)/10000-workBytes,platform).toBeGreaterThanOrEqual(required);
+  expect(nativeImageUsableBytesV1(need-2*mib)*(10000-shares)/10000-workBytes,platform).toBeLessThan(required);
   const search=`import json,sys
-required,shares,overhead=int(sys.argv[1]),int(sys.argv[2]),json.loads(sys.argv[3])
+required,shares,work,overhead=int(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3]),json.loads(sys.argv[4])
 c=-(-required//1048576)*1048576+1048576
-while overhead[str(c)]*(10000-shares)//10000<required:c+=1048576
-print(c)`,first=Math.ceil(required/mib)*mib+mib,table=Object.fromEntries(Array.from({length:(need-first)/mib+1},(_,index)=>[String(first+index*mib),nativeImageUsableBytesV1(first+index*mib-mib)])),run=Bun.spawnSync(["python3","-I","-c",search,String(required),String(shares),JSON.stringify(table)]);
+while overhead[str(c)]*(10000-shares)//10000-work<required:c+=1048576
+print(c)`,first=Math.ceil(required/mib)*mib+mib,table=Object.fromEntries(Array.from({length:(need-first)/mib+1},(_,index)=>[String(first+index*mib),nativeImageUsableBytesV1(first+index*mib-mib)])),run=Bun.spawnSync(["python3","-I","-c",search,String(required),String(shares),String(workBytes),JSON.stringify(table)]);
   expect(run.exitCode,run.stderr.toString()).toBe(0);expect(Number(run.stdout.toString().trim()),platform).toBeLessThanOrEqual(need);
  }
 });

@@ -1,10 +1,11 @@
 import {remoteCacheFileBudgetOfMachineV1} from "../📏️fd-budget/🟦️.ts";
 import {createHash,timingSafeEqual} from "node:crypto";
 import {casEnforceTickV1} from "../../🗄️cas/🚦️guard/🟦️.ts";
-import {readCasUsageHintV1} from "../../🗄️cas/🧹️collector/🟦️.ts";
+import {readCasCensusV1,readCasUsageHintV1} from "../../🗄️cas/🧹️collector/🟦️.ts";
+import {casTextV1} from "../../🗄️cas/🧬️schema/🟦️.ts";
 import type {CasStoreV1} from "../../🗄️cas/🗃️store/🟦️.ts";
-import {CAS_LEASE_HEADER_V1} from "../../🗄️cas/📌️pins/🟦️.ts";
-import {casEffectiveCapBytesV1,declareCasRoleV1,measureCasPartitionV1} from "../../🗄️cas/🌡️partition/🟦️.ts";
+import {CAS_LEASE_HEADER_V1,parseCasLeaseHeaderV1} from "../../🗄️cas/📌️pins/🟦️.ts";
+import {casEffectiveCapBytesV1,casReserveBytesV1,declareCasRoleV1,measureCasPartitionV1} from "../../🗄️cas/🌡️partition/🟦️.ts";
 import {createFleetGateV1,type FleetAccessV1,type FleetGateV1} from "../🛰️fleet/🪪️identity/🛂️gate/🟦️.ts";
 import {readFleetOriginPrivateV1,createFleetRegistryV1,createFleetVerifierV1,fleetContentHashV1,FLEET_CONTENT_HEADER_V1} from "../🛰️fleet/🪪️identity/🟦️.ts";
 import {openProvenanceV1,PROVENANCE_SUPERSEDING_CLASSES_V1,PROVENANCE_VOLATILE_OUTPUTS_V1,provenanceClassV1,provenanceDifferingV1,provenanceFingerprintV1,type ConsumptionV1,type DivergenceV1,type DivergenceWindowV1,type ProvenanceV1} from "../🧾️provenance/🟦️.ts";
@@ -43,7 +44,7 @@ export type RemoteCacheServerStatusV1=Readonly<{version:1;protocols:readonly ["b
 export type RemoteCacheRequestEventV1=Readonly<{stage:"request";method:string;path:string;status:number;milliseconds:number}>;
 
 /** 🔌️ Everything the web-standard handler needs. */
-export type RemoteCacheHandlerOptionsV1=Readonly<{store:RemoteCacheStoreV1;tokens:RemoteCacheTokensV1;defaultInstance:string;readOnly?:boolean;validation?:RemoteCacheValidationV1;maximumActionResultBytes?:number;startedAt?:Date;claims?:ClaimTableV1;mirror?:(request:Request)=>Promise<Response|undefined>;peers?:FleetPeerReadThroughV1;gate?:FleetGateV1;provenance?:ProvenanceV1;fleetStatus?:()=>RemoteCacheFleetStatusV1;hostStore?:Pick<import("../../🗄️cas/🗃️store/🟦️.ts").CasStoreV1,"lease">;onRequest?:(event:RemoteCacheRequestEventV1)=>void}>;
+export type RemoteCacheHandlerOptionsV1=Readonly<{capacityDetail?:()=>string;store:RemoteCacheStoreV1;tokens:RemoteCacheTokensV1;defaultInstance:string;readOnly?:boolean;validation?:RemoteCacheValidationV1;maximumActionResultBytes?:number;startedAt?:Date;claims?:ClaimTableV1;mirror?:(request:Request)=>Promise<Response|undefined>;peers?:FleetPeerReadThroughV1;gate?:FleetGateV1;provenance?:ProvenanceV1;fleetStatus?:()=>RemoteCacheFleetStatusV1;hostStore?:Pick<import("../../🗄️cas/🗃️store/🟦️.ts").CasStoreV1,"lease">;onRequest?:(event:RemoteCacheRequestEventV1)=>void}>;
 
 const RESERVED=new Set(["ac","cas","v1","healthz","status","evidence","claim","mirror"]),INSTANCE=/^[a-z0-9][a-z0-9._-]{0,63}$/u,DIGEST=/^[0-9a-f]{64}$/u,KEY=/^[a-z0-9_-]{1,128}$/u,TREE_BYTES=16*1048576,
  text=(status:number,message:string,headers:Record<string,string>={})=>new Response(message+"\n",{status,headers:{"content-type":"text/plain",...headers}}),
@@ -193,8 +194,9 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
   if(method==="GET"||method==="HEAD"){
    const guard=await authenticate(request,url,peer,false);if("denied" in guard)return guard.denied;
    if(address.kind==="ac"){const answered=await readResult(address.namespace,address.key,method,request);if(method==="GET"&&answered.status===200)options.provenance?.consume(address.namespace,"ac",address.key,guard.access===undefined?"anonymous":guard.access.role==="static"?"static":guard.access.origin);return answered;}
+   const lease=address.kind==="cas"?parseCasLeaseHeaderV1(request.headers.get(CAS_LEASE_HEADER_V1)):undefined;
+   if(lease!==undefined&&method==="HEAD"){try{await options.hostStore?.lease([address.key],undefined,lease.action);}catch{return text(503,"The lease could not be taken",{"retry-after":"1"});}}
    const entry=await options.store.read(address.namespace,address.kind,address.key),counter=counters[address.kind];
-   if(entry&&address.kind==="cas"&&method==="HEAD"&&request.headers.get(CAS_LEASE_HEADER_V1)==="input")await options.hostStore?.lease([address.key]).catch(()=>undefined);
    if(!entry){const near=await throughPeers(request,address);if(near)return near;counter.misses++;return text(404,"Not found");}
    const whole=method==="GET"?await readRemoteCacheEntryV1(entry.path,entry.size):null;
    if(whole===undefined){counter.misses++;return text(404,"Not found");}
@@ -202,7 +204,12 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
    counter.hits++;const headers={"content-type":"application/octet-stream","content-length":String(entry.size)};
    return new Response(whole==="lazy"?runtimeFileV1(entry.path).body():whole,{headers});
   }
-  if(method!=="PUT")return text(405,"Method not allowed",{allow:"GET, HEAD, PUT"});
+  if(method==="DELETE"&&address.kind==="cas"&&parseCasLeaseHeaderV1(request.headers.get(CAS_LEASE_HEADER_V1))!==undefined){
+   const guard=await authenticate(request,url,peer,true);if("denied" in guard)return guard.denied;
+   if(readOnly)return text(403,"Forbidden: this cache is read-only");
+   await options.hostStore?.releaseLease([address.key],parseCasLeaseHeaderV1(request.headers.get(CAS_LEASE_HEADER_V1))!.action).catch(()=>undefined);return text(200,"Released");
+  }
+  if(method!=="PUT")return text(405,"Method not allowed",{allow:address.kind==="cas"?"GET, HEAD, PUT, DELETE":"GET, HEAD, PUT"});
   const guard=await authenticate(request,url,peer,true);if("denied" in guard)return guard.denied;
   const access=guard.access,signed=access!==undefined&&access.role!=="static";
   if(signed&&access!.content==="-")return text(400,"A signed write must carry the hash of its body");
@@ -258,17 +265,18 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
     }
     prior=sort.advisory||superseding?undefined:before;
    }
-   const outcome=await options.store.put(address.namespace,address.kind,address.key,source,{mode:mode(address.kind),verify:address.kind==="cas",declaredLength:known,...(slotHeader!==null&&address.kind!=="cas"?{slot:{slot:slotHeader,...(declaration===undefined?{}:{declaration})}}:{})});
+   const leased=address.kind==="cas"?parseCasLeaseHeaderV1(request.headers.get(CAS_LEASE_HEADER_V1)):undefined;
+   if(leased!==undefined){try{await options.hostStore?.lease([address.key],undefined,leased.action);}catch{return text(503,"The lease could not be taken",{"retry-after":"1"});}}
+   const outcome=await options.store.put(address.namespace,address.kind,address.key,source,{mode:mode(address.kind),verify:address.kind==="cas",declaredLength:known,...(address.kind==="cas"&&parseCasLeaseHeaderV1(request.headers.get(CAS_LEASE_HEADER_V1))!==undefined?{transient:true}:{}),...(slotHeader!==null&&address.kind!=="cas"?{slot:{slot:slotHeader,...(declaration===undefined?{}:{declaration})}}:{})});
    if(nxHash!==undefined&&(outcome==="created"||outcome==="replaced")&&nxHash.digest("hex")!==access!.content){await options.store.remove(address.namespace,NX_KIND,address.key);counter.rejected++;return text(400,"Content hash mismatch");}
    if(signed&&options.provenance!==undefined&&(outcome==="created"||outcome==="replaced")&&(prior===undefined||prior.origin===access!.origin||outcome==="created"))options.provenance.record(address.namespace,address.kind,address.key,access!.origin,fingerprint,unitShaped);
-   if(address.kind==="cas"&&(outcome==="created"||outcome==="exists")&&request.headers.get(CAS_LEASE_HEADER_V1)==="input")await options.hostStore?.lease([address.key]).catch(()=>undefined);
    switch(outcome){
     case "created":case "replaced":counter.puts++;if(address.kind!=="cas")claims.stored(address.namespace,address.kind,address.key);return text(200,"Stored");
     case "exists":if(address.kind===NX_KIND){counter.conflicts++;return text(409,"Conflict: cannot overwrite an existing cache entry");}if(address.kind!=="cas")claims.stored(address.namespace,address.kind,address.key);return text(200,"Stored");
     case "digest-mismatch":counter.rejected++;return text(400,"Digest mismatch");
     case "length-mismatch":counter.rejected++;return text(400,"Content-Length mismatch");
     case "too-large":counter.rejected++;return text(413,"Entry exceeds the maximum entry size");
-    case "capacity":counter.rejected++;return text(507,"Insufficient storage",{"retry-after":"5"});
+    case "capacity":counter.rejected++;return text(507,"Insufficient storage"+(options.capacityDetail===undefined?"":": "+options.capacityDetail()),{"retry-after":"5"});
     case "aborted":return text(499,"Client closed request");
    }
   };
@@ -305,6 +313,23 @@ export async function remoteCacheBlobBoundV1(host:Pick<CasStoreV1,"root"|"policy
  return Math.floor(cap*sharePercent/100);
 }
 
+/** 🧾️ Names the bound behind a 507 in one line, English and German: the bytes the host store holds, the cap in force for its role and the free room of its partition, and the three largest holders of the census the last complete scan of the store left (read at most once a minute, so a refusal never waits for a scan). */
+export function remoteCacheCapacityDetailV1(host:Pick<CasStoreV1,"root"|"policy">):()=>string{
+ let holders="",used:number|undefined,measuredAt=0,running=false;
+ const measure=():void=>{
+  const at=Date.now();if(running||at-measuredAt<60000)return;running=true;
+  void Promise.all([readCasCensusV1(host.root),readCasUsageHintV1(host.root)]).then(([census,hint])=>{
+   used=census?.bytes??hint?.bytes;holders=[...census?.holders??[],...census?[{kind:"inputs",label:"transient-inputs",bytes:census.classes.leased.bytes}]:[]].sort((left,right)=>right.bytes-left.bytes).slice(0,3).map(row=>`${row.kind} ${row.label} ${Math.round(row.bytes/1073741824*100)/100} GiB`).join("; ");measuredAt=Date.now();
+  }).catch(()=>undefined).finally(()=>{running=false;});
+ };
+ return ()=>{
+  measure();
+  const partition=measureCasPartitionV1(host.root),hint=used,gib=(bytes:number|undefined):number=>bytes===undefined?0:Math.round(bytes/1073741824*100)/100;
+  const values={usedGib:gib(hint),capGib:gib(partition===undefined?host.policy.capBytes:casEffectiveCapBytesV1(host.policy,partition,hint)),role:partition?.role??host.policy.sizing.defaultRole,freeGib:gib(partition?.freeBytes),reserveGib:gib(partition===undefined?undefined:casReserveBytesV1(host.policy,partition)),holders:holders===""?"being measured":holders};
+  return casTextV1("capRefusedDetail","en",values)+" / "+casTextV1("capRefusedDetail","de",values);
+ };
+}
+
 /** 🚀️ Opens the store and serves the handler through the runtime interface, over TLS when a certificate is given; refuses to listen beyond loopback without a token, refuses a directory another server owns, keeps the store in step with outside collectors, and stops when `signal` aborts. */
 export async function startRemoteCacheServerV1(options:RemoteCacheServerOptionsV1):Promise<RemoteCacheServerV1>{
  const registry=options.fleet===undefined?undefined:createFleetRegistryV1({storeRoot:options.fleet.storeRoot,group:options.fleet.group,...(options.fleet.groups===undefined?{}:{groups:options.fleet.groups}),...(options.fleet.peerStores===undefined?{}:{peerStores:options.fleet.peerStores}),...(options.fleet.pinned===undefined?{}:{pinned:options.fleet.pinned}),...(options.fleet.registryTtlMilliseconds===undefined?{}:{ttlMilliseconds:options.fleet.registryTtlMilliseconds}),pinsPath:options.fleet.pinsPath??join(options.directory,"fleet","pins.json")});
@@ -329,7 +354,7 @@ export async function startRemoteCacheServerV1(options:RemoteCacheServerOptionsV
  const fleetStatus=():RemoteCacheFleetStatusV1=>{const origins:Record<string,number>={};for(const row of Object.values(registry?.origins()??{}))origins[row.status]=(origins[row.status]??0)+1;return {origins,denied:verifier?.denied()??{},transport:{crossGroup:"sealed",inGroup:options.fleet?.inGroup??"trusted-lan",sealedRoute:exchangeKey!==undefined}};};
  try{
   store=await RemoteCacheStoreV1.open({directory:options.directory,...options.fileBudget===undefined?{}:{fileBudget:options.fileBudget},...options.startupScan===undefined?{}:{startupScan:options.startupScan},...(options.hostStore?{host:options.hostStore,pinBudgetBytes:()=>{const host=options.hostStore!,partition=measureCasPartitionV1(host.root);return partition===undefined?undefined:Math.floor(casEffectiveCapBytesV1(host.policy,partition)*0.8);},blobBoundBytes:()=>remoteCacheBlobBoundV1(options.hostStore!,options.blobSharePercent),...options.graph===undefined?{}:{graph:{sharePercent:options.graph.sharePercent,supersedeGraceMilliseconds:options.graph.supersedeGraceSeconds*1000}}}:{}),maximumBytes:options.maximumBytes,maximumEntryBytes:options.maximumEntryBytes,maximumAgeMilliseconds:options.maximumAgeDays*86400000,...(tree===undefined||options.staleness===undefined?{}:{staleness:{mode:options.staleness.mode,tree,examples:options.staleness.examples,recheckMilliseconds:options.staleness.recheckSeconds*1000,manifestNames:options.staleness.manifestNames,...options.staleness.toolchains===undefined?{}:{toolchains:options.staleness.toolchains}}}),...(options.graceMilliseconds===undefined?{}:{graceMilliseconds:options.graceMilliseconds}),claimed:(namespace,kind,key)=>kind!=="cas"&&(table.claimed(namespace,kind,key)||options.claimed?.(namespace,kind,key)===true),...(options.signal?{signal:options.signal}:{}),...(options.onEvent?{onEvent:options.onEvent}:{})});
-  const opened=store,handler=createRemoteCacheHandlerV1({store:opened,claims:table,gate,provenance,...(options.hostStore===undefined?{}:{hostStore:options.hostStore}),...(options.peers===undefined?{}:{peers:options.peers}),...(registry===undefined?{}:{fleetStatus}),...(options.mirror?{mirror:createMirrorHandlerV1(options.mirror)}:{}),tokens:options.tokens,defaultInstance:options.defaultInstance,...(options.readOnly===undefined?{}:{readOnly:options.readOnly}),...(options.validation===undefined?{}:{validation:options.validation}),...(options.maximumActionResultBytes===undefined?{}:{maximumActionResultBytes:options.maximumActionResultBytes}),...(options.onEvent?{onRequest:options.onEvent}:{})});
+  const opened=store,handler=createRemoteCacheHandlerV1({store:opened,...(options.hostStore===undefined?{}:{capacityDetail:remoteCacheCapacityDetailV1(options.hostStore)}),claims:table,gate,provenance,...(options.hostStore===undefined?{}:{hostStore:options.hostStore}),...(options.peers===undefined?{}:{peers:options.peers}),...(registry===undefined?{}:{fleetStatus}),...(options.mirror?{mirror:createMirrorHandlerV1(options.mirror)}:{}),tokens:options.tokens,defaultInstance:options.defaultInstance,...(options.readOnly===undefined?{}:{readOnly:options.readOnly}),...(options.validation===undefined?{}:{validation:options.validation}),...(options.maximumActionResultBytes===undefined?{}:{maximumActionResultBytes:options.maximumActionResultBytes}),...(options.onEvent?{onRequest:options.onEvent}:{})});
   const sealed=exchangeKey===undefined||options.fleet===undefined?undefined:createSealedHandlerV1({privateKey:exchangeKey,group:options.fleet.group,maximumBytes:options.maximumEntryBytes,handle:handler}),answer=async(request:Request,peer?:string):Promise<Response>=>{if(sealed!==undefined&&!gate.network(peer))return new Response("Forbidden\n",{status:403});return (await sealed?.(request,peer))??handler(request,peer);};
   let active=0;const ceiling=options.maximumConcurrentRequests??Math.max(16,Math.floor((options.fileBudget??remoteCacheFileBudgetOfMachineV1())/4));const entry=async(request:Request,peer?:string):Promise<Response>=>{if(active>=ceiling)return new Response("Busy\n",{status:503,headers:{"retry-after":"1"}});active++;options.onActivity?.(active);try{return await answer(request,peer);}finally{active--;options.onActivity?.(active);}};
   for(const hostname of hosts)listeners.push(await runtimeServeV1({hostname,port:listeners[0]?.port??options.port,idleTimeoutSeconds:60,maximumRequestBodyBytes:options.maximumEntryBytes*2,...options.reusePort===true||options.successor===true?{reusePort:true}:{},...(options.tls?{tls:{certificate:options.tls.certificate,key:options.tls.key}}:{}),fetch:(request,peer)=>entry(request,peer)}));

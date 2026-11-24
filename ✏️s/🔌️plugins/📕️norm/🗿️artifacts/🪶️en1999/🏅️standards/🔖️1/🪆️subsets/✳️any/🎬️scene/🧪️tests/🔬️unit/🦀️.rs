@@ -152,7 +152,7 @@ fn class_4_plates_get_an_effective_ghost_with_the_reported_reduction() {
     let alloy = checks::part_1_1::resolve_alloy_for_thickness("aw6060-t6", checks::part_1_1::max_thickness(&document.sections[0])).expect("alloy");
     let element = &document.sections[0].elements[0];
     let rho = checks::part_1_1::rho_c(reported.computed.value, alloy.buckling_class_a, element.outstand, element.welded);
-    assert!(rho < 1.0 && reported.status == norm::CheckStatus::Warning);
+    assert!(rho < 1.0 && matches!(reported.status, norm::CheckStatus::Warning | norm::CheckStatus::UnverifiedBasis));
     assert!(scene.annotations.iter().any(|a| matches!(a, scene::Annotation::Leader { text, .. } if text.en.contains("ρ_c"))));
 }
 
@@ -364,7 +364,7 @@ fn the_haz_markers_edit_the_plate_thickness_in_millimetres() {
     let document = compliant();
     let report = checks::evaluate_structure(&document);
     let diagram = diagrams(&document, &report, Some("purlin-1")).into_iter().find(|d| d.id == "haz:purlin-1").expect("haz");
-    let marker = diagram.markers.iter().find(|m| m.id == "rho-flange-top").expect("marker");
+    let marker = diagram.markers.iter().find(|m| m.id == "reference:rho-flange-top").expect("marker");
     assert!((marker.at.x - 10.0).abs() < 1e-9);
     let binding = marker.binding.as_ref().expect("binding");
     assert_eq!(binding.path, "sections[id=sec-i120].elements[id=flange-top].thickness");
@@ -429,7 +429,8 @@ fn the_independent_oracle_agrees() {
         let fatigue: Vec<String> = document.fatigue_details.iter().map(|f| format!("{{\"id\":\"{}\",\"dc\":{},\"m1\":{},\"m2\":{}}}", f.id, checks::part_1_3::detail_category_delta_sigma_c(&f.detail_category).unwrap_or(f.delta_sigma_c) / 1.0e6, f.m1, if f.m2 > 0.0 { f.m2 } else { f.m1 + 2.0 })).collect();
         let fires: Vec<String> = document.fire_scenarios.iter().filter_map(|f| {
             let member = document.members.iter().find(|m| m.id == f.member_id)?;
-            Some(format!("{{\"id\":\"{}\",\"section\":\"{}\",\"thetaA\":{},\"durationS\":{}}}", f.id, member.section_id, f.theta_a, f.duration_s))
+            let insulation = document.fire_insulations.iter().find(|i| i.fire_id == f.id).map_or_else(String::new, |i| format!(",\"insulation\":{{\"thickness\":{},\"conductivity\":{},\"specificHeat\":{},\"density\":{}}}", i.thickness, i.conductivity, i.specific_heat, i.density));
+            Some(format!("{{\"id\":\"{}\",\"section\":\"{}\",\"thetaA\":{},\"durationS\":{}{insulation}}}", f.id, member.section_id, f.theta_a, f.duration_s))
         }).collect();
         let shells: Vec<String> = document.shells.iter().map(|s| format!("{{\"id\":\"{}\",\"r\":{},\"t\":{},\"l\":{}}}", s.id, s.radius, s.thickness, s.length)).collect();
         let input = format!("{{\"scene\":{},\"diagrams\":[{}],\"sections\":[{}],\"fatigue\":[{}],\"fires\":[{}],\"shells\":[{}]{}}}", canonical_json(&scene), diagram_json.join(","), sections.join(","), fatigue.join(","), fires.join(","), shells.join(","), wave3::oracle_extras(&document, &diagrams(&document, &report, None)));
@@ -593,7 +594,7 @@ fn wave5() -> En1999Snapshot {
     let mut document = compliant();
     document.fatigue_categories.push(FatigueCategory { id: "site-1".into(), member_id: "purlin-1".into(), element_id: String::new(), detail_category: "71".into(), detail_type: semio_s_artifact_norm_en1999_model::DetailType::ButtWeld, location_x: 3.0, m1: 0.0, m2: 0.0 });
     document.patch_loads.push(PatchLoad { id: "patch-1".into(), subject_id: "purlin-1".into(), position: semio_s_artifact_norm_en1999_model::PatchLoadPosition::Interior, x: 2.0, bearing_length: 0.05, web_height: 0.0, web_angle: 0.0, corner_radius: 0.0, load: 10_000.0 });
-    document.ring_stiffeners.push(RingStiffener { id: "ring-1".into(), shell_id: "shell-pass".into(), x: 1.0, depth: 0.05, thickness: 0.006, internal: false });
+    document.ring_stiffeners.push(RingStiffener { id: "ring-1".into(), shell_id: "shell-pass".into(), x: 0.5, depth: 0.05, thickness: 0.006, internal: false });
     document
 }
 
@@ -644,7 +645,7 @@ fn the_patch_resistance_diagram_pins_the_design_point_to_the_check_and_drags_the
     document.patch_loads[0].position = semio_s_artifact_norm_en1999_model::PatchLoadPosition::End;
     let end = diagrams(&document, &checks::evaluate_structure(&document), Some("patch-1")).into_iter().find(|d| d.id == "patch-resistance:patch-1").expect("diagram without resistance");
     assert_eq!(end.validate(), Ok(()));
-    assert!(end.series.iter().all(|s| !matches!(s, scene::Series::Polyline { .. })) && end.markers[0].utilisation.is_none() && end.annotations.len() == 1, "the end position stays unverified and draws no invented curve");
+    assert!(end.series.iter().all(|s| !matches!(s, scene::Series::Polyline { .. })) && end.markers[0].utilisation.is_none() && end.annotations.iter().filter(|a| a.id == "awaiting").count() == 1, "the end position stays unverified and draws no invented curve");
 }
 
 #[test]
@@ -730,7 +731,8 @@ fn the_web_panel_diagram_follows_the_stiffener_rows_and_a_drag_redraws_it() {
     let mut document = compliant();
     let report = checks::evaluate_structure(&document);
     assert!(diagrams(&document, &report, None).iter().all(|d| !d.id.starts_with("web-panels:")), "without a stiffener there are no panels");
-    for (id, x) in [("s1", 2.0), ("s2", 4.0)] {
+    let third = document.members[0].length / 3.0;
+    for (id, x) in [("s1", third), ("s2", 2.0 * third)] {
         document.transverse_stiffeners.push(TransverseStiffener { id: id.into(), girder_id: "purlin-1".into(), position: x, width: 0.05, thickness: 0.006, sides: semio_s_artifact_norm_en1999_model::StiffenerSides::Two });
     }
     let panels = |document: &En1999Snapshot| diagrams(document, &checks::evaluate_structure(document), Some("s1")).into_iter().find(|d| d.id == "web-panels:purlin-1").expect("the panels of the focused stiffener's girder");
@@ -738,12 +740,12 @@ fn the_web_panel_diagram_follows_the_stiffener_rows_and_a_drag_redraws_it() {
     let before = panels(&document);
     assert_eq!(before.validate(), Ok(()));
     assert_eq!((before.table_twin.rows(), before.markers.len()), (3, 2));
-    assert!(widths(&before).iter().all(|a| (a - 2.0).abs() < 1e-9));
+    assert!(widths(&before).iter().all(|a| (a - third).abs() < 1e-9));
     assert!(before.markers.iter().all(|m| m.binding.as_ref().is_some_and(|b| b.path == format!("transverseStiffeners[id={}].position", m.id))));
     document.transverse_stiffeners[0].position = 1.0;
     let after = panels(&document);
     let moved = widths(&after);
-    assert!((moved[0] - 1.0).abs() < 1e-9 && (moved[1] - 3.0).abs() < 1e-9 && (moved[2] - 2.0).abs() < 1e-9, "{moved:?}");
+    assert!((moved[0] - 1.0).abs() < 1e-9 && (moved[1] - (2.0 * third - 1.0)).abs() < 1e-9 && (moved[2] - third).abs() < 1e-9, "{moved:?}");
     assert!(after.table_twin.columns[4].values[1] > before.table_twin.columns[4].values[1], "the wider panel has the larger aspect ratio");
 }
 

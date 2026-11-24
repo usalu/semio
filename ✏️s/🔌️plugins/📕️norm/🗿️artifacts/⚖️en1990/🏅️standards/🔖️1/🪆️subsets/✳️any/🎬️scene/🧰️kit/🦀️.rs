@@ -26,9 +26,8 @@ pub const LAYER_ANNOTATIONS: &str = "annotations";
 pub const LAYER_ANALYSES: &str = "analyses";
 pub const LAYER_CASES: &str = "cases";
 pub const LAYER_GAMMA: &str = "gamma-bands";
-pub const LAYER_SITE: &str = "site";
 
-const LAYERS: [(&str, &str, &str); 9] = [
+const LAYERS: [(&str, &str, &str); 8] = [
     (LAYER_MEMBERS, "Members", "Bauteile"),
     (LAYER_DECKS, "Bridge decks", "Brückenfahrbahnen"),
     (LAYER_LOADS, "Actions", "Einwirkungen"),
@@ -37,7 +36,6 @@ const LAYERS: [(&str, &str, &str); 9] = [
     (LAYER_ANALYSES, "Analyses", "Analysen"),
     (LAYER_CASES, "Design cases", "Bemessungsfälle"),
     (LAYER_GAMMA, "Permanent factor bands", "Bänder der ständigen Teilsicherheitsbeiwerte"),
-    (LAYER_SITE, "Site", "Standort"),
 ];
 
 /// 🏷️ One entity kind of the EN 1990 outliner, interaction domain and insert palette.

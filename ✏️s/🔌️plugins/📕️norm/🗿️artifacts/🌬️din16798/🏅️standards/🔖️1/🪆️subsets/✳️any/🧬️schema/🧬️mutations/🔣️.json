@@ -602,6 +602,30 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-humidification-provided/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneUnoccupiedVentilation"
+      ],
+      "properties": {
+        "ChangeZoneUnoccupiedVentilation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-unoccupied-ventilation/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ClearZoneUnoccupiedVentilation"
+      ],
+      "properties": {
+        "ClearZoneUnoccupiedVentilation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/clear-zone-unoccupied-ventilation/schema.json"
+        }
+      }
     }
   ]
 }

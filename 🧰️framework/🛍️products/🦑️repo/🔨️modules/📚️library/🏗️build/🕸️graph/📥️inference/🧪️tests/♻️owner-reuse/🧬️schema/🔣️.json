@@ -12,6 +12,7 @@
   "steps": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["name", "edit", "inferred", "derivedClosures"], "additionalProperties": false, "properties": {
    "name": {"type": "string"}, "edit": {"type": "object", "additionalProperties": {"type": "string"}},
    "inferred": {"type": "array", "items": {"type": "string"}},
-   "derivedClosures": {"oneOf": [{"const": 0}, {"const": "any"}]}}}}
+   "derivedClosures": {"oneOf": [{"const": 0}, {"const": "any"}]},
+   "killAfter": {"type": "integer", "minimum": 1}}}}
  }
 }

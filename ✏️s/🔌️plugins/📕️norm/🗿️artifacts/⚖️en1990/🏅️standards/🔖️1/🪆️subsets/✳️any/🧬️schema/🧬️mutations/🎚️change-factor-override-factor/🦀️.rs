@@ -10,7 +10,7 @@ use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 #[value(rename_all = "camelCase")]
 pub struct ChangeFactorOverrideFactor {
     pub id: String,
-    pub new_factor: String,
+    pub new_factor: semio_s_artifact_norm_en1990_model::FactorKind,
 }
 
 impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeFactorOverrideFactor where Op: protocol::Mutation<En1990Snapshot, Diff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::change_factor_override_factor::ChangeFactorOverrideFactor> {

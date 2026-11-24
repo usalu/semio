@@ -1,9 +1,13 @@
 import json, math, pathlib, sys
 
 def threads(case, policy):
-    busy = max(max(0, math.floor(case["others"])), math.ceil(max(0, case["load"])))
-    by_cores = math.floor(case["cores"]) - policy["reserveCores"] - busy
-    by_memory = 1 + math.floor(max(0, case["spare"] - max(0, case["peak"])) / policy["extraMegabytesPerThread"])
+    if case.get("pressured"):
+        return 1
+    others = max(0, math.floor(case["others"]))
+    cores = math.floor(case["cores"]) - policy["reserveCores"]
+    idle = cores - max(others, math.ceil(max(0, case["load"])))
+    by_cores = min(cores - others, max(idle, policy["fairShareThreads"]))
+    by_memory = 1 + math.floor(max(0, case["spare"] - max(0, case["peak"]) + (policy["fairShareThreads"] - 1) * policy["extraMegabytesPerThread"]) / policy["extraMegabytesPerThread"])
     return max(1, min(policy["maximumThreads"], by_cores, by_memory))
 
 data = json.loads((pathlib.Path(__file__).parent / "🔣️.json").read_text())

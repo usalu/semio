@@ -1,0 +1,16 @@
+[
+  {"op": "copy", "scale": "50", "id": "sleeve-r", "from": "elevation", "to": ["front", "plan"]},
+  {"op": "front-sweep", "scale": "50", "id": "neck"},
+  {"op": "front-sweep", "scale": "100", "id": "neck"},
+  {"op": "front-sweep", "scale": "200", "id": "neck"},
+  {"op": "front-sweep", "scale": "500", "id": "sil-neck"},
+  {"op": "front-sweep", "scale": "50", "id": "head", "swing": 40},
+  {"op": "front-sweep", "scale": "50", "id": "hair", "swing": 40},
+  {"op": "front-sweep", "scale": "50", "id": "hair-fringe", "twin": "hair", "range": "keep", "spanOf": "hair"},
+  {"op": "front-sweep", "scale": "100", "id": "head", "swing": 40},
+  {"op": "front-sweep", "scale": "100", "id": "hair", "swing": 40},
+  {"op": "front-sweep", "scale": "100", "id": "hair-fringe", "twin": "hair", "range": "keep", "spanOf": "hair"},
+  {"op": "front-sweep", "scale": "200", "id": "head", "swing": 40},
+  {"op": "front-sweep", "scale": "200", "id": "hair", "swing": 40},
+  {"op": "front-sweep", "scale": "200", "id": "hair-fringe", "twin": "hair", "range": "keep", "spanOf": "hair"}
+]

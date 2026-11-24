@@ -6,7 +6,7 @@ import { normWireLiteral, normWireObject, normWireRequired, normWireString, type
 export interface ChangeFactorOverrideFactor {
   mutation: "changeFactorOverrideFactor";
   id: string;
-  newFactor: string;
+  newFactor: "gamma" | "psi0" | "psi1" | "psi2" | "xi" | "k_fi";
 }
 
-export const parseChangeFactorOverrideFactor: NormWireReader<ChangeFactorOverrideFactor> = normWireObject<ChangeFactorOverrideFactor>({ mutation: normWireRequired(normWireLiteral("changeFactorOverrideFactor")), id: normWireRequired(normWireString), newFactor: normWireRequired(normWireString) });
+export const parseChangeFactorOverrideFactor: NormWireReader<ChangeFactorOverrideFactor> = normWireObject<ChangeFactorOverrideFactor>({ mutation: normWireRequired(normWireLiteral("changeFactorOverrideFactor")), id: normWireRequired(normWireString), newFactor: normWireRequired(normWireLiteral("gamma", "psi0", "psi1", "psi2", "xi", "k_fi")) });

@@ -7,7 +7,7 @@ use super::checks::{k_fi_for_rc, psi_entry_of, psi_is_ordered, psi_lookup, resol
 use super::combinations::Column;
 use super::kit::*;
 use super::layout::Layout;
-use super::model::{En1990Snapshot, LoadGroup};
+use super::model::{En1990Snapshot, FactorKind, LoadGroup};
 use super::scene::*;
 use super::{handles, norm, SceneInput};
 
@@ -111,12 +111,14 @@ fn design_words(factor: Option<f64>, value: f64, column: Option<&Column>) -> (Lo
     }
 }
 
-fn factor_symbol(factor: &str) -> &'static str {
+pub(crate) fn factor_symbol(factor: FactorKind) -> &'static str {
     match factor {
-        "gamma" => "γ",
-        "psi0" => "ψ₀",
-        "psi1" => "ψ₁",
-        _ => "ψ₂",
+        FactorKind::Gamma => "γ",
+        FactorKind::Psi0 => "ψ₀",
+        FactorKind::Psi1 => "ψ₁",
+        FactorKind::Psi2 => "ψ₂",
+        FactorKind::Xi => "ξ",
+        FactorKind::KFi => "K_FI",
     }
 }
 
@@ -127,13 +129,13 @@ pub(crate) fn override_badge(d: &En1990Snapshot, action: &str) -> Option<(Locali
     let (mut en, mut de, mut tone) = (Vec::new(), Vec::new(), Tone::Warning);
     for (index, verdict) in rows_for(d, action) {
         let row = &d.factor_overrides[index];
-        let symbol = factor_symbol(&row.factor);
+        let symbol = factor_symbol(row.factor);
         if verdict != Verdict::Applied {
             tone = Tone::Error;
             en.push(format!("{symbol} row {} not applied", row.id));
             de.push(format!("{symbol}-Zeile {} nicht angewendet", row.id));
         } else if deviating[index] {
-            let annex = annex_for_action(d, &row.factor, action).map_or_else(|| "-".to_string(), |a| format!("{a:.3}"));
+            let annex = annex_for_action(d, row.factor, action).map_or_else(|| "-".to_string(), |a| format!("{a:.3}"));
             en.push(format!("{symbol} {:.3} (NA {annex})", row.value));
             de.push(format!("{symbol} {:.3} (NA {annex})", row.value));
         }

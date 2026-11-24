@@ -646,6 +646,28 @@
               "directoryName": "✅apply"
             }
           ]
+        },
+        {
+          "mutationId": "change-zone-unoccupied-ventilation",
+          "sourceMutationDirectoryName": "🌛️change-zone-unoccupied-ventilation",
+          "mutationDirectoryName": "🌛️change-zone-unoccupied-ventilation",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "clear-zone-unoccupied-ventilation",
+          "sourceMutationDirectoryName": "🌜️clear-zone-unoccupied-ventilation",
+          "mutationDirectoryName": "🌜️clear-zone-unoccupied-ventilation",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -698,7 +720,9 @@
         "change-vent-fan-run-hours",
         "change-vent-duct-test-pressure",
         "change-vent-humidification-required",
-        "change-vent-humidification-provided"
+        "change-vent-humidification-provided",
+        "change-zone-unoccupied-ventilation",
+        "clear-zone-unoccupied-ventilation"
       ]
     }
   ],
@@ -1703,6 +1727,46 @@
             "operation": "change-vent-humidification-provided",
             "bridgeVersion": 1,
             "variant": "ChangeVentHumidificationProvided"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din16798-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-unoccupied-ventilation",
+          "capability": "din16798-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-unoccupied-ventilation",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneUnoccupiedVentilation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din16798-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "clear-zone-unoccupied-ventilation",
+          "capability": "din16798-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "clear-zone-unoccupied-ventilation",
+            "bridgeVersion": 1,
+            "variant": "ClearZoneUnoccupiedVentilation"
           },
           "oracleRequirements": [
             {

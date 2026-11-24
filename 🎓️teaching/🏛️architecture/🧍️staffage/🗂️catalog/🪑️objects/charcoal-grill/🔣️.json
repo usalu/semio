@@ -5117,15 +5117,21 @@
               "z": 2.35,
               "filled": true,
               "tone": 0.25,
+              "region": "legs-steel",
+              "material": "steel-black",
               "kind": "capsule",
-              "x0": 0.19464,
-              "y0": 0,
-              "x1": 0.3,
-              "y1": 0,
+              "x0": 0.29582,
+              "y0": 0.022,
+              "x1": 0.19842,
+              "y1": 0.535,
               "r0": 0.0125,
               "r1": 0.0125,
-              "region": "legs-steel",
-              "material": "steel-black"
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0125,
+                "z1": 0.0125
+              }
             },
             {
               "id": "leg-left",
@@ -5134,15 +5140,25 @@
               "z": 2.35,
               "filled": true,
               "tone": 0.25,
+              "region": "legs-steel",
+              "material": "steel-black",
               "kind": "capsule",
-              "x0": -0.09732,
-              "y0": 0.16856,
-              "x1": -0.14278,
-              "y1": 0.24731,
+              "x0": 0.062,
+              "y0": 0.24731,
+              "x1": 0.535,
+              "y1": 0.16856,
               "r0": 0.0125,
               "r1": 0.0125,
-              "region": "legs-steel",
-              "material": "steel-black"
+              "solid": {
+                "kind": "extruded",
+                "sweep": "u",
+                "z0": -0.162495,
+                "z1": -0.137495,
+                "zTip": [
+                  -0.09225,
+                  -0.06725
+                ]
+              }
             },
             {
               "id": "leg-right",
@@ -5151,15 +5167,25 @@
               "z": 2.35,
               "filled": true,
               "tone": 0.25,
+              "region": "legs-steel",
+              "material": "steel-black",
               "kind": "capsule",
-              "x0": -0.09732,
-              "y0": -0.16856,
-              "x1": -0.14278,
-              "y1": -0.24731,
+              "x0": 0.062,
+              "y0": -0.24731,
+              "x1": 0.535,
+              "y1": -0.16856,
               "r0": 0.0125,
               "r1": 0.0125,
-              "region": "legs-steel",
-              "material": "steel-black"
+              "solid": {
+                "kind": "extruded",
+                "sweep": "u",
+                "z0": -0.162495,
+                "z1": -0.137495,
+                "zTip": [
+                  -0.09225,
+                  -0.06725
+                ]
+              }
             },
             {
               "id": "foot-front",
@@ -8080,15 +8106,21 @@
               "z": 2.35,
               "filled": true,
               "tone": 0.25,
+              "region": "legs-steel",
+              "material": "steel-black",
               "kind": "capsule",
-              "x0": 0.19464,
-              "y0": 0,
-              "x1": 0.3,
-              "y1": 0,
+              "x0": 0.29772,
+              "y0": 0.012,
+              "x1": 0.19654,
+              "y1": 0.54489,
               "r0": 0.0135,
               "r1": 0.0135,
-              "region": "legs-steel",
-              "material": "steel-black"
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0135,
+                "z1": 0.0135
+              }
             },
             {
               "id": "leg-left",
@@ -8097,15 +8129,25 @@
               "z": 2.35,
               "filled": true,
               "tone": 0.25,
+              "region": "legs-steel",
+              "material": "steel-black",
               "kind": "capsule",
-              "x0": -0.09732,
-              "y0": 0.16856,
-              "x1": -0.14278,
-              "y1": 0.24731,
+              "x0": 0.062,
+              "y0": 0.24731,
+              "x1": 0.54489,
+              "y1": 0.16856,
               "r0": 0.0135,
               "r1": 0.0135,
-              "region": "legs-steel",
-              "material": "steel-black"
+              "solid": {
+                "kind": "extruded",
+                "sweep": "u",
+                "z0": -0.163496,
+                "z1": -0.136496,
+                "zTip": [
+                  -0.093249,
+                  -0.066249
+                ]
+              }
             },
             {
               "id": "leg-right",
@@ -8114,15 +8156,25 @@
               "z": 2.35,
               "filled": true,
               "tone": 0.25,
+              "region": "legs-steel",
+              "material": "steel-black",
               "kind": "capsule",
-              "x0": -0.09732,
-              "y0": -0.16856,
-              "x1": -0.14278,
-              "y1": -0.24731,
+              "x0": 0.062,
+              "y0": -0.24731,
+              "x1": 0.54489,
+              "y1": -0.16856,
               "r0": 0.0135,
               "r1": 0.0135,
-              "region": "legs-steel",
-              "material": "steel-black"
+              "solid": {
+                "kind": "extruded",
+                "sweep": "u",
+                "z0": -0.163496,
+                "z1": -0.136496,
+                "zTip": [
+                  -0.093249,
+                  -0.066249
+                ]
+              }
             }
           ]
         },
@@ -10226,19 +10278,25 @@
               "z": 2.35,
               "filled": false,
               "tone": 0.25,
+              "region": "legs-steel",
               "kind": "poly",
               "points": [
                 [
-                  0.19464,
+                  0.3,
                   0
                 ],
                 [
-                  0.3,
-                  0
+                  0.19464,
+                  0.55489
                 ]
               ],
               "closed": false,
-              "region": "legs-steel"
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0125,
+                "z1": 0.0125
+              }
             },
             {
               "id": "leg-left",
@@ -10247,19 +10305,29 @@
               "z": 2.35,
               "filled": false,
               "tone": 0.25,
+              "region": "legs-steel",
               "kind": "poly",
               "points": [
                 [
-                  -0.09732,
-                  0.16856
+                  0.064,
+                  0.24731
                 ],
                 [
-                  -0.14278,
-                  0.24731
+                  0.55489,
+                  0.16856
                 ]
               ],
               "closed": false,
-              "region": "legs-steel"
+              "solid": {
+                "kind": "extruded",
+                "sweep": "u",
+                "z0": -0.162495,
+                "z1": -0.137495,
+                "zTip": [
+                  -0.092248,
+                  -0.067248
+                ]
+              }
             },
             {
               "id": "leg-right",
@@ -10268,19 +10336,29 @@
               "z": 2.35,
               "filled": false,
               "tone": 0.25,
+              "region": "legs-steel",
               "kind": "poly",
               "points": [
                 [
-                  -0.09732,
-                  -0.16856
+                  0.064,
+                  -0.24731
                 ],
                 [
-                  -0.14278,
-                  -0.24731
+                  0.55489,
+                  -0.16856
                 ]
               ],
               "closed": false,
-              "region": "legs-steel"
+              "solid": {
+                "kind": "extruded",
+                "sweep": "u",
+                "z0": -0.162495,
+                "z1": -0.137495,
+                "zTip": [
+                  -0.092248,
+                  -0.067248
+                ]
+              }
             }
           ]
         },
@@ -11540,19 +11618,25 @@
               "z": 2.35,
               "filled": false,
               "tone": 0.25,
+              "region": "legs-steel",
               "kind": "poly",
               "points": [
                 [
-                  0.19464,
+                  0.3,
                   0
                 ],
                 [
-                  0.3,
-                  0
+                  0.19464,
+                  0.55489
                 ]
               ],
               "closed": false,
-              "region": "legs-steel"
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0125,
+                "z1": 0.0125
+              }
             },
             {
               "id": "leg-left",
@@ -11561,19 +11645,29 @@
               "z": 2.35,
               "filled": false,
               "tone": 0.25,
+              "region": "legs-steel",
               "kind": "poly",
               "points": [
                 [
-                  -0.09732,
-                  0.16856
+                  0.076,
+                  0.24731
                 ],
                 [
-                  -0.14278,
-                  0.24731
+                  0.55489,
+                  0.16856
                 ]
               ],
               "closed": false,
-              "region": "legs-steel"
+              "solid": {
+                "kind": "extruded",
+                "sweep": "u",
+                "z0": -0.162495,
+                "z1": -0.137495,
+                "zTip": [
+                  -0.092248,
+                  -0.067248
+                ]
+              }
             },
             {
               "id": "leg-right",
@@ -11582,19 +11676,29 @@
               "z": 2.35,
               "filled": false,
               "tone": 0.25,
+              "region": "legs-steel",
               "kind": "poly",
               "points": [
                 [
-                  -0.09732,
-                  -0.16856
+                  0.076,
+                  -0.24731
                 ],
                 [
-                  -0.14278,
-                  -0.24731
+                  0.55489,
+                  -0.16856
                 ]
               ],
               "closed": false,
-              "region": "legs-steel"
+              "solid": {
+                "kind": "extruded",
+                "sweep": "u",
+                "z0": -0.162495,
+                "z1": -0.137495,
+                "zTip": [
+                  -0.092248,
+                  -0.067248
+                ]
+              }
             }
           ]
         },

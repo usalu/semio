@@ -1,0 +1,1144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/rustc-offload/v1",
+  "title": "Rustc offload",
+  "description": "A machine hands rustc units of the fleet's unit cache to any ready machine of the fleet (distribute), or to one named machine (pin): the policy (thresholds, timeouts, virtual paths, platform properties), the manifest of one offloaded action, the events and the bilingual texts.",
+  "definitions": {
+    "Mode": {
+      "type": "string",
+      "enum": [
+        "never",
+        "distribute",
+        "pin"
+      ]
+    },
+    "Reason": {
+      "type": "string",
+      "enum": [
+        "not-portable",
+        "no-endpoint",
+        "no-credential",
+        "unmapped-path",
+        "inputs-too-large",
+        "unreadable-input",
+        "no-idle-machine",
+        "queue-timeout",
+        "infrastructure",
+        "toolchain-missing",
+        "path-dependent-output",
+        "worker-policy",
+        "incomplete-inputs",
+        "crate-type",
+        "source-kind",
+        "cheap",
+        "local-slot",
+        "unmeasured",
+        "final-wait",
+        "pin-failed",
+        "cancelled"
+      ]
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "limits",
+        "timeouts",
+        "deadline",
+        "virtual",
+        "property",
+        "tool",
+        "root",
+        "environment",
+        "crateTypes",
+        "wasm",
+        "peak",
+        "finals",
+        "link"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "environment",
+            "default",
+            "pinPrefix"
+          ],
+          "properties": {
+            "environment": {
+              "type": "string"
+            },
+            "default": {
+              "$ref": "#/definitions/Mode"
+            },
+            "pinPrefix": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "queueThresholdMilliseconds",
+            "fanOutJobs",
+            "roundTripMilliseconds",
+            "unmeasuredWaitMilliseconds",
+            "maximumInputFiles",
+            "maximumInputBytes",
+            "maximumUploadBytes",
+            "fleetStatusMilliseconds",
+            "maximumOutputBytes",
+            "maximumClosureFiles",
+            "maximumArgumentBytes",
+            "maximumCheckConfigurationBytes",
+            "tokenWaitMilliseconds",
+            "admissionMemoMilliseconds",
+            "unitMegabytes",
+            "declineMemoMilliseconds",
+            "reachableMemoMilliseconds",
+            "contentRetries",
+            "contentRetryAfterCapMilliseconds"
+          ],
+          "properties": {
+            "roundTripMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unmeasuredWaitMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fanOutJobs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 256
+            },
+            "queueThresholdMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumInputFiles": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumInputBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumUploadBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "fleetStatusMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumOutputBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumClosureFiles": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumArgumentBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumCheckConfigurationBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "tokenWaitMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "admissionMemoMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unitMegabytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "declineMemoMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reachableMemoMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "contentRetries": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "contentRetryAfterCapMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "timeouts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "connectMilliseconds",
+            "uploadMilliseconds",
+            "queueMilliseconds",
+            "executeMarginMilliseconds",
+            "downloadMilliseconds",
+            "actionSeconds",
+            "probeMilliseconds",
+            "requestMilliseconds",
+            "rideThroughMilliseconds",
+            "queueSaturatedMilliseconds",
+            "pinQueueMilliseconds"
+          ],
+          "properties": {
+            "connectMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "uploadMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "queueMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "executeMarginMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "downloadMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "actionSeconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "probeMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "requestMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "rideThroughMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "queueSaturatedMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "pinQueueMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "deadline": {
+          "description": "How long an offloaded action may take on the fleet before the unit compiles here instead: factor times the recorded local cost of the unit (floor and cap bound it, a unit without a record takes the unknown value; a linked wasm unit or a command has its own cap and unknown value) from the moment it executes, and how long the stream of an operation may stay silent before the client re-attaches to it.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "factor",
+            "floorMilliseconds",
+            "capMilliseconds",
+            "unknownMilliseconds",
+            "linkedCapMilliseconds",
+            "linkedUnknownMilliseconds",
+            "silenceMilliseconds",
+            "reattachMilliseconds"
+          ],
+          "properties": {
+            "factor": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "floorMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "capMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "unknownMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "linkedCapMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "linkedUnknownMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "silenceMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "reattachMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "virtual": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "base",
+            "out",
+            "deps",
+            "package",
+            "generated",
+            "external",
+            "native",
+            "root"
+          ],
+          "properties": {
+            "base": {
+              "type": "string"
+            },
+            "out": {
+              "type": "string"
+            },
+            "deps": {
+              "type": "string"
+            },
+            "package": {
+              "type": "string"
+            },
+            "generated": {
+              "type": "string"
+            },
+            "external": {
+              "type": "string"
+            },
+            "native": {
+              "type": "string"
+            },
+            "root": {
+              "type": "string"
+            }
+          }
+        },
+        "property": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "offload",
+            "offloadValue",
+            "origin",
+            "toolchain",
+            "target",
+            "targetPrefix",
+            "format",
+            "formatValue",
+            "peak",
+            "queueValue",
+            "pin",
+            "sdk",
+            "linker"
+          ],
+          "properties": {
+            "offload": {
+              "type": "string"
+            },
+            "offloadValue": {
+              "type": "string"
+            },
+            "origin": {
+              "type": "string"
+            },
+            "toolchain": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            },
+            "targetPrefix": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            },
+            "formatValue": {
+              "type": "string"
+            },
+            "peak": {
+              "type": "string"
+            },
+            "queueValue": {
+              "type": "string"
+            },
+            "pin": {
+              "type": "string"
+            },
+            "sdk": {
+              "type": "string"
+            },
+            "linker": {
+              "type": "string"
+            }
+          }
+        },
+        "tool": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "windowsExecutable",
+            "placeholder"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "windowsExecutable": {
+              "const": "rustc.exe"
+            },
+            "placeholder": {
+              "type": "string"
+            }
+          }
+        },
+        "root": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "placeholder",
+            "report",
+            "home",
+            "directories"
+          ],
+          "properties": {
+            "placeholder": {
+              "type": "string"
+            },
+            "report": {
+              "type": "string"
+            },
+            "home": {
+              "type": "string"
+            },
+            "directories": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "deniedNames",
+            "deniedPrefixes",
+            "pathNames",
+            "path"
+          ],
+          "properties": {
+            "deniedNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "deniedPrefixes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "pathNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "path": {
+              "type": "string"
+            }
+          }
+        },
+        "crateTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "peak": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "How much memory placement reserves for one unit: the peak this machine measured the last compiles of the crate to need (halfway down on a smaller measurement, up at once on a larger one) plus `marginPercent`, between `minimumMegabytes` and `maximumMegabytes`; a unit never measured here takes `unknownMegabytes` (a linked wasm unit the larger `wasm.peakMegabytes`). A unit that a worker killed for memory (`killedExit`) learns `killedFactor` times what it was placed with. A linked wasm unit of a crate never measured takes the family estimate (`family`) instead of the cold bound once enough crates of its family were measured.",
+          "required": ["unknownMegabytes", "marginPercent", "minimumMegabytes", "maximumMegabytes", "killedExit", "killedFactor", "family"],
+          "properties": {
+            "unknownMegabytes": {"type": "integer", "minimum": 1},
+            "marginPercent": {"type": "integer", "minimum": 0},
+            "minimumMegabytes": {"type": "integer", "minimum": 1},
+            "maximumMegabytes": {"type": "integer", "minimum": 1},
+            "killedExit": {"type": "integer", "minimum": 1},
+            "killedFactor": {"type": "integer", "minimum": 1},
+            "family": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "The estimate for a crate of a family that was never measured: every crate whose name ends in `crateSuffix` and whose peak is recorded is one sample (its recorded peak, a kill included), the family peak is the `quantilePercent` quantile of the samples (linear between ranks), the placed peak adds `marginPercent`; fewer than `minimumCrates` samples leave the cold bound `wasm.peakMegabytes`.",
+              "required": ["crateSuffix", "quantilePercent", "minimumCrates"],
+              "properties": {
+                "crateSuffix": {"type": "string", "minLength": 1},
+                "quantilePercent": {"type": "integer", "minimum": 1, "maximum": 100},
+                "minimumCrates": {"type": "integer", "minimum": 1}
+              }
+            }
+          }
+        },
+        "finals": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The expensive units: a unit whose predicted local cost reaches `minimumMilliseconds` (its recorded local compile time; for a linked wasm unit never measured here the family estimate, the `peak.family.quantilePercent` quantile of the recorded compile times of the crates of its family, else `seedMilliseconds`) or `minimumMegabytes` (its learned peak, else for a linked wasm unit the family or cold peak) prefers a worker that has the memory for it even when a compile slot of this machine is free: it frees this machine for the next unit and runs with the cores of the worker. It asks the scheduler for such a worker for up to `waitMilliseconds` (every `pollMilliseconds`) and compiles here when none fits in that time; a cheaper unit never asks.",
+          "required": ["minimumMilliseconds", "minimumMegabytes", "seedMilliseconds", "waitMilliseconds", "pollMilliseconds"],
+          "properties": {
+            "minimumMilliseconds": {"type": "integer", "minimum": 1},
+            "minimumMegabytes": {"type": "integer", "minimum": 1},
+            "seedMilliseconds": {"type": "integer", "minimum": 0},
+            "waitMilliseconds": {"type": "integer", "minimum": 0},
+            "pollMilliseconds": {"type": "integer", "minimum": 1}
+          }
+        },
+        "wasm": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The one linked crate type that offloads, and only for WebAssembly targets: the targets, the crate types, the numeric linker arguments (full-match patterns) of the release's wasm-ld flags, how long such an action may run and the cold bound of the memory placement reserves for it (the sign of a linked wasm unit, and its peak only until `peak.family.minimumCrates` crates of its family were measured).",
+          "required": [
+            "targets",
+            "crateTypes",
+            "linkArguments",
+            "actionSeconds",
+            "peakMegabytes"
+          ],
+          "properties": {
+            "targets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "crateTypes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "linkArguments": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "actionSeconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "peakMegabytes": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "link": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "What a native unit may link on another machine: the linked crate types, the linker arguments (full-match patterns), the kinds of `-l`, the kinds of `-L` search directories (always a directory shipped with the action), the system libraries and frameworks that the worker resolves against its own SDK, the directories that every machine has (dropped from a command line, never shipped) and the bound of `-l` arguments of one unit.",
+          "required": [
+            "crateTypes",
+            "arguments",
+            "libraryKinds",
+            "searchKinds",
+            "systemLibraries",
+            "frameworks",
+            "systemDirectories",
+            "maximumLibraries"
+          ],
+          "properties": {
+            "crateTypes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "arguments": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "libraryKinds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "searchKinds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "systemLibraries": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "frameworks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "systemDirectories": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "maximumLibraries": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "Event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "atMs",
+        "pid",
+        "kind",
+        "crate",
+        "key",
+        "milliseconds",
+        "waitedMs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "atMs": {
+          "type": "integer"
+        },
+        "pid": {
+          "type": "integer"
+        },
+        "lane": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "offload-run",
+            "offload-declined",
+            "offload-failed",
+            "offload-local-fallback"
+          ]
+        },
+        "crate": {
+          "type": "string"
+        },
+        "key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "origin": {
+          "type": "string"
+        },
+        "reason": {
+          "$ref": "#/definitions/Reason"
+        },
+        "milliseconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "waitedMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "detail": {
+          "type": "string"
+        },
+        "bytesShipped": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The size of the input files of the unit's action (the files rustc reads)."
+        },
+        "bytesUploaded": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The bytes of the action that the content store lacked and this machine uploaded."
+        },
+        "bytesReturned": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The bytes of the compiler outputs and streams that came back."
+        }
+      }
+    },
+    "Manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "crate",
+        "unitKey",
+        "toolchain",
+        "files",
+        "bytes",
+        "mappings"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "crate": {
+          "type": "string"
+        },
+        "unitKey": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "toolchain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "commit",
+            "host"
+          ],
+          "properties": {
+            "commit": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            }
+          }
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mappings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "real",
+              "virtual"
+            ],
+            "properties": {
+              "real": {
+                "type": "string"
+              },
+              "virtual": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Messages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "$ref": "#/definitions/Texts"
+        },
+        "de": {
+          "$ref": "#/definitions/Texts"
+        }
+      }
+    },
+    "Texts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "policy": {
+    "version": 1,
+    "mode": {
+      "environment": "SEMIO_OFFLOAD",
+      "default": "distribute",
+      "pinPrefix": "pin:"
+    },
+    "limits": {
+      "fanOutJobs": 12,
+      "roundTripMilliseconds": 8000,
+      "unmeasuredWaitMilliseconds": 15000,
+      "queueThresholdMilliseconds": 1500,
+      "maximumInputFiles": 8192,
+      "maximumInputBytes": 4294967296,
+      "maximumUploadBytes": 4294967296,
+      "fleetStatusMilliseconds": 3000,
+      "maximumOutputBytes": 1073741824,
+      "maximumClosureFiles": 32768,
+      "maximumArgumentBytes": 262144,
+      "maximumCheckConfigurationBytes": 1048576,
+      "tokenWaitMilliseconds": 30000,
+      "admissionMemoMilliseconds": 2000,
+      "unitMegabytes": 768,
+      "declineMemoMilliseconds": 3000,
+      "reachableMemoMilliseconds": 15000,
+      "contentRetries": 3,
+      "contentRetryAfterCapMilliseconds": 2000
+    },
+    "timeouts": {
+      "connectMilliseconds": 3000,
+      "uploadMilliseconds": 300000,
+      "queueMilliseconds": 8000,
+      "executeMarginMilliseconds": 30000,
+      "downloadMilliseconds": 120000,
+      "actionSeconds": 1200,
+      "probeMilliseconds": 4000,
+      "requestMilliseconds": 20000,
+      "rideThroughMilliseconds": 20000,
+      "queueSaturatedMilliseconds": 120000,
+      "pinQueueMilliseconds": 3600000
+    },
+    "deadline": {
+      "factor": 4,
+      "floorMilliseconds": 60000,
+      "capMilliseconds": 900000,
+      "unknownMilliseconds": 240000,
+      "linkedCapMilliseconds": 3600000,
+      "linkedUnknownMilliseconds": 2400000,
+      "silenceMilliseconds": 20000,
+      "reattachMilliseconds": 10000
+    },
+    "virtual": {
+      "base": ".semio-offload",
+      "out": ".semio-offload/o",
+      "deps": ".semio-offload/d",
+      "package": ".semio-offload/p",
+      "generated": ".semio-offload/g",
+      "external": ".semio-offload/x",
+      "native": ".semio-offload/n",
+      "root": ".semio-offload/root"
+    },
+    "property": {
+      "offload": "semio-offload",
+      "offloadValue": "if-idle",
+      "origin": "semio-origin",
+      "toolchain": "semio-toolchain",
+      "target": "semio-target",
+      "targetPrefix": "semio-rustc-target-",
+      "format": "semio-offload-format",
+      "formatValue": "argv-1",
+      "peak": "semio-peak-mb",
+      "queueValue": "queue",
+      "pin": "semio-pin",
+      "sdk": "semio-sdk",
+      "linker": "semio-linker"
+    },
+    "tool": {
+      "name": "rustc",
+      "windowsExecutable": "rustc.exe",
+      "placeholder": "@tool"
+    },
+    "root": {
+      "placeholder": "@root",
+      "report": "SEMIO_ROOT_REPORT",
+      "home": ".tmp",
+      "directories": [
+        ".semio-offload/o"
+      ]
+    },
+    "environment": {
+      "deniedNames": [
+        "PATH",
+        "HOME",
+        "USER",
+        "LOGNAME",
+        "SHELL",
+        "PWD",
+        "OLDPWD",
+        "TMPDIR",
+        "TMP",
+        "TEMP",
+        "TERM",
+        "LANG",
+        "CARGO",
+        "CARGO_HOME",
+        "CARGO_MAKEFLAGS",
+        "MAKEFLAGS",
+        "MFLAGS",
+        "MAKELEVEL",
+        "NUM_JOBS",
+        "CARGO_TARGET_DIR",
+        "RUSTC",
+        "RUSTC_WRAPPER",
+        "RUSTC_WORKSPACE_WRAPPER",
+        "RUSTDOC",
+        "RUSTUP_TOOLCHAIN",
+        "RUSTUP_HOME",
+        "LD_LIBRARY_PATH",
+        "SSH_AUTH_SOCK",
+        "OUT_DIR",
+        "CARGO_MANIFEST_DIR",
+        "TZ",
+        "SECURITYSESSIONID",
+        "COMMAND_MODE",
+        "XPC_FLAGS",
+        "XPC_SERVICE_NAME",
+        "LaunchInstanceID",
+        "DEVELOPER_DIR",
+        "CARGO_MANIFEST_PATH"
+      ],
+      "deniedPrefixes": [
+        "SEMIO_",
+        "DYLD_",
+        "LD_",
+        "RUSTUP_",
+        "CARGO_BUILD_",
+        "CARGO_REGISTRIES_",
+        "CARGO_NET_",
+        "CARGO_HTTP_",
+        "__CF",
+        "XPC_",
+        "SSH_",
+        "TERM_",
+        "LC_",
+        "BUN_",
+        "NODE_",
+        "npm_",
+        "GIT_",
+        "HOMEBREW_",
+        "ZSH",
+        "COLOR",
+        "ITERM",
+        "VSCODE_",
+        "CLAUDE",
+        "CODEX_",
+        "ANTHROPIC_",
+        "OPENAI_"
+      ],
+      "pathNames": [
+        "CARGO_MANIFEST_DIR",
+        "CARGO_MANIFEST_PATH",
+        "OUT_DIR"
+      ],
+      "path": "/usr/bin:/bin:/usr/sbin:/sbin"
+    },
+    "crateTypes": [
+      "lib",
+      "rlib",
+      "proc-macro",
+      "bin"
+    ],
+    "peak": {
+      "unknownMegabytes": 2048,
+      "marginPercent": 25,
+      "minimumMegabytes": 64,
+      "maximumMegabytes": 16384,
+      "killedExit": 137,
+      "killedFactor": 2,
+      "family": {
+        "crateSuffix": "_component",
+        "quantilePercent": 90,
+        "minimumCrates": 3
+      }
+    },
+    "finals": {
+      "minimumMilliseconds": 120000,
+      "minimumMegabytes": 4096,
+      "seedMilliseconds": 900000,
+      "waitMilliseconds": 30000,
+      "pollMilliseconds": 2000
+    },
+    "wasm": {
+      "targets": [
+        "wasm32-unknown-unknown",
+        "wasm32-wasip2"
+      ],
+      "crateTypes": [
+        "cdylib"
+      ],
+      "linkArguments": [
+        "^--max-memory=[0-9]{1,12}$",
+        "^-zstack-size=[0-9]{1,10}$",
+        "^-Wl,--export=[A-Za-z_][A-Za-z0-9_]{0,200}$"
+      ],
+      "actionSeconds": 3600,
+      "peakMegabytes": 6144
+    },
+    "link": {
+      "crateTypes": [
+        "cdylib",
+        "dylib",
+        "staticlib"
+      ],
+      "arguments": [
+        "^-Wl,-undefined,dynamic_lookup$"
+      ],
+      "libraryKinds": [
+        "static",
+        "dylib",
+        "framework"
+      ],
+      "searchKinds": [
+        "native",
+        "all",
+        "framework"
+      ],
+      "systemLibraries": [
+        "System",
+        "c",
+        "m",
+        "pthread",
+        "dl",
+        "rt",
+        "util",
+        "iconv",
+        "objc",
+        "c++",
+        "c++abi",
+        "stdc++",
+        "gcc_s",
+        "z",
+        "resolv",
+        "sqlite3",
+        "bz2",
+        "xml2",
+        "ncurses",
+        "curl"
+      ],
+      "frameworks": [
+        "Accelerate",
+        "AppKit",
+        "AudioToolbox",
+        "AudioUnit",
+        "AVFoundation",
+        "Carbon",
+        "CoreAudio",
+        "CoreFoundation",
+        "CoreGraphics",
+        "CoreHaptics",
+        "CoreImage",
+        "CoreMedia",
+        "CoreServices",
+        "CoreText",
+        "CoreVideo",
+        "Foundation",
+        "IOKit",
+        "IOSurface",
+        "Metal",
+        "MetalKit",
+        "QuartzCore",
+        "Security",
+        "SystemConfiguration",
+        "UniformTypeIdentifiers"
+      ],
+      "systemDirectories": [
+        "/usr/lib",
+        "/System/Library/Frameworks",
+        "/Library/Frameworks",
+        "/Library/Developer/CommandLineTools/SDKs",
+        "/Applications/Xcode.app/Contents/Developer/Platforms"
+      ],
+      "maximumLibraries": 256
+    }
+  },
+  "messages": {
+    "en": {
+      "offloaded": "Unit {crate} offloaded to {origin} ({milliseconds} ms).",
+      "declined": "Unit {crate} stays here: {reason}.",
+      "fallback": "Unit {crate} compiles here after the offload failed: {reason}.",
+      "stage.queued": "Unit {crate} waits for a machine.",
+      "stage.executing": "Unit {crate} is compiling on another machine.",
+      "reason.not-portable": "its kind cannot be compiled elsewhere",
+      "reason.no-endpoint": "no execution endpoint is configured",
+      "reason.no-credential": "no fleet credential is available",
+      "reason.unmapped-path": "it names a path outside the workspace that cannot be mapped",
+      "reason.inputs-too-large": "its inputs are too large to ship",
+      "reason.unreadable-input": "an input could not be read",
+      "reason.no-idle-machine": "no other machine has headroom",
+      "reason.queue-timeout": "no machine took it in time",
+      "reason.infrastructure": "the execution service failed",
+      "reason.toolchain-missing": "the compiler identity is unknown",
+      "reason.path-dependent-output": "the result depends on the path of the other machine",
+      "reason.worker-policy": "the action policy of a worker refuses its arguments",
+      "reason.incomplete-inputs": "the other machine lacked an input",
+      "reason.cancelled": "the build was cancelled",
+      "flag.invalid": "--offload takes never, distribute or pin:<origin>, once.",
+      "reason.crate-type": "its crate type is linked here",
+      "reason.source-kind": "its source is not a Rust file",
+      "reason.cheap": "it compiles faster than a round trip",
+      "reason.local-slot": "a compile slot of this machine is free",
+      "reason.unmeasured": "its local cost is not measured yet, so it compiles here first",
+      "reason.final-wait": "it is expensive but no other machine had the memory for it in time",
+      "reason.pin-failed": "the pinned machine could not take or finish it"
+    },
+    "de": {
+      "offloaded": "Einheit {crate} auf {origin} ausgelagert ({milliseconds} ms).",
+      "declined": "Einheit {crate} bleibt hier: {reason}.",
+      "fallback": "Einheit {crate} wird hier kompiliert, nachdem das Auslagern fehlschlug: {reason}.",
+      "stage.queued": "Einheit {crate} wartet auf eine Maschine.",
+      "stage.executing": "Einheit {crate} wird auf einer anderen Maschine kompiliert.",
+      "reason.not-portable": "ihre Art lässt sich nicht anderswo kompilieren",
+      "reason.no-endpoint": "kein Ausführungsendpunkt ist eingerichtet",
+      "reason.no-credential": "kein Flottenzugang ist verfügbar",
+      "reason.unmapped-path": "sie nennt einen Pfad außerhalb des Arbeitsbereichs, der sich nicht abbilden lässt",
+      "reason.inputs-too-large": "ihre Eingaben sind zu groß zum Versenden",
+      "reason.unreadable-input": "eine Eingabe war nicht lesbar",
+      "reason.no-idle-machine": "keine andere Maschine hat Luft",
+      "reason.queue-timeout": "keine Maschine hat sie rechtzeitig übernommen",
+      "reason.infrastructure": "der Ausführungsdienst ist ausgefallen",
+      "reason.toolchain-missing": "die Identität des Compilers ist unbekannt",
+      "reason.path-dependent-output": "das Ergebnis hängt vom Pfad der anderen Maschine ab",
+      "reason.worker-policy": "die Aktionsrichtlinie eines Workers lehnt ihre Argumente ab",
+      "reason.incomplete-inputs": "der anderen Maschine fehlte eine Eingabe",
+      "reason.cancelled": "der Build wurde abgebrochen",
+      "flag.invalid": "--offload nimmt never, distribute oder pin:<Ursprung>, genau einmal.",
+      "reason.crate-type": "sein Crate-Typ wird hier gelinkt",
+      "reason.source-kind": "seine Quelle ist keine Rust-Datei",
+      "reason.cheap": "sie ist schneller kompiliert als ein Hin und Zurück",
+      "reason.local-slot": "ein Kompilierplatz dieser Maschine ist frei",
+      "reason.unmeasured": "ihre lokalen Kosten sind noch nicht gemessen, daher wird sie zuerst hier kompiliert",
+      "reason.final-wait": "sie ist teuer, aber keine andere Maschine hatte rechtzeitig den Speicher dafür",
+      "reason.pin-failed": "die festgelegte Maschine konnte sie nicht annehmen oder nicht beenden"
+    }
+  }
+}

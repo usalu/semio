@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use crate::standards::v1_7::subsets::base::io::error::PdfEngineError;
 use crate::standards::v1_7::subsets::base::schema::stream_roles::PdfStreamRoleValue;
 use crate::standards::v1_7::subsets::base::schema::content_mapping::ResourceMap;
+use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort;
 use crate::standards::v1_7::subsets::base::modules::lift::*;
 
 fn resource_entries<'a>(source: &mut dyn ObjectSource, resources: &'a PdfObject, key: &str) -> std::borrow::Cow<'a, [PdfDictEntry]> {

@@ -375,20 +375,38 @@
     },
     "anchors": [
       {
-        "id": "foot-head",
+        "id": "foot-head-l",
         "bone": "frame",
         "x": 0.03,
         "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Head-end post feet",
-          "de": "Füße der Kopfpfosten"
+          "en": "Head post, left",
+          "de": "Kopfpfosten links"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.06,
-        "footprintWidthM": 1.01,
-        "frictionCoefficient": 0.5
+        "footprintWidthM": 0.06,
+        "frictionCoefficient": 0.5,
+        "z": 0.475
+      },
+      {
+        "id": "foot-head-r",
+        "bone": "frame",
+        "x": 0.03,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Head post, right",
+          "de": "Kopfpfosten rechts"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.06,
+        "footprintWidthM": 0.06,
+        "frictionCoefficient": 0.5,
+        "z": -0.475
       },
       {
         "id": "foot-mid",
@@ -2974,6 +2992,36 @@
               "h": 0.025,
               "region": "bed-frame",
               "material": "pine-timber"
+            },
+            {
+              "id": "leg-mid",
+              "bone": "frame",
+              "role": "body",
+              "z": 1.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 1.03,
+              "y": -0.03,
+              "w": 0.06,
+              "h": 0.06
+            },
+            {
+              "id": "cross-beam",
+              "bone": "frame",
+              "role": "body",
+              "z": 1.45,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 1.04,
+              "y": -0.455,
+              "w": 0.04,
+              "h": 0.91
             }
           ]
         },
@@ -4017,6 +4065,21 @@
               "h": 0.025,
               "region": "bed-frame",
               "material": "pine-timber"
+            },
+            {
+              "id": "leg-mid",
+              "bone": "frame",
+              "role": "body",
+              "z": 1.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 1.03,
+              "y": -0.03,
+              "w": 0.06,
+              "h": 0.06
             }
           ]
         },
@@ -4702,6 +4765,21 @@
               "h": 0.03,
               "region": "bed-frame",
               "material": "pine-timber"
+            },
+            {
+              "id": "leg-mid",
+              "bone": "frame",
+              "role": "body",
+              "z": 1.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 1.03,
+              "y": -0.03,
+              "w": 0.06,
+              "h": 0.06
             }
           ]
         },
@@ -5036,6 +5114,21 @@
                 ]
               ],
               "closed": true
+            },
+            {
+              "id": "leg-mid",
+              "bone": "frame",
+              "role": "body",
+              "z": 1.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.14
             }
           ],
           "plan": [
@@ -5155,6 +5248,21 @@
               "h": 0.97,
               "region": "bed-frame",
               "material": "pine-timber"
+            },
+            {
+              "id": "leg-mid",
+              "bone": "frame",
+              "role": "body",
+              "z": 1.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 1.03,
+              "y": -0.03,
+              "w": 0.06,
+              "h": 0.06
             }
           ]
         },
@@ -5498,7 +5606,8 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "foot-head",
+          "foot-head-l",
+          "foot-head-r",
           "foot-mid",
           "foot-foot-l",
           "foot-foot-r"
@@ -5539,7 +5648,8 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-head",
+          "foot-head-l",
+          "foot-head-r",
           "foot-mid",
           "foot-foot-l",
           "foot-foot-r"
@@ -5586,7 +5696,8 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-head",
+          "foot-head-l",
+          "foot-head-r",
           "foot-mid",
           "foot-foot-l",
           "foot-foot-r"
@@ -5698,7 +5809,8 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-head",
+          "foot-head-l",
+          "foot-head-r",
           "foot-mid",
           "foot-foot-l",
           "foot-foot-r"
@@ -5802,7 +5914,8 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-head",
+          "foot-head-l",
+          "foot-head-r",
           "foot-mid",
           "foot-foot-l",
           "foot-foot-r"
@@ -5861,7 +5974,12 @@
         ],
         "contacts": [
           {
-            "anchor": "foot-head",
+            "anchor": "foot-head-l",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "foot-head-r",
             "fromS": 0,
             "toS": 6
           },
@@ -5937,7 +6055,12 @@
         ],
         "contacts": [
           {
-            "anchor": "foot-head",
+            "anchor": "foot-head-l",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "foot-head-r",
             "fromS": 0,
             "toS": 4
           },
@@ -6089,7 +6212,12 @@
         ],
         "contacts": [
           {
-            "anchor": "foot-head",
+            "anchor": "foot-head-l",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "foot-head-r",
             "fromS": 0,
             "toS": 6
           },
@@ -6290,7 +6418,8 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "foot-head",
+        "foot-head-l",
+        "foot-head-r",
         "foot-mid",
         "foot-foot-l",
         "foot-foot-r"
@@ -12078,7 +12207,7 @@
             }
           },
           {
-            "id": "support-foot-head",
+            "id": "support-foot-head-l",
             "kind": "revolve",
             "bone": "frame",
             "material": "pine-timber",
@@ -12109,20 +12238,51 @@
             ],
             "origin": [
               0.03,
-              0,
+              0.0,
               0.475
             ],
-            "repeat": {
-              "count": 2,
-              "translation": [
-                0,
-                0,
-                -0.95
-              ]
-            },
             "member": "frame",
             "part": "support",
-            "anchor": "foot-head"
+            "anchor": "foot-head-l"
+          },
+          {
+            "id": "support-foot-head-r",
+            "kind": "revolve",
+            "bone": "frame",
+            "material": "pine-timber",
+            "role": "detail",
+            "tone": 0.15,
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.022
+              ],
+              [
+                0.008,
+                0.022
+              ],
+              [
+                0.008,
+                0
+              ]
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "origin": [
+              0.03,
+              0.0,
+              -0.475
+            ],
+            "member": "frame",
+            "part": "support",
+            "anchor": "foot-head-r"
           },
           {
             "id": "support-foot-mid",
@@ -14381,7 +14541,7 @@
             }
           },
           {
-            "id": "support-foot-head",
+            "id": "support-foot-head-l",
             "kind": "revolve",
             "bone": "frame",
             "material": "pine-timber",
@@ -14412,20 +14572,51 @@
             ],
             "origin": [
               0.03,
-              0,
+              0.0,
               0.475
             ],
-            "repeat": {
-              "count": 2,
-              "translation": [
-                0,
-                0,
-                -0.95
-              ]
-            },
             "member": "frame",
             "part": "support",
-            "anchor": "foot-head"
+            "anchor": "foot-head-l"
+          },
+          {
+            "id": "support-foot-head-r",
+            "kind": "revolve",
+            "bone": "frame",
+            "material": "pine-timber",
+            "role": "detail",
+            "tone": 0.15,
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.025
+              ],
+              [
+                0.015,
+                0.025
+              ],
+              [
+                0.015,
+                0
+              ]
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "origin": [
+              0.03,
+              0.0,
+              -0.475
+            ],
+            "member": "frame",
+            "part": "support",
+            "anchor": "foot-head-r"
           },
           {
             "id": "support-foot-mid",
@@ -15647,7 +15838,7 @@
             "part": "joint"
           },
           {
-            "id": "support-foot-head",
+            "id": "support-foot-head-l",
             "kind": "revolve",
             "bone": "frame",
             "material": "pine-timber",
@@ -15678,20 +15869,51 @@
             ],
             "origin": [
               0.03,
-              0,
+              0.0,
               0.475
             ],
-            "repeat": {
-              "count": 2,
-              "translation": [
-                0,
-                0,
-                -0.95
-              ]
-            },
             "member": "frame",
             "part": "support",
-            "anchor": "foot-head"
+            "anchor": "foot-head-l"
+          },
+          {
+            "id": "support-foot-head-r",
+            "kind": "revolve",
+            "bone": "frame",
+            "material": "pine-timber",
+            "role": "detail",
+            "tone": 0.15,
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.03
+              ],
+              [
+                0.03,
+                0.03
+              ],
+              [
+                0.03,
+                0
+              ]
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "origin": [
+              0.03,
+              0.0,
+              -0.475
+            ],
+            "member": "frame",
+            "part": "support",
+            "anchor": "foot-head-r"
           },
           {
             "id": "support-foot-mid",
@@ -16507,7 +16729,7 @@
             "part": "mass"
           },
           {
-            "id": "support-foot-head",
+            "id": "support-foot-head-l",
             "kind": "revolve",
             "bone": "frame",
             "material": "pine-timber",
@@ -16538,20 +16760,51 @@
             ],
             "origin": [
               0.03,
-              0,
+              0.0,
               0.475
             ],
-            "repeat": {
-              "count": 2,
-              "translation": [
-                0,
-                0,
-                -0.95
-              ]
-            },
             "member": "frame",
             "part": "support",
-            "anchor": "foot-head"
+            "anchor": "foot-head-l"
+          },
+          {
+            "id": "support-foot-head-r",
+            "kind": "revolve",
+            "bone": "frame",
+            "material": "pine-timber",
+            "role": "detail",
+            "tone": 0.15,
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.0375
+              ],
+              [
+                0.075,
+                0.0375
+              ],
+              [
+                0.075,
+                0
+              ]
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "origin": [
+              0.03,
+              0.0,
+              -0.475
+            ],
+            "member": "frame",
+            "part": "support",
+            "anchor": "foot-head-r"
           },
           {
             "id": "support-foot-mid",

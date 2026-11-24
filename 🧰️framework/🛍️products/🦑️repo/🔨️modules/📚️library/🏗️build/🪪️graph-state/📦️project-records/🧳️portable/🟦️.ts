@@ -169,19 +169,40 @@ export function unstampRowV1(row:ObservationRowV1,policy:PortableRowsPolicyV1=po
 const neutralWay=(host:HostV1,keys:KeyMapV1,policy:PortableRowsPolicyV1):Direction=>({host,keys,owner:text=>neutralOwner(text,policy),path:text=>neutralPathV1(text,host,policy),text:text=>neutralTextV1(text,host,policy),item:text=>relativeToRootV1(text,host)===undefined?neutralTextV1(text,host,policy):neutralPathV1(text,host,policy)});
 const localWay=(host:HostV1,keys:KeyMapV1,providers:readonly string[],policy:PortableRowsPolicyV1):Direction=>({host,keys,owner:localOwner(providers,policy),path:text=>localPathV1(text,host,policy),text:text=>localTextV1(text,host,policy)});
 
-/** 🧠️ What one conversion remembers per row object, valid for one host, one key map and one policy: the converted row (null for a dropped location row) and the generation ids of the converted rows. A closure entry names the same row objects in thousands of layers, so a conversion that shares a memo converts each distinct row once. */
-export type RowMemoV1=Readonly<{rows:WeakMap<object,ObservationRowV1|null>;ids:WeakMap<object,readonly string[]>}>;
-export const rowMemoV1=():RowMemoV1=>({rows:new WeakMap(),ids:new WeakMap()});
+/** 🧠️ What one conversion remembers per row object, valid for one host and one policy: the converted row (null for a dropped location row), the closure keys its conversion asked the key map with their answers, and the generation ids of the converted rows. A closure entry names the same row objects in thousands of layers, so a conversion that shares a memo converts each distinct row once; a remembered row is used under another key map only while that map answers its keys as before, and the keys are asked again, so the caller's record of consulted keys stays complete. */
+export type RowMemoV1=Readonly<{rows:WeakMap<object,ObservationRowV1|null>;asked:WeakMap<object,readonly AskedKeyV1[]>;ids:WeakMap<object,readonly string[]>}>;
+export type AskedKeyV1=readonly [string,string|undefined];
+export const rowMemoV1=():RowMemoV1=>({rows:new WeakMap(),asked:new WeakMap(),ids:new WeakMap()});
+const answersHoldV1=(asked:readonly AskedKeyV1[]|undefined,keys:KeyMapV1)=>asked===undefined||asked.every(([key,value])=>keys.get(key)===value);
 
-/** 🌍️ The rows of a record in the neutral form of the host's spelling (see {@link neutralRecordV1}): the location rows and the generation as {@link portableRowsV1}, then paths, provider owners and closure keys. Rows that `memo` has seen are not converted again. */
+/** 🌍️ The rows of a record in the neutral form of the host's spelling (see {@link neutralRecordV1}): the location rows and the generation as {@link portableRowsV1}, then paths, provider owners and closure keys. Rows that `memo` has seen are not converted again while `keys` answers what they asked as before. */
 export function neutralRowsV1(rows:readonly ObservationRowV1[],host:HostV1,keys:KeyMapV1=new Map(),policy:PortableRowsPolicyV1=portableRowsPolicyV1,memo:RowMemoV1=rowMemoV1()):readonly ObservationRowV1[]{
- const way=neutralWay(host,keys,policy),kept:ObservationRowV1[]=[];
+ let asked:AskedKeyV1[]=[];
+ const tapped={get:(key:string)=>{const value=keys.get(key);asked.push([key,value]);return value;}} as unknown as KeyMapV1,way=neutralWay(host,tapped,policy),kept:ObservationRowV1[]=[];
  for(const row of rows){
   let moved=memo.rows.get(row);
-  if(moved===undefined){moved=isLocationRow(row,host.root,policy)?null:unstampRowV1(convertRow(row,way,policy),policy);memo.rows.set(row,moved);}
+  if(moved!==undefined&&!answersHoldV1(memo.asked.get(row),keys))moved=undefined;
+  if(moved===undefined){asked=[];moved=isLocationRow(row,host.root,policy)?null:unstampRowV1(convertRow(row,way,policy),policy);memo.rows.set(row,moved);if(asked.length)memo.asked.set(row,asked);else memo.asked.delete(row);}
   if(moved!==null)kept.push(moved);
  }
  return generationRowsV1(installRowsV1(kept,policy.rootToken,policy,memo.ids),policy,memo.ids);
+}
+
+/** 🗃️ The packed layers one process remembers for one host and one policy: per layer object its rows in the neutral canonical order and the closure keys they asked, with the row memo they were converted through. A layer that thousands of entries name (the shared core of every command closure, the walk of the nine targets of one script) is converted and ordered once per process instead of once per offered entry; past `limit` remembered rows both memos start empty. A hit is used only while the key map answers the layer's keys as when it was converted. */
+export type LayerPackMemoV1={readonly host:HostV1;readonly policy:PortableRowsPolicyV1;readonly limit:number;rows:RowMemoV1;layers:WeakMap<object,Readonly<{rows:readonly ObservationRowV1[];asked:readonly AskedKeyV1[]}>>;held:number;hits:number;misses:number};
+export const layerPackMemoV1=(host:HostV1,limit:number,policy:PortableRowsPolicyV1=portableRowsPolicyV1):LayerPackMemoV1=>({host,policy,limit,rows:rowMemoV1(),layers:new WeakMap(),held:0,hits:0,misses:0});
+
+/** 🧮️ One layer in the neutral canonical order, through `memo` when it was made for this host and policy. */
+function packedLayerRowsV1(layer:readonly ObservationRowV1[],host:HostV1,keys:KeyMapV1,policy:PortableRowsPolicyV1,rows:RowMemoV1,memo:LayerPackMemoV1|undefined):readonly ObservationRowV1[]{
+ const usable=memo!==undefined&&memo.host.root===host.root&&memo.host.windows===host.windows&&memo.policy===policy,known=usable?memo.layers.get(layer):undefined;
+ if(known!==undefined&&answersHoldV1(known.asked,keys)){memo!.hits++;return known.rows;}
+ const asked=new Map<string,string|undefined>(),tapped={get:(key:string)=>{const value=keys.get(key);asked.set(key,value);return value;}} as unknown as KeyMapV1,ordered=canonicalRowOrderV1(neutralRowsV1(layer,host,tapped,policy,usable?memo.rows:rows));
+ if(usable){
+  memo.misses++;
+  if(memo.held+ordered.length>memo.limit){memo.rows=rowMemoV1();memo.layers=new WeakMap();memo.held=0;}
+  memo.layers.set(layer,{rows:ordered,asked:[...asked]});memo.held+=ordered.length;
+ }
+ return ordered;
 }
 
 /** 🏠️ The rows of a neutral record for the host: paths spelled the host's way, the provider owners the host registered and its own closure keys; the generation is put in as {@link localRowsV1} does, through `generation`. Rows that `memo` has seen are not converted again. */
@@ -311,13 +332,14 @@ export function unpackRecordV1(packed:PackedRecordV1):PortableRecordV1{
  return{digest:packed.digest,authority:lists[0]!,observations:lists[1]!,image:packed.image};
 }
 
-/** 🌊️ A closure bundle in the neutral stored form, with its rows and every layer in the canonical order of the rows (a layer is a set that two machines observed in another order), built layer by layer: only the distinct rows and the numbers of each layer are held, whatever the number of layers, so memory follows the distinct material and not the expanded entry. `consulted` names the closure keys the rows asked for. Undefined when the bundle cannot be mapped (the taker derives the entry itself). */
-export function packBundleV1(input:Readonly<{recipeKey:string;bundle:ClosureBundleV1}>,host:HostV1,keys:KeyMapV1,policy:PortableRowsPolicyV1=portableRowsPolicyV1):Readonly<{recipeKey:string;document:PackedClosureV1;consulted:ConsultedKeysV1}>|undefined{
+/** 🌊️ A closure bundle in the neutral stored form, with its rows and every layer in the canonical order of the rows (a layer is a set that two machines observed in another order), built layer by layer: only the distinct rows and the numbers of each layer are held, whatever the number of layers, so memory follows the distinct material and not the expanded entry. `consulted` names the closure keys the rows asked for. A `layers` memo of the process ({@link layerPackMemoV1}) converts and orders each layer once for every bundle packed through it; the document is the same bytes with or without it. Undefined when the bundle cannot be mapped (the taker derives the entry itself).
+ * @see ./🧪️tests/🗃️layer-memo */
+export function packBundleV1(input:Readonly<{recipeKey:string;bundle:ClosureBundleV1}>,host:HostV1,keys:KeyMapV1,policy:PortableRowsPolicyV1=portableRowsPolicyV1,layerMemo?:LayerPackMemoV1):Readonly<{recipeKey:string;document:PackedClosureV1;consulted:ConsultedKeysV1}>|undefined{
  try{
   if(closureKeyV1(input.bundle.recipe)!==input.recipeKey)return undefined;
   const{rows,layers,rest}=bundleParts(input.bundle),moved=movedRestV1(rest,"neutral",host,policy),memo=rowMemoV1(),{keys:asked,consulted}=recordingKeysV1(keys),packer=createRowPackerV1();
   packer.add(canonicalRowOrderV1(neutralRowsV1(rows,host,asked,policy,memo)));
-  for(const layer of layers)packer.add(canonicalRowOrderV1(neutralRowsV1(layer,host,asked,policy,memo)));
+  for(const layer of layers)packer.add(packedLayerRowsV1(layer,host,asked,policy,memo,layerMemo));
   const{recipe,value,sidecar,...others}=moved;
   return{recipeKey:closureKeyV1(recipe),consulted,document:{version:2,recipe,rest:others,rows:packer.finish([value??null,sidecar??null])}};
  }catch{return undefined;}

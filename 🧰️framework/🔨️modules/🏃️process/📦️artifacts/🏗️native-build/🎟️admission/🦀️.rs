@@ -457,10 +457,10 @@ fn frontend_tokens(args: &[OsString], tokens: Option<usize>) -> Option<usize> {
     tokens.filter(|count| *count >= 1).map(|count| if is_cdylib_final(args) { 1 } else { count })
 }
 
-/// 🪶️ Keeps the LLVM back end of a `cdylib` final serial only when the run was admitted ONE job (`-Z no-parallel-backend`, keeping its codegen units and ThinLTO): rustc then has no token beside its implicit slot and a private pool would invent three. With a larger grant the flag is left off, so the codegen and ThinLTO workers take their threads from the jobserver Cargo handed rustc unchanged: the tokens left of the grant after the running units (one unit running of four granted cores: three extra threads; four units running: none), so a lone final uses the idle cores and memory stays bounded by the same grant. Output is identical, the flag only schedules; like the thread bound it is added at the process that starts rustc, so fingerprints and unit cache keys never see it.
+/// 🪶️ Keeps the LLVM back end of every admitted `cdylib` final serial (`-Z no-parallel-backend`, keeping its codegen units and ThinLTO): the ThinLTO coordinator holds the whole dependency closure's bitcode once, and every extra codegen or ThinLTO worker adds a parsed module with its imported function bodies on top, so the flow hub final granted four cores was jetsam-killed at 3.33 GiB resident before it finished, while the Energy final of a 1438-unit closure ran serial to a 2.78 GiB peak (ticket 26/09/09/PROCEDURAL-3D-END-TO-END `📓️hub-cdylib-memory-2026-11-24.md`, ticket 26/11/17 `💥️demonstrator-oom.md`). A final is one unit whose speed is bounded by the memory the host can spare, not by idle cores. Output is identical, the flag only schedules; like the thread bound it is added at the process that starts rustc, so fingerprints and unit cache keys never see it.
 /// @see ./🧪️tests/🧵️frontend-threads/🟦️.ts
 fn serial_backend(args: Vec<OsString>, tokens: Option<usize>) -> Vec<OsString> {
-    if tokens != Some(1) || !is_cdylib_final(&args) { return args }
+    if tokens.filter(|count| *count >= 1).is_none() || !is_cdylib_final(&args) { return args }
     let mut result = args;
     result.push(OsString::from("-Z"));
     result.push(OsString::from("no-parallel-backend"));
@@ -728,14 +728,14 @@ mod tests {
         assert_eq!(frontend_tokens(&os(&["--crate-type", "cdylib"]), Some(0)), None);
     }
 
-    /// 🪶️ A `cdylib` final admitted one job runs its back end serially; with more cores granted, libraries and runs without a grant it is untouched.
+    /// 🪶️ A `cdylib` final admitted any grant runs its back end serially; libraries and runs without a grant are untouched.
     #[test]
-    fn serializes_the_back_end_of_a_one_job_cdylib_final() {
+    fn serializes_the_back_end_of_a_granted_cdylib_final() {
         let os = |items: &[&str]| items.iter().map(OsString::from).collect::<Vec<_>>();
         assert_eq!(serial_backend(os(&["--crate-type", "cdylib", "a.rs"]), Some(1)), os(&["--crate-type", "cdylib", "a.rs", "-Z", "no-parallel-backend"]));
         assert_eq!(serial_backend(os(&["--crate-type=cdylib"]), Some(1)), os(&["--crate-type=cdylib", "-Z", "no-parallel-backend"]));
-        assert_eq!(serial_backend(os(&["--crate-type", "cdylib", "a.rs"]), Some(8)), os(&["--crate-type", "cdylib", "a.rs"]));
-        assert_eq!(serial_backend(os(&["--crate-type", "lib"]), Some(1)), os(&["--crate-type", "lib"]));
+        assert_eq!(serial_backend(os(&["--crate-type", "cdylib", "a.rs"]), Some(8)), os(&["--crate-type", "cdylib", "a.rs", "-Z", "no-parallel-backend"]));
+        assert_eq!(serial_backend(os(&["--crate-type", "lib"]), Some(8)), os(&["--crate-type", "lib"]));
         assert_eq!(serial_backend(os(&["--crate-type", "cdylib"]), None), os(&["--crate-type", "cdylib"]));
         assert_eq!(serial_backend(os(&["--crate-type", "cdylib"]), Some(0)), os(&["--crate-type", "cdylib"]));
     }

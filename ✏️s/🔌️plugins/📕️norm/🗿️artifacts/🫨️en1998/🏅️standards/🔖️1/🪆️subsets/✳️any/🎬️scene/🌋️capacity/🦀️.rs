@@ -409,7 +409,8 @@ pub fn moment_curvature_diagrams(document: &En1998Snapshot, report: &CheckReport
         let equivalent = (a.chord_rotation_demand_rad > 0.0 && theta_y > 0.0).then(|| response.kappa_y * a.chord_rotation_demand_rad / theta_y);
         if let Some(kappa) = equivalent {
             let at = Vec2::new(kappa.min(response.kappa_u), moment_on(&curve, kappa));
-            markers.push(Marker { utilisation, bound_check: Some(check_id), ..marker("demand", at, MarkerShape::Square, utilisation.map_or(Tone::Neutral, tone), loc(&format!("Demand \u{3b8}Ed = {:.4} rad, equivalent curvature {:.5} 1/m (\u{3c6}y \u{3b8}Ed/\u{3b8}y)", a.chord_rotation_demand_rad, kappa), &format!("Einwirkung \u{3b8}Ed = {:.4} rad, \u{e4}quivalente Kr\u{fc}mmung {:.5} 1/m (\u{3c6}y \u{3b8}Ed/\u{3b8}y)", a.chord_rotation_demand_rad, kappa))) });
+            let bound = utilisation.map(|_| check_id);
+            markers.push(Marker { id: ::semio_s_plugin_norm_structural_scene::projection_kit::diagram_parts::checked_marker_id(&format!("demand-{}", a.id), &bound), utilisation, bound_check: bound, ..marker("demand", at, MarkerShape::Square, utilisation.map_or(Tone::Neutral, tone), loc(&format!("Demand \u{3b8}Ed = {:.4} rad, equivalent curvature {:.5} 1/m (\u{3c6}y \u{3b8}Ed/\u{3b8}y)", a.chord_rotation_demand_rad, kappa), &format!("Einwirkung \u{3b8}Ed = {:.4} rad, \u{e4}quivalente Kr\u{fc}mmung {:.5} 1/m (\u{3c6}y \u{3b8}Ed/\u{3b8}y)", a.chord_rotation_demand_rad, kappa))) });
         }
         let columns = vec![column("Curvature", "Kr\u{fc}mmung", "1/m", curve.iter().map(|p| p.0).collect()), column("Moment", "Moment", "kN·m", curve.iter().map(|p| p.1).collect())];
         Some(Diagram2d {

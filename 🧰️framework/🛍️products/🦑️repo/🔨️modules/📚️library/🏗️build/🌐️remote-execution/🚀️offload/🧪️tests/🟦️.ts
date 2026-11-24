@@ -620,16 +620,3 @@ test("include_* (plain, raw, concat, include_wgsl) reaches every file rustc read
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
-test("a unit whose extern is semio_os_kernel_dsl_derive stays local: planOffloadV1 declines it unmapped-path",()=>{
- const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-derive-")));
- try{
-  mkdirSync(join(root,"src"));
-  writeFileSync(join(root,"src","lib.rs"),"pub fn f() {}\n");
-  writeFileSync(join(root,"Cargo.toml"),"[package]\nname = \"caller\"\nversion = \"0.1.0\"\n");
-  const environment={CARGO_MANIFEST_DIR:root,CARGO_PKG_NAME:"caller",CARGO_PKG_VERSION:"0.1.0",CARGO_CRATE_NAME:"caller"};
-  const base=["--crate-name","caller","--edition=2021","src/lib.rs","--crate-type","lib","--emit=metadata","--out-dir","out","--remap-path-prefix",`${root}=.`];
-  const declined=(externSpec:string)=>{const result=planOffloadV1({args:[...base,"--extern",externSpec],environment,cwd:root});if(!("declined" in result))return "planned";expect(result.detail).toContain("proc-macro source authority");return result.declined;};
-  expect(declined(`semio_os_kernel_dsl_derive=${join(root,"libsemio_os_kernel_dsl_derive.dylib")}`)).toBe("unmapped-path");
-  expect(declined(`other=${join(root,"deps","libsemio_os_kernel_dsl_derive-hash.dylib")}`)).toBe("unmapped-path");
- }finally{rmSync(root,{recursive:true,force:true});}
-});

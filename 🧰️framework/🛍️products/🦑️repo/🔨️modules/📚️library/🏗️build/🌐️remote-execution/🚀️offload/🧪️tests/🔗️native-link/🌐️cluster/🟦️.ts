@@ -7,6 +7,7 @@ import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {wrapRustcV1,PATH_NEUTRAL_FLAGS_V1} from "../../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts";
 import {linkRootArgumentsV1} from "../../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧭️remap/🟦️.ts";
+import {readRemoteExecutionPolicyV1} from "../../../../🟦️.ts";
 import {startClusterV1,eventuallyV1,type ClusterV1} from "../../../../🧪️tests/🧰️cluster/🟦️.ts";
 import {testHostProbeV1,testRustEnvironmentV1} from "../../🧰️workspace/🟦️.ts";
 
@@ -81,9 +82,10 @@ async function offloadedThreads(label:string,load:number):Promise<number|undefin
  return found===null?undefined:Number(found[1]);
 }
 
-test.skipIf(!toolsPresent)("a cdylib final that runs on a worker uses the cores of that worker: an idle 16-core machine grants it several code generation threads (the policy's cap), a saturated one grants one (the serial back end), and the grant comes back in the result",async()=>{
+test.skipIf(!toolsPresent)("a cdylib final that runs on a worker uses the cores of that worker: an idle 16-core machine grants it several code generation threads (the policy's cap), a saturated one grants the fair share (a busy machine's operating system divides its cores by threads), and the grant comes back in the result",async()=>{
  const idle=await offloadedThreads("idle",0.5);
  expect(idle,"threads granted by an idle worker").toBeGreaterThan(1);
  const saturated=await offloadedThreads("busy",30);
- expect(saturated,"threads granted by a saturated worker").toBe(1);
+ expect(saturated,"threads granted by a saturated worker").toBe(readRemoteExecutionPolicyV1().worker.codegen.fairShareThreads);
+ expect(saturated!,"fewer than an idle one").toBeLessThan(idle!);
 },stretchedBudgetMillisecondsV1(240000));

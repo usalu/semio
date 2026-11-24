@@ -13,10 +13,15 @@ def cap(v,row):
     ok,reserve=derived(total,v["budget"],v["factor"])
     headroom=max(host_floor(v["machine"],total),reserve if ok else -(-total*(100-int(v["highUsedPercent"]))//100))
     floor=sz["transientBytes"]+r["releases"]*sz["releaseBytes"]+(sz["serverBytes"] if r["server"] else 0)
-    wanted=max(total*r["sharePercent"]//100,floor)
     room=float("inf") if store is None else store+max(0,free-headroom)
+    claim=0 if store is None else room*r["freePercent"]//100
+    wanted=max(total*r["sharePercent"]//100,floor,claim)
     w=max(v["minimumCapBytes"],min(wanted,room));step=v["machine"]["alignBytes"]
-    return min(v["capBytes"],max(v["minimumCapBytes"],int(w//step)*step))
+    proportional=min(v["capBytes"],max(v["minimumCapBytes"],int(w//step)*step))
+    if store is None:return proportional
+    reserve_bytes=min(total//2,max(total*r["reservePercent"]//100,r["reserveFloorBytes"]))
+    hard=store+free-reserve_bytes
+    return min(proportional,max(v["minimumCapBytes"],(hard//step)*step))
 
 v=json.load(sys.stdin)
 print(json.dumps([cap(v,row) for row in v["rows"]]))

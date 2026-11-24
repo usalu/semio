@@ -262,9 +262,9 @@ impl Generation3dPreviewCommandWork {
 
     /// 🔒️ Owes every attached preview window an evaluation on the RETAINED session's latch, so two
     /// gestures in a row still leave exactly one debt per window for the run to pay.
-    pub(super) fn owe_attached_previews(&self, view: Option<&semio_plugin::ViewModel>, servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
+    pub(super) fn owe_attached_previews(&self, view: Option<&semio_plugin::ViewModel>, unserved: &[String], emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
         let windows = generation3d_preview_windows(view);
-        self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, emit, grant))
+        self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, unserved, emit, grant))
     }
 
     pub(super) fn close_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {

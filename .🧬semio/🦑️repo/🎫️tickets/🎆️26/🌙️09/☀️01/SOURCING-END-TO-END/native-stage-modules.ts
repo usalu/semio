@@ -21,15 +21,16 @@ import { COMPONENT_RECEIPT_FILE, encodeComponentReceiptV1, rustToolchainIdentity
  * @see ./🧩️native-activation-2026-11.md */
 
 const root = process.cwd(), ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/SOURCING-END-TO-END"), mode = "prototype" as const;
-const modules = join(root, ".cache/b/p/m/browser", mode, "modules"), vendor = join(modules, PREVIEW2_VENDOR_RELATIVE), target = join(ticket, "🗑️generated/native-wasm");
+const modules = join(root, ".cache/b/p/m/browser", mode, "modules"), vendor = join(modules, PREVIEW2_VENDOR_RELATIVE);
+const lanes = join(root, ".cache/b/r/m/u/l"), built = (base: string) => (existsSync(lanes) ? readdirSync(lanes) : []).map((lane) => join(lanes, lane, "t/wasm32-wasip2/prototype", `${base}.wasm`)).filter(existsSync).sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)[0];
 const wanted = new Set(process.argv.length > 2 ? process.argv.slice(2) : ["sourcing", "sourcing-module-beams", "sourcing-module-slabs", "sourcing-module-windows"]);
 const owners = discoverPluginBuildTargets(root).filter((row) => wanted.has(row.pluginId));
 const sha = (bytes: Uint8Array | string) => createHash("sha256").update(bytes).digest("hex");
 const completed: { pluginId: string; artifactSha256: string }[] = [];
 const environment = { ...process.env, SEMIO_BUILD_MODE: mode };
 for (const owner of owners) {
-  const base = owner.packageName.replaceAll("-", "_"), wasm = join(target, "wasm32-wasip2/prototype", `${base}.wasm`), directory = owner.directoryName!;
-  if (!existsSync(wasm)) throw Error(`missing built component ${wasm}`);
+  const base = owner.packageName.replaceAll("-", "_"), wasm = built(base), directory = owner.directoryName!;
+  if (!wasm) throw Error(`missing built component ${base}.wasm in the repo cargo lanes under ${lanes}`);
   const work = join(ticket, "🗑️generated/native-stage", directory), out = join(work, "transpiled"), stage = join(modules, `.stage-${directory}`);
   rmSync(work, { recursive: true, force: true }); rmSync(stage, { recursive: true, force: true }); mkdirSync(work, { recursive: true }); mkdirSync(stage, { recursive: true });
   console.log(`== ${owner.pluginId} -> ${directory}`);

@@ -50,7 +50,7 @@ fn files_below(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
-/// 📦️ Regenerates, for every `.dsl.semio` below `assets`, the canonical DSL text and the pack beside it.
+/// 📦️ Regenerates, for every `.dsl.semio` below `assets`, the canonical DSL text and its pack: the pack beside it, or the one in the example directory above the DSL's own directory.
 ///
 /// `codec` maps the committed DSL text to its canonical text and its pack bytes through the artifact's own codecs. A pack is a pure function of its DSL. A pack file that is not named [`PACK_FILE`] always fails, because blessing would otherwise leave two packs next to one DSL. Packs are only rewritten where one is committed; protocol fixtures (`.op`, `.spr`, `.cmd`) are not generated here.
 ///
@@ -68,8 +68,9 @@ pub fn bless_dsl_and_pack_assets(assets: &Path, codec: &dyn Fn(&str) -> Result<(
         let text = std::fs::read_to_string(dsl_path).unwrap_or_else(|error| panic!("{}: {error}", dsl_path.display()));
         let (canonical, pack) = codec(&text).unwrap_or_else(|error| panic!("{}: the DSL does not decode: {error}", dsl_path.display()));
         bless_or_assert(dsl_path, canonical.as_bytes());
-        let pack_path = dsl_path.with_file_name(PACK_FILE);
-        if pack_path.is_file() {
+        let beside = dsl_path.with_file_name(PACK_FILE);
+        let above = dsl_path.parent().and_then(Path::parent).map(|example| example.join(PACK_FILE));
+        if let Some(pack_path) = [Some(beside), above].into_iter().flatten().find(|path| path.is_file()) {
             bless_or_assert(&pack_path, &pack);
         }
         checked += 1;

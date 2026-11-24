@@ -5,7 +5,7 @@ import {homedir} from "node:os";
 import {dirname,join} from "node:path";
 import {appendCasAccessV1} from "../📒️ledger/🟦️.ts";
 import {createCasGuardV1,type CasGuardV1} from "../🚦️guard/🟦️.ts";
-import {leaseCasTransientV1,pinCasV1,releaseCasPinsV1} from "../📌️pins/🟦️.ts";
+import {leaseCasTransientV1,pinCasV1,releaseCasPinsV1,releaseCasTransientV1} from "../📌️pins/🟦️.ts";
 import {CAS_POLICY_V1,requireCasPolicyV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
 
 /** 🧾️ A content address: lowercase sha256 hex and the byte length. */
@@ -26,12 +26,13 @@ export type CasStoreV1=Readonly<{
  touch(hash:string):Promise<void>;
  adopt(path:string,signal?:AbortSignal):Promise<CasDigestV1>;
  pin(holder:string,hashes:readonly string[],ttlMs?:number):Promise<void>;
- lease(hashes:readonly string[],ttlMs?:number):Promise<void>;
+ lease(hashes:readonly string[],ttlMs?:number,action?:string):Promise<void>;
+ releaseLease(hashes:readonly string[],action?:string):Promise<void>;
  release(holder:string):Promise<void>;
  objectPath(hash:string):string;
 }>;
 /** 🛂️ What a checked put demands of the stream before the object is published: its digest, its exact length, a length bound. */
-export type CasExpectationV1=Readonly<{hash?:string;size?:number;maxBytes?:number}>;
+export type CasExpectationV1=Readonly<{hash?:string;size?:number;maxBytes?:number;transient?:boolean}>;
 /** 🛂️ How a checked put ended; nothing is published unless it is `created` or `exists`. */
 export type CasPutOutcomeV1=Readonly<{outcome:"created"|"exists"|"too-large"|"length-mismatch"|"digest-mismatch"|"aborted";digest?:CasDigestV1}>;
 /** 🧰️ Ports of a store: clock (tests), process id and writer identity, the admission guard (by default the guard of the root, which keeps the cap and the partition watermarks before a write adds to the disk) and `refuseOverCap`: a store of a cache server refuses a write that stays over the cap after a bounded synchronous collection (its callers carry on without the cache), every other store admits it. */
@@ -73,7 +74,7 @@ export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
  };
 
  const ingest=async(source:CasSourceV1,expect:CasExpectationV1,signal?:AbortSignal):Promise<CasPutOutcomeV1>=>{
-  await guard.admit(expect.size??0,signal);
+  await guard.admit(expect.size??0,signal,expect.transient===true);
   const directory=join(root,"v1","t");await mkdir(directory,{recursive:true});
   const temporary=join(directory,`${writer}-${randomUUID().slice(0,12)}`),hash=createHash("sha256");let size=0,outcome:CasPutOutcomeV1["outcome"]|undefined;
   const handle=await open(temporary,"wx",0o600);
@@ -143,7 +144,8 @@ export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
   },
   pin:(holder,hashes,ttlMs=policy.leaseMaxMs)=>pinCasV1(root,policy,holder,hashes,ttlMs,now(),pid),
   release:holder=>releaseCasPinsV1(root,holder),
-  lease:(hashes,ttlMs)=>leaseCasTransientV1(root,policy,writer.replace(/[^A-Za-z0-9._-]/gu,"-").slice(0,96),hashes,now(),ttlMs),
+  lease:(hashes,ttlMs,action)=>leaseCasTransientV1(root,policy,writer.replace(/[^A-Za-z0-9._-]/gu,"-").slice(0,96),hashes,now(),ttlMs,action),
+  releaseLease:(hashes,action)=>releaseCasTransientV1(root,policy,writer.replace(/[^A-Za-z0-9._-]/gu,"-").slice(0,96),hashes,now(),action),
  };
  return Object.freeze(store);
 }

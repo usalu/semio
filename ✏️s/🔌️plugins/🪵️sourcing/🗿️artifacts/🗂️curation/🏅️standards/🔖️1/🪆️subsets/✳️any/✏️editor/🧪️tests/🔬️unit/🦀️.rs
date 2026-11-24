@@ -106,10 +106,15 @@ pub(crate) mod context {
 
     /// 🌐️ Dispatches one UI action through the action endpoint with the JSON arguments the browser host delivers, then settles it.
     pub async fn dispatch_wire(app: &mut SourcingTestApp, action: &str, arguments: &str) -> Result<InvocationResult, semio_framework_job::OriginalTurnFailure> {
-        let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(arguments, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire json")));
-        let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, args, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).await;
+        let result = dispatch_wire_unsettled(app, action, arguments).await;
         settle(app).await;
         result
+    }
+
+    /// 🌐️ Dispatches one UI action like [`dispatch_wire`] but leaves its typed operation unsettled, as the browser does: the dispatch answers its operation id at once and the next wire message can arrive while the operation still publishes.
+    pub async fn dispatch_wire_unsettled(app: &mut SourcingTestApp, action: &str, arguments: &str) -> Result<InvocationResult, semio_framework_job::OriginalTurnFailure> {
+        let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(arguments, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire json")));
+        semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, args, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).await
     }
 
     /// 🏁️ Drains every pending typed operation for instance 1, returning the document effects it published.
@@ -394,15 +399,18 @@ async fn the_real_demonstrator_pack_settles_through_the_typed_set_contributions_
 /// 🌐️ LAW: the real demonstrator pack settles through the typed `setContributions` operation under the browser host's per-turn grant (depth 64, 520 KB copy, 16 MiB capacity, 1 MiB release, 64 items) instead of the native fixture stock.
 #[semio_framework_async_macros::async_test]
 async fn the_real_demonstrator_pack_settles_under_the_browser_grant() {
-    let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 520 * 1024, maximum_capacity_bytes: 16 * 1024 * 1024, maximum_release_bytes: 1024 * 1024, maximum_depth: 64 };
     let mut app = new_app().await;
-    let _browser = semio_plugin::artifact_app_laws::arm_host_turn_grant(stock);
+    let _browser = browser_grant();
     dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: demonstrator_contributions_pack() })).await;
 }
-/// 🧹️ Drives the runtime's live-cleanup clock the way the browser host does after every actor turn: one item and one page of bytes per maintenance unit, every unit required not to fault.
-fn drive_live_cleanup(app: &mut crate::editor_unit_tests::context::SourcingTestApp, units: usize) {
-    use semio_plugin::{MountedOwnerIdentityV1, MountedOwnerPhaseV1, MountedOwnerTurnV1};
-    for _ in 0..units {
+/// 🧹️ Drives the runtime's live-cleanup clock the way the browser host does after every actor turn: one item and one page of bytes per maintenance unit, every unit required not to fault, and the ladder required to reach `Complete` (an `AwaitingInput` wait is not idle) before `RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT` (256) consecutive zero-progress steps — the rule the browser actor applies in `runtime_live_cleanup_nonterminal_status` and faults with `plugin.internal.zero-progress`.
+///
+/// 🔗️ See `🎚️min-availability-fault.md` of ticket 26/09/01/SOURCING-END-TO-END, "Defect 4 fix".
+fn drain_live_cleanup_to_idle(app: &mut crate::editor_unit_tests::context::SourcingTestApp) {
+    use semio_plugin::{MountedOwnerIdentityV1, MountedOwnerPhaseV1, MountedOwnerTurnV1, PluginLifecycleStep};
+    const ZERO_PROGRESS_LIMIT: usize = 256;
+    let mut stalled = 0usize;
+    loop {
         let cx = app.1.cx();
         let identity = MountedOwnerIdentityV1 { instance_id: 1, operation: cx.operation(), generation: cx.generation() };
         let phase = app.0.mounted_owner_maintenance_phase().expect("maintenance phase");
@@ -410,39 +418,139 @@ fn drive_live_cleanup(app: &mut crate::editor_unit_tests::context::SourcingTestA
         let loan = match phase { MountedOwnerPhaseV1::Preparation => &mut policy.preparation, MountedOwnerPhaseV1::Maintenance => &mut policy.maintenance, MountedOwnerPhaseV1::Close => &mut policy.close };
         loan.maximum_items = loan.maximum_items.min(1);
         loan.maximum_copy_bytes = loan.maximum_copy_bytes.min(4096);
-        let Some(mut turn) = MountedOwnerTurnV1::admit(1, identity, phase, policy, cx).expect("maintenance admission") else { continue };
-        app.0.mounted_owner_maintenance_step(&mut turn).expect("[DEBUG] a live-cleanup maintenance unit never faults");
+        let Some(mut turn) = MountedOwnerTurnV1::admit(1, identity, phase, policy, cx).expect("maintenance admission") else { stalled += 1; assert!(stalled < ZERO_PROGRESS_LIMIT, "live cleanup admitted no turn for {ZERO_PROGRESS_LIMIT} consecutive steps"); continue };
+        match app.0.mounted_owner_maintenance_step(&mut turn).expect("a live-cleanup maintenance unit never faults") {
+            PluginLifecycleStep::Complete(_) => return,
+            PluginLifecycleStep::Progress(receipt) if receipt != semio_framework_value::retained_clone::RetainedCloneProgress::default() => stalled = 0,
+            step @ (PluginLifecycleStep::Progress(_) | PluginLifecycleStep::Blocked { .. } | PluginLifecycleStep::AwaitingInput { .. }) => { stalled += 1; assert!(stalled < ZERO_PROGRESS_LIMIT, "live cleanup made no progress for {ZERO_PROGRESS_LIMIT} consecutive steps, last {step:?} (browser: plugin.internal.zero-progress)"); }
+        }
     }
 }
 
 /// 🎚️ LAW: the minimum-availability filter, typed or stepped, settles under the browser host's per-turn grant, applies, and its retired owners clean up without faulting the instance.
 #[semio_framework_async_macros::async_test]
 async fn the_min_availability_filter_settles_under_the_browser_grant_and_keeps_the_instance_alive() {
-    let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 520 * 1024, maximum_capacity_bytes: 16 * 1024 * 1024, maximum_release_bytes: 1024 * 1024, maximum_depth: 64 };
     let mut app = new_app().await;
-    let _browser = semio_plugin::artifact_app_laws::arm_host_turn_grant(stock);
+    let _browser = browser_grant();
     for payload in [set_filter_min_availability::SetFilterMinAvailability { delta: None, value: Some(3.0) }, set_filter_min_availability::SetFilterMinAvailability { delta: Some(1.0), value: None }, set_filter_min_availability::SetFilterMinAvailability { delta: Some(1.0), value: None }] {
         dispatch(&mut app, SourcingCurationCommand::SetFilterMinAvailability(payload)).await;
-        drive_live_cleanup(&mut app, 256);
+        drain_live_cleanup_to_idle(&mut app);
     }
     dispatch(&mut app, SourcingCurationCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: "timber".into() })).await;
-    drive_live_cleanup(&mut app, 256);
+    drain_live_cleanup_to_idle(&mut app);
 }
 
 /// 🔢️ LAW: the minimum-availability input delivers its number over the wire — as a JSON number, a whole number, or the input's text — and every form applies, then cleans up without faulting the instance.
 #[semio_framework_async_macros::async_test]
 async fn the_min_availability_wire_payload_applies_in_every_number_form() {
+    wire_forms_settle(&[r#"{"value":3}"#, r#"{"value":4.0}"#, r#"{"delta":1}"#, r#"{"delta":-1}"#, r#"{"value":"5"}"#]).await;
+}
+
+/// 🎚️ LAW: the browser delivers the number input as a continuous control — ticks with `commit:false` and a release with `commit:true` — and the press leaf of the Config lane settles after each.
+#[semio_framework_async_macros::async_test]
+async fn the_min_availability_gesture_forms_settle_after_every_tick_and_release() {
+    wire_forms_settle(&[r#"{"value":6,"gesture":"input:1","commit":false}"#, r#"{"value":6,"gesture":"input:1","commit":true}"#, r#"{"value":7,"gesture":"input:2","commit":true}"#]).await;
+}
+
+/// 🎚️ LAW: the browser delivers the host abort of an open continuous control (blur) and the press leaf of the Config lane settles after it.
+///
+/// 🔗️ See `🎚️min-availability-fault.md` of ticket 26/09/01/SOURCING-END-TO-END, "Defect 3 fix".
+#[semio_framework_async_macros::async_test]
+async fn the_min_availability_gesture_forms_settle_after_every_tick_release_and_abort() {
+    wire_forms_settle(&[r#"{"value":6,"gesture":"input:1","commit":false}"#, r#"{"value":6,"gesture":"input:1","commit":true}"#, r#"{"value":7,"gesture":"input:2","commit":true}"#, r#"{"gesture":"input:3","abort":"blur"}"#]).await;
+}
+
+async fn wire_forms_settle(forms: &[&str]) {
     use crate::editor_unit_tests::context::dispatch_wire;
-    let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 520 * 1024, maximum_capacity_bytes: 16 * 1024 * 1024, maximum_release_bytes: 1024 * 1024, maximum_depth: 64 };
     let mut app = new_app().await;
-    let _browser = semio_plugin::artifact_app_laws::arm_host_turn_grant(stock);
-    for arguments in [r#"{"value":3}"#, r#"{"value":4.0}"#, r#"{"delta":1}"#, r#"{"delta":-1}"#, r#"{"value":"5"}"#, r#"{"value":6,"gesture":"input:1","commit":false}"#, r#"{"value":6,"gesture":"input:1","commit":true}"#, r#"{"value":7,"gesture":"input:2","commit":true}"#, r#"{"gesture":"input:3","abort":"blur"}"#] {
+    let _browser = browser_grant();
+    for arguments in forms {
         let outcome = dispatch_wire(&mut app, "setFilterMinAvailability", arguments).await;
-        println!("[DEBUG] min-availability {arguments} -> {:?}", outcome.as_ref().map(|_| ()).map_err(|fault| format!("{fault:?}")));
-        drive_live_cleanup(&mut app, 256);
+        outcome.unwrap_or_else(|fault| panic!("min-availability wire payload {arguments} must settle: {fault:?}"));
+        drain_live_cleanup_to_idle(&mut app);
     }
     dispatch(&mut app, SourcingCurationCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: "timber".into() })).await;
+    drain_live_cleanup_to_idle(&mut app);
 }
+
+/// 🌐️ LAW: the exact browser sequence of the minimum-availability number input — a tick with the real ~55-char gesture id and `windowId`, the blur/Enter release of the same press seconds later with `commit:true`, then the next command (`sortTable`) — drains its cleanup ladder to idle, applies the Pool filter and sorts.
+///
+/// 🔗️ See `🎚️min-availability-fault.md` of ticket 26/09/01/SOURCING-END-TO-END, "Defect 4 fix".
+#[semio_framework_async_macros::async_test]
+async fn the_min_availability_browser_press_drains_its_cleanup_ladder_and_keeps_the_next_command_alive() {
+    let mut app = browser_press_app().await;
+    browser_press_wire(&mut app).await;
+    assert_eq!(app.0.rendered_config().filters.min_availability, BROWSER_PRESS_MIN_AVAILABILITY, "the released press must filter the Pool");
+    let browser = browser_grant();
+    dispatch(&mut app, SourcingCurationCommand::SortTable(sort_table::SortTable { column_id: "availability".into(), direction: "desc".into() })).await;
+    drain_live_cleanup_to_idle(&mut app);
+    drop(browser);
+    let config = app.0.rendered_config();
+    assert_eq!(config.filters.sort.as_ref().map(|sort| sort.column_id.as_str()), Some("availability"), "sortTable must apply after the released press");
+    assert_eq!(config.filters.min_availability, BROWSER_PRESS_MIN_AVAILABILITY, "the sort keeps the filter");
+}
+
+/// 🌐️ LAW: a browser tick followed by its release, with no follow-up command, drains the cleanup ladder to idle and the Pool filter applies.
+///
+/// 🔗️ See `🎚️min-availability-fault.md` of ticket 26/09/01/SOURCING-END-TO-END, "Defect 4 fix".
+#[semio_framework_async_macros::async_test]
+async fn the_min_availability_browser_press_drains_its_cleanup_ladder_without_a_follow_up_command() {
+    let mut app = browser_press_app().await;
+    browser_press_wire(&mut app).await;
+    assert_eq!(app.0.rendered_config().filters.min_availability, BROWSER_PRESS_MIN_AVAILABILITY, "the released press must filter the Pool");
+}
+
+/// 🌐️ LAW: the browser sends a press's release while the tick's typed operation still publishes (the number input blurs 90 ms after the fill); both operations settle in order, the cleanup ladder drains and the release filters the Pool.
+///
+/// 🔗️ See `🎚️min-availability-fault.md` of ticket 26/09/01/SOURCING-END-TO-END, "Defect 5: scrub settlement stall".
+#[semio_framework_async_macros::async_test]
+async fn the_min_availability_release_sent_while_its_tick_still_publishes_settles_both() {
+    use crate::editor_unit_tests::context::{dispatch_wire_unsettled, settle};
+    let mut app = browser_press_app().await;
+    let press = "sourcing-filter-min-availability:1795524369502:1";
+    let browser = browser_grant();
+    for commit in [false, true] {
+        let arguments = format!(r#"{{"value":{BROWSER_PRESS_MIN_AVAILABILITY},"gesture":"{press}","commit":{commit},"windowId":"sourcing-pool"}}"#);
+        dispatch_wire_unsettled(&mut app, "setFilterMinAvailability", &arguments).await.unwrap_or_else(|fault| panic!("{arguments}: {fault:?}"));
+    }
+    settle(&mut app).await;
+    drain_live_cleanup_to_idle(&mut app);
+    drop(browser);
+    assert_eq!(app.0.rendered_config().filters.min_availability, BROWSER_PRESS_MIN_AVAILABILITY, "the released press must filter the Pool");
+}
+
+const BROWSER_PRESS_MIN_AVAILABILITY: u32 = 25;
+
+async fn browser_press_app() -> crate::editor_unit_tests::context::SourcingTestApp {
+    let mut app = new_app().await;
+    let browser = browser_grant();
+    dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: demonstrator_contributions_pack() })).await;
+    drain_live_cleanup_to_idle(&mut app);
+    drop(browser);
+    app
+}
+
+const BROWSER_TURN_FUEL: u64 = 50_000_000;
+
+/// 🌐️ The per-turn grant AND fuel the browser host issues: 64 items, 520 KB copy, 16 MiB capacity, 1 MiB release, depth 64 and 50,000,000 fuel (the native fixture grants 2,000,000).
+fn browser_grant() -> impl Sized {
+    let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 520 * 1024, maximum_capacity_bytes: 16 * 1024 * 1024, maximum_release_bytes: 1024 * 1024, maximum_depth: 64 };
+    (semio_plugin::artifact_app_laws::arm_host_turn_grant(stock), semio_plugin::artifact_app_laws::arm_host_turn_fuel(BROWSER_TURN_FUEL))
+}
+
+async fn browser_press_wire(app: &mut crate::editor_unit_tests::context::SourcingTestApp) {
+    use crate::editor_unit_tests::context::dispatch_wire;
+    let press = "sourcing-filter-min-availability:1795524369502:1";
+    for (commit, now_ms) in [(false, 1_000_000u64), (true, 1_004_650)] {
+        app.0.set_tool_clock_ms(Some(now_ms));
+        let arguments = format!(r#"{{"value":{BROWSER_PRESS_MIN_AVAILABILITY},"gesture":"{press}","commit":{commit},"windowId":"sourcing-pool"}}"#);
+        let browser = browser_grant();
+        dispatch_wire(app, "setFilterMinAvailability", &arguments).await.unwrap_or_else(|fault| panic!("{arguments}: {fault:?}"));
+        drain_live_cleanup_to_idle(app);
+        drop(browser);
+    }
+}
+
 
 //#endregion 🧪️RetainedConfigOracle
 use crate::editor_unit_tests::context::{dispatch, new_app, sourcing_manifest_for_tests};

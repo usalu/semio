@@ -33,6 +33,9 @@ semio-s-plugin-norm-compliance = { workspace = true }
 test-support = ["dep:serde", "semio-s-artifact-norm-en1990-diff/test-support", "semio-s-artifact-norm-en1990-model/test-support", "semio-s-artifact-norm-en1990-mutations/test-support", "semio-s-plugin-norm-compliance/test-support"]
 
 [dev-dependencies]
+semio-s-artifact-norm-en1990-diff = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1990-model = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1990-mutations = { workspace = true, features = ["test-support"] }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }
 serde = { workspace = true }

@@ -21,9 +21,9 @@
     },
     "readers": {
      "timeoutMilliseconds": 5000,
-     "maximumLeaseStats": 20000,
      "maximumBuildOwners": 64,
-     "maximumMemoryRecordBytes": 262144
+     "maximumMemoryRecordBytes": 262144,
+     "mappingFreshSeconds": 600
     },
     "graph": {
      "builderResources": [
@@ -135,11 +135,12 @@
      "additionalProperties": false,
      "required": [
       "maximumBuildOwners",
-      "maximumLeaseStats",
+      "mappingFreshSeconds",
       "maximumMemoryRecordBytes",
       "timeoutMilliseconds"
      ],
      "properties": {
+      "mappingFreshSeconds": {"type": "integer", "minimum": 1},
       "maximumMemoryRecordBytes": {
        "type": "integer",
        "minimum": 1
@@ -147,10 +148,6 @@
       "timeoutMilliseconds": {
        "type": "integer",
        "minimum": 0
-      },
-      "maximumLeaseStats": {
-       "type": "integer",
-       "minimum": 1
       },
       "maximumBuildOwners": {
        "type": "integer",
@@ -584,6 +581,14 @@
      "en": "Host store: {used} of {effective} GiB used ({percent} %), cap {cap} GiB, high water {high} GiB, low water {low} GiB",
      "de": "Host-Speicher: {used} von {effective} GiB belegt ({percent} %), Obergrenze {cap} GiB, Hochwasser {high} GiB, Niedrigwasser {low} GiB"
     },
+    "cas.reserve": {
+     "en": "  hard reserve: {reserve} GiB, {free} GiB free, {distance} GiB above it",
+     "de": "  harte Reserve: {reserve} GiB, {free} GiB frei, {distance} GiB darüber"
+    },
+    "cas.reserveBreached": {
+     "en": "  hard reserve: {reserve} GiB, only {free} GiB free, {distance} GiB BELOW it (the store frees expired inputs, then unreferenced data)",
+     "de": "  harte Reserve: {reserve} GiB, nur {free} GiB frei, {distance} GiB UNTER der Reserve (der Speicher gibt abgelaufene Eingaben frei, dann unreferenzierte Daten)"
+    },
     "cas.leases": {
      "en": "  input leases: {leased} live ({leasedGib} GiB), {expired} expired ({expiredGib} GiB); {collection}",
      "de": "  Eingabe-Leases: {leased} aktiv ({leasedGib} GiB), {expired} abgelaufen ({expiredGib} GiB); {collection}"
@@ -624,6 +629,10 @@
      "en": "Offload: {local} running locally, {fleet} on the fleet; {out} offloaded, {refused} refused, {fellBack} fell back ({deadline} deadline, {lost} lost operation, {silent} silent)",
      "de": "Auslagerung: {local} laufen lokal, {fleet} auf der Flotte; {out} ausgelagert, {refused} abgelehnt, {fellBack} lokal nachgeholt ({deadline} Frist, {lost} verlorene Operation, {silent} still)"
     },
+    "offload.spool": {
+     "en": "  upload spool: {depth} units waiting for the fleet cache (a compile waits beyond {bound})",
+     "de": "  Upload-Spool: {depth} Einheiten warten auf den Flotten-Cache (ein Kompilieren wartet ab {bound})"
+    },
     "offload.build": {
      "en": "  build {pid}: {local} locally, {fleet} on the fleet",
      "de": "  Build {pid}: {local} lokal, {fleet} auf der Flotte"
@@ -633,9 +642,56 @@
      "de": "Worker: {ready} bereit, {working} arbeiten, {idle} untätig, {silent} still, {offline} offline, {absent} ohne Eintrag"
     },
     "workers.row": {
-     "en": "  {origin} {platform}: {state}, stage {stage} ({index}/{count}), attempt {attempts}, record {record}, machine {machine}; memory {memory}{refusal}",
-     "de": "  {origin} {platform}: {state}, Stufe {stage} ({index}/{count}), Versuch {attempts}, Eintrag {record}, Maschine {machine}; Speicher {memory}{refusal}"
+     "en": "  {origin} {platform}: {state}, stage {stage} ({index}/{count}), attempt {attempts}, record {record}, machine {machine}; memory {memory}{tree}{mapping}{recent}{refusal}",
+     "de": "  {origin} {platform}: {state}, Stufe {stage} ({index}/{count}), Versuch {attempts}, Eintrag {record}, Maschine {machine}; Speicher {memory}{tree}{mapping}{recent}{refusal}"
     },
+    "workers.recent": {
+     "en": ", last {hours} h in this stage: {parts} ({duration} run)",
+     "de": ", letzte {hours} h in dieser Stufe: {parts} ({duration} gelaufen)"
+    },
+    "workers.recent.ok": {"en": "{count} ok", "de": "{count} erfolgreich"},
+    "workers.recent.failed": {"en": "{count} failed", "de": "{count} fehlgeschlagen"},
+    "workers.recent.stalled": {"en": "{count} stopped as stalled", "de": "{count} als stillstehend beendet"},
+    "workers.recent.timedOut": {"en": "{count} timed out", "de": "{count} Zeitüberschreitung"},
+    "workers.tree.same": {
+     "en": ", tree same as {reference}",
+     "de": ", Baum gleich wie {reference}"
+    },
+    "workers.tree.differs": {
+     "en": ", tree differs from {reference} by {files} file(s) ({there} only here at the worker, {here} only at {reference}), replica says {verdict}{stale}",
+     "de": ", Baum weicht von {reference} um {files} Datei(en) ab ({there} nur hier beim Worker, {here} nur bei {reference}), Replika sagt {verdict}{stale}"
+    },
+    "workers.tree.verdict.ok": {"en": "in step", "de": "im Gleichschritt"},
+    "workers.tree.verdict.off": {"en": "sync off", "de": "Abgleich aus"},
+    "workers.tree.verdict.retired": {"en": "retired", "de": "ausgemustert"},
+    "workers.tree.verdict.missing": {"en": "no attestation", "de": "kein Nachweis"},
+    "workers.tree.verdict.stale": {"en": "attestation old", "de": "Nachweis alt"},
+    "workers.tree.verdict.lagging": {"en": "lagging, edits in flight", "de": "hinkt nach, Änderungen unterwegs"},
+    "workers.tree.verdict.diverged": {"en": "diverged", "de": "abgewichen"},
+    "workers.tree.stale": {
+     "en": ", its view is still being refreshed",
+     "de": ", seine Ansicht wird noch erneuert"
+    },
+    "workers.tree.unknown": {
+     "en": ", tree not comparable (no readable view)",
+     "de": ", Baum nicht vergleichbar (keine lesbare Ansicht)"
+    },
+    "workers.mapping.waiting": {
+     "en": ", mapping grant: {waiting} waiting for the {step}, longest {longest}{holder} (finished: {granted} shared grants waited {waited}, exclusive holds {exclusive}; report {age} old)",
+     "de": ", Zuordnungs-Grant: {waiting} warten auf {step}, am längsten {longest}{holder} (beendet: {granted} geteilte Grants warteten {waited}, exklusive Haltezeit {exclusive}; Bericht {age} alt)"
+    },
+    "workers.mapping.calm": {
+     "en": ", mapping grant: nobody waiting ({granted} shared grants waited {waited} in all, longest {longest}; exclusive holds {exclusive}; report {age} old)",
+     "de": ", Zuordnungs-Grant: niemand wartet ({granted} geteilte Grants warteten insgesamt {waited}, am längsten {longest}; exklusive Haltezeit {exclusive}; Bericht {age} alt)"
+    },
+    "workers.mapping.holder": {
+     "en": ", head of the lease queue: {kind} holder, process {pid}{command} for {held}, {queued} queued",
+     "de": ", Kopf der Lease-Warteschlange: {kind} Halter, Prozess {pid}{command} seit {held}, {queued} in der Schlange"
+    },
+    "workers.mapping.kind.shared": {"en": "shared", "de": "geteilter"},
+    "workers.mapping.kind.exclusive": {"en": "exclusive", "de": "exklusiver"},
+    "workers.mapping.step.slot": {"en": "owner slot of the process", "de": "Eigentümerplatz des Prozesses"},
+    "workers.mapping.step.grant": {"en": "lease grant", "de": "Lease-Zuteilung"},
     "workers.refusal": {
      "en": ", {reason}",
      "de": ", {reason}"
@@ -803,6 +859,22 @@
     "fleet.why": {
      "en": "    {origin} worker {worker}: {reason}",
      "de": "    {origin} Worker {worker}: {reason}"
+    },
+    "fleet.code.same": {
+     "en": ", code {code} (the tree's)",
+     "de": ", Code {code} (der des Baums)"
+    },
+    "fleet.code.differs": {
+     "en": ", CODE {code} differs from the tree's {tree}",
+     "de": ", CODE {code} weicht vom Baum {tree} ab"
+    },
+    "fleet.code.runs": {
+     "en": ", code {code}",
+     "de": ", Code {code}"
+    },
+    "fleet.code.unknown": {
+     "en": ", code unknown (older agent)",
+     "de": ", Code unbekannt (älterer Agent)"
     },
     "fleet.noheadroom": {
      "en": " (no headroom)",
@@ -3378,6 +3450,7 @@
     "queued": {"type": "integer", "minimum": 0},
     "headroom": {"type": "boolean"},
     "ageSeconds": {"type": "integer", "minimum": 0},
+    "code": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
     "worker": {"enum": ["absent", "idle", "busy", "refusing"]},
     "offloadedIn": {"type": "integer", "minimum": 0},
     "offloadedOut": {"type": "integer", "minimum": 0},
@@ -3396,6 +3469,7 @@
    "required": ["scheduler", "expireSeconds", "machines", "queued", "executing", "offloadRejected", "refused", "retried"],
    "properties": {
     "scheduler": {"type": "string"},
+    "treeCode": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
     "expireSeconds": {"type": "integer", "minimum": 0},
     "machines": {"type": "array", "items": {"$ref": "#/definitions/FleetMachine"}},
     "queued": {"type": "integer", "minimum": 0},
@@ -3427,6 +3501,7 @@
    "required": ["scheduler", "machines", "queued", "executing", "offloadedIn", "offloadedOut", "refused", "declined", "retried", "cacheHit", "cacheMiss"],
    "properties": {
     "scheduler": {"type": "string"},
+    "treeCode": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
     "machines": {"type": "array", "items": {"$ref": "#/definitions/FleetMachine"}},
     "queued": {"type": "integer", "minimum": 0},
     "executing": {"type": "integer", "minimum": 0},
@@ -3457,7 +3532,10 @@
     "attempts": {"type": "integer", "minimum": 0},
     "recordAgeSeconds": {"type": ["integer", "null"], "minimum": 0},
     "heartbeatAgeSeconds": {"type": ["integer", "null"], "minimum": 0},
-    "refusal": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["code", "en", "de"], "properties": {"code": {"type": "string"}, "en": {"type": "string"}, "de": {"type": "string"}}}]}
+    "refusal": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["code", "en", "de"], "properties": {"code": {"type": "string"}, "en": {"type": "string"}, "de": {"type": "string"}}}]},
+    "tree": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["reference", "files", "onlyThere", "onlyHere", "stale", "verdict"], "properties": {"reference": {"type": "string"}, "files": {"type": "integer", "minimum": 0}, "onlyThere": {"type": "integer", "minimum": 0}, "onlyHere": {"type": "integer", "minimum": 0}, "stale": {"type": "boolean"}, "verdict": {"enum": ["ok", "off", "retired", "missing", "stale", "lagging", "diverged"]}}}]},
+    "recent": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["hours", "ok", "failed", "stalled", "timedOut", "seconds"], "properties": {"hours": {"type": "integer", "minimum": 1}, "ok": {"type": "integer", "minimum": 0}, "failed": {"type": "integer", "minimum": 0}, "stalled": {"type": "integer", "minimum": 0}, "timedOut": {"type": "integer", "minimum": 0}, "seconds": {"type": "integer", "minimum": 0}}}]},
+    "mapping": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["taken", "waiting", "step", "longestWaitedSeconds", "holderKind", "holderPid", "holderCommand", "holderSeconds", "queued", "sharedGrants", "sharedWaitedSeconds", "sharedLongestSeconds", "exclusiveHeldSeconds", "ageSeconds"], "properties": {"taken": {"type": ["integer", "null"], "minimum": 0}, "waiting": {"type": "integer", "minimum": 0}, "step": {"enum": ["slot", "grant", null]}, "longestWaitedSeconds": {"type": "integer", "minimum": 0}, "holderKind": {"enum": ["shared", "exclusive", null]}, "holderPid": {"type": ["integer", "null"]}, "holderCommand": {"type": ["string", "null"]}, "holderSeconds": {"type": ["integer", "null"], "minimum": 0}, "queued": {"type": ["integer", "null"], "minimum": 0}, "sharedGrants": {"type": "integer", "minimum": 0}, "sharedWaitedSeconds": {"type": "integer", "minimum": 0}, "sharedLongestSeconds": {"type": "integer", "minimum": 0}, "exclusiveHeldSeconds": {"type": "integer", "minimum": 0}, "ageSeconds": {"type": "integer", "minimum": 0}}}]}
    }
   },
   "WorkerMemory": {
@@ -3514,7 +3592,10 @@
     "recordAgeSeconds": {"type": ["integer", "null"], "minimum": 0},
     "heartbeatAgeSeconds": {"type": ["integer", "null"], "minimum": 0},
     "refusal": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["code", "en", "de"], "properties": {"code": {"type": "string"}, "en": {"type": "string"}, "de": {"type": "string"}}}]},
-    "memory": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WorkerMemory"}]}
+    "memory": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WorkerMemory"}]},
+    "tree": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["reference", "files", "onlyThere", "onlyHere", "stale", "verdict"], "properties": {"reference": {"type": "string"}, "files": {"type": "integer", "minimum": 0}, "onlyThere": {"type": "integer", "minimum": 0}, "onlyHere": {"type": "integer", "minimum": 0}, "stale": {"type": "boolean"}, "verdict": {"enum": ["ok", "off", "retired", "missing", "stale", "lagging", "diverged"]}}}]},
+    "recent": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["hours", "ok", "failed", "stalled", "timedOut", "seconds"], "properties": {"hours": {"type": "integer", "minimum": 1}, "ok": {"type": "integer", "minimum": 0}, "failed": {"type": "integer", "minimum": 0}, "stalled": {"type": "integer", "minimum": 0}, "timedOut": {"type": "integer", "minimum": 0}, "seconds": {"type": "integer", "minimum": 0}}}]},
+    "mapping": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["taken", "waiting", "step", "longestWaitedSeconds", "holderKind", "holderPid", "holderCommand", "holderSeconds", "queued", "sharedGrants", "sharedWaitedSeconds", "sharedLongestSeconds", "exclusiveHeldSeconds", "ageSeconds"], "properties": {"taken": {"type": ["integer", "null"], "minimum": 0}, "waiting": {"type": "integer", "minimum": 0}, "step": {"enum": ["slot", "grant", null]}, "longestWaitedSeconds": {"type": "integer", "minimum": 0}, "holderKind": {"enum": ["shared", "exclusive", null]}, "holderPid": {"type": ["integer", "null"]}, "holderCommand": {"type": ["string", "null"]}, "holderSeconds": {"type": ["integer", "null"], "minimum": 0}, "queued": {"type": ["integer", "null"], "minimum": 0}, "sharedGrants": {"type": "integer", "minimum": 0}, "sharedWaitedSeconds": {"type": "integer", "minimum": 0}, "sharedLongestSeconds": {"type": "integer", "minimum": 0}, "exclusiveHeldSeconds": {"type": "integer", "minimum": 0}, "ageSeconds": {"type": "integer", "minimum": 0}}}]}
    }
   },
   "WorkersFact": {
@@ -3544,6 +3625,7 @@
    "required": ["root", "capBytes", "effectiveCapBytes", "highWatermarkBytes", "lowWatermarkBytes", "incrementBytes", "leases", "lastCollection"],
    "properties": {
     "root": {"type": "string"},
+    "reserve": {"type": "object", "additionalProperties": false, "required": ["reserveBytes", "freeBytes"], "properties": {"reserveBytes": {"type": "integer", "minimum": 0}, "freeBytes": {"type": "integer", "minimum": 0}}},
     "capBytes": {"type": "integer", "minimum": 0},
     "effectiveCapBytes": {"type": "integer", "minimum": 0},
     "highWatermarkBytes": {"type": "integer", "minimum": 0},
@@ -3559,6 +3641,7 @@
    "required": ["root", "usedBytes", "usedBasisPoints", "capBytes", "effectiveCapBytes", "highWatermarkBytes", "lowWatermarkBytes", "incrementBytes", "leases", "lastCollection"],
    "properties": {
     "root": {"type": "string"},
+    "reserve": {"type": "object", "additionalProperties": false, "required": ["reserveBytes", "freeBytes", "distanceBytes"], "properties": {"reserveBytes": {"type": "integer", "minimum": 0}, "freeBytes": {"type": "integer", "minimum": 0}, "distanceBytes": {"type": "integer"}}},
     "usedBytes": {"type": ["integer", "null"], "minimum": 0},
     "usedBasisPoints": {"type": ["integer", "null"], "minimum": 0},
     "capBytes": {"type": "integer", "minimum": 0},
@@ -3623,7 +3706,8 @@
     "out": {"type": "integer", "minimum": 0},
     "refused": {"type": "integer", "minimum": 0},
     "fellBack": {"type": "integer", "minimum": 0},
-    "reasons": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}
+    "reasons": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "spool": {"description": "The jobs of the machine's unit cache root waiting in the upload spool for the fleet cache, and the bound beyond which a compile waits for room.", "type": "object", "additionalProperties": false, "required": ["depth", "bound"], "properties": {"depth": {"type": "integer", "minimum": 0}, "bound": {"type": "integer", "minimum": 1}}}
    }
   },
   "OffloadSection": {
@@ -3640,7 +3724,8 @@
     "deadline": {"type": "integer", "minimum": 0},
     "lost": {"type": "integer", "minimum": 0},
     "silent": {"type": "integer", "minimum": 0},
-    "reasons": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}
+    "reasons": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "spool": {"type": "object", "additionalProperties": false, "required": ["depth", "bound"], "properties": {"depth": {"type": "integer", "minimum": 0}, "bound": {"type": "integer", "minimum": 1}}}
    }
   }
  }

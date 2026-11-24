@@ -1,0 +1,8 @@
+{
+  "ops": [
+    { "op": "contact-split", "anchor": "kick-tower-base", "padSize": [null, null, 0.03], "parts": [
+      { "id": "kick-tower-rail-r", "z": -0.18, "footprintWidthM": 0.03, "title": { "en": "Right rail of the kick tower on the floor", "de": "Rechte Kufe des Kickturms auf dem Boden" } },
+      { "id": "kick-tower-rail-l", "z": 0.18, "footprintWidthM": 0.03, "title": { "en": "Left rail of the kick tower on the floor", "de": "Linke Kufe des Kickturms auf dem Boden" } }
+    ] }
+  ]
+}

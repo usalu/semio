@@ -98,11 +98,21 @@ def main() -> int:
                     WITH basis(floor, q) AS (
                         SELECT CASE :usage WHEN 'residential' THEN 0 ELSE 14.4 * :occupants END,
                                CASE :method
-                                   WHEN 'method_2_limit_concentration' THEN :occupants * 18000.0 / 1350
-                                   WHEN 'method_3_predefined_rates' THEN 9 * :occupants + 1.44 * :areaM2
-                                   ELSE CASE :category
-                                       WHEN 'II' THEN 25.2 * :occupants + 2.52 * :areaM2
-                                       WHEN 'IV' THEN 9 * :occupants + 1.08 * :areaM2
+                                   WHEN 'method_2_limit_concentration' THEN :occupants * 20000.0 / CASE :annex
+                                       WHEN 'De' THEN CASE :category WHEN 'I' THEN 350 WHEN 'II' THEN 550 WHEN 'III' THEN 900 ELSE 1350 END
+                                       ELSE CASE :category WHEN 'I' THEN 550 WHEN 'II' THEN 800 ELSE 1350 END
+                                   END
+                                   WHEN 'method_3_predefined_rates' THEN 3.6 * max(
+                                       :occupants * CASE :category WHEN 'I' THEN 20.0 WHEN 'II' THEN 14.0 WHEN 'III' THEN 8.0 ELSE 5.5 END,
+                                       :areaM2 * CASE :category WHEN 'I' THEN 2.0 WHEN 'II' THEN 1.4 WHEN 'III' THEN 0.8 ELSE 0.55 END)
+                                   ELSE CASE :usage
+                                       WHEN 'residential' THEN 3.6 * (
+                                           :occupants * CASE :category WHEN 'I' THEN 3.5 WHEN 'II' THEN 2.5 WHEN 'III' THEN 1.5 END
+                                           + :areaM2 * CASE :category WHEN 'I' THEN 0.25 WHEN 'II' THEN 0.15 WHEN 'III' THEN 0.1 END)
+                                       ELSE CASE :category
+                                           WHEN 'II' THEN 25.2 * :occupants + 2.52 * :areaM2
+                                           WHEN 'IV' THEN 9 * :occupants + 1.08 * :areaM2
+                                       END
                                    END
                                END
                     )
@@ -111,6 +121,16 @@ def main() -> int:
                 assert abs(floor - case["healthMinimumM3H"]) < 1e-9, case["name"]
                 assert abs(required - case["designMinimumM3H"]) < 1e-9, case["name"]
                 assert (case["supplyM3H"] + 1e-9 >= required) == case["passes"], case["name"]
+        print(json.dumps({"ok": True, "cases": len(fixture["cases"])}))
+        return 0
+    if len(sys.argv) == 3 and sys.argv[1] == "--occupancy-fixture":
+        fixture = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
+        with sqlite3.connect(":memory:") as db:
+            db.execute("CREATE TABLE density(usage TEXT PRIMARY KEY, m2_per_person REAL)")
+            db.executemany("INSERT INTO density VALUES (?, ?)", [("office", 10.0), ("meeting", 2.0), ("classroom", 2.0), ("retail", 7.0)])
+            for case in fixture["cases"]:
+                row = db.execute("SELECT :areaM2 / m2_per_person FROM density WHERE usage = :usage", case).fetchone()
+                assert (row[0] if row else None) == case["typicalOccupants"], case["name"]
         print(json.dumps({"ok": True, "cases": len(fixture["cases"])}))
         return 0
     if len(sys.argv) >= 2 and sys.argv[1] == "--report":

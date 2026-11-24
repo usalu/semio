@@ -17,6 +17,12 @@ import { playgroundIframeEmbedHeadersPlugin } from "@semio-tech/ui-styling/ifram
 import { staticDirVitePlugin } from "@semio-tech/ui-styling/builder/vite";
 import type { OwnedBuildConfig, OwnedBuildPlugin } from "@semio-tech/ui-react/build-tooling";
 import { semioAgentBridgeRendezvousVitePlugin } from "@semio-tech/framework-os-dev/vite-plugins/agent-bridge-rendezvous";
+import { devStreamMuxServer } from "@semio-tech/framework-os-dev/vite-plugins/stream-mux-server";
+import { semioExtensionStoreVitePlugin } from "@semio-tech/plugin-extension-store";
+
+/** 🗂️ The page URL the completed boot's unbundled `new Worker(new URL(…, import.meta.url))` of the local catalog resolves to, and the workspace file serving it. */
+export const WGPU_STORE_WORKER_ROUTE = "/🏪️store/👷️worker/🟦️.ts";
+export const WGPU_STORE_WORKER_SOURCE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts";
 
 export type WgpuBrowserConfiguration = {
   readonly catalog: PluginCatalogRowsV1;
@@ -119,12 +125,13 @@ export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): Owne
     publicDir: false,
     cacheDir: repoCacheDirectory(options.workspace, "vite", "wgpu", options.variant ?? "fixture", options.profile),
     optimizeDeps: { noDiscovery: true, include: [] },
-    resolve: { alias: mounts.map(([find, replacement]) => ({ find, replacement })) },
-    server: { watch: null, fs: { allow: [options.root, ...mounts.map(([, root]) => root).filter(root => !guarded(root))] }, ...(process.env.SEMIO_VITE_HMR === "0" ? { hmr: false } : {}) },
+    resolve: { alias: [{ find: WGPU_STORE_WORKER_ROUTE, replacement: join(options.workspace, WGPU_STORE_WORKER_SOURCE) }, ...mounts.map(([find, replacement]) => ({ find, replacement }))] },
+    server: { watch: null, fs: { allow: [options.root, options.workspace, ...mounts.map(([, root]) => root).filter(root => !guarded(root))] }, ...(process.env.SEMIO_VITE_HMR === "0" ? { hmr: false } : {}) },
     plugins: [
       { ...playgroundIframeEmbedHeadersPlugin(), enforce: "pre" },
       semioEmojiIndexHtmlVitePlugin(options.root),
       semioAgentBridgeRendezvousVitePlugin({ shellKind: "wgpu-web" }),
+      semioExtensionStoreVitePlugin({ installRoot: options.extensionRoot, repoRoot: options.workspace, streams: devStreamMuxServer }) as OwnedBuildPlugin,
       ...mounts.flatMap(([route, root]) => staticDirVitePlugin(options.workspace, { kind: "static-dir", route, root }, guarded(root) ? options.openCapturedFile : undefined).filter(plugin => plugin.apply !== "build")),
       ...createAssetBuildPluginsV1(options.workspace, options.assets, PLAYGROUND_ASSET_PROVIDERS_V1, options.assetServeMode),
       {

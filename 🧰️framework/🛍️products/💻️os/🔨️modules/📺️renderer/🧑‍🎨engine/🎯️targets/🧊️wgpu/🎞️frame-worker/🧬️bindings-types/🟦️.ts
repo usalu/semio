@@ -1,4 +1,4 @@
-import type { OriginalBrowserFrameNative } from "../🎟️original/🟦️.ts";
+import type { OriginalBrowserFrameAdmissionNative, OriginalBrowserFrameNative } from "../🎟️original/🟦️.ts";
 import type { RuntimeAssetBindings } from "../../../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
 import { pluginHandleForBridge } from "../../🐚️plugin-bridge/🟦️.ts";
 
@@ -26,7 +26,7 @@ export type BrowserRendererWorkerHandle = OriginalBrowserFrameNative & {
   closeStep(): boolean;
 };
 
-type BrowserRendererBootstrapHandle = {
+type BrowserRendererBootstrapHandle = OriginalBrowserFrameAdmissionNative & {
   step(): string;
   bootShell(): Promise<BrowserRendererBootstrapHandle>;
   finish(): BrowserRendererWorkerHandle;
@@ -36,7 +36,7 @@ export type BrowserRendererBootStep = { readonly stage: string; readonly progres
 
 
 export type RendererBindings = RuntimeAssetBindings & {
-  default?: (moduleOrPath?: WebAssembly.Module | RequestInfo | URL) => Promise<unknown>;
+  default?: (init?: { readonly module_or_path: WebAssembly.Module | RequestInfo | URL }) => Promise<unknown>;
   dumpStructure?: (windowId?: string) => string;
   dumpFrameStats?: (windowId?: string) => string;
   /** ♿️ The window's accessibility tree, for the UI isolate's ARIA mirror — production, not a probe. */

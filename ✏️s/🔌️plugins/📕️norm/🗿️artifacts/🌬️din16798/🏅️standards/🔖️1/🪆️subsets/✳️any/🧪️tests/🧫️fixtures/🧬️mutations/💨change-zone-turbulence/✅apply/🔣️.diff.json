@@ -34,7 +34,9 @@
           "noiseDb": null,
           "turbulenceIntensityPercent": 35.0,
           "ventMethod": null,
-          "ventSystemId": null
+          "ventSystemId": null,
+          "unoccupiedVentilation": null,
+          "clearUnoccupiedVentilation": null
         }
       }
     ]

@@ -1,0 +1,90 @@
+{
+  "cover": [
+    {
+      "view": "plan",
+      "from": "side",
+      "id": "carcass",
+      "z0": -0.215,
+      "z1": 0.215
+    },
+    {
+      "view": "plan",
+      "from": "leg-rear",
+      "spans": {
+        "leg-rear-l": [
+          0.1565,
+          0.1935
+        ],
+        "leg-rear-r": [
+          -0.1935,
+          -0.1565
+        ]
+      }
+    },
+    {
+      "view": "plan",
+      "from": "leg-front",
+      "spans": {
+        "leg-front-l": [
+          0.1565,
+          0.1935
+        ],
+        "leg-front-r": [
+          -0.1935,
+          -0.1565
+        ]
+      }
+    }
+  ],
+  "solidify": [
+    {
+      "under": "carcass"
+    }
+  ],
+  "ops": [
+    {
+      "op": "shape-copy",
+      "from": "50",
+      "scale": "100",
+      "view": "elevation",
+      "id": "knob",
+      "after": "drawer-front"
+    },
+    {
+      "op": "shape-copy",
+      "from": "50",
+      "scale": "50",
+      "view": "front",
+      "id": "leg-front",
+      "as": "leg-rear",
+      "after": "blanket",
+      "set": {
+        "z": 1.9
+      }
+    },
+    {
+      "op": "shape-copy",
+      "from": "100",
+      "scale": "100",
+      "view": "front",
+      "id": "leg-front",
+      "as": "leg-rear",
+      "after": "blanket",
+      "set": {
+        "z": 1.9
+      }
+    },
+    {
+      "op": "shape-copy",
+      "from": "200",
+      "scale": "200",
+      "view": "front",
+      "id": "leg-front",
+      "as": "leg-rear",
+      "after": "blanket",
+      "set": {
+        "z": 1.9
+      }
+    }
+  ]
+}

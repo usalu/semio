@@ -1,0 +1,7 @@
+{
+  "cover": [
+    { "scales": ["50", "100"], "view": "front", "from": "side-l", "z0": -0.25, "z1": 0.287, "z": 2.9 },
+    { "scales": ["200"], "view": "front", "from": "side-l", "z0": -0.25, "z1": 0.29, "z": 2.9 }
+  ],
+  "solidify": [{ "under": "carcass" }]
+}

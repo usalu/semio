@@ -36,3 +36,21 @@ Fixes (each loads the app's own empty document for `""`)
 - remodeling: `RemodelingSnapshot::default()`; raster: `empty_raster_document()`; block 2d/3d/5d: `BlockNdSnapshot::default()`; note: `empty_note_snapshot()`.
 
 Laws: one per fixed plugin (`set_active_example_empty_id_*` / `*empty_document*` in each crate's unit tests).
+
+### Raster: blocked by its own migration, law not run
+
+The raster `""` handler fix (`empty_raster_document()`) and its law (`empty_id_resolves_to_the_empty_document`) are in place but cannot run: the raster crate does not compile, independent of this ticket.
+- Model crate: `RasterSelectionSpans::clone` (`🎯️selection/📦️coverage/🦀️.rs`) calls `PersistentList::retained_alias_work_demand(&self)` and `retained_alias(&self, effect)`, removed in commit `01324745f80`. The surviving `pack_json::retained_alias` takes a `RetainedCloneRef<T>` and returns a `RetainedOwnedProjection<T>`, so it is not a drop-in.
+- No local fix: `ArtifactViewer::Mutation` requires `Clone` (`🧰️framework/.../👁️artifact-viewer-trait/🦀️.rs:96`), so `RasterMutation` must stay `Clone`, hence `ApplyFilter`, `FillRegion`, `FillSelection`, `PaintStroke` (each holds `Option<RasterSelectionSpans>`) and the selection session type, hence `RasterSelectionSpans: Clone`. Dropping `Clone` was tried and cascaded to the viewer crate. It needs a shared-owner payload redesign by the raster owner.
+- Mutation test crate: `semio_s_artifact_raster_raster_model::find_layer_mut` not found, `protocol::MutationKind::diff` and `::inverse` not found, no field `artifact` on `RasterDiff`, no method `retire_cold` on `RasterDiff`.
+- Run `$T/empty-example-laws.sh` again once raster compiles.
+
+### Law run status (native, 2026-11-24)
+- Passed: jack `set_active_example_empty_id_loads_the_blank_graph_document` (1 passed, 0 failed), after generating `🔌️jack/🤖️generated` with `$T/generate-jack-graph.ts`.
+- Blocked, handler fixed and law written but the owning test build does not compile (none of these errors are in the new code):
+  - rewriting: `semio-s-artifact-stdio-semio` cannot resolve its `semio_s_artifact_stdio_semio_members_*` crates (peer edit in flight); the workspace-wide build also fails in `rewriting-operations` retirement tests (`RetainedWorkOutcome::unwrap_or_else`, `Arc<RewritingSnapshot>: RetireOwned`).
+  - block 2d/3d/5d: `Block{2d,3d,5d}Snapshot: RetireOwned` not satisfied in the model crates; 3d also `unresolved import crate::snapshot`.
+  - note: `semio-s-artifact-note-note-v1` tests fail in `🚪️io/🧪️tests/🔬️pdf-page-contract` (`STDIO_PDF_DOCUMENT_SCHEMA` missing, two arity errors).
+  - remodeling: the `editor` test target (`semio-s-artifact-remodel-remodeling`) fails in existing tests (`history_snapshot`, `protocol_laws`, `ArtifactToolRegistration`, `RemodelingRetainedCommandJobFactory`, ...); `MAX_INTERACTIVE_IMAGE_*` consts made `pub` in `frame-ingest`.
+  - raster: see above.
+- Rerun with `$T/empty-example-laws-3.sh` (scoped packages), `-5.sh`, `-6.sh` once those crates compile.

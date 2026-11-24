@@ -204,4 +204,39 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Sour
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
     fn terminal_is_empty(&self) -> bool { self.owners.terminal_is_empty() }
 }
+
+/// 🔁️ The cold replay issuer of the Config lane, priced by the same envelope the one-item preparation validates.
+type SourcingCurationConfigReplay = store::ColdMutationApplyFactory<SourcingCurationConfig, SourcingCurationConfigMutation>;
+
+fn sourcing_curation_config_replay() -> SourcingCurationConfigReplay {
+    SourcingCurationConfigReplay::bounded(store::ColdPreparationBounds {
+        maximum_bytes: SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES,
+        mutation_bytes: |mutation| sourcing_curation_config_mutation_retained_bytes(mutation).unwrap_or(usize::MAX),
+        snapshot_bytes: |config| sourcing_curation_config_bytes(config).unwrap_or(usize::MAX),
+    })
+}
+
+/// 🔁️ A scrub press previews its provisional config leaf through the Store's replay port, so the Config lane installs this one issuer for publication and replay alike.
+impl store::os_store::replay_preparation::ArtifactReplayPreparationFactory<SourcingCurationConfig, SourcingCurationConfigMutation> for SourcingCurationConfigPreparationFactory {
+    fn preparation_birth_demand(&self) -> semio_framework_value::RetirementDemand {
+        store::os_store::replay_preparation::ArtifactReplayPreparationFactory::preparation_birth_demand(&sourcing_curation_config_replay())
+    }
+
+    fn begin(&self, request: store::os_store::replay_preparation::ArtifactReplayPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn store::os_store::replay_preparation::ArtifactReplayPreparation<SourcingCurationConfig, SourcingCurationConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::replay_preparation::ArtifactReplayPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation>)> {
+        store::os_store::replay_preparation::ArtifactReplayPreparationFactory::begin(&sourcing_curation_config_replay(), request, grant)
+    }
+}
+
+/// 📏️ Quotes the Config owner catalog with the shared semantic issuer installed.
+pub fn sourcing_curation_config_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    store::os_store::document_store_owners::bounded_artifact_store_owners_shared_semantic_source_demands::<SourcingCurationConfig, SourcingCurationConfigMutation, SourcingCurationConfigPreparationFactory>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }, 0)
+}
+
+/// 🗃️ Admits the Config owner catalog with the shared semantic issuer installed for publication and replay, so a continuous control's press can preview its leaf.
+pub fn admit_sourcing_curation_config_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<SourcingCurationConfig, SourcingCurationConfigMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<SourcingCurationConfig, SourcingCurationConfigMutation>> {
+    store::os_store::document_store_owners::bounded_artifact_store_owners_with_shared_semantic_preparation(grant, semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }, 0, || SourcingCurationConfigPreparationFactory).map(|(mut owners, progress)| {
+        owners.operation_wire = owners.operation_wire.with_original_ordinal_binary_receiving().with_original_target(store::os_store::whole_document_target::<SourcingCurationConfigMutation>);
+        (owners, progress)
+    })
+}
 //#endregion 📬️ConfigStorePreparation

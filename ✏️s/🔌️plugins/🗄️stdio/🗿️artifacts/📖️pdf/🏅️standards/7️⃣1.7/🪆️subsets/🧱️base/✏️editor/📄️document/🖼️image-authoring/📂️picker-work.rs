@@ -33,6 +33,8 @@ where
 
     fn reports_progress(&self) -> bool { false }
 
+    fn terminal_frame_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, cx: &mut StepContext<'_>)
         -> Result<ArtifactCommandWorkStep<A>, OriginalTurnFailure>
     {

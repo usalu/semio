@@ -306,11 +306,11 @@ test("cooperative footer, cursors and pages", async ({ device }) => {
   await expect.poll(async () => {
     const owner = await ben.page.locator(stripSelector).evaluate((element) => (element as HTMLElement).style.transform);
     const observed = await anna.page.locator("[data-follow-screen]").locator(stripSelector).evaluate((element) => (element as HTMLElement).style.transform);
-    const values = (transform: string) => (transform.replace("translate3d", "").match(/-?\d+(?:\.\d+)?/gu) ?? []).map(Number);
+    const values = (transform: string) => (transform.replace("translate3d", "").match(/-?\d+(?:\.\d+)?/gu) ?? []).map(Number).slice(0, 2);
     const ownerValues = values(owner);
     const observedValues = values(observed);
-    expect(ownerValues).toHaveLength(3);
-    expect(observedValues).toHaveLength(3);
+    expect(ownerValues, "the pan offsets of the strip, whether it is promoted to its own layer for the pan or at rest").toHaveLength(2);
+    expect(observedValues).toHaveLength(2);
     expect([...ownerValues, ...observedValues].every(Number.isFinite)).toBe(true);
     expect(ownerValues.slice(0, 2).some((value) => Math.abs(value) > 1)).toBe(true);
     return Math.max(...ownerValues.map((value, index) => Math.abs(value - observedValues[index]!)));
@@ -447,7 +447,7 @@ test("cooperative card scroll", async ({ device }) => {
   const [annaName, benName] = [handle("Scroll Observer"), handle("Scroll Player")];
   const anna = await device("en");
   const ben = await device("de");
-  await anna.page.setViewportSize({ width: 1440, height: 100 });
+  await anna.page.setViewportSize({ width: 1440, height: 60 });
   await ben.page.setViewportSize({ width: 375, height: 200 });
   await enter(anna, { kind: "pseudonym", handle: annaName }, true);
   await enter(ben, { kind: "pseudonym", handle: benName }, true);

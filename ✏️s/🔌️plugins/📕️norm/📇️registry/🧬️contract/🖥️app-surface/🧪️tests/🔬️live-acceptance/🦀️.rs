@@ -9,6 +9,24 @@ macro_rules! norm_live_acceptance {
             use super::*;
             use semio_framework_value::ToValue;
             type Doc = <$app as semio_plugin::ArtifactEditor>::Snapshot;
+            type Mut = <$app as semio_plugin::ArtifactEditor>::Mutation;
+
+            /// 🔁️ The document after one mutation of a batch.
+            fn step(document: &Doc, mutation: &Mut) -> Doc {
+                let raised = <Mut as protocol::ColdMutation<Doc>>::diff(mutation, document);
+                protocol::apply_diff_cold(raised.diff(), document).unwrap_or_else(|error| panic!("a mutation of the batch does not apply: {error:?}"))
+            }
+
+            /// 🌱️ The tree of `seed` with the first row of `spec`, placed the way a click places it: the insert resolves through the editor's own edit rules, which seed an empty collection.
+            fn with_first_row(seed: &Doc, spec: &$crate::direct_manipulation::InsertSpec, tree: &semio_framework_value::DslValue) -> semio_framework_value::DslValue {
+                let insert = $crate::direct_manipulation::insert_edit(tree, spec, [0.0, 0.0, 0.0]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
+                let mutations = <$app as $crate::NormLiveEditor>::live_resolve(seed, &insert).unwrap_or_else(|error| panic!("kind '{}': the first row does not resolve: {error}", spec.id));
+                let mut placed: Option<Doc> = None;
+                for mutation in &mutations {
+                    placed = Some(step(placed.as_ref().unwrap_or(seed), mutation));
+                }
+                placed.unwrap_or_else(|| panic!("kind '{}': the first row raises no mutation", spec.id)).to_value()
+            }
             type Family = <$app as $crate::NormRetainedEditor>::Family;
 
             fn probe() -> (Doc, semio_s_plugin_norm_structural_scene::EntityRef, semio_s_plugin_norm_structural_scene::Handle, f64, f64) {
@@ -215,8 +233,7 @@ macro_rules! norm_live_acceptance {
                 for spec in <$app as $crate::NormLiveEditor>::live_palette().iter().filter(|spec| spec.collection != placements) {
                     let mut tree = seed.to_value();
                     if tree.get(&spec.collection).and_then(DslValue::as_array).is_none_or(|rows| rows.is_empty()) {
-                        let insert = $crate::direct_manipulation::insert_edit(&tree, spec, [0.0, 0.0, 0.0]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
-                        $crate::entity_editing::apply_to_tree(&mut tree, &[insert]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
+                        tree = with_first_row(&seed, spec, &tree);
                     }
                     let Some(id) = tree.get(&spec.collection).and_then(DslValue::as_array).and_then(|list| list.first()).and_then($crate::object_id_field).map(str::to_owned) else { continue };
                     let doc = <Doc as FromValue>::from_value(tree.clone()).unwrap_or_else(|error| panic!("kind '{}': the document with a first row does not load: {error:?}", spec.id));
@@ -254,8 +271,7 @@ macro_rules! norm_live_acceptance {
                     let count = |tree: &DslValue| tree.get(&spec.collection).and_then(DslValue::as_array).map(|rows| rows.len());
                     let before = count(&tree).unwrap_or_else(|| panic!("kind '{}': the snapshot has no list '{}'", spec.id, spec.collection));
                     if before == 0 {
-                        let insert = $crate::direct_manipulation::insert_edit(&tree, spec, [0.0, 0.0, 0.0]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
-                        $crate::entity_editing::apply_to_tree(&mut tree, &[insert]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
+                        tree = with_first_row(&seed, spec, &tree);
                     }
                     let rows = count(&tree).unwrap_or_default();
                     let doc = <Doc as FromValue>::from_value(tree.clone()).unwrap_or_else(|error| panic!("kind '{}': the document with a first row does not load: {error:?}", spec.id));
@@ -294,11 +310,6 @@ macro_rules! norm_live_acceptance {
             #[test]
             fn every_registered_entity_kind_deletes_a_multi_selection_as_one_atomic_batch_that_undoes_and_redoes() {
                 use semio_framework_value::{DslValue, FromValue};
-                type Mut = <$app as semio_plugin::ArtifactEditor>::Mutation;
-                fn step(document: &Doc, mutation: &Mut) -> Doc {
-                    let raised = <Mut as protocol::ColdMutation<Doc>>::diff(mutation, document);
-                    protocol::apply_diff_cold(raised.diff(), document).unwrap_or_else(|error| panic!("a mutation of the batch does not apply: {error:?}"))
-                }
                 let seed = Doc::default();
                 let placements = semio_s_plugin_norm_structural_scene::projection_kit::PLACEMENTS_FIELD;
                 let mut covered = 0;
@@ -306,8 +317,7 @@ macro_rules! norm_live_acceptance {
                     let mut tree = seed.to_value();
                     let rows = |tree: &DslValue| tree.get(&spec.collection).and_then(DslValue::as_array).map(|rows| rows.iter().filter_map(|row| $crate::object_id_field(row).map(str::to_owned)).collect::<Vec<String>>()).unwrap_or_default();
                     if rows(&tree).is_empty() {
-                        let insert = $crate::direct_manipulation::insert_edit(&tree, spec, [0.0, 0.0, 0.0]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
-                        $crate::entity_editing::apply_to_tree(&mut tree, &[insert]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
+                        tree = with_first_row(&seed, spec, &tree);
                     }
                     let first = rows(&tree).into_iter().next().unwrap_or_else(|| panic!("kind '{}': rows carry an id", spec.id));
                     let copy = $crate::entity_editing::duplicate_edits(&tree, &spec.collection, std::slice::from_ref(&first), &[]).unwrap_or_else(|error| panic!("kind '{}': duplicate: {error}", spec.id));
@@ -358,8 +368,7 @@ macro_rules! norm_live_acceptance {
                 for spec in <$app as $crate::NormLiveEditor>::live_palette() {
                     let mut tree = seed.to_value();
                     if tree.get(&spec.collection).and_then(DslValue::as_array).is_none_or(|rows| rows.is_empty()) {
-                        let insert = $crate::direct_manipulation::insert_edit(&tree, &spec, [0.0, 0.0, 0.0]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
-                        $crate::entity_editing::apply_to_tree(&mut tree, &[insert]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
+                        tree = with_first_row(&seed, &spec, &tree);
                     }
                     let Some(id) = tree.get(&spec.collection).and_then(DslValue::as_array).and_then(|list| list.first()).and_then($crate::object_id_field).map(str::to_owned) else { continue };
                     let doc = <Doc as FromValue>::from_value(tree).unwrap_or_else(|error| panic!("kind '{}': the document with a first row does not load: {error:?}", spec.id));
@@ -591,8 +600,7 @@ macro_rules! norm_live_acceptance {
                 let doc = Doc::default();
                 let tree = doc.to_value();
                 let entities = $entities(&doc);
-                let first = entities.first().expect("the default document offers an entity");
-                let (collection, ids) = $crate::selected_rows(&tree, std::slice::from_ref(&first.id)).expect("the first entity is a row of the document");
+                let (first, (collection, ids)) = entities.iter().find_map(|entity| $crate::selected_rows(&tree, std::slice::from_ref(&entity.id)).map(|rows| (entity, rows))).expect("the default document offers an entity that is a row of the document");
                 let context = $crate::HostContext { collection: collection.clone(), ids: ids.clone(), clip_json: Some("{}".to_owned()) };
                 let menu = $crate::touch_menu(ids.len(), true, Some(0));
                 assert!(menu.iter().all(|entry| entry.enabled), "with a selection, a clip and a governing check every entry of the Edit menu is on");
@@ -611,8 +619,7 @@ macro_rules! norm_live_acceptance {
                 for spec in <$app as $crate::NormLiveEditor>::live_palette() {
                     let mut grown = doc.to_value();
                     if grown.get(&spec.collection).and_then(DslValue::as_array).is_none_or(|rows| rows.is_empty()) {
-                        let insert = $crate::direct_manipulation::insert_edit(&grown, &spec, [0.0, 0.0, 0.0]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
-                        $crate::entity_editing::apply_to_tree(&mut grown, &[insert]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
+                        grown = with_first_row(&doc, &spec, &grown);
                     }
                     let Some(id) = grown.get(&spec.collection).and_then(DslValue::as_array).and_then(|list| list.first()).and_then($crate::object_id_field).map(str::to_owned) else { continue };
                     let loaded = <Doc as FromValue>::from_value(grown).unwrap_or_else(|error| panic!("kind '{}': the document with a first row does not load: {error:?}", spec.id));

@@ -1,0 +1,22 @@
+{
+  "title": "Warden Coverage for Every Repo Toolchain Process and Disk-Bounded Swap",
+  "emoji": "🧯",
+  "status": "open",
+  "description": "The Mac worker ran out of application memory and macOS halted it, while the host warden (ticket 26/11/24/FLEET-MEMORY-WATCHDOG-ADMISSION-AND-UNIT-CARVING) stayed calm and acted on nothing. Cause: warden subjects must descend from a bun root or the build scheduler, so rustc/cargo started by shell scripts (native fallback builds, agents' cargo test runs, rustc-wrapper bypass) and cargo test binaries and Playwright browsers were invisible; those scripts also ran -j 8 without admission; and the disk had filled to 95%, capping macOS swap at 3 GB. This must never happen: every memory-relevant process launched from the repo's pinned toolchains, repo target directories or repo browser runtime must be a warden subject regardless of ancestry; native cargo invocations must pass the host-capacity admission and the rustc wrapper instead of bypassing them; the warden's level must account for swap headroom bounded by free disk; packages whose compile units exceed the 16 GB-class unit ceiling must be carved. Language-agnostic tests with an independent oracle; proof on this worker.",
+  "goal": "🎯repomechanisms",
+  "sessions": [
+    "0e85c250-770c-4e4f-9faa-efffbc3c6942"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-24 17:20:00",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "The Mac worker ran out of application memory and macOS halted it, while the host warden (ticket 26/11/24/FLEET-MEMORY-WATCHDOG-ADMISSION-AND-UNIT-CARVING) stayed calm and acted on nothing. Cause: warden subjects must descend from a bun root or the build scheduler, so rustc/cargo started by shell scripts (native fallback builds, agents' cargo test runs, rustc-wrapper bypass) and cargo test binaries and Playwright browsers were invisible; those scripts also ran -j 8 without admission; and the disk had filled to 95%, capping macOS swap at 3 GB. This must never happen: every memory-relevant process launched from the repo's pinned toolchains, repo target directories or repo browser runtime must be a warden subject regardless of ancestry; native cargo invocations must pass the host-capacity admission and the rustc wrapper instead of bypassing them; the warden's level must account for swap headroom bounded by free disk; packages whose compile units exceed the 16 GB-class unit ceiling must be carved. Language-agnostic tests with an independent oracle; proof on this worker.",
+      "llm": "opus-5-5"
+    }
+  ]
+}

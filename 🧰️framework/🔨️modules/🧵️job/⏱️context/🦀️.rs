@@ -22,7 +22,7 @@ pub use original_job_continuation::source as original_return_source;
 pub use semio_framework_job_failure::{OriginalSourceCloseFailure,project_original_source_close_failure,key_original_source_close_failure,OriginalFailureContext,OriginalWorkFailure,OriginalTurnFailure,OriginalTurnPrimary,OriginalReceivingPrimary,OriginalRetirementReceivingPrimary,OriginalClosureFailure,OriginalDomainFailure,OriginalDomainPrimary,OriginalDomainReservation,OriginalDomainProjection,OriginalDomainView,admit_original_domain_failure,original_domain_failure_demand,project_original_turn_failure,key_original_turn_failure,project_original_value_error,key_original_value_error,project_original_fault,key_original_fault,project_original_retirement_failure,key_original_retirement_failure,project_original_retirement_receiving,key_original_retirement_receiving,project_original_receiving_primary,key_original_receiving_primary};
 #[path="../♻️retirement/🎟️context/🦀️.rs"]
 mod original_close_context;
-pub use original_close_context::{close_original_quoted_retained_step,receive_original_retained_work,receive_original_receiving_work,close_original_granted_step,close_original_nested_step,close_original_retained_step,close_original_retained_turn,close_original_effect_step,close_original_retained_effect_step};
+pub use original_close_context::{close_original_source_effect_step,close_original_quoted_retained_step,receive_original_retained_work,receive_original_receiving_work,close_original_granted_step,close_original_nested_step,close_original_retained_step,close_original_retained_turn,close_original_effect_step,close_original_retained_effect_step};
 
 #[cfg(test)]
 use std::time::Instant;
@@ -203,6 +203,12 @@ impl<'a> StepContext<'a> {
         if self.receiving_floor_exceeds_turn(floor){return Ok(false)}
         self.receiving.open(self.retained_grant()).map_err(OriginalTurnFailure::from)?;
         let mut operation=Some(operation);let quote=self.covering_receiving_quote(floor);self.original_receiving_outcome(out,quote,semio_framework_job_receiving::OriginalReceivingOperation::ReceiveWithWork(&mut |native,grant,units|operation.take().unwrap()(native,grant,units)))
+    }
+    /// 🔪️ Like [`Self::with_native_receiving_work`], but the automatic claim never exceeds `slice` on any axis, so a held scope credit stays a bounded slice of Source stock under any turn grant; the scope still runs as many receiving actions as the slice and the work admit, and `floor` raises it to cover the next indivisible action.
+    pub fn with_native_receiving_slice(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,floor:semio_framework_value_retained_clone::RetirementDemand,slice:RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant,u64)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{
+        if self.receiving_floor_exceeds_turn(floor){return Ok(false)}
+        self.receiving.open(self.retained_grant()).map_err(OriginalTurnFailure::from)?;
+        let mut operation=Some(operation);let quote=self.sliced_receiving_quote(floor,slice);self.original_receiving_outcome(out,Some(quote),semio_framework_job_receiving::OriginalReceivingOperation::ReceiveWithWork(&mut |native,grant,units|operation.take().unwrap()(native,grant,units)))
     }
     /// 🎯️ Like [`Self::with_native_receiving`], but its receiving scope claims exactly the quoted grant and work plus its own control, so the held scope credit never takes the rest of the turn or Source stock.
     pub fn with_native_receiving_quoted(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,quote:(RetainedCloneGrant,u64),operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{

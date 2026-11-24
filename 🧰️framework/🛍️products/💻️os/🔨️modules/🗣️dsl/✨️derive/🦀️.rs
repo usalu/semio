@@ -15,7 +15,7 @@ use mutation_leaf_descriptor::{MutationLeafJson, emit_mutation_leaf_descriptor, 
 
 #[path = "🪪️mutation-leaf-attrs-and-schema-index/🦀️.rs"]
 pub(crate) mod mutation_leaf_attrs_and_schema_index;
-use mutation_leaf_attrs_and_schema_index::{mutation_authority_canonical, mutation_authority_workspace_token, mutation_leaf_include_path};
+use mutation_leaf_attrs_and_schema_index::{mutation_authority_canonical, mutation_authority_workspace_token};
 
 #[path = "🏗️document-diff-and-composite-expansion/🦀️.rs"]
 pub(crate) mod document_diff_and_composite_expansion;

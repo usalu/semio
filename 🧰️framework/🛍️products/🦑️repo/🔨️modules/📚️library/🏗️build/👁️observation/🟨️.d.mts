@@ -107,6 +107,10 @@ export function observationLayerHoldsV1(layer:readonly unknown[]):boolean;
 export function observationLookupClockV1():Record<string,number>;
 /** 🧪️ Whether one stored row still holds, probed against the tree now and remembered nowhere. */
 export function observationRowFreshV1(row:unknown):boolean;
+/** 🪪️ The stamps of the few files and directories whose state decides a set of rows that all hold now, `typed` rows (existence and type of a name, probed by name), `live` rows probed again by every verification, and the parser revisions it was taken under; undefined while it cannot be taken. */
+export type ObservationWitnessV1 = Readonly<{paths:readonly string[];tuples:readonly string[];typed:readonly (readonly [string,string,unknown])[];code:readonly (readonly [string,string])[];live:readonly string[]}>;
+export function observationWitnessV1(rows:Iterable<unknown>,options?:{since?:number}):ObservationWitnessV1|undefined;
+export function observationWitnessHoldsV1(witness:ObservationWitnessV1,options?:{tuples?:Map<string,string>;verdicts?:Map<string,boolean>;step?:()=>Promise<void>}):Promise<boolean>;
 /** 🏃️ The running validation round, if any. */
 export function observationRoundV1():object|undefined;
 export function forgetRoundReadsV1():void;

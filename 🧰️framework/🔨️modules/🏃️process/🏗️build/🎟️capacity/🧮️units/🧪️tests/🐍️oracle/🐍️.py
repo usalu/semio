@@ -35,7 +35,7 @@ def plan(policy, host, intent):
         if 1 < units:
             units, reason = 1, "pressure-critical"
     elif host["pressure"] == "warn":
-        halved = math.ceil(units / policy["pressureWarnDivisor"])
+        halved = math.ceil(units / policy["localPressureWarnDivisor"])
         if halved < units:
             units, reason = max(1, halved), "pressure-warn"
     minimum = max(1, -(-units * policy["minimumShareBasisPoints"] // 10000))

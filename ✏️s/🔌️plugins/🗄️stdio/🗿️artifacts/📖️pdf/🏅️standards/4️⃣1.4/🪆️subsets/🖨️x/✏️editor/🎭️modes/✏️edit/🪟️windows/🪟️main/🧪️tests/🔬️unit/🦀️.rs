@@ -23,12 +23,13 @@ fn definition_declares_the_own_resolved_page_actions() {
     assert_eq!(definition.body_key, BODY_KEY);
     let mut actual = definition.actions.iter().map(|action| action.id.as_str()).collect::<Vec<_>>();
     actual.sort();
-    let mut expected = vec!["set-page", "insert-page", "remove-page", "move-page", "set-page-size", "replace-page-text"];
+    let mut expected = vec!["set-page", "replace-page-text"];
     expected.sort();
     assert_eq!(actual, expected);
 }
 #[test]
 fn render_keeps_each_own_page_draft_and_dimensions() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let document = fixture();
     let view = page::editable_view(&document, UiPublicationRevision(55)).unwrap();
     assert_eq!(view.pages[0].text, document.pages[0].text);

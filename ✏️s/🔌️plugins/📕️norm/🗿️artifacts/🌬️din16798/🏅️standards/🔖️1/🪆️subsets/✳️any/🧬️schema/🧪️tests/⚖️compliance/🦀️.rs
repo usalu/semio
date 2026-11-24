@@ -61,6 +61,36 @@ fn occupied_nonresidential_outdoor_air_respects_the_hygienic_minimum() {
 }
 
 #[test]
+fn usage_category_sets_the_typical_occupancy_the_declared_occupancy_is_reported_against() {
+    let directory = family_any_dir().join("🧬️schema/🧪️tests/⚖️compliance");
+    let result = semio_s_plugin_norm_compliance::python_oracle::command()
+        .arg(directory.join("🐍️.py"))
+        .arg("--occupancy-fixture")
+        .arg(directory.join("🔣️occupancy.json"))
+        .output().unwrap();
+    assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️occupancy.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let mut doc = Din16798Snapshot::compliant_office();
+        let zone = &mut doc.zones[0];
+        zone.usage_type = case["usage"].as_str().unwrap().into();
+        zone.floor_area_m2 = case["areaM2"].as_f64().unwrap();
+        zone.occupants = case["occupants"].as_u64().unwrap().try_into().unwrap();
+        let id = format!("din16798-1.occupancy.{}", zone.id);
+        let report = check_full_environment(&doc);
+        let check = report.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("{name}: {id} missing"));
+        match case["typicalOccupants"].as_f64() {
+            Some(typical) => {
+                assert_eq!(check.status, CheckStatus::Info, "{name}");
+                assert!((check.computed.value - typical).abs() < 1e-9, "{name}: {} vs {typical}", check.computed.value);
+            }
+            None => assert_eq!(check.status, CheckStatus::NotApplicable, "{name}"),
+        }
+    }
+}
+
+#[test]
 fn inspection_age_reports_the_record_without_assuming_a_mandatory_interval() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️inspection-age.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
@@ -440,19 +470,15 @@ fn python_oracle_matches_rust_q_sfp_co2_within_half_percent() {
 fn jsonschema_validates_compliant_and_noncompliant_snapshots() {
     let schema = family_any_dir().join("🧬️schema/📸️snapshot/🔣️.json");
     assert!(schema.exists(), "{}", schema.display());
+    let validate = family_any_dir().join("🔮️oracles/🧬️snapshot-schema/🐍️.py");
     let tmp = ticket_generated();
     let _ = std::fs::create_dir_all(&tmp);
-    let validate = family_any_dir().join("🔮️oracles/🧬️snapshot-schema/🐍️.py");
     for (name, doc) in [("compliant", Din16798Snapshot::compliant_office()), ("noncompliant", Din16798Snapshot::noncompliant_office())] {
         let snap = tmp.join(format!("{name}.schema.snap.json"));
         std::fs::write(&snap, serde_json::to_string_pretty(&doc).unwrap()).unwrap();
         let output = semio_s_plugin_norm_compliance::python_oracle::command().arg(&validate).arg(&schema).arg(&snap).output().expect("jsonschema spawn");
-        assert!(
-            output.status.success(),
-            "{name} jsonschema: {}{}",
-            String::from_utf8_lossy(&output.stderr),
-            String::from_utf8_lossy(&output.stdout)
-        );
+        assert!(output.status.success(), "{name} jsonschema: {}{}", String::from_utf8_lossy(&output.stderr), String::from_utf8_lossy(&output.stdout));
+        semio_s_plugin_norm_compliance::python_oracle::assert_serde_snapshot_law(&schema, &format!("din16798-{name}"), &doc);
     }
 }
 
@@ -655,6 +681,7 @@ fn perturb_leaf_value(doc: &mut Din16798Snapshot, path: &str) {
         semio_framework_value::DslValue::String(s) => {
             let leaf = path.rsplit(['.', '[']).next().unwrap_or(path).trim_end_matches(']');
             let alt: String = match leaf {
+                "operation" => if s == "nonResidentialPurge" { "residentialReduced" } else { "nonResidentialPurge" }.into(),
                 "annex" => if s.eq_ignore_ascii_case("de") { "En" } else { "De" }.into(),
                 "usageType" => "classroom".into(),
                 "comfortCategory" => "III".into(),
@@ -677,6 +704,17 @@ fn perturb_leaf_value(doc: &mut Din16798Snapshot, path: &str) {
                 _ => format!("{s}-x"),
             };
             semio_framework_value::DslValue::String(alt)
+        }
+        semio_framework_value::DslValue::Null if path.ends_with(".unoccupiedVentilation") => {
+            let field = |key: &str, value: semio_framework_value::DslValue| (key.to_string(), value);
+            semio_framework_value::DslValue::object([
+                field("operation", semio_framework_value::DslValue::String("nonResidentialPurge".into())),
+                field("assessedAreaM2", semio_framework_value::DslValue::float(200.0)),
+                field("zoneVolumeM3", semio_framework_value::DslValue::float(600.0)),
+                field("minutesBeforeOccupancy", semio_framework_value::DslValue::float(60.0)),
+                field("residentialDesignRateLPerSM2", semio_framework_value::DslValue::float(0.0)),
+                field("outdoorAirM3H", semio_framework_value::DslValue::float(700.0)),
+            ])
         }
         other => panic!("unsupported leaf value at {path}: {other:?}"),
     };
@@ -740,6 +778,15 @@ fn leaf_applies_in_example(doc: &Din16798Snapshot, path: &str, leaf: &str) -> bo
                 && part_1::draught_rate_percent(zone.t_op_summer_c, zone.air_speed_m_s, zone.turbulence_intensity_percent).is_some()
         }
         "cellarVentilationM3H" => doc.cellar_area_m2 > 0.0,
+        "zoneVolumeM3" | "minutesBeforeOccupancy" => zone_id_from_leaf_path(path).and_then(|id| doc.zones.iter().find(|zone| zone.id == id))
+            .and_then(|zone| zone.unoccupied_ventilation.as_ref())
+            .is_none_or(|record| record.operation == semio_s_artifact_norm_din16798_model::UnoccupiedVentilationOperation::NonResidentialPurge),
+        "assessedAreaM2" => zone_id_from_leaf_path(path).and_then(|id| doc.zones.iter().find(|zone| zone.id == id))
+            .and_then(|zone| zone.unoccupied_ventilation.as_ref())
+            .is_none_or(|record| record.operation != semio_s_artifact_norm_din16798_model::UnoccupiedVentilationOperation::NonResidentialPurge),
+        "residentialDesignRateLPerSM2" => zone_id_from_leaf_path(path).and_then(|id| doc.zones.iter().find(|zone| zone.id == id))
+            .and_then(|zone| zone.unoccupied_ventilation.as_ref())
+            .is_none_or(|record| record.operation == semio_s_artifact_norm_din16798_model::UnoccupiedVentilationOperation::ResidentialReduced),
         _ => true,
     }
 }

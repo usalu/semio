@@ -1919,6 +1919,20 @@
               "filled": true,
               "tone": 0.15,
               "penMm": 0.2
+            },
+            {
+              "id": "base-ring",
+              "bone": "base",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.4,
+              "material": "powder-steel",
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.28,
+              "ry": 0.28
             }
           ],
           "front": [
@@ -3485,6 +3499,20 @@
               "filled": true,
               "tone": 0.15,
               "penMm": 0.2
+            },
+            {
+              "id": "feet",
+              "bone": "base",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.35,
+              "material": "powder-steel",
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.25,
+              "ry": 0.25
             }
           ],
           "front": [
@@ -4591,6 +4619,20 @@
               "region": "connections",
               "material": "enamelled-steel",
               "penMm": 0.2
+            },
+            {
+              "id": "feet",
+              "bone": "base",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.35,
+              "material": "powder-steel",
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.25,
+              "ry": 0.25
             }
           ],
           "front": [

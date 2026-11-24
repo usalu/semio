@@ -41,10 +41,6 @@ fn stiffness_basis_options() -> Vec<(String, &'static str, &'static str)> {
         .collect()
 }
 
-fn snap(step: f64) -> SnapRule {
-    SnapRule { increment: Some(step), tolerance: 0.0, ..SnapRule::NONE }
-}
-
 struct Grip<'a> {
     id: String,
     entity: &'a str,
@@ -62,16 +58,17 @@ struct Grip<'a> {
     name: (String, String),
 }
 
-/// 🪝️ The grip as the framework drives it: declared relative to its current value (`base + k · s`, limits around zero), then re-based on the absolute parameter at its anchor, so the value read at the rest position is the current value exactly and the limits contain it.
+/// 🪝️ The grip as the framework drives it: declared relative to its current value (`base + k · s`, limits around zero), then re-based on the absolute parameter at its anchor, so the value read at the rest position is the current value exactly and the limits contain it; the step rounds the written value in value units, and only for a current value on that grid, so an untouched grip never rewrites its field.
 fn handle(g: Grip<'_>) -> Handle {
+    let on_grid = ((g.base / g.step).round() * g.step - g.base).abs() <= 1e-9 * g.base.abs().max(1.0);
     with_rest_in_limits(rebased(Handle {
         id: g.id,
         entity: EntityRef::new(g.entity_kind, g.entity, g.path),
         kind: g.kind,
         anchor: g.anchor,
         grip: g.style,
-        writes: vec![FieldBinding::new(g.field, Affine { base: g.base, k: g.k }, g.unit)],
-        snap: snap(g.step),
+        writes: vec![FieldBinding { quantise: on_grid.then_some(Quantise::Round { step: g.step }), ..FieldBinding::new(g.field, Affine { base: g.base, k: g.k }, g.unit) }],
+        snap: SnapRule::NONE,
         limits: Some(Interval::new((g.limits.0 - g.base) / g.k, (g.limits.1 - g.base) / g.k)),
         accessible_name: loc(&g.name.0, &g.name.1),
     }))

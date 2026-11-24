@@ -502,7 +502,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
                   type="button"
                   id={enlarge.id}
                   data-slot={enlarge.slot}
-                  className={cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
+                  className={cn("flex min-h-medium w-auto items-center justify-center self-stretch border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
                   onClick={enlarge.onClick}
                 >
                   {enlarge.icon}
@@ -514,7 +514,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
                   type="button"
                   id={close.id}
                   data-slot={close.slot}
-                  className={cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
+                  className={cn("flex min-h-medium w-auto items-center justify-center self-stretch border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
                   onClick={close.onClick}
                 >
                   {close.icon}
@@ -556,7 +556,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         {capDock === "bottom" ? capRow : null}
         {hasFooter ? (
           footerCenterChips ? (
-            <div ref={setFooterRef} data-slot="window-chrome-footer" data-dock="bottom" data-dim className="pointer-events-none absolute inset-x-0 bottom-0 grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end bg-transparent" style={WINDOW_CHROME_CHIP_ROW_STYLE}>
+            <div ref={setFooterRef} data-slot="window-chrome-footer" data-dock="bottom" data-dim className="pointer-events-none absolute inset-x-0 bottom-0 grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch bg-transparent" style={WINDOW_CHROME_CHIP_ROW_STYLE}>
               {footerLeftChips ? (
                 <div data-slot="window-chrome-footer-left" data-window-frame-chip data-chip-reach="next" data-dock="bottom" data-level={chipLevel} className={cn("col-start-1 justify-self-start", footerChipClass)}>
                   {footerLeftChips}

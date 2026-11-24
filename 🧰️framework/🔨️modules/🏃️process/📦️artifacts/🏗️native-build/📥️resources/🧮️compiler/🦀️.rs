@@ -52,6 +52,14 @@ pub fn inside_input_root_v1(path: &Path) -> bool { inside_root_v1(path, input_ro
 
 fn inside_root_v1(path: &Path, root: Option<&Path>) -> bool { root.is_none_or(|root| path.starts_with(root)) }
 
+/// 🧭️ `path` as the `/`-separated path from the directory of `source` (for `include_str!` in the output of a proc-macro): relative, so the expansion is the same in every checkout root and offload sandbox.
+pub fn include_path_v1(source: &Path, path: &Path) -> Result<String, String> {
+    let from: Vec<_> = source.parent().ok_or("source has no directory")?.components().collect();
+    let to: Vec<_> = path.components().collect();
+    let common = from.iter().zip(&to).take_while(|(left, right)| left == right).count();
+    Ok(from[common..].iter().map(|_| "..".into()).chain(to[common..].iter().map(|part| part.as_os_str().to_string_lossy().into_owned())).collect::<Vec<String>>().join("/"))
+}
+
 /// 🔁️ Runs a filesystem read again across the short window in which a replica daemon replaces a file (missing or refused for a moment), then fails with the path named. Other errors fail at once.
 fn settled_v1<T>(path: &Path, mut operation: impl FnMut() -> io::Result<T>) -> io::Result<T> {
     for attempt in 1..=SETTLE_ATTEMPTS_V1 {
@@ -155,6 +163,15 @@ mod tests {
         assert!(!inside_root_v1(Path::new("/work"), Some(root)));
         assert!(!inside_root_v1(Path::new("/Users/u/semio"), Some(root)));
         assert!(inside_root_v1(Path::new("/Users/u/semio"), None));
+    }
+
+    #[test]
+    fn an_include_path_is_relative_to_the_source_directory_in_every_root() {
+        for root in ["/a/ws", "/very/other/root/ws"] {
+            let (source, target) = (Path::new(root).join("p/x/lib.rs"), Path::new(root).join("t/auth.json"));
+            assert_eq!(include_path_v1(&source, &target).unwrap(), "../../t/auth.json");
+            assert_eq!(include_path_v1(&source, &Path::new(root).join("p/x/s/d.json")).unwrap(), "s/d.json");
+        }
     }
 
     #[test]

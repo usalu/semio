@@ -115,6 +115,12 @@ impl<P,M> Copy for SemioMemberStoreProducer<P,M> {}
 impl<P,M> Clone for SemioMemberStoreProducer<P,M> {fn clone(&self)->Self{*self}}
 impl<P,M> SemioMemberStoreProducer<P,M> {pub const fn new()->Self{Self(::std::marker::PhantomData)}}
 
+/// 📏️ The history read limits every semio member declares: one authority for the member groups that expand [`space_members!`](semio_os_kernel::space_members).
+pub const SEMIO_MEMBER_HISTORY_LIMITS: semio_os_kernel::os_store::HistoryReadLimits = semio_os_kernel::os_store::HistoryReadLimits { file_bytes: 67108864, frame_body_bytes: 1048576, records: 8192, maximum_fields: 128, maximum_text_bytes: 1048576, maximum_binary_bytes: 1048576, maximum_json_bytes: 1048576, maximum_json_allocation_bytes: 8388608, maximum_json_items: 65536, maximum_json_depth: 64 };
+
+/// 📏️ The history allocation ceiling every semio member declares next to [`SEMIO_MEMBER_HISTORY_LIMITS`].
+pub const SEMIO_MEMBER_HISTORY_ALLOCATION_BYTES: usize = 8388608;
+
 /// 🌱️ Implements the native default of snapshot types whose omitted field receives their `Default` value; it copies no bytes
 /// beyond the value itself. The crate that owns each type invokes it.
 #[macro_export]

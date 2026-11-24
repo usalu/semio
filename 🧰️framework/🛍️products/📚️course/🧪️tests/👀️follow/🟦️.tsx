@@ -13,6 +13,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { CameraRelay, evolveFollow, followStep, publicPresenceRun, followedCourseState, usePresenceCapture, usePresenceViewport, type FollowEvent } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/👀️follow/🟦️.tsx";
 import { EMPTY_PRESENCE_VIEW, FOLLOW_DEPARTURE_GRACE_MS, FOLLOW_REJOIN_GRACE_MS, Dialog, FollowProvider, LeaderboardCard, PresenceFooter, PresenceProvider, followedPreferences, initialCourseState, localStore, memoryStorageOrigin, observerSession, courseText, readPreferences, useFollow, type CoursePresenceSnapshot, type CourseSession, type RoomStatus } from "@semio-tech/course-react";
 import { RunScreen } from "@semio-tech/course-react/modules/run/.tsx";
+import { DEFAULT_BOARD, boardKey } from "@semio-tech/course-react";
 import type { Leaderboard, LeaderboardRow, Place, PresencePresentation, RunView, Sheet } from "@semio-tech/course";
 import vectors from "../../🧫️fixtures/👀️follow/🔣️.json";
 import sheets from "../../🧫️fixtures/🃏️sheet-assembly/🔣️.json";
@@ -215,6 +216,16 @@ describe("ephemeral following", () => {
     expect(own.runs).toEqual({});
     expect(own.step).toEqual({ screen: "home" });
     expect(shown.learner?.id).not.toBe("private-learner");
+  });
+  it("reads the overall leaderboard from the observer's own copy and takes only a board the peer chose from the peer, so no state carries the standings of a whole class twice", () => {
+    const overall: Leaderboard = { period: "all-time", rows: [], learners: 100, submissions: 800 };
+    const physics: Leaderboard = { period: "all-time", quiz: "physics", rows: [], learners: 3, submissions: 4 };
+    const own = { ...initialCourseState({ introduced: true, runs: {} }), leaderboards: { [boardKey(DEFAULT_BOARD)]: { board: overall, at: 7 } } };
+    const peer = { tag: "alice", identity: { kind: "anonymous" as const }, place: { screen: "leaderboard" as const }, active: true };
+    expect(followedCourseState(own, { ...peer, view: { board: DEFAULT_BOARD } }).leaderboards).toEqual(own.leaderboards);
+    const chosen = followedCourseState(own, { ...peer, view: { board: { period: "all-time", quiz: "physics" }, leaderboard: physics, leaderboardAt: 9 } });
+    expect(chosen.leaderboards).toEqual({ [boardKey(DEFAULT_BOARD)]: { board: overall, at: 7 }, [boardKey({ period: "all-time", quiz: "physics" })]: { board: physics, at: 9 } });
+    expect(chosen.board).toEqual({ period: "all-time", quiz: "physics" });
   });
   it("blocks commands and automatic observer refreshes", async () => {
     const own = initialCourseState({ introduced: true, runs: {} });

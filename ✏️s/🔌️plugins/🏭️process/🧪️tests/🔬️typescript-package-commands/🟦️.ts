@@ -122,7 +122,7 @@ function sourceOracle(fixture: Fixture, source: string): boolean {
 
 /** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
 export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
-  runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🏭️process/🧪️tests/🧭️dev-route/🟦️.ts", "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(context.repoRoot, path))], { cwd: context.repoRoot });
+  runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🏭️process/🧪️tests/🧭️dev-route/🟦️.ts", "✏️s/🔌️plugins/🏭️process/🧪️tests/🔬️bridge-hub-fixtures/🟦️.ts", "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(context.repoRoot, path))], { cwd: context.repoRoot });
 
   await checkRetainedRoutes(resolve(context.root, "../.."));
 }

@@ -22,12 +22,14 @@
         "inputs-too-large",
         "unreadable-input",
         "no-idle-machine",
+        "no-compatible-worker",
         "queue-timeout",
         "infrastructure",
         "toolchain-missing",
         "path-dependent-output",
         "worker-policy",
         "incomplete-inputs",
+        "remote-failed-local-redo",
         "crate-type",
         "source-kind",
         "cheap",
@@ -104,8 +106,11 @@
             "unitMegabytes",
             "declineMemoMilliseconds",
             "reachableMemoMilliseconds",
+            "workersMemoMilliseconds",
+            "storeFullMemoMilliseconds",
             "contentRetries",
-            "contentRetryAfterCapMilliseconds"
+            "contentRetryAfterCapMilliseconds",
+            "repairRounds"
           ],
           "properties": {
             "roundTripMilliseconds": {
@@ -177,6 +182,14 @@
               "type": "integer",
               "minimum": 0
             },
+            "workersMemoMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "storeFullMemoMilliseconds": {
+              "type": "integer",
+              "minimum": 0
+            },
             "contentRetries": {
               "type": "integer",
               "minimum": 0
@@ -184,6 +197,12 @@
             "contentRetryAfterCapMilliseconds": {
               "type": "integer",
               "minimum": 0
+            },
+            "repairRounds": {
+              "description": "How many times the requester sends the blobs a worker or the scheduler named as missing (the store collected them between the existence check and the fetch) and runs the same action again before the unit compiles here.",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
             }
           }
         },
@@ -251,7 +270,7 @@
           }
         },
         "deadline": {
-          "description": "How long an offloaded action may take on the fleet before the unit compiles here instead: factor times the recorded local cost of the unit (floor and cap bound it, a unit without a record takes the unknown value; a linked wasm unit or a command has its own cap and unknown value) from the moment it executes, and how long the stream of an operation may stay silent before the client re-attaches to it.",
+          "description": "How long an offloaded action may take on the fleet before the unit compiles here instead: factor times the recorded local cost of the unit (a unit that has run on the fleet for twice what it costs here is lost: the local compile is cheaper than the wait; floor and cap bound it, a unit without a record takes the unknown value; a linked wasm unit or a command has its own cap and unknown value) from the moment it executes, and how long the stream of an operation may stay silent before the client re-attaches to it.",
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -354,7 +373,8 @@
             "peak",
             "queueValue",
             "pin",
-            "sdk"
+            "sdk",
+            "linker"
           ],
           "properties": {
             "offload": {
@@ -391,6 +411,9 @@
               "type": "string"
             },
             "sdk": {
+              "type": "string"
+            },
+            "linker": {
               "type": "string"
             }
           }
@@ -656,7 +679,8 @@
             "offload-run",
             "offload-declined",
             "offload-failed",
-            "offload-local-fallback"
+            "offload-local-fallback",
+            "offload-reuploaded"
           ]
         },
         "crate": {
@@ -818,8 +842,11 @@
       "unitMegabytes": 768,
       "declineMemoMilliseconds": 3000,
       "reachableMemoMilliseconds": 15000,
+      "workersMemoMilliseconds": 15000,
+      "storeFullMemoMilliseconds": 30000,
       "contentRetries": 3,
-      "contentRetryAfterCapMilliseconds": 2000
+      "contentRetryAfterCapMilliseconds": 2000,
+      "repairRounds": 3
     },
     "timeouts": {
       "connectMilliseconds": 3000,
@@ -830,12 +857,12 @@
       "actionSeconds": 1200,
       "probeMilliseconds": 4000,
       "requestMilliseconds": 20000,
-      "rideThroughMilliseconds": 20000,
+      "rideThroughMilliseconds": 60000,
       "queueSaturatedMilliseconds": 120000,
       "pinQueueMilliseconds": 3600000
     },
     "deadline": {
-      "factor": 4,
+      "factor": 2,
       "floorMilliseconds": 60000,
       "capMilliseconds": 900000,
       "unknownMilliseconds": 240000,
@@ -866,7 +893,8 @@
       "peak": "semio-peak-mb",
       "queueValue": "queue",
       "pin": "semio-pin",
-      "sdk": "semio-sdk"
+      "sdk": "semio-sdk",
+      "linker": "semio-linker"
     },
     "tool": {
       "name": "rustc",
@@ -1081,6 +1109,7 @@
       "offloaded": "Unit {crate} offloaded to {origin} ({milliseconds} ms).",
       "declined": "Unit {crate} stays here: {reason}.",
       "fallback": "Unit {crate} compiles here after the offload failed: {reason}.",
+      "reuploaded": "Unit {crate}: {blobs} input blobs ({bytes} bytes) were lost in the store and sent again (round {round}).",
       "stage.queued": "Unit {crate} waits for a machine.",
       "stage.executing": "Unit {crate} is compiling on another machine.",
       "reason.not-portable": "its kind cannot be compiled elsewhere",
@@ -1090,12 +1119,14 @@
       "reason.inputs-too-large": "its inputs are too large to ship",
       "reason.unreadable-input": "an input could not be read",
       "reason.no-idle-machine": "no other machine has headroom",
+      "reason.no-compatible-worker": "no worker advertises what it requires (compiler, linker, SDK or target)",
       "reason.queue-timeout": "no machine took it in time",
       "reason.infrastructure": "the execution service failed",
       "reason.toolchain-missing": "the compiler identity is unknown",
       "reason.path-dependent-output": "the result depends on the path of the other machine",
       "reason.worker-policy": "the action policy of a worker refuses its arguments",
       "reason.incomplete-inputs": "the other machine lacked an input",
+      "reason.remote-failed-local-redo": "the other machine failed in a way only it can explain, compiled again here",
       "reason.cancelled": "the build was cancelled",
       "flag.invalid": "--offload takes never, distribute or pin:<origin>, once.",
       "reason.crate-type": "its crate type is linked here",
@@ -1110,6 +1141,7 @@
       "offloaded": "Einheit {crate} auf {origin} ausgelagert ({milliseconds} ms).",
       "declined": "Einheit {crate} bleibt hier: {reason}.",
       "fallback": "Einheit {crate} wird hier kompiliert, nachdem das Auslagern fehlschlug: {reason}.",
+      "reuploaded": "Einheit {crate}: {blobs} Eingabe-Blobs ({bytes} Bytes) gingen im Speicher verloren und wurden erneut gesendet (Runde {round}).",
       "stage.queued": "Einheit {crate} wartet auf eine Maschine.",
       "stage.executing": "Einheit {crate} wird auf einer anderen Maschine kompiliert.",
       "reason.not-portable": "ihre Art lässt sich nicht anderswo kompilieren",
@@ -1119,12 +1151,14 @@
       "reason.inputs-too-large": "ihre Eingaben sind zu groß zum Versenden",
       "reason.unreadable-input": "eine Eingabe war nicht lesbar",
       "reason.no-idle-machine": "keine andere Maschine hat Luft",
+      "reason.no-compatible-worker": "kein Worker bietet, was sie verlangt (Compiler, Linker, SDK oder Ziel)",
       "reason.queue-timeout": "keine Maschine hat sie rechtzeitig übernommen",
       "reason.infrastructure": "der Ausführungsdienst ist ausgefallen",
       "reason.toolchain-missing": "die Identität des Compilers ist unbekannt",
       "reason.path-dependent-output": "das Ergebnis hängt vom Pfad der anderen Maschine ab",
       "reason.worker-policy": "die Aktionsrichtlinie eines Workers lehnt ihre Argumente ab",
       "reason.incomplete-inputs": "der anderen Maschine fehlte eine Eingabe",
+      "reason.remote-failed-local-redo": "die andere Maschine scheiterte auf eine Weise, die nur sie erklärt, hier erneut kompiliert",
       "reason.cancelled": "der Build wurde abgebrochen",
       "flag.invalid": "--offload nimmt never, distribute oder pin:<Ursprung>, genau einmal.",
       "reason.crate-type": "sein Crate-Typ wird hier gelinkt",

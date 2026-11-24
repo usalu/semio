@@ -23,5 +23,5 @@ test("surface resize preserves geometry and original source currencies", () => {
  } finally { db.close(); }
  const source = readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");
  for (const forbidden of ["StepContext::new", "root_cancel_token()", "MountedWorkerJobSession::try_new", "released_items", "StepOutcome::"]) expect(source.includes(forbidden)).toBe(false);
- for (const required of ["pump_one_for_interactive_turn(cx)", "admit_pending", "close_original_retained_step", "fn borrow_outcome", "OriginalTurnFailure"]) expect(source.includes(required)).toBe(true);
+ for (const required of ["pump_one_for_interactive_turn(cx)", "take_checked_out_retained_step_receipt()", "admit_pending", "close_original_retained_step", "fn borrow_outcome", "OriginalTurnFailure"]) expect(source.includes(required)).toBe(true);
 });

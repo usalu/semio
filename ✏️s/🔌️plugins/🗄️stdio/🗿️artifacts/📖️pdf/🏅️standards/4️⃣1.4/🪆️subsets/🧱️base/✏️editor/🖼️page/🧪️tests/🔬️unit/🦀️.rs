@@ -33,6 +33,7 @@ fn fixture() -> crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnap
 
 #[test]
 fn own14_page_view_retains_the_exact_publication_and_each_addressed_text() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let document = fixture();
     let revision = UiPublicationRevision(37);
     let view = editable_view(&document, revision).unwrap();

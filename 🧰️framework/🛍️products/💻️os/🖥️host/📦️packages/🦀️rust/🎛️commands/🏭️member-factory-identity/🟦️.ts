@@ -7,7 +7,7 @@ import { unsignedLebOracleV1 } from "../../../../../../../🔨️modules/🎒️
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { join } from "node:path";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
@@ -18,9 +18,9 @@ export class MemberFactoryIdentityScript extends BundleScript {
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory");
     const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     
-    const semioSource = readFileSync(join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs"), "utf8");
-    const semioTable = semioSource.slice(semioSource.indexOf("pub enum SemioMembers, SemioMembersOpen {"), semioSource.indexOf("/// 🏭️ Mints a typed Semio child"));
-    const declarations = [...semioTable.matchAll(/\w+\("([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"\) =>/g)].map(match => match.slice(1));
+    const subsetsRoot = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets");
+    const semioTable = readdirSync(subsetsRoot).filter(subset => existsSync(join(subsetsRoot, subset, "👥️member", "🦀️.rs"))).map(subset => readFileSync(join(subsetsRoot, subset, "👥️member", "🦀️.rs"), "utf8")).join("\n");
+    const declarations = [...semioTable.matchAll(/\w+\("([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"\) =>/g)].map(match => match.slice(1)).sort((left, right) => (left[2]! < right[2]! ? -1 : left[2]! > right[2]! ? 1 : 0));
     assert.equal(declarations.length, 18); assert.deepEqual(declarations, fixture.declarations, "neutral rows must be exactly the owning closed factory declaration, never parallel authority");
     const inputFixture = JSON.parse(readFileSync(join(owner, "../🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     assert.equal(Buffer.from(inputFixture.historyHex, "hex").length + 2, fixture.inputBytes);

@@ -18,6 +18,10 @@ import { OWNER_POOL_STAGING_POLICY_V1, ownerPoolStagingIoV1, ownerPoolStagingSwe
 /** 🔬️ The revision of the record code this process runs: a child whose revision differs from the wave's would file its records under other keys. */
 export const ownerPoolRevisionV1 = () => projectRecordKeyTextV1(null);
 
+/** 🗃️ The closure store every pool child of this machine shares, outside the graph image and the staging directory a child removes: what one child derived for the shared tool and provider groups (about twenty entries of two thousand modules each, which a fresh child otherwise walks, saves and offers again for every owner) the next child verifies and loads. Bounded by the pool policy; every entry is verified against the tree before it is used, so a stale entry costs one derivation and never a wrong record.
+ * @see ../🧬️schema/🔣️.json */
+export const ownerPoolClosureStoreV1 = (fleetRoot, policy = P) => ({ directory: machinePathV1(fleetRoot, ".cache", "f", policy.closureStoreDirectory), limits: { closureStoreMaximumEntries: policy.closureStoreMaximumEntries, closureStoreMaximumLayers: policy.closureStoreMaximumLayers, closureStoreMaximumValues: policy.closureStoreMaximumValues } });
+
 /** 🧷️ The fleet port of one pool child: the leaves of a record are read from the staging directory the child infers into first, then from the store of the machine, because the child removes its staging directory after the publication and the store of the machine never holds what the child inferred. */
 export const ownerPoolFleetPortV1 = ({ root, environment, client, staging }) => createProjectFleetPortV1({ root, environment, client, leaves: stagedLeafPortV1(staging, workspaceClosurePortV1(root)) });
 
@@ -30,7 +34,9 @@ export async function openOwnerPoolInferenceV1({ root, fleetRoot = root, environ
   const service = await import("../../🏊️project-farm/👷️service/🟨️.mjs"), stagingRoot = ownerPoolStagingDirectoryV1([realpathSync(tmpdir()), machinePathV1(fleetRoot, ".cache", "f", P.stagingFallbackDirectory)], { probe: (directory, megabytes) => { mkdirSync(directory, { recursive: true }); const file = join(directory, ".probe-" + process.pid); try { writeFileSync(file, Buffer.alloc(megabytes * 1048576, 1)); } finally { rmSync(file, { force: true }); } } }), base = (mkdirSync(stagingRoot, { recursive: true }), mkdtempSync(join(stagingRoot, OWNER_POOL_STAGING_POLICY_V1.prefix)));
   writeOwnerPoolStagingOwnerV1(base);
   ownerPoolStagingSweepV1({ parents: [realpathSync(tmpdir()), machinePathV1(fleetRoot, ".cache", "f", P.stagingFallbackDirectory)], own: base, io: ownerPoolStagingIoV1 });
-  const sent = deserialize(bytes), session = { ...sent, workspaceRoot: root, closureStore: undefined, analysisStore: analysisStoreDirectoryOfV1(sent.closureStore), stagingBase: base, authority: undefined };
+  const sent = deserialize(bytes), shared = ownerPoolClosureStoreV1(fleetRoot);
+  mkdirSync(shared.directory, { recursive: true });
+  const session = { ...sent, workspaceRoot: root, closureStore: shared.directory, closureStoreWritable: true, closureStoreLimits: shared.limits, analysisStore: analysisStoreDirectoryOfV1(sent.closureStore), stagingBase: base, authority: undefined };
   await service.open(session, { slot: 0, generation: 1 });
   const port = ownerPoolFleetPortV1({ root, environment, client, staging: service.stagingDirectoryV1() });
   if (port === undefined) throw new Error("no fleet port");

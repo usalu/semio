@@ -7,7 +7,7 @@ import {type UnitEventV1} from "../💾️store/🟦️.ts";
 import {createFleetClientV1,readFleetSettingsV1,type FleetClientV1} from "./📡️client/🟦️.ts";
 import {fleetCacheRootV1,remoteCacheFetchV1} from "../../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {compilerReleaseV1,type CompilerReleaseV1,FLEET_POLICY_V1,hostIndependentV1,neutralReleaseV1,platformOfV1,portableRootsV1,remoteKeyV1,slotIdV1,slotPartsV1,type PlatformV1,type PortableRootV1,type ToolRootsV1} from "./🪪️identity/🟦️.ts";
-import {enqueueUploadV1,markOfferedV1,offeredV1,startUploaderV1} from "./📤️uploader/🟦️.ts";
+import {enqueueUploadV1,markOfferedV1,offeredV1,spoolBoundV1,spoolLengthV1,startUploaderV1} from "./📤️uploader/🟦️.ts";
 import {installFleetUnitV1} from "./📥️adopt/🟦️.ts";
 import {decodeProtobufV1,encodeProtobufV1,REAPI_V1} from "../../../../🏗️build/🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
 
@@ -47,12 +47,23 @@ export function fleetUnidentifiedReasonV1(root:string,environment:Environment):s
  try{return readFleetSettingsV1(root,environment)?"no-compiler-identity":undefined;}catch{return "no-compiler-identity";}
 }
 
+const clients=new Map<string,FleetClientV1>();
+
+/** 📡️ The fleet client of this process for one cache configuration (one per endpoint, instance and credential, so the manifest lookup before the key and the unit lookup after it share it); `undefined` when the tier is off. Never throws. */
+export function fleetClientV1(root:string,environment:Environment):FleetClientV1|undefined{
+ try{
+  const settings=readFleetSettingsV1(root,environment);if(!settings)return undefined;
+  const known=clients.get(settings.identity+"|"+root);if(known)return known;
+  const workspace=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined,identityRoot=workspace??fleetCacheRootV1(environment),client=createFleetClientV1(settings,identityRoot===undefined?{}:{fetch:remoteCacheFetchV1(environment,{root:identityRoot})});
+  clients.set(settings.identity+"|"+root,client);return client;
+ }catch{return undefined;}
+}
+
 /** 🛰️ Prepares the fleet tier for one cache-eligible unit, also while the breaker is open (lookup and claims then wait for the breaker, the upload of the compiled unit waits in the spool); `undefined` when the tier is off or the unit has no identity. Never throws. */
 export function prepareFleetV1(input:Readonly<{root:string;environment:Environment;basics:UnitBasicsV1;unit:RustcUnitV1;args:readonly string[];cwd:string;laneRoot:string|undefined;localKey:string;keyInput:Parameters<typeof unitKeyV1>[0];toolchain:string;crate:string;sensitive?:readonly string[];expected?:readonly string[];tools?:ToolRootsV1}>,world:Readonly<{client?:FleetClientV1}>={}):FleetUnitV1|undefined{
  try{
   const settings=readFleetSettingsV1(input.root,input.environment);if(!settings)return undefined;
-  const workspace=input.environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined,identityRoot=workspace??fleetCacheRootV1(input.environment);
-  const client=world.client??createFleetClientV1(settings,identityRoot===undefined?{}:{fetch:remoteCacheFetchV1(input.environment,{root:identityRoot})});
+  const workspace=input.environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined,client=world.client??fleetClientV1(input.root,input.environment);if(client===undefined)return undefined;
   const platform=platformOfV1({release:input.basics.release,unit:input.unit,args:input.args,environment:input.environment,toolchain:input.toolchain}),roots=portableRootsV1({cwd:input.cwd,workspace,hints:[input.environment.CARGO_MANIFEST_DIR,input.environment.PWD],...input.tools});
   return Object.freeze({client,root:input.root,environment:input.environment,localKey:input.localKey,key:remoteKeyV1(platform,input.keyInput,roots,input.sensitive),slot:input.basics.slot,slotParts:input.basics.slotParts,crate:input.crate,platform,roots,cwd:input.cwd,workspace,laneRoot:input.laneRoot,owner:fleetOwnerV1(),expected:input.expected??[],...input.tools===undefined?{}:{tools:input.tools}});
  }catch{return undefined;}
@@ -215,5 +226,16 @@ export function shareFleetUnitV1(unit:FleetUnitV1,input:Readonly<{claimed:FleetH
   const queued=enqueueUploadV1(unit.root,{version:1,key:unit.key,localKey:unit.localKey,slot:unit.slot,crate:unit.crate,cwd:unit.cwd,workspace:unit.workspace??null,laneRoot:unit.laneRoot??null,owner:unit.owner,claimed:input.claimed!==undefined&&!input.claimed.lost(),costMs:Math.round(input.costMs),platform:unit.platform,queuedMs:Date.now(),...jobExtras(unit),...input.hint===undefined?{}:{hint:{neutralKey:input.hint.neutralKey,kinds:[...input.hint.kinds]}}});
   if(queued){input.claimed?.stop();startUploaderV1(unit.root,unit.environment);}
   return queued;
+ }catch{return false;}
+}
+
+/** 🚰️ {@link shareFleetUnitV1} with back-pressure instead of loss: while the spool is at its bound and the fleet cache answers, the compile waits (at most `spool.waitMilliseconds`, polling for room) so the compiler never outruns the uploader; a unit is refused only when no room appears in that time or the cache is down (then the spool would not drain either). */
+export async function shareFleetUnitAwaitingV1(unit:FleetUnitV1,input:Parameters<typeof shareFleetUnitV1>[1]):Promise<boolean>{
+ if(shareFleetUnitV1(unit,input))return true;
+ try{
+  if(!unit.client.settings.upload)return false;
+  const deadline=Date.now()+FLEET_POLICY_V1.spool.waitMilliseconds;
+  while(Date.now()<deadline&&unit.client.usable()&&spoolLengthV1(unit.root)>=spoolBoundV1(unit.root)){startUploaderV1(unit.root,unit.environment);await new Promise(done=>setTimeout(done,250));}
+  return shareFleetUnitV1(unit,input);
  }catch{return false;}
 }

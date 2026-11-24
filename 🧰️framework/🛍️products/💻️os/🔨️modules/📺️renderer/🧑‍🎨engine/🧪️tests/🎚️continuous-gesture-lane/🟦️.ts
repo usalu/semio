@@ -22,6 +22,9 @@
  * The Rust twin over the same table is `✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit`'s
  * `every_continuous_gesture_row_costs_one_edit_and_ends_on_the_released_value`.
  */
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { continuousPressIdentity, createContinuousGestureLane, type ContinuousGestureAbortReason, type ContinuousGesturePhase } from "@semio-tech/framework";
@@ -310,3 +313,42 @@ describe("🎚️ interpreted continuous controls speak the scrub protocol", () 
   });
 });
 //#endregion 🎚️InterpretedControls
+
+//#region 🎚️NumberFieldPress
+type PressStep = { readonly do: "input" | "enter" | "escape" | "blur"; readonly value?: string };
+const pressFixture = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🎚️number-field-press/🔣️.json"), "utf8")) as {
+  readonly field: Record<string, unknown>;
+  readonly cases: readonly { readonly case: string; readonly steps: readonly PressStep[]; readonly expected: readonly Record<string, unknown>[] }[];
+};
+
+/** ⌨️ A typed value as a browser delivers it: set through the native setter, then one bubbling `input` event. */
+function typeInto(field: HTMLInputElement, value: string) {
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(field, value);
+  field.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+describe("🎚️ a continuous number field's press ends by keyboard (fixture 🧫️fixtures/🎚️number-field-press)", () => {
+  afterEach(() => cleanup());
+
+  for (const row of pressFixture.cases) {
+    it(row.case, () => {
+      const { view, intents } = interpreted({ type: "input", placeholder: null, commit: null, accept: null, snaps: [], ...pressFixture.field }, "inspector.count");
+      const field = view.container.querySelector<HTMLInputElement>('input[type="number"]')!;
+      field.focus();
+      for (const step of row.steps) {
+        if (step.do === "input") typeInto(field, step.value!);
+        else if (step.do === "blur") fireEvent.blur(field);
+        else fireEvent.keyDown(field, { key: step.do === "enter" ? "Enter" : "Escape" });
+      }
+      const names = new Map<unknown, string>();
+      const observed = intents.map((intent) => {
+        const { gesture, ...rest } = intent.input!;
+        if (!names.has(gesture)) names.set(gesture, String.fromCharCode(65 + names.size));
+        return { press: names.get(gesture), ...rest };
+      });
+      expect(observed).toEqual(row.expected);
+      expect(document.activeElement, "a keyboard release keeps the field focused").toBe(field);
+    });
+  }
+});
+//#endregion 🎚️NumberFieldPress

@@ -93,7 +93,7 @@ fn pier_base_spectrum(d: &En1998Snapshot, report: &CheckReport, site: &Site, bas
             Series::Polyline { id: "displacement".into(), label: loc("Elastic displacement spectrum", "Elastisches Verschiebungsspektrum"), points: times.iter().zip(&values).map(|(t, v)| Vec2::new(*t, *v)).collect(), style: stroke(Tone::Info, 2.0, Dash::Solid) },
             Series::Limit { id: "capacity".into(), label: loc("Bearing capacity d_Rd", "Lagerkapazit\u{e4}t d_Rd"), axis: AxisRef::Y, value: bridge_row.bearing_d_rd_m, style: stroke(Tone::Error, 1.5, Dash::Dashed) },
         ],
-        markers: vec![marker("fixed", t_fixed, Tone::Neutral, "Fixed base", "Feste Einspannung", None), marker("ssi", t_ssi, utilisation.map_or(Tone::Neutral, scene::utilisation_tone), "With foundation springs", "Mit Fundamentfedern", Some(check_id))],
+        markers: vec![marker("reference:fixed", t_fixed, Tone::Neutral, "Fixed base", "Feste Einspannung", None), marker("ssi", t_ssi, utilisation.map_or(Tone::Neutral, scene::utilisation_tone), "With foundation springs", "Mit Fundamentfedern", Some(check_id))],
         annotations: Vec::new(),
         focus: Some(EntityRef::new(EntityKind::Support, &base.id, path)),
         legend: true,

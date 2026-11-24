@@ -26,3 +26,43 @@ async fn registered_clipboard_copy_paste_cut_preserve_atomic_inverse_and_live_se
  let edits=app.history_snapshot().await.unwrap().edit_count;reserved_clipboard(&mut app,"cut",None,&meta).await;assert_eq!(app.snapshot().unwrap(),before);assert!(selected_strokes(&app).await.is_empty());assert_eq!(app.history_snapshot().await.unwrap().edit_count,edits+1);artifact_laws::settle_history_verb(&mut app.0, "undo", meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;assert_eq!(app.snapshot().unwrap(),pasted);
  artifact_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");assert!(app.close_terminal_is_empty());
 }
+/// 🌐️ The per-turn fuel and one interactive grant the browser shard issues, and the turns a browser command may take before the shell calls it stuck.
+const BROWSER_TURN_FUEL:u64=50_000_000;
+const BROWSER_TURN_LIMIT:usize=4096;
+async fn browser_clipboard_settled(app:&mut DrawingAppFixture,verb:&str,args:Option<semio_framework_value::DslValue>,meta:&semio_plugin::ActionMeta)->(semio_plugin::InvocationResult,Result<(semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt,usize),semio_plugin::PluginLifecycleFailure>){
+ let policy=semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+ let _fuel=semio_plugin::artifact_app_laws::arm_host_turn_fuel(BROWSER_TURN_FUEL);let _grant=semio_plugin::artifact_app_laws::arm_host_turn_grant(policy.preparation);let _lifetime=semio_plugin::artifact_app_laws::arm_host_lifetime(app.1.cx());
+ let admitted=semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, args, meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), policy.close).await.unwrap();
+ let result=semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.unwrap();
+ (result,semio_plugin::artifact_app_laws::settle_registered_typed_operation_within(&mut app.0, meta.instance_id, policy, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), BROWSER_TURN_LIMIT).await)
+}
+async fn browser_clipboard(app:&mut DrawingAppFixture,verb:&str,args:Option<semio_framework_value::DslValue>,meta:&semio_plugin::ActionMeta)->(semio_plugin::InvocationResult,semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt,usize){
+ let(result,settled)=browser_clipboard_settled(app,verb,args,meta).await;let(receipt,turns)=settled.unwrap_or_else(|error|panic!("{verb} did not settle within {BROWSER_TURN_LIMIT} browser turns: {error:?}"));(result,receipt,turns)
+}
+#[semio_framework_async_macros::async_test]
+async fn browser_grants_copy_emits_clipboard_write_and_paste_inserts_the_layer(){
+ use semio_framework_value::ToValue;
+ let fixtures:Vec<serde_json::Value>=serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json")).unwrap();
+ let before:DrawingSnapshot=serde_json::from_value(fixtures.iter().find(|row|row["name"]=="rectangle").unwrap()["document"].clone()).unwrap();let original_id=semio_s_artifact_draw_drawing_model::layer_base(&before.layers[0]).id.to_string_owner();
+ let(mut app,meta)=inline_selection_app().await;load_drawing_fixture(&mut app,&before);
+ let policy=semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+ let targets=serde_json::to_string(&vec![serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":original_id})]).unwrap();
+ let selection=semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), policy.close).await.unwrap();
+ semio_plugin::app::settle_framework_reserved_admission(&mut app.0, selection, app.1.cx()).await.unwrap();artifact_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, policy, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+ let(copied,copy_receipt,_)=browser_clipboard(&mut app,"copy",None,&meta).await;
+ let fragments=copied.requested_effects.iter().chain(copy_receipt.effects.iter()).filter_map(|effect|if let Effect::ClipboardWrite{fragment}=effect{Some(fragment.clone())}else{None}).collect::<Vec<_>>();assert_eq!(fragments.len(),1,"copy must emit exactly one clipboard-write effect");
+ let args=semio_framework_value::DslValue::Object(vec![("fragment".into(),fragments[0].to_value()),("anchor".into(),semio_framework_value::DslValue::String("original".into()))]);
+ browser_clipboard(&mut app,"paste",Some(args),&meta).await;
+ let pasted=app.snapshot().unwrap();assert_eq!(pasted.layers.len(),before.layers.len()+1);let selected=selected_strokes(&app).await;assert_eq!(selected.len(),1);assert_ne!(selected[0],original_id);assert!(semio_s_artifact_draw_drawing_model::find_drawing_layer(&pasted,&selected[0]).is_some());
+ artifact_laws::close_registered_fixture_app(&mut app.0, policy, app.1.cx()).expect("original caller paid app close");assert!(app.close_terminal_is_empty());
+}
+#[semio_framework_async_macros::async_test]
+async fn browser_grants_copy_without_selection_is_refused_within_the_turn_limit(){
+ let fixtures:Vec<serde_json::Value>=serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json")).unwrap();
+ let before:DrawingSnapshot=serde_json::from_value(fixtures.iter().find(|row|row["name"]=="rectangle").unwrap()["document"].clone()).unwrap();
+ let(mut app,meta)=inline_selection_app().await;load_drawing_fixture(&mut app,&before);
+ let(_,settled)=browser_clipboard_settled(&mut app,"copy",None,&meta).await;
+ let Err(refused)=settled else{panic!("copy without a selection must be refused, not settled")};assert!(!format!("{refused:?}").contains("original fixture settlement stopped"),"copy without a selection stalled instead of being refused: {refused:?}");
+ assert_eq!(app.snapshot().unwrap(),before);
+ artifact_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");assert!(app.close_terminal_is_empty());
+}

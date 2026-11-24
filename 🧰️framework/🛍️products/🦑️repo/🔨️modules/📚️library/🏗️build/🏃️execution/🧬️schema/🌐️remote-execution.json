@@ -131,7 +131,9 @@
         "keepAliveSeconds",
         "cancelGraceSeconds",
         "stuckSeconds",
-        "chargeRampSeconds"
+        "chargeRampSeconds",
+        "resumeGraceSeconds",
+        "inputLeaseRenewSeconds"
       ],
       "properties": {
         "host": {
@@ -238,6 +240,18 @@
           "minimum": 1,
           "maximum": 3600
         },
+        "resumeGraceSeconds": {
+          "description": "How long a restarted scheduler waits for the workers that ran actions before it stopped: it restores its operation table from its journal, places nothing while one of those workers is still missing, binds each action to its worker when that worker registers again with the task it kept running, and queues an action whose worker never returned once this time has passed. An action that was executing is never run a second time because the scheduler restarted.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "inputLeaseRenewSeconds": {
+          "description": "How often the scheduler renews the lease it holds on the input blobs of every queued or executing operation (taken when the operation is accepted, ended when it completes); below the store's transient lease so an operation that queues for hours never loses an input.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1200
+        },
         "stuckSeconds": {
           "description": "The age after which an operation that still has not finished counts as stuck for `repo remote-execution cancel all-stuck`.",
           "type": "integer",
@@ -271,7 +285,8 @@
         "confinement",
         "actions",
         "disk",
-        "codegen"
+        "codegen",
+        "outage"
       ],
       "properties": {
         "codegen": {
@@ -280,9 +295,10 @@
           "required": [
             "maximumThreads",
             "reserveCores",
-            "extraMegabytesPerThread"
+            "extraMegabytesPerThread",
+            "fairShareThreads"
           ],
-          "description": "How many LLVM code generation and ThinLTO threads the worker grants to one linked `cdylib` unit it runs: the cores no other running action holds and the machine does not use itself (the larger of the cores granted to its other actions and its load), less the reserve, at most the maximum, and only as many as the spare memory above the unit's declared peak holds (each thread beyond the first keeps one more module in flight). A grant of one runs the unit with `-Z no-parallel-backend`; more runs it with a job-token pool of that size. The granted thread count is returned in the action result.",
+          "description": "How many LLVM code generation and ThinLTO threads the worker grants to one linked `cdylib` unit it runs: the cores no other running action holds and the machine does not use itself (the larger of the cores granted to its other actions and its load), less the reserve, but never fewer than the fair share while the cores granted to its other remote actions leave room (a busy machine's operating system divides its cores by threads, so a unit with one thread gets a tenth of the machine at load ten while one with four gets four fourteenths: a final is the longest unit of a build and a worker is rarely idle), at most the maximum, and only as many as the spare memory above the unit's declared peak holds (each thread beyond the first keeps one more module in flight); a machine whose memory pressure is raised grants one. A grant of one runs the unit with `-Z no-parallel-backend`; more runs it with a job-token pool of that size. The granted thread count is returned in the action result.",
           "properties": {
             "maximumThreads": {
               "type": "integer",
@@ -301,6 +317,42 @@
               "minimum": 1,
               "maximum": 65536,
               "description": "The memory one more code generation thread adds to the unit's peak (one module in flight beside the front end that the declared peak already covers)."
+            },
+            "fairShareThreads": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 256,
+              "description": "The code generation threads a linked unit is granted even when the machine's load leaves no idle core: the share of a busy machine that makes the unit measurably faster, bounded by the cores the other remote actions leave, the maximum and the memory."
+            }
+          }
+        },
+        "outage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "seconds",
+            "initialMilliseconds",
+            "maximumMilliseconds"
+          ],
+          "description": "How long a worker keeps trying to hand over the outputs of an action it has finished, and a requester keeps trying to fetch them, while the content store is unreachable (it restarts itself after code edits): the finished work is never thrown away for a restart of a few minutes. The pause between two attempts doubles from the initial to the maximum.",
+          "properties": {
+            "seconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3600,
+              "description": "The longest time one transfer waits for the store to come back, then the failure stands."
+            },
+            "initialMilliseconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 600000,
+              "description": "The pause before the second attempt."
+            },
+            "maximumMilliseconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 600000,
+              "description": "The longest pause between two attempts."
             }
           }
         },
@@ -906,6 +958,8 @@
         "cancelledExecuting",
         "workersReused",
         "sweepStalls",
+        "restored",
+        "resumed",
         "queueWaitSamples",
         "queueWaitP50Milliseconds",
         "queueWaitP90Milliseconds",
@@ -965,6 +1019,16 @@
           "minimum": 0
         },
         "sweepStalls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "restored": {
+          "description": "Operations this scheduler restored from the journal of the process it replaced.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "resumed": {
+          "description": "Restored executing operations that a returning worker bound again by the task it kept running (never run a second time).",
           "type": "integer",
           "minimum": 0
         },
@@ -1797,6 +1861,11 @@
         "worker": {
           "$ref": "#/definitions/WorkerState"
         },
+        "code": {
+          "description": "The first 16 hex digits of the digest of the code the build agent of that machine runs (the closure of its sidecar), so `repo fleet status` can tell a machine that runs older code than the coordinator's tree.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        },
         "counters": {
           "$ref": "#/definitions/MachineCounters"
         }
@@ -1899,6 +1968,11 @@
         "refused": {
           "type": "integer",
           "minimum": 0
+        },
+        "code": {
+          "description": "The first 16 hex digits of the digest of the code the build agent of that machine runs (the closure of its sidecar), so `repo fleet status` can tell a machine that runs older code than the coordinator's tree.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
         },
         "counters": {
           "$ref": "#/definitions/MachineCounters"

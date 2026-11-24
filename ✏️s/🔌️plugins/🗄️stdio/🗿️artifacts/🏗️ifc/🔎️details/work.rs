@@ -222,6 +222,7 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
         t!("source", self.source.as_ref().is_none_or(Source::terminal_is_empty)); t!("pub_source", self.publication.view.source.as_ref().is_none_or(Source::terminal_is_empty));
         out
     }
+    #[cfg(any(test, feature = "testkit"))]
     pub fn reduction_ticks(&self) -> usize {
         self.control.ticks
     }

@@ -1,0 +1,10 @@
+[
+  { "drop": { "op": "front-sweep" } }, { "drop": { "op": "plan-revolve" } }, { "drop": { "op": "extrude" } }, { "drop": { "op": "copy" } },
+  { "choose": [[{ "op": "front-sweep", "id": "shorts" }]], "scale": "50", "label": "shorts-front" },
+  { "choose": [[{ "op": "copy", "id": "hand-r", "from": "plan", "to": ["front"] }]], "scale": "50", "label": "hand-r" },
+  { "choose": [[{ "op": "plan-along", "id": "shirt-core", "twin": "shirt", "clip": true }]], "scale": "50", "label": "shirt-core-plan" },
+  { "choose": [[{ "op": "front-sweep", "id": "shirt" }]], "scale": "100", "label": "shirt-front" },
+  { "choose": [[{ "op": "plan-along", "id": "shirt-core", "twin": "shirt", "clip": true }, { "op": "plan-along", "id": "shirt", "clip": true }]], "scale": "100", "label": "shirt-plan" },
+  { "choose": [[{ "op": "copy", "id": "hand-r", "from": "elevation", "to": ["front", "plan"] }]], "scale": "500", "label": "hand-r" },
+  { "choose": [[{ "op": "plan-along", "id": "shirt", "clip": true }]], "scale": "500", "label": "shirt-plan" }
+]

@@ -140,10 +140,10 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
         }
         self.consumed = true;
         let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
-        let servable = semio_s_artifact_procedural_2d_preview_eval::may_rearm(&input.snapshot.host_snapshot);
+        let unserved = semio_s_artifact_procedural_2d_preview_eval::unserved_kinds(&input.snapshot.host_snapshot);
         let emit = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
             let mut emit = owner.with_session(|session| generation2d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session))??;
-            owner.owe_attached_previews_for_mutations(&windows, servable, &mut emit, input.operation.retained)?;
+            owner.owe_attached_previews_for_mutations(&windows, &unserved, &mut emit, input.operation.retained)?;
             Ok(emit)
         })?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
@@ -357,8 +357,8 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerat
         let mut emit = result.emit;
         if result.publishes_preview {
             let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
-            let servable = semio_s_artifact_procedural_2d_preview_eval::may_rearm(&input.snapshot.host_snapshot);
-            self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained))?;
+            let unserved = semio_s_artifact_procedural_2d_preview_eval::unserved_kinds(&input.snapshot.host_snapshot);
+            self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, &unserved, &mut emit, input.operation.retained))?;
         }
         Ok(ArtifactCommandWorkStep::Complete(emit))
     

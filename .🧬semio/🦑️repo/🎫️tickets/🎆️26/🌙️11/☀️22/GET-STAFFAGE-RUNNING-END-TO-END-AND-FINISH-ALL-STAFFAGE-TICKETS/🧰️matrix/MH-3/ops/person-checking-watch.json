@@ -1,0 +1,8 @@
+[
+  { "op": "front-sweep", "scale": "50", "id": "neck" },
+  { "op": "front-sweep", "scale": "100", "id": "neck" },
+  { "op": "front-sweep", "scale": "200", "id": "neck" },
+  { "op": "front-sweep", "scale": "500", "id": "sil-neck" },
+  { "op": "front-sweep", "scale": "500", "id": "sil-head", "swing": 40 },
+  { "op": "plan-sweep-u", "scale": "500", "id": "sil-head", "section": "ellipse", "swing": 40 }
+]

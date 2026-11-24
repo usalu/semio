@@ -33,7 +33,7 @@ const workingDirectory = dirname(script);
 const commandLine = ["repo", script, ...args].map(arg => JSON.stringify(arg)).join(" ");
 const mode = process.env.DRAW_NATIVE_BUILD_MODE ?? "prototype";
 if (mode !== "prototype" && mode !== "release") throw Error("Expected a registered Draw build mode");
-const maximumElapsedMilliseconds = stage.startsWith("serve") ? 86_400_000 : stage.startsWith("component") ? 10_800_000 : 5_400_000;
+const maximumElapsedMilliseconds = stage.startsWith("serve") ? 86_400_000 : stage.startsWith("component") ? 21_600_000 : 5_400_000;
 const capabilities = {
   version: 1,
   buildMode: mode,

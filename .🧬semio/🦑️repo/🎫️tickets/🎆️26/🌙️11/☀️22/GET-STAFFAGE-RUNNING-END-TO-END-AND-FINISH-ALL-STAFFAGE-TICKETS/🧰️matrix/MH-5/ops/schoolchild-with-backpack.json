@@ -1,0 +1,64 @@
+[
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l",
+  "bone": "hand-l",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "forearm-r",
+  "bone": "forearm-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "shoe-l",
+  "bone": "foot-l",
+  "view": "front"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "shoe-l",
+  "bone": "foot-l",
+  "view": "plan"
+ },
+ {
+  "op": "sync",
+  "scale": "500",
+  "id": "shoe-l",
+  "bone": "foot-l"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "shoe-r",
+  "bone": "foot-r",
+  "view": "front"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "shoe-r",
+  "bone": "foot-r",
+  "view": "plan"
+ },
+ {
+  "op": "sync",
+  "scale": "500",
+  "id": "shoe-r",
+  "bone": "foot-r"
+ }
+]

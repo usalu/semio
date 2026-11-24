@@ -20,6 +20,10 @@ use mutation_decode::*;
 mod decode_owner_catalog;
 pub use decode_owner_catalog::*;
 
+#[path = "🌱️genesis/🦀️.rs"]
+mod genesis;
+pub use genesis::*;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️retained-laws/🦀️.rs"]
 mod retained_laws;

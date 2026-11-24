@@ -3,11 +3,10 @@
   "title": "Remote execution admission by unit",
   "definitions": {
     "Policy": {
-      "description": "How a worker admits one offloaded unit: a machine offers itself (headroom) when its smallest unit fits (`smallestMegabytes`), the free memory it reports is what a unit may still take above its floor, and a unit is admitted when its own predicted peak fits into that. Raised memory pressure (`warn`) alone refuses only units above `warnMaximumMegabytes` and every unit while swap is growing; critical pressure refuses all. While the readiness stage of the machine runs (a fresh claim that does not wait) the machine runs at most `stageConcurrency` remote units at once: the stage reads the project graph through the fleet cache, and a lookup that waits for a thread starved by compiles took 9 s instead of 5 ms (measured on a 16 GB worker with 3 to 6 remote units beside its stage).",
+      "description": "How a worker admits one offloaded unit: a machine offers itself (headroom) when its smallest unit fits (`smallestMegabytes`), the free memory it reports is what a unit may still take above its floor, and a unit is admitted when its own predicted peak fits into that beside the part of their peaks the running units have not grown into yet. Raised memory pressure (`warn`) alone refuses only units above `warnMaximumMegabytes` and every unit while swap is growing; critical pressure refuses all. How many units a machine lends while its readiness stage runs is decided by measured memory alone (the stage keeps its own reserve through its claim): a fixed count of one unit per stage left every worker whose stage read for hours unable to take a component final although it had the memory.",
       "const": {
         "smallestMegabytes": 256,
-        "warnMaximumMegabytes": 1024,
-        "stageConcurrency": 1
+        "warnMaximumMegabytes": 1024
       }
     }
   }

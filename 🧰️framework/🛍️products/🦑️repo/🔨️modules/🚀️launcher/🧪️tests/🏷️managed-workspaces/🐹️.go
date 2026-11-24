@@ -142,10 +142,15 @@ func TestWorkspaceDetached(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
+			if row.Mutation == "unready-image" {
+				if err := os.MkdirAll(target, 0o755); err != nil {
+					t.Fatal(err)
+				}
+			}
 			if err := createWorkspaceDirectoryLink(link, endpoint); err != nil {
 				t.Fatal(err)
 			}
-			if _, err := os.Stat(endpoint); !os.IsNotExist(err) {
+			if _, err := os.Stat(endpoint); row.Mutation != "unready-image" && !os.IsNotExist(err) {
 				t.Fatalf("store is attached: %v", err)
 			}
 			classification, err := ClassifyWorkspaceNamespace(root, policy)

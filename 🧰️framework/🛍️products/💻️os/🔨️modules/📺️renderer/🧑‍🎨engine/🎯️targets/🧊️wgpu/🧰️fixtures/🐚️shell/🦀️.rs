@@ -409,6 +409,36 @@ pub fn retire_shell_documents(shell: &mut ShellState) {
     shell.docs.drain_retained_document_arenas();
 }
 
+/// 🛡️ A shell a law owns: it derefs to the shell and, when the law panics, retires every retained document it published before the fixture caller and arena close, so one failing law cannot leave queued documents for the next law on its thread.
+pub struct RetiringShell(ShellState);
+
+impl RetiringShell {
+    pub fn new(shell: ShellState) -> Self {
+        Self(shell)
+    }
+}
+
+impl std::ops::Deref for RetiringShell {
+    type Target = ShellState;
+    fn deref(&self) -> &ShellState {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for RetiringShell {
+    fn deref_mut(&mut self) -> &mut ShellState {
+        &mut self.0
+    }
+}
+
+impl Drop for RetiringShell {
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| retire_shell_documents(&mut self.0)));
+        }
+    }
+}
+
 /// 🎟️ The fuel one pointer-document paint turn is quoted: a layout or paint phase posts one unit per node it settles, which a one-unit default turn cannot hold.
 const POINTER_DOCUMENT_TURN_WORK: u64 = 1 << 20;
 

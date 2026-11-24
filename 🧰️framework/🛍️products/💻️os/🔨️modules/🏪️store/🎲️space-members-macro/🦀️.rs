@@ -74,6 +74,85 @@ macro_rules! space_members {
             }
         }
 
+        $crate::space_member_delegation!{$enum_name; $($variant),+}
+
+        impl $crate::os_store::MemberFactory for $enum_name {
+            const OPEN_DECLARATIONS: &'static [$crate::os_store::MemberOpenDeclaration] = &[
+                $($crate::os_store::MemberOpenDeclaration { kind: $kind, standard: $standard, subset: $subset, schema: $schema,history_limits:$history_limits,maximum_history_allocation_bytes:$history_allocation_bytes }),+
+            ];
+
+            type Open = $open_name;
+
+            fn open_birth_demand(request: &$crate::os_store::MemberOpenRequest) -> Result<$crate::os_store::RetainedCloneBirthDemand, $crate::os_store::MemberOpenDiagnostic> {
+                let dialect = &request.admitted_expected()?.dialect;
+                match (dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str()) {
+                    $(($kind, $standard, $subset) => {
+                        let child = $crate::os_store::InitialMemberStoreOpen::<Self, $snapshot, $mutation,$catalog>::begin_birth_demand(request,&$catalog_value)?;
+                        let capacity_bytes = child.capacity_bytes.checked_add(::std::mem::size_of::<$crate::os_store::InitialMemberStoreOpen<Self, $snapshot, $mutation,$catalog>>()).ok_or($crate::os_store::MemberOpenDiagnostic::Capacity)?;
+                        let depth = child.depth.checked_add(1).ok_or($crate::os_store::MemberOpenDiagnostic::Capacity)?;
+                        Ok($crate::os_store::RetainedCloneBirthDemand { capacity_bytes, depth })
+                    },)+
+                    _ => Err($crate::os_store::MemberOpenDiagnostic::Identity),
+                }
+            }
+
+            fn open_copy_byte_demand(request:&$crate::os_store::MemberOpenRequest)->Result<usize,$crate::os_store::MemberOpenDiagnostic>{
+                let dialect=&request.admitted_expected()?.dialect;
+                match(dialect.artifact_kind.as_str(),dialect.standard.as_str(),dialect.subset.as_str()){
+                    $(($kind,$standard,$subset)=>$crate::os_store::InitialMemberStoreOpen::<Self,$snapshot,$mutation,$catalog>::begin_copy_byte_demand(request,&$catalog_value)?.checked_add(2*::std::mem::size_of::<Self::Open>()).ok_or($crate::os_store::MemberOpenDiagnostic::Capacity),)+
+                    _=>Err($crate::os_store::MemberOpenDiagnostic::Identity),
+                }
+            }
+
+            fn member_frame_bytes(&self) -> usize {
+                match self { $(Self::$variant(member) => ::std::mem::size_of_val(member.as_ref())),+ }
+            }
+
+            fn begin_open(admission:&mut $crate::os_store::MemberOpenSourceAdmission,opened:&mut Option<Self::Open>,cx:&mut ::semio_framework_job::StepContext<'_>,parent:&::semio_framework_job::OriginalCallerSourceParent)->Result<bool,::semio_framework_job::OriginalTurnFailure>{
+                if opened.is_some(){return Err($crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Stale).into())}
+                if !admission.admit_source(parent,cx)?||cx.should_yield(){return Ok(false)}
+                let retained=admission.request().ok_or_else(||$crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Stale))?;
+                let required_copy=Self::open_copy_byte_demand(retained).map_err($crate::os_store::member_open::member_admission_diagnostic)?;
+                let required=Self::open_birth_demand(retained).map_err($crate::os_store::member_open::member_admission_diagnostic)?;
+                let grant=cx.retained_grant();
+                let work = u64::try_from(required_copy).unwrap_or(u64::MAX).saturating_add(1);
+                if cx.fuel_remaining() < work { return Ok(false); }
+                if grant.maximum_items==0||grant.maximum_copy_bytes<required_copy||grant.maximum_depth<required.depth||grant.maximum_capacity_bytes<required.capacity_bytes{return Ok(false)}
+                let dialect=&retained.admitted_expected().map_err($crate::os_store::member_open::member_admission_diagnostic)?.dialect;
+                match(dialect.artifact_kind.as_str(),dialect.standard.as_str(),dialect.subset.as_str()){
+                    $(($kind,$standard,$subset)=>{let(open,mut progress)=$crate::os_store::InitialMemberStoreOpen::begin(admission,cx,::semio_framework_value::retained_clone::RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-2*::std::mem::size_of::<Self::Open>(),maximum_capacity_bytes:grant.maximum_capacity_bytes-::std::mem::size_of::<$crate::os_store::InitialMemberStoreOpen<Self,$snapshot,$mutation,$catalog>>(),maximum_depth:grant.maximum_depth-1,..grant},$catalog_value)?;progress.retained_capacity_bytes+=::std::mem::size_of_val(&open);progress.copied_bytes+=2*::std::mem::size_of::<Self::Open>();*opened=Some($open_name::$variant(Box::new(open)));$crate::os_store::member_open::receive_member_close(cx,Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)))?;Ok(true)},)+
+                    _=>Err($crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Identity).into()),
+                }
+            }
+
+            async fn create(id: &str, dialect: &::semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: $crate::os_spr::ActorId) -> Result<Self, $crate::os_store::VcsError> {
+                match (dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str()) {
+                    $(($kind, $standard, $subset) => Ok(Self::$variant(Box::new($crate::os_store::create_member_store($schema, id, dialect, initial_pack, actor, $native_producer,&$catalog_value).await?))),)+
+                    _ => Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", ::semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText::to_coordinate(dialect), stringify!($enum_name)))),
+                }
+            }
+            async fn open(expected: &::semio_framework_artifact_reference::ArtifactRef, owner: Option<&$crate::os_store::OwnerRef>, envelope_pack: &[u8], actor: $crate::os_spr::ActorId) -> Result<Self, $crate::os_store::VcsError> {
+                match (expected.dialect.artifact_kind.as_str(), expected.dialect.standard.as_str(), expected.dialect.subset.as_str()) {
+                    $(($kind, $standard, $subset) => Ok(Self::$variant(Box::new($crate::os_store::open_member_store($schema, expected, owner, envelope_pack, actor, $native_producer,&$catalog_value).await?))),)+
+                    _ => Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", ::semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText::to_coordinate(&expected.dialect), stringify!($enum_name)))),
+                }
+            }
+        }
+
+        impl $crate::os_store::MemberVisit for $enum_name {
+            fn visit_member<V: $crate::os_store::MemberStoreVisitor>(&self, visitor: V) -> V::Output {
+                match self { $(Self::$variant(m) => visitor.visit(m.as_ref())),+ }
+            }
+            async fn visit_member_mut<V: $crate::os_store::MemberStoreVisitorMut>(&mut self, visitor: V) -> V::Output {
+                match self { $(Self::$variant(m) => visitor.visit_mut(m.as_mut()).await),+ }
+            }
+        }
+    };
+}
+/// 🪞️ Delegation of the `SpaceMember` and `ReferenceSpaceMember` methods over every variant of a member enum. Every variant holds a `Box` of a type that is itself a `SpaceMember` and `ReferenceSpaceMember`: a typed store, or a group enum of [`space_member_groups!`].
+#[macro_export]
+macro_rules! space_member_delegation {
+    ($enum_name:ident; $($variant:ident),+) => {
         impl $crate::os_store::SpaceMember for $enum_name {
             fn local_actor_id(&self) -> &$crate::os_spr::ActorId {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::local_actor_id(m.as_ref())),+ }
@@ -294,76 +373,146 @@ macro_rules! space_members {
                 match self { $(Self::$variant(m) => $crate::os_store::ReferenceSpaceMember::pack_at_checkpoint(m.as_ref(), checkpoint_id).await),+ }
             }
         }
+    };
+}
+
+/// 🎯️ Whether a member group owns the dialect coordinate: one of its open declarations carries the same kind, standard and subset.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! space_member_group_owns {
+    ($group:ty, $dialect:ident) => {
+        <$group as $crate::os_store::MemberFactory>::OPEN_DECLARATIONS.iter().any(|declaration| declaration.kind == $dialect.artifact_kind.as_str() && declaration.standard == $dialect.standard.as_str() && declaration.subset == $dialect.subset.as_str())
+    };
+}
+
+/// 🧩️ Composes member enums of [`space_members!`] into one member enum, so a member set larger than one crate compiles in several: every group crate instantiates the typed stores of its own subsets, this expansion only routes. The open declarations are the concatenation of the group tables in the written order.
+/// ```ignore
+/// space_member_groups! {
+///     pub enum NoteMembers, NoteMembersOpen {
+///         Text(NoteTextMembers),
+///         Sketch(NoteSketchMembers),
+///     }
+/// }
+/// ```
+#[macro_export]
+macro_rules! space_member_groups {
+    (pub enum $enum_name:ident, $open_name:ident { $($variant:ident($group:ty)),+ $(,)? }) => {
+        pub enum $enum_name {
+            $($variant(Box<$group>)),+
+        }
+
+        pub enum $open_name {
+            $($variant(<$group as $crate::os_store::MemberFactory>::Open)),+
+        }
+
+        impl $crate::os_store::MemberOpenOperation for $open_name {
+            type Member = $enum_name;
+
+            fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<$crate::os_store::MemberOpenStep<Self::Member>, ::semio_framework_job::OriginalTurnFailure> {
+                Ok(match self {
+                    $(Self::$variant(open) => match $crate::os_store::MemberOpenOperation::step(open, cx, grant)? {
+                        $crate::os_store::MemberOpenStep::Pending(progress) => $crate::os_store::MemberOpenStep::Pending(progress),
+                        $crate::os_store::MemberOpenStep::Ready(member) => $crate::os_store::MemberOpenStep::Ready($enum_name::$variant(Box::new(member))),
+                        $crate::os_store::MemberOpenStep::Rejected(diagnostic) => $crate::os_store::MemberOpenStep::Rejected(diagnostic),
+                    }),+
+                })
+            }
+            fn close_step(&mut self, parent: &::semio_framework_job::OriginalCallerSourceParent, cx: &mut ::semio_framework_job::StepContext<'_>) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_job::OriginalTurnFailure> {
+                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::close_step(open, parent, cx)),+ }
+            }
+            fn terminal_is_empty(&self) -> bool {
+                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::terminal_is_empty(open)),+ }
+            }
+            fn next_copy_byte_demand(&self) -> Result<usize, ::semio_framework_value::ValueError> {
+                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::next_copy_byte_demand(open)),+ }
+            }
+            fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ::semio_framework_value::ValueError> {
+                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::next_capacity_byte_demand(open, body)),+ }
+            }
+            fn next_release_byte_demand(&self) -> Result<usize, ::semio_framework_value::ValueError> {
+                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::next_release_byte_demand(open)),+ }
+            }
+            fn next_depth_demand(&self) -> Result<usize, ::semio_framework_value::ValueError> {
+                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::next_depth_demand(open)),+ }
+            }
+            fn terminal_drop_byte_demand(&self) -> Option<usize> {
+                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::terminal_drop_byte_demand(open)),+ }
+            }
+        }
+
+        $crate::space_member_delegation!{$enum_name; $($variant),+}
 
         impl $crate::os_store::MemberFactory for $enum_name {
-            const OPEN_DECLARATIONS: &'static [$crate::os_store::MemberOpenDeclaration] = &[
-                $($crate::os_store::MemberOpenDeclaration { kind: $kind, standard: $standard, subset: $subset, schema: $schema,history_limits:$history_limits,maximum_history_allocation_bytes:$history_allocation_bytes }),+
-            ];
+            const OPEN_DECLARATIONS: &'static [$crate::os_store::MemberOpenDeclaration] = {
+                const TOTAL: usize = 0 $(+ <$group as $crate::os_store::MemberFactory>::OPEN_DECLARATIONS.len())+;
+                const ROWS: [$crate::os_store::MemberOpenDeclaration; TOTAL] = {
+                    let groups: &[&[$crate::os_store::MemberOpenDeclaration]] = &[$(<$group as $crate::os_store::MemberFactory>::OPEN_DECLARATIONS),+];
+                    let mut rows = [groups[0][0]; TOTAL];
+                    let mut at = 0;
+                    let mut group = 0;
+                    while group < groups.len() {
+                        let mut row = 0;
+                        while row < groups[group].len() {
+                            rows[at] = groups[group][row];
+                            at += 1;
+                            row += 1;
+                        }
+                        group += 1;
+                    }
+                    rows
+                };
+                &ROWS
+            };
 
             type Open = $open_name;
 
             fn open_birth_demand(request: &$crate::os_store::MemberOpenRequest) -> Result<$crate::os_store::RetainedCloneBirthDemand, $crate::os_store::MemberOpenDiagnostic> {
                 let dialect = &request.admitted_expected()?.dialect;
-                match (dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str()) {
-                    $(($kind, $standard, $subset) => {
-                        let child = $crate::os_store::InitialMemberStoreOpen::<Self, $snapshot, $mutation,$catalog>::begin_birth_demand(request,&$catalog_value)?;
-                        let capacity_bytes = child.capacity_bytes.checked_add(::std::mem::size_of::<$crate::os_store::InitialMemberStoreOpen<Self, $snapshot, $mutation,$catalog>>()).ok_or($crate::os_store::MemberOpenDiagnostic::Capacity)?;
-                        let depth = child.depth.checked_add(1).ok_or($crate::os_store::MemberOpenDiagnostic::Capacity)?;
-                        Ok($crate::os_store::RetainedCloneBirthDemand { capacity_bytes, depth })
-                    },)+
-                    _ => Err($crate::os_store::MemberOpenDiagnostic::Identity),
-                }
+                $(if $crate::space_member_group_owns!($group, dialect) { return <$group as $crate::os_store::MemberFactory>::open_birth_demand(request) })+
+                Err($crate::os_store::MemberOpenDiagnostic::Identity)
             }
 
-            fn open_copy_byte_demand(request:&$crate::os_store::MemberOpenRequest)->Result<usize,$crate::os_store::MemberOpenDiagnostic>{
-                let dialect=&request.admitted_expected()?.dialect;
-                match(dialect.artifact_kind.as_str(),dialect.standard.as_str(),dialect.subset.as_str()){
-                    $(($kind,$standard,$subset)=>$crate::os_store::InitialMemberStoreOpen::<Self,$snapshot,$mutation,$catalog>::begin_copy_byte_demand(request,&$catalog_value)?.checked_add(2*::std::mem::size_of::<Self::Open>()).ok_or($crate::os_store::MemberOpenDiagnostic::Capacity),)+
-                    _=>Err($crate::os_store::MemberOpenDiagnostic::Identity),
-                }
+            fn open_copy_byte_demand(request: &$crate::os_store::MemberOpenRequest) -> Result<usize, $crate::os_store::MemberOpenDiagnostic> {
+                let dialect = &request.admitted_expected()?.dialect;
+                $(if $crate::space_member_group_owns!($group, dialect) { return <$group as $crate::os_store::MemberFactory>::open_copy_byte_demand(request) })+
+                Err($crate::os_store::MemberOpenDiagnostic::Identity)
             }
 
             fn member_frame_bytes(&self) -> usize {
-                match self { $(Self::$variant(member) => ::std::mem::size_of_val(member.as_ref())),+ }
+                match self { $(Self::$variant(member) => $crate::os_store::MemberFactory::member_frame_bytes(member.as_ref())),+ }
             }
 
-            fn begin_open(admission:&mut $crate::os_store::MemberOpenSourceAdmission,opened:&mut Option<Self::Open>,cx:&mut ::semio_framework_job::StepContext<'_>,parent:&::semio_framework_job::OriginalCallerSourceParent)->Result<bool,::semio_framework_job::OriginalTurnFailure>{
-                if opened.is_some(){return Err($crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Stale).into())}
-                if !admission.admit_source(parent,cx)?||cx.should_yield(){return Ok(false)}
-                let retained=admission.request().ok_or_else(||$crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Stale))?;
-                let required_copy=Self::open_copy_byte_demand(retained).map_err($crate::os_store::member_open::member_admission_diagnostic)?;
-                let required=Self::open_birth_demand(retained).map_err($crate::os_store::member_open::member_admission_diagnostic)?;
-                let grant=cx.retained_grant();
-                let work = u64::try_from(required_copy).unwrap_or(u64::MAX).saturating_add(1);
-                if cx.fuel_remaining() < work { return Ok(false); }
-                if grant.maximum_items==0||grant.maximum_copy_bytes<required_copy||grant.maximum_depth<required.depth||grant.maximum_capacity_bytes<required.capacity_bytes{return Ok(false)}
-                let dialect=&retained.admitted_expected().map_err($crate::os_store::member_open::member_admission_diagnostic)?.dialect;
-                match(dialect.artifact_kind.as_str(),dialect.standard.as_str(),dialect.subset.as_str()){
-                    $(($kind,$standard,$subset)=>{let(open,mut progress)=$crate::os_store::InitialMemberStoreOpen::begin(admission,cx,::semio_framework_value::retained_clone::RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-2*::std::mem::size_of::<Self::Open>(),maximum_capacity_bytes:grant.maximum_capacity_bytes-::std::mem::size_of::<$crate::os_store::InitialMemberStoreOpen<Self,$snapshot,$mutation,$catalog>>(),maximum_depth:grant.maximum_depth-1,..grant},$catalog_value)?;progress.retained_capacity_bytes+=::std::mem::size_of_val(&open);progress.copied_bytes+=2*::std::mem::size_of::<Self::Open>();*opened=Some($open_name::$variant(Box::new(open)));$crate::os_store::member_open::receive_member_close(cx,Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)))?;Ok(true)},)+
-                    _=>Err($crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Identity).into()),
-                }
+            fn begin_open(admission: &mut $crate::os_store::MemberOpenSourceAdmission, opened: &mut Option<Self::Open>, cx: &mut ::semio_framework_job::StepContext<'_>, parent: &::semio_framework_job::OriginalCallerSourceParent) -> Result<bool, ::semio_framework_job::OriginalTurnFailure> {
+                if opened.is_some() { return Err($crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Stale).into()) }
+                if !admission.admit_source(parent, cx)? || cx.should_yield() { return Ok(false) }
+                let dialect = &admission.request().ok_or_else(|| $crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Stale))?.admitted_expected().map_err($crate::os_store::member_open::member_admission_diagnostic)?.dialect;
+                $(if $crate::space_member_group_owns!($group, dialect) {
+                    let mut inner = None;
+                    let started = <$group as $crate::os_store::MemberFactory>::begin_open(admission, &mut inner, cx, parent)?;
+                    *opened = inner.map($open_name::$variant);
+                    return Ok(started);
+                })+
+                Err($crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Identity).into())
             }
 
             async fn create(id: &str, dialect: &::semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: $crate::os_spr::ActorId) -> Result<Self, $crate::os_store::VcsError> {
-                match (dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str()) {
-                    $(($kind, $standard, $subset) => Ok(Self::$variant(Box::new($crate::os_store::create_member_store($schema, id, dialect, initial_pack, actor, $native_producer,&$catalog_value).await?))),)+
-                    _ => Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", ::semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText::to_coordinate(dialect), stringify!($enum_name)))),
-                }
+                $(if $crate::space_member_group_owns!($group, dialect) { return Ok(Self::$variant(Box::new(<$group as $crate::os_store::MemberFactory>::create(id, dialect, initial_pack, actor).await?))) })+
+                Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", ::semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText::to_coordinate(dialect), stringify!($enum_name))))
             }
+
             async fn open(expected: &::semio_framework_artifact_reference::ArtifactRef, owner: Option<&$crate::os_store::OwnerRef>, envelope_pack: &[u8], actor: $crate::os_spr::ActorId) -> Result<Self, $crate::os_store::VcsError> {
-                match (expected.dialect.artifact_kind.as_str(), expected.dialect.standard.as_str(), expected.dialect.subset.as_str()) {
-                    $(($kind, $standard, $subset) => Ok(Self::$variant(Box::new($crate::os_store::open_member_store($schema, expected, owner, envelope_pack, actor, $native_producer,&$catalog_value).await?))),)+
-                    _ => Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", ::semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText::to_coordinate(&expected.dialect), stringify!($enum_name)))),
-                }
+                let dialect = &expected.dialect;
+                $(if $crate::space_member_group_owns!($group, dialect) { return Ok(Self::$variant(Box::new(<$group as $crate::os_store::MemberFactory>::open(expected, owner, envelope_pack, actor).await?))) })+
+                Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", ::semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText::to_coordinate(dialect), stringify!($enum_name))))
             }
         }
 
         impl $crate::os_store::MemberVisit for $enum_name {
             fn visit_member<V: $crate::os_store::MemberStoreVisitor>(&self, visitor: V) -> V::Output {
-                match self { $(Self::$variant(m) => visitor.visit(m.as_ref())),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::MemberVisit::visit_member(m.as_ref(), visitor)),+ }
             }
             async fn visit_member_mut<V: $crate::os_store::MemberStoreVisitorMut>(&mut self, visitor: V) -> V::Output {
-                match self { $(Self::$variant(m) => visitor.visit_mut(m.as_mut()).await),+ }
+                match self { $(Self::$variant(m) => $crate::os_store::MemberVisit::visit_member_mut(m.as_mut(), visitor).await),+ }
             }
         }
     };

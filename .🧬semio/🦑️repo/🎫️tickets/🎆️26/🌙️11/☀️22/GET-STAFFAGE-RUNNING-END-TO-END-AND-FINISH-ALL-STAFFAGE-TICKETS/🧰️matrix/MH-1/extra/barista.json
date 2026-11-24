@@ -1,0 +1,11 @@
+[
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "palm-r",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ]
+ }
+]

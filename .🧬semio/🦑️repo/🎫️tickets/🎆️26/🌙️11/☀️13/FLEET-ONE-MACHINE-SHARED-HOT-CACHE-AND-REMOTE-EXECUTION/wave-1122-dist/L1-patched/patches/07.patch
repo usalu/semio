@@ -1,0 +1,31 @@
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts
+@@ -10,12 +10,12 @@
+ import{cargoTimingPolicyV1,cargoTimingEventV1,cargoResourceWaitEventV1,cargoTimingLedgerRowV1,appendCargoTimingLedgerV1}from"../⏱️timing/🟦️.ts";
+ import{withCompilerWorkspaceSharedWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+ import {acquirePooledLaneV1,planPoolAcquireV1,poolBoundsV1,readPoolV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts";
+-import {crateKeyV1,measureLaneBytesV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
++import {crateKeyV1,laneFlavourV1,measureLaneBytesV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
+ import {rustImageReclaimRuleV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/♻️auto-reclaim/🟦️.ts";
+ import {admitImageHeadroomV1,headroomImageMountV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🟦️.ts";
+ import {compilerLaneQuotaBytesV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🟦️.ts";
+ import {agentSessionAddressV1,currentAgentSessionV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
+-import {gcOutOfSpaceV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts";
++import {gcOutOfSpaceV1,measureVolumeV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts";
+ import {collectAfterOutOfSpaceV1,focusFromCargoArgumentsV1,retryWhenFullV1,laneMessageV1,relieveUnitCachePressureV1,withUnitPressureRecheckV1,reportUnitCacheStillFullV1,unitCacheCapacityBytesV1,unitCacheEnvironmentV1,unitCacheRootV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
+ import {unitAdmissionMemoV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/🟦️.ts";
+ import {foreignDigestMemoV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/📖️admission/📚️foreign/🟦️.ts";
+@@ -121,11 +121,11 @@
+ async function withAgentLaneV1<T>(options:AgentLaneOptionsV1,body:(lane:RepositoryCargoAgentLaneV1)=>Promise<T>):Promise<T>{
+  requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();bindWaitMarkerOnceV1();
+  const root=options.storage.backing.root;requireNativeStoragePathV1(root,options.cacheRoot);mkdirSync(options.cacheRoot,{recursive:true});
+- const session=currentAgentSessionV1({environment:options.environment}),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,quotaBytes=await compilerLaneQuotaBytesV1(options.workspace,options.environment,options.capacityBytes),classes=options.classes??["lane"];
++ const session=currentAgentSessionV1({environment:options.environment}),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,quotaBytes=await compilerLaneQuotaBytesV1(options.workspace,options.environment,options.capacityBytes),classes=options.classes??["lane"],flavour=laneFlavourV1(options.sharedBuild);
+  const warm=planPoolAcquireV1(readPoolV1(options.cacheRoot,Date.now()),{crateKey:crateKeyV1(options.crates)},poolBoundsV1(quotaBytes)).kind==="warm";
+  const headroom=await admitImageHeadroomV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,classes,temperature:warm?"warm":"cold",label:classes[classes.length-1]!,language,report:line=>{process.stderr.write(line+"\n");},signal:options.control.signal,softReclaim:rustImageReclaimRuleV1});
+  try{
+-  const lane=await acquirePooledLaneV1(options.cacheRoot,{crates:options.crates,quotaBytes,owner:{session:agentSessionAddressV1(session),agent:session.agent.id}},{signal:options.control.signal,report:(kind,parameters)=>{process.stderr.write(laneMessageV1(kind,parameters,language)+"\n");}});
++  const lane=await acquirePooledLaneV1(options.cacheRoot,{crates:options.crates,quotaBytes,owner:{session:agentSessionAddressV1(session),agent:session.agent.id},...flavour===undefined?{}:{flavour}},{signal:options.control.signal,volume:()=>measureVolumeV1(options.cacheRoot,options.capacityBytes),report:(kind,parameters)=>{process.stderr.write(laneMessageV1(kind,parameters,language)+"\n");}});
+   return await withLaneRetentionV1({lane,shared:options.sharedBuild,language,report:line=>{process.stderr.write(line+"\n");}},async()=>{let grown:(()=>number)|undefined,completed=false;
+   try{
+    for(const path of[lane.paths.target,lane.paths.build])requireNativeStoragePathV1(root,path);

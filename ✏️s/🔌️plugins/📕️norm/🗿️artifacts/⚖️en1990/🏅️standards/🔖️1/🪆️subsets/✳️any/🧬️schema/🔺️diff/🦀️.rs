@@ -291,7 +291,7 @@ protocol::row_patch! {
     #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `FactorOverride`.
-    pub En1990FactorOverridePatch of semio_s_artifact_norm_en1990_model::FactorOverride { set { factor: String, target: String, value: f64, justification: String } }
+    pub En1990FactorOverridePatch of semio_s_artifact_norm_en1990_model::FactorOverride { set { factor: semio_s_artifact_norm_en1990_model::FactorKind, target: String, value: f64, justification: String } }
 }
 
 protocol::list_delta! {

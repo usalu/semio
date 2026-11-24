@@ -8,6 +8,7 @@ import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../../../
 import {cargoScratchBaseV1} from "../../../🧪️tests/🏖️scratch/🟦️.ts";
 import {drainUploadsV1,spoolLengthV1} from "../../📤️uploader/🟦️.ts";
 import {FLEET_POLICY_V1} from "../../🪪️identity/🟦️.ts";
+process.env.SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS="1500";
 
 /** 🧷️ The determinism law of the shared units: a unit that is published to the fleet is always compiled without rustc's incremental session (whose object names differ on every run), so two machines that compile the same workspace under Cargo's incremental default publish byte-identical rlibs and rmetas; a focused unit keeps its session, its local entry is marked `session`, and it is never queued for the fleet, neither after its compile nor after a later local hit. */
 const here=fileURLToPath(new URL(".",import.meta.url)),script=resolve(here,"../../../📜️script.ts"),counter=resolve(here,"../🔢️count/🟦️.ts"),fleet=FLEET_POLICY_V1,base=cargoScratchBaseV1(),cargo=process.env.SEMIO_TEST_CARGO??"cargo";

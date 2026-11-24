@@ -1,0 +1,272 @@
+[
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "neck",
+  "why": "neck: flat/swv/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "neck",
+  "why": "neck: flat/swv/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "neck",
+  "why": "neck: flat/swv/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "sil-neck",
+  "why": "neck: flat/swv/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "sil-head",
+  "rebuild": true,
+  "why": "head: flat/swv/swv: the plan was the front prism, 47 mm short of the elevation head behind; a prism fitted to the rounded head leaves 34 mm, a body revolved about the head axis 22 mm"
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "plan",
+  "id": "torso-u81",
+  "set": {
+   "points": [
+    [
+     -0.103,
+     0.14724
+    ],
+    [
+     -0.1149,
+     0.13404
+    ],
+    [
+     -0.1209,
+     0.11844
+    ],
+    [
+     -0.1355,
+     0.12564
+    ],
+    [
+     -0.223,
+     0.12564
+    ],
+    [
+     -0.2362,
+     0.11964
+    ],
+    [
+     -0.2446,
+     0.10884
+    ],
+    [
+     -0.247,
+     0.10164
+    ],
+    [
+     -0.247,
+     -0.10956
+    ],
+    [
+     -0.2422,
+     -0.12156
+    ],
+    [
+     -0.2338,
+     -0.12996
+    ],
+    [
+     -0.2182,
+     -0.13476
+    ],
+    [
+     -0.1448,
+     -0.13476
+    ],
+    [
+     -0.1304,
+     -0.13236
+    ],
+    [
+     -0.1244,
+     -0.12756
+    ],
+    [
+     -0.1209,
+     -0.12756
+    ],
+    [
+     -0.1137,
+     -0.14436
+    ],
+    [
+     -0.1054,
+     -0.15156
+    ],
+    [
+     -0.1054,
+     -0.15396
+    ],
+    [
+     -0.0958,
+     -0.16236
+    ],
+    [
+     -0.0958,
+     -0.16476
+    ],
+    [
+     -0.091,
+     -0.16956
+    ],
+    [
+     -0.0622,
+     -0.18516
+    ],
+    [
+     -0.0227,
+     -0.18996
+    ],
+    [
+     -0.0154,
+     -0.19236
+    ],
+    [
+     0.0207,
+     -0.18756
+    ],
+    [
+     0.0387,
+     -0.17436
+    ],
+    [
+     0.0519,
+     -0.16836
+    ],
+    [
+     0.0678,
+     -0.15036
+    ],
+    [
+     0.0726,
+     -0.14916
+    ],
+    [
+     0.0985,
+     -0.12396
+    ],
+    [
+     0.1033,
+     -0.11196
+    ],
+    [
+     0.1057,
+     -0.11076
+    ],
+    [
+     0.1092,
+     -0.10116
+    ],
+    [
+     0.114,
+     -0.09516
+    ],
+    [
+     0.119,
+     -0.07236
+    ],
+    [
+     0.1208,
+     -0.06876
+    ],
+    [
+     0.1235,
+     -0.04956
+    ],
+    [
+     0.1253,
+     -0.01356
+    ],
+    [
+     0.1226,
+     0.05124
+    ],
+    [
+     0.1165,
+     0.07284
+    ],
+    [
+     0.114,
+     0.08724
+    ],
+    [
+     0.1116,
+     0.08844
+    ],
+    [
+     0.108,
+     0.09804
+    ],
+    [
+     0.1045,
+     0.10164
+    ],
+    [
+     0.1045,
+     0.13284
+    ],
+    [
+     0.0787,
+     0.13404
+    ],
+    [
+     0.0579,
+     0.15204
+    ],
+    [
+     0.0579,
+     0.15444
+    ],
+    [
+     0.0531,
+     0.15804
+    ],
+    [
+     0.0422,
+     0.173
+    ],
+    [
+     0.0099,
+     0.1851
+    ],
+    [
+     -0.002,
+     0.1875
+    ],
+    [
+     -0.03,
+     0.1875
+    ],
+    [
+     -0.0599,
+     0.1793
+    ],
+    [
+     -0.0817,
+     0.1675
+    ],
+    [
+     -0.1002,
+     0.1501
+    ]
+   ]
+  },
+  "why": "the underlay of the torso (a fill of the silhouette round under hoodie and daypack) also covered the place of the left arm of the default pose, 86 mm beside the torso; bound to the torso it stayed there when the arm moved (sync-lateral 36 mm in take-and-check): the arm lobe is cut off along the outline of the hoodie, the arm is drawn by its sleeve solids"
+ }
+]

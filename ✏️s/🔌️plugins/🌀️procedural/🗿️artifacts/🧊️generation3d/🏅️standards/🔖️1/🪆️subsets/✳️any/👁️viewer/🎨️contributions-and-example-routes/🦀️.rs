@@ -79,9 +79,9 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
                 None => pending = true,
                 Some(true) => {
                     let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
-                    let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
+                    let unserved = preview_eval::unserved_kinds(&viewed.snapshot().host_snapshot);
                     viewed.retire();
-                    owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
+                    owner.owe_attached_previews_carrying(&windows, &unserved, &mut emit, input.operation.retained)?;
                 }
                 Some(false) => {}
             }

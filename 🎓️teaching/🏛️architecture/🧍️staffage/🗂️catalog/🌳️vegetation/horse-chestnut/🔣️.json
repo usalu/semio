@@ -111289,9 +111289,9 @@
    {
     "id": "tp-sun-3",
     "bone": "t2-3-b",
-    "x": 1.2498,
-    "y": -2.7263,
-    "z": -4.6862,
+    "x": 1.2976,
+    "y": -2.3879,
+    "z": -4.4445,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the sun leaves, anchor 3",
@@ -111324,10 +111324,10 @@
    },
    {
     "id": "tp-sun-6",
-    "bone": "t1-1-b",
-    "x": 4.16,
-    "y": 4.3667,
-    "z": 2.1504,
+    "bone": "t3-1-b",
+    "x": 3.5565,
+    "y": -3.3896,
+    "z": 2.4591,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the sun leaves, anchor 6",
@@ -111336,10 +111336,10 @@
    },
    {
     "id": "tp-sun-7",
-    "bone": "t3-2-b",
-    "x": 5.6814,
-    "y": -0.7743,
-    "z": 2.8806,
+    "bone": "t4-1",
+    "x": 5.7062,
+    "y": -0.5272,
+    "z": 5.762,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the sun leaves, anchor 7",
@@ -111360,10 +111360,10 @@
    },
    {
     "id": "tp-sun-9",
-    "bone": "t2-2-b",
-    "x": 3.7267,
-    "y": -3.0421,
-    "z": 2.5906,
+    "bone": "t3-3-b",
+    "x": 2.9002,
+    "y": 1.0336,
+    "z": 2.8424,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the sun leaves, anchor 9",
@@ -111372,10 +111372,10 @@
    },
    {
     "id": "tp-shade-1",
-    "bone": "t2-2",
-    "x": 5.448,
-    "y": -2.2288,
-    "z": -0.2644,
+    "bone": "t3-4",
+    "x": 2.9177,
+    "y": -0.0459,
+    "z": -1.2689,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the shade leaves, anchor 1",
@@ -111384,10 +111384,10 @@
    },
    {
     "id": "tp-shade-2",
-    "bone": "t3-4",
-    "x": 4.6663,
-    "y": -2.8389,
-    "z": -2.825,
+    "bone": "t4-4",
+    "x": 2.7806,
+    "y": 0.1461,
+    "z": -1.8457,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the shade leaves, anchor 2",
@@ -111396,10 +111396,10 @@
    },
    {
     "id": "tp-shade-3",
-    "bone": "t3-5",
-    "x": 5.2669,
-    "y": 0.464,
-    "z": -1.9167,
+    "bone": "t4-4",
+    "x": 2.3774,
+    "y": 0.0446,
+    "z": -1.419,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the shade leaves, anchor 3",
@@ -111420,10 +111420,10 @@
    },
    {
     "id": "tp-shade-5",
-    "bone": "t1-2",
-    "x": 3.8503,
-    "y": -0.6553,
-    "z": 1.5322,
+    "bone": "t2-2",
+    "x": 1.9119,
+    "y": -0.2628,
+    "z": 1.026,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the shade leaves, anchor 5",

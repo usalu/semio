@@ -65,7 +65,7 @@ async function expectNoSidewaysScroll(page: Page, where: string): Promise<void> 
   expect(wider, `${where}: boxes that scroll sideways`).toEqual([]);
 }
 
-/** 🖱️ Reads the paths the compositor paints for the sorting result card before and after pointer entry. */
+/** 🖱️ Reads the paths the compositor paints for the sorting result card before and after pointer entry: the hover adds no line inside the card, only the edges of its outline a neighbour owns at rest. */
 async function expectStableResultHover(page: Page): Promise<void> {
   const card = screen(page, "task-result").filter({ has: page.locator(".course-plot-mean") }).first();
   const caption = card.getByText("Was alle geantwortet haben", { exact: true });
@@ -90,7 +90,12 @@ async function expectStableResultHover(page: Page): Promise<void> {
   const hover = await paint();
   expect(rest.widths).toEqual(["1px"]);
   expect(hover.widths).toEqual(rest.widths);
-  expect(hover.edges).toEqual(rest.edges);
+  expect(hover.edges, "a hovered card paints its whole rectangle: every edge it painted at rest, and the edges it shares with a neighbour that painted them at rest").toEqual(expect.arrayContaining(rest.edges));
+  const [frameWidth, frameHeight] = [hover.bounds[2]!, hover.bounds[3]!];
+  for (const edge of hover.edges.filter((edge) => !rest.edges.includes(edge))) {
+    const points = [...edge.matchAll(/(-?[\d.]+) (-?[\d.]+)/gu)].map((point) => [Number(point[1]), Number(point[2])] as const);
+    expect(points.every(([x, y]) => x <= 1.5 || y <= 1.5 || x >= frameWidth - 1.5 || y >= frameHeight - 1.5), `${edge} lies on the card's outline`).toBe(true);
+  }
   expect(hover.bounds).toEqual(rest.bounds);
   expect(new Set(hover.edges).size).toBe(hover.edges.length);
 }

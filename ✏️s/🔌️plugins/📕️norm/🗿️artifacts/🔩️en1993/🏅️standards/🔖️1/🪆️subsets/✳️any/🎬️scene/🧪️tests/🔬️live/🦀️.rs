@@ -80,7 +80,7 @@ fn edit(document: &mut En1993Snapshot, rng: &mut Rng, counter: &mut usize) {
         }
         1 => {
             let i = rng.next(document.members.len());
-            document.members[i].member_type = ["beam", "column"][rng.next(2)].into();
+            document.members[i].member_type = [model::SteelMemberType::Beam, model::SteelMemberType::Column][rng.next(2)];
         }
         2 => {
             *counter += 1;

@@ -106,7 +106,7 @@ fn entity_check_diagrams(d: &En1998Snapshot, report: &CheckReport, drawn: &BTree
             };
             let columns = vec![column("Check (report order)", "Nachweis (Berichtsreihenfolge)", "1", points.iter().map(|p| p.x).collect()), column("Utilisation", "Ausnutzung", "1", points.iter().map(|p| p.y).collect())];
             Some(Diagram2d {
-                id: format!("{collection}-checks:{id}"),
+                id: format!("{}-checks:{id}", collection.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect::<String>()),
                 title: loc(&format!("Utilisation of the checks of {id}"), &format!("Ausnutzung der Nachweise von {id}")),
                 description: loc("Utilisation of every check of the entity in report order; values above the limit 1 do not comply.", "Ausnutzung aller Nachweise des Objekts in Berichtsreihenfolge; Werte über der Grenze 1 sind nicht eingehalten."),
                 axes: vec![axis("Check", "Nachweis", QuantityKind::Dimensionless, "1", Some((0.5, points.len() as f64 + 0.5))), axis("Utilisation", "Ausnutzung", QuantityKind::Dimensionless, "1", None)],
@@ -166,7 +166,7 @@ fn horizontal_spectra(report: &CheckReport, site: &Site, building: Option<&En199
         let se = spectra::elastic(&params, t1);
         markers.push(Marker { id: ::semio_s_plugin_norm_structural_scene::projection_kit::diagram_parts::checked_marker_id("t1-se", &t1_check), at: Vec2::new(t1, se), shape: MarkerShape::Circle, tone: Tone::Info, label: loc(&format!("Se(T1) = {se:.2} m/s\u{b2}"), &format!("Se(T1) = {se:.2} m/s\u{b2}")), utilisation: None, bound_check: t1_check.clone(), binding: None });
         let gross = r.t1_gross.clamp(0.0, T_MAX);
-        if (gross - t1).abs() > 1e-9 {
+        {
             let (sd_gross, se_gross) = (spectra::design(&params, gross), spectra::elastic(&params, gross));
             markers.push(Marker { id: ::semio_s_plugin_norm_structural_scene::projection_kit::diagram_parts::checked_marker_id("t1-gross", &t1_check), at: Vec2::new(gross, sd_gross), shape: MarkerShape::Diamond, tone: Tone::Warning, label: loc(&format!("T1 gross = {gross:.2} s (uncracked), Sd = {sd_gross:.2} m/s\u{b2}"), &format!("T1 ungerissen = {gross:.2} s, Sd = {sd_gross:.2} m/s\u{b2}")), utilisation: None, bound_check: t1_check.clone(), binding: None });
             markers.push(Marker { id: ::semio_s_plugin_norm_structural_scene::projection_kit::diagram_parts::checked_marker_id("t1-gross-se", &t1_check), at: Vec2::new(gross, se_gross), shape: MarkerShape::Circle, tone: Tone::Warning, label: loc(&format!("Se(T1 gross) = {se_gross:.2} m/s\u{b2}"), &format!("Se(T1 ungerissen) = {se_gross:.2} m/s\u{b2}")), utilisation: None, bound_check: t1_check.clone(), binding: None });

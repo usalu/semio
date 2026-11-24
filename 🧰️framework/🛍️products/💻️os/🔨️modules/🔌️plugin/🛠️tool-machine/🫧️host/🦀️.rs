@@ -114,6 +114,7 @@ impl<M:RetireOwned+Send+Sync+'static> OriginalScrubDispatch<M>{
   }
   if self.phase==1&&(self.frozen||matches!(tag,Some(ToolTag::Scrub(ScrubTag{phase:semio_framework_tool_machine::ScrubPhase::Abort{..},..})))){self.phase=2;paid(cx,d)?;return Ok(false)}
   if self.phase==2{OriginalScrubHost::admit_abort_reason(tag,self.frozen.then_some(semio_framework_tool_machine::ToolAbortReason::Frozen),&mut self.admission,&mut self.host,cx)?;return Ok(false)}
+  if !self.admission.terminal_is_empty(){unbuilt(cx,&mut self.admission)?;return Ok(false)}
   if decision.is_some(){return Err(fault().into())}
   *decision=Some(self.phase==3);self.binding=None;paid(cx,d)?;Ok(true)
  }

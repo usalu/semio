@@ -221,6 +221,7 @@
     "repo": false,
     "human": false,
     "lease": "free",
+    "inflight": null,
     "memoryOk": true,
     "failure": null,
     "now": 1000000
@@ -254,6 +255,7 @@
     "repo": true,
     "human": false,
     "lease": "free",
+    "inflight": null,
     "memoryOk": true,
     "failure": null,
     "now": 1000000
@@ -287,6 +289,7 @@
     "repo": true,
     "human": false,
     "lease": "free",
+    "inflight": null,
     "memoryOk": true,
     "failure": null,
     "now": 1000000
@@ -320,6 +323,7 @@
     "repo": false,
     "human": false,
     "lease": "free",
+    "inflight": null,
     "memoryOk": true,
     "failure": null,
     "now": 1000000
@@ -349,6 +353,7 @@
     "repo": false,
     "human": false,
     "lease": "free",
+    "inflight": null,
     "memoryOk": true,
     "failure": null,
     "now": 1000000
@@ -381,6 +386,7 @@
     "repo": true,
     "human": false,
     "lease": "free",
+    "inflight": null,
     "memoryOk": true,
     "failure": null,
     "now": 1000000
@@ -410,6 +416,7 @@
     "repo": false,
     "human": true,
     "lease": "free",
+    "inflight": null,
     "memoryOk": true,
     "failure": null,
     "now": 1000000
@@ -439,6 +446,7 @@
     "repo": false,
     "human": false,
     "lease": "other",
+    "inflight": null,
     "memoryOk": true,
     "failure": null,
     "now": 1000000
@@ -468,6 +476,7 @@
     "repo": false,
     "human": false,
     "lease": "own",
+    "inflight": null,
     "memoryOk": true,
     "failure": null,
     "now": 1000000
@@ -497,6 +506,7 @@
     "repo": false,
     "human": false,
     "lease": "free",
+    "inflight": null,
     "memoryOk": true,
     "failure": {
      "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
@@ -529,6 +539,7 @@
     "repo": false,
     "human": false,
     "lease": "free",
+    "inflight": null,
     "memoryOk": true,
     "failure": {
      "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
@@ -561,6 +572,7 @@
     "repo": false,
     "human": false,
     "lease": "free",
+    "inflight": null,
     "memoryOk": true,
     "failure": {
      "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
@@ -593,6 +605,7 @@
     "repo": false,
     "human": false,
     "lease": "free",
+    "inflight": null,
     "memoryOk": false,
     "failure": null,
     "now": 1000000
@@ -622,6 +635,7 @@
     "repo": false,
     "human": false,
     "lease": "free",
+    "inflight": null,
     "memoryOk": true,
     "failure": {"digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "nextAttemptMs": 900000},
     "now": 1000000
@@ -655,8 +669,75 @@
     "repo": true,
     "human": true,
     "lease": "free",
+    "inflight": null,
     "memoryOk": true,
     "failure": null,
+    "now": 1000000
+   }
+  },
+  {
+   "name": "a stage in flight is adopted while memory is low",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {
+     "native": "1111111111111111111111111111111111111111111111111111111111111111",
+     "tools": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "marker": true,
+    "repo": true,
+    "human": false,
+    "lease": "free",
+    "inflight": "workspace",
+    "memoryOk": false,
+    "failure": null,
+    "now": 1000000
+   }
+  },
+  {
+   "name": "a stage in flight is adopted during the back-off of an earlier failure",
+   "input": {
+    "server": false,
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "stages": [
+     {
+      "name": "native",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+     },
+     {
+      "name": "tools",
+      "digest": "2222222222222222222222222222222222222222222222222222222222222222"
+     },
+     {
+      "name": "workspace",
+      "digest": "3333333333333333333333333333333333333333333333333333333333333333"
+     }
+    ],
+    "done": {
+     "native": "1111111111111111111111111111111111111111111111111111111111111111",
+     "tools": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "marker": true,
+    "repo": true,
+    "human": false,
+    "lease": "free",
+    "inflight": "workspace",
+    "memoryOk": true,
+    "failure": {"digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "nextAttemptMs": 2000000},
     "now": 1000000
    }
   }

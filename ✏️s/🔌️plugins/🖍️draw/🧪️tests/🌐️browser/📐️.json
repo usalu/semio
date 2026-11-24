@@ -8,6 +8,7 @@
     "minimumBootLayers",
     "example",
     "exampleLayer",
+    "emptyExample",
     "blankExample",
     "utility",
     "utilityPressStates",
@@ -15,6 +16,7 @@
     "layerDelta",
     "persistence",
     "export",
+    "documentLoads",
     "steps",
     "guestFaults"
   ],
@@ -43,6 +45,14 @@
     },
     "exampleLayer": {
       "const": "emblem-orange"
+    },
+    "emptyExample": {
+      "const": {
+        "labels": {
+          "en": "No example",
+          "de": "Kein Beispiel"
+        }
+      }
     },
     "blankExample": {
       "const": {
@@ -111,6 +121,9 @@
           "const": "renderedPixels"
         }
       }
+    },
+    "documentLoads": {
+      "const": 2
     },
     "steps": {
       "const": [

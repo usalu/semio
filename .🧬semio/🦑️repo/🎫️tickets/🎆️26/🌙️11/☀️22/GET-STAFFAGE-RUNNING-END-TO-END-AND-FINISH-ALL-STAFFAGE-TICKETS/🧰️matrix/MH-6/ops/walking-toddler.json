@@ -1,0 +1,8 @@
+[
+  {"op": "extrude", "scale": "50", "id": "shirt-core", "twin": "shirt", "view": "plan"},
+  {"op": "extrude", "scale": "100", "id": "shirt-core", "twin": "shirt", "view": "plan"},
+  {"op": "plan-sweep", "scale": "100", "id": "shoe-r"},
+  {"op": "plan-sweep", "scale": "200", "id": "shoe-r"},
+  {"op": "plan-sweep", "scale": "500", "id": "shoe-l"},
+  {"op": "plan-sweep", "scale": "500", "id": "shoe-r"}
+]

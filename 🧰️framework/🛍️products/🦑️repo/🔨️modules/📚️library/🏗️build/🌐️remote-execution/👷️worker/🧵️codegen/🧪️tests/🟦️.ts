@@ -5,19 +5,20 @@ import {join} from "node:path";
 import {readRemoteExecutionPolicyV1} from "../../../🟦️.ts";
 import {remoteExecutionCodegenArgumentsV1,remoteExecutionCodegenSerialRequestedV1,remoteExecutionCodegenThreadsV1} from "../🟦️.ts";
 
-const vectors=JSON.parse(readFileSync(join(import.meta.dir,"🔣️.json"),"utf8")) as {policy:{maximumThreads:number;reserveCores:number;extraMegabytesPerThread:number};cases:readonly {id:string;cores:number;load:number;others:number;spare:number;peak:number;threads:number}[]};
+const vectors=JSON.parse(readFileSync(join(import.meta.dir,"🔣️.json"),"utf8")) as {policy:{maximumThreads:number;reserveCores:number;extraMegabytesPerThread:number;fairShareThreads:number};cases:readonly {id:string;cores:number;load:number;others:number;spare:number;peak:number;pressured?:boolean;threads:number}[]};
 
 test("the thread grant of every vector equals the grant of the independent Python oracle",()=>{
- for(const row of vectors.cases)expect(remoteExecutionCodegenThreadsV1({cores:row.cores,load:row.load,others:row.others,spareMegabytes:row.spare,peakMegabytes:row.peak},vectors.policy),row.id).toBe(row.threads);
+ for(const row of vectors.cases)expect(remoteExecutionCodegenThreadsV1({cores:row.cores,load:row.load,others:row.others,spareMegabytes:row.spare,peakMegabytes:row.peak,...row.pressured===undefined?{}:{pressured:row.pressured}},vectors.policy),row.id).toBe(row.threads);
  const oracle=spawnSync("python3",["-I",join(import.meta.dir,"🐍️.py")],{encoding:"utf8"});
  expect(oracle.status,oracle.stdout+oracle.stderr).toBe(0);
  expect(JSON.parse(oracle.stdout).checked).toBe(vectors.cases.length);
 });
 
-test("the authored worker policy grants a whole idle machine's cores (less the reserve, at most the cap) and one thread to a saturated one",()=>{
+test("the authored worker policy grants a whole idle machine's cores (less the reserve, at most the cap), the fair share to a saturated one and one thread under memory pressure",()=>{
  const policy=readRemoteExecutionPolicyV1().worker.codegen;
  expect(remoteExecutionCodegenThreadsV1({cores:10,load:0,others:0,spareMegabytes:20000,peakMegabytes:4000},policy)).toBe(Math.min(policy.maximumThreads,10-policy.reserveCores));
- expect(remoteExecutionCodegenThreadsV1({cores:10,load:30,others:0,spareMegabytes:20000,peakMegabytes:4000},policy)).toBe(1);
+ expect(remoteExecutionCodegenThreadsV1({cores:10,load:30,others:0,spareMegabytes:20000,peakMegabytes:4000},policy)).toBe(policy.fairShareThreads);
+ expect(remoteExecutionCodegenThreadsV1({cores:10,load:30,others:0,spareMegabytes:20000,peakMegabytes:4000,pressured:true},policy)).toBe(1);
 });
 
 test("one granted thread adds the serial back end once, more leave the arguments alone, and a serial request is recognised in both spellings",()=>{

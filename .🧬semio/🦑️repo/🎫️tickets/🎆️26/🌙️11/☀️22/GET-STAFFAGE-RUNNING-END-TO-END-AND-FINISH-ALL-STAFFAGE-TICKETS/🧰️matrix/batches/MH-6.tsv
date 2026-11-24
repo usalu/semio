@@ -1,0 +1,11 @@
+humans	teenager-with-headphones	4 / 0; flat+solid; 1 extent				
+humans	tennis-player	1 / 8; solid; 1 extent				
+humans	tour-guide	0 / 10; solid				
+humans	traveller-with-rolling-suitcase	5 / 208; flat+solid; 24 extent	32; descendant 21, other bone 7, off 4			
+humans	waiter-with-tray	4 / 11; flat+solid; 2 extent	6; descendant 5, off 1			
+humans	walking-toddler	1 / 5; solid; 3 extent				
+humans	waving-person	4 / 16; flat+solid				
+humans	wheelchair-user	0 / 2; flat	80; descendant 46, off 34			
+humans	worker-carrying-box	0 / 214; flat+solid; 3 extent				
+humans	worker-with-jackhammer	9 / 23; flat				
+humans	worker-with-pallet-jack	1 / 4; flat+followTip+solid; 4 other id	33; descendant 25, off 6, other bone 2			

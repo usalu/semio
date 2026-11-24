@@ -1,0 +1,18 @@
+import { createRequire } from "node:module";
+import { join } from "node:path";
+const root = process.cwd();
+const osDev = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev";
+const { ensureRepositoryBrowserPathV1 } = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts"));
+const { awaitBeacon, dismissIntroduction } = await import(join(root, osDev, "🧪️tests/🧮️program-matrix/🟦️.ts"));
+const require = createRequire(join(root, osDev, "📦️packages/🟦️typescript/package.json"));
+ensureRepositoryBrowserPathV1(root, process.env);
+const { chromium } = require("playwright") as typeof import("playwright");
+const browser = await chromium.launch();
+const page = await browser.newPage({ locale: process.env.LOC ?? "en-US", viewport: { width: 1600, height: 1000 } });
+await page.goto("http://127.0.0.1:6260/");
+await awaitBeacon(page, Date.now() + 240_000);
+await dismissIntroduction(page);
+console.log(await page.evaluate(() => document.body.innerText));
+console.log("INPUTS", await page.evaluate(() => [...document.querySelectorAll("input,textarea,[role=tab],[role=tablist] button")].map(e => `${e.tagName}|${e.id}|${e.getAttribute("aria-label") ?? ""}|${(e as HTMLInputElement).value ?? ""}|${(e.textContent ?? "").trim().slice(0, 30)}`).join("\n")));
+await page.screenshot({ path: join(import.meta.dir, "🗑️generated", "explore-details.png") });
+await browser.close();

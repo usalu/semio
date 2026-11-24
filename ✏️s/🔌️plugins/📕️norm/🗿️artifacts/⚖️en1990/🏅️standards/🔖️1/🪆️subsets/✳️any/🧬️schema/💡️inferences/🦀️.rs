@@ -101,7 +101,7 @@ mod tests;
 use semio_s_plugin_norm_compliance::incremental_evaluation::Scope;
 use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
 use semio_s_artifact_norm_en1990_checks::*;
-use semio_s_artifact_norm_en1990_model::{BridgeSls, FactorOverride, LoadGroup, Member, MemberEffect, TrafficGroup, VariableAction};
+use semio_s_artifact_norm_en1990_model::{BridgeSls, FactorKind, FactorOverride, LoadGroup, Member, MemberEffect, TrafficGroup, VariableAction};
 
 #[path = "🧰️report-helpers/🦀️.rs"]
 mod report_helpers;

@@ -105,8 +105,7 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
       if (!surface) throw new Error("plugin-ui.surface-missing");
       if(!scope.state.disposing&&!scope.closingInstances.has(instanceId)&&lifecycleByInstance.get(instanceId)===lease&&uiOwnerByInstance.get(instanceId)===owner&&scope.actorIdByInstance.get(instanceId)===lease.activation.actorId){
         const surfaces=uiSurfaceByInstance.get(instanceId)??new Map<string,OwnedUiInstanceSurface>(),previous=surfaces.get(surfaceId);surfaces.set(surfaceId,surface);uiSurfaceByInstance.set(instanceId,surfaces);
-        const installedNow=reads.install(instanceId,surfaceId,surface,intake);console.error("[DEBUG] ui install",instanceId,surfaceId,installedNow);
-        if(installedNow){const installedAtMs=performance.now();uiSurfaceInstalledAtMs.set(`${instanceId}:${surfaceId}`,installedAtMs);hopTrace.record("patch.install",startedMs,installedAtMs-startedMs,{instanceId,surfaceId});installed.push(surfaceId);}
+        if(reads.install(instanceId,surfaceId,surface,intake)){const installedAtMs=performance.now();uiSurfaceInstalledAtMs.set(`${instanceId}:${surfaceId}`,installedAtMs);hopTrace.record("patch.install",startedMs,installedAtMs-startedMs,{instanceId,surfaceId});installed.push(surfaceId);}
         else if(uiSurfaceByInstance.get(instanceId)===surfaces&&surfaces.get(surfaceId)===surface){if(previous)surfaces.set(surfaceId,previous);else surfaces.delete(surfaceId);}
       }
       await closeIntake(instanceId, intake);
@@ -242,7 +241,7 @@ function createUiSurfaceProjection(scope: PluginHandleScope, admission: ReturnTy
     const project = async (targets: PluginUiRefreshRequest["windows"]): Promise<PluginUiRefreshSectionResponse[]> => {
       const result: PluginUiRefreshSectionResponse[] = [];
       for (const target of targets ?? []) {
-        const surfaceId=retainedSurfaceId(instanceId,target.key),surface=surfaces.get(surfaceId),view=surface?.view;console.error("[DEBUG] refresh target",surfaceId,target.hash,view?.hash,view?.revision);
+        const surfaceId=retainedSurfaceId(instanceId,target.key),surface=surfaces.get(surfaceId),view=surface?.view;
         if (surface && view&&uiRefreshSectionUnchanged(target.hash, view)) {
           const response={key:target.key,hash:target.hash!};reads.issueTarget(instanceId,surfaceId,response,view);result.push(response);
           continue;

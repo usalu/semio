@@ -296,8 +296,8 @@ async fn render_right_after_an_edit_shows_updated_checks_without_evaluate() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, En1990Command::SetField(set_field::SetField { path: "consequenceClass".into(), value_json: "2".into() })).await;
     let edited = app.snapshot().expect("projection");
-    let expected = semio_s_artifact_norm_en1990_inferences::evaluate(&edited);
-    assert_eq!(*<En1990Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(&edited), expected, "the retained session equals the full fold");
+    let expected = semio_s_plugin_norm_compliance::incremental_evaluation::owned::<semio_s_artifact_norm_en1990_inferences::En1990Units>(&edited, semio_s_artifact_norm_en1990_inferences::evaluate(&edited));
+    assert_eq!(*<En1990Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(&edited), expected, "the retained session equals the full fold filed under its owners");
     let worst = expected.checks.iter().max_by(|a, b| a.utilization.total_cmp(&b.utilization)).expect("the edited document still has checks");
     let rendered = context::render(&mut app, checks::BODY_CHECKS).await;
     assert!(!rendered.contains("No checks computed"), "no evaluate command was dispatched: {rendered}");
@@ -308,8 +308,9 @@ async fn render_right_after_an_edit_shows_updated_checks_without_evaluate() {
 
 #[test]
 fn a_picked_entity_selects_its_governing_check_in_every_window() {
-    let report = semio_s_artifact_norm_en1990_inferences::evaluate(&En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
-    let entity = report.checks.iter().find(|check| !check.subject.entity_id.is_empty() && check.status != semio_s_plugin_norm_compliance::CheckStatus::NotApplicable).map(|check| check.subject.entity_id.clone()).expect("a check with an entity");
+    let document = En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    let report = semio_s_artifact_norm_en1990_inferences::evaluate(&document);
+    let entity = report.checks.iter().find(|check| semio_s_artifact_norm_en1990_scene_kit::entity_kind_of(&document, &check.subject.entity_id).is_some() && check.status != semio_s_plugin_norm_compliance::CheckStatus::NotApplicable).map(|check| check.subject.entity_id.clone()).expect("a check with an entity");
     let live = semio_s_plugin_norm_app_surface::LiveView::<En1990Family>::new(En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De), None, &[entity.clone()]);
     assert!(live.selection.contains(&entity));
     assert_eq!(live.focus.as_deref(), Some(entity.as_str()));

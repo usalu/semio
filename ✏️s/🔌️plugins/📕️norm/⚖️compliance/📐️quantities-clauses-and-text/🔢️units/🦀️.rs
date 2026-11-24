@@ -143,6 +143,7 @@ units! {
     KilogramPerHour: "kg/h", "", MassFlow, 1.0 / 3600.0, 0.0, "kilogram per hour", "Kilogramm je Stunde";
     CubicMetrePerSecondSquareMetre: "m³/(s·m²)", "m3/(s*m2)", AirPermeability, 1.0, 0.0, "cubic metre per second square metre", "Kubikmeter je Sekunde und Quadratmeter";
     CubicMetrePerHourSquareMetre: "m³/(h·m²)", "m3/(h*m2)", AirPermeability, 1.0 / 3600.0, 0.0, "cubic metre per hour square metre", "Kubikmeter je Stunde und Quadratmeter";
+    LitrePerSecondSquareMetre: "L/(s·m²)", "l/(s*m2)", AirPermeability, 1e-3, 0.0, "litre per second square metre", "Liter je Sekunde und Quadratmeter";
     JoulePerKilogramKelvin: "J/(kg·K)", "J/(kgK)", SpecificHeat, 1.0, 0.0, "joule per kilogram kelvin", "Joule je Kilogramm und Kelvin";
     WattPerCubicMetrePerSecond: "W/(m³/s)", "W/(m3/s)", FanPower, 1.0, 0.0, "watt per cubic metre per second", "Watt je Kubikmeter je Sekunde";
     KilowattHourPerPersonYear: "kWh/(Person·a)", "kWh/(Person*a)", EnergyPerPerson, 3.6e6 / 31_557_600.0, 0.0, "kilowatt hour per person and year", "Kilowattstunde je Person und Jahr";

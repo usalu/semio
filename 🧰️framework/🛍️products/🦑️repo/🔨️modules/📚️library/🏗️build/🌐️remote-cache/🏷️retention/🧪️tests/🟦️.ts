@@ -344,3 +344,12 @@ test("the audit against the key set of the current state is the independent orac
  expect((await auditRemoteCacheDirectoryV1(store.root,stale,{graceMilliseconds:600})).stray.length,"a key the state does not need is reported once its grace passed").toBe(1);
  await store.close();
 });
+
+test("reclaim never removes a blob that a live operation leases as its input, and takes it once the lease ended",async()=>{
+ const cas=directory("reclaim-lease"),host=createCasStoreV1({root:cas,policy:{...CAS_POLICY_V1,minAgeMs:0,partition:{lowUsedFraction:0.98,highUsedFraction:0.99,criticalUsedFraction:0.999}}}),digest=await host.put(new TextEncoder().encode("input of a queued final"));
+ await host.lease([digest.hash],undefined,"op-live");
+ expect(await reclaimCasObjectsV1(host,[digest.hash])).toMatchObject({entries:0,leased:1});expect(existsSync(host.objectPath(digest.hash))).toBe(true);
+ await host.releaseLease([digest.hash],"op-live");
+ expect(await reclaimCasObjectsV1(host,[digest.hash]),"the short grace after the release still protects").toMatchObject({entries:0,leased:1});
+ expect(await reclaimCasObjectsV1(host,[digest.hash],{now:()=>Date.now()+3_600_000})).toMatchObject({entries:1,leased:0});expect(existsSync(host.objectPath(digest.hash))).toBe(false);
+});

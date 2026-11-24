@@ -1,0 +1,40 @@
+{
+  "title": "UI Laws for Chips, Hover, Bands, Drag, Toggles, Icons and Lines",
+  "emoji": "🪟",
+  "status": "closed",
+  "description": "UI inconsistencies seen on the architecture and technology course site but affecting the UI in general. (1) All chips are conceptually one layer higher than the element they sit on: they need a different, tinted glass background through which the content below stays visible; e.g. on the cards overview the chips currently have the same background as the card. (2) The hover effect currently adds an additional border around an element. This must never happen: emphasis only ever happens on existing borders and on the foreground (text, icon) of a UI element.",
+  "summary": "Ten UI laws fixed in the shared UI module and the course site: chips carry a foreground-veil glass tint; hover recolours existing lines and never adds one; pages, grids and dialogs tile edge to edge; navbar and footer are panel-level glass bands the content scrolls beneath; a dragged task element is detached with all drop places shown; clip posters fill the card under the chips; no rounded corner or shadow, native tick boxes drawn square; the challenge is a chip-titled card of toggle cells and switches are toggle cells; every shared course control requires an icon; a line shared with a band is painted by the band. Verified: TypeScript border law and compositor tests pass (9, 16, 13, 45, 11), each law checked in the browser on the course site. Not verified: all Rust changes (outline law, Theme::chip_glass, wgpu chip sites) are uncompiled, the graph test run failed twice on infrastructure (stale dependency receipt, then dependencies image out of space); no TypeScript type check; DOM component suites not run; several course screens not opened. See summary.md in the ticket folder.",
+  "goal": "🎯runningframework",
+  "sessions": [
+    "82f8c751-6ce3-4727-abc2-a22fa48b70a2"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-24 03:29:11",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "UI inconsistencies seen on the architecture and technology course site but affecting the UI in general. (1) All chips are conceptually one layer higher than the element they sit on: they need a different, tinted glass background through which the content below stays visible; e.g. on the cards overview the chips currently have the same background as the card. (2) The hover effect currently adds an additional border around an element. This must never happen: emphasis only ever happens on existing borders and on the foreground (text, icon) of a UI element.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 12:52:01",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "3b15468f901294ad97d37119cf8ad8d2a2ca8663",
+      "summary": "Ten UI laws fixed in the shared UI module and the course site: chips carry a foreground-veil glass tint; hover recolours existing lines and never adds one; pages, grids and dialogs tile edge to edge; navbar and footer are panel-level glass bands the content scrolls beneath; a dragged task element is detached with all drop places shown; clip posters fill the card under the chips; no rounded corner or shadow, native tick boxes drawn square; the challenge is a chip-titled card of toggle cells and switches are toggle cells; every shared course control requires an icon; a line shared with a band is painted by the band. Verified: TypeScript border law and compositor tests pass (9, 16, 13, 45, 11), each law checked in the browser on the course site. Not verified: all Rust changes (outline law, Theme::chip_glass, wgpu chip sites) are uncompiled, the graph test run failed twice on infrastructure (stale dependency receipt, then dependencies image out of space); no TypeScript type check; DOM component suites not run; several course screens not opened. See summary.md in the ticket folder.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️⚖️footerandforcedcolors💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️📖️quizpage💻🟦️"
+        }
+      ]
+    }
+  ]
+}

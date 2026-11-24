@@ -5,7 +5,7 @@ import { parse as parseToml } from "@iarna/toml";
 import { buildSync } from "esbuild";
 import { spawnSync } from "node:child_process";
 import { examplesForApp } from "@semio-tech/framework-manifest";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { discoverPluginBuildTargets, generatePluginRegistry, generatePluginRegistryReport, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, parseRegistryChannelDiagnosticsV1 } from "../🟦️.ts";
 import { REGISTRY_HOST_APP_CHANNEL_VERSION } from "../../🧬️schema/🟦️.ts";
@@ -196,4 +196,63 @@ test("source deployment names remain available before compiled catalog admission
   const result=JSON.parse(node.stdout), parsed=parseToml(cargo) as any;
   expect(result.modules).toEqual([{pluginId:"portable",directoryName:parsed.package.metadata.semio["deployment-directory"]}]);
   expect(result.plugins).toEqual([]);
+});
+
+for (const row of corpus.retainedSession) test(`retained session reader ${row.id}`, async () => {
+  const ts = (await import("typescript")).default;
+  const { lstat, open } = await import("node:fs/promises");
+  const { default: sessionSchema } = await import("../../🎮️playground/🧭️session/🧬️schema/🔣️.json");
+  const { playgroundSessionPublicationV1, buildPlaygroundSession, renderPlaygroundSessionTypeScript, refreshPlaygroundSessionPublicationV1 } = await import("../../🎮️playground/🧭️session/🟦️.ts");
+  const { parseDeployedRegistryEntryV1 } = await import("../🧬️schema/🟦️.ts");
+  const { parseProjectedPlaygroundV1, registryModuleDirectories } = await import("../../📖️catalog-view/🟦️.ts");
+  const { artifactsStorageSchema } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts");
+  const readingPath = resolve(import.meta.dirname, "../../🎮️playground/🧭️session/👓️reading/🟦️.ts");
+  const tree = ts.createSourceFile(readingPath, readFileSync(readingPath, "utf8"), ts.ScriptTarget.Latest, true);
+  const names = ["textAt", "withPlaygroundSessionV1", "retainedPlaygroundSessionProjectionV1", "withSessionV1"];
+  const code = names.map(name => tree.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name)!.getText(tree).replace(/^export /u, "")).join("\n");
+  const program = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 }, reportDiagnostics: true });
+  expect(program.diagnostics).toEqual([]);
+  const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "retained-session-"));
+  const entry = corpus.cases.find(item => item.stage === "deployed" && item.valid)!.value;
+  const projection = { entries: [entry], playgrounds: [{ variant: "portable", pluginId: entry.pluginId, aliases: [], app: "portable.drawing@1/*#editor", ports: { react: 6000, wgpu: 6100 }, examples: [], assets: [], engines: [], cratePath: entry.cratePath }] } as never;
+  const output = join(root, "portable");
+  for (const file of playgroundSessionPublicationV1("portable", projection)) {
+    const path = join(output, file.path);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, file.text + (file.path === sessionSchema.definitions.Protocol.const.files[0] ? row.sourceSuffix : ""));
+  }
+  const workspace = "/repo", invocation = Object.freeze({ capabilities: {} });
+  const ports = {
+    schema: sessionSchema, publicationSchema: artifactsStorageSchema, lstat, open, join, resolve,
+    parseDeployedRegistryEntryV1, parseProjectedPlaygroundV1, registryModuleDirectories, buildPlaygroundSession, renderPlaygroundSessionTypeScript,
+    PLAYGROUND_SESSION_ARTIFACT_KEY: sessionSchema.definitions.Protocol.const.files[0],
+    playgroundSessionsRootV1: () => root,
+    readNativeCallerAuthorityV1: () => ({ repositoryRoot: workspace, original: { buildMode: "prototype" } }),
+    scriptCompilerAdmissionControlV1: () => ({}),
+    checkResourceLeaseControl: () => {},
+    withRepositoryCacheStoreV1: (_workspace: unknown, _partition: unknown, _invocation: unknown, phase: unknown, body: (store: unknown, phase: unknown) => Promise<unknown>) => body({ storage: {}, control: {} }, phase),
+    withRepositoryArtifactV1: (_options: unknown, body: (reader: unknown) => Promise<unknown>) => body({}),
+    withRepositoryArtifactTaskV1: (_reader: unknown, _invocation: unknown, body: (artifact: unknown) => Promise<unknown>) => body({ path: output, files: [...sessionSchema.definitions.Protocol.const.files], control: {}, recheck: async () => {} }),
+  };
+  const api = new Function(...Object.keys(ports), program.outputText + "\nreturn {withPlaygroundSessionV1,retainedPlaygroundSessionProjectionV1};")(...Object.values(ports));
+  const retained = await api.retainedPlaygroundSessionProjectionV1(workspace, invocation, "portable");
+  expect(retained !== undefined).toBe(row.retained);
+  if (row.retained) expect(retained).toEqual(projection);
+  const strict = api.withPlaygroundSessionV1(workspace, invocation, "portable", async (session: unknown) => session);
+  if (row.strictAccepts) await strict;
+  else await expect(strict).rejects.toThrow("Session Source differs from its exact copied projection");
+  const publications: unknown[] = [];
+  const republished = await refreshPlaygroundSessionPublicationV1(projection, () => api.retainedPlaygroundSessionProjectionV1(workspace, invocation, "portable"), async current => { publications.push(current); });
+  expect(republished).toBe(!row.retained);
+  expect(publications.length).toBe(row.retained ? 0 : 1);
+  const preFix = refreshPlaygroundSessionPublicationV1(projection, () => api.withPlaygroundSessionV1(workspace, invocation, "portable", async (_session: unknown, current: unknown) => current), async () => {});
+  if (row.retained) expect(await preFix).toBe(false);
+  else await expect(preFix).rejects.toThrow("Session Source differs");
+});
+
+test("the dev playground serve command reads the retained session with the stale-tolerant reader", () => {
+  const source = readFileSync(resolve(import.meta.dirname, "../../../../../../🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🎮️playground/🟦️.ts"), "utf8");
+  const guard = source.slice(source.indexOf("refreshPlaygroundSessionPublicationV1(projection"), source.indexOf("stagePlaygroundSession(workspace"));
+  expect(guard).toContain("retainedPlaygroundSessionProjectionV1(");
+  expect(guard).not.toContain("withPlaygroundSessionV1");
 });

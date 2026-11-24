@@ -1,6 +1,6 @@
 import {afterAll,expect,test} from "bun:test";
 import {createHash} from "node:crypto";
-import {existsSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
+import {existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir,uptime} from "node:os";
 import {join} from "node:path";
 import {leaseRegistryFolderV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧭️order/🟦️.ts";
@@ -20,7 +20,7 @@ import {graphProbeV1,newestImplementationMillisecondsV1} from "../../🔎️prob
 import {leasesProbeV1} from "../../🔎️probes/🔒️leases/🟦️.ts";
 import {processesProbeV1} from "../../🔎️probes/🏃️processes/🟦️.ts";
 import {sessionsProbeV1} from "../../🔎️probes/🪪️sessions/🟦️.ts";
-import {imageRepairPlanV1,storageProbeV1} from "../../🔎️probes/💾️storage/🟦️.ts";
+import {imageGrowPlanV1,imageRepairPlanV1,storageProbeV1} from "../../🔎️probes/💾️storage/🟦️.ts";
 import {acquireResourceLease,requireMaterializedPathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {toolsProbeV1} from "../../🔎️probes/🔧️tools/🟦️.ts";
 
@@ -454,3 +454,48 @@ test("every probe is declared once, in contract order, and every area but doctor
  expect(areas.sort()).toEqual(["tools","storage","leases","capacity","sessions","graph","dependencies","caches","processes"].sort());
  expect(DOCTOR_PROBES_V1.find(probe=>probe.area==="processes")!.phase).toBe(2);
 });
+
+test("storage-grow: the plan names the mounted images below the declared need and the doctor policy states the grow protocol's sizes",async()=>{
+ const {NATIVE_IMAGE_GROW_V1}=await import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📈️grow/🟦️.ts");
+ expect(DOCTOR_POLICY_V1.storage.imageTrailerBytes).toBe(NATIVE_IMAGE_GROW_V1.trailerBytes);expect(DOCTOR_POLICY_V1.storage.imageUnitBytes).toBe(NATIVE_IMAGE_GROW_V1.unitBytes);
+ const MiB=1048576,need=29177675776,part=(id:string,state:"mounted"|"detached",imageBytes:number|null,needBytes:number|null,image:"ok"|"damaged"="ok")=>({id,state,capacityBytes:null,freeBytes:null,imageBytes,backing:"present" as const,publication:"none" as const,publicationAgeSeconds:null,image,needBytes});
+ const rows=[part("dependencies","mounted",8180000000,need),part("graph","mounted",8589934592,null),part("born","mounted",need-MiB+40960,need),part("detached","detached",1,need),part("damaged","mounted",1,need,"damaged"),part("unknown","mounted",null,need)];
+ expect(imageGrowPlanV1({partitions:rows},40960,MiB)).toEqual(["dependencies"]);
+ expect(imageGrowPlanV1(undefined,40960,MiB)).toEqual([]);
+ const ids=analyzeDoctorV1({version:1,atMs:Date.now(),platform:"darwin",probes:[],storage:{hostFreeBytes:null,hostTotalBytes:null,partitions:rows}}).findings.map(row=>`${row.id}:${row.subject}`);
+ expect(ids.filter(id=>id.startsWith("storage.image-below-need"))).toEqual(["storage.image-below-need:dependencies"]);
+});
+
+test("storage-grow: other platforms have no image to grow and say so",async()=>{
+ const repair=DOCTOR_REPAIRS_V1.get("storage-grow")!,root=fresh(),outcome=await repair.run(ports(root,{platform:"linux"}),context(),false);
+ expect(outcome).toMatchObject({removed:0,status:"unavailable"});expect(outcome.reason).toContain("Nicht anwendbar");
+});
+
+test.skipIf(process.platform!=="darwin")("storage-grow: a mounted image below its need grows in place under its lease, keeps its mount point, rewrites its receipt and a held lease keeps it untouched",async()=>{
+ const root=fresh(),directory=partitionDirectory(root,"dependencies"),MiB=1048576;
+ mkdirSync(join(directory,"m"),{recursive:true});
+ const real=realpathSync(directory),image=join(real,"fixed.dmg"),mount=join(real,"m"),seed=join(fresh(),"seed");mkdirSync(seed);
+ expect(imageTool("/usr/bin/hdiutil",["create","-size","64m","-format","UDRW","-nospotlight","-fs","Case-sensitive APFS","-volname","semio","-srcfolder",seed,image]).exitCode).toBe(0);
+ const receipt={version:1,dev:1,ino:2,filesystemBytes:64*MiB,size:64*MiB+40960,maximumPhysicalBytes:65*MiB};write(join(directory,"image.json"),JSON.stringify(receipt));
+ attachImage(image,mount);
+ const port=ports(root,{platform:"darwin"}),repair=DOCTOR_REPAIRS_V1.get("storage-grow")!;
+ try{
+  const facts=(await read(storageProbeV1,port) as {storage:NonNullable<DoctorFactsV1["storage"]>}).storage.partitions.find(row=>row.id==="dependencies")!;
+  expect(facts).toMatchObject({state:"mounted",needBytes:budget.partitions.dependencies.needBytes.darwin});
+  expect(await repair.run(port,context(),true)).toMatchObject({removed:1});expect(imageRow(image)!.mounts).toEqual([mount]);
+  const leaseDirectory=join(root,".cache","b","l","m","data");mkdirSync(leaseDirectory,{recursive:true});
+  const held=await acquireResourceLease({directory:leaseDirectory,resource:"native-fixed-image:"+requireMaterializedPathV1(directory),mode:"exclusive",signal:new AbortController().signal,timeoutMs:0});
+  try{
+   const refused=await repair.run(port,context(),false);
+   expect(refused).toMatchObject({removed:0,status:"unavailable"});expect(refused.reason).toContain("in use");
+   expect(JSON.parse(readFileSync(join(directory,"image.json"),"utf8")).filesystemBytes).toBe(64*MiB);
+  }finally{held.release();}
+  const fixed=await repair.run(port,context(),false),need=budget.partitions.dependencies.needBytes.darwin;
+  expect(fixed).toMatchObject({removed:1});expect(fixed.bytes).toBeGreaterThan(0);
+  const grown=JSON.parse(readFileSync(join(directory,"image.json"),"utf8")) as typeof receipt;
+  expect(grown.filesystemBytes+MiB).toBeGreaterThanOrEqual(need);expect(grown.size).toBe(grown.filesystemBytes+40960);expect(grown.ino).toBe(2);expect(lstatSync(image).size).toBe(grown.size);
+  expect(imageRow(image)!.mounts).toEqual([mount]);
+  expect((await read(storageProbeV1,port) as {storage:NonNullable<DoctorFactsV1["storage"]>}).storage.partitions.find(row=>row.id==="dependencies")).toMatchObject({state:"mounted"});
+  expect(await repair.run(port,context(),false)).toMatchObject({removed:0,status:"nothing"});
+ }finally{releaseImage(image);}
+},120000);

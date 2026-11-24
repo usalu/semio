@@ -190,6 +190,20 @@ fn run_frame_owner_turn(cx: &mut StepContext<'_>, advance: impl FnOnce(&mut Step
     Some(step)
 }
 
+/// 🧾️ A worker turn receipt excludes the return span its outcome reserved on the caller, so the caller's already posted total is the receipt plus that reserved delta.
+fn posted_receipt(before: RetainedCloneProgress, receipt: RetainedCloneProgress, held_before: RetainedCloneProgress, cx: &StepContext<'_>) -> bool {
+    let held_after = cx.reserved_return_progress();
+    let delta = |after: usize, before: usize| after.checked_sub(before);
+    let (Some(copied_items), Some(copied_bytes), Some(retained_capacity_bytes), Some(released_bytes)) = (
+        delta(held_after.copied_items, held_before.copied_items),
+        delta(held_after.copied_bytes, held_before.copied_bytes),
+        delta(held_after.retained_capacity_bytes, held_before.retained_capacity_bytes),
+        delta(held_after.released_bytes, held_before.released_bytes),
+    ) else { return false };
+    let reserved = RetainedCloneProgress { copied_items, copied_bytes, retained_capacity_bytes, released_bytes };
+    before.checked_add(receipt).and_then(|total| total.checked_add(reserved)).is_ok_and(|total| total == cx.retained_progress())
+}
+
 fn return_worker_cancel_alias(
     cx: &mut StepContext<'_>,
     return_alias: impl FnOnce(&CancelToken, &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome<Option<RetainedCloneStep>, WorkerJobDemandError>,
@@ -433,13 +447,13 @@ impl ActiveFrameBuild {
                     return ActiveFrameStep::Pending;
                 }
                 if !self.deadline_receipt_received {
-                    let expected=cx.retained_grant();let before=cx.retained_progress();
+                    let expected=cx.retained_grant();let before=cx.retained_progress();let held_before=cx.reserved_return_progress();
                     let poll=match session.step_on_original_caller(cx){Ok(poll)=>poll,Err(failure)=>return ActiveFrameStep::CloseFailure(failure)};
                     if !matches!(poll,semio_framework_job_worker::WorkerJobPoll::Outcome|semio_framework_job_worker::WorkerJobPoll::Terminal)||!session.checkout_outcome(){return ActiveFrameStep::Pending}
                     let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline worker omitted its checked-out physical receipt"))};
                     self.deadline_receipt_received=true;
                     let after=cx.retained_progress();
-                    let posted=before.checked_add(progress).is_ok_and(|total|total==after);
+                    let posted=posted_receipt(before,progress,held_before,cx);
                     if issued!=expected||!progress.fits(issued)||!posted{self.deadline_refused_receipt=Some((issued,progress));return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline worker tuple differs from its already posted original caller receipt"))}
                     return ActiveFrameStep::Pending;
                 }
@@ -516,12 +530,13 @@ impl ActiveFrameBuild {
         }
         if cx.is_cancelled() { self.cancel(); }
         match run_frame_owner_turn(cx, |cx| self.advance(cx)) {
-            None | Some(ActiveFrameStep::Pending) => Ok(None),
+            None => Ok(None),
+            Some(ActiveFrameStep::Pending) => JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from),
             Some(ActiveFrameStep::Fault(error)) => Err(OriginalTurnFailure::from(error)),
             Some(ActiveFrameStep::CloseFailure(error)) => Err(error),
             Some(ActiveFrameStep::Complete(frame)) => {
                 self.completed = frame;
-                Ok(None)
+                JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from)
             }
         }
     }
@@ -533,7 +548,10 @@ impl InteractiveJob for ActiveFrameBuild {
     }
 
     fn borrow_outcome<'a>(&'a self, original: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
-        original.complete(None, None)
+        match original.kind() {
+            JobOutcomeKind::Yield => original.yielded(),
+            _ => original.complete(None, None),
+        }
     }
 
     fn begin_close(&mut self) {
@@ -571,6 +589,22 @@ impl InteractiveJob for ActiveFrameBuild {
         Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})
     }
 
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(if self.completed.as_ref().is_some_and(|frame| frame.terminal_is_empty()) { size_of::<Option<semio_renderer_wgpu_app_runtime::AppFramePresentation>>() } else { 0 })
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(usize::from(!self.terminal_is_empty()))
+    }
+
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.cancel.is_none() && self.cancel_retirement.is_none() && self.completed.is_none() && self.retiring_phase.is_none() && !self.deadline_receipt_received && self.deadline_outcome_pending.is_none() && !self.deadline_acknowledged && self.deadline_refused_receipt.is_none() && matches!(self.phase, ActiveFramePhase::Terminal)
     }
@@ -591,18 +625,18 @@ impl FrameBuildHandle {
             let kind=self.original_outcome_kind;let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
             let progress=RetainedCloneProgress{copied_items:1,..Default::default()};cx.consume_retained(progress)?;cx.consume_fuel(1);
             let mut owner=self.original_outcome.take().unwrap();self.original_outcome_acknowledged=false;self.original_outcome_kind=None;
-            if kind==Some(JobOutcomeKind::Yield){match owner.resume(){Ok(())=>self.ticket=None,Err(owner)=>self.original_outcome=Some(owner)}return Ok(None)}
+            if matches!(kind,None|Some(JobOutcomeKind::Yield)){match owner.resume(){Ok(())=>self.ticket=None,Err(owner)=>self.original_outcome=Some(owner)}return Ok(None)}
             let frame=if kind==Some(JobOutcomeKind::Complete){owner.job_mut().ok().and_then(|job|if generation_is_fresh(presentation_generation,job.presentation_generation){job.completed.take()}else{None})}else{None};owner.begin_close();self.ticket=None;return Ok(frame)
         }
         if let Some(session)=self.session.as_mut(){
             if self.closing||cx.is_cancelled(){let _=session.begin_close();}
             match session.poll(){
                 semio_framework_job_worker::WorkerJobPoll::Idle=>{
-                    let before=cx.retained_progress();let expected=cx.retained_grant();let Some((ticket,poll))=session.try_step_on_original_caller(cx)?else{return Ok(None)};if poll==semio_framework_job_worker::WorkerJobPoll::Idle{return Ok(None)}
+                    let before=cx.retained_progress();let held_before=cx.reserved_return_progress();let expected=cx.retained_grant();let Some((ticket,poll))=session.try_step_on_original_caller(cx)?else{return Ok(None)};if poll==semio_framework_job_worker::WorkerJobPoll::Idle{return Ok(None)}
                     let mut owner=if poll==semio_framework_job_worker::WorkerJobPoll::Terminal{session.take_terminal()}else{session.take_outcome(ticket)}.map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame callback lost its retained outcome"))?;
                     let tuple=owner.take_retained_step_receipt();self.original_outcome_kind=owner.outcome_descriptor().map(JobOutcomeDescriptor::kind);self.ticket=Some(ticket);self.original_outcome=Some(owner);
                     let Some((issued,progress))=tuple else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame callback omitted its physical receipt").into())};
-                    if issued!=expected||!progress.fits(issued)||!before.checked_add(progress).is_ok_and(|posted|posted==cx.retained_progress()){self.original_refused_receipt=Some((issued,progress));return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame callback receipt differs from its already posted initiating recipient").into())}
+                    if issued!=expected||!progress.fits(issued)||!posted_receipt(before,progress,held_before,cx){self.original_refused_receipt=Some((issued,progress));return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame callback receipt differs from its already posted initiating recipient").into())}
                 },
                 semio_framework_job_worker::WorkerJobPoll::Closing=>{
                     match session.has_original_cancel_alias_witness(cx.original_cancel_token()){

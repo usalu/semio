@@ -1,0 +1,13 @@
+animals	dairy-cow	2 / 315; flat+followTip; 42 other id; 11 extent	71; other bone 48, descendant 15, off 8			
+animals	domestic-cat	7 / 406; flat+followTip; 90 other id	2; descendant 2			
+animals	goat	8 / 384; flat+followTip+solid; 299 other id; 5 extent	19; off 9, other bone 8, descendant 2			
+animals	hedgehog	0 / 39; flat; 2 extent	6; other bone 4, off 2			
+animals	herring-gull	26 / 174; flat+solid; 4 extent				
+animals	horse	8 / 213; flat+followTip+solid; 86 other id	4; other bone 2, off 2			
+animals	labrador-dog	2 / 541; flat+followTip; 18 other id; 35 extent	30; descendant 21, other bone 6, off 3			
+animals	mallard-duck	0 / 57; flat; 15 extent	6; off 6			
+animals	pig	14 / 300; flat+followTip; 10 extent	18; other bone 12, off 6			
+animals	pigeon	3 / 152; flat+solid; 9 extent				
+animals	red-fox	30 / 662; solid; 12 extent	99; other bone 88, off 6, descendant 5			
+animals	roe-deer	8 / 928; flat+followTip+solid; 42 extent	38; other bone 34, descendant 4			
+animals	sheep	10 / 319; flat+followTip; 7 extent	8; off 8			

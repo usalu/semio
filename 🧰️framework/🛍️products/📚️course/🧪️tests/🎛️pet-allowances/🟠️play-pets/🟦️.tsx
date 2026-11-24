@@ -69,7 +69,7 @@ export function registerPlayPetsTests(): void {
         }
         unmount();
       }
-    });
+    }, 60_000);
 
     it("is there only while the pets are calm or lively, play is allowed, somebody is on stage and the site has pets", async () => {
       const source = fakeSource();

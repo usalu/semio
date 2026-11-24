@@ -329,3 +329,41 @@ test("a holder tree passes a waiting writer at any age (no wait-for cycle), stra
   expect(queueMayProceedV1(holder,ahead,next(1e9),next(2)?Infinity:next(hour)+1000),"a shared holder waits for nothing a writer holds").toBe(true);
  }
 });
+
+test("the mapping resource runs a writer cycle: readers pass for the stand-aside part, wait at most one block behind a waiting writer, and the writer's block windows recur",async()=>{
+ const policy=(await import("../../🧭️order/🔣️policy.json")).default.fairness as never as {writerPreferenceByPrefix:{prefix:string;cycle?:{standAsideMilliseconds:number;blockMilliseconds:number}}[]};
+ const cycle=writerPreferenceForResourceV1(policy,"native-storage-mapping:abc");
+ expect(typeof cycle).toBe("object");
+ const {standAsideMilliseconds:aside,blockMilliseconds:block}=cycle as {standAsideMilliseconds:number;blockMilliseconds:number};
+ expect(block).toBeLessThanOrEqual(2000);expect(aside).toBeGreaterThan(block);
+ const writer={pid:1,mode:"exclusive" as const,sharedCohort:false,yielding:false,arrivedAtMs:0},reader={pid:2,mode:"shared" as const,sharedCohort:true,yielding:false,holdsShared:false};
+ expect(queueMayProceedV1(reader,[writer],0,cycle)).toBe(true);
+ expect(queueMayProceedV1(reader,[writer],aside-1,cycle)).toBe(true);
+ expect(queueMayProceedV1(reader,[writer],aside,cycle)).toBe(false);
+ expect(queueMayProceedV1(reader,[writer],aside+block-1,cycle)).toBe(false);
+ expect(queueMayProceedV1(reader,[writer],aside+block,cycle)).toBe(true);
+ let worst=0;for(let at=0;at<10*(aside+block);at+=10){let waited=0;while(!queueMayProceedV1(reader,[writer],at+waited,cycle))waited+=10;worst=Math.max(worst,waited);}
+ expect(worst,"no reader waits longer than one block").toBeLessThanOrEqual(block);
+ const blocked=[];for(let at=0;at<10*(aside+block);at+=10)if(!queueMayProceedV1(reader,[writer],at,cycle))blocked.push(at);
+ expect(new Set(blocked.map(at=>Math.floor(at/(aside+block)))).size,"a writer closes the queue in every period, so continuous readers cannot starve it").toBe(10);
+ expect(queueMayProceedV1({...reader,mode:"exclusive"} as never,[{...writer,pid:3}],0,cycle)).toBe(false);
+});
+
+test("a reader of the mapping resource behind a waiting writer is served within one block, not after the general preference of two minutes",async()=>{
+ const directory=root(),resource="native-storage-mapping:fair";
+ try{
+  const holder=participant("bun",{role:"holder",api:"queued",mode:"shared",directory,resource,holdMilliseconds:12000});
+  await until(()=>holder.lines.some(line=>line.held===true),5000,"shared holder");
+  const writer=participant("bun",{role:"writer",api:"queued",directory,resource,timeoutMilliseconds:30000});
+  await until(()=>tickets(directory,resource).length===2,5000,"writer ticket");
+  const early=participant("node",{role:"waiter",api:"queued",directory,resource,timeoutMilliseconds:3000});
+  const inBlock=participant("node",{role:"waiter",api:"queued",directory,resource,timeoutMilliseconds:3500,offsetMilliseconds:4300});
+  await Promise.all([early.done,inBlock.done]);
+  for(const reader of [early,inBlock]){const outcome=reader.lines.find(line=>line.role==="waiter")!;expect(outcome.outcome,JSON.stringify(outcome)).toBe("acquired");}
+  expect(early.lines.find(line=>line.role==="waiter")!.wallMs as number).toBeLessThan(1500);
+  expect(inBlock.lines.find(line=>line.role==="waiter")!.wallMs as number).toBeLessThan(2500);
+  await writer.done;
+  const granted=writer.lines.find(line=>line.role==="writer")!;
+  expect(granted.acquiredAfterMs as number,JSON.stringify(granted)).toBeGreaterThan(0);
+ }finally{await cleanup(directory);}
+},120000);

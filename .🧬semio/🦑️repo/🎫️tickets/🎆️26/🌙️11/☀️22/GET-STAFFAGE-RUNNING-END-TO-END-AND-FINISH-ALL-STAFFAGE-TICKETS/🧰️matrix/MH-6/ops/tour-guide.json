@@ -1,0 +1,7 @@
+[
+  {"op": "thicken", "scale": "50", "view": "front", "id": "sleeve-l"},
+  {"op": "thicken", "scale": "50", "view": "plan", "id": "sleeve-l"},
+  {"op": "thicken", "scale": "50", "view": "front", "id": "sleeve-r"},
+  {"op": "thicken", "scale": "50", "view": "plan", "id": "sleeve-r"},
+  {"op": "thicken", "scale": "50", "view": "plan", "id": "hand-r"}
+]

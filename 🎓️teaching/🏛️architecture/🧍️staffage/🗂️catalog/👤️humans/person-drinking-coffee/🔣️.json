@@ -24298,7 +24298,7 @@
        "role": "body",
        "z": 4.52,
        "filled": true,
-       "tone": 0.45,
+       "tone": 0.35,
        "region": "jacket",
        "material": "wool-jacket",
        "solid": {
@@ -25466,7 +25466,7 @@
        "role": "body",
        "z": 4.52,
        "filled": true,
-       "tone": 0.45,
+       "tone": 0.35,
        "region": "jacket",
        "material": "wool-jacket",
        "solid": {
@@ -35143,7 +35143,7 @@
        "role": "body",
        "z": 4.5,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.45,
        "region": "jacket",
        "material": "wool-jacket",
        "solid": {
@@ -36091,7 +36091,7 @@
        "role": "body",
        "z": 4.5,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.45,
        "region": "jacket",
        "material": "wool-jacket",
        "solid": {
@@ -36447,7 +36447,7 @@
        "role": "body",
        "z": 4.52,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.45,
        "region": "jacket",
        "material": "wool-jacket",
        "solid": {
@@ -36867,7 +36867,7 @@
        "role": "body",
        "z": 4.52,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.45,
        "region": "jacket",
        "material": "wool-jacket",
        "solid": {

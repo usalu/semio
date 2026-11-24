@@ -1,0 +1,57 @@
+{
+  "cover": [
+    {
+      "view": "front",
+      "from": "glide-rear",
+      "spans": {
+        "glide-rear-left": [
+          0.32,
+          0.37
+        ],
+        "glide-rear-right": [
+          -0.37,
+          -0.32
+        ]
+      }
+    },
+    {
+      "scales": [
+        "500"
+      ],
+      "view": "front",
+      "from": "back-cushion",
+      "z0": -0.2575,
+      "z1": 0.2575
+    }
+  ],
+  "solidify": [
+    {
+      "under": "tilt",
+      "twins": {
+        "glide-left": "glide-front",
+        "glide-right": "glide-front",
+        "arm-left": "arm-right"
+      }
+    }
+  ],
+  "fit": [
+    {
+      "op": "front-sweep",
+      "scale": "50",
+      "id": "back-cushion",
+      "range": "keep"
+    },
+    {
+      "op": "front-sweep",
+      "scale": "100",
+      "id": "back-cushion",
+      "range": "keep"
+    },
+    {
+      "op": "front-sweep",
+      "scale": "200",
+      "id": "back-cushion",
+      "range": "keep"
+    }
+  ]
+}

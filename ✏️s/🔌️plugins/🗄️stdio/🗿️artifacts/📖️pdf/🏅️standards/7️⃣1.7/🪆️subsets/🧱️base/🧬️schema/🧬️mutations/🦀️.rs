@@ -433,16 +433,38 @@ fn decode<T: FromValue>(value: DslValue) -> Result<T, Fault> {
     T::from_value(value).map_err(|error| refused("pdf-edit.schema-invalid", error.to_string()))
 }
 
+/// 🔎️ Whether the pointer segments address an existing member of `value`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resolves(value: &DslValue, rest: &[String]) -> bool {
+    let Some((first, tail)) = rest.split_first() else { return true };
+    match value {
+        DslValue::Object(entries) => entries.iter().find(|(key, _)| key == first).is_some_and(|(_, child)| resolves(child, tail)),
+        DslValue::Array(items) => first.parse::<usize>().ok().and_then(|at| items.get(at)).is_some_and(|child| resolves(child, tail)),
+        _ => false,
+    }
+}
+
+/// 🚫️ The bilingual refusal of an edit that names a field the document does not have.
+fn unknown_field(rest: &[String]) -> Fault {
+    let field = rest.join("/");
+    refused("stdio.pdf.unknown-field", format!("the document has no field '{field}'")).with_param("field", field)
+}
+
 /// 🎯️ A whole-value lane (`/language`, `/info/title`, …) edited below `rest`: its own `set-*` kind carries the edited value.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn whole_lane<T: ToValue + FromValue + PartialEq>(current: &T, rest: &[String], edit: Edit, make: impl FnOnce(T) -> PdfMutation) -> Result<Vec<PdfMutation>, Fault> {
     let mut value = current.to_value();
+    let before = value.clone();
+    let created = match &edit { Edit::Set(next) | Edit::Insert(next) => Some(next.clone()), Edit::Remove => None };
     match (rest.is_empty(), edit) {
         (true, Edit::Remove) => value = DslValue::Null,
         (true, Edit::Insert(next) | Edit::Set(next)) => value = next,
         (_, edit) => edit_at(&mut value, rest, edit)?,
     }
     let next: T = decode(value)?;
+    if !rest.is_empty() && next == *current && !resolves(&before, rest) && !matches!(&created, Some(DslValue::Null)) && !matches!(&created, Some(DslValue::Array(items)) if items.is_empty()) {
+        return Err(unknown_field(rest));
+    }
     Ok((next != *current).then(|| make(next)).into_iter().collect())
 }
 
@@ -562,23 +584,22 @@ pub fn special_edit(event: &SnapshotEditEvent, snapshot: &PdfSnapshot) -> Result
     };
     let segments = pointer_segments(path)?;
     let Some((lane, rest)) = segments.split_first() else { return Ok(None) };
-    let lane_level = rest.is_empty();
     let leaves = match lane.as_str() {
-        "info" if lane_level => whole_lane(&snapshot.info, rest, edit, |info| PdfMutation::SetInfo(SetInfo { info })),
-        "outlines" if lane_level => whole_lane(&snapshot.outlines, rest, edit, |outlines| PdfMutation::SetOutlines(SetOutlines { outlines })),
-        "pageLabels" if lane_level => whole_lane(&snapshot.page_labels, rest, edit, |labels| PdfMutation::SetPageLabels(SetPageLabels { labels })),
-        "outputIntents" if lane_level => whole_lane(&snapshot.output_intents, rest, edit, |intents| PdfMutation::SetOutputIntents(SetOutputIntents { intents })),
-        "acroForm" if lane_level => whole_lane(&snapshot.acro_form, rest, edit, |form| PdfMutation::SetAcroForm(SetAcroForm { form })),
-        "optionalContent" if lane_level => whole_lane(&snapshot.optional_content, rest, edit, |content| PdfMutation::SetOptionalContent(SetOptionalContent { content })),
-        "pageLayout" if lane_level => whole_lane(&snapshot.page_layout, rest, edit, |layout| PdfMutation::SetPageLayout(SetPageLayout { layout })),
-        "pageMode" if lane_level => whole_lane(&snapshot.page_mode, rest, edit, |mode| PdfMutation::SetPageMode(SetPageMode { mode })),
-        "viewerPreferences" if lane_level => whole_lane(&snapshot.viewer_preferences, rest, edit, |preferences| PdfMutation::SetViewerPreferences(SetViewerPreferences { preferences })),
-        "openAction" if lane_level => whole_lane(&snapshot.open_action, rest, edit, |action| PdfMutation::SetOpenAction(SetOpenAction { action })),
-        "language" if lane_level => whole_lane(&snapshot.language, rest, edit, |language| PdfMutation::SetLanguage(SetLanguage { language })),
-        "markInfo" if lane_level => whole_lane(&snapshot.mark_info, rest, edit, |info| PdfMutation::SetMarkInfo(SetMarkInfo { info })),
-        "metadata" if lane_level => whole_lane(&snapshot.metadata, rest, edit, |xmp| PdfMutation::SetMetadata(SetMetadata { xmp })),
-        "documentId" if lane_level => whole_lane(&snapshot.document_id, rest, edit, |id| PdfMutation::SetDocumentId(SetDocumentId { id })),
-        "encryption" if lane_level => whole_lane(&snapshot.encryption, rest, edit, |encryption| PdfMutation::SetEncryption(SetEncryption { encryption })),
+        "info" => whole_lane(&snapshot.info, rest, edit, |info| PdfMutation::SetInfo(SetInfo { info })),
+        "outlines" => whole_lane(&snapshot.outlines, rest, edit, |outlines| PdfMutation::SetOutlines(SetOutlines { outlines })),
+        "pageLabels" => whole_lane(&snapshot.page_labels, rest, edit, |labels| PdfMutation::SetPageLabels(SetPageLabels { labels })),
+        "outputIntents" => whole_lane(&snapshot.output_intents, rest, edit, |intents| PdfMutation::SetOutputIntents(SetOutputIntents { intents })),
+        "acroForm" => whole_lane(&snapshot.acro_form, rest, edit, |form| PdfMutation::SetAcroForm(SetAcroForm { form })),
+        "optionalContent" => whole_lane(&snapshot.optional_content, rest, edit, |content| PdfMutation::SetOptionalContent(SetOptionalContent { content })),
+        "pageLayout" => whole_lane(&snapshot.page_layout, rest, edit, |layout| PdfMutation::SetPageLayout(SetPageLayout { layout })),
+        "pageMode" => whole_lane(&snapshot.page_mode, rest, edit, |mode| PdfMutation::SetPageMode(SetPageMode { mode })),
+        "viewerPreferences" => whole_lane(&snapshot.viewer_preferences, rest, edit, |preferences| PdfMutation::SetViewerPreferences(SetViewerPreferences { preferences })),
+        "openAction" => whole_lane(&snapshot.open_action, rest, edit, |action| PdfMutation::SetOpenAction(SetOpenAction { action })),
+        "language" => whole_lane(&snapshot.language, rest, edit, |language| PdfMutation::SetLanguage(SetLanguage { language })),
+        "markInfo" => whole_lane(&snapshot.mark_info, rest, edit, |info| PdfMutation::SetMarkInfo(SetMarkInfo { info })),
+        "metadata" => whole_lane(&snapshot.metadata, rest, edit, |xmp| PdfMutation::SetMetadata(SetMetadata { xmp })),
+        "documentId" => whole_lane(&snapshot.document_id, rest, edit, |id| PdfMutation::SetDocumentId(SetDocumentId { id })),
+        "encryption" => whole_lane(&snapshot.encryption, rest, edit, |encryption| PdfMutation::SetEncryption(SetEncryption { encryption })),
         "objects" => item_lane(&snapshot.objects, rest, edit, |item| item.id, |id| PdfMutation::RemoveObject(RemoveObject { id, admitted_stream_roles: None }), |item, index| PdfMutation::SetObjectValue(SetObjectValue { id: item.id, value: item.value, index, admitted_stream_roles: None })),
         "trailer" => item_lane(&snapshot.trailer, rest, edit, |item| item.key.clone(), |key| PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key }), |item, index| PdfMutation::SetTrailerEntry(SetTrailerEntry { key: item.key, value: item.value, index })),
         "catalogExtra" => item_lane(&snapshot.catalog_extra, rest, edit, |item| item.key.clone(), |key| PdfMutation::RemoveCatalogEntry(RemoveCatalogEntry { key }), |item, index| PdfMutation::SetCatalogEntry(SetCatalogEntry { key: item.key, value: item.value, index })),

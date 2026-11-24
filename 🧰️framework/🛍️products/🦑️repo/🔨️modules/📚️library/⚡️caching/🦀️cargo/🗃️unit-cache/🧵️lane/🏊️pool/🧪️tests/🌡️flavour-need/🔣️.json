@@ -1,0 +1,36 @@
+{
+ "version": 1,
+ "gib": 1073741824,
+ "need": [
+  {"id": "release needs the sum of its lanes, the largest flavour wins", "lanes": [
+   {"id": "p000001", "flavour": "r", "bytes": 17},
+   {"id": "p000002", "flavour": "r", "bytes": 6},
+   {"id": "p000003", "flavour": "r", "bytes": 8},
+   {"id": "p000004", "flavour": "p", "bytes": 12},
+   {"id": "p000005", "bytes": 40}
+  ], "expect": 31},
+  {"id": "no declared flavour needs nothing", "lanes": [{"id": "p000001", "bytes": 9}], "expect": 0}
+ ],
+ "trim": [
+  {"id": "recent lanes of a flavour stay without pressure although far over the bounds", "pressure": false, "requested": [],
+   "bounds": {"maximumLanes": 1, "maximumLiveLanes": 5, "quotaBytes": 10},
+   "lanes": [
+    {"id": "p000001", "claimed": false, "lastUsedMs": 10, "crateKey": "a", "bytes": 60, "recent": true, "flavour": "r"},
+    {"id": "p000002", "claimed": false, "lastUsedMs": 20, "crateKey": "b", "bytes": 60, "recent": true, "flavour": "r"},
+    {"id": "p000003", "claimed": false, "lastUsedMs": 5, "crateKey": "c", "bytes": 60}
+   ], "expect": ["p000003"]},
+  {"id": "under pressure the least recently used lane goes, the requested one never", "pressure": true, "requested": ["p000001"],
+   "bounds": {"maximumLanes": 2, "maximumLiveLanes": 5, "quotaBytes": 130},
+   "lanes": [
+    {"id": "p000001", "claimed": false, "lastUsedMs": 10, "crateKey": "a", "bytes": 60, "recent": true, "flavour": "r"},
+    {"id": "p000002", "claimed": false, "lastUsedMs": 20, "crateKey": "b", "bytes": 60, "recent": true, "flavour": "r"},
+    {"id": "p000003", "claimed": false, "lastUsedMs": 30, "crateKey": "c", "bytes": 60, "recent": true, "flavour": "r"}
+   ], "expect": ["p000002"]},
+  {"id": "a claimed lane is never a victim", "pressure": true, "requested": [],
+   "bounds": {"maximumLanes": 1, "maximumLiveLanes": 5, "quotaBytes": 10},
+   "lanes": [
+    {"id": "p000001", "claimed": true, "lastUsedMs": 1, "crateKey": "a", "bytes": 60},
+    {"id": "p000002", "claimed": false, "lastUsedMs": 2, "crateKey": "b", "bytes": 60}
+   ], "expect": ["p000002"]}
+ ]
+}

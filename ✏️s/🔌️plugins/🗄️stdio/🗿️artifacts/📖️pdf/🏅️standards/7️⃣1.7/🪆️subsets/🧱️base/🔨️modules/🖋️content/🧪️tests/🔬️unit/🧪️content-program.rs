@@ -272,3 +272,35 @@ fn standard_type1_program_preserves_roundtrip_text_and_alias_codes() {
         assert_eq!(account.acquired, account.released + operators.iter().map(transferred_bytes).sum::<usize>());
     }
 }
+
+#[test]
+fn simple_type1_differences_and_mac_roman_decode_like_the_reference_codec() {
+    use crate::standards::v1_7::subsets::base::modules::fonts::{controlled_simple_text, FontCodec};
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfEncodingDifference, PdfFont, PdfFontKind, PdfSimpleEncoding};
+
+    let resources = NativePdfArtifactResources::from_objects(&[]);
+    let cases: [(PdfBaseEncoding, &[(u32, &str)]); 6] = [
+        (PdfBaseEncoding::MacRoman, &[]),
+        (PdfBaseEncoding::Standard, &[(65, "eacute"), (66, "Euro")]),
+        (PdfBaseEncoding::WinAnsi, &[(128, "bullet"), (233, "e")]),
+        (PdfBaseEncoding::WinAnsi, &[(97, "b"), (98, "a")]),
+        (PdfBaseEncoding::MacRoman, &[(36, "at"), (233, "udieresis")]),
+        (PdfBaseEncoding::WinAnsi, &[(200, "eacute"), (201, "eacute")]),
+    ];
+    for (base, authored) in cases {
+        let differences: Vec<PdfEncodingDifference> = authored.iter().map(|(code, glyph)| PdfEncodingDifference { code: *code, glyph: (*glyph).into() }).collect();
+        let font = PdfFont {
+            id: "F1".into(),
+            kind: PdfFontKind::Type1 {
+                base_font: "Helvetica".into(), encoding: PdfSimpleEncoding { base: Some(base), differences: differences.clone() },
+                first_char: 0, widths: Vec::new(), descriptor: None, program: None,
+            },
+            to_unicode: None, extra: Vec::new(),
+        };
+        let codec = FontCodec::new(&font, &resources).unwrap();
+        for byte in 0..=u8::MAX {
+            let reference = codec.decode_text(&[byte]).filter(|text| codec.encode(text).as_deref() == Some(&[byte]));
+            assert_eq!(controlled_simple_text(base, &differences, byte), reference.as_deref(), "{base:?} {authored:?} {byte}");
+        }
+    }
+}

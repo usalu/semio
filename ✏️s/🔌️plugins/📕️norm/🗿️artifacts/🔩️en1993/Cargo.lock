@@ -7852,9 +7852,11 @@ dependencies = [
 name = "semio-s-artifact-norm-en1993-editor-field-meta"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-value",
  "semio-s-artifact-norm-en1993-model",
  "semio-s-artifact-norm-en1993-mutations",
  "semio-s-plugin-norm-app-surface",
+ "semio-s-plugin-norm-compliance",
  "serde_json",
 ]
 

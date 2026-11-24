@@ -1020,7 +1020,7 @@ semio-plugin-describe = { path = "🧰️framework/🛍️products/💻️os/�
 # Cargo.lock already resolves to, so adopting `.workspace = true` later is a no-op for
 # resolution). Deps below the ~10-manifest survey bar are left alone (see ticket report).
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = { version = "1.0.149", features = ["raw_value"] }
+serde_json = { version = "1.0.149", features = ["raw_value", "float_roundtrip"] }
 wasm-bindgen = "0.2.106"
 js-sys = "0.3.83"
 tokio = { version = "1" }

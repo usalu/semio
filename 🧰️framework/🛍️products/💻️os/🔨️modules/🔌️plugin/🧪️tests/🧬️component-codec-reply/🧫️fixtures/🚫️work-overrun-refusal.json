@@ -1,0 +1,10 @@
+{
+  "failure": {
+    "tag": "authority",
+    "val": "work-limit"
+  },
+  "expectedMessage": "original-turn.native-return-refused: authority (work-limit)",
+  "expectedPollCalls": 2,
+  "expectedHeldCount": 0,
+  "expectedLaterCall": "original-turn.later-call-reached-the-guest"
+}

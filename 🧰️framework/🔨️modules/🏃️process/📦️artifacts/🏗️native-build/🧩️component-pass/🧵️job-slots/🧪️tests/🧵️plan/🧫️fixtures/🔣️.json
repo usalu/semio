@@ -8,9 +8,10 @@
     {"name": "coordinator memory carries two residues above the reserve and the local compile", "host": {"local": 1, "fleetSlots": 11, "availableMegabytes": 3072, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 3, "local": 1, "remote": 2, "reason": "jobs-memory"}},
     {"name": "no memory left above the reserve: no remote job", "host": {"local": 1, "fleetSlots": 11, "availableMegabytes": 2500, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 1, "local": 1, "remote": 0, "reason": "jobs-memory"}},
     {"name": "unknown memory is no limit", "host": {"local": 1, "fleetSlots": 6, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}, "expect": {"jobs": 7, "local": 1, "remote": 6, "reason": "jobs-all"}},
-    {"name": "raised memory pressure halves the remote jobs", "host": {"local": 1, "fleetSlots": 11, "availableMegabytes": 64000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 6, "local": 1, "remote": 5, "reason": "jobs-pressure"}},
+    {"name": "raised memory pressure with ample memory takes nothing off the fleet share", "host": {"local": 1, "fleetSlots": 11, "availableMegabytes": 64000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 12, "local": 1, "remote": 11, "reason": "jobs-all"}},
+    {"name": "raised memory pressure with scarce memory is bound by the memory term alone", "host": {"local": 1, "fleetSlots": 11, "availableMegabytes": 3072, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 3, "local": 1, "remote": 2, "reason": "jobs-memory"}},
     {"name": "critical memory pressure keeps every remote job away", "host": {"local": 1, "fleetSlots": 11, "availableMegabytes": 64000, "pressure": "critical", "unitMegabytes": 512}, "expect": {"jobs": 1, "local": 1, "remote": 0, "reason": "jobs-pressure"}},
-    {"name": "one fitting slot under raised pressure is none", "host": {"local": 1, "fleetSlots": 1, "availableMegabytes": 64000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 1, "local": 1, "remote": 0, "reason": "jobs-pressure"}}
+    {"name": "one fitting slot under raised pressure is still taken", "host": {"local": 1, "fleetSlots": 1, "availableMegabytes": 64000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 2, "local": 1, "remote": 1, "reason": "jobs-all"}}
   ],
   "invalid": [
     {"name": "no local slot", "host": {"local": 0, "fleetSlots": 3, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}},

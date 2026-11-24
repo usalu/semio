@@ -178,8 +178,55 @@ pub enum Stepped {
 
 /// 🦶️ Drives one step of `job` under `fuel` and `deadline_us` through its own original source and return receiver, and answers what it lent; a step that is unfunded or past its deadline cannot enter the job and yields.
 pub fn step_once<J: InteractiveJob + ?Sized>(job: &mut J, fuel: u64, deadline_us: u64, _cancel: &CancelToken, operation: OperationId, generation: Generation, _sequence: &mut u64) -> Stepped {
-    let mut caller = fixture_caller(operation, generation, u64::MAX, fuel.saturating_add(1 << 20));
-    caller.admit_return_table();
+    let mut session = StepSession::open(operation, generation, fuel.saturating_add(1 << 20));
+    let answered = session.step(job, fuel, deadline_us);
+    session.close();
+    answered
+}
+
+/// 🪙️ One original source that lends its turns to many consecutive driven steps of one job, so work a job constructs across steps stays bound to the source that admitted it.
+pub struct StepSession {
+    caller: OriginalJobFixtureCaller,
+    decoder: semio_framework_job::OriginalJobDecodeOwner,
+    replacement: Option<semio_framework_job::ReplacementIdentity>,
+}
+
+impl StepSession {
+    /// 🎟️ Admits the source and its return table once, with `fuel` as its whole lifetime work.
+    pub fn open(operation: OperationId, generation: Generation, fuel: u64) -> Self {
+        let mut caller = fixture_caller(operation, generation, u64::MAX, fuel);
+        caller.admit_return_table();
+        let decoder = caller.admitted_decoder();
+        Self { caller, decoder, replacement: None }
+    }
+
+    /// 🧷️ Installs `current` as the store's current replacement identity for every later step of this session.
+    pub fn under_replacement(mut self, current: semio_framework_job::ReplacementIdentity) -> Self {
+        self.replacement = Some(current);
+        self
+    }
+
+    /// 🏁️ Retires the decoder, then the source stock.
+    pub fn close(mut self) {
+        for _ in 0..65_536 {
+            if self.decoder.terminal_is_empty() {
+                break;
+            }
+            let (quote, _) = semio_framework_job::original_decoder_teardown_quote(&self.decoder).expect("the decoder quotes its teardown");
+            let decoder = &mut self.decoder;
+            self.caller.turn(quote, |cx| { decoder.close_on_source(cx)?; Ok(()) }).expect("original decoder teardown turn");
+        }
+        assert!(self.decoder.terminal_is_empty(), "the step decoder did not reach terminal-empty");
+        self.caller.retire(SOURCE_STOCK);
+    }
+
+    /// 🦶️ Drives one step of `job` through a fresh return receiver of this source.
+    pub fn step<J: InteractiveJob + ?Sized>(&mut self, job: &mut J, fuel: u64, deadline_us: u64) -> Stepped {
+        step_in(&mut self.caller, &mut self.decoder, self.replacement, job, fuel, deadline_us)
+    }
+}
+
+fn step_in<J: InteractiveJob + ?Sized>(caller: &mut OriginalJobFixtureCaller, decoder: &mut semio_framework_job::OriginalJobDecodeOwner, replacement: Option<semio_framework_job::ReplacementIdentity>, job: &mut J, fuel: u64, deadline_us: u64) -> Stepped {
     let mut origin = OriginalJobReturnOrigin::empty();
     let one = RetainedCloneGrant { maximum_items: 1, ..SOURCE_STOCK };
     let mut ready = false;
@@ -202,8 +249,8 @@ pub fn step_once<J: InteractiveJob + ?Sized>(job: &mut J, fuel: u64, deadline_us
     let mut verdict = None;
     let mut pending = None;
     caller
-        .refreshed_turn(STEP_GRANT, |cx| {
-            cx.with_original_work_loan(fuel, deadline_us, |cx| {
+        .refreshed_turn_with_decoder(STEP_GRANT, decoder, |cx| {
+            let mut run = |cx: &mut StepContext<'_>| cx.with_original_work_loan(fuel, deadline_us, |cx| {
                 match semio_framework_job::drive_step(job, cx, origin.receiver()?, "procedural.test", InteractiveStage::InteractiveStep, &mut verdict)? {
                     OriginalJobReturn::Preparing | OriginalJobReturn::Pending => {}
                     OriginalJobReturn::Outcome(reply) => {
@@ -217,13 +264,17 @@ pub fn step_once<J: InteractiveJob + ?Sized>(job: &mut J, fuel: u64, deadline_us
                         });
                         pending = Some(reply.into_descriptor());
                     }
-                    OriginalJobReturn::Continuation(_) => panic!("job step returned a continuation"),
+                    OriginalJobReturn::Continuation(continuation) => panic!("job step returned a continuation: {:?}", continuation.view().callback.map(|failure| format!("{failure:?}"))),
                 }
                 if pending.is_some() {
                     origin.receive_outcome(cx, &mut pending)?;
                 }
                 Ok(())
-            })
+            });
+            match replacement {
+                Some(current) => cx.with_replacement_current(current, run),
+                None => run(cx),
+            }
         })
         .expect("job step admission");
     for _ in 0..64 {
@@ -239,7 +290,6 @@ pub fn step_once<J: InteractiveJob + ?Sized>(job: &mut J, fuel: u64, deadline_us
         caller.refreshed_turn(one, |cx| origin.close_step(cx).map(|_| ())).expect("original return source close");
     }
     assert!(origin.terminal_is_empty(), "the original return source did not close");
-    caller.retire(SOURCE_STOCK);
     answered.unwrap_or(Stepped::Yield)
 }
 

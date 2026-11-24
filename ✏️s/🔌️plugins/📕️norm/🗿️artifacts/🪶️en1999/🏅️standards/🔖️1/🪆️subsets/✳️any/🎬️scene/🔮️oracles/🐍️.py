@@ -79,6 +79,20 @@ def aluminium(theta0, am_v, duration):
     return theta
 
 
+def protected(theta0, ap_v, duration, ins):
+    """🧱️ Protected member temperature by explicit stepping (5 s) of the EN 1999-1-2 insulation formula with k1 = 3 and k2 = 10."""
+    theta, t = max(theta0, 20.0), 0.0
+    while t < duration - 1e-9:
+        step = min(5.0, duration - t)
+        g_now, g_next = gas(t), gas(t + step)
+        c_a = 0.41 * theta + 903.0
+        phi = ins["specificHeat"] * ins["density"] / (c_a * 2700.0) * ins["thickness"] * ap_v
+        rise = ins["conductivity"] / ins["thickness"] * ap_v / (c_a * 2700.0) * (g_next - theta) / (1.0 + phi / 3.0) * step - (math.exp(phi / 10.0) - 1.0) * (g_next - g_now)
+        theta += rise if g_next <= g_now else max(rise, 0.0)
+        t += step
+    return theta
+
+
 def section_factor(s):
     if s["kind"] in ("tube", "chs"):
         d = max(s["d"], s["b"])
@@ -372,7 +386,9 @@ def main():
             for q in next(s for s in series if s["id"] == "gas")["points"]:
                 check(abs(q["y"] - gas(q["x"] * 60.0)) < 1e-9, f"{diagram['id']}: gas at {q['x']} min")
             for q in next(s for s in series if s["id"] == "aluminium")["points"]:
-                check(abs(q["y"] - aluminium(fire["thetaA"], am_v, q["x"] * 60.0)) < 1e-6, f"{diagram['id']}: aluminium at {q['x']} min")
+                insulation = fire.get("insulation")
+                expected = protected(fire["thetaA"], am_v, q["x"] * 60.0, insulation) if insulation and insulation["thickness"] > 0 else aluminium(fire["thetaA"], am_v, q["x"] * 60.0)
+                check(abs(q["y"] - expected) < 1e-6, f"{diagram['id']}: aluminium at {q['x']} min")
         if kind == "fire-k":
             ks = [q["y"] for q in next(s for s in series if s["id"] == "k-theta")["points"]]
             check(abs(ks[0] - 1.0) < 1e-12 and all(a >= b - 1e-12 for a, b in zip(ks, ks[1:])), f"{diagram['id']}: k_theta monotone from 1")

@@ -1,0 +1,14 @@
+[
+  {"op":"anchor","id":"tp-leaves-1","set":{"bone":"culm-1b","x":0.227,"y":-0.0399,"z":-0.0148}},
+  {"op":"anchor","id":"tp-leaves-2","set":{"bone":"culm-2b","x":0.2274,"y":-0.0069,"z":-0.0157}},
+  {"op":"anchor","id":"tp-leaves-3","set":{"bone":"culm-3b","x":0.2275,"y":0.0324,"z":0.0275}},
+  {"op":"anchor","id":"tp-leaves-4","set":{"bone":"culm-4b","x":0.2136,"y":0.0395,"z":-0.0162}},
+  {"op":"anchor","id":"tp-leaves-5","set":{"bone":"shoot-1","x":1.5693,"y":0.0076,"z":-0.067}},
+  {"op":"anchor","id":"tp-leaves-6","set":{"bone":"culm-6b","x":0.2161,"y":-0.014,"z":-0.0193}},
+  {"op":"anchor","id":"tp-leaves-7","set":{"bone":"culm-7b","x":0.2326,"y":0.0165,"z":0.0286}},
+  {"op":"anchor","id":"tp-leaves-8","set":{"bone":"culm-8b","x":0.256,"y":-0.0254,"z":-0.0154}},
+  {"op":"anchor","id":"tp-leaves-9","set":{"bone":"culm-9b","x":0.211,"y":0.0381,"z":0.0103}},
+  {"op":"anchor","id":"tp-leaves-10","set":{"bone":"shoot-1","x":1.1249,"y":-0.0369,"z":-0.0493}},
+  {"op":"anchor","id":"tp-leaves-11","set":{"bone":"shoot-2","x":1.0352,"y":0.0052,"z":0.0682}},
+  {"op":"anchor","id":"tp-leaves-12","set":{"bone":"shoot-3","x":1.1308,"y":0.0161,"z":-0.0801}}
+]

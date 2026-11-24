@@ -59,6 +59,8 @@ def decide(policy, i):
         return act("observe", index, "human-running", policy["observePollMilliseconds"])
     if i["lease"] == "other":
         return act("observe", index, "lease-held", policy["observePollMilliseconds"])
+    if i["inflight"] is not None:
+        return act("run", index, None, 0)
     f = i["failure"]
     if f is not None and f["digest"] == i["digest"] and f["nextAttemptMs"] > i["now"]:
         return act("backoff", index, None, f["nextAttemptMs"] - i["now"])
@@ -82,7 +84,7 @@ def workspace_invalidation(fixture, schema, policy, rustup_bridge):
             files = {} if case["path"] is None else {case["path"]: "a" * 64}
             current = digests(schema, platform, files, rustup_bridge)
             changed = [b["name"] for a, b in zip(old["stages"], current["stages"]) if a["digest"] != b["digest"]]
-            decision = decide(policy, dict(current, server=False, done={stage["name"]: stage["digest"] for stage in old["stages"]}, marker=True, repo=True, human=False, lease="free", memoryOk=True, failure=None, now=1))
+            decision = decide(policy, dict(current, server=False, done={stage["name"]: stage["digest"] for stage in old["stages"]}, marker=True, repo=True, human=False, lease="free", inflight=None, memoryOk=True, failure=None, now=1))
             results.append({"changed": changed, "decision": decision})
     return results
 

@@ -1,4 +1,4 @@
-/** 🎨️ Gives every outline or prism the repair drew in place of authored shapes the look of what it replaced: per group of ops (the plates or prisms of one bone in one view) each added shape takes tone, hatch, pen and drawing order `z` of the removed shape with its id, else of the removed shape of its material that it overlaps most in the default pose, else of the removed shape it overlaps most (a shape that an earlier group of the repair drew counts with the look it was given); the volume only gives the tone of a part that was not drawn before. Rewrites the shapes inside ops/<slug>.json (idempotent) and prints what changed.
+/** 🎨️ Gives every outline or prism the repair drew in place of authored shapes the look of what it replaced: per group of ops (the plates or prisms of one bone in one view) each added shape takes tone, hatch, pen and drawing order `z` of the removed shape with its id, else of the removed shape of its material that it overlaps most in the default pose, else the tone of its volume solid and the drawing order of the removed shape it overlaps most (a shape that an earlier group of the repair drew counts with the look it was given): a part of another material than anything it replaces keeps the tone of the body. Rewrites the shapes inside ops/<slug>.json (idempotent) and prints what changed.
  *  bun restyle.ts <backup dir> <slug>… */
 import { evaluate } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
 import { applyOps, readOps, writeOps } from "./ops.ts";
@@ -36,15 +36,18 @@ for (const slug of slugs) {
     for (const o of list.filter((x) => x.op === "shape-add")) {
       const id = o.shape.id as string;
       const best = (pool: any[]): any | undefined => pool.map((s) => ({ s, a: overlap(was.get(s.id), now.get(id)) })).sort((p, q) => q.a - p.a)[0]?.s;
-      const match = removed.find((s) => s.id === id || s.id === id.replace(/(-p)+$/u, "")) ?? best(removed.filter((s) => s.material !== undefined && s.material === o.shape.material)) ?? best(removed);
+      const own = removed.find((s) => s.id === id || s.id === id.replace(/(-p)+$/u, "")) ?? best(removed.filter((s) => s.material !== undefined && s.material === o.shape.material));
+      const match = own ?? best(removed);
       if (match === undefined) continue;
-      const style: Record<string, unknown> = { tone: match.tone, z: match.z };
-      for (const k of ["hatch", "penMm"]) if (match[k] !== undefined) style[k] = match[k];
+      const solids = (after.volumes[scale]?.body ?? []) as any[];
+      const solid = solids.find((x) => x.id === id.replace(/(-p)+$/u, "")) ?? solids.find((x) => x.bone === o.shape.bone && x.material !== undefined && x.material === o.shape.material);
+      const style: Record<string, unknown> = { tone: own === undefined && solid?.tone !== undefined ? solid.tone : match.tone, z: match.z };
+      if (own !== undefined) for (const k of ["hatch", "penMm"]) if (match[k] !== undefined) style[k] = match[k];
       for (const target of ops.filter((x) => x.scale === scale && x.view === view && (x.op === "shape-add" || x.op === "shape") && x.shape?.id === id)) {
         const s = target.shape;
-        if (Object.entries(style).every(([k, v]) => s[k] === v) && (match.hatch !== undefined || s.hatch === undefined)) continue;
+        if (Object.entries(style).every(([k, v]) => s[k] === v) && (style.hatch !== undefined || s.hatch === undefined)) continue;
         Object.assign(s, style);
-        if (match.hatch === undefined) delete s.hatch;
+        if (style.hatch === undefined) delete s.hatch;
         changed++;
       }
     }

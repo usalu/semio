@@ -6,22 +6,10 @@ use super::*;
 fn example_snapshot_validates_against_json_schema() {
     let schema_path = snapshot_schema_path();
     for snap in [En1999Snapshot::compliant_roof_purlin(), En1999Snapshot::noncompliant_multi_fail()] {
-        let instance = semio_s_artifact_norm_en1999_io::text::snapshot::encode_en1999_snapshot_json(&snap);
-        let tmp = std::env::temp_dir().join(format!("en1999-instance-{}.json", snap.members[0].id));
-        std::fs::write(&tmp, &instance).unwrap();
-        let status = semio_s_plugin_norm_compliance::python_oracle::command()
-            .arg("-c")
-            .arg("import json,sys,jsonschema; s=json.load(open(sys.argv[1])); i=json.load(open(sys.argv[2])); jsonschema.validate(instance=i, schema=s); print('ok')")
-            .arg(&schema_path)
-            .arg(&tmp)
-            .output()
-            .expect("python jsonschema");
-        assert!(
-            status.status.success(),
-            "jsonschema: {}\n{}",
-            String::from_utf8_lossy(&status.stdout),
-            String::from_utf8_lossy(&status.stderr)
-        );
+        let label = format!("en1999-{}", snap.members[0].id);
+        let canonical = semio_s_artifact_norm_en1999_io::text::snapshot::encode_en1999_snapshot_json(&snap);
+        semio_s_plugin_norm_compliance::python_oracle::validate_json_schema(&schema_path, &label, &canonical).unwrap();
+        semio_s_plugin_norm_compliance::python_oracle::assert_serde_snapshot_law(&schema_path, &label, &snap);
     }
 }
 

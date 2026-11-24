@@ -482,7 +482,7 @@ export interface En1990FactorOverrideModification {
 }
 
 export interface En1990FactorOverridePatch {
-  factor?: string | null;
+  factor?: ("gamma" | "psi0" | "psi1" | "psi2" | "xi" | "k_fi") | null;
   target?: string | null;
   value?: number | null;
   justification?: string | null;
@@ -696,7 +696,7 @@ export const parseEn1990FactorOverrideRemoval: NormWireReader<En1990FactorOverri
 export const parseEn1990FactorOverrideInsertion: NormWireReader<En1990FactorOverrideInsertion> = normWireObject<En1990FactorOverrideInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseEn1990FactorOverride) });
 export const parseEn1990FactorOverrideRelocation: NormWireReader<En1990FactorOverrideRelocation> = normWireObject<En1990FactorOverrideRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
 export const parseEn1990FactorOverrideModification: NormWireReader<En1990FactorOverrideModification> = normWireObject<En1990FactorOverrideModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1990FactorOverridePatch)) });
-export const parseEn1990FactorOverridePatch: NormWireReader<En1990FactorOverridePatch> = normWireObject<En1990FactorOverridePatch>({ factor: normWireOptional(normWireNullable(normWireString)), target: normWireOptional(normWireNullable(normWireString)), value: normWireOptional(normWireNullable(normWireNumber)), justification: normWireOptional(normWireNullable(normWireString)) });
+export const parseEn1990FactorOverridePatch: NormWireReader<En1990FactorOverridePatch> = normWireObject<En1990FactorOverridePatch>({ factor: normWireOptional(normWireNullable(normWireLiteral("gamma", "psi0", "psi1", "psi2", "xi", "k_fi"))), target: normWireOptional(normWireNullable(normWireString)), value: normWireOptional(normWireNullable(normWireNumber)), justification: normWireOptional(normWireNullable(normWireString)) });
 export const parseEn1990TrafficGroupDelta: NormWireReader<En1990TrafficGroupDelta> = normWireObject<En1990TrafficGroupDelta>({ removed: normWireOptional(normWireArray(normWireRef(() => parseEn1990TrafficGroupRemoval))), inserted: normWireOptional(normWireArray(normWireRef(() => parseEn1990TrafficGroupInsertion))), moved: normWireOptional(normWireArray(normWireRef(() => parseEn1990TrafficGroupRelocation))), modified: normWireOptional(normWireArray(normWireRef(() => parseEn1990TrafficGroupModification))) });
 export const parseEn1990TrafficGroupRemoval: NormWireReader<En1990TrafficGroupRemoval> = normWireObject<En1990TrafficGroupRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
 export const parseEn1990TrafficGroupInsertion: NormWireReader<En1990TrafficGroupInsertion> = normWireObject<En1990TrafficGroupInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseEn1990TrafficGroup) });

@@ -23,6 +23,7 @@
     "semio": {
       "runtimeSourceEntries": [
         "✏️s/🔌️plugins/🏭️process/🧪️tests/🧭️dev-route/🟦️.ts",
+        "✏️s/🔌️plugins/🏭️process/🧪️tests/🔬️bridge-hub-fixtures/🟦️.ts",
         "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts",
         "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"
       ]

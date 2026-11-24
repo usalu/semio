@@ -1,0 +1,6 @@
+[
+{"op": "shape-add", "scale": "50", "view": "plan", "after": "back", "shape": {"id": "frame", "bone": "carcass", "role": "body", "z": 2, "filled": true, "tone": 0.85, "kind": "poly", "points": [[0.003, 0], [0.154, 0], [0.154, 1.434], [0.003, 1.434]], "closed": true, "region": "carcass", "material": "chipboard-foil", "solid": {"kind": "extruded", "sweep": "w", "z0": -0.4, "z1": 0.4}}},
+{"op": "note", "scale": "50", "decision": "retained", "en": "Plan: the carcass block under the top, which shows when the cabinet is tilted.", "de": "Draufsicht: der Korpusblock unter dem Deckel, der sichtbar wird, wenn der Schrank gekippt ist."},
+{"op": "shape-add", "scale": "100", "view": "plan", "after": "back", "shape": {"id": "frame", "bone": "carcass", "role": "body", "z": 2, "filled": true, "tone": 0.85, "kind": "poly", "points": [[0.003, 0], [0.154, 0], [0.154, 1.434], [0.003, 1.434]], "closed": true, "material": "chipboard-foil", "region": "carcass", "solid": {"kind": "extruded", "sweep": "w", "z0": -0.4, "z1": 0.4}}},
+{"op": "note", "scale": "100", "decision": "retained", "en": "Plan: the carcass block under the top, which shows when the cabinet is tilted.", "de": "Draufsicht: der Korpusblock unter dem Deckel, der sichtbar wird, wenn der Schrank gekippt ist."}
+]

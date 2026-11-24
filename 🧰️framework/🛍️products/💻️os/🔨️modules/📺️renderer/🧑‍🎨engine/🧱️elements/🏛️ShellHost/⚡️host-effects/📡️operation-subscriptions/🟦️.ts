@@ -6,6 +6,7 @@ import { useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { type Effect, type UiDirtyScope } from "@semio-tech/framework";
 import { spawnedProgramViewStateV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { settledFaultNoticeV1 } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { typedOperationCompletionRefreshV1 } from "../../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { operationProgressPartsV1, type OperationProgressV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import { logUnlessRetiredV1 } from "../../🧱️built-node-stores/🟦️.ts";
@@ -38,7 +39,7 @@ import type { ShellCoreAfterSpawnedSession } from "../../🛫️spawned-session/
  * session already routes to `refreshSpawnedUi`, so the completion pass needs no spawned-specific
  * branch of its own — only an owner.
  */
-export function useOperationCompletionSubscriptions({ session, loadedPluginsRef, settleOperation, applyHistoryPatch, captureProgramEffectOwner, applyLeftoverInteractionView, dropForRetiredInstance, isCurrentEffectOwner, hostMode, spawnedAppsRef, spawnedRosterKey, showTransientNoticeRef, contributorInstancesRef, contributorRosterKey, applyHostEffects }: Pick<ShellCoreAfterSpawnedSession, "session" | "loadedPluginsRef" | "settleOperation" | "applyHistoryPatch" | "captureProgramEffectOwner" | "applyLeftoverInteractionView" | "dropForRetiredInstance" | "isCurrentEffectOwner" | "hostMode" | "spawnedAppsRef" | "spawnedRosterKey" | "showTransientNoticeRef" | "contributorInstancesRef"> & {
+export function useOperationCompletionSubscriptions({ session, loadedPluginsRef, settleOperation, applyHistoryPatch, captureProgramEffectOwner, applyLeftoverInteractionView, dropForRetiredInstance, isCurrentEffectOwner, hostMode, spawnedAppsRef, spawnedRosterKey, showTransientNoticeRef, uiTerminologyRef, contributorInstancesRef, contributorRosterKey, applyHostEffects }: Pick<ShellCoreAfterSpawnedSession, "session" | "loadedPluginsRef" | "settleOperation" | "applyHistoryPatch" | "captureProgramEffectOwner" | "applyLeftoverInteractionView" | "dropForRetiredInstance" | "isCurrentEffectOwner" | "hostMode" | "spawnedAppsRef" | "spawnedRosterKey" | "showTransientNoticeRef" | "contributorInstancesRef" | "uiTerminologyRef"> & {
   readonly contributorRosterKey: string;
   readonly applyHostEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>) => Promise<void>;
 }) {
@@ -119,15 +120,21 @@ export function useOperationCompletionSubscriptions({ session, loadedPluginsRef,
 
   useEffect(() => {
     if (!session) return;
-    const instances = [{ pluginId: session.pluginId, instanceId: session.instanceId }, ...(hostMode ? spawnedAppsRef.current : [])];
+    const instances = [{ pluginId: session.pluginId, instanceId: session.instanceId, appId: session.app.id }, ...(hostMode ? spawnedAppsRef.current : [])];
     const disposers: (() => void)[] = [];
     for (const instance of instances) {
-      const plugin = loadedPluginsRef.current.find(entry => entry.handle.pluginId === instance.pluginId)?.handle;
+      const loaded = loadedPluginsRef.current.find(entry => entry.handle.pluginId === instance.pluginId);
+      const plugin = loaded?.handle;
       if (!plugin) continue;
       disposers.push(plugin.subscribeOperationDiagnostics(instance.instanceId, ({ token, diagnostic }) => {
         if (token.receiver !== instance.instanceId) return;
         const severity = diagnostic.severity === "fatal" ? "error" : diagnostic.severity;
         showTransientNoticeRef.current(diagnostic.message, severity, diagnostic.code);
+      }));
+      const app = loaded?.manifest.apps.find(candidate => candidate.id === instance.appId);
+      disposers.push(plugin.subscribeOperationFaults(instance.instanceId, error => {
+        const notice = settledFaultNoticeV1(error.fault, app, uiTerminologyRef.current);
+        showTransientNoticeRef.current(notice.text, notice.kind === "fatal" ? "error" : notice.kind, notice.code);
       }));
     }
     return () => { for (const dispose of disposers) dispose(); };

@@ -35,7 +35,7 @@
       "fleetArea": "fleet-cache-index",
       "directory": ".🧬semio/🦑️repo/⚡️cache/remote-cache",
       "maximumBytes": 2684354560,
-      "maximumEntryBytes": 536870912,
+      "maximumEntryBytes": 1342177280,
       "maximumAgeDays": 30,
       "readOnly": false,
       "tls": null,
@@ -563,7 +563,9 @@
       "keepAliveSeconds": 5,
       "cancelGraceSeconds": 20,
       "stuckSeconds": 600,
-      "chargeRampSeconds": 120
+      "chargeRampSeconds": 120,
+      "resumeGraceSeconds": 60,
+      "inputLeaseRenewSeconds": 600
     },
     "worker": {
       "concurrency": 0,
@@ -571,7 +573,7 @@
       "pollSeconds": 20,
       "directory": ".🧬semio/🦑️repo/⚡️cache/remote-execution",
       "materialize": "clone",
-      "maximumBlobBytes": 268435456,
+      "maximumBlobBytes": 12884901888,
       "ownerlessWorkSeconds": 86400,
       "sandbox": "auto",
       "inlineOutputBytes": 4096,
@@ -587,7 +589,13 @@
       "codegen": {
         "maximumThreads": 8,
         "reserveCores": 1,
-        "extraMegabytesPerThread": 512
+        "extraMegabytesPerThread": 512,
+        "fairShareThreads": 4
+      },
+      "outage": {
+        "seconds": 600,
+        "initialMilliseconds": 1000,
+        "maximumMilliseconds": 15000
       }
     }
   }

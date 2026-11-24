@@ -38,8 +38,8 @@
   margin-block-start: var(--course-clear-top);
 }
 
-.course-app [data-layered-neighbour] {
-  margin-block: var(--course-clear-top) var(--course-clear-bottom);
+.course-app .course-page-picker {
+  margin-block-start: var(--course-clear-top);
 }
 
 /* 🔲️ Forced colours (Windows high contrast): backgrounds, shadows and custom colours are replaced by system colours,

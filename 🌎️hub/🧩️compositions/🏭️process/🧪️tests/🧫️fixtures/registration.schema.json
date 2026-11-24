@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Process composition registration fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pluginId", "label", "version", "apps", "unknownApp", "capabilities", "exampleCount"],
+  "properties": {
+    "pluginId": { "type": "string", "minLength": 1 },
+    "label": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "apps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "role", "originalFactory"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "role": { "enum": ["editor", "viewer"] },
+          "originalFactory": { "const": true }
+        }
+      }
+    },
+    "unknownApp": { "type": "string", "minLength": 1 },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["artifact", "rights", "scope"],
+        "properties": {
+          "artifact": { "type": "string" },
+          "rights": { "enum": ["read", "write"] },
+          "scope": { "type": "string" }
+        }
+      }
+    },
+    "exampleCount": { "type": "integer", "minimum": 0 }
+  }
+}

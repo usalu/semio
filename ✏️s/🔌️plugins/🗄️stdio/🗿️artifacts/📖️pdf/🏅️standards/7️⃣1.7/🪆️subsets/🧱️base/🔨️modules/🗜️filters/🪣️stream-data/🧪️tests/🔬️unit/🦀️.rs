@@ -113,7 +113,7 @@ fn identity_stream_output_is_born_and_retired_in_bounded_pages() {
         steps += 1;
     }
     assert_eq!(released, retained);
-    assert!(steps >= 2 * pages && steps <= 2 * pages + 4, "{steps} retirement steps for {pages} pages");
+    assert_eq!(steps, pages + body.len().div_ceil(4096), "one release per page plus one octet discard per leaf page");
     close(&mut cursor, 0);
 }
 

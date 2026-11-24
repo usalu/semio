@@ -1,0 +1,32 @@
+{
+  "elderly-with-cane": {
+    "widthM": 0.477
+  },
+  "kneeling-gardener": {
+    "heightM": 1.027
+  },
+  "leaning-person": {
+    "depthM": 0.536
+  },
+  "parent-carrying-toddler": {
+    "heightM": 1.757
+  },
+  "parent-with-stroller": {
+    "widthM": 1.81,
+    "heightM": 1.739,
+    "depthM": 0.61
+  },
+  "person-carrying-ladder": {
+    "depthM": 0.511
+  },
+  "person-drinking-coffee": {
+    "depthM": 0.556
+  },
+  "person-signing": {
+    "widthM": 0.554,
+    "depthM": 0.53
+  },
+  "person-stretching": {
+    "widthM": 0.701
+  }
+}

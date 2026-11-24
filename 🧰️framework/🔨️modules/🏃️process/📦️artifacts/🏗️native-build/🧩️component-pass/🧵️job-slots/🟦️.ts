@@ -4,8 +4,8 @@ import type{NativeBuildPassV1}from"../📋️contract/🟦️.ts";
 import{ADMISSION_POLICY_V1,componentFinalKeyV1,componentFinalPeaksV1,predictPeakBytesV1,quantileR7V1,type UnitObservationV1}from"../../🎟️admission/🟦️.ts";
 
 const policy=schema.definitions.Policy.const;
-/** 🎫️ What a running pass holds here: the `local` slot (a jobserver token, at most one at a time) or a `light` one (the cargo process and the input shipping only, its units compile on workers). */
-export type PassJobSlotV1="local"|"light";
+/** 🎫️ What a running pass holds here: a `local` slot (a jobserver token and, beyond the first, a memory reservation of its predicted peak) or a `fleet` one (only the small local footprint of a pass whose units and final run on workers: the cargo process, the rustc wrappers and the input shipping). */
+export type PassJobSlotV1="local"|"fleet";
 
 /** 🛰️ Whether everything a pass still does after its inputs are shipped can run on a worker: its target is host independent, so its units, its final cdylib among them, are offloadable. Any other pass keeps the strictly sequential local behaviour.
  * @see ./🧬️schema/🔣️.json (`Policy.offloadableTargetPrefixes`) */
@@ -22,6 +22,17 @@ export type LocalJobEventV1=Readonly<{kind:"waiting"|"started";running:number;pe
 /** 🏠️ How a lane runs component jobs on THIS machine beside the first one: at most `maximum` local jobs at once, each holding a reservation of its predicted `peak` (megabytes) that is charged against the memory `sample` reads before every start, above `floorMegabytes` that stays free. */
 export type LocalJobsOptionsV1<T>=Readonly<{maximum:number;floorMegabytes:number;peak:(pass:T)=>number|Promise<number>;sample:()=>Promise<LocalJobSampleV1>;report?:(pass:T,event:LocalJobEventV1)=>void;pollMilliseconds?:number;progressMilliseconds?:number;now?:()=>number}>;
 
+/** 🌐️ Why a pass may or may not start on a fleet slot: a worker slot is free and the small local footprint fits, the fleet does not answer, every worker slot that fits a final is taken, the authored cap of fleet jobs is reached, memory pressure is critical or the free memory above the floor does not carry another fleet job. */
+export type FleetJobReasonV1="fleet-fits"|"fleet-none"|"fleet-busy"|"fleet-cap"|"fleet-pressure"|"fleet-memory";
+/** 🧭️ Which kind of slot a waiting pass is waiting for: a `local` one (no worker slot can take it), a `fleet` one (the local jobs cannot grow) or `either`, whichever frees first. */
+export type FleetJobWaitV1="local"|"fleet"|"either";
+/** 📣️ What the runner tells about a fleet slot: a pass starts on it and reserves its footprint, or it waits (repeated as progress) for `waitsFor`. `slots` are the worker slots that fit one more final now (`null` when the fleet does not answer), `running` the fleet jobs held here. */
+export type FleetJobEventV1=Readonly<{kind:"waiting"|"started";waitsFor:FleetJobWaitV1|null;running:number;slots:number|null;footprintMegabytes:number;peakMegabytes:number;freeMegabytes:number;floorMegabytes:number;fleetReason:FleetJobReasonV1|null;localReason:LocalJobReasonV1|null;waitedMilliseconds:number}>;
+/** 🌐️ How a lane runs component jobs on the FLEET: up to `maximum` fleet jobs at once, each charging `footprintMegabytes` of this machine (its cargo process, the rustc wrappers and the input shipping; its units and final run on workers), started only while `slots` (the worker slots that fit one more final, re-read every `pollMilliseconds`) are free and the memory `sample` shows the footprints above the hard `floorMegabytes`; local memory pressure does not stop them, critical pressure does. */
+export type FleetJobsOptionsV1<T>=Readonly<{maximum:number;slots:()=>Promise<number|null|undefined>;footprintMegabytes:number;floorMegabytes:number;sample:()=>Promise<LocalJobSampleV1>;report?:(pass:T,event:FleetJobEventV1)=>void;pollMilliseconds?:number;progressMilliseconds?:number;now?:()=>number}>;
+/** 🛑️ Raised by the body of a pass that holds a fleet slot when the worker placement of its final failed: the runner gives the fleet slot back and queues the pass for a LOCAL slot, where it waits for its reservation instead of compiling in memory nobody reserved. */
+export class FleetPlacementFailedErrorV1 extends Error{constructor(message:string){super(message);this.name="FleetPlacementFailedErrorV1";}}
+
 const pause=(milliseconds:number,wake:Iterable<Promise<void>>,signal?:AbortSignal):Promise<void>=>new Promise<void>(resolve=>{
  let timer:ReturnType<typeof setTimeout>|undefined;
  const done=()=>{if(timer!==undefined)clearTimeout(timer);signal?.removeEventListener("abort",done);resolve();};
@@ -30,50 +41,82 @@ const pause=(milliseconds:number,wake:Iterable<Promise<void>>,signal?:AbortSigna
  for(const task of wake)void task.then(done,done);
 });
 
-/** 🧵️ Runs the passes of one lane in order with up to `jobs` offloadable passes at once. The first running pass holds the local slot. Without `local` every other pass holds a light one (the strictly sequential behaviour of a build without a fleet when `jobs` is one). With `local` up to `local.maximum` passes hold a local slot: each one beyond the first holds a real reservation of its predicted peak, starts only while the free memory above the floor carries it beside the running reservations, otherwise waits (progress reported, ended by a settling job, the poll, `check` or `signal`) and re-reads the memory before each start, so a running build picks up memory that was freed; the light slots are the rest of `jobs`. A pass that is not offloadable waits for every running pass and runs alone. The first failure stops launching, is handed to `fail` at once (the driver ends the sibling cargo children) and is thrown after every running pass settled.
- * @see ./🧪️tests/🟦️.ts */
-export async function runPassesInJobSlotsV1<T extends Pick<NativeBuildPassV1,"target">>(passes:readonly T[],options:Readonly<{jobs:number;check:()=>void;run:(pass:T,slot:PassJobSlotV1)=>Promise<void>;fail?:(error:unknown)=>void;offloadable?:(pass:T)=>boolean;local?:LocalJobsOptionsV1<T>;signal?:AbortSignal}>):Promise<void>{
- const running=new Set<Promise<void>>(),reservations=new Map<Promise<void>,number>(),offloadable=options.offloadable??nativeBuildPassOffloadableV1,local=options.local,localMaximum=Math.max(1,local?.maximum??1),lightMaximum=Math.max(0,options.jobs-localMaximum),now=local?.now??Date.now;
- let failure:{error:unknown}|undefined,localHeld=0,lightHeld=0;
- const reserved=()=>{let sum=0;for(const value of reservations.values())sum+=value;return sum;};
- const launch=(pass:T,slot:PassJobSlotV1,peak:number):Promise<void>=>{
-  if(slot==="local")localHeld++;else lightHeld++;
-  const task:Promise<void>=(async()=>options.run(pass,slot))().catch(error=>{if(!failure){failure={error};options.fail?.(error);}}).finally(()=>{running.delete(task);reservations.delete(task);if(slot==="local")localHeld--;else lightHeld--;});
-  running.add(task);if(slot==="local")reservations.set(task,peak);return task;
+/** 🧵️ Runs the passes of one lane in order with up to `jobs` offloadable passes at once, each holding ONE of two kinds of slot. The first running pass holds a local slot, always. A `fleet` slot (option `fleet`) reserves only the small local footprint of a pass whose units and final run on workers, and starts while a worker slot is free, re-read while the lane runs; without `fleet` the other `jobs` less the local jobs are fleet slots without a charge (the strictly sequential behaviour of a build without a fleet when `jobs` is one). A local slot beyond the first (option `local`, up to `local.maximum`) holds a real reservation of the predicted peak, starts only while the free memory above the floor carries it beside the running reservations and the fleet footprints, and re-reads the memory before each start. A pass starts as soon as EITHER kind is free (fleet first, it is the cheaper one); otherwise it waits, with progress that names the kind it waits for, woken by a settling job, the poll, `check` or `signal`. A fleet pass whose body throws `FleetPlacementFailedErrorV1` is queued for a LOCAL slot only, ahead of the passes not yet started, and does not hold them back: while it waits for its reservation the next passes still take free fleet slots. A pass that is not offloadable waits for every running pass and runs alone. The first failure stops launching, is handed to `fail` at once (the driver ends the sibling cargo children) and is thrown after every running pass settled.
+ * @see ./🧪️tests/🟦️.ts
+ * @see ./🧪️tests/🌐️fleet/🟦️.ts */
+export async function runPassesInJobSlotsV1<T extends Pick<NativeBuildPassV1,"target">>(passes:readonly T[],options:Readonly<{jobs:number;check:()=>void;run:(pass:T,slot:PassJobSlotV1)=>Promise<void>;fail?:(error:unknown)=>void;offloadable?:(pass:T)=>boolean;local?:LocalJobsOptionsV1<T>;fleet?:FleetJobsOptionsV1<T>;signal?:AbortSignal}>):Promise<void>{
+ const running=new Set<Promise<void>>(),reservations=new Map<Promise<void>,number>(),footprints=new Map<Promise<void>,number>(),offloadable=options.offloadable??nativeBuildPassOffloadableV1,local=options.local,fleet=options.fleet,localMaximum=Math.max(1,local?.maximum??1),staticFleet=Math.max(0,options.jobs-localMaximum),fleetMaximum=fleet?Math.max(0,Math.min(fleet.maximum,options.jobs-1)):staticFleet,now=local?.now??fleet?.now??Date.now,pending=[...passes],retries:T[]=[],states=new Map<T,{peak:number|undefined;waitedSince:number|undefined;reportedAt:number}>();
+ let failure:{error:unknown}|undefined,localHeld=0,fleetHeld=0,idle:number|null|undefined,idleAt=-Infinity;
+ const sum=(rows:Map<Promise<void>,number>)=>{let total=0;for(const value of rows.values())total+=value;return total;};
+ const idleNow=async():Promise<number|null>=>{
+  if(!fleet)return Math.max(0,staticFleet-fleetHeld);
+  const at=now();
+  if(idle===undefined||at-idleAt>=(fleet.pollMilliseconds??policy.fleetPollMilliseconds)){idleAt=at;const value=await fleet.slots().catch(()=>null);idle=value===null||value===undefined?null:Math.max(0,Math.floor(value));}
+  return idle;
  };
- try{for(const pass of passes){
-  if(failure)break;
-  options.check();
-  if(options.jobs<=1||!offloadable(pass)){while(running.size)await Promise.race(running);if(failure)break;await launch(pass,"local",0);continue;}
-  let peak:number|undefined,waitedSince:number|undefined,reportedAt=-Infinity;
-  while(!failure){
-   if(waitedSince!==undefined)options.check();
-   let slot:PassJobSlotV1|undefined,verdict:LocalJobAdmitDecisionV1|undefined;
-   if(running.size<options.jobs){
-    if(localHeld===0)slot="local";
-    else if(lightHeld<lightMaximum)slot="light";
-    else if(local&&localHeld<localMaximum){
-     peak??=await local.peak(pass);
-     const sample=await local.sample(),held=reserved();
-     verdict=admitLocalComponentJobV1({running:localHeld,maximum:localMaximum,availableMegabytes:sample.availableMegabytes,ownedMegabytes:Math.min(sample.ownedMegabytes,held),reservedMegabytes:held,floorMegabytes:local.floorMegabytes,pressure:sample.pressure,peakMegabytes:peak});
+ const launch=(pass:T,slot:PassJobSlotV1,peak:number,footprint:number):Promise<void>=>{
+  if(slot==="local")localHeld++;else{fleetHeld++;if(typeof idle==="number")idle=Math.max(0,idle-1);}
+  const task:Promise<void>=(async()=>options.run(pass,slot))().catch(error=>{
+   if(slot==="fleet"&&error instanceof FleetPlacementFailedErrorV1&&!failure){states.delete(pass);retries.push(pass);return;}
+   if(!failure){failure={error};options.fail?.(error);}
+  }).finally(()=>{running.delete(task);reservations.delete(task);footprints.delete(task);if(slot==="local")localHeld--;else{fleetHeld--;idleAt=-Infinity;}});
+  running.add(task);if(slot==="local")reservations.set(task,peak);else footprints.set(task,footprint);return task;
+ };
+ const attempt=async(pass:T,localOnly:boolean):Promise<"started"|"poll"|"settle">=>{
+  let state=states.get(pass);if(!state){state={peak:undefined,waitedSince:undefined,reportedAt:-Infinity};states.set(pass,state);}
+  let slot:PassJobSlotV1|undefined,verdict:LocalJobAdmitDecisionV1|undefined,fleetVerdict:FleetJobAdmitDecisionV1|undefined,slots:number|null=null;
+  if(running.size<options.jobs){
+   if(localHeld===0)slot="local";
+   else{
+    if(!localOnly){
+     if(fleet){
+      slots=await idleNow();
+      const sample=await fleet.sample().catch(()=>({availableMegabytes:null,ownedMegabytes:0,pressure:null}) as LocalJobSampleV1);
+      fleetVerdict=admitFleetComponentJobV1({running:fleetHeld,slots,maximum:fleetMaximum,availableMegabytes:sample.availableMegabytes,reservedMegabytes:Math.ceil(sum(footprints)),floorMegabytes:fleet.floorMegabytes,pressure:sample.pressure,footprintMegabytes:fleet.footprintMegabytes});
+      if(fleetVerdict.admit)slot="fleet";
+     }else if(fleetHeld<staticFleet)slot="fleet";
+    }
+    if(!slot&&local&&localHeld<localMaximum){
+     state.peak??=await local.peak(pass);
+     const sample=await local.sample(),held=sum(reservations);
+     verdict=admitLocalComponentJobV1({running:localHeld,maximum:localMaximum,availableMegabytes:sample.availableMegabytes,ownedMegabytes:Math.min(sample.ownedMegabytes,held),reservedMegabytes:Math.ceil(held+sum(footprints)),floorMegabytes:local.floorMegabytes,pressure:sample.pressure,peakMegabytes:state.peak});
      if(verdict.admit)slot="local";
     }
    }
-   if(failure)break;
-   if(slot){
-    if(slot==="local"&&local&&peak===undefined)peak=await local.peak(pass);
-    if(failure)break;
-    const extra=slot==="local"&&localHeld>0;
-    if(extra&&local&&verdict)local.report?.(pass,{kind:"started",running:localHeld,peakMegabytes:peak!,freeMegabytes:verdict.freeMegabytes,floorMegabytes:local.floorMegabytes,reason:verdict.reason,waitedMilliseconds:waitedSince===undefined?0:now()-waitedSince});
-    launch(pass,slot,peak??0);
-    break;
-   }
-   if(verdict&&local){
-    const at=now();waitedSince??=at;
-    if(at-reportedAt>=(local.progressMilliseconds??policy.localJobsProgressMilliseconds)){reportedAt=at;local.report?.(pass,{kind:"waiting",running:localHeld,peakMegabytes:peak!,freeMegabytes:verdict.freeMegabytes,floorMegabytes:local.floorMegabytes,reason:verdict.reason,waitedMilliseconds:at-waitedSince});}
-    await pause(local.pollMilliseconds??policy.localJobsPollMilliseconds,running,options.signal);
-   }else await Promise.race(running);
   }
+  if(failure)return"settle";
+  const waited=state.waitedSince===undefined?0:now()-state.waitedSince;
+  if(slot){
+   if(slot==="local"&&local&&state.peak===undefined)state.peak=await local.peak(pass);
+   if(failure)return"settle";
+   const extra=slot==="local"&&localHeld>0,peak=state.peak??0;
+   if(extra&&local&&verdict)local.report?.(pass,{kind:"started",running:localHeld,peakMegabytes:peak,freeMegabytes:verdict.freeMegabytes,floorMegabytes:local.floorMegabytes,reason:verdict.reason,waitedMilliseconds:waited});
+   if(slot==="fleet"&&fleet)fleet.report?.(pass,{kind:"started",waitsFor:null,running:fleetHeld,slots,footprintMegabytes:fleet.footprintMegabytes,peakMegabytes:peak,freeMegabytes:fleetVerdict?.freeMegabytes??0,floorMegabytes:fleet.floorMegabytes,fleetReason:fleetVerdict?.reason??null,localReason:verdict?.reason??null,waitedMilliseconds:waited});
+   (localOnly?retries:pending).shift();states.delete(pass);launch(pass,slot,peak,fleet?.footprintMegabytes??0);
+   return"started";
+  }
+  if(!fleetVerdict&&!(verdict&&local))return"settle";
+  const at=now();state.waitedSince??=at;
+  if(at-state.reportedAt>=(local?.progressMilliseconds??fleet?.progressMilliseconds??policy.localJobsProgressMilliseconds)){
+   state.reportedAt=at;
+   if(fleet){const fleetWait=fleetVerdict!==undefined&&fleetVerdict.reason!=="fleet-none",localWait=localOnly||local!==undefined,waitsFor:FleetJobWaitV1=fleetWait&&localWait?"either":fleetWait?"fleet":"local";fleet.report?.(pass,{kind:"waiting",waitsFor,running:fleetHeld,slots,footprintMegabytes:fleet.footprintMegabytes,peakMegabytes:state.peak??0,freeMegabytes:verdict?.freeMegabytes??fleetVerdict?.freeMegabytes??0,floorMegabytes:local?.floorMegabytes??fleet.floorMegabytes,fleetReason:fleetVerdict?.reason??null,localReason:verdict?.reason??null,waitedMilliseconds:at-state.waitedSince});}
+   else if(verdict&&local)local.report?.(pass,{kind:"waiting",running:localHeld,peakMegabytes:state.peak!,freeMegabytes:verdict.freeMegabytes,floorMegabytes:local.floorMegabytes,reason:verdict.reason,waitedMilliseconds:at-state.waitedSince});
+  }
+  return"poll";
+ };
+ try{while(!failure){
+  const retry=retries[0],next=pending[0];
+  if(retry===undefined&&next===undefined){if(!running.size)break;await Promise.race(running);continue;}
+  options.check();
+  const sequential=next!==undefined&&(options.jobs<=1||!offloadable(next));
+  if(retry===undefined&&sequential){if(running.size){await Promise.race(running);continue;}pending.shift();await launch(next,"local",0,0);continue;}
+  let outcome:"started"|"poll"|"settle"="settle";
+  if(retry!==undefined)outcome=await attempt(retry,true);
+  if(failure)break;
+  if(outcome!=="started"&&next!==undefined&&!sequential){const second=await attempt(next,false);outcome=second==="started"?"started":second==="poll"||outcome==="poll"?"poll":"settle";}
+  if(failure)break;
+  if(outcome==="poll"||outcome==="settle"&&!running.size)await pause(local?.pollMilliseconds??fleet?.pollMilliseconds??policy.localJobsPollMilliseconds,running,options.signal);
+  else if(outcome==="settle")await Promise.race(running);
  }}catch(error){if(!failure){failure={error};options.fail?.(error);}}
  while(running.size)await Promise.allSettled([...running]);
  if(failure)throw failure.error;
@@ -87,13 +130,13 @@ export type ComponentJobsHostV1=Readonly<{local:number;fleetSlots:number|null;av
 export type ComponentJobsDecisionV1=Readonly<{jobs:number;local:number;remote:number;reason:ComponentJobsReasonV1}>;
 
 const fill=(text:string,values:Readonly<Record<string,string|number>>):string=>text.replace(/\{([a-z]+)\}/gu,(match,key:string)=>key in values?String(values[key]):match);
-function requireDefinition<T>(definition:"ComponentJobsHost"|"ComponentJobsDecision"|"LocalJobsHost"|"LocalJobsDecision"|"LocalJobAdmitHost"|"LocalJobAdmitDecision"|"ComponentJobSlotsHost"|"ComponentJobSlotsDecision",value:unknown):T{
+function requireDefinition<T>(definition:"FleetJobAdmitHost"|"FleetJobAdmitDecision"|"ComponentJobsHost"|"ComponentJobsDecision"|"LocalJobsHost"|"LocalJobsDecision"|"LocalJobAdmitHost"|"LocalJobAdmitDecision"|"ComponentJobSlotsHost"|"ComponentJobSlotsDecision",value:unknown):T{
  const errors=validateJsonSchemaSubset({definitions:schema.definitions,$ref:`#/definitions/${definition}`},value);
  if(errors.length)throw Error(fill(schema.definitions.Messages.const.en.errors.definitionRequired,{detail:errors[0]!}));
  return value as T;
 }
 
-/** 🧵️ Sizes the concurrent component jobs of one build: the local grant plus the worker slots that can take a wasm final (`fleetSlots`, counted at the predicted peak of the final), bounded by the authored cap (`componentJobsMaximum`) and by the memory the local residue of an offloaded job (`componentJobResidueMegabytes`: the cargo process, its fingerprint checks and the input shipping) may hold beside the local compiles; none under critical and half under raised memory pressure. Without a fleet answer the plan is the local grant, so a build with the fleet down behaves as before.
+/** 🧵️ Sizes the concurrent component jobs of one build: the local grant plus the worker slots that can take a wasm final (`fleetSlots`, counted at the predicted peak of the final), bounded by the authored cap (`componentJobsMaximum`) and by the memory the local residue of an offloaded job (`componentJobResidueMegabytes`: the cargo process, its fingerprint checks and the input shipping) may hold beside the local compiles; none under critical memory pressure. Raised pressure takes nothing off the fleet share: a remote job holds only its small known footprint here, so the memory term alone bounds it. Without a fleet answer the plan is the local grant, so a build with the fleet down behaves as before.
  * @see ./🧬️schema/🔣️.json
  * @see ./🧪️tests/🧵️plan/🐍️oracle/🐍️.py */
 export function planComponentJobsV1(hostValue:ComponentJobsHostV1):ComponentJobsDecisionV1{
@@ -104,7 +147,6 @@ export function planComponentJobsV1(hostValue:ComponentJobsHostV1):ComponentJobs
  limit(Math.max(0,policy.componentJobsMaximum-host.local),"jobs-cap");
  if(host.availableMegabytes!==null)limit(Math.floor(Math.max(0,host.availableMegabytes-policy.reserveMegabytes-host.local*host.unitMegabytes)/policy.componentJobResidueMegabytes),"jobs-memory");
  if(host.pressure==="critical")limit(0,"jobs-pressure");
- else if(host.pressure==="warn")limit(Math.floor(remote/policy.pressureWarnDivisor),"jobs-pressure");
  return Object.freeze(requireDefinition<ComponentJobsDecisionV1>("ComponentJobsDecision",{jobs:host.local+remote,local:host.local,remote,reason}));
 }
 
@@ -181,4 +223,41 @@ export function describeComponentJobsV1(language:"en"|"de",values:Readonly<Recor
 /** 🖨️ Describes a local job event or plan of local jobs in both languages on one line (English first, German second), the way the driver logs its other bilingual lines. */
 export function describeLocalComponentJobsV1(name:"plan"|"waiting"|"started",values:Readonly<Record<string,string|number>>):string{
  return(["en","de"] as const).map(language=>{const catalogue=schema.definitions.Messages.const[language].local,reason=values.reason;return fill(catalogue[name],{...values,...typeof reason==="string"&&reason in catalogue.reasons?{reason:catalogue.reasons[reason as keyof typeof catalogue.reasons]}:{}});}).join(" / ");
+}
+
+/** 🌐️ What one decision to start a pass on a fleet slot reads: the fleet jobs held here (`running`) and the most that may run (`maximum`), the worker slots that fit one more final right now (`slots`, `null` when the fleet does not answer), the free megabytes now (`null` when unreadable), the megabytes the fleet jobs here already charge, the hard floor that stays free, the memory pressure and the footprint of the job that asks. */
+export type FleetJobAdmitHostV1=Readonly<{running:number;maximum:number;slots:number|null;availableMegabytes:number|null;reservedMegabytes:number;floorMegabytes:number;pressure:LocalJobPressureV1;footprintMegabytes:number}>;
+/** 🎟️ The verdict: `admit`, why, and the megabytes that are free for a new footprint (free now less the footprints held and the hard floor). */
+export type FleetJobAdmitDecisionV1=Readonly<{admit:boolean;reason:FleetJobReasonV1;freeMegabytes:number}>;
+
+/** 🌐️ Decides whether one more pass may start on a fleet slot: while the cap is not reached, a worker slot that fits a final is free and the memory pressure is not critical, the pass is charged only its small local footprint against the free memory above the hard floor, so raised local memory pressure and the reservations of local finals never keep a fleet-placed pass away. Unreadable memory does not stop it either: its footprint is a few hundred megabytes, and the host warden acts on a real overshoot.
+ * @see ./🧬️schema/🔣️.json
+ * @see ./🧪️tests/🌐️fleet/🐍️oracle/🐍️.py */
+export function admitFleetComponentJobV1(hostValue:FleetJobAdmitHostV1):FleetJobAdmitDecisionV1{
+ const host=requireDefinition<FleetJobAdmitHostV1>("FleetJobAdmitHost",hostValue),free=host.availableMegabytes===null?0:Math.max(-4194304,host.availableMegabytes-host.floorMegabytes-host.reservedMegabytes);
+ const decide=(admit:boolean,reason:FleetJobReasonV1)=>Object.freeze(requireDefinition<FleetJobAdmitDecisionV1>("FleetJobAdmitDecision",{admit,reason,freeMegabytes:free}));
+ if(host.running>=host.maximum)return decide(false,"fleet-cap");
+ if(host.slots===null)return decide(false,"fleet-none");
+ if(host.slots<=0)return decide(false,"fleet-busy");
+ if(host.pressure==="critical")return decide(false,"fleet-pressure");
+ if(host.availableMegabytes!==null&&host.footprintMegabytes>free)return decide(false,"fleet-memory");
+ return decide(true,"fleet-fits");
+}
+
+/** 🌐️ The authored cap of concurrent component jobs (local and fleet slots together).
+ * @see ./🧬️schema/🔣️.json */
+export const componentJobsLimitV1:number=policy.componentJobsMaximum;
+
+/** 📏️ The local footprint (megabytes) one fleet job is charged and the hard floor that stays free beside the fleet jobs: authored, measured on the play build (one pass held 14 rustc wrappers of about 32 MB and a cargo of 9 MB, 460 MB).
+ * @see ./🧬️schema/🔣️.json */
+export const componentFleetChargeV1={footprintMegabytes:policy.fleetPassFootprintMegabytes,floorMegabytes:policy.fleetFloorMegabytes,pollMilliseconds:policy.fleetPollMilliseconds} as const;
+
+/** 🖨️ Describes a fleet slot event or plan in both languages on one line (English first, German second): `waiting` is worded by the kind of slot the pass waits for (`values.waitsFor`).
+ * @see ./🧬️schema/🔣️.json */
+export function describeFleetComponentJobsV1(name:"plan"|"started"|"waiting",values:Readonly<Record<string,string|number>>):string{
+ return(["en","de"] as const).map(language=>{
+  const catalogue=schema.definitions.Messages.const[language].fleet,key=name==="waiting"?({local:"waitingLocal",fleet:"waitingFleet",either:"waitingEither"} as const)[values.waitsFor as "local"|"fleet"|"either"]:name;
+  const reason=values.reason,localReason=values.localReason;
+  return fill(catalogue[key],{...values,...typeof reason==="string"&&reason in catalogue.reasons?{reason:catalogue.reasons[reason as keyof typeof catalogue.reasons]}:{},...typeof localReason==="string"&&localReason in schema.definitions.Messages.const[language].local.reasons?{lreason:schema.definitions.Messages.const[language].local.reasons[localReason as keyof typeof schema.definitions.Messages.const.en.local.reasons]}:{}});
+ }).join(" / ");
 }

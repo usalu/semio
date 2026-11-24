@@ -147,7 +147,7 @@ fn tower(input: &SceneInput, layout: &Layout, site: &Site, handles: &Index, t: &
         glyph.handles = handles.of(&mark.id);
         out.push(glyph, &[mark.at.clone()]);
     }
-    let (base_kind, base_en, base_de) = if t.base_rotational_stiffness_nm > 0.0 { (SupportKind::Spring { stiffness: vec![Quantity::new(QuantityKind::Stiffness, t.base_rotational_stiffness_nm)] }, format!("Foundation spring k\u{3b8} = {:.3e} N\u{b7}m/rad", t.base_rotational_stiffness_nm), format!("Gr\u{fc}ndungsfeder k\u{3b8} = {:.3e} N\u{b7}m/rad", t.base_rotational_stiffness_nm)) } else { (SupportKind::Fixed, "Fixed base".to_owned(), "Einspannung".to_owned()) };
+    let (base_kind, base_en, base_de) = if t.base_rotational_stiffness_nm > 0.0 { (SupportKind::Spring { stiffness: [0.0, 0.0, 0.0, 0.0, t.base_rotational_stiffness_nm, 0.0].iter().map(|v| Quantity::new(QuantityKind::Stiffness, *v)).collect() }, format!("Foundation spring k\u{3b8} = {:.3e} N\u{b7}m/rad", t.base_rotational_stiffness_nm), format!("Gr\u{fc}ndungsfeder k\u{3b8} = {:.3e} N\u{b7}m/rad", t.base_rotational_stiffness_nm)) } else { (SupportKind::Fixed, "Fixed base".to_owned(), "Einspannung".to_owned()) };
     let mut base = Spec::new(EntityKind::Support, format!("{}:base", t.id), path.clone(), Geometry::Support(SupportGeometry { kind: base_kind, at: o.clone(), frame: world_frame(o.clone()) }), MaterialRole::Support, loc(&base_en, &base_de), LAYER_TOWERS);
     base.binding = binding_exact(input.report, &format!("en1998.6.{}.interaction", t.id));
     base.handles = handles.of(&format!("{}:base", t.id));

@@ -2,7 +2,7 @@ import {randomUUID} from "node:crypto";
 import {link,readdir,readFile,rename,stat,unlink,writeFile} from "node:fs/promises";
 import {join} from "node:path";
 import {parseRemoteCacheActionResultV1,type RemoteCacheDigestV1} from "../🔬️action-result/🟦️.ts";
-import {SLOT_GRACE_MILLISECONDS_V1,type StalenessModeV1} from "../../🪢️slots/🟦️.ts";
+import {SLOT_GRACE_MILLISECONDS_V1,type StaleCauseV1,type StalenessModeV1} from "../../🪢️slots/🟦️.ts";
 import {readRemoteCacheMetaV1,readRemoteCacheReferencesV1,removeRemoteCacheMetaV1,scanRemoteCacheMetaV1,type RemoteCacheMetaV1} from "../🏷️retention/🟦️.ts";
 import {judgeStalenessV1,stalenessReportV1,type StalenessVerdictV1,type TreeDigestsV1} from "../🏷️retention/🍂️staleness/🟦️.ts";
 
@@ -111,7 +111,7 @@ export function planRemoteCacheBlobBoundV1(rows:Iterable<RemoteCacheBlobRowV1>,s
 }
 
 /** 🥀️ Judges every entry of a scanned store against the synchronized tree: the entries come from the scan and the sidecars (`declaration` is what an entry declared), the tree from `tree`, the tombstones are the blobs of entries an earlier sweep retired. */
-export async function judgeRemoteCacheStalenessV1(index:ReadonlyMap<string,unknown>,metas:ReadonlyMap<string,RemoteCacheMetaV1>,input:Readonly<{now:number;graceMilliseconds:number;tree:Pick<TreeDigestsV1,"digest">;toolchains?:ReadonlySet<string>|undefined;retired?:ReadonlySet<string>|undefined;signal?:AbortSignal|undefined}>):Promise<Map<string,StalenessVerdictV1>>{
+export async function judgeRemoteCacheStalenessV1(index:ReadonlyMap<string,unknown>,metas:ReadonlyMap<string,RemoteCacheMetaV1>,input:Readonly<{now:number;graceMilliseconds:number;tree:Pick<TreeDigestsV1,"digest">;toolchains?:ReadonlySet<string>|undefined;retired?:ReadonlyMap<string,StaleCauseV1>|undefined;signal?:AbortSignal|undefined}>):Promise<Map<string,StalenessVerdictV1>>{
  const entries=[...index.keys()].filter(key=>key.split("/")[1]!=="cas").map(key=>{const meta=metas.get(key);return {key,storedAt:meta?.storedAt??0,refs:meta?.refs??[],declaration:meta?.declaration};});
  return judgeStalenessV1(entries,{now:input.now,graceMilliseconds:input.graceMilliseconds,digest:input.tree.digest,toolchains:input.toolchains,retired:input.retired,signal:input.signal});
 }

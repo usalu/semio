@@ -118,20 +118,25 @@ pub fn check_system_base_shear(
     if f_b > system.base_shear_resistance_n {
         let req_v = f_b;
         let req_mass = (system.base_shear_resistance_n / (s_d * lambda)).max(0.0);
+        let first_gk = building.storeys.first().map(|s| s.permanent_gk_n).unwrap_or(0.0);
+        let reduced_gk = (first_gk - (total_mass - req_mass).max(0.0) * 9.81).max(0.0);
         shear = shear
             .remedy(Remedy::at_least(
                 SubjectRef::new(bid, format!("{spath}.baseShearResistanceN"), lc("Base shear resistance", "Querkrafttragfähigkeit")),
                 q_force(system.base_shear_resistance_n),
                 q_force(req_v),
                 lc(&format!("Increase V_Rd from {:.0} N to at least {:.0} N (or add walls).", system.base_shear_resistance_n, req_v), &format!("V_Rd von {:.0} N auf mindestens {:.0} N erhöhen (oder Wände ergänzen).", system.base_shear_resistance_n, req_v)),
-            ))
-            .remedy(Remedy::at_most(
+            ));
+        if reduced_gk < first_gk {
+            shear = shear.remedy(Remedy::at_most(
                 SubjectRef::new(bid, format!("{bpath}.storeys[id={}].permanentGkN", building.storeys.first().map(|s| s.id.as_str()).unwrap_or("s1")), lc("Permanent G_k", "Ständige Einwirkung G_k")),
-                q_force(building.storeys.first().map(|s| s.permanent_gk_n).unwrap_or(0.0)),
-                q_force((req_mass * 9.81 * 0.85).max(0.0)),
+                q_force(first_gk),
+                q_force(reduced_gk),
                 lc(&format!("Reduce permanent G_k so seismic mass approaches {req_mass:.0} kg.",), &format!("Ständige G_k senken, damit seismische Masse Richtung {req_mass:.0} kg geht.")),
             ));
+        }
     }
+
     report.push(spectrum_ndps.iter().fold(shear.ndps(&q_ndps), |b, id| b.ndp(id)).build());
     (q, f_b)
 }

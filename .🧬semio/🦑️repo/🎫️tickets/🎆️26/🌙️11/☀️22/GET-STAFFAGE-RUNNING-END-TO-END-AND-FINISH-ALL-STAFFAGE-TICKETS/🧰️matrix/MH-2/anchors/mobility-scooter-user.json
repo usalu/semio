@@ -1,0 +1,51 @@
+[
+ {
+  "anchor": "patch-rear",
+  "into": [
+   {
+    "id": "patch-rear-l",
+    "z": 0.235,
+    "title": {
+     "en": "Left rear tyre contact patch",
+     "de": "Aufstandsfläche des linken Hinterreifens"
+    }
+   },
+   {
+    "id": "patch-rear-r",
+    "z": -0.235,
+    "title": {
+     "en": "Right rear tyre contact patch",
+     "de": "Aufstandsfläche des rechten Hinterreifens"
+    }
+   }
+  ]
+ },
+ {
+  "anchor": "patch-front",
+  "into": [
+   {
+    "id": "patch-front-l",
+    "z": 0.235,
+    "title": {
+     "en": "Left front tyre contact patch",
+     "de": "Aufstandsfläche des linken Vorderreifens"
+    }
+   },
+   {
+    "id": "patch-front-r",
+    "z": -0.235,
+    "title": {
+     "en": "Right front tyre contact patch",
+     "de": "Aufstandsfläche des rechten Vorderreifens"
+    }
+   }
+  ]
+ },
+ {
+  "assumption": 0,
+  "text": {
+   "en": "The four tyre patches are the ground contacts, one anchor per tyre at its real lateral position; the person is rigidly attached to the scooter through seat and footboard and the weight is shared according to the elastic-support model of the solver (about two thirds on the rear axle under the seat and the batteries).",
+   "de": "Die vier Reifenaufstandsflächen sind die Bodenkontakte, ein Anker je Reifen an seiner wirklichen seitlichen Lage; die Person ist über Sitz und Trittbrett starr mit dem Elektromobil verbunden, und das Gewicht verteilt sich nach dem Elastizitätsmodell des Lösers (etwa zwei Drittel auf der Hinterachse unter Sitz und Akkus)."
+  }
+ }
+]

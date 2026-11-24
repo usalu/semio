@@ -39289,7 +39289,7 @@
               "role": "body",
               "z": 0.5,
               "filled": true,
-              "tone": 0.45,
+              "tone": 0.2,
               "material": "pvc-foot",
               "solid": {
                 "kind": "extruded",
@@ -39310,7 +39310,7 @@
               "role": "body",
               "z": 0.5,
               "filled": true,
-              "tone": 0.45,
+              "tone": 0.78,
               "region": "ladder",
               "material": "aluminium-rail",
               "solid": {

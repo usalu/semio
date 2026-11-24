@@ -26,6 +26,7 @@
         "storeDirectory": "build-telemetry",
         "storeFile": "units.jsonl",
         "sourceExtension": ".rs",
+        "forecastSizeToleranceBasisPoints": 2500,
         "sourceSkipDirectories": [
           "target",
           "node_modules",
@@ -508,6 +509,11 @@
           "minimum": 0
         },
         "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lines": {
+          "description": "The Rust source lines of the unit's crate directory when it was observed: the input size the peak was measured for. A forecast only uses rows whose size is within the policy tolerance of the unit's current size; rows without it are stale.",
           "type": "integer",
           "minimum": 0
         }

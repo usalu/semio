@@ -671,6 +671,7 @@ fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
 #[test]
 fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
     let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
+    caller.own_surface(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID);
     let fixture = display_order_fixture();
     let mut shell = display_shell();
     let kind = shell.docs.session.as_mut().unwrap().app.window_kinds.first_mut();
@@ -718,5 +719,6 @@ fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
     }
     assert!(input.hits().iter().any(|hit| hit.control_id.as_deref() == Some(orthographic_id.as_str())), "actual hugging Display publishes Orthographic after one click per disclosure");
     caller.retire_world(&mut resources);
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
     caller.finish();
 }

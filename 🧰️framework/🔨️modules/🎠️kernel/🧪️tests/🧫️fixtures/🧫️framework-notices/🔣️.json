@@ -82,6 +82,11 @@
       "de": "Dieses Plugin wurde für App-Kanal {guest} gebaut, diese App spricht aber App-Kanal {host} — Plugin neu bauen."
     },
     {
+      "code": "plugin.original-stock-exhausted",
+      "en": "This app has used up its work budget and could not renew it — cancel its running tasks and try again, or reopen the app.",
+      "de": "Diese App hat ihr Arbeitsbudget aufgebraucht und konnte es nicht erneuern — laufende Aufgaben abbrechen und erneut versuchen oder die App neu öffnen."
+    },
+    {
       "code": "history-filter.unknown",
       "en": "This history filter is not known — choose one the history panel offers.",
       "de": "Dieser Verlaufsfilter ist unbekannt — einen im Verlaufsbereich angebotenen wählen."

@@ -110,6 +110,36 @@ test("lib: a unit compiled in its package directory whose module directory above
  }finally{cleanup();}
 },180000);
 
+test("lib: a unit whose #[path] modules live in another top-level tree, so that the module directory is the workspace root itself, gets the remap `workspace=.` from the launcher and has the same bytes locally at two checkout paths and in a worker",()=>{
+ try{
+  const kind:Kind={label:"lib",type:"lib"},prepare=(label:string)=>{
+   const side=checkout(label,kind),manifest=join(side.root,"t","📦️packages","🦀️rust");
+   mkdirSync(join(side.root,"x"),{recursive:true});writeFileSync(join(side.root,"x","🦀️.rs"),"pub fn o()->u32{if false{panic!(\"{}\",file!())}7}\n");
+   writeFileSync(join(side.root,"t","🦀️.rs"),readFileSync(join(side.root,"t","🦀️.rs"),"utf8")+'#[path = "../x/🦀️.rs"]\nmod outside;\npub fn o()->u32{outside::o()}\n');
+   mkdirSync(join(side.root,"out"),{recursive:true});
+   const dependency=spawnSync(rustc,common(side.root,{label:"d",type:"lib"},"d","abc123"),{cwd:side.root,encoding:"utf8",env:testRustEnvironmentV1(environmentOf(side.root,"d"))});
+   if(dependency.status!==0)throw Error(dependency.stderr);
+   const cargoGave=packageArguments(side.root,kind,["."]),linked=[...moduleRemapArgumentsV1(cargoGave,environmentOf(side.root,"t"),manifest,side.root)??cargoGave],here=spawnSync(rustc,[...linked,...linkRootArgumentsV1(linked,join(side.root,"out"))],{cwd:manifest,encoding:"utf8",env:testRustEnvironmentV1(environmentOf(side.root,"t"))});
+   if(here.status!==0)throw Error(here.stderr);
+   return{side,manifest,linked,cargoGave};
+  };
+  const a=prepare("wa"),b=prepare("wb"),base=realpathSync(mkdtempSync(join(realpathSync(tmpdir()),"determinism-w2-")));scratch.push(base);
+  expect(a.linked.length,"the launcher added the remap of the workspace root").toBe(a.cargoGave.length+1);
+  expect(a.linked.some(argument=>argument===`--remap-path-prefix=${a.side.root}=.`)).toBe(true);
+  const plan=planOffloadV1({args:a.linked,environment:environmentOf(a.side.root,"t"),cwd:a.manifest});
+  if("declined" in plan)throw Error(JSON.stringify(plan));
+  expect([...plan.files.keys()].some(name=>name.endsWith("/x/🦀️.rs")),"the module of the other tree travels").toBe(true);
+  const remote=runAction(plan,join(base,"work","🧱️root"));
+  expect(names(join(a.side.root,"out")).length).toBeGreaterThan(1);
+  for(const name of names(join(a.side.root,"out"))){
+   if(name.endsWith(".d"))continue;
+   const here=readFileSync(join(a.side.root,"out",name));
+   expect(Buffer.compare(here,readFileSync(join(remote,name))),name+": local against worker").toBe(0);
+   expect(Buffer.compare(here,readFileSync(join(b.side.root,"out",name))),name+": two checkout paths").toBe(0);
+  }
+ }finally{cleanup();}
+},180000);
+
 type Source=Readonly<{label:string;below:string;remap:string;crate:string}>;
 const SOURCES:readonly Source[]=[
  {label:"registry crate",below:"registry/src/index.crates.io-1949cf8c6b5b557f/reg-1.0.0",remap:"registry/src",crate:"reg"},

@@ -6,7 +6,7 @@ for f in "$@"; do
     rm -f "$T/🗑️generated/labels-$f.done" "$T/🗑️generated/retry-$f.done"
     "$T/run-history-inputs-families.sh" $f
     L="$T/🗑️generated/labels-$f.log"
-    if grep -qE 'exceeds its source boundary before|failed to build archive|No space left' "$L" || grep -E '^error: could not compile `' "$L" | grep -vE 'norm-(en|din|vdi|iso)' | grep -q .; then n=$((n+1)); sleep 180; else break; fi
+    if grep -qE 'exceeds its source boundary before|Cancelled \(SIGTERM\)|failed to build archive|No space left' "$L" || grep -E '^error: could not compile `' "$L" | grep -vE 'norm-(en|din|vdi|iso)' | grep -q .; then n=$((n+1)); sleep 180; else break; fi
   done
   touch "$T/🗑️generated/retry-$f.done"
 done

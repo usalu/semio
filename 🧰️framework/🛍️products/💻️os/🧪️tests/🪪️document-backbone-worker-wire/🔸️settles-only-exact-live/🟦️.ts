@@ -1,5 +1,5 @@
 /** 🔸️ The settles only exact live tests of the document backbone worker wire suite. */
-import { expect, it, vi } from "vitest";
+import { expect, it } from "vitest";
 import { source } from "../../🧮️directory-client-helpers/🟦️.ts";
 
 /** 🔹 Registers the settles only exact live tests of the document backbone worker wire suite. */
@@ -36,10 +36,9 @@ export function registerSettlesOnlyExactLiveTests(): void {
       expect(equal(await queued, queuedReceipt)).toBe(true);
       expect(mailbox.pending()).toBe(0);
       const next = mailbox.dispatchIntent(owner, "map", intent);
-      const retired = expect(next).rejects.toThrow("retired");
       expect(sent[2].actionSequence).toBe(3);
       mailbox.close("retired");
-      await retired;
+      await expect(next).rejects.toThrow("retired");
       expect(mailbox.settle({ ...fixture.acknowledged, actionSequence: 3 })).toBe(false);
       await expect(mailbox.dispatchIntent(owner, "map", intent)).rejects.toThrow("closed");
       expect(mailbox.pending()).toBe(0);
@@ -77,11 +76,10 @@ export function registerSettlesOnlyExactLiveTests(): void {
       expect(await overflow.catch((error) => browserActorActionRefusalReasonV1(error))).toBe("queue-full");
       expect(boundedSent).toEqual([1]);
       expect(bounded.pending()).toBe(2);
-      const firstClosed = expect(first).rejects.toThrow("owner retired");
-      const secondClosed = expect(second).rejects.toThrow("owner retired");
       bounded.close("browser-actor-action: owner retired");
-      await firstClosed;
-      await secondClosed;
+      const closed = await Promise.allSettled([first, second]);
+      expect(closed.map((outcome) => outcome.status)).toEqual(["rejected", "rejected"]);
+      for (const outcome of closed) expect(outcome.status === "rejected" && (outcome.reason as Error).message).toContain("owner retired");
       expect(await first.catch((error) => browserActorActionRefusalReasonV1(error))).toBe("owner-mismatch");
       expect(bounded.pending()).toBe(0);
       expect(bounded.settle({ ...fixture.acknowledged, actionSequence: 1 })).toBe(false);
@@ -109,10 +107,10 @@ export function registerSettlesOnlyExactLiveTests(): void {
     try {
       await expect(retry.dispatchIntent(owner, "map", { ...intent, revision: 4 })).rejects.toThrow("stale surface");
       expect(retried).toEqual([]);
-      const refused = expect(retry.dispatchIntent(owner, "map", intent)).rejects.toThrow(fixture.rejected.reason);
+      const refused = retry.dispatchIntent(owner, "map", intent);
       expect(retried).toEqual([2]);
       expect(retry.settle({ ...fixture.rejected, actionSequence: 2 })).toBe(true);
-      await refused;
+      await expect(refused).rejects.toThrow(fixture.rejected.reason);
       const next = retry.dispatchIntent(owner, "map", intent);
       expect(retried).toEqual([2, 3]);
       expect(retry.settle({ ...fixture.acknowledged, actionSequence: 3 })).toBe(true);
@@ -120,23 +118,23 @@ export function registerSettlesOnlyExactLiveTests(): void {
     } finally {
       retry.close("test cleanup");
     }
-    vi.useFakeTimers();
+    const wait = (milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
     const timedSent: number[] = [];
-    const timed = new BrowserActorActionMailboxV1((request) => { timedSent.push(request.actionSequence); }, 10);
+    const timed = new BrowserActorActionMailboxV1((request) => { timedSent.push(request.actionSequence); }, 200);
     try {
-      const expired = expect(timed.dispatchIntent(owner, "map", intent)).rejects.toThrow("unconfirmed");
+      const expired = timed.dispatchIntent(owner, "map", intent).then(() => undefined, (error: Error) => error);
       const behind = timed.dispatchIntent(owner, "map", intent);
       expect(timedSent).toEqual([1]);
-      await vi.advanceTimersByTimeAsync(9);
+      await wait(50);
       expect(timedSent).toEqual([1]);
-      await vi.advanceTimersByTimeAsync(1);
-      await expired;
+      await wait(200);
+      expect((await expired)?.message).toContain("unconfirmed");
       expect(timedSent).toEqual([1, 2]);
       expect(timed.pending()).toBe(1);
-      await vi.advanceTimersByTimeAsync(9);
+      await wait(50);
       expect(timed.settle({ ...fixture.acknowledged, actionSequence: 2 })).toBe(true);
       expect((await behind).actionSequence).toBe(2);
-      await vi.advanceTimersByTimeAsync(10);
+      await wait(250);
       expect(timed.pending()).toBe(0);
       const later = timed.dispatchIntent(owner, "map", intent);
       expect(timedSent).toEqual([1, 2, 3]);
@@ -144,7 +142,6 @@ export function registerSettlesOnlyExactLiveTests(): void {
       await later;
     } finally {
       timed.close("test cleanup");
-      vi.useRealTimers();
     }
   });
 }

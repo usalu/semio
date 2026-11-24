@@ -17,6 +17,7 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     check_zone_temperatures(doc, zone, &mut out, cat, usage, &path);
     check_zone_clothing_insulation(doc, zone, &mut out, cat, &path);
     check_zone_air_quality(doc, zone, annex, &mut out, cat, usage, pollution, method, &path, linked_name, linked_type);
+    check_zone_occupancy(doc, zone, &mut out, usage, &path);
     if let Some(result) = unoccupied_ventilation_report::check(zone, usage, doc.annex) {
         out.push(result);
     }
@@ -281,6 +282,36 @@ fn check_zone_clothing_insulation(
         }
         out.push(bppd_w.build());
     }
+}
+
+/// 🪑️ Reports the typical occupancy the usage category implies for the zone's floor area next to the declared occupancy.
+fn check_zone_occupancy(
+    doc: &semio_s_artifact_norm_din16798_model::Din16798Snapshot,
+    zone: &ZoneDocument,
+    out: &mut Vec<CheckResult>,
+    usage: OccupancyType,
+    path: &dyn Fn(&str) -> String,
+) {
+    let builder = CheckResult::assess(
+        format!("din16798-1.occupancy.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "Annex B", "occupancy"),
+        zone_subject(zone, path("occupants")), loc("Typical occupancy of the usage category", "Typische Belegung der Nutzungsart"),
+    ).annex(doc.annex);
+    let Some(density) = part_1::typical_floor_area_per_person_m2(usage) else {
+        out.push(builder.not_applicable(loc(
+            "The standard defines no typical occupancy for this usage category.",
+            "Die Norm legt für diese Nutzungsart keine typische Belegung fest.",
+        )).build());
+        return;
+    };
+    let typical = zone.floor_area_m2 / density;
+    let declared = zone.occupants;
+    let (note_en, note_de) = if f64::from(declared) > typical * (1.0 + 1e-9) {
+        (" The declared occupancy exceeds the typical one; confirm it as the project design occupancy.", " Die angegebene Belegung übersteigt die typische; sie ist als Projektauslegung zu bestätigen.")
+    } else { ("", "") };
+    out.push(builder.informative(Quantity::new(QuantityKind::Dimensionless, typical)).explanation(loc(
+        format!("Typical occupancy {typical:.1} persons at {density:.1} m² per person. Declared {declared} persons.{note_en}"),
+        format!("Typische Belegung {typical:.1} Personen bei {density:.1} m² je Person. Angegeben {declared} Personen.{note_de}"),
+    )).build());
 }
 
 /// ⚙️ Checks the ventilation method, the outdoor air flow and the carbon dioxide level of a zone.

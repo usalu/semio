@@ -109,7 +109,9 @@ export function concurrentTextV1(language:string,name:string,values:Readonly<Rec
  return Object.entries(values).reduce((text,[key,value])=>text.replaceAll("{"+key+"}",String(value)),template);
 }
 /** 📣️ Is one language-neutral concurrency event. */
-export type ConcurrentEventV1=Readonly<{version:1;purpose:"dependency-concurrency-event";event:(typeof protocol.events)[number];resource?:ConcurrentLeaseKindV1;elapsedMs?:number;scope?:string;generation?:string;epoch?:number;count?:number;neededBytes?:number;freeBytes?:number;reason?:string}>;
+/** 🪪️ Is one process the lease registry names as holder of a dependency lease: who, since when, how long it has not renewed its registration, in which mode. */
+export type ConcurrentHolderV1=Readonly<{pid:number;command:string;sinceMs:number;silentMs:number;mode:"shared"|"exclusive"}>;
+export type ConcurrentEventV1=Readonly<{version:1;purpose:"dependency-concurrency-event";event:(typeof protocol.events)[number];resource?:ConcurrentLeaseKindV1;elapsedMs?:number;scope?:string;generation?:string;epoch?:number;count?:number;neededBytes?:number;freeBytes?:number;reason?:string;limitMs?:number;holder?:ConcurrentHolderV1}>;
 /** 📗️ Admits only a schema-valid event. */
 export function concurrentEventV1(body:Omit<ConcurrentEventV1,"version"|"purpose">):ConcurrentEventV1{
  const value={version:1 as const,purpose:"dependency-concurrency-event" as const,...body},errors=eventSchema.validate(value);
@@ -125,10 +127,18 @@ export function concurrentAdmissionV1(input:Readonly<{scope:string;pointers:read
  return Object.freeze({neededBytes,requiredBytes,freeBytes:input.freeBytes,admitted:input.freeBytes>=requiredBytes});
 }
 
-/** 📐️ Is the physical size the dependencies partition must declare so it holds the package cache, scratch space and the installed generation set plus one building set with headroom; a linking install backend shares data with the cache, a copying one does not. */
+/** 🎭️ Is the closed set of machine roles that size the remote-execution work directory inside the dependencies volume (the cas roles: `worker`, `builder`, `cache-host`). */
+export type ConcurrentRoleV1=keyof typeof protocol.budget.remoteExecution.slots;
+/** 📐️ Is the physical size the install of the dependencies partition must hold after its nested areas (the remote-execution work directory is one, see `concurrentWorkDirectoryBytesV1`): the package cache, the python runtime, scratch space and the installed generation of every scope plus the generations being built, with headroom; a linking install backend shares data with the cache, a copying one does not. */
 export function concurrentRequiredImageBytesV1(sharing:boolean):number{
  const budget=protocol.budget,generation=sharing?budget.physicalGenerationBytes:budget.copiedGenerationBytes;
- return Math.ceil((budget.packageCacheBytes+budget.tmpReserveBytes+2*budget.scopes*generation)*(100+budget.headroomPercent)/100);
+ return Math.ceil((budget.packageCacheBytes+budget.pythonBytes+budget.tmpReserveBytes+(budget.scopes+budget.buildingGenerations)*generation)*(100+budget.headroomPercent)/100);
+}
+/** 🏭️ Is the size the remote-execution work directory needs inside the dependencies volume for one machine role: its reserve plus one action for every slot, so a worker always holds all its slots (the ledger declares the worker role's value as the byte budget of its nested area). */
+export function concurrentWorkDirectoryBytesV1(role:ConcurrentRoleV1="worker"):number{
+ const rule=protocol.budget.remoteExecution,slots=rule.slots[role];
+ if(slots===undefined)throw Error("Declared machine role required");
+ return rule.reserveBytes+slots*rule.perActionBytes;
 }
 /** 🧽️ Names the scratch directories no process has touched for the stale period (shortened under pressure), judged by name and modification time alone. */
 export function concurrentStaleTemporariesV1(rows:readonly ConcurrentRowV1[],nowMs:number,pressure:boolean):readonly string[]{

@@ -221,6 +221,9 @@ fn is_plain_stack_container(tree: &UiTree, id: NodeId, node: &Node) -> bool {
 /// `reconcile::tree_item_row` keys the row with). `None` for anything that isn't a keyed descendant
 /// of a `Tree` (ordinary `Stack`s, a `Tree`'s section rows, which are keyed by `section.id` instead).
 pub fn find_tree_item_spec(tree: &UiTree, row: NodeId) -> Option<&UiTreeItemNode> {
+    if !matches!(tree.node(row)?.spec.0, UiNode::Stack(_)) {
+        return None;
+    }
     let NodeKey::Explicit(row_id) = &tree.node(row)?.key else { return None };
     let mut ancestor = tree.node(row)?.parent;
     while let Some(candidate) = ancestor {

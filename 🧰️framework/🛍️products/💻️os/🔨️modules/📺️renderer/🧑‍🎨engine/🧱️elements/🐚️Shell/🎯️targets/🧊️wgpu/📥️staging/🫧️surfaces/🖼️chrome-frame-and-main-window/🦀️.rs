@@ -91,7 +91,7 @@ impl SurfaceState {
         if self.component_world3d_retirement.is_none() {
             let Some(token)=self.world3d_states.token(&target.host_id) else {return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));};
             let Some(owner)=self.world3d_states.take_exact_to_retirement(token) else {return Err(WorldDynamicFault::StaleToken);};
-            self.component_world3d_retirement=Some(owner);
+            self.component_world3d_retirement=Some(Box::new(owner));
             let _ = context.set_stage("componentWorldRetirement");
             context.consume_fuel(1);
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:0}));

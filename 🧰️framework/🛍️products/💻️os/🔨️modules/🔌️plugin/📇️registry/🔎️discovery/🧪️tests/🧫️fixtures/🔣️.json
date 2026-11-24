@@ -499,6 +499,10 @@
       "executionMode": "isolated"
     }
   },
+  "retainedSession": [
+    { "id": "current renderer output", "sourceSuffix": "", "retained": true, "strictAccepts": true },
+    { "id": "renderer changed since staging", "sourceSuffix": "\n// emitted by an older renderer\n", "retained": false, "strictAccepts": false }
+  ],
   "comparisons": [
     {
       "name": "ordered-id-arrays",

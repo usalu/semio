@@ -110,8 +110,8 @@
     "densityKgM3": 2700,
     "conductivityWmK": 200,
     "specificHeatJKgK": 900,
-    "elasticModulusPa": 69000000000.0,
-    "strengthPa": 150000000.0,
+    "elasticModulusPa": 69000000000,
+    "strengthPa": 150000000,
     "source": "literature",
     "reference": "en-755-2"
    },
@@ -126,8 +126,8 @@
     "densityKgM3": 2680,
     "conductivityWmK": 150,
     "specificHeatJKgK": 900,
-    "elasticModulusPa": 72000000000.0,
-    "strengthPa": 140000000.0,
+    "elasticModulusPa": 72000000000,
+    "strengthPa": 140000000,
     "source": "literature",
     "reference": "en-1706"
    },
@@ -142,8 +142,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 450,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 400000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 400000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -172,8 +172,8 @@
     "densityKgM3": 2400,
     "conductivityWmK": 1.65,
     "specificHeatJKgK": 1000,
-    "elasticModulusPa": 30000000000.0,
-    "strengthPa": 30000000.0,
+    "elasticModulusPa": 30000000000,
+    "strengthPa": 30000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -186,7 +186,7 @@
     "emissivity": 0.92,
     "solarAbsorptivity": 0.7,
     "densityKgM3": 1700,
-    "conductivityWmK": 2.0,
+    "conductivityWmK": 2,
     "specificHeatJKgK": 910,
     "source": "literature",
     "reference": "iso-10456-2007"
@@ -248,7 +248,7 @@
      },
      "section": {
       "areaM2": 0.001857,
-      "secondMomentM4": 9e-06,
+      "secondMomentM4": 0.000009,
       "extremeFibreM": 0.1,
       "material": "alu-tube",
       "title": {
@@ -281,7 +281,7 @@
      },
      "section": {
       "areaM2": 0.000337,
-      "secondMomentM4": 3e-06,
+      "secondMomentM4": 0.000003,
       "extremeFibreM": 0.094388,
       "material": "steel-galv",
       "title": {
@@ -314,7 +314,7 @@
      },
      "section": {
       "areaM2": 0.00048,
-      "secondMomentM4": 2e-06,
+      "secondMomentM4": 0.000002,
       "extremeFibreM": 0.089198,
       "material": "alu-cast",
       "title": {
@@ -445,7 +445,7 @@
        "id": "socket",
        "bone": "footing",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.65,
        "regions": [
@@ -456,7 +456,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.25
         ],
         [
@@ -468,7 +468,7 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ]
        ],
@@ -485,7 +485,7 @@
        "region": "anchor-cage",
        "material": "steel-galv",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.094388,
        "w": 0.452,
        "h": 0.012
@@ -500,7 +500,7 @@
        "region": "anchor-cage",
        "material": "steel-galv",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.082388,
        "w": 0.452,
        "h": 0.012
@@ -539,7 +539,7 @@
        "id": "flange",
        "bone": "bollard",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.3,
        "region": "tube-coat",
@@ -547,7 +547,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
@@ -567,7 +567,7 @@
          0.15
         ],
         [
-         0.0,
+         0,
          0.15
         ]
        ],
@@ -647,7 +647,7 @@
        "id": "tube",
        "bone": "bollard",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.35,
        "region": "tube-coat",
@@ -772,7 +772,7 @@
         ],
         [
          0.49,
-         0.0
+         0
         ],
         [
          0.475,
@@ -894,7 +894,7 @@
        "id": "base-ring",
        "bone": "head",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.3,
        "region": "head-housing",
@@ -902,7 +902,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.104
         ],
         [
@@ -914,7 +914,7 @@
          0.104
         ],
         [
-         0.0,
+         0,
          0.104
         ]
        ],
@@ -1173,11 +1173,11 @@
         ],
         [
          0.2,
-         0.0
+         0
         ],
         [
          0.2,
-         0.0
+         0
         ],
         [
          0.199,
@@ -1231,7 +1231,7 @@
         ],
         [
          0.199,
-         0.0
+         0
         ]
        ],
        "closed": false,
@@ -1243,7 +1243,7 @@
        "id": "socket",
        "bone": "footing",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.65,
        "regions": [
@@ -1259,11 +1259,11 @@
         ],
         [
          -0.25,
-         0.0
+         0
         ],
         [
          0.25,
-         0.0
+         0
         ],
         [
          0.25,
@@ -1337,7 +1337,7 @@
        "id": "flange",
        "bone": "bollard",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.3,
        "region": "tube-coat",
@@ -1346,7 +1346,7 @@
        "points": [
         [
          -0.15,
-         0.0
+         0
         ],
         [
          -0.15,
@@ -1366,7 +1366,7 @@
         ],
         [
          0.15,
-         0.0
+         0
         ]
        ],
        "closed": true
@@ -1445,7 +1445,7 @@
        "id": "tube",
        "bone": "bollard",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.35,
        "region": "tube-coat",
@@ -1645,7 +1645,7 @@
        "id": "base-ring",
        "bone": "head",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.3,
        "region": "head-housing",
@@ -1923,11 +1923,11 @@
          0.899
         ],
         [
-         0.0,
+         0,
          0.9
         ],
         [
-         0.0,
+         0,
          0.9
         ],
         [
@@ -1967,7 +1967,7 @@
        "id": "socket",
        "bone": "footing",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.65,
        "regions": [
@@ -1976,8 +1976,8 @@
        ],
        "material": "concrete",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.25,
        "ry": 0.25,
        "hatch": "concrete-stipple"
@@ -1992,8 +1992,8 @@
        "region": "sand-fill",
        "material": "sand-fill",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.2,
        "ry": 0.2,
        "hatch": "sand-stipple"
@@ -2002,14 +2002,14 @@
        "id": "flange",
        "bone": "bollard",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.3,
        "region": "tube-coat",
        "material": "alu-cast",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.15,
        "ry": 0.15
       },
@@ -2237,14 +2237,14 @@
        "id": "cap",
        "bone": "head",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.3,
        "region": "head-housing",
        "material": "alu-cast",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.11,
        "ry": 0.11
       },
@@ -2258,8 +2258,8 @@
        "region": "head-housing",
        "material": "alu-cast",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.06,
        "ry": 0.06,
        "penMm": 0.13
@@ -2361,7 +2361,7 @@
        "id": "socket",
        "bone": "footing",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.65,
        "regions": [
@@ -2372,7 +2372,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.25
         ],
         [
@@ -2384,7 +2384,7 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ]
        ],
@@ -2401,7 +2401,7 @@
        "region": "anchor-cage",
        "material": "steel-galv",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.094388,
        "w": 0.452,
        "h": 0.012
@@ -2416,7 +2416,7 @@
        "region": "anchor-cage",
        "material": "steel-galv",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.082388,
        "w": 0.452,
        "h": 0.012
@@ -2455,7 +2455,7 @@
        "id": "flange",
        "bone": "bollard",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.3,
        "region": "tube-coat",
@@ -2463,7 +2463,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
@@ -2475,7 +2475,7 @@
          0.15
         ],
         [
-         0.0,
+         0,
          0.15
         ]
        ],
@@ -2515,7 +2515,7 @@
        "id": "tube",
        "bone": "bollard",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.35,
        "region": "tube-coat",
@@ -2609,7 +2609,7 @@
        "id": "base-ring",
        "bone": "head",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.3,
        "region": "head-housing",
@@ -2617,7 +2617,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.104
         ],
         [
@@ -2629,7 +2629,7 @@
          0.104
         ],
         [
-         0.0,
+         0,
          0.104
         ]
        ],
@@ -2846,11 +2846,11 @@
         ],
         [
          0.2,
-         0.0
+         0
         ],
         [
          0.2,
-         0.0
+         0
         ],
         [
          0.196,
@@ -2877,7 +2877,7 @@
        "id": "socket",
        "bone": "footing",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.65,
        "regions": [
@@ -2893,11 +2893,11 @@
         ],
         [
          -0.25,
-         0.0
+         0
         ],
         [
          0.25,
-         0.0
+         0
         ],
         [
          0.25,
@@ -2971,7 +2971,7 @@
        "id": "flange",
        "bone": "bollard",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.3,
        "region": "tube-coat",
@@ -2980,7 +2980,7 @@
        "points": [
         [
          -0.15,
-         0.0
+         0
         ],
         [
          -0.15,
@@ -2992,7 +2992,7 @@
         ],
         [
          0.15,
-         0.0
+         0
         ]
        ],
        "closed": true
@@ -3031,7 +3031,7 @@
        "id": "tube",
        "bone": "bollard",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.35,
        "region": "tube-coat",
@@ -3089,7 +3089,7 @@
          0.12
         ],
         [
-         0.0,
+         0,
          0.126
         ],
         [
@@ -3103,7 +3103,7 @@
        "id": "base-ring",
        "bone": "head",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.3,
        "region": "head-housing",
@@ -3339,11 +3339,11 @@
          0.896
         ],
         [
-         0.0,
+         0,
          0.9
         ],
         [
-         0.0,
+         0,
          0.9
         ],
         [
@@ -3371,7 +3371,7 @@
        "id": "socket",
        "bone": "footing",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.65,
        "regions": [
@@ -3380,8 +3380,8 @@
        ],
        "material": "concrete",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.25,
        "ry": 0.25,
        "hatch": "concrete-stipple"
@@ -3396,8 +3396,8 @@
        "region": "sand-fill",
        "material": "sand-fill",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.2,
        "ry": 0.2
       },
@@ -3405,14 +3405,14 @@
        "id": "flange",
        "bone": "bollard",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.3,
        "region": "tube-coat",
        "material": "alu-cast",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.15,
        "ry": 0.15
       },
@@ -3572,14 +3572,14 @@
        "id": "cap",
        "bone": "head",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.3,
        "region": "head-housing",
        "material": "alu-cast",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.11,
        "ry": 0.11
       }
@@ -3641,7 +3641,7 @@
        "id": "socket",
        "bone": "footing",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.65,
        "regions": [
@@ -3652,7 +3652,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.25
         ],
         [
@@ -3664,7 +3664,7 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ]
        ],
@@ -3682,7 +3682,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.088388
         ],
         [
@@ -3704,7 +3704,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.088388
         ],
         [
@@ -3718,7 +3718,7 @@
        "id": "flange",
        "bone": "bollard",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.3,
        "region": "tube-coat",
@@ -3726,7 +3726,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
@@ -3738,7 +3738,7 @@
          0.15
         ],
         [
-         0.0,
+         0,
          0.15
         ]
        ],
@@ -3748,7 +3748,7 @@
        "id": "tube",
        "bone": "bollard",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.35,
        "region": "tube-coat",
@@ -3778,7 +3778,7 @@
        "id": "louvre-band",
        "bone": "head",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.4,
        "regions": [
@@ -3789,7 +3789,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.108
         ],
         [
@@ -3801,7 +3801,7 @@
          0.108
         ],
         [
-         0.0,
+         0,
          0.108
         ]
        ],
@@ -3876,11 +3876,11 @@
         ],
         [
          0.2,
-         0.0
+         0
         ],
         [
          0.2,
-         0.0
+         0
         ],
         [
          0.192,
@@ -3903,7 +3903,7 @@
        "id": "socket",
        "bone": "footing",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.65,
        "regions": [
@@ -3919,11 +3919,11 @@
         ],
         [
          -0.25,
-         0.0
+         0
         ],
         [
          0.25,
-         0.0
+         0
         ],
         [
          0.25,
@@ -3980,7 +3980,7 @@
        "id": "flange",
        "bone": "bollard",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.3,
        "region": "tube-coat",
@@ -3989,7 +3989,7 @@
        "points": [
         [
          -0.15,
-         0.0
+         0
         ],
         [
          -0.15,
@@ -4001,7 +4001,7 @@
         ],
         [
          0.15,
-         0.0
+         0
         ]
        ],
        "closed": true
@@ -4010,7 +4010,7 @@
        "id": "tube",
        "bone": "bollard",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.35,
        "region": "tube-coat",
@@ -4040,7 +4040,7 @@
        "id": "louvre-band",
        "bone": "head",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.4,
        "regions": [
@@ -4137,11 +4137,11 @@
          0.892
         ],
         [
-         0.0,
+         0,
          0.9
         ],
         [
-         0.0,
+         0,
          0.9
         ],
         [
@@ -4165,7 +4165,7 @@
        "id": "socket",
        "bone": "footing",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.65,
        "regions": [
@@ -4174,8 +4174,8 @@
        ],
        "material": "concrete",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.25,
        "ry": 0.25
       },
@@ -4189,8 +4189,8 @@
        "region": "sand-fill",
        "material": "sand-fill",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.2,
        "ry": 0.2
       },
@@ -4198,14 +4198,14 @@
        "id": "flange",
        "bone": "bollard",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.3,
        "region": "tube-coat",
        "material": "alu-cast",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.15,
        "ry": 0.15
       },
@@ -4213,14 +4213,14 @@
        "id": "cap",
        "bone": "head",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.3,
        "region": "head-housing",
        "material": "alu-cast",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.11,
        "ry": 0.11
       }
@@ -4282,7 +4282,7 @@
        "id": "socket",
        "bone": "footing",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.65,
        "regions": [
@@ -4293,7 +4293,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.25
         ],
         [
@@ -4305,7 +4305,7 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ]
        ],
@@ -4323,7 +4323,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.088388
         ],
         [
@@ -4346,7 +4346,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.088388
         ],
         [
@@ -4361,7 +4361,7 @@
        "id": "flange",
        "bone": "bollard",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.3,
        "region": "tube-coat",
@@ -4369,7 +4369,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
@@ -4381,7 +4381,7 @@
          0.15
         ],
         [
-         0.0,
+         0,
          0.15
         ]
        ],
@@ -4391,7 +4391,7 @@
        "id": "tube",
        "bone": "bollard",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.35,
        "region": "tube-coat",
@@ -4421,7 +4421,7 @@
        "id": "head",
        "bone": "head",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.35,
        "regions": [
@@ -4432,7 +4432,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.11
         ],
         [
@@ -4444,7 +4444,7 @@
          0.11
         ],
         [
-         0.0,
+         0,
          0.11
         ]
        ],
@@ -4456,7 +4456,7 @@
        "id": "socket",
        "bone": "footing",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.65,
        "regions": [
@@ -4472,11 +4472,11 @@
         ],
         [
          -0.25,
-         0.0
+         0
         ],
         [
          0.25,
-         0.0
+         0
         ],
         [
          0.25,
@@ -4535,7 +4535,7 @@
        "id": "flange",
        "bone": "bollard",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.3,
        "region": "tube-coat",
@@ -4544,7 +4544,7 @@
        "points": [
         [
          -0.15,
-         0.0
+         0
         ],
         [
          -0.15,
@@ -4556,7 +4556,7 @@
         ],
         [
          0.15,
-         0.0
+         0
         ]
        ],
        "closed": true
@@ -4565,7 +4565,7 @@
        "id": "tube",
        "bone": "bollard",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.35,
        "region": "tube-coat",
@@ -4595,7 +4595,7 @@
        "id": "head",
        "bone": "head",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.35,
        "regions": [
@@ -4630,7 +4630,7 @@
        "id": "socket",
        "bone": "footing",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.65,
        "regions": [
@@ -4639,46 +4639,16 @@
        ],
        "material": "concrete",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.25,
        "ry": 0.25
-      },
-      {
-       "id": "sand-fill",
-       "bone": "footing",
-       "role": "body",
-       "z": 1.1,
-       "filled": true,
-       "tone": 0.75,
-       "region": "sand-fill",
-       "material": "sand-fill",
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.2,
-       "ry": 0.2
-      },
-      {
-       "id": "flange",
-       "bone": "bollard",
-       "role": "body",
-       "z": 2.0,
-       "filled": true,
-       "tone": 0.3,
-       "region": "tube-coat",
-       "material": "alu-cast",
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.15,
-       "ry": 0.15
       },
       {
        "id": "head",
        "bone": "head",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.35,
        "regions": [
@@ -4687,8 +4657,8 @@
        ],
        "material": "alu-cast",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.11,
        "ry": 0.11
       }
@@ -4708,8 +4678,8 @@
       "de": "Die Stangen enden im Flansch, der als erklärte Platte von 12 mm bleibt, damit der herausgehobene Ankerkorb an ihm hängt; Lamellen, Abdeckung und Grundring in ein Band von 120 mm; die Kappe ist ein Block von 80 mm."
      },
      "omitted": {
-      "en": "Nuts, rings, collar and all traces of use.",
-      "de": "Muttern, Ringe, Kragen und alle Gebrauchsspuren."
+      "en": "Nuts, rings, collar and all traces of use. Plan: the sand ring and the flange ring (0.1 and 0.08 mm on paper).",
+      "de": "Muttern, Ringe, Kragen und alle Gebrauchsspuren. Draufsicht: der Sandring und der Flanschring (0,1 und 0,08 mm auf dem Papier)."
      },
      "thinElements": {
       "en": "Rods are 0.1 mm lines.",
@@ -4750,7 +4720,7 @@
     "thermal": {
      "regions": {
       "tube-coat": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.5,
        "contact": {
         "fraction": 0.12,
@@ -4758,23 +4728,23 @@
        }
       },
       "head-housing": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.6
       },
       "diffuser": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       },
       "anchor-cage": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.95,
         "tempC": 16
        }
       },
       "socket-concrete": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.03,
        "contact": {
         "fraction": 0.96,
@@ -4782,7 +4752,7 @@
        }
       },
       "sand-fill": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.1,
        "contact": {
         "fraction": 0.85,
@@ -4817,40 +4787,40 @@
     "thermal": {
      "regions": {
       "tube-coat": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.12,
         "tempC": 22
        }
       },
       "head-housing": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "diffuser": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "anchor-cage": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.95,
         "tempC": 16
        }
       },
       "socket-concrete": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.96,
         "tempC": 16
        }
       },
       "sand-fill": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.85,
         "tempC": 16
@@ -4884,40 +4854,40 @@
     "thermal": {
      "regions": {
       "tube-coat": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.12,
         "tempC": 22
        }
       },
       "head-housing": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "diffuser": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "anchor-cage": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.95,
         "tempC": 16
        }
       },
       "socket-concrete": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.96,
         "tempC": 16
        }
       },
       "sand-fill": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.85,
         "tempC": 16
@@ -4951,40 +4921,40 @@
     "thermal": {
      "regions": {
       "tube-coat": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.12,
         "tempC": 22
        }
       },
       "head-housing": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "diffuser": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "anchor-cage": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.95,
         "tempC": 16
        }
       },
       "socket-concrete": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.96,
         "tempC": 16
        }
       },
       "sand-fill": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.85,
         "tempC": 16
@@ -5032,7 +5002,7 @@
     "thermal": {
      "regions": {
       "tube-coat": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.5,
        "contact": {
         "fraction": 0.12,
@@ -5040,23 +5010,23 @@
        }
       },
       "head-housing": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.6
       },
       "diffuser": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       },
       "anchor-cage": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.95,
         "tempC": 16
        }
       },
       "socket-concrete": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.03,
        "contact": {
         "fraction": 0.96,
@@ -5064,7 +5034,7 @@
        }
       },
       "sand-fill": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.1,
        "contact": {
         "fraction": 0.85,
@@ -5118,23 +5088,23 @@
     "thermal": {
      "regions": {
       "tube-coat": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.5
       },
       "head-housing": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.6
       },
       "diffuser": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       },
       "anchor-cage": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.3
       },
       "socket-concrete": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.03,
        "contact": {
         "fraction": 0.96,
@@ -5142,7 +5112,7 @@
        }
       },
       "sand-fill": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.1,
        "contact": {
         "fraction": 0.8,
@@ -5431,7 +5401,7 @@
        "kind": "metal",
        "material": "alu-tube",
        "thicknessM": 0.003,
-       "resistanceM2KW": 1.5e-05,
+       "resistanceM2KW": 0.000015,
        "heatCapacityJM2K": 7290,
        "source": "literature",
        "reference": "iso-10456-2007"
@@ -5464,7 +5434,7 @@
        "kind": "metal",
        "material": "alu-cast",
        "thicknessM": 0.006,
-       "resistanceM2KW": 4e-05,
+       "resistanceM2KW": 0.00004,
        "heatCapacityJM2K": 14472,
        "source": "literature",
        "reference": "iso-10456-2007"
@@ -5525,7 +5495,7 @@
      "areaM2": 0.21,
      "characteristicLengthM": 0.012,
      "geometry": "cylinder",
-     "skyViewFactor": 0.0,
+     "skyViewFactor": 0,
      "layers": [
       {
        "id": "rod-steel",
@@ -5558,7 +5528,7 @@
      "areaM2": 1.838,
      "characteristicLengthM": 0.5,
      "geometry": "vertical-plate",
-     "skyViewFactor": 0.0,
+     "skyViewFactor": 0,
      "layers": [
       {
        "id": "concrete",
@@ -5681,7 +5651,7 @@
       "tone": 0.65,
       "profile": [
        [
-        0.0,
+        0,
         0.2
        ],
        [
@@ -5693,11 +5663,11 @@
         0.25
        ],
        [
-        0.0,
+        0,
         0.25
        ],
        [
-        0.0,
+        0,
         0.2
        ]
       ],
@@ -5707,9 +5677,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -5721,11 +5691,11 @@
       "tone": 0.75,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.2
        ],
        [
@@ -5734,7 +5704,7 @@
        ],
        [
         0.6,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5743,9 +5713,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -5757,11 +5727,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.006
        ],
        [
@@ -5770,7 +5740,7 @@
        ],
        [
         0.452,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5779,7 +5749,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.088388,
        0.088388
       ],
@@ -5834,9 +5804,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -5874,9 +5844,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -5888,11 +5858,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -5905,7 +5875,7 @@
        ],
        [
         0.012,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5914,9 +5884,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -5958,9 +5928,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -6049,9 +6019,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -6064,7 +6034,7 @@
       "profile": [
        [
         0.1,
-        0.0
+        0
        ],
        [
         0.099786,
@@ -6159,7 +6129,7 @@
         0.099786
        ],
        [
-        0.0,
+        0,
         0.1
        ],
        [
@@ -6256,7 +6226,7 @@
        ],
        [
         -0.095,
-        0.0
+        0
        ],
        [
         -0.095005,
@@ -6351,7 +6321,7 @@
         -0.099786
        ],
        [
-        -0.0,
+        0,
         -0.1
        ],
        [
@@ -6454,7 +6424,7 @@
        [
         [
          0.097,
-         0.0
+         0
         ],
         [
          0.096792,
@@ -6549,7 +6519,7 @@
          0.096792
         ],
         [
-         0.0,
+         0,
          0.097
         ],
         [
@@ -6646,7 +6616,7 @@
         ],
         [
          -0.092,
-         0.0
+         0
         ],
         [
          -0.092011,
@@ -6741,7 +6711,7 @@
          -0.096792
         ],
         [
-         -0.0,
+         0,
          -0.097
         ],
         [
@@ -6849,7 +6819,7 @@
       "profile": [
        [
         0.1,
-        0.0
+        0
        ],
        [
         0.099786,
@@ -6944,7 +6914,7 @@
         0.099786
        ],
        [
-        0.0,
+        0,
         0.1
        ],
        [
@@ -7041,7 +7011,7 @@
        ],
        [
         -0.09,
-        0.0
+        0
        ],
        [
         -0.090223,
@@ -7136,7 +7106,7 @@
         -0.099786
        ],
        [
-        -0.0,
+        0,
         -0.1
        ],
        [
@@ -7239,7 +7209,7 @@
        [
         [
          0.097,
-         0.0
+         0
         ],
         [
          0.096792,
@@ -7334,7 +7304,7 @@
          0.096792
         ],
         [
-         0.0,
+         0,
          0.097
         ],
         [
@@ -7431,7 +7401,7 @@
         ],
         [
          -0.087,
-         0.0
+         0
         ],
         [
          -0.08723,
@@ -7526,7 +7496,7 @@
          -0.096792
         ],
         [
-         -0.0,
+         0,
          -0.097
         ],
         [
@@ -7634,7 +7604,7 @@
       "profile": [
        [
         0.1,
-        0.0
+        0
        ],
        [
         0.099786,
@@ -7729,7 +7699,7 @@
         0.099786
        ],
        [
-        0.0,
+        0,
         0.1
        ],
        [
@@ -7826,7 +7796,7 @@
        ],
        [
         -0.095,
-        0.0
+        0
        ],
        [
         -0.095005,
@@ -7921,7 +7891,7 @@
         -0.099786
        ],
        [
-        -0.0,
+        0,
         -0.1
        ],
        [
@@ -8024,7 +7994,7 @@
        [
         [
          0.097,
-         0.0
+         0
         ],
         [
          0.096792,
@@ -8119,7 +8089,7 @@
          0.096792
         ],
         [
-         0.0,
+         0,
          0.097
         ],
         [
@@ -8216,7 +8186,7 @@
         ],
         [
          -0.092,
-         0.0
+         0
         ],
         [
          -0.092011,
@@ -8311,7 +8281,7 @@
          -0.096792
         ],
         [
-         -0.0,
+         0,
          -0.097
         ],
         [
@@ -8444,9 +8414,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -8458,11 +8428,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.104
        ],
        [
@@ -8479,7 +8449,7 @@
        ],
        [
         0.005,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -8488,9 +8458,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -8528,9 +8498,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -8548,7 +8518,7 @@
       "transform": {
        "translation": [
         0.087,
-        0.0,
+        0,
         0.093
        ]
       },
@@ -8602,9 +8572,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true,
       "repeat": {
@@ -8626,7 +8596,7 @@
       "profile": [
        [
         0.156,
-        0.0
+        0
        ],
        [
         0.156,
@@ -8662,11 +8632,11 @@
        ],
        [
         0.2,
-        0.0
+        0
        ],
        [
         0.195,
-        0.0
+        0
        ],
        [
         0.194,
@@ -8694,7 +8664,7 @@
        ],
        [
         0.16,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -8703,9 +8673,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -8718,7 +8688,7 @@
       "profile": [
        [
         0.146,
-        0.0
+        0
        ],
        [
         0.146,
@@ -8730,7 +8700,7 @@
        ],
        [
         0.156,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -8739,9 +8709,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      }
     ],
@@ -8851,7 +8821,7 @@
       "profile": [
        [
         0.1935,
-        0.0
+        0
        ],
        [
         0.1935,
@@ -8863,7 +8833,7 @@
        ],
        [
         0.2015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -8872,9 +8842,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "region": "head-housing",
       "tags": [
@@ -8961,9 +8931,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "bollard",
       "part": "member"
@@ -9001,8 +8971,8 @@
       "transform": {
        "translation": [
         0.2004,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "cage",
@@ -9023,8 +8993,8 @@
       "transform": {
        "translation": [
         0.2002,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "bollard",
@@ -9045,8 +9015,8 @@
       "transform": {
        "translation": [
         0.104,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "head",
@@ -9081,7 +9051,7 @@
       "tone": 0.65,
       "profile": [
        [
-        0.0,
+        0,
         0.2
        ],
        [
@@ -9093,11 +9063,11 @@
         0.25
        ],
        [
-        0.0,
+        0,
         0.25
        ],
        [
-        0.0,
+        0,
         0.2
        ]
       ],
@@ -9107,9 +9077,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -9121,11 +9091,11 @@
       "tone": 0.75,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.2
        ],
        [
@@ -9134,7 +9104,7 @@
        ],
        [
         0.6,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9143,9 +9113,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -9157,11 +9127,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.006
        ],
        [
@@ -9170,7 +9140,7 @@
        ],
        [
         0.452,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9179,7 +9149,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.088388,
        0.088388
       ],
@@ -9234,9 +9204,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "repeat": {
        "count": 2,
@@ -9256,11 +9226,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -9269,7 +9239,7 @@
        ],
        [
         0.012,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9278,9 +9248,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "sheet": true
      },
@@ -9378,9 +9348,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -9392,11 +9362,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.104
        ],
        [
@@ -9405,7 +9375,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9414,9 +9384,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -9454,9 +9424,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -9494,9 +9464,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true,
       "repeat": {
@@ -9518,7 +9488,7 @@
       "profile": [
        [
         0.16,
-        0.0
+        0
        ],
        [
         0.16,
@@ -9538,7 +9508,7 @@
        ],
        [
         0.2,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9547,9 +9517,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      }
     ],
@@ -9619,7 +9589,7 @@
       "profile": [
        [
         0.1865,
-        0.0
+        0
        ],
        [
         0.1865,
@@ -9631,7 +9601,7 @@
        ],
        [
         0.2015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9640,9 +9610,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "region": "head-housing",
       "tags": [
@@ -9661,11 +9631,11 @@
       "tone": 0.65,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.25
        ],
        [
@@ -9674,7 +9644,7 @@
        ],
        [
         0.6,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9683,9 +9653,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "footing",
       "part": "member"
@@ -9749,9 +9719,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "bollard",
       "part": "member"
@@ -9777,7 +9747,7 @@
       "transform": {
        "translation": [
         0.0875,
-        0.0,
+        0,
         0.093
        ]
       },
@@ -9820,8 +9790,8 @@
       "transform": {
        "translation": [
         0.2004,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "cage",
@@ -9842,8 +9812,8 @@
       "transform": {
        "translation": [
         0.2002,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "bollard",
@@ -9864,8 +9834,8 @@
       "transform": {
        "translation": [
         0.104,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "head",
@@ -9900,7 +9870,7 @@
       "tone": 0.65,
       "profile": [
        [
-        0.0,
+        0,
         0.2
        ],
        [
@@ -9912,11 +9882,11 @@
         0.25
        ],
        [
-        0.0,
+        0,
         0.25
        ],
        [
-        0.0,
+        0,
         0.2
        ]
       ],
@@ -9926,9 +9896,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -9940,11 +9910,11 @@
       "tone": 0.75,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.2
        ],
        [
@@ -9953,7 +9923,7 @@
        ],
        [
         0.6,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9962,9 +9932,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -9976,11 +9946,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.006
        ],
        [
@@ -9989,7 +9959,7 @@
        ],
        [
         0.432,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9998,7 +9968,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.088388,
        0.088388
       ],
@@ -10027,11 +9997,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -10040,7 +10010,7 @@
        ],
        [
         0.012,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10049,9 +10019,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "sheet": true
      },
@@ -10090,9 +10060,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -10104,11 +10074,11 @@
       "tone": 0.4,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.108
        ],
        [
@@ -10117,7 +10087,7 @@
        ],
        [
         0.152,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10126,9 +10096,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -10141,7 +10111,7 @@
       "profile": [
        [
         0.152,
-        0.0
+        0
        ],
        [
         0.152,
@@ -10157,7 +10127,7 @@
        ],
        [
         0.2,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10166,9 +10136,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      }
     ],
@@ -10243,9 +10213,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "region": "diffuser"
      },
@@ -10259,7 +10229,7 @@
       "profile": [
        [
         0.1715,
-        0.0
+        0
        ],
        [
         0.1715,
@@ -10271,7 +10241,7 @@
        ],
        [
         0.2015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10280,9 +10250,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "region": "head-housing",
       "tags": [
@@ -10301,11 +10271,11 @@
       "tone": 0.65,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.25
        ],
        [
@@ -10314,7 +10284,7 @@
        ],
        [
         0.6,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10323,9 +10293,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "footing",
       "part": "member"
@@ -10351,7 +10321,7 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
+        0,
         0.097
        ],
        [
@@ -10363,11 +10333,11 @@
         0.1
        ],
        [
-        0.0,
+        0,
         0.1
        ],
        [
-        0.0,
+        0,
         0.097
        ]
       ],
@@ -10377,9 +10347,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "bollard",
       "part": "member"
@@ -10411,8 +10381,8 @@
       "transform": {
        "translation": [
         0.2004,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "cage",
@@ -10433,8 +10403,8 @@
       "transform": {
        "translation": [
         0.2002,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "bollard",
@@ -10455,8 +10425,8 @@
       "transform": {
        "translation": [
         0.104,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "head",
@@ -10491,7 +10461,7 @@
       "tone": 0.65,
       "profile": [
        [
-        0.0,
+        0,
         0.2
        ],
        [
@@ -10503,11 +10473,11 @@
         0.25
        ],
        [
-        0.0,
+        0,
         0.25
        ],
        [
-        0.0,
+        0,
         0.2
        ]
       ],
@@ -10517,9 +10487,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -10531,11 +10501,11 @@
       "tone": 0.75,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.2
        ],
        [
@@ -10544,7 +10514,7 @@
        ],
        [
         0.6,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10553,9 +10523,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -10567,11 +10537,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.006
        ],
        [
@@ -10580,7 +10550,7 @@
        ],
        [
         0.432,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10589,7 +10559,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.088388,
        0.088388
       ],
@@ -10618,11 +10588,11 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -10631,7 +10601,7 @@
        ],
        [
         0.012,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10640,9 +10610,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "sheet": true
      },
@@ -10681,9 +10651,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -10695,11 +10665,11 @@
       "tone": 0.4,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.108
        ],
        [
@@ -10708,7 +10678,7 @@
        ],
        [
         0.12,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10717,9 +10687,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -10732,7 +10702,7 @@
       "profile": [
        [
         0.12,
-        0.0
+        0
        ],
        [
         0.12,
@@ -10744,7 +10714,7 @@
        ],
        [
         0.2,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10753,9 +10723,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      }
     ],
@@ -10805,7 +10775,7 @@
       "profile": [
        [
         0.1265,
-        0.0
+        0
        ],
        [
         0.1265,
@@ -10817,7 +10787,7 @@
        ],
        [
         0.2015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10826,9 +10796,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "region": "head-housing",
       "tags": [
@@ -10847,11 +10817,11 @@
       "tone": 0.65,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.25
        ],
        [
@@ -10860,7 +10830,7 @@
        ],
        [
         0.6,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10869,9 +10839,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "footing",
       "part": "member"
@@ -10903,11 +10873,11 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.11
        ],
        [
@@ -10916,7 +10886,7 @@
        ],
        [
         0.2,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10925,9 +10895,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "member": "head",
       "part": "member"
@@ -10947,8 +10917,8 @@
       "transform": {
        "translation": [
         0.2004,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "cage",
@@ -10969,8 +10939,8 @@
       "transform": {
        "translation": [
         0.2002,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "bollard",
@@ -10991,8 +10961,8 @@
       "transform": {
        "translation": [
         0.104,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "head",

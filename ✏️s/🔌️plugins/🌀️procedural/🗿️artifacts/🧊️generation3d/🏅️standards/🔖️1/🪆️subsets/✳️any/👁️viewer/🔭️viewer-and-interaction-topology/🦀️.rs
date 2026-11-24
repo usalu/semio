@@ -116,14 +116,17 @@ impl semio_plugin::ArtifactViewer for Generation3dViewer {
     fn pending_effects(owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_plugin::ArtifactPendingView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&semio_plugin::ViewModel>) -> Vec<semio_plugin::Effect> {
         let windows = generation3d_view_preview_windows(view);
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
+        let unserved = if windows.is_empty() { Vec::new() } else { semio_os_flow::unserved_flow_operator_kinds(&viewed.snapshot().host_snapshot, &semio_os_flow::flow_operator_registry()) };
+        let servable = unserved.is_empty();
         viewed.retire();
         let document = preview_eval::PreviewEvalDocumentStamp { content_revision: doc.source_version().canonical_revision, provisional_generation: doc.provisional_generation() };
         owner
             .with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
                 use preview_eval::PreviewEvalRunOwner as _;
                 let (session, link) = owner.preview_eval_parts().ok_or_else(|| Fault::from("generation3d-view-eval-session-closing"))?;
-                Ok(preview_eval::preview_eval_run_effects(session, link, &windows, doc.tool_run(), servable, document))
+                let mut effects = preview_eval::preview_eval_run_effects(session, link, &windows, doc.tool_run(), servable, document);
+                effects.extend(preview_eval::on_demand_run_effects(link, unserved));
+                Ok(effects)
             })
             .unwrap_or_default()
     }

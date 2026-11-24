@@ -19,7 +19,6 @@ use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
 use crate::render_bundle::{RenderCtx, RenderRef};
 use semio_plugin_command::lifted_command::history_mutation_entry;
-use semio_plugin_job::reserved_jobs::plugin_job_yield_once;
 use semio_ui_contract::*;
 use semio_framework::kernel::HistoryReprojection;
 use semio_framework::kernel::HistoryReprojectionKind;
@@ -28,6 +27,9 @@ use std::sync::Arc;
 use semio_plugin_instance_extension::InstanceExtension;
 use semio_plugin_command::CommandLogAppend;
 use semio_plugin_document_media::ActiveDocumentArchiveLoad;
+
+/// 🧹️ The bounded command-prune steps one cache refresh drives before it projects: the refresh is reached from synchronous exchanges that cannot suspend, so the rest of a long prune stays with the maintenance ladder and a later refresh re-projects once it removed rows.
+const COMMAND_PRUNE_STEPS_PER_REFRESH: usize = 1024;
 use semio_framework::ActionKind;
 use store::MemberFactory;
 use store::ReferenceSpaceMember;
@@ -326,9 +328,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 🧾️ The history view is patched, not rebuilt ([`Self::refresh_history_view`], design §20.14): the cache's own
     /// share of it is dropped first, so the retained view stays the only owner and is patched in its own allocation.
     pub async fn refresh_cache(&mut self) -> Result<(), Fault> {
-        while self.history.command_prune_requested() || self.history.pending_command_prune.is_some() {
-            ({ let __a0 = self.mounted_policy.maintenance; let __a1 = false; self.history.advance_command_prune_step(&mut *self.stores, __a0, __a1) })?;
-            plugin_job_yield_once().await;
+        for _ in 0..COMMAND_PRUNE_STEPS_PER_REFRESH {
+            if !(self.history.command_prune_requested() || self.history.pending_command_prune.is_some()) { break }
+            let step = ({ let __a0 = self.mounted_policy.maintenance; let __a1 = false; self.history.advance_command_prune_step(&mut *self.stores, __a0, __a1) })?;
+            if step.progress().is_none_or(|progress| progress == Default::default()) { break }
         }
         let key = (self.stores.store.generation(), self.stores.config_store.generation(), self.history.log_generation, self.history.history_filter);
         if self.history.cache.as_ref().map(|(cached_key, _, _, _)| *cached_key) == Some(key) {

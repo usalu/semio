@@ -428,7 +428,7 @@ pub struct FaultNotice {
 /// 🏢️ Framework-owned EN/DE notices of the refusal codes any app raises under a framework namespace (`app.command.*`,
 /// `mutation.*`, design §20.12) and of the host's guest admission (`plugin.channel-mismatch`, `{guest}`/`{host}`) — a shell tells them with the fault's own severity, before the app's own table. Fixture
 /// `🧫️fixtures/🧫️framework-notices/🔣️.json`; TS twin `FRAMEWORK_FAULT_NOTICE_LABELS`.
-pub const FRAMEWORK_FAULT_NOTICE_LABELS: [(&str, &str, &str); 96] = [
+pub const FRAMEWORK_FAULT_NOTICE_LABELS: [(&str, &str, &str); 97] = [
     ("app.command.unsupported", "This action is not available here.", "Diese Aktion ist hier nicht verfügbar."),
     ("app.command.invalid", "This action is not valid.", "Diese Aktion ist ungültig."),
     ("app.command.invalid-args", "The action's input is not valid.", "Die Eingabe der Aktion ist ungültig."),
@@ -445,6 +445,7 @@ pub const FRAMEWORK_FAULT_NOTICE_LABELS: [(&str, &str, &str); 96] = [
     ("mutation.too-large", "This change is too large to record at once — split it into smaller steps.", "Diese Änderung ist zu groß, um sie auf einmal aufzuzeichnen — in kleinere Schritte aufteilen."),
     ("plugin.media.schema-mismatch", "This input is a {found} document, but only {expected} documents can be loaded here.", "Diese Eingabe ist ein {found}-Dokument, hier lassen sich aber nur {expected}-Dokumente laden."),
     ("plugin.channel-mismatch", "This plugin was built for app channel {guest}, but this app speaks app channel {host} — rebuild the plugin.", "Dieses Plugin wurde für App-Kanal {guest} gebaut, diese App spricht aber App-Kanal {host} — Plugin neu bauen."),
+    ("plugin.original-stock-exhausted", "This app has used up its work budget and could not renew it — cancel its running tasks and try again, or reopen the app.", "Diese App hat ihr Arbeitsbudget aufgebraucht und konnte es nicht erneuern — laufende Aufgaben abbrechen und erneut versuchen oder die App neu öffnen."),
     ("history-filter.unknown", "This history filter is not known — choose one the history panel offers.", "Dieser Verlaufsfilter ist unbekannt — einen im Verlaufsbereich angebotenen wählen."),
     ("window-transient.window-required", "This needs an open window — focus a window first.", "Dafür wird ein offenes Fenster benötigt — zuerst ein Fenster fokussieren."),
     ("window-transient.window-stale", "The window is no longer open.", "Das Fenster ist nicht mehr geöffnet."),

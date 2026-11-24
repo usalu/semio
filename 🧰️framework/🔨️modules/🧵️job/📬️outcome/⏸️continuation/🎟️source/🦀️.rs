@@ -25,6 +25,7 @@ impl semio_framework_job_return_budget::OriginalReturnOrigin for OriginalReturnS
  fn fuel(&self)->u64{self.fuel}
  fn spent(&self)->P{self.spent}
  fn work(&self)->u128{self.work}
+ fn succeeded(self,granted:RetainedCloneGrant,fuel:u64)->Self{Self{granted,fuel,spent:P::default(),work:0,..self}}
 }
 pub type OriginalReturnBudget=semio_framework_job_return_budget::OriginalReturnBudget<OriginalReturnSourceInput>;
 pub type OriginalReturnBudgetReference<'a>=semio_framework_job_return_budget::OriginalReturnBudgetReference<'a,OriginalReturnSourceInput>;

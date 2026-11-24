@@ -1,0 +1,4 @@
+[
+{"op": "shape-add", "scale": "100", "view": "plan", "after": "reflector", "shape": {"id": "dome-rib", "bone": "reflector", "role": "detail", "z": 3.55, "filled": false, "tone": 0.5, "kind": "ellipse", "cx": 0, "cy": 0, "rx": 0.22, "ry": 0.22, "region": "reflector"}},
+{"op": "note", "scale": "100", "decision": "retained", "en": "Plan: the stiffening rib of the dome as one circle.", "de": "Draufsicht: die Versteifungssicke des Schirms als ein Kreis."}
+]

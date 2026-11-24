@@ -189,8 +189,11 @@ export type {
   PluginSourceWatch
 } from "../../🔌️plugin-source/🟦️.ts";
 export {
+  catalogPluginRegistryEntries,
+  deferredPluginEntries,
   PlaygroundBootPlanner,
   PLUGIN_GRAPH_CHUNK_ROWS,
+  pluginRegistryEntryOf,
   resolvePlaygroundBoot,
   resolvePlaygroundDefaultAppId,
   resolvePluginHostConfig,

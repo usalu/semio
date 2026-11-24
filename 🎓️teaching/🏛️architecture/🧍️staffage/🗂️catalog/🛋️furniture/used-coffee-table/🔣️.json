@@ -111,11 +111,11 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.5,
-    "densityKgM3": 660.0,
+    "densityKgM3": 660,
     "conductivityWmK": 0.145,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 1700000000.0,
-    "strengthPa": 11000000.0,
+    "elasticModulusPa": 1700000000,
+    "strengthPa": 11000000,
     "source": "literature",
     "reference": "en-312-2010"
    },
@@ -127,11 +127,11 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.55,
-    "densityKgM3": 700.0,
+    "densityKgM3": 700,
     "conductivityWmK": 0.18,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 11000000000.0,
-    "strengthPa": 40000000.0,
+    "elasticModulusPa": 11000000000,
+    "strengthPa": 40000000,
     "source": "literature",
     "reference": "wood-handbook-2021"
    },
@@ -143,11 +143,11 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.35,
-    "densityKgM3": 650.0,
+    "densityKgM3": 650,
     "conductivityWmK": 0.14,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 2550000000.0,
-    "strengthPa": 15000000.0,
+    "elasticModulusPa": 2550000000,
+    "strengthPa": 15000000,
     "source": "literature",
     "reference": "en-312-2010"
    },
@@ -159,11 +159,11 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.6,
-    "densityKgM3": 7850.0,
+    "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 450,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "en-10219-2-2019"
    },
@@ -175,7 +175,7 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.8,
-    "densityKgM3": 134.0,
+    "densityKgM3": 134,
     "conductivityWmK": 0.045,
     "specificHeatJKgK": 1300,
     "source": "authored-estimate",
@@ -189,7 +189,7 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.6,
-    "densityKgM3": 950.0,
+    "densityKgM3": 950,
     "conductivityWmK": 0.4,
     "specificHeatJKgK": 1900,
     "source": "authored-estimate",
@@ -239,7 +239,7 @@
      },
      "section": {
       "areaM2": 0.03,
-      "secondMomentM4": 1.5625e-06,
+      "secondMomentM4": 0.0000015625,
       "extremeFibreM": 0.0125,
       "material": "melamine-chipboard",
       "title": {
@@ -265,7 +265,7 @@
      "mass": {
       "kg": 1.343002,
       "comX": 0.36,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "moving-blanket-catalogue"
@@ -341,14 +341,14 @@
      "mass": {
       "kg": 10.882616,
       "comX": 0.3,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "coffee-table-catalogue"
      },
      "section": {
       "areaM2": 0.0275,
-      "secondMomentM4": 1.43229e-06,
+      "secondMomentM4": 0.00000143229,
       "extremeFibreM": 0.0125,
       "material": "veneered-chipboard",
       "title": {
@@ -381,7 +381,7 @@
      },
      "section": {
       "areaM2": 0.002025,
-      "secondMomentM4": 3.41719e-07,
+      "secondMomentM4": 3.41719e-7,
       "extremeFibreM": 0.0225,
       "material": "oak-solid",
       "title": {
@@ -407,14 +407,14 @@
      "mass": {
       "kg": 6.58977,
       "comX": 0.26,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "coffee-table-catalogue"
      },
      "section": {
       "areaM2": 0.01938,
-      "secondMomentM4": 5.83015e-07,
+      "secondMomentM4": 5.83015e-7,
       "extremeFibreM": 0.0095,
       "material": "veneered-chipboard",
       "title": {
@@ -669,7 +669,7 @@
        "filled": true,
        "tone": 0.85,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0125,
        "w": 0.8,
        "h": 0.025,
@@ -753,7 +753,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.006
         ],
         [
@@ -770,7 +770,7 @@
         ],
         [
          0.72,
-         0.0
+         0
         ],
         [
          0.719196,
@@ -785,7 +785,7 @@
          0.006
         ],
         [
-         0.0,
+         0,
          0.006
         ]
        ],
@@ -812,7 +812,7 @@
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0125,
        "w": 0.6,
        "h": 0.025,
@@ -839,7 +839,7 @@
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0095,
        "w": 0.52,
        "h": 0.019,
@@ -942,7 +942,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": 0.54,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.715,
        "region": "depot-frame",
@@ -957,7 +957,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": -0.58,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.715,
        "region": "depot-frame",
@@ -1022,14 +1022,47 @@
        "z": 3,
        "filled": true,
        "tone": 0.62,
-       "kind": "rect",
-       "x": -0.55,
-       "y": 0.752,
-       "w": 1.1,
-       "h": 0.025,
        "region": "table-top",
        "material": "veneered-chipboard",
-       "hatch": "grain-h"
+       "hatch": "grain-h",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.55
+        ],
+        [
+         0,
+         0.55
+        ],
+        [
+         0.572,
+         0.55
+        ],
+        [
+         0.581,
+         0.538
+        ],
+        [
+         0.592,
+         0.529
+        ],
+        [
+         0.6,
+         0.518
+        ],
+        [
+         0.6,
+         -0.55
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0125,
+        "z1": 0.0125
+       }
       },
       {
        "id": "shelf",
@@ -1038,61 +1071,362 @@
        "z": 4,
        "filled": true,
        "tone": 0.6,
-       "kind": "rect",
-       "x": -0.51,
-       "y": 1.072,
-       "w": 1.02,
-       "h": 0.019,
        "region": "shelf",
-       "material": "veneered-chipboard"
+       "material": "veneered-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0.52,
+         -0.475
+        ],
+        [
+         0.52,
+         0.475
+        ],
+        [
+         0.485,
+         0.475
+        ],
+        [
+         0.485,
+         0.51
+        ],
+        [
+         0.035,
+         0.51
+        ],
+        [
+         0.035,
+         0.475
+        ],
+        [
+         0,
+         0.475
+        ],
+        [
+         0,
+         -0.475
+        ],
+        [
+         0.035,
+         -0.475
+        ],
+        [
+         0.035,
+         -0.51
+        ],
+        [
+         0.485,
+         -0.51
+        ],
+        [
+         0.485,
+         -0.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0095,
+        "z1": 0.0095
+       }
       },
       {
-       "id": "apron-side",
+       "id": "leg-rr",
+       "bone": "frame",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "legs",
+       "material": "oak-solid",
+       "hatch": "grain-v",
+       "kind": "poly",
+       "points": [
+        [
+         0.5175,
+         -0.52
+        ],
+        [
+         0.4725,
+         -0.52
+        ],
+        [
+         0.4725,
+         -0.47500000000000003
+        ],
+        [
+         0.5175,
+         -0.47500000000000003
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
+      },
+      {
+       "id": "leg-rl",
+       "bone": "frame",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "legs",
+       "material": "oak-solid",
+       "hatch": "grain-v",
+       "kind": "poly",
+       "points": [
+        [
+         0.5175,
+         0.475
+        ],
+        [
+         0.4725,
+         0.475
+        ],
+        [
+         0.4725,
+         0.52
+        ],
+        [
+         0.5175,
+         0.52
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
+      },
+      {
+       "id": "leg-fr",
+       "bone": "frame",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "legs",
+       "material": "oak-solid",
+       "hatch": "grain-v",
+       "kind": "poly",
+       "points": [
+        [
+         0.0225,
+         -0.52
+        ],
+        [
+         -0.0225,
+         -0.52
+        ],
+        [
+         -0.0225,
+         -0.47500000000000003
+        ],
+        [
+         0.0225,
+         -0.47500000000000003
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
+      },
+      {
+       "id": "leg-fl",
+       "bone": "frame",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "legs",
+       "material": "oak-solid",
+       "hatch": "grain-v",
+       "kind": "poly",
+       "points": [
+        [
+         0.0225,
+         0.475
+        ],
+        [
+         -0.0225,
+         0.475
+        ],
+        [
+         -0.0225,
+         0.52
+        ],
+        [
+         0.0225,
+         0.52
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
+      },
+      {
+       "id": "apron-end-r",
        "bone": "frame",
        "role": "body",
        "z": 5,
        "filled": true,
        "tone": 0.5,
-       "kind": "rect",
-       "x": -0.475,
-       "y": 0.777,
-       "w": 0.95,
-       "h": 0.07,
        "region": "apron",
        "material": "oak-solid",
-       "hatch": "grain-h"
+       "hatch": "grain-h",
+       "kind": "poly",
+       "points": [
+        [
+         0.4725,
+         -0.515
+        ],
+        [
+         0.0225,
+         -0.515
+        ],
+        [
+         0.0225,
+         -0.495
+        ],
+        [
+         0.4725,
+         -0.495
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
       },
       {
-       "id": "leg-l",
+       "id": "apron-end-l",
        "bone": "frame",
        "role": "body",
-       "z": 5.5,
+       "z": 5,
        "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": 0.475,
-       "y": 0.777,
-       "w": 0.045,
-       "h": 0.425,
-       "region": "legs",
+       "tone": 0.5,
+       "region": "apron",
        "material": "oak-solid",
-       "hatch": "grain-v"
+       "hatch": "grain-h",
+       "kind": "poly",
+       "points": [
+        [
+         0.4725,
+         0.495
+        ],
+        [
+         0.0225,
+         0.495
+        ],
+        [
+         0.0225,
+         0.515
+        ],
+        [
+         0.4725,
+         0.515
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
       },
       {
-       "id": "leg-r",
+       "id": "apron-side-r",
        "bone": "frame",
        "role": "body",
-       "z": 5.5,
+       "z": 5,
        "filled": true,
-       "tone": 0.55,
-       "kind": "rect",
-       "x": -0.52,
-       "y": 0.777,
-       "w": 0.045,
-       "h": 0.425,
-       "region": "legs",
+       "tone": 0.5,
+       "region": "apron",
        "material": "oak-solid",
-       "hatch": "grain-v"
+       "hatch": "grain-h",
+       "kind": "poly",
+       "points": [
+        [
+         0.5125,
+         -0.475
+        ],
+        [
+         0.4925,
+         -0.475
+        ],
+        [
+         0.4925,
+         0.475
+        ],
+        [
+         0.5125,
+         0.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
+      },
+      {
+       "id": "apron-side-f",
+       "bone": "frame",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "apron",
+       "material": "oak-solid",
+       "hatch": "grain-h",
+       "kind": "poly",
+       "points": [
+        [
+         0.0025,
+         -0.475
+        ],
+        [
+         -0.0175,
+         -0.475
+        ],
+        [
+         -0.0175,
+         0.475
+        ],
+        [
+         0.0025,
+         0.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
       },
       {
        "id": "leg-wear",
@@ -1145,40 +1479,46 @@
        "z": 3,
        "filled": true,
        "tone": 0.62,
+       "region": "table-top",
+       "material": "veneered-chipboard",
        "kind": "poly",
        "points": [
         [
-         0.3,
+         0,
          -0.55
         ],
         [
-         0.3,
+         0,
          0.55
         ],
         [
-         -0.272,
+         0.572,
          0.55
         ],
         [
-         -0.281,
+         0.581,
          0.538
         ],
         [
-         -0.292,
+         0.592,
          0.529
         ],
         [
-         -0.3,
+         0.6,
          0.518
         ],
         [
-         -0.3,
+         0.6,
          -0.55
         ]
        ],
        "closed": true,
-       "region": "table-top",
-       "material": "veneered-chipboard"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0125,
+        "z1": 0.0125
+       }
       },
       {
        "id": "cup-rings",
@@ -1220,13 +1560,34 @@
        "z": 4,
        "filled": true,
        "tone": 0.5,
-       "kind": "rect",
-       "x": 0.245,
-       "y": -0.475,
-       "w": 0.02,
-       "h": 0.95,
        "region": "apron",
-       "material": "oak-solid"
+       "material": "oak-solid",
+       "kind": "poly",
+       "points": [
+        [
+         0.0025,
+         -0.475
+        ],
+        [
+         -0.0175,
+         -0.475
+        ],
+        [
+         -0.0175,
+         0.475
+        ],
+        [
+         0.0025,
+         0.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
       },
       {
        "id": "apron-side-r",
@@ -1235,13 +1596,34 @@
        "z": 4,
        "filled": true,
        "tone": 0.5,
-       "kind": "rect",
-       "x": -0.265,
-       "y": -0.475,
-       "w": 0.02,
-       "h": 0.95,
        "region": "apron",
-       "material": "oak-solid"
+       "material": "oak-solid",
+       "kind": "poly",
+       "points": [
+        [
+         0.5125,
+         -0.475
+        ],
+        [
+         0.4925,
+         -0.475
+        ],
+        [
+         0.4925,
+         0.475
+        ],
+        [
+         0.5125,
+         0.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
       },
       {
        "id": "apron-end-l",
@@ -1250,13 +1632,34 @@
        "z": 4,
        "filled": true,
        "tone": 0.5,
-       "kind": "rect",
-       "x": -0.225,
-       "y": 0.495,
-       "w": 0.45,
-       "h": 0.02,
        "region": "apron",
-       "material": "oak-solid"
+       "material": "oak-solid",
+       "kind": "poly",
+       "points": [
+        [
+         0.4725,
+         0.495
+        ],
+        [
+         0.0225,
+         0.495
+        ],
+        [
+         0.0225,
+         0.515
+        ],
+        [
+         0.4725,
+         0.515
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
       },
       {
        "id": "apron-end-r",
@@ -1265,13 +1668,34 @@
        "z": 4,
        "filled": true,
        "tone": 0.5,
-       "kind": "rect",
-       "x": -0.225,
-       "y": -0.515,
-       "w": 0.45,
-       "h": 0.02,
        "region": "apron",
-       "material": "oak-solid"
+       "material": "oak-solid",
+       "kind": "poly",
+       "points": [
+        [
+         0.4725,
+         -0.515
+        ],
+        [
+         0.0225,
+         -0.515
+        ],
+        [
+         0.0225,
+         -0.495
+        ],
+        [
+         0.4725,
+         -0.495
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
       },
       {
        "id": "leg-fl",
@@ -1280,13 +1704,34 @@
        "z": 4.2,
        "filled": true,
        "tone": 0.55,
-       "kind": "rect",
-       "x": 0.225,
-       "y": 0.475,
-       "w": 0.045,
-       "h": 0.045,
        "region": "legs",
-       "material": "oak-solid"
+       "material": "oak-solid",
+       "kind": "poly",
+       "points": [
+        [
+         0.0225,
+         0.475
+        ],
+        [
+         -0.0225,
+         0.475
+        ],
+        [
+         -0.0225,
+         0.52
+        ],
+        [
+         0.0225,
+         0.52
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
       },
       {
        "id": "leg-fr",
@@ -1295,13 +1740,34 @@
        "z": 4.2,
        "filled": true,
        "tone": 0.55,
-       "kind": "rect",
-       "x": 0.225,
-       "y": -0.52,
-       "w": 0.045,
-       "h": 0.045,
        "region": "legs",
-       "material": "oak-solid"
+       "material": "oak-solid",
+       "kind": "poly",
+       "points": [
+        [
+         0.0225,
+         -0.52
+        ],
+        [
+         -0.0225,
+         -0.52
+        ],
+        [
+         -0.0225,
+         -0.47500000000000003
+        ],
+        [
+         0.0225,
+         -0.47500000000000003
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
       },
       {
        "id": "leg-rl",
@@ -1310,13 +1776,34 @@
        "z": 4.2,
        "filled": true,
        "tone": 0.55,
-       "kind": "rect",
-       "x": -0.27,
-       "y": 0.475,
-       "w": 0.045,
-       "h": 0.045,
        "region": "legs",
-       "material": "oak-solid"
+       "material": "oak-solid",
+       "kind": "poly",
+       "points": [
+        [
+         0.5175,
+         0.475
+        ],
+        [
+         0.4725,
+         0.475
+        ],
+        [
+         0.4725,
+         0.52
+        ],
+        [
+         0.5175,
+         0.52
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
       },
       {
        "id": "leg-rr",
@@ -1325,13 +1812,34 @@
        "z": 4.2,
        "filled": true,
        "tone": 0.55,
-       "kind": "rect",
-       "x": -0.27,
-       "y": -0.52,
-       "w": 0.045,
-       "h": 0.045,
        "region": "legs",
-       "material": "oak-solid"
+       "material": "oak-solid",
+       "kind": "poly",
+       "points": [
+        [
+         0.5175,
+         -0.52
+        ],
+        [
+         0.4725,
+         -0.52
+        ],
+        [
+         0.4725,
+         -0.47500000000000003
+        ],
+        [
+         0.5175,
+         -0.47500000000000003
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
       },
       {
        "id": "shelf",
@@ -1340,60 +1848,66 @@
        "z": 4.1,
        "filled": true,
        "tone": 0.6,
+       "region": "shelf",
+       "material": "veneered-chipboard",
        "kind": "poly",
        "points": [
         [
-         -0.26,
+         0.52,
          -0.475
         ],
         [
-         -0.26,
+         0.52,
          0.475
         ],
         [
-         -0.225,
+         0.485,
          0.475
         ],
         [
-         -0.225,
+         0.485,
          0.51
         ],
         [
-         0.225,
+         0.035,
          0.51
         ],
         [
-         0.225,
+         0.035,
          0.475
         ],
         [
-         0.26,
+         0,
          0.475
         ],
         [
-         0.26,
+         0,
          -0.475
         ],
         [
-         0.225,
+         0.035,
          -0.475
         ],
         [
-         0.225,
+         0.035,
          -0.51
         ],
         [
-         -0.225,
+         0.485,
          -0.51
         ],
         [
-         -0.225,
+         0.485,
          -0.475
         ]
        ],
        "closed": true,
-       "region": "shelf",
-       "material": "veneered-chipboard"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0095,
+        "z1": 0.0095
+       }
       },
       {
        "id": "price-label",
@@ -1414,8 +1928,8 @@
       "de": "Stapel 16 x 24 mm auf dem Papier: der Couchtisch kopfüber, Beine oben, auf der gefalteten dunklen Decke auf dem hellen Lagertisch. Seitenansicht über die 0,60 m Tiefe: Platte, Stirnzarge, die beiden vorderen Beine und dazwischen die Bodenkante; Lagertischplatte, Stirnzarge und zwei Rohrbeine mit Gleitern; die Decke mit gerundetem Falz vorn. Vorderansicht über die 1,10 m Länge: dasselbe mit der Längszarge. Grundriss: Lagertischplatte, Deckenrand, die Platte mit abgebrochener Ecke, die 5 mm über den Boden stehenden Zargen, die vier Beinenden und der ausgeklinkte Boden mit Preisschild."
      },
      "retained": {
-      "en": "The 30 mm broken corner, the cup rings and scratches of the top, the scuffed leg ends, the 5 mm set-back of the aprons, the shelf notches, the glides, the quilting and the folded layers of the blanket.",
-      "de": "Die 30-mm-Ausbruchecke, die Wasserränder und Kratzer der Platte, die bestoßenen Beinenden, der 5-mm-Rücksprung der Zargen, die Ausklinkungen des Bodens, die Gleiter, die Steppung und die gefalteten Lagen der Decke."
+      "en": "The 30 mm broken corner, the cup rings and scratches of the top, the scuffed leg ends, the 5 mm set-back of the aprons, the shelf notches, the glides, the quilting and the folded layers of the blanket. Front and plan: top, shelf, the four legs and the four aprons are solids that turn with the table.",
+      "de": "Die 30-mm-Ausbruchecke, die Wasserränder und Kratzer der Platte, die bestoßenen Beinenden, der 5-mm-Rücksprung der Zargen, die Ausklinkungen des Bodens, die Gleiter, die Steppung und die gefalteten Lagen der Decke. Vorderansicht und Draufsicht: Platte, Ablage, die vier Beine und die vier Zargen sind Körper, die sich mit dem Tisch drehen."
      },
      "merged": {
       "en": "Far legs and far aprons coincide with the near ones in both elevations; the long aprons and depot rails seen end-on lie behind the legs.",
@@ -1468,7 +1982,7 @@
        "filled": true,
        "tone": 0.85,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0125,
        "w": 0.8,
        "h": 0.025,
@@ -1531,7 +2045,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.006
         ],
         [
@@ -1540,14 +2054,14 @@
         ],
         [
          0.72,
-         0.0
+         0
         ],
         [
          0.714,
          0.006
         ],
         [
-         0.0,
+         0,
          0.006
         ]
        ],
@@ -1563,7 +2077,7 @@
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0125,
        "w": 0.6,
        "h": 0.025,
@@ -1578,7 +2092,7 @@
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0095,
        "w": 0.52,
        "h": 0.019,
@@ -1681,11 +2195,11 @@
         ],
         [
          0.58,
-         0.0
+         0
         ],
         [
          0.54,
-         0.0
+         0
         ],
         [
          0.54,
@@ -1697,11 +2211,11 @@
         ],
         [
          -0.54,
-         0.0
+         0
         ],
         [
          -0.58,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -1730,13 +2244,46 @@
        "z": 3,
        "filled": true,
        "tone": 0.62,
-       "kind": "rect",
-       "x": -0.55,
-       "y": 0.752,
-       "w": 1.1,
-       "h": 0.025,
        "region": "table-top",
-       "material": "veneered-chipboard"
+       "material": "veneered-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.55
+        ],
+        [
+         0,
+         0.55
+        ],
+        [
+         0.572,
+         0.55
+        ],
+        [
+         0.581,
+         0.538
+        ],
+        [
+         0.592,
+         0.529
+        ],
+        [
+         0.6,
+         0.518
+        ],
+        [
+         0.6,
+         -0.55
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0125,
+        "z1": 0.0125
+       }
       },
       {
        "id": "shelf",
@@ -1745,62 +2292,378 @@
        "z": 4,
        "filled": true,
        "tone": 0.6,
-       "kind": "rect",
-       "x": -0.51,
-       "y": 1.072,
-       "w": 1.02,
-       "h": 0.019,
        "region": "shelf",
-       "material": "veneered-chipboard"
+       "material": "veneered-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0.52,
+         -0.475
+        ],
+        [
+         0.52,
+         0.475
+        ],
+        [
+         0.485,
+         0.475
+        ],
+        [
+         0.485,
+         0.51
+        ],
+        [
+         0.035,
+         0.51
+        ],
+        [
+         0.035,
+         0.475
+        ],
+        [
+         0,
+         0.475
+        ],
+        [
+         0,
+         -0.475
+        ],
+        [
+         0.035,
+         -0.475
+        ],
+        [
+         0.035,
+         -0.51
+        ],
+        [
+         0.485,
+         -0.51
+        ],
+        [
+         0.485,
+         -0.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0095,
+        "z1": 0.0095
+       }
       },
       {
-       "id": "frame",
+       "id": "leg-rr",
+       "bone": "frame",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.5175,
+         -0.52
+        ],
+        [
+         0.4725,
+         -0.52
+        ],
+        [
+         0.4725,
+         -0.47500000000000003
+        ],
+        [
+         0.5175,
+         -0.47500000000000003
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
+      },
+      {
+       "id": "leg-rl",
+       "bone": "frame",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.5175,
+         0.475
+        ],
+        [
+         0.4725,
+         0.475
+        ],
+        [
+         0.4725,
+         0.52
+        ],
+        [
+         0.5175,
+         0.52
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
+      },
+      {
+       "id": "leg-fr",
+       "bone": "frame",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.0225,
+         -0.52
+        ],
+        [
+         -0.0225,
+         -0.52
+        ],
+        [
+         -0.0225,
+         -0.47500000000000003
+        ],
+        [
+         0.0225,
+         -0.47500000000000003
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
+      },
+      {
+       "id": "leg-fl",
+       "bone": "frame",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.0225,
+         0.475
+        ],
+        [
+         -0.0225,
+         0.475
+        ],
+        [
+         -0.0225,
+         0.52
+        ],
+        [
+         0.0225,
+         0.52
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
+      },
+      {
+       "id": "apron-end-r",
        "bone": "frame",
        "role": "body",
        "z": 5,
        "filled": true,
        "tone": 0.52,
-       "kind": "poly",
-       "points": [
-        [
-         -0.52,
-         0.777
-        ],
-        [
-         0.52,
-         0.777
-        ],
-        [
-         0.52,
-         1.202
-        ],
-        [
-         0.475,
-         1.202
-        ],
-        [
-         0.475,
-         0.847
-        ],
-        [
-         -0.475,
-         0.847
-        ],
-        [
-         -0.475,
-         1.202
-        ],
-        [
-         -0.52,
-         1.202
-        ]
-       ],
-       "closed": true,
        "material": "oak-solid",
        "regions": [
         "legs",
         "apron"
-       ]
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.4725,
+         -0.515
+        ],
+        [
+         0.0225,
+         -0.515
+        ],
+        [
+         0.0225,
+         -0.495
+        ],
+        [
+         0.4725,
+         -0.495
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
+      },
+      {
+       "id": "apron-end-l",
+       "bone": "frame",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.4725,
+         0.495
+        ],
+        [
+         0.0225,
+         0.495
+        ],
+        [
+         0.0225,
+         0.515
+        ],
+        [
+         0.4725,
+         0.515
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
+      },
+      {
+       "id": "apron-side-r",
+       "bone": "frame",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.5125,
+         -0.475
+        ],
+        [
+         0.4925,
+         -0.475
+        ],
+        [
+         0.4925,
+         0.475
+        ],
+        [
+         0.5125,
+         0.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
+      },
+      {
+       "id": "apron-side-f",
+       "bone": "frame",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.0025,
+         -0.475
+        ],
+        [
+         -0.0175,
+         -0.475
+        ],
+        [
+         -0.0175,
+         0.475
+        ],
+        [
+         0.0025,
+         0.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
       }
      ],
      "plan": [
@@ -1841,40 +2704,46 @@
        "z": 3,
        "filled": true,
        "tone": 0.62,
+       "region": "table-top",
+       "material": "veneered-chipboard",
        "kind": "poly",
        "points": [
         [
-         0.3,
+         0,
          -0.55
         ],
         [
-         0.3,
+         0,
          0.55
         ],
         [
-         -0.272,
+         0.572,
          0.55
         ],
         [
-         -0.281,
+         0.581,
          0.538
         ],
         [
-         -0.292,
+         0.592,
          0.529
         ],
         [
-         -0.3,
+         0.6,
          0.518
         ],
         [
-         -0.3,
+         0.6,
          -0.55
         ]
        ],
        "closed": true,
-       "region": "table-top",
-       "material": "veneered-chipboard"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0125,
+        "z1": 0.0125
+       }
       },
       {
        "id": "cup-rings",
@@ -1888,81 +2757,384 @@
        "region": "table-top"
       },
       {
-       "id": "frame",
-       "bone": "frame",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.52,
-       "kind": "path",
-       "d": "M -0.27000 -0.52000 L 0.27000 -0.52000 L 0.27000 0.52000 L -0.27000 0.52000 Z M -0.24500 -0.49500 L -0.24500 0.49500 L 0.24500 0.49500 L 0.24500 -0.49500 Z",
-       "material": "oak-solid",
-       "regions": [
-        "legs",
-        "apron"
-       ]
-      },
-      {
        "id": "shelf",
        "bone": "shelf",
        "role": "body",
        "z": 4.1,
        "filled": true,
        "tone": 0.6,
+       "region": "shelf",
+       "material": "veneered-chipboard",
        "kind": "poly",
        "points": [
         [
-         -0.26,
+         0.52,
          -0.475
         ],
         [
-         -0.26,
+         0.52,
          0.475
         ],
         [
-         -0.225,
+         0.485,
          0.475
         ],
         [
-         -0.225,
+         0.485,
          0.51
         ],
         [
-         0.225,
+         0.035,
          0.51
         ],
         [
-         0.225,
+         0.035,
          0.475
         ],
         [
-         0.26,
+         0,
          0.475
         ],
         [
-         0.26,
+         0,
          -0.475
         ],
         [
-         0.225,
+         0.035,
          -0.475
         ],
         [
-         0.225,
+         0.035,
          -0.51
         ],
         [
-         -0.225,
+         0.485,
          -0.51
         ],
         [
-         -0.225,
+         0.485,
          -0.475
         ]
        ],
        "closed": true,
-       "region": "shelf",
-       "material": "veneered-chipboard"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0095,
+        "z1": 0.0095
+       }
+      },
+      {
+       "id": "leg-rr",
+       "bone": "frame",
+       "role": "body",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.5175,
+         -0.52
+        ],
+        [
+         0.4725,
+         -0.52
+        ],
+        [
+         0.4725,
+         -0.47500000000000003
+        ],
+        [
+         0.5175,
+         -0.47500000000000003
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
+      },
+      {
+       "id": "leg-rl",
+       "bone": "frame",
+       "role": "body",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.5175,
+         0.475
+        ],
+        [
+         0.4725,
+         0.475
+        ],
+        [
+         0.4725,
+         0.52
+        ],
+        [
+         0.5175,
+         0.52
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
+      },
+      {
+       "id": "leg-fr",
+       "bone": "frame",
+       "role": "body",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.0225,
+         -0.52
+        ],
+        [
+         -0.0225,
+         -0.52
+        ],
+        [
+         -0.0225,
+         -0.47500000000000003
+        ],
+        [
+         0.0225,
+         -0.47500000000000003
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
+      },
+      {
+       "id": "leg-fl",
+       "bone": "frame",
+       "role": "body",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.0225,
+         0.475
+        ],
+        [
+         -0.0225,
+         0.475
+        ],
+        [
+         -0.0225,
+         0.52
+        ],
+        [
+         0.0225,
+         0.52
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.425
+       }
+      },
+      {
+       "id": "apron-end-r",
+       "bone": "frame",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.4725,
+         -0.515
+        ],
+        [
+         0.0225,
+         -0.515
+        ],
+        [
+         0.0225,
+         -0.495
+        ],
+        [
+         0.4725,
+         -0.495
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
+      },
+      {
+       "id": "apron-end-l",
+       "bone": "frame",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.4725,
+         0.495
+        ],
+        [
+         0.0225,
+         0.495
+        ],
+        [
+         0.0225,
+         0.515
+        ],
+        [
+         0.4725,
+         0.515
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
+      },
+      {
+       "id": "apron-side-r",
+       "bone": "frame",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.5125,
+         -0.475
+        ],
+        [
+         0.4925,
+         -0.475
+        ],
+        [
+         0.4925,
+         0.475
+        ],
+        [
+         0.5125,
+         0.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
+      },
+      {
+       "id": "apron-side-f",
+       "bone": "frame",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.52,
+       "material": "oak-solid",
+       "regions": [
+        "legs",
+        "apron"
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0.0025,
+         -0.475
+        ],
+        [
+         -0.0175,
+         -0.475
+        ],
+        [
+         -0.0175,
+         0.475
+        ],
+        [
+         0.0025,
+         0.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.07
+       }
       }
      ]
     },
@@ -1972,8 +3144,8 @@
       "de": "Stapel 8 x 12 mm: dieselben Teile ohne Kantentextur: Platte mit Ausbruchecke im Grundriss, Beine, Zargen, Boden, Decke mit Falz, Lagertischplatte, Zarge und Beine."
      },
      "retained": {
-      "en": "The broken corner, the cup rings, the shelf notches and the aprons in plan.",
-      "de": "Die Ausbruchecke, die Wasserränder, die Ausklinkungen und die Zargen im Grundriss."
+      "en": "The broken corner, the cup rings, the shelf notches and the aprons in plan. Front and plan: top, shelf, the four legs and the four aprons are solids that turn with the table.",
+      "de": "Die Ausbruchecke, die Wasserränder, die Ausklinkungen und die Zargen im Grundriss. Vorderansicht und Draufsicht: Platte, Ablage, die vier Beine und die vier Zargen sind Körper, die sich mit dem Tisch drehen."
      },
      "merged": {
       "en": "Glides into the legs, tube walls into full bars.",
@@ -2026,7 +3198,7 @@
        "filled": true,
        "tone": 0.85,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0125,
        "w": 0.8,
        "h": 0.025,
@@ -2089,7 +3261,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.006
         ],
         [
@@ -2101,7 +3273,7 @@
          0.006
         ],
         [
-         0.0,
+         0,
          0.006
         ]
        ],
@@ -2117,7 +3289,7 @@
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0125,
        "w": 0.6,
        "h": 0.025,
@@ -2132,7 +3304,7 @@
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0095,
        "w": 0.52,
        "h": 0.019,
@@ -2224,11 +3396,11 @@
         ],
         [
          0.58,
-         0.0
+         0
         ],
         [
          0.54,
-         0.0
+         0
         ],
         [
          0.54,
@@ -2240,11 +3412,11 @@
         ],
         [
          -0.54,
-         0.0
+         0
         ],
         [
          -0.58,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -2273,13 +3445,34 @@
        "z": 3,
        "filled": true,
        "tone": 0.62,
-       "kind": "rect",
-       "x": -0.55,
-       "y": 0.752,
-       "w": 1.1,
-       "h": 0.025,
        "region": "table-top",
-       "material": "veneered-chipboard"
+       "material": "veneered-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0.6,
+         -0.55
+        ],
+        [
+         0,
+         -0.55
+        ],
+        [
+         0,
+         0.55
+        ],
+        [
+         0.6,
+         0.55
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0125,
+        "z1": 0.0125
+       }
       },
       {
        "id": "shelf",
@@ -2288,13 +3481,66 @@
        "z": 4,
        "filled": true,
        "tone": 0.6,
-       "kind": "rect",
-       "x": -0.51,
-       "y": 1.072,
-       "w": 1.02,
-       "h": 0.019,
        "region": "shelf",
-       "material": "veneered-chipboard"
+       "material": "veneered-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0.52,
+         -0.475
+        ],
+        [
+         0.52,
+         0.475
+        ],
+        [
+         0.485,
+         0.475
+        ],
+        [
+         0.485,
+         0.51
+        ],
+        [
+         0.035,
+         0.51
+        ],
+        [
+         0.035,
+         0.475
+        ],
+        [
+         0,
+         0.475
+        ],
+        [
+         0,
+         -0.475
+        ],
+        [
+         0.035,
+         -0.475
+        ],
+        [
+         0.035,
+         -0.51
+        ],
+        [
+         0.485,
+         -0.51
+        ],
+        [
+         0.485,
+         -0.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0095,
+        "z1": 0.0095
+       }
       },
       {
        "id": "frame",
@@ -2303,47 +3549,53 @@
        "z": 5,
        "filled": true,
        "tone": 0.52,
-       "kind": "poly",
-       "points": [
-        [
-         -0.52,
-         0.777
-        ],
-        [
-         0.52,
-         0.777
-        ],
-        [
-         0.52,
-         1.202
-        ],
-        [
-         0.475,
-         1.202
-        ],
-        [
-         0.475,
-         0.847
-        ],
-        [
-         -0.475,
-         0.847
-        ],
-        [
-         -0.475,
-         1.202
-        ],
-        [
-         -0.52,
-         1.202
-        ]
-       ],
-       "closed": true,
        "material": "oak-solid",
        "regions": [
         "legs",
         "apron"
-       ]
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.52
+        ],
+        [
+         0,
+         0.52
+        ],
+        [
+         0.425,
+         0.52
+        ],
+        [
+         0.425,
+         0.475
+        ],
+        [
+         0.07,
+         0.475
+        ],
+        [
+         0.07,
+         -0.475
+        ],
+        [
+         0.425,
+         -0.475
+        ],
+        [
+         0.425,
+         -0.52
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0225,
+        "z1": 0.5175
+       }
       }
      ],
      "plan": [
@@ -2384,13 +3636,34 @@
        "z": 3,
        "filled": true,
        "tone": 0.62,
-       "kind": "rect",
-       "x": -0.3,
-       "y": -0.55,
-       "w": 0.6,
-       "h": 1.1,
        "region": "table-top",
-       "material": "veneered-chipboard"
+       "material": "veneered-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0.6,
+         -0.55
+        ],
+        [
+         0,
+         -0.55
+        ],
+        [
+         0,
+         0.55
+        ],
+        [
+         0.6,
+         0.55
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0125,
+        "z1": 0.0125
+       }
       },
       {
        "id": "frame",
@@ -2399,13 +3672,53 @@
        "z": 4,
        "filled": true,
        "tone": 0.52,
-       "kind": "path",
-       "d": "M -0.27000 -0.52000 L 0.27000 -0.52000 L 0.27000 0.52000 L -0.27000 0.52000 Z M -0.23500 -0.48500 L -0.23500 0.48500 L 0.23500 0.48500 L 0.23500 -0.48500 Z",
        "material": "oak-solid",
        "regions": [
         "legs",
         "apron"
-       ]
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.52
+        ],
+        [
+         0,
+         0.52
+        ],
+        [
+         0.425,
+         0.52
+        ],
+        [
+         0.425,
+         0.475
+        ],
+        [
+         0.07,
+         0.475
+        ],
+        [
+         0.07,
+         -0.475
+        ],
+        [
+         0.425,
+         -0.475
+        ],
+        [
+         0.425,
+         -0.52
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0225,
+        "z1": 0.5175
+       }
       },
       {
        "id": "shelf",
@@ -2414,60 +3727,66 @@
        "z": 4.1,
        "filled": true,
        "tone": 0.6,
+       "region": "shelf",
+       "material": "veneered-chipboard",
        "kind": "poly",
        "points": [
         [
-         -0.26,
+         0.52,
          -0.475
         ],
         [
-         -0.26,
+         0.52,
          0.475
         ],
         [
-         -0.225,
+         0.485,
          0.475
         ],
         [
-         -0.225,
+         0.485,
          0.51
         ],
         [
-         0.225,
+         0.035,
          0.51
         ],
         [
-         0.225,
+         0.035,
          0.475
         ],
         [
-         0.26,
+         0,
          0.475
         ],
         [
-         0.26,
+         0,
          -0.475
         ],
         [
-         0.225,
+         0.035,
          -0.475
         ],
         [
-         0.225,
+         0.035,
          -0.51
         ],
         [
-         -0.225,
+         0.485,
          -0.51
         ],
         [
-         -0.225,
+         0.485,
          -0.475
         ]
        ],
        "closed": true,
-       "region": "shelf",
-       "material": "veneered-chipboard"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0095,
+        "z1": 0.0095
+       }
       }
      ]
     },
@@ -2531,7 +3850,7 @@
        "filled": true,
        "tone": 0.85,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0125,
        "w": 0.8,
        "h": 0.025,
@@ -2578,7 +3897,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.016
         ],
         [
@@ -2590,7 +3909,7 @@
          0.006
         ],
         [
-         0.0,
+         0,
          0.006
         ]
        ],
@@ -2606,7 +3925,7 @@
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0125,
        "w": 0.6,
        "h": 0.025,
@@ -2621,7 +3940,7 @@
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0125,
        "w": 0.52,
        "h": 0.022,
@@ -2703,7 +4022,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": 0.505,
-       "y": 0.0,
+       "y": 0,
        "w": 0.075,
        "h": 0.715,
        "region": "depot-frame",
@@ -2718,7 +4037,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": -0.58,
-       "y": 0.0,
+       "y": 0,
        "w": 0.075,
        "h": 0.715,
        "region": "depot-frame",
@@ -2746,13 +4065,34 @@
        "z": 3,
        "filled": true,
        "tone": 0.62,
-       "kind": "rect",
-       "x": -0.55,
-       "y": 0.752,
-       "w": 1.1,
-       "h": 0.025,
        "region": "table-top",
-       "material": "veneered-chipboard"
+       "material": "veneered-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0.6,
+         -0.55
+        ],
+        [
+         0,
+         -0.55
+        ],
+        [
+         0,
+         0.55
+        ],
+        [
+         0.6,
+         0.55
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0125,
+        "z1": 0.0125
+       }
       },
       {
        "id": "shelf",
@@ -2761,13 +4101,66 @@
        "z": 4,
        "filled": true,
        "tone": 0.6,
-       "kind": "rect",
-       "x": -0.51,
-       "y": 1.072,
-       "w": 1.02,
-       "h": 0.022,
        "region": "shelf",
-       "material": "veneered-chipboard"
+       "material": "veneered-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0.52,
+         -0.475
+        ],
+        [
+         0.52,
+         0.475
+        ],
+        [
+         0.485,
+         0.475
+        ],
+        [
+         0.485,
+         0.51
+        ],
+        [
+         0.035,
+         0.51
+        ],
+        [
+         0.035,
+         0.475
+        ],
+        [
+         0,
+         0.475
+        ],
+        [
+         0,
+         -0.475
+        ],
+        [
+         0.035,
+         -0.475
+        ],
+        [
+         0.035,
+         -0.51
+        ],
+        [
+         0.485,
+         -0.51
+        ],
+        [
+         0.485,
+         -0.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0125,
+        "z1": 0.009499999999999998
+       }
       },
       {
        "id": "frame",
@@ -2776,47 +4169,53 @@
        "z": 5,
        "filled": true,
        "tone": 0.52,
-       "kind": "poly",
-       "points": [
-        [
-         -0.52,
-         0.777
-        ],
-        [
-         0.52,
-         0.777
-        ],
-        [
-         0.52,
-         1.202
-        ],
-        [
-         0.445,
-         1.202
-        ],
-        [
-         0.445,
-         0.852
-        ],
-        [
-         -0.445,
-         0.852
-        ],
-        [
-         -0.445,
-         1.202
-        ],
-        [
-         -0.52,
-         1.202
-        ]
-       ],
-       "closed": true,
        "material": "oak-solid",
        "regions": [
         "legs",
         "apron"
-       ]
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.52
+        ],
+        [
+         0,
+         0.52
+        ],
+        [
+         0.425,
+         0.52
+        ],
+        [
+         0.425,
+         0.445
+        ],
+        [
+         0.075,
+         0.445
+        ],
+        [
+         0.075,
+         -0.445
+        ],
+        [
+         0.425,
+         -0.445
+        ],
+        [
+         0.425,
+         -0.52
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0225,
+        "z1": 0.5175
+       }
       }
      ],
      "plan": [
@@ -2857,13 +4256,34 @@
        "z": 3,
        "filled": true,
        "tone": 0.62,
-       "kind": "rect",
-       "x": -0.3,
-       "y": -0.55,
-       "w": 0.6,
-       "h": 1.1,
        "region": "table-top",
-       "material": "veneered-chipboard"
+       "material": "veneered-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0.6,
+         -0.55
+        ],
+        [
+         0,
+         -0.55
+        ],
+        [
+         0,
+         0.55
+        ],
+        [
+         0.6,
+         0.55
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0125,
+        "z1": 0.0125
+       }
       },
       {
        "id": "frame",
@@ -2872,13 +4292,53 @@
        "z": 4,
        "filled": true,
        "tone": 0.52,
-       "kind": "path",
-       "d": "M -0.27000 -0.52000 L 0.27000 -0.52000 L 0.27000 0.52000 L -0.27000 0.52000 Z M -0.19500 -0.44500 L -0.19500 0.44500 L 0.19500 0.44500 L 0.19500 -0.44500 Z",
        "material": "oak-solid",
        "regions": [
         "legs",
         "apron"
-       ]
+       ],
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.52
+        ],
+        [
+         0,
+         0.52
+        ],
+        [
+         0.425,
+         0.52
+        ],
+        [
+         0.425,
+         0.445
+        ],
+        [
+         0.075,
+         0.445
+        ],
+        [
+         0.075,
+         -0.445
+        ],
+        [
+         0.425,
+         -0.445
+        ],
+        [
+         0.425,
+         -0.52
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0225,
+        "z1": 0.5175
+       }
       },
       {
        "id": "shelf",
@@ -2887,60 +4347,66 @@
        "z": 4.1,
        "filled": true,
        "tone": 0.6,
+       "region": "shelf",
+       "material": "veneered-chipboard",
        "kind": "poly",
        "points": [
         [
-         -0.26,
+         0.52,
          -0.475
         ],
         [
-         -0.26,
+         0.52,
          0.475
         ],
         [
-         -0.225,
+         0.485,
          0.475
         ],
         [
-         -0.225,
+         0.485,
          0.51
         ],
         [
-         0.225,
+         0.035,
          0.51
         ],
         [
-         0.225,
+         0.035,
          0.475
         ],
         [
-         0.26,
+         0,
          0.475
         ],
         [
-         0.26,
+         0,
          -0.475
         ],
         [
-         0.225,
+         0.035,
          -0.475
         ],
         [
-         0.225,
+         0.035,
          -0.51
         ],
         [
-         -0.225,
+         0.485,
          -0.51
         ],
         [
-         -0.225,
+         0.485,
          -0.475
         ]
        ],
        "closed": true,
-       "region": "shelf",
-       "material": "veneered-chipboard"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0125,
+        "z1": 0.009499999999999998
+       }
       }
      ]
     },
@@ -3591,7 +5057,7 @@
       "ease": "smooth"
      },
      {
-      "t": 1.0,
+      "t": 1,
       "pose": "lifted-key",
       "ease": "smooth"
      },
@@ -3652,7 +5118,7 @@
      {
       "id": "lift",
       "fromS": 0,
-      "toS": 1.0,
+      "toS": 1,
       "title": {
        "en": "Lift off",
        "de": "Abheben"
@@ -3660,7 +5126,7 @@
      },
      {
       "id": "clear",
-      "fromS": 1.0,
+      "fromS": 1,
       "toS": 2.4,
       "title": {
        "en": "Walk clear",
@@ -3714,7 +5180,7 @@
         "v": 0.53
        },
        {
-        "t": 1.0,
+        "t": 1,
         "v": 0.995
        }
       ]
@@ -3728,7 +5194,7 @@
         "v": 0.13
        },
        {
-        "t": 1.0,
+        "t": 1,
         "v": 0.51
        }
       ]
@@ -4115,12 +5581,12 @@
        "material": "oak-solid",
        "thicknessM": 0.0225,
        "resistanceM2KW": 0.125,
-       "heatCapacityJM2K": 25200.0,
+       "heatCapacityJM2K": 25200,
        "source": "literature",
        "reference": "wood-handbook-2021"
       }
      ],
-     "heatCapacityJM2K": 25200.0,
+     "heatCapacityJM2K": 25200,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -4148,12 +5614,12 @@
        "material": "oak-solid",
        "thicknessM": 0.02,
        "resistanceM2KW": 0.111111,
-       "heatCapacityJM2K": 22400.0,
+       "heatCapacityJM2K": 22400,
        "source": "literature",
        "reference": "wood-handbook-2021"
       }
      ],
-     "heatCapacityJM2K": 22400.0,
+     "heatCapacityJM2K": 22400,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -4181,12 +5647,12 @@
        "material": "veneered-chipboard",
        "thicknessM": 0.019,
        "resistanceM2KW": 0.131034,
-       "heatCapacityJM2K": 21318.0,
+       "heatCapacityJM2K": 21318,
        "source": "literature",
        "reference": "en-312-2010"
       }
      ],
-     "heatCapacityJM2K": 21318.0,
+     "heatCapacityJM2K": 21318,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -4246,13 +5712,13 @@
        "kind": "metal",
        "material": "powder-coated-steel",
        "thicknessM": 0.002,
-       "resistanceM2KW": 4e-05,
-       "heatCapacityJM2K": 7065.0,
+       "resistanceM2KW": 0.00004,
+       "heatCapacityJM2K": 7065,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 7065.0,
+     "heatCapacityJM2K": 7065,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -4365,7 +5831,7 @@
        "translation": [
         0.4,
         -5.55112e-17,
-        0.0
+        0
        ]
       }
      },
@@ -4851,7 +6317,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.006
        ],
        [
@@ -4868,7 +6334,7 @@
        ],
        [
         0.72,
-        0.0
+        0
        ],
        [
         0.719196,
@@ -4883,7 +6349,7 @@
         0.006
        ],
        [
-        0.0,
+        0,
         0.006
        ]
       ],
@@ -4901,11 +6367,11 @@
       "profile": [
        [
         -0.55,
-        0.0
+        0
        ],
        [
         0.55,
-        0.0
+        0
        ],
        [
         0.55,
@@ -5027,7 +6493,7 @@
        "translation": [
         0.035,
         0.5025,
-        0.0
+        0
        ]
       }
      },
@@ -5047,7 +6513,7 @@
        "translation": [
         0.035,
         -0.0075,
-        0.0
+        0
        ]
       }
      },
@@ -5126,11 +6592,11 @@
        ],
        [
         0.475,
-        0.0
+        0
        ],
        [
         -0.475,
-        0.0
+        0
        ],
        [
         -0.475,
@@ -5433,7 +6899,7 @@
       "transform": {
        "translation": [
         0.485,
-        0.0,
+        0,
         0.475
        ]
       },
@@ -5499,7 +6965,7 @@
       "transform": {
        "translation": [
         0.485,
-        0.0,
+        0,
         -0.475
        ]
       },
@@ -5565,7 +7031,7 @@
       "transform": {
        "translation": [
         0.035,
-        0.0,
+        0,
         0.475
        ]
       },
@@ -5631,7 +7097,7 @@
       "transform": {
        "translation": [
         0.035,
-        0.0,
+        0,
         -0.475
        ]
       },
@@ -5669,11 +7135,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0075
        ],
        [
@@ -5682,7 +7148,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5708,11 +7174,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0075
        ],
        [
@@ -5721,7 +7187,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5747,11 +7213,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0075
        ],
        [
@@ -5760,7 +7226,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5786,11 +7252,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0075
        ],
        [
@@ -5799,7 +7265,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5832,7 +7298,7 @@
        "translation": [
         0.4,
         -0.0325,
-        0.0
+        0
        ]
       },
       "member": "depot-table",
@@ -5853,8 +7319,8 @@
       "transform": {
        "translation": [
         0.3,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "table",
@@ -5876,7 +7342,7 @@
        "translation": [
         0.035,
         0.2475,
-        0.0
+        0
        ]
       },
       "member": "frame",
@@ -5897,8 +7363,8 @@
       "transform": {
        "translation": [
         0.26,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "shelf",
@@ -5936,7 +7402,7 @@
        "translation": [
         0.4,
         -5.55112e-17,
-        0.0
+        0
        ]
       }
      },
@@ -6182,7 +7648,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.006
        ],
        [
@@ -6199,7 +7665,7 @@
        ],
        [
         0.72,
-        0.0
+        0
        ],
        [
         0.719196,
@@ -6214,7 +7680,7 @@
         0.006
        ],
        [
-        0.0,
+        0,
         0.006
        ]
       ],
@@ -6233,11 +7699,11 @@
       "profile": [
        [
         -0.55,
-        0.0
+        0
        ],
        [
         0.55,
-        0.0
+        0
        ],
        [
         0.55,
@@ -6359,7 +7825,7 @@
        "translation": [
         0.035,
         0.5025,
-        0.0
+        0
        ]
       }
      },
@@ -6379,7 +7845,7 @@
        "translation": [
         0.035,
         -0.0075,
-        0.0
+        0
        ]
       }
      },
@@ -6458,11 +7924,11 @@
        ],
        [
         0.475,
-        0.0
+        0
        ],
        [
         -0.475,
-        0.0
+        0
        ],
        [
         -0.475,
@@ -6745,7 +8211,7 @@
       "transform": {
        "translation": [
         0.485,
-        0.0,
+        0,
         0.475
        ]
       },
@@ -6811,7 +8277,7 @@
       "transform": {
        "translation": [
         0.485,
-        0.0,
+        0,
         -0.475
        ]
       },
@@ -6877,7 +8343,7 @@
       "transform": {
        "translation": [
         0.035,
-        0.0,
+        0,
         0.475
        ]
       },
@@ -6943,7 +8409,7 @@
       "transform": {
        "translation": [
         0.035,
-        0.0,
+        0,
         -0.475
        ]
       },
@@ -6981,11 +8447,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -6994,7 +8460,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -7020,11 +8486,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -7033,7 +8499,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -7059,11 +8525,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -7072,7 +8538,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -7098,11 +8564,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -7111,7 +8577,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -7144,7 +8610,7 @@
        "translation": [
         0.4,
         -0.0325,
-        0.0
+        0
        ]
       },
       "member": "depot-table",
@@ -7165,8 +8631,8 @@
       "transform": {
        "translation": [
         0.3,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "table",
@@ -7188,7 +8654,7 @@
        "translation": [
         0.035,
         0.2475,
-        0.0
+        0
        ]
       },
       "member": "frame",
@@ -7209,8 +8675,8 @@
       "transform": {
        "translation": [
         0.26,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "shelf",
@@ -7248,7 +8714,7 @@
        "translation": [
         0.4,
         -5.55112e-17,
-        0.0
+        0
        ]
       }
      },
@@ -7427,7 +8893,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.006
        ],
        [
@@ -7439,7 +8905,7 @@
         0.006
        ],
        [
-        0.0,
+        0,
         0.006
        ]
       ],
@@ -7458,11 +8924,11 @@
       "profile": [
        [
         -0.55,
-        0.0
+        0
        ],
        [
         0.55,
-        0.0
+        0
        ],
        [
         0.55,
@@ -7582,7 +9048,7 @@
         0.515
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.07,
       "holes": [
        [
@@ -7640,11 +9106,11 @@
        ],
        [
         0.475,
-        0.0
+        0
        ],
        [
         -0.475,
-        0.0
+        0
        ],
        [
         -0.475,
@@ -7861,7 +9327,7 @@
       "transform": {
        "translation": [
         0.485,
-        0.0,
+        0,
         0.475
        ]
       },
@@ -7927,7 +9393,7 @@
       "transform": {
        "translation": [
         0.485,
-        0.0,
+        0,
         -0.475
        ]
       },
@@ -7993,7 +9459,7 @@
       "transform": {
        "translation": [
         0.035,
-        0.0,
+        0,
         0.475
        ]
       },
@@ -8059,7 +9525,7 @@
       "transform": {
        "translation": [
         0.035,
-        0.0,
+        0,
         -0.475
        ]
       },
@@ -8097,11 +9563,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.03
        ],
        [
@@ -8110,7 +9576,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -8136,11 +9602,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.03
        ],
        [
@@ -8149,7 +9615,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -8175,11 +9641,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.03
        ],
        [
@@ -8188,7 +9654,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -8214,11 +9680,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.03
        ],
        [
@@ -8227,7 +9693,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -8260,7 +9726,7 @@
        "translation": [
         0.4,
         -0.0325,
-        0.0
+        0
        ]
       },
       "member": "depot-table",
@@ -8281,8 +9747,8 @@
       "transform": {
        "translation": [
         0.3,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "table",
@@ -8304,7 +9770,7 @@
        "translation": [
         0.035,
         0.2475,
-        0.0
+        0
        ]
       },
       "member": "frame",
@@ -8325,8 +9791,8 @@
       "transform": {
        "translation": [
         0.26,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "shelf",
@@ -8364,7 +9830,7 @@
        "translation": [
         0.4,
         -5.55112e-17,
-        0.0
+        0
        ]
       }
      },
@@ -8458,7 +9924,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.016
        ],
        [
@@ -8470,7 +9936,7 @@
         0.006
        ],
        [
-        0.0,
+        0,
         0.006
        ]
       ],
@@ -8488,11 +9954,11 @@
       "profile": [
        [
         -0.55,
-        0.0
+        0
        ],
        [
         0.55,
-        0.0
+        0
        ],
        [
         0.55,
@@ -8612,7 +10078,7 @@
         0.52
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.075,
       "holes": [
        [
@@ -8670,11 +10136,11 @@
        ],
        [
         0.475,
-        0.0
+        0
        ],
        [
         -0.475,
-        0.0
+        0
        ],
        [
         -0.475,
@@ -8880,7 +10346,7 @@
       "transform": {
        "translation": [
         0.485,
-        0.0,
+        0,
         0.475
        ]
       },
@@ -8946,7 +10412,7 @@
       "transform": {
        "translation": [
         0.485,
-        0.0,
+        0,
         -0.475
        ]
       },
@@ -9012,7 +10478,7 @@
       "transform": {
        "translation": [
         0.035,
-        0.0,
+        0,
         0.475
        ]
       },
@@ -9078,7 +10544,7 @@
       "transform": {
        "translation": [
         0.035,
-        0.0,
+        0,
         -0.475
        ]
       },
@@ -9116,11 +10582,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0375
        ],
        [
@@ -9129,7 +10595,7 @@
        ],
        [
         0.075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9155,11 +10621,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0375
        ],
        [
@@ -9168,7 +10634,7 @@
        ],
        [
         0.075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9194,11 +10660,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0375
        ],
        [
@@ -9207,7 +10673,7 @@
        ],
        [
         0.075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9233,11 +10699,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0375
        ],
        [
@@ -9246,7 +10712,7 @@
        ],
        [
         0.075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9279,7 +10745,7 @@
        "translation": [
         0.4,
         -0.0325,
-        0.0
+        0
        ]
       },
       "member": "depot-table",
@@ -9300,8 +10766,8 @@
       "transform": {
        "translation": [
         0.3,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "table",
@@ -9323,7 +10789,7 @@
        "translation": [
         0.0375,
         0.2475,
-        0.0
+        0
        ]
       },
       "member": "frame",
@@ -9344,8 +10810,8 @@
       "transform": {
        "translation": [
         0.26,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "shelf",

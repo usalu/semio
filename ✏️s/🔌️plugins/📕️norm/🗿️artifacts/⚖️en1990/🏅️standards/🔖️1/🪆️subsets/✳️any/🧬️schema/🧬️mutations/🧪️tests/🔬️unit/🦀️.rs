@@ -1,6 +1,6 @@
 use crate::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
-use protocol::{ColdMutation, Mutation};
+use protocol::{ColdMutation, ColdMutationDiff, Mutation};
 
 fn every_mutation() -> Vec<En1990Mutation> {
     let base = En1990Snapshot::example(AnnexChoice::De);
@@ -84,7 +84,7 @@ async fn change_consequence_class_and_beta_absorb() {
     let d1 = En1990Mutation::ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass { new_consequence_class: 3 }).diff(&base).diff().clone();
     let d2 = En1990Mutation::ChangeBetaComputed(change_beta_computed::ChangeBetaComputed { new_beta_computed: 4.3 }).diff(&base).diff().clone();
     let mut absorbed = d1.clone();
-    protocol::MutationDiff::<En1990Snapshot>::absorb(&mut absorbed, d2.clone());
+    absorbed.absorb(d2.clone());
     assert_eq!(absorbed.consequence_class, Some(3));
     assert_eq!(absorbed.beta_computed, Some(4.3));
 }

@@ -175,7 +175,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
                 };
             }
             let windows=generation3d_preview_windows(input.context.and_then(|context|context.view_state.as_deref()));
-            let servable=flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
+            let unserved=flow_eval_tick::unserved_kinds(&input.snapshot.host_snapshot);
             let result=self.instance_owner.with_mut::<Generation3dInstanceOperationOwner,_>(|owner|{
                 let step=owner.with_session_and_gumball(|session,_|read.admit_current_output(&input.snapshot.host_snapshot,input.operation.canonical_base_revision,session,&request,_cx).map_err(|error|Fault::from(error.to_string())))??;
                 match step{
@@ -184,7 +184,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
                     semio_os_flow::FlowCurrentOutputRead::Ready(source)=>{
                         let doc=ArtifactView::with_operation(input.snapshot,input.history,input.operation.clone());
                         let mut emit=add_widget::create_connected(payload,&doc,&source)?;
-                        owner.owe_attached_previews_for_mutations(&windows,servable,&mut emit,input.operation.retained)?;
+                        owner.owe_attached_previews_for_mutations(&windows,&unserved,&mut emit,input.operation.retained)?;
                         Ok(ArtifactCommandWorkStep::Complete(emit))
                     },
                 }
@@ -194,7 +194,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
         }}
         self.consumed = true;
         let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
-        let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
+        let unserved = flow_eval_tick::unserved_kinds(&input.snapshot.host_snapshot);
         let emit = self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
             let gestures = owner.gumball.revision();
             let mut emit = if matches!(input.command, Generation3dCommand::Reorganize(_)) {
@@ -208,9 +208,9 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
                 Generation3dConfigMutation::SetLodMode(detail)
                     if preview_eval::preview_tolerance(&detail.value) != current_tolerance));
             if detail_changed || owner.gumball.revision() != gestures {
-                owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
+                owner.owe_attached_previews_carrying(&windows, &unserved, &mut emit, input.operation.retained)?;
             } else {
-                owner.owe_attached_previews_for_mutations(&windows, servable, &mut emit, input.operation.retained)?;
+                owner.owe_attached_previews_for_mutations(&windows, &unserved, &mut emit, input.operation.retained)?;
             }
             Ok(emit)
         })?;

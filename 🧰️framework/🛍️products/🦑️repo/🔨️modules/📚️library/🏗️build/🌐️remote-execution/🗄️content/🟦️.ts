@@ -2,8 +2,8 @@ import type {RemoteExecutionDigestV1} from "../🟦️.ts";
 import {CAS_LEASE_HEADER_V1} from "../../🗄️cas/📌️pins/🟦️.ts";
 import { runtimeSleepV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 
-/** 📥️ Why a blob is asked for or sent: `input` marks a blob that only feeds one action, which the store leases for the time of the action instead of keeping it like a published output. */
-export type RemoteExecutionContentIntentV1="input";
+/** 📥️ Why a blob is asked for or sent: `input` marks a blob that only feeds one action, which the store leases for the time of the action instead of keeping it like a published output; `input:<action>` names the action that holds the lease, so the lease of one action can end (`release`) while another action still uses the blob. */
+export type RemoteExecutionContentIntentV1="input"|`input:${string}`;
 
 /** 🗄️ Where the protocol's blobs and action results live: the shared content-addressed store. Scheduler and workers use this interface only, so a store can be swapped without touching either. */
 export interface RemoteExecutionContentV1{
@@ -14,16 +14,19 @@ export interface RemoteExecutionContentV1{
  write(instance:string,digest:RemoteExecutionDigestV1,source:Uint8Array|AsyncIterable<Uint8Array>,signal?:AbortSignal,intent?:RemoteExecutionContentIntentV1):Promise<void>;
  readActionResult(instance:string,hash:string,signal?:AbortSignal):Promise<Uint8Array|undefined>;
  writeActionResult(instance:string,hash:string,bytes:Uint8Array,signal?:AbortSignal):Promise<void>;
+ release?(instance:string,hashes:readonly string[],intent:RemoteExecutionContentIntentV1,signal?:AbortSignal):Promise<void>;
 }
 
 /** 🚧️ The store refused or could not take the request. `code` is a gRPC status code and `missingOutput` names a blob explicitly rejected during action-result validation. */
 export class RemoteExecutionContentErrorV1 extends Error{
  readonly code:number;
  readonly missingOutput?:string|undefined;
- constructor(code:number,message:string,missingOutput?:string){
+ readonly status?:number|undefined;
+ constructor(code:number,message:string,missingOutput?:string,status?:number){
   super(message);
   this.code=code;
   this.missingOutput=missingOutput;
+  this.status=status;
  }
 }
 
@@ -63,7 +66,7 @@ export function httpRemoteExecutionContentV1(options:RemoteExecutionHttpContentO
  const refuse=(response:Response,what:string,reason=""):never=>{
   const code=response.status===401?16:response.status===403?7:response.status===507?8:response.status===413?8:response.status===400?3:14;
   const missingOutput=response.status===400&&what.startsWith("ac/")?/^Invalid action result: (?:blob|tree) ([0-9a-f]{64})(?: of tree [0-9a-f]{64})? is not in the content store$/u.exec(reason)?.[1]:undefined;
-  throw new RemoteExecutionContentErrorV1(code,`Content store answered ${response.status} for ${what}${reason===""?"":": "+reason}`,missingOutput);
+  throw new RemoteExecutionContentErrorV1(code,`Content store answered ${response.status} for ${what}${reason===""?"":": "+reason}`,missingOutput,response.status);
  };
  const content:RemoteExecutionContentV1={
   async has(instance,hash,signal,intent){
@@ -107,9 +110,49 @@ export function httpRemoteExecutionContentV1(options:RemoteExecutionHttpContentO
    if(response.status!==200)return refuse(response,`ac/${hash}`);
    return new Uint8Array(await response.arrayBuffer());
   },
+  async release(instance,hashes,intent,signal){
+   let next=0;
+   await Promise.all(Array.from({length:Math.min(limit,hashes.length)},async()=>{for(;;){const index=next++;if(index>=hashes.length)return;const hash=hashes[index]!;if(hash===EMPTY)continue;const response=await send("DELETE",url(instance,"cas",hash),signal,{headers:{[CAS_LEASE_HEADER_V1]:intent}});await response.body?.cancel();}}));
+  },
   async writeActionResult(instance,hash,bytes,signal){
    const response=await send("PUT",url(instance,"ac",hash),signal,{body:bytes as unknown as BodyInit,headers:{"content-length":String(bytes.length),"content-type":"application/octet-stream"}});await settle(response,`ac/${hash}`);
   },
  };
  return Object.freeze(content);
+}
+
+/** ⏳️ How long and how patiently a transfer waits for an unreachable store (the policy's `worker.outage`). */
+export type RemoteExecutionContentOutageV1=Readonly<{seconds:number;initialMilliseconds:number;maximumMilliseconds:number}>;
+
+const retryableStatusV1=(error:RemoteExecutionContentErrorV1):boolean=>error.status===507||(error.code===14&&(error.status===undefined||error.status>=500||error.status===408||error.status===429));
+
+/** 🔁️ Runs `operation` again while the store is unreachable (gRPC code 14 from {@link RemoteExecutionContentErrorV1}) or answers 507 Insufficient storage (the store collects room meanwhile) with a pause that doubles from the outage's initial to its maximum, for at most its seconds from the first failure, so the work already done on a finished action survives a restart of the store; any other failure, an abort and an expired outage end it at once with the last error. The operation builds its source anew per attempt.
+ * @see ../🧪️tests/🔁️content-retry/🟦️.ts */
+export async function retryRemoteExecutionContentOutageV1<T>(operation:()=>Promise<T>,outage:RemoteExecutionContentOutageV1,signal?:AbortSignal,sleep:(milliseconds:number)=>Promise<void>=runtimeSleepV1,now:()=>number=Date.now):Promise<T>{
+ let began:number|undefined,pause=outage.initialMilliseconds;
+ for(;;){
+  try{return await operation();}
+  catch(error){
+   if(!(error instanceof RemoteExecutionContentErrorV1)||!retryableStatusV1(error)||signal?.aborted===true)throw error;
+   began??=now();
+   const left=outage.seconds*1000-(now()-began);
+   if(left<=0)throw error;
+   await sleep(Math.min(pause,left));pause=Math.min(pause*2,outage.maximumMilliseconds);
+  }
+ }
+}
+
+/** 🛟️ The store of `content` that waits out an outage on every transfer whose input can be replayed: existence checks, reads and byte writes; a stream is handed through (its owner retries by building a new source with {@link retryRemoteExecutionContentOutageV1}). */
+export function outageTolerantRemoteExecutionContentV1(content:RemoteExecutionContentV1,outage:RemoteExecutionContentOutageV1,sleep?:(milliseconds:number)=>Promise<void>):RemoteExecutionContentV1{
+ const again=<T>(operation:()=>Promise<T>,signal?:AbortSignal):Promise<T>=>retryRemoteExecutionContentOutageV1(operation,outage,signal,sleep);
+ return Object.freeze<RemoteExecutionContentV1>({
+  has:(instance,hash,signal,intent)=>again(()=>content.has(instance,hash,signal,intent),signal),
+  missing:(instance,digests,signal,intent)=>again(()=>content.missing(instance,digests,signal,intent),signal),
+  read:(instance,digest,signal)=>again(()=>content.read(instance,digest,signal),signal),
+  stream:(instance,digest,signal)=>content.stream(instance,digest,signal),
+  write:(instance,digest,source,signal,intent)=>source instanceof Uint8Array?again(()=>content.write(instance,digest,source,signal,intent),signal):content.write(instance,digest,source,signal,intent),
+  readActionResult:(instance,hash,signal)=>again(()=>content.readActionResult(instance,hash,signal),signal),
+  writeActionResult:(instance,hash,bytes,signal)=>again(()=>content.writeActionResult(instance,hash,bytes,signal),signal),
+  ...content.release===undefined?{}:{release:(instance:string,hashes:readonly string[],intent:RemoteExecutionContentIntentV1,signal?:AbortSignal)=>content.release!(instance,hashes,intent,signal)},
+ });
 }

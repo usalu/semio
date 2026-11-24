@@ -131,7 +131,12 @@ fn hop_effect(action: &str, window_id: &str, window_kind_id: &str) -> Effect {
 /// continuation — a fault nothing in this process can clear owes no continuation at all. The run
 /// therefore neither starts on such a graph nor continues it.
 pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> bool {
-    semio_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_os_flow::flow_operator_registry()).is_empty()
+    unserved_kinds(host_snapshot).is_empty()
+}
+
+/// 🧭️ The operator kinds of `host_snapshot` the live flow extension registry cannot serve, ascending: what a route hands [`owe_attached_previews_carrying`] and [`owe_attached_previews_for_mutations`] so an unservable graph parks its preview AND asks the host to activate the deferred extensions. Empty means servable.
+pub fn unserved_kinds(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> Vec<String> {
+    semio_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_os_flow::flow_operator_registry())
 }
 
 /// 🌀️ The one argument object every hop of the chain carries, on the redispatch and on the
@@ -182,12 +187,12 @@ pub fn owe_attached_previews(session: &mut FlowEvalSession, link: &mut PreviewEv
 /// silent for 60 s with not one poll to read it. So a gesture with no live run carries the run start on
 /// its OWN emit, under the same one-request latch `preview_eval_run_effects` asks through, and an
 /// unservable graph carries nothing for the reason that function refuses one.
-pub fn owe_attached_previews_for_mutations<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, semio_framework_value::ValueError> {
+pub fn owe_attached_previews_for_mutations<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], unserved: &[String], emit: &mut semio_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, semio_framework_value::ValueError> {
     if emit.artifact_mutations.is_empty() {
         link.wake();
         return Ok(false);
     }
-    owe_attached_previews_carrying(session, link, windows, servable, emit, grant)?;
+    owe_attached_previews_carrying(session, link, windows, unserved, emit, grant)?;
     Ok(true)
 }
 
@@ -202,8 +207,12 @@ pub fn owe_attached_previews_for_mutations<M, C, D>(session: &mut FlowEvalSessio
 /// preview empty for 120 s with not one `toolRunStart` in the console, and as an inspector slider that
 /// moved `height` 6 → 7 against a preview that never re-evaluated
 /// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
-pub fn owe_attached_previews_carrying<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+pub fn owe_attached_previews_carrying<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], unserved: &[String], emit: &mut semio_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     owe_attached_previews(session, link, windows, grant)?;
+    let servable = unserved.is_empty();
+    if !windows.is_empty() {
+        emit.effects.extend(on_demand_run_effects(link, unserved.to_vec()));
+    }
     let woken = link.port.is_some() && link.settled.is_none();
     if !windows.is_empty() && servable && !woken && link.requested.is_none() {
         link.requested = Some((PreviewEvalRunRequest::Start, None));

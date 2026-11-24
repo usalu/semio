@@ -176,7 +176,7 @@ async function journey(browser: Browser, language: "en" | "de") {
       await eventually(async () => assert.equal((await names(pool())).length, total, "typology not cleared"));
       return { labels, filtered };
     });
-    const wedged = () => s.faults.some(line => /prior-outcome|runtime live cleanup faulted/u.test(line));
+    const wedged = () => s.faults.some(line => /prior-outcome|runtime live cleanup faulted|publication-stalled|zero-progress/u.test(line));
     const restart = async () => {
       await page.reload();
       assert.match((await awaitBeacon(page, Date.now() + 300_000)) ?? "", /^ready/u);
@@ -192,7 +192,7 @@ async function journey(browser: Browser, language: "en" | "de") {
         await eventually(async () => assert.equal((await names(pool())).length, total, "min availability not cleared"));
         return { listed };
       } catch (error) {
-        if (wedged()) { await restart(); throw new Error(`${error}; instance wedged by the edit (plugin.internal.prior-outcome), page reloaded to isolate later steps`); }
+        if (wedged()) { await restart(); throw new Error(`${error}; instance wedged by the edit, page reloaded to isolate later steps`); }
         throw error;
       }
     });

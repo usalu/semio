@@ -19,6 +19,41 @@ impl<'ctx> ActionsCtx<'ctx> {
         Ok(())
     }
 
+    /// ⏳️ Answers a guest's typed activation request (`os.on-demand.request`, queued by the host-effect funnel): every deferred owner the frame Worker's activator resolves for it is installed through [`PluginState::install_plugin`], so the install band shows the progress and its cancel stops the load, then the contributions push moves the flow registry generation and the parked document resumes. An owner that cannot load tells the person in their language and leaves the rest of the document working; a cancelled install is silent.
+    #[cfg(target_arch = "wasm32")]
+    pub(super) async fn framework_activate_on_demand(&mut self, action: &ActionDescriptor) -> Result<(), String> {
+        let Some(request) = action.args.as_ref().and_then(|args| args.get("request")).and_then(|value| value.as_str()).map(ToOwned::to_owned) else { return Ok(()) };
+        let owners = match semio_renderer_wgpu_program_bridge::resolve_on_demand_owners(&request) {
+            Ok(owners) => owners,
+            Err(error) => {
+                debug_log(&format!("[TRACE] wgpu shell on-demand activation request failed: {error}"));
+                return Ok(());
+            }
+        };
+        let mut installed = false;
+        for plugin_id in owners {
+            match self.plugins.install_plugin(&plugin_id).await {
+                Ok(()) => installed = true,
+                Err(error) => {
+                    debug_log(&format!("[TRACE] wgpu shell on-demand install of {plugin_id} failed: {error}"));
+                    if let Some((text, alert)) = semio_renderer_wgpu_program_bridge::on_demand_status_notice(&plugin_id, &self.prefs.locale_id) {
+                        self.chrome.show_transient_notice(text, if alert { semio_framework::Severity::Error } else { semio_framework::Severity::Info }, Some(&format!("on-demand.{plugin_id}")));
+                    }
+                }
+            }
+        }
+        if installed {
+            self.as_window_actions().push_contributions().await?;
+            self.settle.owe_refresh(UiDirtyScope::Full);
+        }
+        Ok(())
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(super) async fn framework_activate_on_demand(&mut self, _action: &ActionDescriptor) -> Result<(), String> {
+        Ok(())
+    }
+
     /// 🩺️ React's `recovery.disablePlugin`: the plugin is quarantined, and dropped unless it is the session's own program.
     pub(super) async fn framework_quarantine_plugin(&mut self, action: &ActionDescriptor) -> Result<(), String> {
         if let Some(plugin_id) = action.args.as_ref().and_then(|args| args.get("pluginId")).and_then(|v| v.as_str()).map(ToOwned::to_owned) {

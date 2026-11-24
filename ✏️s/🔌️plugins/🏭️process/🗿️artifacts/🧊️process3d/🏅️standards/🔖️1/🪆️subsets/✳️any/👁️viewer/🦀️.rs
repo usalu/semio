@@ -36,6 +36,9 @@ pub mod modes {
         }
     }
 }
+#[path = "🌱️initialization/🦀️.rs"]
+mod initialization;
+pub use initialization::{Process3dViewerDeclarations, Process3dViewerNativeRegistration};
 //#endregion 🧩️Modules
 
 use crate::modes::view;

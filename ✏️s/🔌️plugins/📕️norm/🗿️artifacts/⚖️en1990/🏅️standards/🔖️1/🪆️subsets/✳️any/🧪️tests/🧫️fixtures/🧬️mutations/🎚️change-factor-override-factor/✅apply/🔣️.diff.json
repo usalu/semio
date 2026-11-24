@@ -86,7 +86,7 @@
       {
         "id": "fac-1",
         "patch": {
-          "factor": "normal-alt",
+          "factor": "psi0",
           "target": null,
           "value": null,
           "justification": null

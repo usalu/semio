@@ -37,7 +37,7 @@ export function followedCourseState(own: CourseState, peer: PresenceState): Cour
   const run = peer.view?.run;
   const profile = peer.view?.profile;
   const board = peer.view?.board ?? DEFAULT_BOARD;
-  const leaderboards = { ...(peer.view?.overall === undefined ? {} : { [boardKey(DEFAULT_BOARD)]: { board: peer.view.overall, at: peer.view.overallAt ?? 0 } }), ...(peer.view?.leaderboard === undefined ? {} : { [boardKey(board)]: { board: peer.view.leaderboard, at: peer.view.leaderboardAt ?? 0 } }) };
+  const leaderboards = { ...own.leaderboards, ...(peer.view?.leaderboard === undefined ? {} : { [boardKey(board)]: { board: peer.view.leaderboard, at: peer.view.leaderboardAt ?? 0 } }) };
   return {
     ...own,
     step: followStep(peer.place, peer.view?.home),

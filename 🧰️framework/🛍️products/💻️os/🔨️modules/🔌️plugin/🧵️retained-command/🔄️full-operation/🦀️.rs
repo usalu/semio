@@ -7,15 +7,38 @@ impl semio_os_kernel::os_vcs::io::binary::entity_identity::control::IdentityWork
     }
 }
 
-/// 🧭️ Why one publication unit could not advance the ladder: a static cause and the three figures it was measured against.
+/// 🧭️ Why one publication unit could not advance: a static cause, the `phase` of the settlement that waited and the `resource` of its quote that was short (both empty when the cause says it all), and the three figures it was measured against. A funding shortfall reads `[stage, demand, grant]`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct PublicationWait { pub cause: &'static str, pub have: [u64; 3] }
+pub struct PublicationWait { pub cause: &'static str, pub phase: &'static str, pub resource: &'static str, pub have: [u64; 3] }
+
+impl PublicationWait {
+    /// 📏️ A funding shortfall: `resource` of `phase` was short, `demand` quoted against the `grant` available.
+    pub fn shortfall(cause: &'static str, phase: &'static str, resource: &'static str, demand: u64, grant: u64) -> Self { Self { cause, phase, resource, have: [0, demand, grant] } }
+
+    /// 🎚️ The same wait observed at settlement `stage`.
+    pub fn at_stage(mut self, stage: u64) -> Self { self.have[0] = stage; self }
+}
+
+impl std::fmt::Display for PublicationWait {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.phase.is_empty() && self.resource.is_empty() { write!(f, "{} {:?}", self.cause, self.have) } else { write!(f, "{} [phase '{}', short of {}; stage, demand, grant] {:?}", self.cause, self.phase, self.resource, self.have) }
+    }
+}
+
+/// 🧭️ How one tool settlement unit ended: the settlement is `Complete`, it `Advanced` (a funded step ran and the next unit continues it), or it is `Waiting` on a named cause no step could run for.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ToolSettlementUnit { Complete, Advanced, Waiting(PublicationWait) }
 
 thread_local! { static LAST_PUBLICATION_WAIT: std::cell::Cell<Option<(u64, PublicationWait)>> = const { std::cell::Cell::new(None) }; }
 
 /// 🧭️ Records the cause the latest publication unit of `operation` waited on, so a stall names it instead of staying silent.
 pub fn note_publication_wait(operation: u64, cause: &'static str, have: [u64; 3]) {
-    LAST_PUBLICATION_WAIT.with(|slot| slot.set(Some((operation, PublicationWait { cause, have }))));
+    note_publication_unit_wait(operation, PublicationWait { cause, phase: "", resource: "", have });
+}
+
+/// 🧭️ Records a typed wait the settlement itself named for `operation`.
+pub fn note_publication_unit_wait(operation: u64, wait: PublicationWait) {
+    LAST_PUBLICATION_WAIT.with(|slot| slot.set(Some((operation, wait))));
 }
 
 /// 🧭️ Reads the cause last recorded for `operation`, if any.
@@ -524,6 +547,20 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         let demand=self.result_page_retirement_demands(grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;if !plugin_turn_admitted(demand,grant)?{return Ok(Default::default());}let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Option<TypedOperationResultPage>>()-size_of::<bool>(),..grant};let page=self.result_page.as_mut().unwrap();let mut progress=page.close_step(&mut effect.nested(child)).map_err(plugin_retirement_fault)?.progress();
         if page.terminal_is_empty(){self.result_page=None;self.result_page_presented=false;progress.copied_bytes+=size_of::<Option<TypedOperationResultPage>>()+size_of::<bool>();}
         Ok(progress)
+    }
+
+    /// 🏁️ The terminal publication this operation currently presents to its owner: a captured fault, a fault page, a cancelled terminal page, or a successful terminal or download page; `None` while only progress pages are presented. See [`Self::acknowledge_result_page`].
+    pub fn terminal_publication(&self) -> Option<Result<(), semio_plugin_decl_app::tool_contract::ArtifactBoundedToolFault>> {
+        use semio_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, decode_typed_operation_fault_page};
+        self.terminal_fault.map(Err).or_else(|| {
+            let page = self.result_page.as_ref()?;
+            match page.lane {
+                TypedOperationResultLane::Fault => Some(Err(ArtifactBoundedToolFault::from_fault(&decode_typed_operation_fault_page(page.bytes())))),
+                TypedOperationResultLane::Terminal if self.user_cancel_requested => Some(Err(ArtifactBoundedToolFault::from_fault(&Fault::from("original media import was cancelled")))),
+                TypedOperationResultLane::Terminal | TypedOperationResultLane::Download => Some(Ok(())),
+                _ => None,
+            }
+        })
     }
 
     pub fn acknowledge_result_page(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault> {

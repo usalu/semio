@@ -1,7 +1,7 @@
 import{stretchedBudgetMillisecondsV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {afterAll,beforeAll,expect,test} from "bun:test";
 import {spawn,spawnSync,type ChildProcess} from "node:child_process";
-import {chmodSync,copyFileSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {chmodSync,constants,copyFileSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,readlinkSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
@@ -17,31 +17,40 @@ const scratch=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR?
 process.env.SEMIO_CAS_ROOT=join(scratch,"cas");
 const children=new Set<ChildProcess>();
 let cluster:ClusterV1;
-const workers=new Map<string,{child:ChildProcess;lines:string[]}>();
+const workers=new Map<string,{child:ChildProcess;lines:string[];directory:string}>();
+
+/** 📍️ A sysroot of the test toolchain cloned below `scratch` (own inodes: through a hard link the loader may resolve the executable to its original path, whose libraries the sandbox hides) whose `bin/rustc` records its pid in `compiler-<crate>.pid` in the action root before it becomes the real compiler, so a test sees the remote compiler start and die without scanning the process table; `--print sysroot` names it, so the worker offers it exactly like the real one (same identity, targets and linker). */
+const signalingSysroot=((sysroot:string,root:string):string=>{
+ const mirror=(from:string,to:string):void=>{mkdirSync(to,{recursive:true});for(const entry of readdirSync(from,{withFileTypes:true})){const source=join(from,entry.name),target=join(to,entry.name);if(entry.isDirectory()){if(!(entry.name==="src"&&from.endsWith("rustlib")))mirror(source,target);}else if(entry.isSymbolicLink())symlinkSync(readlinkSync(source),target);else copyFileSync(source,target,constants.COPYFILE_FICLONE);}};
+ mirror(join(sysroot,"lib"),join(root,"lib"));mkdirSync(join(root,"libexec"));copyFileSync(join(sysroot,"bin","rustc"),join(root,"libexec","rustc"),constants.COPYFILE_FICLONE);mkdirSync(join(root,"bin"));
+ writeFileSync(join(root,"bin","rustc"),`#!/bin/sh\n[ "$*" = "--print sysroot" ] && { echo '${root}'; exit 0; }\np=\nfor a;do [ "$p" = --crate-name ]&&echo $$ >".c$$"&&/bin/mv ".c$$" "compiler-$a.pid";p=$a;done\nexec '${root}/libexec/rustc' "$@"\n`);chmodSync(join(root,"bin","rustc"),0o755);
+ return join(root,"bin");
+})(spawnSync("rustc",["--print","sysroot"],{encoding:"utf8",env:testRustEnvironmentV1()}).stdout.trim(),join(scratch,"sysroot"));
+const compilerPids=(directory:string,crate:string):number[]=>{try{return(readdirSync(directory,{recursive:true}) as string[]).filter(path=>path.endsWith(`compiler-${crate}.pid`)).map(path=>Number(readFileSync(join(directory,path),"utf8").trim())).filter(Number.isSafeInteger);}catch{return[];}};
+const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch{return false;}};
 
 const idleHost=join(scratch,"idle-host.json");
 writeFileSync(idleHost,JSON.stringify({host:{version:1,atMs:Date.now()+86400000,platform:process.platform==="darwin"?"darwin":"linux",cores:16,totalMegabytes:65536,availableMegabytes:48000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:0.5,openFiles:null,openFilesMaximum:null,attachedImages:null},grants:[],waiters:[]}));
 
-function startWorker(name:string,directory:string):{child:ChildProcess;lines:string[]}{
+function startWorker(name:string,directory:string):{child:ChildProcess;lines:string[];directory:string}{
  mkdirSync(directory,{recursive:true});
- const lines:string[]=[],child=spawn(process.execPath,[entry,"--join",cluster.server.workerUrl,"--name",name,"--origin",name,"--work-directory",join(directory,"work"),"--concurrency","2"],{cwd:directory,env:testRustEnvironmentV1({SEMIO_CAS_ROOT:undefined,SEMIO_REMOTE_EXECUTION_HOST_VIEW:idleHost}),stdio:["ignore","pipe","pipe"]});
+ const lines:string[]=[],child=spawn(process.execPath,[entry,"--join",cluster.server.workerUrl,"--name",name,"--origin",name,"--work-directory",join(directory,"work"),"--concurrency","2"],{cwd:directory,env:testRustEnvironmentV1({SEMIO_CAS_ROOT:undefined,SEMIO_REMOTE_EXECUTION_HOST_VIEW:idleHost,PATH:`${signalingSysroot}:${process.env.PATH}`}),stdio:["ignore","pipe","pipe"]});
  const collect=(chunk:Buffer)=>{lines.push(...chunk.toString().split("\n").filter(Boolean));};
  child.stdout!.on("data",collect);child.stderr!.on("data",collect);children.add(child);child.on("close",()=>children.delete(child));
- const row={child,lines};workers.set(name,row);return row;
+ const row={child,lines,directory};workers.set(name,row);return row;
 }
 
-const fleetReady=async(label:string):Promise<void>=>{
- await eventuallyV1(async()=>{const status=await (await fetch(cluster.server.workerUrl+"/status")).json() as {workers?:unknown[]};return(status.workers?.length??0)>=2;},60000,label+": both workers present");
- await eventuallyV1(async()=>{const response=await fetch(cluster.server.workerUrl+"/v1/fleet/load");if(!response.ok)return false;const table=await response.json() as {machines?:{origin:string;headroom?:boolean}[]};return["wA","wB"].every(name=>table.machines?.some(row=>row.origin===name&&row.headroom===true)===true);},60000,label+": both machines report their load");
-};
+const fleetReady=async(label:string):Promise<void>=>{try{
+ await eventuallyV1(async()=>{const status=await (await fetch(cluster.server.workerUrl+"/status")).json() as {workers?:unknown[]};return(status.workers?.length??0)>=2;},stretchedBudgetMillisecondsV1(60000),label+": both workers present");
+ await eventuallyV1(async()=>{const response=await fetch(cluster.server.workerUrl+"/v1/fleet/load");if(!response.ok)return false;const table=await response.json() as {machines?:{origin:string;headroom?:boolean}[]};return["wA","wB"].every(name=>table.machines?.some(row=>row.origin===name&&row.headroom===true)===true);},stretchedBudgetMillisecondsV1(60000),label+": both machines report their load");
+}catch(error){throw Error(`${(error as Error).message}; workers: ${JSON.stringify([...workers].map(([name,row])=>({name,exit:row.child.exitCode,signal:row.child.signalCode,lines:row.lines.slice(-12)})))}; scheduler: ${JSON.stringify(cluster.events.slice(-12))}`);}};
 beforeAll(async()=>{
  cluster=await startClusterV1({workers:0,root:scratch,scheduler:{leaseSeconds:5,lingerSeconds:1,unmatchedSeconds:30}});
  for(const name of ["wA","wB"])startWorker(name,join(scratch,"worker-"+name));
  await eventuallyV1(async()=>{const status=await (await fetch(cluster.server.workerUrl+"/status")).json() as {workers?:unknown[]};return(status.workers?.length??0)>=2;},60000,"both worker processes join");
  await eventuallyV1(async()=>{const response=await fetch(cluster.server.workerUrl+"/v1/fleet/load");if(!response.ok)return false;const table=await response.json() as {machines?:{origin:string;headroom?:boolean}[]};return["wA","wB"].every(name=>table.machines?.some(row=>row.origin===name&&row.headroom===true)===true);},60000,"both machines report their load");
 },stretchedBudgetMillisecondsV1(120000));
-const orphans=():number[]=>spawnSync("ps",["-ax","-o","pid=,command="],{encoding:"utf8"}).stdout.split("\n").filter(line=>line.includes(scratch)&&line.includes(".semio-offload/o")&&line.includes("--crate-name")).map(line=>Number(line.trim().split(/\s+/u)[0])).filter(Number.isSafeInteger);
-const reap=():void=>{for(const pid of orphans())try{process.kill(pid,"SIGKILL");}catch{}};
+const reap=():void=>{for(const directory of readdirSync(scratch).filter(name=>name.startsWith("worker-")))for(const crate of["c","cx"])for(const pid of compilerPids(join(scratch,directory),crate))if(spawnSync("ps",["-p",String(pid),"-o","comm="],{encoding:"utf8"}).stdout.trim().endsWith("rustc"))try{process.kill(pid,"SIGKILL");}catch{}};
 afterAll(async()=>{
  reap();
  for(const child of children)child.kill("SIGKILL");
@@ -279,6 +288,25 @@ test("a result that embeds the other machine's path is never stored: the unit fa
  expect(rlib.includes(Buffer.from("/work/"))).toBe(false);
 },stretchedBudgetMillisecondsV1(180000));
 
+test("a unit Cargo compiles in its package directory whose #[path] module lies in another top-level tree (the module directory is the workspace root) runs on a worker with the module shipped, and its rlib is byte-identical to a local build at another checkout path",async()=>{
+ const source='#[path = "../../../x/m.rs"]\nmod m;\npub fn c()->u32{b::b()+m::m()}\n';
+ const make=(label:string)=>{const checkout=checkoutWith(label,source);mkdirSync(join(checkout.root,"x"),{recursive:true});writeFileSync(join(checkout.root,"x","m.rs"),"pub fn m()->u32{if false{panic!(\"{}\",file!())}9}\n");return checkout;};
+ const run=(checkout:TestCheckoutV1,root:string,offload:string):Promise<Run>=>{
+  mkdirSync(root,{recursive:true});const manifest=join(checkout.root,"pk","c");
+  const args=checkout.arguments("c",["b"]).map(argument=>argument==="pk/c/src/lib.rs"?join(manifest,"src","lib.rs"):argument);
+  const child=spawn(process.execPath,[wrapper,"rustc",...args],{cwd:manifest,env:environmentOf(checkout,"c",root,{SEMIO_OFFLOAD:offload,SEMIO_UNIT_CACHE_WORKSPACE_ROOT:checkout.root}),stdio:["ignore","pipe","pipe"]});
+  children.add(child);const out:Buffer[]=[],err:Buffer[]=[];child.stdout!.on("data",chunk=>out.push(chunk));child.stderr!.on("data",chunk=>err.push(chunk));
+  return new Promise(done=>child.on("close",status=>{children.delete(child);done({status,stdout:Buffer.concat(out).toString(),stderr:Buffer.concat(err).toString()});}));
+ };
+ const remote=make("modroot-r"),local=make("modroot-l"),remoteRoot=join(scratch,"unit-modroot-r"),localRoot=join(scratch,"unit-modroot-l");
+ const left=await run(remote,remoteRoot,"distribute"),right=await run(local,localRoot,"never");
+ expect(left.status,left.stderr+JSON.stringify(events(remoteRoot))).toBe(0);expect(right.status,right.stderr).toBe(0);
+ expect(events(remoteRoot).map(row=>row.kind),JSON.stringify(events(remoteRoot))).toEqual(["offload-run"]);
+ expect(callsOf(join(remoteRoot,"rustc-calls.log"))).toBe(0);expect(callsOf(join(localRoot,"rustc-calls.log"))).toBe(1);
+ const name=`libc-${externHash("c")}.rlib`;
+ expect(Buffer.compare(readFileSync(join(remote.deps,name)),readFileSync(join(local.deps,name))),"the rlib of the worker against the local one").toBe(0);
+},stretchedBudgetMillisecondsV1(240000));
+
 const SLOW="#![allow(long_running_const_eval)]\nconst X:u64={let mut i=0u64;let mut s=0u64;while i<4_000_000{s=s.wrapping_add(i);i+=1;}s};\npub fn c()->u64{X}\n";
 
 test("killing the worker that runs the unit mid-compilation still completes the unit, elsewhere or locally",async()=>{
@@ -286,9 +314,11 @@ test("killing the worker that runs the unit mid-compilation still completes the 
  const checkout=checkoutWith("kill",SLOW),root=join(scratch,"unit-kill");
  const started=cluster.events.length,running=runWrapper(checkout,"c",["b"],root,{SEMIO_OFFLOAD:"distribute"});
  const assigned=()=>cluster.events.slice(started).map(event=>/-> (\S+)$/u.exec(event)?.[1]).find(Boolean);
- await eventuallyV1(()=>assigned()!==undefined,60000,"a worker is assigned the unit");
- const victim=assigned()!,compiling=():boolean=>spawnSync("ps",["-ax","-o","command="],{encoding:"utf8"}).stdout.split("\n").some(line=>line.includes("--crate-name c ")&&line.includes(scratch)&&line.includes(".semio-offload/o"));
- await Promise.race([eventuallyV1(compiling,60000,"the remote compiler runs"),running]);
+ let settled=false;void running.then(()=>{settled=true;});
+ await eventuallyV1(()=>assigned()!==undefined,stretchedBudgetMillisecondsV1(60000),"a worker is assigned the unit");
+ const victim=assigned()!,directory=workers.get(victim)!.directory;
+ await eventuallyV1(()=>settled||compilerPids(directory,"c").some(alive),stretchedBudgetMillisecondsV1(60000),"the remote compiler runs");
+ expect(compilerPids(directory,"c").some(alive),"the compiler on the assigned worker runs while the unit is unfinished").toBe(true);
  workers.get(victim)!.child.kill("SIGKILL");
  const result=await running;
  expect(result.status,result.stderr).toBe(0);
@@ -308,11 +338,12 @@ test("cancelling the build (SIGTERM to the wrapper) cancels the remote action: t
  await fleetReady("before cancel");
  const checkout=checkoutWith("cancel",SLOW.replace("4_000_000","4_000_000_000"),"cx"),root=join(scratch,"unit-cancel");
  const running=runWrapper(checkout,"cx",["b"],root,{SEMIO_OFFLOAD:"distribute"}),child=lastWrapper!;
- const marker=`pk/cx/src/lib.rs`;
- const compilerRunning=():boolean=>spawnSync("ps",["-ax","-o","command="],{encoding:"utf8"}).stdout.split("\n").some(line=>line.includes("--crate-name cx")&&line.includes(marker)&&line.includes(".semio-offload/o"));
- await eventuallyV1(compilerRunning,90000,"the remote compiler runs");
-  child.kill("SIGTERM");
+ const started=():number[]=>[...workers.values()].flatMap(row=>compilerPids(row.directory,"cx")).filter(alive);
+ await eventuallyV1(()=>started().length>0,stretchedBudgetMillisecondsV1(90000),"the remote compiler runs");
+ const [compiler]=started();
+ expect(alive(compiler!)).toBe(true);
+ child.kill("SIGTERM");
  const result=await running;
  expect(result.status).toBe(143);
- await eventuallyV1(()=>!compilerRunning(),30000,"the remote compiler is killed");
+ await eventuallyV1(()=>!alive(compiler!),stretchedBudgetMillisecondsV1(30000),"the remote compiler is killed");
 },stretchedBudgetMillisecondsV1(240000));

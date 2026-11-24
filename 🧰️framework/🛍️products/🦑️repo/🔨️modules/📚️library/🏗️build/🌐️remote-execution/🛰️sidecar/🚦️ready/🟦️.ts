@@ -7,7 +7,7 @@ import{nativeShardHoldV1}from"../../../🌡️host-capacity/🧹️disk-recovery
 import{currentHostWardenMirrorV1,ensureHostWardenV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts";
 import type{HostWardenMirrorV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts";
 import{createHash}from"node:crypto";
-import{spawn,spawnSync}from"node:child_process";
+import{execFile,spawn,spawnSync}from"node:child_process";
 import{closeSync,constants,existsSync,fstatSync,mkdirSync,openSync,readFileSync,readSync,realpathSync,renameSync,rmSync,statSync,writeFileSync,writeSync,type BigIntStats}from"node:fs";
 import{availableParallelism,homedir,hostname,tmpdir,totalmem}from"node:os";
 import{delimiter,dirname,isAbsolute,join,relative,sep}from"node:path";
@@ -22,7 +22,7 @@ import{hostCapacityDirectoryV1}from"../../../../../../../../🔨️modules/🏃�
 import type{RemoteExecutionSidecarContextV1}from"../🧰️shared/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import nativeBootstrap from"../../../../../🔩️native/🥾️bootstrap/🧬️schema/🔣️.json"with{type:"json"};
-import{readyCodeStopV1,readyDeadlineV1,readyForgetTreeV1,readyStallTrackerV1,readyStalledV1,readyGraphCounterTrackerV1,readyAbsoluteDeadlineV1,readyReadingLiveV1,readyStallCountV1,readyIdentityV1,readyConfirmProcessReplacementV1,readyKillTreeV1,readyLivenessV1,readyTreeCpuV1,readyLeaseVerdictV1,readyHolderRestartV1,readyStaleStopV1,readyStagePhaseV1,type ReadyPhaseV1,readyHolderWaitTrackerV1,readyHolderWaitOfV1,readyHolderCustodyV1,readyBackgroundReaderV1,readyForegroundBusyV1,type ReadyHolderWaitV1,type ReadyReadRecordV1,readyScaledTreePolicyV1,readyStallRestartV1,readyStepWatchV1,readyStepOverdueSecondsV1,type ReadyStepV1,type ReadyStepWatchCheckpointV1,readySemanticsV1,readySemanticsChangedV1,readyProcessStartSyncV1,readyProgressKeyV1,readyReadTableV1,readyReadTreeV1,readyTreeMembersV1,readyWindowsTreeSampleV1,readyWriteTreeV1,READY_TREE_POLICY_V1,type ReadyWindowsWatchdogSampleV1,type ReadyKnownV1,type ReadyProcessV1}from"./🌲️process-tree/🟦️.ts";
+import{readyCodeStopV1,readyDeadlineV1,readyForgetTreeV1,readyStallTrackerV1,readyStalledV1,readyGraphCounterTrackerV1,readyAbsoluteDeadlineV1,readyReadingLiveV1,readyStallCountV1,readyWardenHoldsV1,readyGrantWaitV1,readyIdentityV1,readyConfirmProcessReplacementV1,readyKillTreeV1,readyLivenessV1,readyTreeCpuV1,readyLeaseVerdictV1,readyHolderRestartV1,readyStaleStopV1,readyStagePhaseV1,type ReadyPhaseV1,readyHolderWaitTrackerV1,readyHolderWaitOfV1,readyHolderCustodyV1,readyBackgroundReaderV1,readyForegroundBusyV1,type ReadyHolderWaitV1,type ReadyReadRecordV1,readyScaledTreePolicyV1,readyStallRestartV1,readyStepWatchV1,readyStepOverdueSecondsV1,type ReadyStepV1,type ReadyStepWatchCheckpointV1,readySemanticsV1,readySemanticsChangedV1,readyProcessStartSyncV1,readyProgressKeyV1,readyReadTableV1,readyReadTreeV1,readyTreeMembersV1,readyWindowsTreeSampleV1,readyWriteTreeV1,READY_TREE_POLICY_V1,type ReadyWindowsWatchdogSampleV1,type ReadyKnownV1,type ReadyProcessV1}from"./🌲️process-tree/🟦️.ts";
 import{CAS_RESERVE_FACTOR_V1}from"../../../🗄️cas/🧬️schema/🟦️.ts";
 import{localMachineSpeedFactorV1,scaledMillisecondsV1}from"../../../🐢️speed/🟨️.mjs";
 import{inspectTypescriptCompilerV1}from"../../../🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs";
@@ -49,7 +49,7 @@ const P=READY_POLICY_V1,ZERO="0".repeat(64),sha=(text:string|Uint8Array):string=
 
 export type ReadyStageV1=Readonly<{name:string;kind:"bootstrap"|"repo";arguments:readonly string[];timeoutMilliseconds:number;inputs:readonly string[];bootstrapInput:boolean;dependencyInputs?:true}>;
 export type ReadyPlatformV1="linux"|"macos"|"windows";
-export type ReadyCodeV1="human-running"|"lease-held"|"memory-low"|"stage-failed"|"tooling-compiler"|"stage-timeout"|"stage-stalled"|"stage-stall-exhausted"|"stage-code-changed"|"stage-code-stale"|"stage-step-overdue"|"stage-holder-silent"|"store-full"|"disk-short"|"disk-unmeasured"|"disk-collecting"|"disk-consumers"|"loop-failed"|"spawn-failed"|"interrupted"|"server";
+export type ReadyCodeV1="human-running"|"lease-held"|"memory-low"|"stage-failed"|"tooling-compiler"|"stage-timeout"|"stage-stalled"|"stage-stall-exhausted"|"stage-code-changed"|"stage-code-stale"|"stage-step-overdue"|"stage-holder-silent"|"store-full"|"disk-short"|"disk-unmeasured"|"disk-collecting"|"disk-consumers"|"disk-unfit"|"loop-failed"|"spawn-failed"|"interrupted"|"server";
 export type ReadyReasonCodeV1="first-run"|"inputs-changed"|"previous-failed"|"stalled"|"code-changed"|"code-stale"|"step-overdue"|"holder-silent"|"adopted"|"binary-missing"|"refreshing";
 export type ReadyReasonV1=Readonly<{code:ReadyReasonCodeV1;en:string;de:string}>;
 export type ReadyRefusalV1=Readonly<{code:ReadyCodeV1;en:string;de:string}>;
@@ -209,6 +209,19 @@ export function readyDiskCollectingV1(stage:string,short:ReadyDiskShortV1):Ready
  return readyRefusalV1("disk-collecting",{stage,path:short.path,unit:short.resource==="space"?"MB":"inodes",needed:short.needed,available:short.available,missing:Math.max(0,short.needed-short.available)});
 }
 
+/** ⛔️ What a worker remembers once a collection proved its disk too small: when it was said, the free megabytes at that time and the largest consumers named then. */
+export type ReadyDiskUnfitV1=Readonly<{atMs:number;availableMegabytes:number;consumers:readonly ReadyDiskConsumerV1[]}>;
+/** 🩹️ What the repair of a stage's storage before it starts answered: how many images grew in place and, when an image cannot grow because the host volume lacks the free bytes of the larger envelope, the volume and the numbers (the worker is then unfit for the stage). */
+export type ReadyHealV1=Readonly<{grown:number;unfit:Readonly<{path:string;neededMegabytes:number;availableMegabytes:number}>|null}>;
+/** 🗣️ The refusal of a worker whose disk cannot hold a stage even after every derivable cache was collected: it names the stage, the volume, the numbers, the largest consumers and when the machine is checked again. */
+export function readyDiskUnfitRefusalV1(stage:string,short:ReadyDiskShortV1,consumers:readonly ReadyDiskConsumerV1[]):ReadyRefusalV1{
+ return readyRefusalV1("disk-unfit",{stage,path:short.path,unit:short.resource==="space"?"MB":"inodes",needed:short.needed,available:short.available,missing:Math.max(0,short.needed-short.available),growth:P.unfitRecheckGrowthMegabytes,hours:Math.round(P.unfitRecheckMilliseconds/3600000),consumers:consumers.map(row=>`${row.root} (${Math.round(row.bytes/1048576)} MB): \`${row.command}\``).join("; ")||"-"});
+}
+/** 🔁️ Whether an unfit worker is looked at again: the free megabytes grew by `unfitRecheckGrowthMegabytes` since it was said, or `unfitRecheckMilliseconds` passed; nothing else retries a collection that found nothing to collect. A pure function. */
+export function readyUnfitRecheckDueV1(unfit:Pick<ReadyDiskUnfitV1,"atMs"|"availableMegabytes">,availableMegabytes:number,nowMs:number):boolean{
+ return availableMegabytes-unfit.availableMegabytes>=P.unfitRecheckGrowthMegabytes||nowMs-unfit.atMs>=P.unfitRecheckMilliseconds;
+}
+
 /** 🕳️ Whether the lines of a failed stage say that a write found no space left, in a form `storeFullPattern` does not cover (the operating system's own message: `No space left on device`, `os error 28`, `ENOSPC`, the Windows disk-full text; see `noSpacePatterns` of the schema), so that a full image, quota or workspace volume is recognised from any tool that reports it. */
 export function readyNoSpaceV1(lines:readonly string[]):boolean{
  return readyStoreFullV1(lines)!==null||lines.some(line=>P.noSpacePatterns.some(pattern=>line.includes(pattern)));
@@ -237,10 +250,10 @@ export function readyTreeMegabytesV1(rows:string,root:number):number{
  return Math.round(kilobytes/1024);
 }
 
-export type ReadyDecisionInputV1=Readonly<{server:boolean;digest:string;stages:readonly Readonly<{name:string;digest:string}>[];done:Readonly<Record<string,string>>;marker:boolean;repo:boolean;human:boolean;lease:"free"|"own"|"other";memoryOk:boolean;failure:Readonly<{digest:string;nextAttemptMs:number}>|null;now:number}>;
+export type ReadyDecisionInputV1=Readonly<{server:boolean;digest:string;stages:readonly Readonly<{name:string;digest:string}>[];done:Readonly<Record<string,string>>;marker:boolean;repo:boolean;human:boolean;lease:"free"|"own"|"other";inflight:string|null;memoryOk:boolean;failure:Readonly<{digest:string;nextAttemptMs:number}>|null;now:number}>;
 export type ReadyDecisionV1=Readonly<{action:"server"|"idle"|"mark"|"observe"|"wait"|"backoff"|"run";stageIndex:number;code:ReadyCodeV1|null;waitMilliseconds:number}>;
 
-/** ⚖️ The whole decision of one turn: the group server never; every stage current with the marker and the `repo` binary there is ready and does nothing; current stages without the marker only write it; without the binary the run starts again at the first stage; a person running the setup or another runner holding the lease is observed; a recorded failure of the same digest waits for its back-off (a changed input is a new cause and retries at once); too little free memory waits; otherwise the first stale stage runs. A supervisor restart that is merely deferred holds no stage back: a stage in flight is adopted by the restarted supervisor and the restart waits for it, so waiting for the restart first would only idle the worker. */
+/** ⚖️ The whole decision of one turn: the group server never; every stage current with the marker and the `repo` binary there is ready and does nothing; current stages without the marker only write it; without the binary the run starts again at the first stage; a person running the setup or another runner holding the lease is observed; a stage already in flight (`inflight`, started by a former supervisor) is adopted at once: it already holds its memory and its back-off was served before it started, so waiting would only leave it unwatched; a recorded failure of the same digest waits for its back-off (a changed input is a new cause and retries at once); too little free memory waits; otherwise the first stale stage runs. A supervisor restart that is merely deferred holds no stage back: a stage in flight is adopted by the restarted supervisor and the restart waits for it, so waiting for the restart first would only idle the worker. */
 export function readyDecideV1(input:ReadyDecisionInputV1):ReadyDecisionV1{
  const act=(action:ReadyDecisionV1["action"],stageIndex:number,code:ReadyCodeV1|null,waitMilliseconds:number):ReadyDecisionV1=>Object.freeze({action,stageIndex,code,waitMilliseconds});
  if(input.server)return act("server",-1,"server",P.idlePollMilliseconds);
@@ -249,6 +262,7 @@ export function readyDecideV1(input:ReadyDecisionInputV1):ReadyDecisionV1{
  const index=stale<0||!input.repo?0:stale;
  if(input.human)return act("observe",index,"human-running",P.observePollMilliseconds);
  if(input.lease==="other")return act("observe",index,"lease-held",P.observePollMilliseconds);
+ if(input.inflight!==null)return act("run",index,null,0);
  if(input.failure!==null&&input.failure.digest===input.digest&&input.failure.nextAttemptMs>input.now)return act("backoff",index,null,input.failure.nextAttemptMs-input.now);
  if(!input.memoryOk)return act("wait",index,"memory-low",P.memoryPollMilliseconds);
  return act("run",index,null,0);
@@ -356,7 +370,7 @@ export function createReadyStatusV1(input:Readonly<{store:string|undefined;origi
    if(changed||now()-written>=P.statusIntervalMilliseconds)write();
    else if(timer===undefined){timer=setTimeout(write,P.statusIntervalMilliseconds);timer.unref?.();}
   },
-  heartbeat(){if((doc.refreshing===true||!doc.ready)&&(doc.refreshing===true||doc.state==="running"||doc.state==="backoff"||doc.state==="waiting"&&doc.refusal?.code==="disk-collecting")&&now()-written>=P.statusHeartbeatMilliseconds)write();},
+  heartbeat(){if((doc.refreshing===true||!doc.ready)&&(doc.refreshing===true||doc.state==="running"||doc.state==="backoff"||doc.state==="waiting"&&(doc.refusal?.code==="disk-collecting"||doc.refusal?.code==="disk-unfit"))&&now()-written>=P.statusHeartbeatMilliseconds)write();},
   current:()=>doc,
  });
 }
@@ -372,6 +386,7 @@ export type ReadyPortsV1=Readonly<{
  lease:ReturnType<typeof createReadyLeaseV1>;inflight?():string|undefined;
  memory():Readonly<{availableMegabytes:number|null;ok:boolean;floorMegabytes?:number}>;disk?(stage:string):ReadyDiskShortV1|null;diskUnknown?(stage:string):readonly ReadyDiskUnknownV1[];recover?(request:Readonly<{stage:string;short:ReadyDiskShortV1;signal:AbortSignal;report(line:string):void}>):Promise<ReadyDiskRecoveryV1>;sweep?(request:Readonly<{stage:string;neededMegabytes:number;signal:AbortSignal;report(line:string):void}>):Promise<ReadyDiskRecoveryV1>;native?():NativeShardConsumerV1|null;relieve?(request:Readonly<{signal:AbortSignal;report(line:string):void}>):Promise<number>;freeMegabytes?():number|null;compiler?():Readonly<{en:string;de:string}>|null;discardDependencies?():Readonly<{receipts:number;generations:number}>;
  run(stage:ReadyStageV1,options:Readonly<{signal:AbortSignal;jobs:number;onLine(line:string):void;onStage?(stage:string,adopted:boolean):void;onActivity?():void;mirror?:ReadyLogMirrorV1}>):Promise<ReadyRunResultV1>;
+ heal?(request:Readonly<{stage:string;signal:AbortSignal;report(line:string):void}>):Promise<ReadyHealV1>;
  status:Readonly<{update(patch:Partial<ReadyStatusV1>):void;heartbeat?():void}>;
  mirror?:ReadyLogMirrorV1;timing?(run:ReadyTimingV1):void;
  say(line:string):void;busy?(busy:boolean):void;
@@ -405,6 +420,7 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
  if(ports.server)return;
  const plan=ports.stages??READY_STAGES_V1,names=plan.map(stage=>stage.name);
  const stalls=new Map<string,number>(),warnedUnmeasured=new Set<string>(),swept=new Set<string>(),inodeSweptAt=new Map<string,number>(),discarded=new Set<string>();
+ const unfit=new Map<string,ReadyDiskUnfitV1>(),unfitSaid=new Set<string>(),healedAt=new Map<string,number>(),healUnfit=new Map<string,Readonly<{atMs:number;availableMegabytes:number;short:ReadyDiskShortV1}>>();
  const discardDependencies=(digest:string):void=>{if(discarded.has(digest)||ports.discardDependencies===undefined)return;discarded.add(digest);try{const gone=ports.discardDependencies();ports.say(`the dependency store verified current but lacks the tooling compiler: ${gone.receipts} synchronization receipt(s) and ${gone.generations} ready marker(s) discarded, the next dependencies stage rebuilds them / der Abhängigkeitsspeicher galt als aktuell, es fehlt aber der Werkzeug-Compiler: ${gone.receipts} Synchronisationsbeleg(e) und ${gone.generations} Fertigmarkierung(en) verworfen, die nächste Stufe dependencies baut sie neu`);}catch{}};
  let memoryLowSince:number|undefined,memoryWaitSaid=false,refreshStage:string|null=null;
  const status={update:(patch:Partial<ReadyStatusV1>):void=>{ports.status.update(readyRefreshingPatchV1(patch,refreshStage));}};
@@ -425,7 +441,7 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
    const memoryWaitedOut=!memory.ok&&ports.now()-memoryLowSince!>=P.memoryWaitMaximumMilliseconds;
    if(memoryWaitedOut&&!memoryWaitSaid){memoryWaitSaid=true;ports.say(`free memory stayed under ${memory.floorMegabytes??P.memoryFloorMegabytes} MB for ${Math.round(P.memoryWaitMaximumMilliseconds/60000)} min: the stage starts anyway and its own capacity gate sizes, shrinks or refuses its grant / freier Speicher blieb ${Math.round(P.memoryWaitMaximumMilliseconds/60000)} min unter ${memory.floorMegabytes??P.memoryFloorMegabytes} MB: die Stufe startet trotzdem, ihr eigenes Kapazitätstor bemisst, verkleinert oder verweigert ihre Zuteilung`);}
    if(memory.ok)memoryWaitSaid=false;
-   const decision=readyDecideV1({server:false,digest,stages,done,marker,repo,human:ports.human(),lease,memoryOk:memory.ok||memoryWaitedOut,failure:state.failure===null?null:{digest:state.failure.digest,nextAttemptMs:state.failure.nextAttemptMs},now});
+   const decision=readyDecideV1({server:false,digest,stages,done,marker,repo,human:ports.human(),lease,inflight:ports.inflight?.()??null,memoryOk:memory.ok||memoryWaitedOut,failure:state.failure===null?null:{digest:state.failure.digest,nextAttemptMs:state.failure.nextAttemptMs},now});
    const base:Partial<ReadyStatusV1>={digest,attempts:state.attempts,peakMegabytes:state.peakMegabytes,readyMs:state.readyMs,stageCount:names.length,exit:state.failure?.exit??null,tail:[...state.failure?.tail??[]],containment:lastContainment};
    const full=state.failure===null?null:readyStoreFullV1(state.failure.tail),failure=state.failure!==null&&state.failure.digest===digest?readyRefusalV1(state.failure.code,{stage:state.failure.stage,ending:readyEndingV1(state.failure.exit,state.failure.signal),path:full?.path??"-",errno:full?.errno??"-",count:READY_TREE_POLICY_V1.stallRestartMaximum}):null;
    const stage=decision.stageIndex>=0?names[decision.stageIndex]!:null;
@@ -442,9 +458,34 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
    }
    else if(decision.action==="run"){
     const diskStage=plan[decision.stageIndex]!.name;
+    if(ports.heal!==undefined&&ports.inflight?.()!==diskStage){
+     const parked=healUnfit.get(diskStage),free=ports.freeMegabytes?.()??null;
+     if(parked!==undefined&&(free!==null&&free-parked.availableMegabytes>=P.unfitRecheckGrowthMegabytes||ports.now()-parked.atMs>=P.unfitRecheckMilliseconds)){healUnfit.delete(diskStage);unfitSaid.delete("heal:"+diskStage);healedAt.delete(diskStage);}
+     if(!healUnfit.has(diskStage)&&ports.now()-(healedAt.get(diskStage)??-Infinity)>=P.healRetryMilliseconds){
+      healedAt.set(diskStage,ports.now());leave();
+      status.update({...base,state:"waiting",ready:false,stage,stageIndex:decision.stageIndex+1,refusal:null,reason:null,tail:[],nextAttemptMs:null});
+      const beat=setInterval(()=>{if(!signal.aborted)try{ports.status.heartbeat?.();}catch{}},P.statusHeartbeatMilliseconds);beat.unref?.();
+      try{
+       const healed=await ports.heal({stage:diskStage,signal,report:line=>{if(signal.aborted)return;ports.say(line);const progress=formatLogLineV1(line,P.tailCharacters);if(progress!=="")try{status.update({tail:[progress]});}catch{}}});
+       if(signal.aborted)break;
+       if(healed.unfit!==null)healUnfit.set(diskStage,{atMs:ports.now(),availableMegabytes:healed.unfit.availableMegabytes,short:Object.freeze({path:healed.unfit.path,resource:"space" as const,needed:healed.unfit.neededMegabytes,available:healed.unfit.availableMegabytes})});
+      }catch(error){if(signal.aborted)break;ports.say(`repairing the storage for stage ${diskStage} failed (${String((error as Error)?.message??error).slice(0,200)}) / Speicher für Stufe ${diskStage} reparieren fehlgeschlagen`);}
+      finally{clearInterval(beat);}
+     }
+     const parkedNow=healUnfit.get(diskStage);
+     if(parkedNow!==undefined){
+      const refusal=readyDiskUnfitRefusalV1(diskStage,parkedNow.short,[]);
+      status.update({...base,state:"waiting",ready:false,stage,stageIndex:decision.stageIndex+1,refusal,tail:[],nextAttemptMs:ports.now()+P.memoryPollMilliseconds});
+      if(!unfitSaid.has("heal:"+diskStage)){unfitSaid.add("heal:"+diskStage);ports.say(`${refusal.en} / ${refusal.de}`);}
+      await ports.sleep(P.memoryPollMilliseconds,signal);
+      continue;
+     }
+    }
     let short=ports.inflight?.()===diskStage?null:ports.disk?.(diskStage)??null,remaining:readonly ReadyDiskConsumerV1[]|undefined;
     if(ports.inflight?.()!==diskStage)for(const row of ports.diskUnknown?.(diskStage)??[]){const key=`${diskStage}\0${row.path}\0${row.reason}`;if(!warnedUnmeasured.has(key)){warnedUnmeasured.add(key);const warning=readyDiskUnmeasuredV1(diskStage,row);ports.say(`${warning.en} / ${warning.de}`);}}
-    if(short!==null&&short.resource==="space"&&ports.recover!==undefined){
+    if(short===null){unfit.delete(diskStage);unfitSaid.delete(diskStage);}
+    else if(unfit.has(diskStage)&&readyUnfitRecheckDueV1(unfit.get(diskStage)!,short.available,ports.now())){unfit.delete(diskStage);unfitSaid.delete(diskStage);}
+    if(short!==null&&short.resource==="space"&&ports.recover!==undefined&&!unfit.has(diskStage)){
      leave();
      status.update({...base,state:"waiting",ready:false,stage,stageIndex:decision.stageIndex+1,refusal:readyDiskCollectingV1(diskStage,short),tail:[],nextAttemptMs:null});
      let recovering=true;
@@ -458,7 +499,7 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
        if(progress!=="")try{status.update({tail:[progress]});}catch{}
       }});
       if(signal.aborted)break;
-      if(outcome.fits)short=ports.disk?.(diskStage)??null;else remaining=outcome.consumers;
+      if(outcome.fits)short=ports.disk?.(diskStage)??null;else{remaining=outcome.consumers;unfit.set(diskStage,Object.freeze({atMs:ports.now(),availableMegabytes:short.available,consumers:outcome.consumers}));}
      }catch(error){
       if(signal.aborted)break;
       remaining=[];ports.say(`collecting space for stage ${diskStage} failed (${String((error as Error)?.message??error).slice(0,200)}) / Platz für Stufe ${diskStage} sammeln fehlgeschlagen`);
@@ -479,9 +520,9 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
     }
     if(short!==null){
      leave();
-     const refusal=readyDiskRefusalV1(diskStage,short,remaining);
+     const marked=unfit.get(diskStage),refusal=marked!==undefined?readyDiskUnfitRefusalV1(diskStage,short,marked.consumers):readyDiskRefusalV1(diskStage,short,remaining);
      status.update({...base,state:"waiting",ready:false,stage,stageIndex:decision.stageIndex+1,refusal,nextAttemptMs:ports.now()+P.memoryPollMilliseconds});
-     ports.say(`${refusal.en} / ${refusal.de}`);
+     if(marked===undefined||!unfitSaid.has(diskStage)){if(marked!==undefined)unfitSaid.add(diskStage);ports.say(`${refusal.en} / ${refusal.de}`);}
      await ports.sleep(P.memoryPollMilliseconds,signal);
      continue;
     }
@@ -647,7 +688,7 @@ const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(er
 /** 🧾️ The record of the stage in flight, `<worktree>/.cache/f/ready/running.json`: which stage, which process group, when it started, where its exit file and log are. */
 type ReadyWatchdogV1=Readonly<{
  toolsGrace?:ToolsCheckpoint|null;
- version:1;owner:string;peakMegabytes:number;progressAt:number;stallAt:number;armedAt:number;progressKey:string|null;phase:ReadyPhaseV1;phaseAt:number;offset:number;
+ version:1;owner:string;peakMegabytes:number;progressAt:number;stallAt:number;watchedAt:number;unwatchedMilliseconds:number;armedAt:number;progressKey:string|null;phase:ReadyPhaseV1;phaseAt:number;offset:number;
  seen:readonly string[];step:ReadyStepWatchCheckpointV1;holderSince:number|null;holderEvidence:string|null;
  graphCounter?:number;semantics:Readonly<Record<string,string|null>>;cpu:readonly (readonly [number,number])[];windows?:ReadyWindowsWatchdogSampleV1;lastActivity?:ReadyOwnedActivityV1;
 }>;
@@ -689,7 +730,7 @@ const watchdogOwnerV1=(inflight:ReadyInflightV1):string=>sha(JSON.stringify([inf
 function restoredWatchdogV1(inflight:ReadyInflightV1,now:number,policy:typeof READY_TREE_POLICY_V1):ReadyWatchdogV1|undefined{
  const row=inflight.watchdog;
  if(row===undefined||validateJsonSchemaSubset(schema.definitions.Watchdog,row,schema).length||row.owner!==watchdogOwnerV1(inflight))return undefined;
- const times=[row.progressAt,row.stallAt,row.phaseAt,row.step.movedAt,row.holderSince];
+ const times=[row.progressAt,row.stallAt,row.watchedAt,row.phaseAt,row.step.movedAt,row.holderSince];
  if(times.some(at=>at!==null&&(at<inflight.startedMs||at>now))||row.armedAt<inflight.startedMs||row.armedAt>now+2*P.samplerMilliseconds+P.pollMilliseconds||
   row.seen.length>policy.stallSeenMaximum||row.step.seen.length>policy.stallSeenMaximum)return undefined;
  if(row.toolsGrace!==undefined&&row.toolsGrace!==null&&!currentToolsCheckpoint(row.toolsGrace,inflight.startedMs,now)){const {toolsGrace:_invalid,...retained}=row;return retained;}
@@ -924,7 +965,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
   let awaitingProbe=observedAt<armedAt;
   const stageClaim=(()=>{try{return input.environment.SEMIO_FLEET_STORE_ROOT?createReadyStageClaimPublisherV1({directory:hostCapacityDirectoryV1(input.environment),stage:inflight.stage,pid:inflight.pid,totalMegabytes:Math.round(totalmem()/1048576),runs:()=>{try{return(JSON.parse(readFileSync(join(directory,P.timingsName),"utf8")) as {runs:ReadyTimingV1[]}).runs;}catch{return[];}}}):undefined;}catch{return undefined;}})();
   stageClaim?.observe(0);
-  let peak=prior?.peakMegabytes??0,progressKey=prior?.progressKey??null,progressAt=prior?.progressAt??inflight.startedMs,stallAt=prior?.stallAt??inflight.startedMs,
+  let peak=prior?.peakMegabytes??0,progressKey=prior?.progressKey??null,progressAt=prior?.progressAt??inflight.startedMs,stallAt=prior?.stallAt??inflight.startedMs,unwatched=prior===undefined?0:prior.unwatchedMilliseconds+Math.max(0,observedAt-prior.watchedAt),
    phase=prior?.phase??null,phaseAt=prior?.phaseAt??inflight.startedMs,phaseOffset=prior?.offset??0,holderEvidence=prior?.holderEvidence??null,
    lastActivity=prior?.lastActivity,cpuBefore:ReadonlyMap<number,number>=new Map(prior?.cpu),windowsBefore=windows?prior?.windows:undefined,dirty=prior===undefined||needsProbe,lastWrite=0;
   if(prior===undefined&&!fresh){
@@ -937,12 +978,12 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
   }
   let reportedActivityAt=stallAt;
   const checkpoint=(force=false):void=>{
-   if(!watching||!dirty||!force&&Date.now()-lastWrite<P.watchdogWriteMilliseconds)return;
+   if(!watching||!force&&Date.now()-lastWrite<(dirty?P.watchdogWriteMilliseconds:P.watchdogIdleWriteMilliseconds))return;
    lastWrite=Date.now();
    try{
     const held=readInflightV1(inflightFile);
     if(held===undefined||!sameReadyFlightV1(held,inflight))return;
-    const watchdog:ReadyWatchdogV1={version:1,owner:watchdogOwnerV1(inflight),peakMegabytes:peak,progressAt,stallAt,armedAt,progressKey,phase,phaseAt,offset:phaseOffset,seen:tracker.snapshot(),step:stepWatch.snapshot(),holderSince:holder.snapshot(),holderEvidence,semantics:semanticsAtStart,...graphCounter.snapshot()<0?{}:{graphCounter:graphCounter.snapshot()},cpu:cpuBefore.size<=P.watchdogCpuMaximum?[...cpuBefore]:[],...windowsBefore===undefined?{}:{windows:windowsBefore},...lastActivity===undefined?{}:{lastActivity},...toolsPaths===undefined?{}:{toolsGrace}};
+    const watchdog:ReadyWatchdogV1={version:1,owner:watchdogOwnerV1(inflight),peakMegabytes:peak,progressAt,stallAt,watchedAt:Date.now(),unwatchedMilliseconds:unwatched,armedAt,progressKey,phase,phaseAt,offset:phaseOffset,seen:tracker.snapshot(),step:stepWatch.snapshot(),holderSince:holder.snapshot(),holderEvidence,semantics:semanticsAtStart,...graphCounter.snapshot()<0?{}:{graphCounter:graphCounter.snapshot()},cpu:cpuBefore.size<=P.watchdogCpuMaximum?[...cpuBefore]:[],...windowsBefore===undefined?{}:{windows:windowsBefore},...lastActivity===undefined?{}:{lastActivity},...toolsPaths===undefined?{}:{toolsGrace}};
     const text=JSON.stringify({...held,watchdog});
     if(Buffer.byteLength(text)>P.watchdogRecordBytes)return;
     const temporary=inflightFile+"."+process.pid+".tmp";
@@ -950,7 +991,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
     if(!killed&&!finishing&&!input.signal.aborted&&stallAt>reportedActivityAt){reportedActivityAt=stallAt;input.onActivity?.();}
    }catch{}
   };
-  const moved=(now=Date.now()):void=>{stallAt=now;progressAt=now;dirty=true;};
+  const moved=(now=Date.now()):void=>{stallAt=now;progressAt=now;unwatched=0;dirty=true;};
   const holderLines=treePolicy.holderWaitPatterns.map(pattern=>new RegExp(pattern,"u")),left=new Map<number,ReadyKnownV1>(earlier.survivors.map(row=>[row.pid,row])),reaped:ReadyReapedV1[]=[...earlier.reaped];
   const rootOf=():ReadyKnownV1=>({pid:inflight.pid,startMs:inflight.startedMs});
    const toolsEligible=stage.name==="tools"&&stage.kind==="repo"&&JSON.stringify(stage.arguments)==='["tools","setup","all"]'&&
@@ -1085,6 +1126,8 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
    }
    aliveAt=Date.now();
     if(tick%mirrorEvery===0)mirror();
+    if(tick%mirrorEvery===0&&!killed)try{const slot=ownedSliceReportV1(input.root,ownerOf(inflight.stage,inflight.startedMs));if(slot!==undefined&&statSync(slot.file).size<=P.sliceReport.fileBytes&&readyGrantWaitV1(JSON.parse(readFileSync(slot.file,"utf8")),Date.now(),treePolicy))moved();}catch{}
+    if(tick%mirrorEvery===0&&!killed)try{if(readyWardenHoldsV1(currentHostWardenMirrorV1(undefined,Date.now()) as never,new Set([inflight.pid,...known.map(member=>member.pid)])))moved();}catch{}
    const probeEnded=awaitingProbe&&Date.now()>=armedAt;if(probeEnded)awaitingProbe=false;
    if(tick%progressEvery===0||!fresh&&tick===1||probeEnded){const recent=analysisTailV1(inflight.log),line=formatLogLineV1(recent.at(-1)??"",P.tailCharacters),raw=readyProgressKeyV1(recent.slice(-P.tailLines)),key=raw===null?null:sha(raw);if(key!==null&&key!==progressKey){progressKey=key;progressAt=Date.now();dirty=true;}if(line!==""&&line!==last){last=line;input.onLine(line);}if([tracker.observe(recent),graphCounter.observe(recent)].some(Boolean))moved();const since=holder.snapshot(),waiting=holder.observe(recent,Date.now()),fed=logSinceV1(inflight.log,phaseOffset),seenPhase=readyStagePhaseV1(fed.lines,phase,treePolicy);if(phaseOffset!==fed.offset||since!==holder.snapshot())dirty=true;phaseOffset=fed.offset;if(!killed)lastActivity=readyOwnedActivityV1(fed.lines,lastActivity);if(!killed&&!inspecting&&holder.snapshot()!==null&&Date.now()-inspectedAt>=treePolicy.holderCheckMilliseconds){const named=readyHolderWaitOfV1(recent,treePolicy);if(named!==undefined){inspecting=true;inspectedAt=Date.now();void inspect(named,waiting).catch(()=>undefined).finally(()=>{inspecting=false;});}}if(seenPhase!==phase){if(phase!==null||seenPhase!=="reading")phaseAt=Date.now();phase=seenPhase;dirty=true;}const watched=stepWatch.observe(recent,Date.now());if(!killed&&Date.now()>=armedAt&&phase!=="executing"&&watched.overdue&&watched.step!==undefined){
      const {seconds,bound}=watched.step,limit=readyStepOverdueSecondsV1(bound,treePolicy),stepOverdue={seconds,bound,limit,quietMs:watched.quietMs};
@@ -1095,7 +1138,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
    if(!windows&&(tick%sampleEvery===0||!fresh&&tick===1)){const rows=spawnSync("ps",["-A","-o","pid=,ppid=,rss=,time="],{encoding:"utf8"});if(rows.status===0){const observedPeak=readyTreeMegabytesV1(rows.stdout,inflight.pid);if(observedPeak>peak){peak=observedPeak;peakChanged=dirty=true;}stageClaim?.observe(observedPeak,holder.snapshot()!==null);const cpu=readyTreeCpuV1(rows.stdout,inflight.pid,known.map(member=>member.pid));if(!killed&&readyLivenessV1(cpuBefore,cpu,treePolicy))moved();if(cpu.size!==cpuBefore.size||[...cpu].some(([pid,spent])=>cpuBefore.get(pid)!==spent))dirty=true;cpuBefore=cpu;}}
    checkpoint(peakChanged);
    const liveRead=readyReadingLiveV1({phase,record:phase==="reading"?readRecord():undefined,alive});
-   if(!killed&&Date.now()>=armedAt&&readyStalledV1(Date.now()-stallAt,treePolicy,liveRead)){stalled=true;kill("stall");}
+   if(!killed&&Date.now()>=armedAt&&readyStalledV1(Date.now()-stallAt-unwatched,treePolicy,liveRead)){stalled=true;kill("stall");}
    const elapsed=Date.now()-inflight.startedMs;
    if(elapsed>stageTimeout){
     const verdict=readyDeadlineV1({stage:stage.name,elapsedMs:elapsed,softMs:stageTimeout,sinceProgressMs:liveRead?0:Date.now()-progressAt,policy:treePolicy}),now=Date.now();
@@ -1254,6 +1297,14 @@ export function createReadyPortsV1(input:Readonly<{facts?(path:string):ReadyFile
    native:()=>nativeShardConsumerV1(readNativeShardsV1(input.root))??null,
    relieve:async request=>{const outcome=await relieveNativeShardsV1({facts:readNativeShardsV1(input.root),hold:nativeShardHoldV1(input.root),language:"both",signal:request.signal});for(const line of outcome.lines)request.report(line);return outcome.freedBytes;},
    compiler,
+   heal:async request=>{
+    if(process.platform!=="darwin"||request.stage!=="dependencies")return{grown:0,unfit:null};
+    const{growImagesV1}=await import("../../../🩺️doctor/🔎️probes/💾️storage/🟦️.ts"),{doctorPortsV1}=await import("../../../🩺️doctor/🔌️ports/🟦️.ts");
+    const rows=await growImagesV1(doctorPortsV1(input.root,{signal:request.signal,environment:input.environment,progress:stage=>request.report(`growing the image / das Image wächst: ${stage}`),command:(program,args)=>new Promise<string>((done,fail)=>execFile(program,[...args],{encoding:"utf8",maxBuffer:8*1048576,timeout:P.healCommandMilliseconds,signal:request.signal},(error,stdout,stderr)=>error?fail(Error(`${program} ${args.join(" ")}: ${stderr||error.message}`)):done(stdout)))}),false);
+    for(const row of rows)if(row.state!=="grown")request.report(row.note);
+    const unfit=rows.find(row=>row.state==="skipped"&&row.kind==="unfit");
+    return{grown:rows.filter(row=>row.state==="grown").length,unfit:unfit?.state==="skipped"?{path:machinePathV1(input.root,...cachePolicy.partitions.dependencies.directory.split("/")),neededMegabytes:Number(unfit.values.needed),availableMegabytes:Number(unfit.values.free)}:null};
+   },
    discardDependencies:()=>discardDependencyGenerationsV1(join(input.root,...cachePolicy.partitions.dependencies.directory.split("/"),"m")),
  memory:()=>{const reading=fleetHostReadingV1({environment:input.environment}),free=reading.availableMegabytes,floor=readyMemoryFloorMegabytesV1(reading.hostMegabytes);return{availableMegabytes:free,ok:free===null||free>=floor,floorMegabytes:floor};},
   run:(stage,options)=>runReadyStageV1({completion,root:input.root,environment:input.environment,stage,...input.home===undefined?{}:{home:input.home},orphans:{registryRoot:readyRegistryRootV1(input.environment,process.platform,input.home??homedir()),windows:()=>{try{return readyStoppedWindowsV1(recentRuns().filter(run=>run.attempts!==null));}catch{return[];}},human:()=>{try{return readyHumanRecordV1(readFileSync(join(directory,P.humanName),"utf8"));}catch{return null;}}},...options}),

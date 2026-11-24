@@ -848,10 +848,10 @@
     {
       "id": "tp-sun-7",
       "bone": "fol-top",
-      "x": -0.03366,
-      "y": -0.82297,
+      "x": -0.0901,
+      "y": -0.71,
       "kind": "emitter",
-      "z": 0.32824,
+      "z": 0.3282,
       "title": {
         "en": "Transpiration of the sun leaves, anchor 7",
         "de": "Transpiration der Sonnenblätter, Anker 7"
@@ -872,10 +872,10 @@
     {
       "id": "tp-shade-2",
       "bone": "fol-core-low",
-      "x": 0.14649,
-      "y": 0.57153,
+      "x": 0.094,
+      "y": 0.4567,
       "kind": "emitter",
-      "z": -0.28922,
+      "z": -0.2328,
       "title": {
         "en": "Transpiration of the shade leaves, anchor 2",
         "de": "Transpiration der Schattenblätter, Anker 2"

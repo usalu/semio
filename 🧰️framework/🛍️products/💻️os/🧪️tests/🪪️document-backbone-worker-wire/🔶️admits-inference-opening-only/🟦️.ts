@@ -26,13 +26,13 @@ export function registerAdmitsInferenceOpeningOnlyTests(): void {
       expect(equal(await pending, fixture.opened)).toBe(true);
       expect(mailbox.settle(fixture.opened)).toBe(false);
       await expect(mailbox.open(fixture.request)).rejects.toThrow("replayed");
-      const refused = expect(mailbox.open({ ...fixture.request, operationEpoch: 22 })).rejects.toThrow("inference.capacity");
+      const refused = mailbox.open({ ...fixture.request, operationEpoch: 22 });
       expect(mailbox.settle(fixture.opened)).toBe(false);
       expect(mailbox.settle({ ...fixture.refused, operationEpoch: 22 })).toBe(true);
-      await refused;
-      const closed = expect(mailbox.open({ ...fixture.request, operationEpoch: 23 })).rejects.toThrow("retired");
+      await expect(refused).rejects.toThrow("inference.capacity");
+      const closed = mailbox.open({ ...fixture.request, operationEpoch: 23 });
       mailbox.close("retired");
-      await closed;
+      await expect(closed).rejects.toThrow("retired");
       expect(mailbox.settle(fixture.opened)).toBe(false);
       expect(equal(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(fixture.opened)), fixture.opened)).toBe(true);
       for (const extra of [{ code: "inference.capacity" }, { authority: "forged" }, { operationEpoch: 0 }]) expect(() => parseInferencePortOpeningResultV1({ ...fixture.opened, ...extra })).toThrow();

@@ -15,7 +15,7 @@ import { veilClass } from "@semio-tech/ui/modules/surface-presentation";
 import { WindowChrome, windowChromeTitleChipClass } from "@semio-tech/ui/elements/WindowChrome";
 import { DragHandle } from "@semio-tech/ui/elements/DragHandle";
 import { CloseIcon, Icon } from "@semio-tech/ui/elements/Icons";
-import { Button } from "@semio-tech/ui/elements/Button";
+import { ButtonGroup, ButtonGroupItem } from "@semio-tech/ui/elements/ButtonGroup";
 import { createPortal } from "react-dom";
 import { INTRODUCTION_CLEAR_RANGE_PX, INTRODUCTION_DOCK_REACH_PX, type IntroductionInfoBoxPosition, clampIntroductionInfoBoxPosition, clearIntroductionInfoBoxNearMisses, dockIntroductionInfoBox, introductionRectRelativeToHost, resolveIntroductionPlacement, splitIntroductionBodyParagraphs, useIntroductionAnchorRect, useIntroductionElevation } from "../📐️introduction-geometry/🟦️.ts";
 import { INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION, IntroductionDemonstrationOverlay } from "../🎬️introduction-demo/🟦️.tsx";
@@ -307,6 +307,8 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     },
   });
 
+  const naturalWidthRef = reactHostPort.useRef<{ readonly key: string; readonly width: number } | null>(null);
+  const widthStretchedRef = reactHostPort.useRef(false);
   useControlKeybinding("ui.introduction.skip", skip, { enableOnFormTags: true, enabled: shellActive }, [skip, shellActive]);
   useControlKeybinding("ui.introduction.next", () => advanceByButton && next(), { enableOnFormTags: true, enabled: shellActive && advanceByButton }, [advanceByButton, next, shellActive]);
   useControlKeybinding("ui.introduction.back", back, { enableOnFormTags: true, enabled: shellActive }, [back, shellActive]);
@@ -319,14 +321,23 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const survey = <T,>(kind: string, make: () => T): T => reuseSurvey(surveyRef, surveyKey, kind, make);
   const hostRect = survey("host", () => overlayHost?.getBoundingClientRect() ?? null);
   const placementAnchor = introduceRect && hostRect ? introductionRectRelativeToHost(introduceRect, hostRect) : introduceRect;
-  const placed = resolveIntroductionPlacement(step.placement, placementAnchor, boxSize, viewport);
-  const docked = typeof document !== "undefined" ? dockIntroductionInfoBox(placed, boxSize, survey("underlying", () => underlyingBorderLines(hostRect ?? new DOMRect(0, 0, window.innerWidth, window.innerHeight), boxRef.current)), INTRODUCTION_DOCK_REACH_PX) : { ...placed, ...boxSize };
+  const naturalKey = `${stepIndex},${viewport.width},${viewport.height}`;
+  if (naturalWidthRef.current?.key !== naturalKey && !widthStretchedRef.current && boxSize.width > 0) naturalWidthRef.current = { key: naturalKey, width: boxSize.width };
+  const natural = naturalWidthRef.current?.key === naturalKey ? { width: naturalWidthRef.current.width, height: boxSize.height } : boxSize;
+  const placed = resolveIntroductionPlacement(step.placement, placementAnchor, natural, viewport);
+  const snapped = typeof document !== "undefined" ? dockIntroductionInfoBox(placed, natural, survey("underlying", () => underlyingBorderLines(hostRect ?? new DOMRect(0, 0, window.innerWidth, window.innerHeight), boxRef.current)), INTRODUCTION_DOCK_REACH_PX) : { ...placed, ...natural };
+  const docked = snapped.width < natural.width - 0.5 ? { ...placed, ...natural } : snapped;
+  const stretched = naturalWidthRef.current?.key === naturalKey && dragPosition === null && Math.abs(docked.width - natural.width) > 0.5;
+  widthStretchedRef.current = stretched;
   const clearHost = hostRect ?? new DOMRect(0, 0, window.innerWidth, window.innerHeight);
-  const boxPosition = typeof document !== "undefined" && Math.abs(docked.width - boxSize.width) < 0.5
-    ? clampIntroductionInfoBoxPosition(clearIntroductionInfoBoxNearMisses({ top: docked.top, left: docked.left }, survey("own", () => ownBorderLines(boxRef.current)), survey("chips", () => underlyingChipLines(clearHost, boxRef.current)), INTRODUCTION_DOCK_REACH_PX, INTRODUCTION_CLEAR_RANGE_PX), boxSize, viewport, 0)
-    : { top: docked.top, left: docked.left };
-  dragLayoutRef.current = { placement: boxPosition, boxSize, viewport };
-  const position = dragPosition ?? boxPosition;
+  const boxPosition = typeof document === "undefined"
+    ? { top: docked.top, left: docked.left }
+    : stretched
+      ? clampIntroductionInfoBoxPosition({ top: docked.top, left: docked.left }, { width: docked.width, height: boxSize.height }, viewport, 0)
+      : clampIntroductionInfoBoxPosition(clearIntroductionInfoBoxNearMisses({ top: docked.top, left: docked.left }, survey("own", () => ownBorderLines(boxRef.current)), survey("chips", () => underlyingChipLines(clearHost, boxRef.current)), INTRODUCTION_DOCK_REACH_PX, INTRODUCTION_CLEAR_RANGE_PX), boxSize, viewport, 0);
+  const restingPosition = { top: Math.round(boxPosition.top), left: Math.round(boxPosition.left) };
+  dragLayoutRef.current = { placement: restingPosition, boxSize, viewport };
+  const position = dragPosition ?? restingPosition;
   const overlayPositionClass = overlayPositioned ? "absolute" : "fixed";
   const veilBlocksPointer = step.introduce == null || elevated.has(step.introduce) || (step.show ?? []).some((id) => elevated.has(id));
 
@@ -348,7 +359,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
         borderKind={introductionActivated ? undefined : "introduced"}
         level="dialog"
         className={cn("pointer-events-auto z-tutorial w-fit max-w-[calc(100vw-2rem)] bg-transparent", overlayPositionClass)}
-        style={{ top: position.top, left: position.left, width: dragPosition === null && Math.abs(docked.width - boxSize.width) > 0.5 ? docked.width : undefined, maxWidth: dragPosition === null && Math.abs(docked.width - boxSize.width) > 0.5 ? "none" : undefined, zIndex: "calc(var(--z-tutorial) + 2)" }}
+        style={{ top: position.top, left: position.left, width: stretched ? docked.width : undefined, maxWidth: stretched ? "none" : undefined, zIndex: "calc(var(--z-tutorial) + 2)" }}
         titleChips={
           <div data-hover-scope data-slot="introduction-info-box-chip" className={cn(windowChromeTitleChipClass, "!h-auto max-w-none shrink overflow-visible whitespace-normal")}>
             <span data-slot="introduction-info-box-title" className="min-w-0 flex-1 break-words whitespace-normal text-sm leading-normal font-medium">
@@ -418,8 +429,8 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
             </span>
           </div>
         }
-        footerLeftChips={stepIndex > 0 ? <div data-shared-border-cells="" className="flex items-stretch"><Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel} onClick={back} /></div> : undefined}
-        footerRightChips={advanceByButton ? <div data-shared-border-cells="" className="flex items-stretch"><Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} onClick={next} /></div> : undefined}
+        footerLeftChips={stepIndex > 0 ? <div data-shared-border-cells="" className="flex flex-1 items-stretch"><ButtonGroup className="w-full"><ButtonGroupItem id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel} className="flex-1 justify-between" onClick={back} /></ButtonGroup></div> : undefined}
+        footerRightChips={advanceByButton ? <div data-shared-border-cells="" className="flex flex-1 items-stretch"><ButtonGroup className="w-full"><ButtonGroupItem id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} className="flex-1 justify-between" onClick={next} /></ButtonGroup></div> : undefined}
         bodyClassName="p-double shadow-lg"
       />
       {effectiveDemonstrations.length > 0 && <IntroductionDemonstrationOverlay key={step.id} demonstrations={effectiveDemonstrations} />}

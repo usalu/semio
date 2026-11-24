@@ -941,6 +941,21 @@
        "hatch": "quilt"
       },
       {
+       "id": "base",
+       "bone": "base",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "stand",
+       "material": "abs-stand",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.17,
+       "ry": 0.17
+      },
+      {
        "id": "rear",
        "bone": "cabinet",
        "role": "body",
@@ -1390,6 +1405,21 @@
        "material": "felt-blanket"
       },
       {
+       "id": "base",
+       "bone": "base",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "stand",
+       "material": "abs-stand",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.17,
+       "ry": 0.17
+      },
+      {
        "id": "rear",
        "bone": "cabinet",
        "role": "body",
@@ -1687,6 +1717,21 @@
        "material": "felt-blanket"
       },
       {
+       "id": "stand",
+       "bone": "base",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.42,
+       "region": "stand",
+       "material": "abs-stand",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.17,
+       "ry": 0.17
+      },
+      {
        "id": "rear",
        "bone": "cabinet",
        "role": "body",
@@ -1730,6 +1775,21 @@
        "h": 0.7,
        "region": "bezel",
        "material": "hips-anthracite"
+      },
+      {
+       "id": "screen",
+       "bone": "tube",
+       "role": "glazing",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.12,
+       "region": "screen",
+       "material": "crt-panel-glass",
+       "kind": "rect",
+       "x": 0.035,
+       "y": -0.28,
+       "w": 0.103,
+       "h": 0.56
       }
      ]
     },
@@ -1956,6 +2016,21 @@
        "h": 0.9,
        "region": "blanket",
        "material": "felt-blanket"
+      },
+      {
+       "id": "stand",
+       "bone": "base",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.42,
+       "region": "stand",
+       "material": "abs-stand",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.17,
+       "ry": 0.17
       },
       {
        "id": "rear",

@@ -1,0 +1,41 @@
+--- /Users/ueli/.sinc/play/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts	2026-11-24 02:28:30
++++ /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/o24/root/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts	2026-11-24 14:10:16
+@@ -48,7 +48,7 @@
+ import { CargoProvenanceSessionV1, cargoConfigurationArgumentsV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1, sharedProvenanceCustodyV1, type CargoProvenanceStagedV1 } from "../🟦️.ts";
+ import { cargoBuildRunLeafV1, cargoProvenanceMerkleRootV1, cargoProvenanceRowsDigestV1, cargoProvenanceSourceV1, cargoUnitIdentityV1, cargoUnitLeafV1, type CargoDepInfoChecksumV1, type CargoProvenanceRootsV1, type CargoUnitObservationV1 } from "../🧾️receipt/🟦️.ts";
+ import { ADMISSION_POLICY_V1, admissionMemoryBytesV1, appendUnitHistoryV1, admissionMemoryShareV1, admissionReserveBytesV1, buildSchedulerV1,schedulerCargoSelectionV1, compilerWrapperEnvironmentV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, startAdmissionBrokerV1, unitHistoryPathV1, unitKeyV1, unitObservationV1, unitObservationsV1, unitOutputBytesV1, type UnitObservationV1, type UnitRecordV1 } from "../🎟️admission/🟦️.ts";
+-import { componentPassPeakMegabytesV1, describeLocalComponentJobsV1, nativeBuildPassOffloadableV1, planComponentJobSlotsV1, planLocalComponentJobsV1, runPassesInJobSlotsV1, type ComponentJobsDecisionV1, type LocalJobSampleV1, type PassJobSlotV1 } from "./🧵️job-slots/🟦️.ts";
++import { componentFleetChargeV1, componentJobsLimitV1, componentPassPeakMegabytesV1, describeFleetComponentJobsV1, describeLocalComponentJobsV1, nativeBuildPassOffloadableV1, planComponentJobSlotsV1, planLocalComponentJobsV1, runPassesInJobSlotsV1, type ComponentJobsDecisionV1, type FleetJobEventV1, type LocalJobSampleV1, type PassJobSlotV1 } from "./🧵️job-slots/🟦️.ts";
+ import { cargoJobsV1, createJobserverV1, defaultJobserverStyleV1, withoutJobserverEnvironmentV1, type JobSlotV1 } from "../🎰️jobserver/🟦️.ts";
+ import { criticalPathV1, startTimelineV1, TELEMETRY_POLICY_V1, writeBuildReportV1, type BuildScriptRunV1, type StageRecordV1 } from "../📈️telemetry/🟦️.ts";
+ import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../🗃️stage-cache/🟦️.ts";
+@@ -335,6 +335,7 @@
+   fleetRunning?: () => number;
+   fleetJobs?: (facts: Readonly<{ local: number; unitMegabytes: number; signal: AbortSignal }>) => Promise<FleetJobsDecisionV1 | undefined>;
+   componentJobs?: (facts: Readonly<{ local: number; unitMegabytes: number; crates: readonly string[]; signal: AbortSignal }>) => Promise<ComponentJobsDecisionV1 | undefined>;
++  fleetSlots?: (facts: Readonly<{ crates: readonly string[]; signal: AbortSignal }>) => Promise<number | null | undefined>;
+   localJobs?: Readonly<{ maximum?: number; floorMegabytes?: number; sample?: (signal: AbortSignal) => Promise<LocalJobSampleV1>; peakMegabytes?: (pass: NativeBuildPassV1) => number }>;
+   physicalBytes?: number;
+   storageReserveBytes?: number;
+@@ -514,7 +515,8 @@
+   options = { ...options, environment: { ...options.environment, SEMIO_COMPILER_PARALLELISM: String(tokens) } };
+   const fleet = await options.fleetJobs?.({ local: tokens, unitMegabytes: compileUnitMegabytesV1(await unitHistory()), signal }).catch(() => undefined), fleetRemote = fleet?.remote ?? 0;
+   const componentJobs = fleetRemote > 0 ? await options.componentJobs?.({ local: tokens, unitMegabytes: compileUnitMegabytesV1(await unitHistory()), crates: [...new Set(plan.passes.filter(pass => nativeBuildPassOffloadableV1(pass)).flatMap(pass => pass.packages.map(row => row.name.replaceAll("-", "_"))))], signal }).catch(() => undefined) : undefined, jobSlots = Math.max(1, Math.min(componentJobs?.jobs ?? 1, tokens + fleetRemote));
+-  const { jobs: componentJobsTotal, local: localJobsAllowed } = planComponentJobSlotsV1({ fleetJobs: jobSlots, tokens, wanted: options.localJobs?.maximum ?? 1024 });
++  const fleetLive = fleetRemote > 0 && options.fleetSlots !== undefined, offloadableCrates = [...new Set(plan.passes.filter(pass => nativeBuildPassOffloadableV1(pass)).flatMap(pass => pass.packages.map(row => row.name.replaceAll("-", "_"))))];
++  const { jobs: plannedJobs, local: localJobsAllowed } = planComponentJobSlotsV1({ fleetJobs: fleetLive ? 1 : jobSlots, tokens, wanted: options.localJobs?.maximum ?? 1024 }), componentJobsTotal = fleetLive ? componentJobsLimitV1 : plannedJobs;
+   if (fleetRemote > 0) options = { ...options, environment: { ...options.environment, SEMIO_UNIT_CACHE_SLOTS: options.environment.SEMIO_UNIT_CACHE_SLOTS ?? String(tokens), SEMIO_UNIT_CACHE_LIGHT_SLOTS: String(fleetRemote) } };
+   const cargoJobs: Readonly<Record<string, string>> = fleetRemote > 0 ? { CARGO_BUILD_JOBS: String(cargoJobsV1(tokens, options.environment)) } : {};
+   const cargoHome = resolve(options.environment.CARGO_HOME ?? join(homedir(), ".cargo")), roots: CargoProvenanceRootsV1 = { repository: options.cwd, build: generation.build, cargoHome };
+@@ -1183,8 +1185,10 @@
+       const offloadable = passes.filter(row => nativeBuildPassOffloadableV1(row)).slice(0, 8), sample = await sampleLocalMemory(signal).catch(() => ({ availableMegabytes: null, ownedMegabytes: 0, pressure: null }) as LocalJobSampleV1);
+       if (offloadable.length > 1) { const peaks = await Promise.all(offloadable.map(localPeakMegabytes)), planned = planLocalComponentJobsV1({ tokens: localJobsAllowed, availableMegabytes: sample.availableMegabytes === null ? null : Math.floor(sample.availableMegabytes), floorMegabytes: localFloorMegabytes, pressure: sample.pressure, peaksMegabytes: peaks }); log(describeLocalComponentJobsV1("plan", { operation: "component build", jobs: planned.jobs, reason: planned.reason, available: sample.availableMegabytes ?? 0, floor: localFloorMegabytes, peak: Math.max(...peaks) })); }
+     }
++    const fleetOptions = fleetLive ? { maximum: componentJobsLimitV1 - 1, slots: () => options.fleetSlots!({ crates: offloadableCrates, signal }), ...componentFleetChargeV1, sample: () => sampleLocalMemory(signal), report: (pass: NativeBuildPassV1, event: FleetJobEventV1) => log(describeFleetComponentJobsV1(event.kind, { pass: pass.id, running: event.running, slots: event.slots ?? 0, footprint: event.footprintMegabytes, peak: event.peakMegabytes, free: event.freeMegabytes, floor: event.floorMegabytes, waitsFor: event.waitsFor ?? "fleet", reason: event.fleetReason ?? "fleet-none", localReason: event.localReason ?? "local-memory" })) } : undefined;
++    if (fleetOptions) log(describeFleetComponentJobsV1("plan", { operation: "component build", local: localJobsAllowed, fleet: fleetOptions.maximum, footprint: fleetOptions.footprintMegabytes, seconds: Math.round(fleetOptions.pollMilliseconds / 1000), slots: await options.fleetSlots!({ crates: offloadableCrates, signal }).catch(() => undefined) ?? 0 }));
+     await Promise.all(lanes.map(async (lane) => {
+-      await runPassesInJobSlotsV1(lane.passes, { jobs: componentJobsTotal, check, run: runPass, signal, ...local ? { local } : {}, ...componentJobsTotal > 1 ? { fail: stop } : {} });
++      await runPassesInJobSlotsV1(lane.passes, { jobs: componentJobsTotal, check, run: runPass, signal, ...local ? { local } : {}, ...fleetOptions ? { fleet: fleetOptions } : {}, ...componentJobsTotal > 1 ? { fail: stop } : {} });
+     }));
+     let sealFailure: { error: unknown } | undefined;
+     if (!failures.length) {

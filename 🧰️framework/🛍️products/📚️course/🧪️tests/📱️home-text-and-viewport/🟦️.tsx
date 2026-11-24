@@ -96,7 +96,7 @@ describe("🥞️ the opened page and the short viewport", () => {
       const classes = layer.className.split(" ");
       expect(classes).toContain("overflow-y-auto");
       expect(classes).toContain("items-stretch");
-      expect(layer.style.paddingBottom, "room for the hint below, in px so large text never narrows it").toMatch(/^(0px)?$|^calc\((0px \+ )?\d+px\)$/u);
+      expect(layer.style.paddingBottom, "room for the hint below and the footer band beneath which the page runs, in px so large text never narrows it").toMatch(/^(0px|var\(--course-clear-bottom\))?$|^calc\(((0px|var\(--course-clear-bottom\)) \+ )?\d+px\)$/u);
       expect(classes.some((name) => name.endsWith("rem]"))).toBe(false);
     }
   });

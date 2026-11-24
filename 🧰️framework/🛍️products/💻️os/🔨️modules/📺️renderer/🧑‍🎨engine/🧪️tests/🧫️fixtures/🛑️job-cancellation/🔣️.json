@@ -1,0 +1,7 @@
+{
+  "schema": "semio.spawned-job-cancellation.v1",
+  "cases": [
+    { "id": "settled-job-is-not-cancelled", "spawns": [17], "settles": 17, "cancels": 17, "sent": [] },
+    { "id": "running-job-is-cancelled", "spawns": [18, 19], "settles": 18, "cancels": 19, "sent": [19] }
+  ]
+}

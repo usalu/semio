@@ -1,0 +1,104 @@
+[
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "sleeve-l",
+  "why": "arm-l: sww/None/rev: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "neck",
+  "why": "neck: flat/swv/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "sleeve-l",
+  "why": "arm-l: sww/None/rev: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "sleeve-r",
+  "why": "arm-r: sww/None/rev: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "neck",
+  "why": "neck: flat/swv/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "sleeve-l",
+  "why": "arm-l: sww/None/rev: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "sleeve-r",
+  "why": "arm-r: sww/None/rev: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "neck",
+  "why": "neck: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "shank-l",
+  "why": "shank-l: flat/swv/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "shank-r",
+  "why": "shank-r: flat/swv/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "sil-arm-l",
+  "why": "arm-l: sww/None/rev: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "sil-forearm-l",
+  "range": "stretch",
+  "why": "forearm-l: sww/rev/rev: the revolved plan body stretched to the length of the elevation outline"
+ },
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "sil-forearm-l",
+  "from": "plan",
+  "to": [
+   "front"
+  ],
+  "why": "forearm-l: sww/rev/rev: the same revolved body in the front"
+ },
+ {
+  "op": "prism",
+  "scale": "500",
+  "id": "sil-head",
+  "view": "plan",
+  "why": "head: flat/None/flat: prism that keeps the outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "sil-neck",
+  "why": "neck: flat/swv/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "sil-neck",
+  "why": "neck: flat/swv/flat: revolved about the bone axis"
+ }
+]

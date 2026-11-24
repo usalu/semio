@@ -214,7 +214,6 @@ fn registered_segmented_save_writes_the_large_original_image_and_reopens_exactly
     let reopened = decode_pdf(&actual).unwrap();
     assert!(largest_stream(&reopened) == image, "the segmented save keeps exactly the original image samples");
     assert_eq!(reopened.pages, snapshot.pages);
-    println!("[DEBUG] segmented native Save wrote and retired {} bytes", actual.len());
 }
 
 const TWO_PAGES: &[u8] = include_bytes!("../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");

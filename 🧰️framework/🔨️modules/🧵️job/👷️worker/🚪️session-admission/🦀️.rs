@@ -45,7 +45,7 @@ impl<J:InteractiveJob+'static,S:AdmittedWorkerJobSession<J>> WorkerJobSessionAdm
  fn post(cx:&mut StepContext<'_>,p:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{receive_original_retained_work(cx,RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(p)),work:1})?;Ok(())}
  fn metadata(cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{Self::post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})}
  pub fn advance(&mut self,job:&mut Option<J>,params:&mut Option<BatchJobParams>,output:&mut Option<S>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if self.stage==9&&self.terminal_is_empty(){return Ok(output.is_some())}self.validate(cx)?;
+  if self.stage==9&&self.terminal_is_empty(){if output.is_some(){return Ok(true)}self.stage=0;}self.validate(cx)?;
   if self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session birth cannot advance during paid close").into())}
   if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session receiver already owns its output").into())}
   if !Self::enter(cx,0,0,false){return Ok(false)}

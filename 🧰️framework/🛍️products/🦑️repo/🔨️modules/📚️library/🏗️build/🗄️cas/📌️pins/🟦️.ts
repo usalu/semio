@@ -1,4 +1,5 @@
-import {appendFile,lstat,mkdir,readdir,readFile,rename,unlink,writeFile} from "node:fs/promises";
+import {appendFile,lstat,mkdir,open,readdir,rename,unlink,writeFile} from "node:fs/promises";
+import {readFile} from "node:fs/promises";
 import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import type {CasPolicyV1} from "../🧬️schema/🟦️.ts";
@@ -72,47 +73,114 @@ export async function holdCasPinsV1(root:string,policy:Pick<CasPolicyV1,"leaseMa
 /** ⏳️ The request header with which a client marks a blob as an input of one action (value `input`): the cache server leases it instead of treating it like a published output. */
 export const CAS_LEASE_HEADER_V1="x-semio-lease";
 
+/** ⏳️ Reads the lease header: `input` marks an input of an anonymous action, `input:<action>` of the named one (`action` is what lets two actions that share a blob end their leases independently); anything else is not a lease. */
+export function parseCasLeaseHeaderV1(value:string|null):Readonly<{action:string}>|undefined{
+ if(value==="input")return Object.freeze({action:""});
+ const action=value?.startsWith("input:")?value.slice(6):undefined;
+ return action!==undefined&&HOLDER.test(action)?Object.freeze({action}):undefined;
+}
+
 /** ⏳️ Directory of the transient lease segments of the store: one append-only file per writer process, a line `{d,u}` per digest and lease expiry. */
 export const casTransientDirectoryV1=(root:string):string=>join(root,"v1","x");
 
-/** ⏳️ Leases blobs that are inputs of one action (not outputs): they are protected until `nowMs + ttlMs` (the action runs, plus a grace) and are the first the collector takes after that, unless something read them later. A new lease for a digest replaces the earlier one (renewal). Never pins: outputs are pinned, inputs only lease. */
-export async function leaseCasTransientV1(root:string,policy:Pick<CasPolicyV1,"transientLeaseMs">,writer:string,digests:readonly string[],nowMs:number,ttlMs:number=policy.transientLeaseMs):Promise<void>{
+/** ⏳️ Leases blobs that are inputs of one action (not outputs): they are protected until `nowMs + ttlMs` (the action runs, plus a grace) and are the first the collector takes after that, unless something read them later. A lease names the `action` that holds it (blobs shared by two actions are protected until both ended); a new lease of the same action replaces its earlier one (renewal). Never pins: outputs are pinned, inputs only lease. */
+export async function leaseCasTransientV1(root:string,policy:Pick<CasPolicyV1,"transientLeaseMs">&Partial<Pick<CasPolicyV1,"transientSegmentBytes">>,writer:string,digests:readonly string[],nowMs:number,ttlMs:number=policy.transientLeaseMs,action:string=""):Promise<void>{
+ await appendCasTransientsV1(root,policy,writer,digests,nowMs,ttlMs,action,false);
+}
+
+/** 🔓️ Ends the leases `action` holds on inputs whose action ended: they now run only `transientGraceMs` longer (a retry of the action leases again) unless another action still holds the blob, after which the blobs are the first the collector takes. Never deletes a blob and never touches a pin. */
+export async function releaseCasTransientV1(root:string,policy:Pick<CasPolicyV1,"transientLeaseMs"|"transientGraceMs">&Partial<Pick<CasPolicyV1,"transientSegmentBytes">>,writer:string,digests:readonly string[],nowMs:number,action:string=""):Promise<void>{
+ await appendCasTransientsV1(root,policy,writer,digests,nowMs,policy.transientGraceMs,action,true);
+}
+
+async function appendCasTransientsV1(root:string,policy:Pick<CasPolicyV1,"transientLeaseMs">&Partial<Pick<CasPolicyV1,"transientSegmentBytes">>,writer:string,digests:readonly string[],nowMs:number,ttlMs:number,action:string,release:boolean):Promise<void>{
  if(!HOLDER.test(writer))throw Error("Valid lease writer required / Gültiger Lease-Halter erforderlich");
+ if(action!==""&&!HOLDER.test(action))throw Error("Valid lease action required / Gültige Lease-Aktion erforderlich");
  for(const digest of digests)if(!DIGEST.test(digest))throw Error("Valid digest required / Gültiger Digest erforderlich");
  if(digests.length===0)return;
  const directory=casTransientDirectoryV1(root),until=nowMs+Math.min(Math.max(ttlMs,0),policy.transientLeaseMs*4);
  await mkdir(directory,{recursive:true});
- await appendFile(join(directory,writer+".jsonl"),[...new Set(digests)].map(d=>JSON.stringify({d,u:until})+"\n").join(""));
+ const text=[...new Set(digests)].map(d=>JSON.stringify({d,u:until,a:nowMs,...action===""?{}:{h:action},...release?{x:1}:{}})+"\n").join("");
+ await appendFile(join(directory,await segmentOfWriterV1(directory,writer,Buffer.byteLength(text),policy.transientSegmentBytes??CAS_TRANSIENT_SEGMENT_BYTES_V1)),text);
 }
 
-/** ⏳️ Reads the leases: the latest expiry per digest over every segment; unreadable lines are skipped. */
-export async function readCasTransientsV1(root:string):Promise<Map<string,number>>{
- const leases=new Map<string,number>(),directory=casTransientDirectoryV1(root);let names:string[];
- try{names=await readdir(directory);}catch{return leases;}
- for(const name of names){
-  if(!name.endsWith(".jsonl"))continue;
-  let text:string;try{text=await readFile(join(directory,name),"utf8");}catch{continue;}
-  for(const line of text.split("\n")){
-   if(line==="")continue;
-   try{const row=JSON.parse(line) as {d?:unknown;u?:unknown};if(typeof row.d==="string"&&DIGEST.test(row.d)&&typeof row.u==="number")leases.set(row.d,Math.max(leases.get(row.d)??0,row.u));}catch{}
-  }
+/** 🔄️ The size from which a writer starts a new lease segment, so that a long-lived writer never grows one file without bound and closed segments can be compacted (declared as `Policy.transientSegmentBytes`). */
+export const CAS_TRANSIENT_SEGMENT_BYTES_V1=8388608;
+const writerSegments=new Map<string,{name:string;bytes:number}>();
+
+async function segmentOfWriterV1(directory:string,writer:string,adding:number,limit:number):Promise<string>{
+ const key=directory+"\0"+writer;let segment=writerSegments.get(key);
+ if(segment===undefined){const info=await lstat(join(directory,writer+".jsonl")).catch(()=>undefined);segment={name:writer+".jsonl",bytes:info?.size??0};}
+ if(segment.bytes>=limit)segment={name:`${writer}.${Date.now().toString(36)}.jsonl`,bytes:0};
+ segment={name:segment.name,bytes:segment.bytes+adding};writerSegments.set(key,segment);return segment.name;
+}
+
+type SegmentCursorV1={ino:number;offset:number};
+type LeaseRowV1={at:number;until:number};
+type LeaseStateV1={files:Map<string,SegmentCursorV1>;rows:Map<string,Map<string,LeaseRowV1>>};
+const leaseStates=new Map<string,LeaseStateV1>();
+
+function foldLeaseLineV1(rows:LeaseStateV1["rows"],line:string):void{
+ if(line==="")return;
+ try{
+  const row=JSON.parse(line) as {d?:unknown;u?:unknown;a?:unknown;h?:unknown};
+  if(typeof row.d!=="string"||!DIGEST.test(row.d)||typeof row.u!=="number")return;
+  const at=typeof row.a==="number"?row.a:0,action=typeof row.h==="string"?row.h:"";let actions=rows.get(row.d);
+  if(actions===undefined)rows.set(row.d,actions=new Map());
+  const held=actions.get(action);
+  if(held===undefined||at>held.at)actions.set(action,{at,until:row.u});else if(at===held.at)held.until=Math.max(held.until,row.u);
+ }catch{}
+}
+
+/** ⏳️ Reads the leases: per digest and holding action the latest line (by its time; a release is such a line with its short grace), then the latest expiry over the actions, over every segment; unreadable lines are skipped. Segments are append-only, so a segment already read is read again only from the byte after its last complete line (a rewritten, shrunk or replaced segment starts the root over): a collection that asks again at every shard costs the new bytes, not the whole history. */
+export async function readCasTransientsV1(root:string,requesterLeaseMs:number=REQUESTER_LEASE_MS_V1):Promise<Map<string,number>>{
+ const directory=casTransientDirectoryV1(root);let names:string[];
+ try{names=(await readdir(directory)).filter(name=>name.endsWith(".jsonl")).sort();}catch{leaseStates.delete(root);return new Map();}
+ let state=leaseStates.get(root);const infos=new Map<string,{ino:number;size:number}>();
+ for(const name of names)try{const info=await lstat(join(directory,name));infos.set(name,{ino:info.ino,size:info.size});}catch{}
+ if(state!==undefined)for(const [name,cursor] of state.files){const info=infos.get(name);if(info===undefined||info.ino!==cursor.ino||info.size<cursor.offset){state=undefined;break;}}
+ if(state===undefined){state={files:new Map(),rows:new Map()};}
+ leaseStates.set(root,state);
+ for(const [name,info] of infos){
+  const cursor=state.files.get(name)??{ino:info.ino,offset:0};
+  if(info.size<=cursor.offset){state.files.set(name,cursor);continue;}
+  let handle;try{handle=await open(join(directory,name),"r");}catch{continue;}
+  try{
+   const buffer=Buffer.allocUnsafe(info.size-cursor.offset),{bytesRead}=await handle.read(buffer,0,buffer.length,cursor.offset),end=buffer.subarray(0,bytesRead).lastIndexOf(10);
+   if(end>=0){for(const line of buffer.subarray(0,end).toString("utf8").split("\n"))foldLeaseLineV1(state.rows,line);cursor.offset+=end+1;}
+   state.files.set(name,cursor);
+  }catch{}finally{await handle.close().catch(()=>undefined);}
  }
+ const leases=new Map<string,number>();
+ for(const [digest,actions] of state.rows){let until=0;for(const [action,row] of actions){const bound=casLeaseUntilV1(action,row,actions,requesterLeaseMs);if(bound>until)until=bound;}if(until>0)leases.set(digest,until);}
  return leases;
 }
 
-/** 🧹️ Drops what no longer matters from segments nobody appended to for longer than the lease: lines of blobs that are gone (`exists` false) or whose lease ended and which were taken. A segment that ends up empty is removed. */
+/** ⏳️ The expiry one lease line grants: the scheduler's operation lease (`op-<action>`) as written, renewed while the operation lives; a requester's lease (`<action>` or anonymous) at most `requesterLeaseMs` after it was taken, and never past the operation lease of the same action once the scheduler holds that operation, so a client that asks for a long fixed lease cannot keep inputs beyond the upload, the operation and the grace.
+ * @see ../../🌐️remote-execution/🗓️scheduler/🔐️input-leases/🟦️.ts */
+export function casLeaseUntilV1(action:string,row:Readonly<{at:number;until:number}>,actions:ReadonlyMap<string,Readonly<{at:number;until:number}>>,requesterLeaseMs:number):number{
+ if(action.startsWith(CAS_OPERATION_LEASE_PREFIX_V1))return row.until;
+ const bounded=Math.min(row.until,row.at+requesterLeaseMs),operation=action===""?undefined:actions.get(CAS_OPERATION_LEASE_PREFIX_V1+action);
+ return operation!==undefined&&operation.at>=row.at?Math.min(bounded,operation.until):bounded;
+}
+
+/** ⏳️ The prefix of the lease action under which the scheduler holds the inputs of one operation for its lifetime. */
+export const CAS_OPERATION_LEASE_PREFIX_V1="op-";
+const REQUESTER_LEASE_MS_V1=schema.definitions.Policy.const.requesterLeaseMs;
+
+/** 🧹️ Drops what no longer matters from segments nobody appended to for two leases: lines whose lease ended or whose blob is gone (`exists` false); the objects of an ended lease are plain candidates of the collector from then on. A segment that ends up empty is removed. */
 export async function compactCasTransientsV1(root:string,policy:Pick<CasPolicyV1,"transientLeaseMs">,nowMs:number,exists:(digest:string)=>Promise<boolean>):Promise<number>{
  const directory=casTransientDirectoryV1(root);let names:string[],removed=0;
  try{names=await readdir(directory);}catch{return 0;}
  for(const name of names){
   if(!name.endsWith(".jsonl"))continue;
   const path=join(directory,name);let info;try{info=await lstat(path);}catch{continue;}
-  if(nowMs-info.mtimeMs<policy.transientLeaseMs*4)continue;
+  if(nowMs-info.mtimeMs<policy.transientLeaseMs*2)continue;
   let text:string;try{text=await readFile(path,"utf8");}catch{continue;}
   const kept:string[]=[];
   for(const line of text.split("\n")){
    if(line==="")continue;
-   try{const row=JSON.parse(line) as {d:string};if(await exists(row.d))kept.push(line);else removed++;}catch{removed++;}
+   try{const row=JSON.parse(line) as {d:string;u?:number};if(!(typeof row.u==="number"&&row.u<=nowMs)&&await exists(row.d))kept.push(line);else removed++;}catch{removed++;}
   }
   if(kept.length===0){await unlink(path).catch(()=>undefined);continue;}
   if(kept.length===text.split("\n").filter(Boolean).length)continue;

@@ -5,7 +5,7 @@ use super::{container_native_owned_path,parse_container_attrs,parse_field_attrs,
 #[path="🔀️enum/🦀️.rs"]mod enums;
 fn optional(ty:&Type)->bool{matches!(ty,Type::Path(path)if path.path.segments.last().is_some_and(|s|s.ident=="Option"))}
 /// 🍃️ A bare primitive scalar field is received by its record directly, without an owned child slot.
-fn scalar_leaf(ty:&Type)->bool{matches!(ty,Type::Path(path)if path.qself.is_none()&&path.path.segments.len()==1&&path.path.segments[0].arguments.is_empty()&&["bool","f32","f64","u8","u16","u32","u64","usize","i8","i16","i32","i64","isize"].iter().any(|name|path.path.segments[0].ident==name))}
+fn scalar_leaf(ty:&Type)->bool{match ty{Type::Tuple(tuple)=>!tuple.elems.is_empty()&&tuple.elems.iter().all(scalar_leaf),_=>matches!(ty,Type::Path(path)if path.qself.is_none()&&path.path.segments.len()==1&&path.path.segments[0].arguments.is_empty()&&["bool","f32","f64","u8","u16","u32","u64","usize","i8","i16","i32","i64","isize"].iter().any(|name|path.path.segments[0].ident==name))}}
 pub fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
  if !input.generics.params.is_empty(){return Err(syn::Error::new_spanned(input,"native record receiving requires an explicit concrete owner declaration"))}
  let attrs=parse_container_attrs(&input.attrs)?;if attrs.validate.is_some()||attrs.validate_controlled.is_some()||attrs.deserialize_controlled_with.is_some(){return Err(syn::Error::new_spanned(input,"validated native receiving requires its authored controlled owner port"))}let value:syn::Path=syn::parse_str(attrs.crate_path.as_deref().unwrap_or("::semio_framework_value"))?;let native=container_native_owned_path(&attrs);let owner=quote!(#native::native_decoding::owned);let tree=quote!(#owner::tree);let name=&input.ident;let vis=&input.vis;
@@ -83,14 +83,36 @@ pub fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
  let close_arms=indices.iter().map(|i|{let ty=types[*i];let member=&members[*i];let pending=&pending[*i];let s=as_mut(present(*i));let d=as_mut(phased(*i));quote!(#i=>#machine::field_close_step::<I,#name,#ty,_,_,#count>(c,::std::mem::offset_of!(#name,#member),#i,original,body,demand,effect,&mut self.#pending,#s,#d))}).collect::<Vec<_>>();
  let view_ids=live_slots.iter().chain(default_ids.iter()).cloned().collect::<Vec<_>>();
  let view_indices=(0..view_ids.len()).collect::<Vec<_>>();
+ let all_leaf=attrs.crate_path.is_none()&&!tuple&&count>0&&(0..count).all(|i|leaf[i]&&required[i]&&!flattened[i]);
+ let leaf_indices=(0..count).collect::<Vec<_>>();
+ let leaf_vars=(0..count).map(|i|format_ident!("field_{}",i)).collect::<Vec<_>>();
+ let leaf_names=members.iter().map(|m|match m{Member::Named(id)=>quote!(#id),Member::Unnamed(i)=>quote!(#i)}).collect::<Vec<_>>();
+ let scalar_impl=quote!{
+  impl<I:#tree::NativeValueSource+?Sized>#native::native_decoding::NativeReceive<I> for #name{type Receiver=#tree::NativeScalarReceiver<I,Self>;fn receiver()->Self::Receiver{#tree::NativeScalarReceiver::new()}}
+  impl<I:#tree::NativeValueSource+?Sized>#tree::NativeScalarValue<I> for #name{
+   fn read(original:&I)->Result<Self,#value::ValueError>{
+    #(let mut #leaf_vars:Option<#types>=None;)*
+    for position in 0..original.record_len()?{
+     let index=match original.record_key(position)?{#owner::NativeRecordKey::Name(name)=>match name{#(#wires=>#leaf_indices,)*_=>return Err(#tree::invalid())},#owner::NativeRecordKey::Ordinal(ordinal)=>usize::from(ordinal)};
+     let child=original.record_child(position)?;
+     match index{#(#leaf_indices=>{if #leaf_vars.is_some(){return Err(#tree::invalid())}#leaf_vars=Some(<#types as #tree::NativeScalarValue<dyn #tree::NativeValueSource>>::read(child)?)},)*_=>return Err(#tree::invalid())}
+    }
+    Ok(Self{#(#leaf_names:#leaf_vars.ok_or_else(#tree::invalid)?,)*})
+   }
+   fn read_copy_bytes(_:&I)->Result<usize,#value::ValueError>{Ok(::std::mem::size_of::<Option<Self>>())}
+  }
+ };
+ let receive_impl=if all_leaf{scalar_impl}else{quote!{
+ impl<I:#tree::NativeValueSource+?Sized>#native::native_decoding::NativeReceive<I>for #name #implementation_where{type Receiver=#machine::NativeRecordReceiver<I,#name,#state,#count>;fn receiver()->Self::Receiver{#machine::NativeRecordReceiver::birth(false)}fn record_subset_receiver()->Option<Self::Receiver>{Some(#machine::NativeRecordReceiver::birth(true))}
+  fn receiver_template(subset:bool)->Option<#native::native_decoding::NativeSeedTemplate<Self::Receiver>>{<Self::Receiver>::template(subset)}}
+ }};
  Ok(quote!{
  #vis struct #state where #(#bounds,)*{#(#slot_decls)*#(#pending: ::std::mem::ManuallyDrop<Option<#types>>,)*#(#default_fields,)*frame:#frame_ty}
  impl #state where #(#bounds,)*{
   const SPEC:#machine::RecordSpec=#machine::RecordSpec{count:#count,tuple:#tuple,flatten:&[#(#flattened),*],required:&[#(#required),*],leaves:&[#(#leaves),*],any_flatten:#any_flatten};
  }
  unsafe impl #owner::NativeRecordFields for #name{fn native_schema_count()->usize{#count}fn native_schema_field(index:usize)->Option<#owner::NativeRecordSchema>{match index{#(#descriptors,)*_=>None}}}
- impl<I:#tree::NativeValueSource+?Sized>#native::native_decoding::NativeReceive<I>for #name #implementation_where{type Receiver=#machine::NativeRecordReceiver<I,#name,#state,#count>;fn receiver()->Self::Receiver{#machine::NativeRecordReceiver::birth(false)}fn record_subset_receiver()->Option<Self::Receiver>{Some(#machine::NativeRecordReceiver::birth(true))}
-  fn receiver_template(subset:bool)->Option<#native::native_decoding::NativeSeedTemplate<Self::Receiver>>{<Self::Receiver>::template(subset)}}
+  #receive_impl
  impl<I:#tree::NativeValueSource+?Sized>#machine::NativeRecordArms<I,#name,#count> for #state where #(#bounds,)*{
   fn spec(&self)->&'static #machine::RecordSpec{&Self::SPEC}
   fn static_spec()->&'static #machine::RecordSpec{&Self::SPEC}

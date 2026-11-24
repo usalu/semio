@@ -117,7 +117,8 @@ fn every_painted_pane_chip_registers_a_hit_target() {
 /// moves the chip's own icon, which is where React shows the live spec too.
 #[test]
 fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
+    caller.own_surface(&window_projection_surface_id("pane-top"));
     let theme = Theme::light();
     let window = Rect::new(0.0, 0.0, 800.0, 600.0);
     let mut shell = world_pane_shell();
@@ -240,6 +241,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
 
     press_chip(&mut shell, WindowPaneChip::Projection.control_id("pane-top", false));
     assert!(shell.windows.projection_pane_folded("pane-top"), "🔀️ the same id folds it again");
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
     caller.finish();
 }
 

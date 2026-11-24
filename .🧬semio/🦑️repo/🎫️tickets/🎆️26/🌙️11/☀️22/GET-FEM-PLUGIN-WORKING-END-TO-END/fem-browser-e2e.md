@@ -102,7 +102,38 @@ Fix: `WindowConfigOwnerRegistry::ensure_for_roster` pumps the partition birth of
 ### Open: Live Cleanup Zero Progress on Edit
 
 - With the above fixes the smoke now gets to the node edit. `patchNode` fails with `plugin.internal.zero-progress: runtime live cleanup faulted for instance 1`. The app maintenance answered zero progress or `Blocked` for the whole stall budget.
-- An instrumented build (`[DEBUG] live cleanup zero progress`) is pending to name the blocking step.
+- Instrumented build 1 (wasm `cd289fdf…`) reproduces the fault after `X = 1.5`. All 256 stalled steps are `Progress(0)` and none is `Blocked`.
+- None of the FEM 2D session prints fire (`maintenance_step`, `retire_one`, `close_request_step`). The zero receipt therefore comes from the generic `maintenance_ladder_unit_step`, not from the FEM owner.
+- That ladder answers `Progress(0)` whenever the terminal witness is not empty and every present rung is either empty or unfunded. It skips an unfunded rung with `continue`. Candidate: stage 15, the mounted FEM job's close or maintenance quote, is never funded by the live grant, so the FEM owner is never reached.
+- Instrumented build 2 adds a `[DEBUG] ladder zero` trace of every rung's demand against its grant.
+- Instrumented build 2 (wasm `34481dd6…`, built after peers' maintenance and retirement changes landed) no longer reproduces the stall. The node edit `X = 1.5` lands (`n1 · (1.50, …)`). No `ladder zero` or `live cleanup` line was printed, and no fault.
+- The same build's 3D page shows `Preparing analysis`, then `Solving loads`, then `Case: dead`, with the stress-coloured solid, about 48 s after load and without interaction.
+
+### Open: Press Settlement Stalls When a Click Follows the Edit
+
+- The browser smoke clicks `Artifact` right after pressing Enter in the X field. `patchNode` then faults with `interactive-job.publication-stalled: … waiting on the tool settlement is not complete (stage, retained items, fuel) [2, …]`. Stage 2 is `Scrub`, the number field's press settlement.
+- Edits without an immediate follow-up click land (probe above). The stall is therefore an interaction between the press settlement in `settle_tool_operation` / `settle_press` and a concurrent input turn.
+- Build 3 instruments `settle_press` (context, accepts, phase, yield, grant) to name the guard that never opens.
+- Build 3 (wasm `81f7d367…`) result: the edit's Tick press (operation 512) settles. Its Commit press (operation 576, mode 1) holds `settle_press` at phase 3, `OriginalScrubWrite::admit`, for all 4096 units.
+- Context and accepts both match, and nothing yields (`yield=false`, full 64-item grant). Turn binding and funding are therefore ruled out.
+- `admit` only declines on `ledger.writing` or a read lease on the window's press slot. The slot reader is the tool-overlay follow (`🔁️follow`), which only the maintenance ladder's `ToolOverlay` rung advances.
+- Build 4 prints which of the two guards holds and what the follow rung answers.
+
+### Root Cause: Commit Waits on the Follow's Read; Only Maintenance Moves the Follow
+
+- Build 4 (wasm `f1eb03df…`) prints `scrub write admit writing=false read=true window=fem2d-model` for all 4096 units. The Commit's scrub writer waits for the read lease that the tool-overlay follow holds on the window's press slot.
+- After the Tick press settled, the follow advanced on maintenance turns (`follow unit … Progress`). Once the Commit's publication ran, maintenance stopped reaching it.
+- Live cleanup runs only in a turn's leftover budget: `plugin_step_live_cleanup` after `retirement_should_yield`. Every turn spent its budget re-polling the blocked publication unit, so the follow never finished, its read never dropped, and the Commit never admitted. That is a deadlock, and the stall ceiling turned it into the fault.
+- Without a click right after Enter, the follow finished on idle maintenance before the Commit arrived, so the race only showed in the smoke.
+- Fix: `OriginalPressSettlement::awaits_writer` (phase 3, no writer). When it holds and a follow exists, `settle_press` quotes the follow (`tool_overlay_retirement_demand`), funds it with `plugin_grant_funds`, and drives one `tool_overlay_retirement_step(cx, grant, false)`, the same step the maintenance ladder's `ToolOverlay` rung takes. The waiting publication thereby releases its own blocker.
+- Law: `a_press_commit_blocked_by_the_follow_read_drives_the_follow` in `🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧾️source-rejection-anchors-and-host-lane`.
+- Not changed: the typing settlement (`OriginalTypingSettlement`) has the same read-lease guard (`retained_read_pending`) and may need the same treatment. FEM's number inputs use the press path.
+- Also fixed in passing: the ticket's `native-fem-dev.sh` pinned a removed cached Vite (`.cache/b/d/m/j/420f…`) and now picks the newest cached Vite. Its `wasm` mode exits 0 on failure, so `wasm-retry.sh` reads the logged `rc=`. `RUST_MIN_STACK=128 MiB` is set against the repeated `STATUS_ACCESS_VIOLATION` / `STATUS_STACK_BUFFER_OVERRUN` rustc crashes under `-Z threads=0`.
+
+## Final Evidence (2026-11-24, wasm `e68c95d3…`, no temporary prints)
+
+- 2D, full `🧪️browser-smoke.mjs` rc=0: `Initial FEM 2D Converged · 36 / 512 · Residual 7.460e-9`, then after editing n1 X to 1.5 and clicking away, `Updated FEM 2D Converged · 49 / 512 · Residual 9.515e-9`, and the Live Load reaction is `Ty: 12000 N`.
+- 3D, headless, no interaction: Preparing analysis (24.6 s), Solving loads (37.5 s), results `Case: dead` (44.3 s), 0 faults.
 
 ## Changed Files
 
@@ -112,9 +143,21 @@ Fix: `WindowConfigOwnerRegistry::ensure_for_roster` pumps the partition birth of
 - `🧰️framework/…/🔌️plugin/🪟️window/🎚️config/🧭️owner-registry/🦀️.rs`: `ensure_for_roster`.
 - `🧰️framework/…/🔌️plugin/🧵️instance/🖼️render/📥️staging/🪟️projections/🦀️.rs`: `pending_effects` ensures roster partitions before preparation.
 - `🧰️framework/…/🔌️plugin/🪟️window/🎚️config/🎟️capture/🧪️tests/🦀️.rs`: law `roster_partitions_open_for_every_unaddressed_window`.
+- `🧰️framework/…/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🚚️handle-turn-drive/🟦️.ts`: `publishSpawnedJobTerminal` repaints a job's final frame after its completion turn.
+- FEM 2D `✏️editor/📌️panels/🔍️inspection/🦀️.rs` and its `🧪️tests/🔬️unit/🦀️.rs`: `control_row` names the inline control after its row label.
 - FEM 2D session (`🏗️model-build-job`, `🎼️eigen-stages`, `🔁️mounted-state-step`, `🧪️tests/🎼️eigen`, `🧪️tests/🔬️unit`) and FEM 3D `💼️mounted-state`: child operation from the host-bound operation and generation.
+- `🧰️framework/…/🔌️plugin/🧵️instance/🖼️render/📥️staging/🛠️tool-machine/🦀️.rs`: `settle_press` drives the tool follow when the Commit waits for its writer (fix C; a peer later folded it into `ToolSettlementUnit` with shortfall reporting).
+- `🧰️framework/…/🔌️plugin/🛠️tool-machine/🧵️settlement/🦀️.rs`: `OriginalPressSettlement::awaits_writer`.
+- `🧰️framework/…/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧾️source-rejection-anchors-and-host-lane/🦀️.rs`: law `a_press_commit_blocked_by_the_follow_read_drives_the_follow`.
+- Temporary `[DEBUG]` prints removed again from the 2D job bridge, cleanup turns, maintenance ladder, 3D session API/mounted job/results, TS turn drive/UI intake/validation graph and the scrub writer.
+- `☀️20/GET-DEV-FEM-2D-WORKING-END-TO-END/🧪️browser-smoke.mjs`: closes the Artifact panel only if it opened, then reopens it after the edit; the Results click moved off the new Actions overlay.
+- FEM 2D `✏️editor/📌️panels/📦️packages/🦀️rust/Cargo.toml`: dev-dependency `semio-plugin` with `artifact-app-testing`.
+- Ticket scripts: `a2d-inspection-test.sh` (now targets `editor_app`), `native-fem-dev.sh` (dynamic Vite, `RUST_MIN_STACK`), `wasm-retry.sh` (new), `law-test.sh` (new), `inspect-node-probe.mjs` (waits for the Demo combobox, `--click`, 120 s edit poll).
 
 ## Tests
+
+- Law `a_press_commit_blocked_by_the_follow_read_drives_the_follow` in `semio-plugin-tests-01` natively (`law-test.sh`): 1 passed.
+- FEM 2D inspection laws, including the `control_row` accessible name, in the editor crate's `editor_app` host (`a2d-inspection-test.sh`): 16 passed. The panels crate's own results unit tests could not compile, because its dev-dependencies lacked `semio-plugin`'s `artifact-app-testing` feature (`artifact_app_laws`). Added.
 
 - 2D session suite 21/21 and 3D numerical child 3/3 natively, after the child-operation fix.
 - `semio-plugin-window-config-original --lib`: 10 of 11 fail in the current tree, including the pre-existing capture law, with `native Window partition did not initialize`. Blocked by the peer value-protocol work.

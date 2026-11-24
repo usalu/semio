@@ -1,0 +1,4 @@
+[
+  {"op": "set", "scale": "50", "view": "plan", "id": "sleeve-r", "set": {"solid": {"kind": "extruded", "sweep": "v", "z0": -0.027, "z1": 0.022}}},
+  {"op": "copy", "scale": "200", "id": "hand-r", "from": "elevation", "to": ["front", "plan"], "solid": {"front": {"kind": "extruded", "sweep": "w", "z0": -0.232, "z1": -0.148}, "plan": {"kind": "extruded", "sweep": "w", "z0": -0.222, "z1": -0.148}}}
+]

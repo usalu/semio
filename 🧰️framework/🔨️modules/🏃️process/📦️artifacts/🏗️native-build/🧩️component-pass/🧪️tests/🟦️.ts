@@ -285,6 +285,23 @@ test("component jobs: workspaces of one wasm lane overlap up to the planned jobs
   expect(concurrent.spans[1]!.start).toBeLessThan(concurrent.spans[0]!.end);expect(concurrent.spans[2]!.start).toBeLessThan(concurrent.spans[0]!.end);
 }, 120_000);
 
+test("fleet component jobs: under raised local memory pressure passes start on fleet slots while a local reservation is out of reach, and with no free worker slot they wait for a local one", async () => {
+  const run = async (root: string, slots: number | null) => {
+    const cargo = stubCargo(root), passes = [stubWorkspace(root, "w0", ["c-0"], "release"), stubWorkspace(root, "w1", ["c-1"], "release"), stubWorkspace(root, "w2", ["c-2"], "release")], lines: string[] = [], asked: number[] = [];
+    await runStub(root, { version: 1, passes }, cargo, { log: line => lines.push(line), fleetJobs: async () => ({ jobs: 6, local: 2, remote: 4, reason: "fleet-all" as const }), componentJobs: async () => ({ jobs: 5, local: 1, remote: 4, reason: "jobs-all" as const }), fleetSlots: async () => { asked.push(Date.now()); return slots; }, localJobs: { maximum: 2, floorMegabytes: 4000, peakMegabytes: () => 3000, sample: async () => ({ availableMegabytes: 6000, ownedMegabytes: 0, pressure: "warn" }) } });
+    const calls = readFileSync(cargo.calls, "utf8").trim().split("\n").map((line) => JSON.parse(line));
+    return { lines, asked, spans: passes.map(pass => ({ start: calls.find((row) => row.at && row.manifest === pass.manifest).at as number, end: calls.find((row) => row.end && row.manifest === pass.manifest).end as number })) };
+  };
+  const open = await run(mkdtempSync(join(artifacts, "fj3-")), 3);
+  expect(open.spans[1]!.start).toBeLessThan(open.spans[0]!.end);expect(open.spans[2]!.start).toBeLessThan(open.spans[0]!.end);
+  expect(open.lines.filter(line => line.includes("starts on a fleet slot beside")).length).toBe(2);
+  expect(open.lines.some(line => line.includes("component build: 2 local slot(s) and up to") && line.includes("fleet slot(s)"))).toBe(true);
+  expect(open.asked.length).toBeGreaterThan(1);
+  const none = await run(mkdtempSync(join(artifacts, "fj0-")), null);
+  expect(none.spans[1]!.start).toBeGreaterThanOrEqual(none.spans[0]!.end);
+  expect(none.lines.some(line => /waits for a local slot: it needs 3000 MB/.test(line) && line.includes("wartet auf einen lokalen Platz"))).toBe(true);
+}, 180_000);
+
 test("local component jobs: without any fleet two finals overlap with real reservations while a third waits for memory, and the memory is re-read before each start", async () => {
   const root = mkdtempSync(join(artifacts, "lj-")), cargo = stubCargo(root), passes = [stubWorkspace(root, "w0", ["c-0"], "release"), stubWorkspace(root, "w1", ["c-1"], "release"), stubWorkspace(root, "w2", ["c-2"], "release")];
   const peaks: Record<string, number> = { [passes[0]!.id]: 3300, [passes[1]!.id]: 1200, [passes[2]!.id]: 6500 }, lines: string[] = [], samples: number[] = [];

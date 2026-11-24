@@ -9643,7 +9643,7 @@
        "role": "body",
        "z": 3.9,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.45,
        "region": "hoodie",
        "material": "cotton-sweatshirt",
        "solid": {
@@ -14007,7 +14007,7 @@
        "role": "body",
        "z": 3.9,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.42,
        "region": "hoodie",
        "material": "cotton-sweatshirt",
        "solid": {
@@ -36369,7 +36369,7 @@
        "role": "detail",
        "z": 6,
        "filled": true,
-       "tone": 0.25,
+       "tone": 0.2,
        "region": "face-skin",
        "material": "skin",
        "solid": {
@@ -36423,7 +36423,7 @@
        "role": "detail",
        "z": 6,
        "filled": true,
-       "tone": 0.25,
+       "tone": 0.75,
        "region": "hair",
        "material": "hair",
        "solid": {

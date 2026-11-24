@@ -5,7 +5,7 @@ Feature: Every staffage is covered in the side elevation, the front elevation an
   The frame is left-handed: x ahead, y up, z left. The side elevation is seen from the asset's right, the front from ahead (paper x = z), the plan from above (paper up = z).
   All views of one instant come from one evaluated state. Scale maps metres to paper millimetres only: mm = m · 1000 / denominator.
 
-  THE REFERENCES are third-party: svgelements recomputes the bounds of exported SVG paths, scipy the Hausdorff distance of derived-view detection, shapely the gap of the printability vector.
+  THE REFERENCES are third-party: svgelements recomputes the bounds of exported SVG paths and of hatched areas, scipy the Hausdorff distance of derived-view detection, shapely the gap of the printability vector, the distance of an anchor to drawn shapes and the extents of bone shapes.
 
   Scenario: The universe of cells follows the declarations
     Given an asset with presets, valid ranges and alternatives
@@ -77,3 +77,43 @@ Feature: Every staffage is covered in the side elevation, the front elevation an
     Given a front that is a copy, mirror, 90 degree rotation or scaled copy of the elevation
     When derived-view detection runs
     Then it is flagged unless it is allowlisted with a reason, and handcrafted outlines are not
+
+  Scenario: The paper box reads fills and outline runs
+    Given a view whose outermost part is drawn unfilled
+    When the paper box of the view is measured
+    Then it spans the fills and the outline runs of the shapes and equals the dimensions on the paper
+    And an independent SVG parser finds the same box
+
+  Scenario: An anchor may lie on a descendant bone
+    Given a contact bound to the frame that carries a wheel drawn on its own bone below it
+    When the anchor landmarks are tested
+    Then the anchor passes on the shapes of its bone and of its descendant bones
+    And an anchor on an ancestor, on another branch or in the air is a finding with its distance
+
+  Scenario: The hard per-bone tier holds for a shape and its twin
+    Given a bone whose single shapes in two views carry the same id, and one whose single shapes carry different ids
+    When their extents along the shared axis disagree
+    Then the twin is a sync-bone failure and the two different parts are reported as group-drift
+
+  Scenario: A strong member diagram is never colour-only
+    Given the bending-moment, shear and axial diagrams of a loaded figure
+    When they are drawn with patterns on
+    Then the area and the line-of-sight ring of a member above 15 % of the ordinate maximum are hatched by sign, diagonal for negative and dots for positive
+    And an unhatched thermal, forces or moments scene passes only when its legend states the unhatched share in English and German
+
+  Scenario: The generator survives a long run
+    Given a run folder with one record per finished asset
+    When the run is cut and started again
+    Then the finished assets are skipped, an asset whose document changed is run again and shards of separate invocations merge
+    And an asset that crashed or timed out fails its cells by name with the message, never as cell-missing
+
+  Scenario: The authors' gate checks one asset in seconds
+    Given one asset and the check functions of the matrix
+    When it is scanned
+    Then every finding names its code, pose, scale, views and, where it has one, bone, anchor and delta
+    And a row counts the findings per family, synchrony at rest and in other poses, and anchors by the place they lie
+
+  Scenario: A truthful band copy is allowlisted with its reason
+    Given a view that is the same drawing in two bands because the part is prismatic or plain
+    When the allowlist names the asset, the view and those bands with a physical reason in English and German
+    Then a band copy between two of the named bands is no finding, every other band and view still is, and an entry without both texts allows nothing

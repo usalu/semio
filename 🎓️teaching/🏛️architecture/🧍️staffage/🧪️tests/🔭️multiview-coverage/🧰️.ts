@@ -1,12 +1,16 @@
 /** 🔭️ The multiview coverage engine: the matrix asset × scale (preset, valid-range band edges, declared alternatives) × viewpoint (elevation, front, plan) × mode (seven) × pose, clip instant and transition.
  *
- * Every cell is `ok` (rendered and checked), `unavailable` (the asset declares the scale unavailable with a complete reason, limiting feature and alternatives) or `fail` with named checks.
- * The universe of cells is enumerated from the declarations alone ({@link universe}); a cell that no runner produced is a `fail` named `cell-missing`, so nothing is ever skipped silently.
+ * Every cell is `ok` (rendered and checked), `unavailable` (the asset declares the scale unavailable with a complete reason, limiting feature and alternatives), `range-end`, `group-drift` (reported tiers) or `fail` with named checks.
+ * The universe of cells is enumerated from the declarations alone ({@link universe}); a cell that no runner produced is a `fail` named `cell-missing` and the cells of an asset whose run crashed or timed out fail under that name ({@link failedAsset}), so nothing is ever skipped silently.
  * Declarations, geometry of every pose, clip instant and transition, and the cross-view synchrony of every instant are checked exhaustively; the seven modes are rendered for every pose
  * and for the clip instants of {@link clipInstants} (keyframes, mid-transitions, extremes of the extents, start, end and at least eight uniform intermediates).
  *
+ * The check functions are exported one by one ({@link geometryFindings}, {@link paperFindings}, {@link cueFinding}, {@link derivedFindings}) so that the authors' gate checks one asset with exactly the checks of the matrix.
+ *
  * @see ./🥒️.feature — the scenarios
  * @see ./🟦️.ts — the cases
+ * @see ./📊️matrix.ts — the generator: one process and one record per asset, resume, merge of shards
+ * @see ./🔎️scan.ts — the authors' gate: one asset in seconds
  * @see ../../🧫️fixtures/🔭️multiview-coverage/🔣️.json — the vectors
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -126,6 +130,22 @@ export function sceneBox(scene: DrawingScene, ids?: ReadonlySet<string>): Extent
     }
   return xs.length === 0 ? undefined : { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
 }
+
+/** 🧻️ The ids of the path items that draw the non-ground shapes of a view: the fill of a filled closed shape (`shape:<id>`) and every visible outline run of a shape (`outline:<id>:<n>`), so a part drawn unfilled is measured too. */
+export function paperIds(scene: DrawingScene, shapes: readonly EvaluatedShape[]): Set<string> {
+  const wanted = new Set(shapes.filter((evaluated) => evaluated.shape.role !== "ground").map((evaluated) => evaluated.shape.id));
+  const ids = new Set<string>();
+  for (const layer of scene.layers)
+    for (const item of layer.items) {
+      if (item.kind !== "path") continue;
+      const shape = item.id.startsWith("shape:") ? item.id.slice(6) : item.id.startsWith("outline:") ? item.id.slice(8, item.id.lastIndexOf(":")) : undefined;
+      if (shape !== undefined && wanted.has(shape)) ids.add(item.id);
+    }
+  return ids;
+}
+
+/** 📃️ The paper box in millimetres of the shapes of a view: fills and outline runs ({@link paperIds}), or undefined when none is drawn. */
+export const paperBox = (scene: DrawingScene, shapes: readonly EvaluatedShape[]): Extent | undefined => sceneBox(scene, paperIds(scene, shapes));
 
 /** 🔑️ The key of a cell. */
 export const cellKey = (asset: string, scale: string, view: PlanarViewpoint, mode: View): string => `${asset}|${scale}|${view}|${mode}`;
@@ -295,30 +315,32 @@ const finite = (extent: Extent): boolean => Object.values(extent).every(Number.i
 
 const messageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error)).split("\n")[0]!.slice(0, 220);
 
-function checkGeometry(asset: Asset, subject: Subject, state: EvaluatedState, collector: Collector): void {
+/** 🧷️ One finding of the geometry of one evaluated state: the views it concerns, the check, the message and, where measured, the delta with its pair, the bone or the anchor; `tier` is `reported` for the group-drift tier of D41. */
+export type GeometryFinding = { readonly views: readonly PlanarViewpoint[]; readonly check: string; readonly tier: "hard" | "reported"; readonly message: string; readonly delta?: { readonly deltaMm: number; readonly pair: string }; readonly bone?: string; readonly anchor?: string; readonly anchorKind?: string };
+
+/** 🧲️ The geometry findings of one evaluated state: empty or non-finite views, the synchrony of the extents of the three views, the per-bone synchrony ({@link boneSync}), the anchor landmarks ({@link anchorLandmarks}) and, for the default pose, the extents against the dimensions. */
+export function geometryFindings(asset: Asset, state: EvaluatedState, isDefault: boolean): GeometryFinding[] {
   const tolerance = toleranceM(asset);
+  const findings: GeometryFinding[] = [];
   const extents = Object.fromEntries(VIEWPOINT_LIST.map((view) => [view, extentOf(state.shapes[view])])) as Record<PlanarViewpoint, Extent | undefined>;
   for (const view of VIEWPOINT_LIST) {
     const extent = extents[view];
-    if (extent === undefined) collector.fail([view], MODE_LIST, `${view}-empty`, subject.id, `${view} evaluates to no geometry`);
-    else if (!finite(extent)) collector.fail([view], MODE_LIST, `${view}-bounds`, subject.id, `${view} has non-finite bounds ${JSON.stringify(extent)}`);
+    if (extent === undefined) findings.push({ views: [view], check: `${view}-empty`, tier: "hard", message: `${view} evaluates to no geometry` });
+    else if (!finite(extent)) findings.push({ views: [view], check: `${view}-bounds`, tier: "hard", message: `${view} has non-finite bounds ${JSON.stringify(extent)}` });
   }
   const { elevation: e, front: f, plan: p } = extents;
   const agree = (check: string, views: readonly PlanarViewpoint[], label: string, a: readonly [number, number], b: readonly [number, number]): void => {
     const delta = Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]));
-    if (!(delta <= tolerance)) collector.fail(views, MODE_LIST, check, subject.id, `${label} differ: [${a[0].toFixed(3)}, ${a[1].toFixed(3)}] vs [${b[0].toFixed(3)}, ${b[1].toFixed(3)}] m (tolerance ${tolerance.toFixed(3)})`, { deltaMm: delta * 1000, pair: views.join("/") });
+    if (!(delta <= tolerance)) findings.push({ views, check, tier: "hard", message: `${label} differ: [${a[0].toFixed(3)}, ${a[1].toFixed(3)}] vs [${b[0].toFixed(3)}, ${b[1].toFixed(3)}] m (tolerance ${tolerance.toFixed(3)})`, delta: { deltaMm: delta * 1000, pair: views.join("/") } });
   };
   if (e && p) agree("sync-forward", ["elevation", "plan"], "elevation x and plan x", [e.minX, e.maxX], [p.minX, p.maxX]);
   if (e && f) agree("sync-height", ["elevation", "front"], "elevation y and front y", [e.minY, e.maxY], [f.minY, f.maxY]);
   if (f && p) agree("sync-lateral", ["front", "plan"], "front x and plan y", [f.minX, f.maxX], [p.minY, p.maxY]);
-  for (const finding of boneSync(state, tolerance)) {
-    const [a, b] = finding.pair.split("/") as [PlanarViewpoint, PlanarViewpoint];
-    collector.fail([a, b], MODE_LIST, finding.check, subject.id, finding.message, { deltaMm: finding.deltaMm, pair: `${finding.pair} ${finding.bone}` });
-  }
-  for (const finding of anchorLandmarks(state, tolerance)) collector.fail([finding.view], MODE_LIST, "anchor-landmark", subject.id, finding.message, { deltaMm: finding.deltaMm, pair: `${finding.view} ${finding.anchor}` });
-  if (!subject.isDefault) return;
+  for (const finding of boneSync(state, tolerance)) findings.push({ views: finding.pair.split("/") as PlanarViewpoint[], check: finding.check, tier: finding.tier === "bone" ? "hard" : "reported", message: finding.message, delta: { deltaMm: finding.deltaMm, pair: `${finding.pair} ${finding.bone}` }, bone: finding.bone });
+  for (const finding of anchorLandmarks(state, tolerance)) findings.push({ views: [finding.view], check: "anchor-landmark", tier: "hard", message: finding.message, delta: { deltaMm: finding.deltaMm, pair: `${finding.view} ${finding.anchor}` }, bone: finding.bone, anchor: finding.anchor, anchorKind: finding.kind });
+  if (!isDefault) return findings;
   const size = (check: string, view: PlanarViewpoint, label: string, measured: number, nominal: number): void => {
-    if (!(Math.abs(measured - nominal) <= d18(nominal))) collector.fail([view], MODE_LIST, check, subject.id, `${label} is ${measured.toFixed(3)} m but the dimensions say ${nominal.toFixed(3)} m`, { deltaMm: Math.abs(measured - nominal) * 1000, pair: `${view} vs dimensions` });
+    if (!(Math.abs(measured - nominal) <= d18(nominal))) findings.push({ views: [view], check, tier: "hard", message: `${label} is ${measured.toFixed(3)} m but the dimensions say ${nominal.toFixed(3)} m`, delta: { deltaMm: Math.abs(measured - nominal) * 1000, pair: `${view} vs dimensions` } });
   };
   const d = asset.dimensions;
   if (e) {
@@ -333,6 +355,11 @@ function checkGeometry(asset: Asset, subject: Subject, state: EvaluatedState, co
     size("dimension-plan-length", "plan", "plan x extent (widthM)", p.maxX - p.minX, d.widthM);
     size("dimension-plan-width", "plan", "plan lateral extent (depthM)", p.maxY - p.minY, d.depthM);
   }
+  return findings;
+}
+
+function checkGeometry(asset: Asset, subject: Subject, state: EvaluatedState, collector: Collector): void {
+  for (const finding of geometryFindings(asset, state, subject.isDefault)) collector.fail(finding.views, MODE_LIST, finding.check, subject.id, finding.message, finding.delta);
 }
 
 /** 🕳️ Why a scene draws none of the shapes of a view: per shape its role, pen and filled flag, then the reason class (`zero-pen`, `degenerate`, `occluded-or-unexplained`). */
@@ -352,6 +379,22 @@ export function blankReason(state: EvaluatedState, view: PlanarViewpoint, mode: 
   return `${mode}: ${lines.length} shapes: ${lines.slice(0, 6).join("; ")}`;
 }
 
+/** 📰️ The paper findings of the default pose of one view: the box of the drawn fills and outline runs ({@link paperBox}) against the dimensions at the scale of the scene, within D18. */
+export function paperFindings(asset: Asset, view: PlanarViewpoint, scene: DrawingScene, shapes: readonly EvaluatedShape[]): { readonly check: "paper-width" | "paper-height"; readonly message: string; readonly delta: { readonly deltaMm: number; readonly pair: string } }[] {
+  const box = paperBox(scene, shapes);
+  if (box === undefined) return [];
+  const k = scene.metadata.mmPerMetre;
+  const d = asset.dimensions;
+  const [w, h] = view === "elevation" ? [d.widthM, d.heightM] : view === "front" ? [d.depthM, d.heightM] : [d.widthM, d.depthM];
+  const gotW = box.maxX - box.minX;
+  const gotH = box.maxY - box.minY;
+  const pair = `${view} paper vs dimensions`;
+  return [
+    ...(Math.abs(gotW - w * k) > d18(w) * k ? [{ check: "paper-width" as const, message: `drawn width ${gotW.toFixed(2)} mm but ${w}·${k.toFixed(3)} = ${(w * k).toFixed(2)} mm`, delta: { deltaMm: (Math.abs(gotW - w * k) / k) * 1000, pair } }] : []),
+    ...(Math.abs(gotH - h * k) > d18(h) * k ? [{ check: "paper-height" as const, message: `drawn height ${gotH.toFixed(2)} mm but ${h}·${k.toFixed(3)} = ${(h * k).toFixed(2)} mm`, delta: { deltaMm: (Math.abs(gotH - h * k) / k) * 1000, pair } }] : []),
+  ];
+}
+
 function checkScene(asset: Asset, subject: Subject, state: EvaluatedState, view: PlanarViewpoint, mode: View, scene: DrawingScene, requested: number, collector: Collector): void {
   const fail = (check: string, message: string): void => collector.fail([view], [mode], check, subject.id, message);
   const m = scene.metadata;
@@ -367,15 +410,7 @@ function checkScene(asset: Asset, subject: Subject, state: EvaluatedState, view:
   if (box === undefined) return fail("blank", "the scene draws no path");
   if (!finite(box)) return fail("scene-bounds", "the scene has non-finite coordinates");
   if (named === undefined && mode !== "forces" && mode !== "moments") fail("blank-shapes", `no ${view} shape of the representation is drawn: ${blankReason(state, view, mode)}`);
-  if (named !== undefined && subject.isDefault) {
-    const k = m.mmPerMetre;
-    const d = asset.dimensions;
-    const [w, h] = view === "elevation" ? [d.widthM, d.heightM] : view === "front" ? [d.depthM, d.heightM] : [d.widthM, d.depthM];
-    const gotW = named.maxX - named.minX;
-    const gotH = named.maxY - named.minY;
-    if (Math.abs(gotW - w * k) > d18(w) * k) collector.fail([view], [mode], "paper-width", subject.id, `drawn width ${gotW.toFixed(2)} mm but ${w}·${k.toFixed(3)} = ${(w * k).toFixed(2)} mm`, { deltaMm: (Math.abs(gotW - w * k) / k) * 1000, pair: `${view} paper vs dimensions` });
-    if (Math.abs(gotH - h * k) > d18(h) * k) collector.fail([view], [mode], "paper-height", subject.id, `drawn height ${gotH.toFixed(2)} mm but ${h}·${k.toFixed(3)} = ${(h * k).toFixed(2)} mm`, { deltaMm: (Math.abs(gotH - h * k) / k) * 1000, pair: `${view} paper vs dimensions` });
-  }
+  if (subject.isDefault) for (const finding of paperFindings(asset, view, scene, state.shapes[view])) collector.fail([view], [mode], finding.check, subject.id, finding.message, finding.delta);
 }
 
 export function drawOptions(mode: View, denominator: number, textless = false, language: Language = "en"): DrawOptions {
@@ -385,7 +420,20 @@ export function drawOptions(mode: View, denominator: number, textless = false, l
 
 const shapeGeometry = (scene: DrawingScene): string => JSON.stringify(scene.layers.flatMap((layer) => layer.items.flatMap((item) => (item.kind === "path" && item.id.startsWith("shape:") ? [[item.id, item.commands]] : []))));
 
-const hasCue = (scene: DrawingScene): boolean => scene.layers.some((layer) => layer.items.some((item) => item.kind === "path" && (item.fill?.pattern !== undefined || (item.stroke?.dashMm?.length ?? 0) > 0)));
+/** 🦓️ Whether a scene carries a colour-independent cue: a hatch pattern or a dashed stroke. */
+export const hasCue = (scene: DrawingScene): boolean => scene.layers.some((layer) => layer.items.some((item) => item.kind === "path" && (item.fill?.pattern !== undefined || (item.stroke?.dashMm?.length ?? 0) > 0)));
+
+/** 🚦️ The analysis modes and the share of the range (per cent) below which each leaves a value unhatched: within 35 % of the centre in the thermal mode, up to 15 % of its side of the range in the forces and moments modes. */
+export const UNHATCHED_PERCENT: Readonly<Partial<Record<View, number>>> = { thermal: 35, forces: 15, moments: 15 };
+
+/** 🪧️ The cue finding of an analysis scene, one rule for the three analysis modes: a scene without hatch pattern and without dashed stroke is accepted only when its legend states, in English and German, the share below which a value is drawn unhatched, so the unhatched state is itself a reading. */
+export function cueFinding(mode: View, scene: DrawingScene): { readonly check: "analysis-cue-legend"; readonly message: string } | undefined {
+  const percent = UNHATCHED_PERCENT[mode];
+  if (percent === undefined || hasCue(scene)) return undefined;
+  const legend = JSON.stringify(scene.legends.map((l) => [l.convention, l.interpretation]));
+  if (new RegExp(`${percent}\\s?%`, "u").test(legend) && /unhatched|without hatch/iu.test(legend) && /schraffiert|ohne Schraffur/iu.test(legend)) return undefined;
+  return { check: "analysis-cue-legend", message: `the ${mode} scene has neither a hatch pattern nor a dashed stroke under default options and its legend does not state that a value within ${percent} % is drawn unhatched` };
+}
 
 function renderSubject(asset: Asset, subject: Subject, source: DrawingSource, collector: Collector, symbol?: SymbolRepresentation): void {
   let geometryDone = false;
@@ -414,11 +462,8 @@ function renderSubject(asset: Asset, subject: Subject, source: DrawingSource, co
         if (drawing.state !== multi.state) collector.fail([view], [mode], "state-identity", subject.id, "the view was projected from another evaluated state");
         if (symbol !== undefined && drawing.fidelity === "conventional-symbol" && !CONVENTIONAL_NOTE.test(`${symbol.dimensionalNote.en} ${symbol.dimensionalNote.de}`)) collector.fail([view], [mode], "symbol-conventional-note", subject.id, "a conventional symbol does not say that it is a conventional sign");
         checkScene(asset, subject, drawing.state, view, mode, drawing.scene, source.denominator, collector);
-        if ((mode === "thermal" || mode === "forces" || mode === "moments") && !hasCue(drawing.scene)) {
-          const legend = JSON.stringify(drawing.scene.legends.map((l) => [l.convention, l.interpretation]));
-          if (mode !== "thermal") collector.fail([view], [mode], "analysis-cue", subject.id, `the ${mode} scene has neither a hatch pattern nor a dashed stroke under default options`);
-          else if (!(/35\s?%/u.test(legend) && /unhatched|without hatch/iu.test(legend) && /schraffiert|ohne Schraffur/iu.test(legend))) collector.fail([view], [mode], "analysis-cue-legend", subject.id, "the thermal scene is unhatched and its legend does not state that a value within 35 % of the centre is drawn unhatched");
-        }
+        const cue = cueFinding(mode, drawing.scene);
+        if (cue !== undefined) collector.fail([view], [mode], cue.check, subject.id, cue.message);
         const key = `${view}|${mode}`;
         if (language === "en") english.set(key, shapeGeometry(drawing.scene));
         else if (english.get(key) !== undefined && english.get(key) !== shapeGeometry(drawing.scene)) collector.fail([view], [mode], "language-geometry", subject.id, `the ${language} drawing has other shape geometry than the English one`);
@@ -497,23 +542,41 @@ function runAuthored(asset: Asset, entry: ScaleEntry): Collector {
   return collector;
 }
 
-/** 📷️ One allowlisted symmetric view: the asset, the viewpoint and the physical reason. */
-export type DerivedAllowance = { readonly asset: string; readonly view: PlanarViewpoint; readonly reason: string };
+/** 📷️ One allowlisted symmetric view: the asset, the viewpoint and the physical reason in English and German (a body of revolution has the same front and side by nature). */
+export type DerivedAllowance = { readonly asset: string; readonly view: PlanarViewpoint; readonly reason: { readonly en: string; readonly de: string } };
 
-/** 📜️ The allowlist of genuinely symmetric bodies, read from the fixture of the vectors. */
-export function derivedAllowlist(): readonly DerivedAllowance[] {
+/** 🧱️ One allowlisted band copy: the asset, the viewpoint, the scale keys (two or more different ones, in any order) whose drawing of that view is truthfully the same, so a copy between any two of them is allowed, and the physical reason in English and German (a prismatic or plain part, such as a rendered wall face, has nothing a finer band could add). */
+export type BandCopyAllowance = { readonly asset: string; readonly view: PlanarViewpoint; readonly bands: readonly string[]; readonly reason: { readonly en: string; readonly de: string } };
+
+/** 📜️ The two allowlists of the derived-view checks. */
+export type Allowlists = { readonly derived: readonly DerivedAllowance[]; readonly bandCopy: readonly BandCopyAllowance[] };
+
+/** 🗝️ The allowlists read from the fixture of the vectors: `derivedViewAllowlist` (genuinely symmetric bodies) and `bandCopyAllowlist` (views that are truthfully the same drawing in two bands). */
+export function allowlists(): Allowlists {
   const file = join(STAFFAGE_ROOT, "🧫️fixtures", "🔭️multiview-coverage", "🔣️.json");
-  return existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as { derivedViewAllowlist: DerivedAllowance[] }).derivedViewAllowlist : [];
+  if (!existsSync(file)) return { derived: [], bandCopy: [] };
+  const document = JSON.parse(readFileSync(file, "utf8")) as { derivedViewAllowlist?: DerivedAllowance[]; bandCopyAllowlist?: BandCopyAllowance[] };
+  return { derived: document.derivedViewAllowlist ?? [], bandCopy: document.bandCopyAllowlist ?? [] };
+}
+
+/** 🧬️ The derived-view findings of the default pose of one representation (or symbol) at a requested denominator: a front or plan that equals the same view of another authored band (`derived-view-band-copy`) or another view of its own band (`derived-view-in-band`), unless an allowlist names the asset and view (for a band copy also the two bands) with a physical reason in English and German; an entry without both texts allows nothing. */
+export function derivedFindings(asset: Asset, representation: string, requested: number, symbol?: string, allow: Allowlists = allowlists()): { readonly view: PlanarViewpoint; readonly check: "derived-view-band-copy" | "derived-view-in-band"; readonly against: string; readonly message: string }[] {
+  const select = (denominator: number): RepresentationSelector => (symbol === undefined ? scaleSelector(denominator) : { kind: "symbol", symbol });
+  const shapesAt = (denominator: number) => evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, select(denominator)).shapes;
+  const others = symbol !== undefined ? {} : Object.fromEntries(Object.keys(asset.representations).filter((key) => key !== representation && authoredOf(asset, key) !== undefined).map((key) => [`1:${key}`, shapesAt(Number(key))]));
+  const reasoned = (allowance: DerivedAllowance | BandCopyAllowance): boolean => allowance.asset === asset.id && filled(allowance.reason);
+  const symmetric = allow.derived.filter(reasoned);
+  const copies = allow.bandCopy.filter(reasoned);
+  const allowed = (flag: { readonly view: PlanarViewpoint; readonly against: string }): boolean =>
+    flag.against.startsWith("1:") ? copies.some((allowance) => allowance.view === flag.view && representation !== flag.against.slice(2).split(" ")[0] && allowance.bands.includes(representation) && allowance.bands.includes(flag.against.slice(2).split(" ")[0]!)) : symmetric.some((allowance) => allowance.view === flag.view);
+  return derivedFlags(shapesAt(requested), others)
+    .filter((flag) => !allowed(flag))
+    .map((flag) => ({ view: flag.view, check: flag.against.startsWith("1:") ? ("derived-view-band-copy" as const) : ("derived-view-in-band" as const), against: flag.against, message: `the ${flag.view} view equals the ${flag.against} under ${flag.transform} (normalised Hausdorff ${flag.distance})` }));
 }
 
 function checkDerived(asset: Asset, entry: ScaleEntry, collector: Collector, symbol?: string): void {
-  const select = (denominator: number): RepresentationSelector => (symbol === undefined ? scaleSelector(denominator) : { kind: "symbol", symbol });
   try {
-    const shapesAt = (denominator: number) => evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, select(denominator)).shapes;
-    const others = symbol !== undefined ? {} : Object.fromEntries(Object.keys(asset.representations).filter((key) => key !== entry.representation && authoredOf(asset, key) !== undefined).map((key) => [`1:${key}`, shapesAt(Number(key))]));
-    const allowed = derivedAllowlist().filter((allowance) => allowance.asset === asset.id);
-    for (const flag of derivedFlags(shapesAt(entry.requested!), others))
-      if (!allowed.some((allowance) => allowance.view === flag.view)) collector.fail([flag.view], MODE_LIST, flag.against.startsWith("1:") ? "derived-view-band-copy" : "derived-view-in-band", "default pose", `the ${flag.view} view equals the ${flag.against} under ${flag.transform} (normalised Hausdorff ${flag.distance})`);
+    for (const finding of derivedFindings(asset, entry.representation, entry.requested!, symbol)) collector.fail([finding.view], MODE_LIST, finding.check, "default pose", finding.message);
     collector.checked(VIEWPOINT_LIST);
   } catch (error) {
     collector.fail(VIEWPOINT_LIST, MODE_LIST, "derived-view", "default pose", messageOf(error));
@@ -559,12 +622,14 @@ function runSymbol(asset: Asset, entry: ScaleEntry, symbolId: string): Collector
   return collector;
 }
 
-/** 🧮️ Runs every cell of one asset: every scale entry with its declarations, geometry, instants, renders and alternatives. */
-export function runAsset(asset: Asset, catalogById: ReadonlyMap<string, Asset>): Cell[] {
+/** 🧮️ Runs every cell of one asset: every scale entry with its declarations, geometry, instants, renders and alternatives. `onEntry` reports the progress before each scale entry (its index, the count and its scale) and stops the run with the error it throws, which is how a caller cancels. */
+export function runAsset(asset: Asset, catalogById: ReadonlyMap<string, Asset>, onEntry?: (index: number, count: number, scale: string) => void): Cell[] {
   const cells: Cell[] = [];
   const byScale = new Map<string, Cell[]>();
   const ordered = scaleEntries(asset);
-  for (const entry of [...ordered.filter((candidate) => candidate.kind !== "alternative"), ...ordered.filter((candidate) => candidate.kind === "alternative")]) {
+  const sequence = [...ordered.filter((candidate) => candidate.kind !== "alternative"), ...ordered.filter((candidate) => candidate.kind === "alternative")];
+  for (const [position, entry] of sequence.entries()) {
+    onEntry?.(position, sequence.length, entry.scale);
     const decision = asset.representations[entry.representation as keyof Asset["representations"]];
     let produced: Cell[];
     if (entry.kind === "alternative") {
@@ -606,6 +671,11 @@ function okAll(asset: Asset, entry: ScaleEntry): Collector {
   const collector = collectorOf(asset, entry);
   collector.checked(VIEWPOINT_LIST);
   return collector;
+}
+
+/** 🧯️ The cells of an asset whose run did not end: every cell of its universe as a failure named `code` (`asset-crashed`, `asset-timeout`) that carries the message, so a crash or a timeout inside one asset is never a silent `cell-missing`. */
+export function failedAsset(asset: Asset, code: string, message: string): Cell[] {
+  return scaleEntries(asset).flatMap((entry) => VIEWPOINT_LIST.flatMap((view) => MODE_LIST.map((mode): Cell => ({ asset: asset.id, category: asset.category, scale: entry.scale, scaleKind: entry.kind, requested: entry.requested, view, mode, status: "fail", checked: 0, failures: { [code]: { count: 1, first: [{ subject: asset.id, message }] } } }))));
 }
 
 /** 🚨️ The result of the matrix: every universe cell exactly once, missing ones as `cell-missing` failures. */

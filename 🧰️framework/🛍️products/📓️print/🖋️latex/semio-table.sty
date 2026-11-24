@@ -576,28 +576,31 @@
 \newcommand{\semio@abbreviations@table@header@long@repeat}{\semio@termlist@table@header@long@repeat{abbreviations}}
 %endregion LongTableHeader
 
-% 🤝️ A long table that opens on a pending frame starts on that frame's bottom edge:
-% no space before it, and the shared edge keeps the neighbour's accent colour.
-\newcommand{\semio@table@long@top@color}{semio-chrome-border-normal}
+% 🤝️ A long table that opens on a pending frame starts on that frame's bottom edge.
 \newcommand{\semio@table@long@junction@prepare}{%
   \ifsemio@frame@interlocked
     \setlength{\LTpre}{0pt}%
-    \xdef\semio@table@long@top@color{\semio@frame@top@color}%
   \else
     \setlength{\LTpre}{\semio@spacing@table@outer}%
-    \xdef\semio@table@long@top@color{\semio@frame@edge@neutral}%
   \fi
   \global\semio@frame@interlockedfalse
 }
-\newcommand{\semio@table@long@shared@edge}{%
-  \ifx\semio@table@long@top@color\semio@frame@edge@neutral\else
-    \hbox to \linewidth{%
-      \smash{\raisebox{\dimexpr\ht\LT@head+\dp\LT@head-\semio@stroke@hairline\relax}{%
-        \textcolor{\semio@table@long@top@color}{\rule{\linewidth}{\semio@stroke@hairline}}}}%
-      \hss
+
+% 📄️ Where a long table breaks across pages its last row on the page stays open:
+% the rule below that row is taken back, so the row's cell runs down to the
+% footer rule, which closes it together with the column's side borders. The
+% table's real last row keeps its rule (the last foot is empty).
+\newcommand{\semio@table@long@break@foot}{%
+  \noalign{%
+    \nointerlineskip
+    \vbox to\z@{%
+      \vss
+      \hbox{%
+        \hskip\arrayrulewidth
+        \textcolor{semio-chrome-canvas}{\rule{\dimexpr\linewidth-2\arrayrulewidth\relax}{\arrayrulewidth}}%
+      }%
     }%
-    \xdef\semio@table@long@top@color{\semio@frame@edge@neutral}%
-  \fi
+  }%
 }
 
 \newcommand{\semio@table@long@render}[5]{%
@@ -633,11 +636,14 @@
   \semio@table@long@title@chrome@row@pageparts{#5}%
   #3%
   \endhead
-  \noalign{\vskip\z@\semio@table@long@shared@edge}% head->body transition: no negative pull (a -\semio@table@body@height skip here pulled the first body row up over the header row, hiding it)
+  \semio@table@long@break@foot
+  \endfoot
+  \endlastfoot
+  \noalign{\vskip\z@}% head->body transition: no negative pull (a -\semio@table@body@height skip here pulled the first body row up over the header row, hiding it)
   #4%
   \end{longtable}%
   \semio@table@long@parts@record
-  \semio@frame@close{\semio@spacing@table@outer}{\semio@frame@edge@neutral}%
+  \semio@frame@close{\semio@spacing@table@outer}%
   \endgroup
   \global\semio@table@long@mode=0\relax
   \global\semio@table@row@startedfalse
@@ -1350,7 +1356,7 @@
   \global\semio@table@headerfilltrue
   \gdef\semio@table@long@column@count{8}%
   \semio@table@long@rules@gset@project
-  \semio@frame@open{0pt}{\semio@frame@edge@neutral}%
+  \semio@frame@open{0pt}%
   \begingroup
   \ifsemio@frame@interlocked\parskip\z@\else\addvspace{\semio@spacing@table@outer}\fi
   \SemioSans
@@ -1371,7 +1377,7 @@
   #3%
   \end{tabular}%
   \par
-  \semio@frame@close{\semio@spacing@table@outer}{\semio@frame@edge@neutral}%
+  \semio@frame@close{\semio@spacing@table@outer}%
   \endgroup
   \global\semio@table@long@mode=0\relax
   \global\semio@table@row@startedfalse

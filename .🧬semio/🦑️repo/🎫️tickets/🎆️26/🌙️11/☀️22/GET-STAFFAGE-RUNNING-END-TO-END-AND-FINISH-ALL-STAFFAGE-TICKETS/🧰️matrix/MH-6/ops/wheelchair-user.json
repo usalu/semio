@@ -1,0 +1,7 @@
+[
+  {"op": "anchor-split", "id": "patch-rear", "into": [{"id": "patch-rear-l", "z": 0.28, "title": {"en": "Contact patch of the left rear tyre", "de": "Aufstandsfläche des linken Hinterreifens"}}, {"id": "patch-rear-r", "z": -0.28, "title": {"en": "Contact patch of the right rear tyre", "de": "Aufstandsfläche des rechten Hinterreifens"}}]},
+  {"op": "anchor-split", "id": "patch-front", "into": [{"id": "patch-front-l", "z": 0.215, "title": {"en": "Contact patch of the left castor", "de": "Aufstandsfläche der linken Lenkrolle"}}, {"id": "patch-front-r", "z": -0.215, "title": {"en": "Contact patch of the right castor", "de": "Aufstandsfläche der rechten Lenkrolle"}}]},
+  {"op": "front-sweep", "scale": "500", "id": "hoodie"},
+  {"op": "plan-prism", "scale": "500", "id": "hoodie"},
+  {"op": "core", "scale": "500", "id": "hoodie"}
+]

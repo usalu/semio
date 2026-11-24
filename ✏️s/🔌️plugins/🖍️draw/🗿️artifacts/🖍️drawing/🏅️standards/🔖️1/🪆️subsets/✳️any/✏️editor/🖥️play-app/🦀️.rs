@@ -124,6 +124,14 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(semio_plugin::no_transient_store_disposer())
     }
 
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        drawing_document_store_owners_source_demands()
+    }
+
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(drawing_document_store_owners(grant))
+    }
+
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(DrawingArtifactStorePreparationFactory::default()))
     }

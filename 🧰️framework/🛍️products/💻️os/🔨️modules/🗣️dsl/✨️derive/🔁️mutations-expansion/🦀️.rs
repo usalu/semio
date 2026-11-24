@@ -1,7 +1,7 @@
 //! 🔁️ Mutations expansion of the dsl derive expansion: the mutations attribute parser, the derive mutations expansion, the mutations expansion with its payload law test and the relative path helper. See [`super`].
 
 use quote::quote;
-use super::{Data, DeriveInput, Fields, MutationAggregateSourceAuthority, Path, TokenStream, Type, mutation_aggregate_source_authority, mutation_authority_canonical, mutation_authority_relative, mutation_authority_workspace_token, mutation_leaf_include_path, parse_macro_input, to_kebab};
+use super::{Data, DeriveInput, Fields, MutationAggregateSourceAuthority, Path, TokenStream, Type, mutation_aggregate_source_authority, mutation_authority_canonical, mutation_authority_relative, mutation_authority_workspace_token, parse_macro_input, to_kebab};
 
 //#region 🔖️Mutations
 /// 🗣️ `#[mutations(snapshot = ..., diff = ..., schema = "..." [, reference = ..., reference_diff = ..., retire_cold = path])]` container
@@ -111,7 +111,7 @@ let retire_cold = attrs.retire_cold.map(|retire| quote! {
     let mutation_root = mutation_authority_relative(&authority.workspace_root, &authority.mutation_root).map_err(map_error)?;
     let taxonomy_path = mutation_authority_relative(&authority.workspace_root, &authority.taxonomy_path).map_err(map_error)?;
     let dependency_paths = [authority.taxonomy_path.clone()];
-    let dependencies = dependency_paths.iter().map(|path| mutation_leaf_include_path(path)).collect::<Result<Vec<_>, _>>().map_err(map_error)?;
+    let dependencies = dependency_paths.iter().map(|path| crate::compiler_resources::include_path_v1(&authority.source_path, path)).collect::<Result<Vec<_>, _>>().map_err(map_error)?;
     let source_filename = &authority.source_filename;
     let descriptor_filename = &authority.descriptor_filename;
     let mutation_payload_facet = &authority.mutation_payload_facet;

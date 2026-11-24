@@ -69,7 +69,7 @@ impl TaggedPackOperation {
 
 /// 🧳️ Receives one complete pack document or tagged wire value across original turns before binding its typed operation.
 pub struct OriginalPackValueReceiving<M:FromValue+RetireOwned>{
- source:(usize,usize),range:(usize,usize),tagged:Option<TaggedPackOperation>,record:Option<RetainedRecordReceiving>,value:OwnedSlot<DslValue>,output:OwnedSlot<M>,phase:u8,closing:u8,closed:bool,failed:bool,
+ source:(usize,usize),range:(usize,usize),tagged:Option<TaggedPackOperation>,record:Option<RetainedRecordReceiving>,value:OwnedSlot<DslValue>,output:OwnedSlot<M>,paid:usize,phase:u8,closing:u8,closed:bool,failed:bool,
 }
 /// ⚖️ Retained bytes of one decoded value tree: every node header plus its string, byte and key payloads.
 pub fn decoded_value_retained_bytes(value:&DslValue)->usize{
@@ -82,7 +82,7 @@ pub fn decoded_value_retained_bytes(value:&DslValue)->usize{
   _=>0,
  })
 }
-/// ⚖️ The conversion quote: the decoded value's retained bytes plus the typed output header.
+/// ⚖️ The conversion quote: the decoded value's retained bytes plus the typed output header. A quote above one page is prepaid page by page across turns before the atomic conversion runs, so every turn stays within its grant and between pages the operation is cancellable.
 pub fn pack_value_conversion_quote<M>(value:&DslValue)->RetirementDemand{RetirementDemand{copy_bytes:decoded_value_retained_bytes(value).saturating_add(std::mem::size_of::<Option<M>>()),depth:1,..Default::default()}}
 impl<M:FromValue+RetireOwned> OriginalPackValueReceiving<M>{
  /// 🎟️ Preserves the full original source and the exact document range without parsing or allocating.
@@ -92,7 +92,7 @@ impl<M:FromValue+RetireOwned> OriginalPackValueReceiving<M>{
    if range.0>range.1||range.1>source.len(){return Err(invalid("original pack value escaped its full source"))}
    if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
    work=1;
-   Ok(Some((Self{source:(source.as_ptr()as usize,source.len()),range,tagged:None,record:None,value:Default::default(),output:Default::default(),phase:0,closing:0,closed:false,failed:false},RetainedCloneProgress{copied_items:1,..Default::default()})))
+   Ok(Some((Self{source:(source.as_ptr()as usize,source.len()),range,tagged:None,record:None,value:Default::default(),output:Default::default(),paid:0,phase:0,closing:0,closed:false,failed:false},RetainedCloneProgress{copied_items:1,..Default::default()})))
   })();
   RetainedWorkOutcome{result,work}
  }
@@ -116,7 +116,7 @@ impl<M:FromValue+RetireOwned> OriginalPackValueReceiving<M>{
    },
    1=>{let record=self.record.as_ref().ok_or_else(||ValueError::invariant("original pack value record is absent"))?;if record.is_ready(){metadata::<DslValue>()}else{record.demands(source)?}},
    2=>metadata::<DslValue>(),
-   3=>pack_value_conversion_quote::<M>(self.value.value.as_ref().ok_or_else(||ValueError::invariant("original pack value is absent"))?),
+   3=>{let quote=pack_value_conversion_quote::<M>(self.value.value.as_ref().ok_or_else(||ValueError::invariant("original pack value is absent"))?);let remaining=quote.copy_bytes.saturating_sub(self.paid);if remaining>body.max(1){RetirementDemand{copy_bytes:body.max(1),depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:remaining,..quote}}},
    _=>RetirementDemand{depth:1,..Default::default()},
   };
   demand.depth+=1;
@@ -151,6 +151,7 @@ impl<M:FromValue+RetireOwned> OriginalPackValueReceiving<M>{
    2=>{let record=self.record.as_mut().ok_or_else(||ValueError::invariant("original pack value record is absent"))?;let turn=take_received_wire_value(record,&mut self.value.value,child);perform(effect,turn.work)?;let progress=turn.result?;if self.value.value.is_some(){self.phase=3}Ok(progress)},
    _=>{
     perform(effect,1)?;
+    if self.paid.saturating_add(demand.copy_bytes)<pack_value_conversion_quote::<M>(self.value.value.as_ref().ok_or_else(||ValueError::invariant("original pack value is absent"))?).copy_bytes{self.paid+=demand.copy_bytes;return Ok(receipt(demand))}
     let value=self.value.value.take().ok_or_else(||ValueError::invariant("original pack value is absent"))?;
     let converted=M::from_value(renormalize_whole_number_floats(value)).map_err(|error|error.with_retained_progress(receipt(demand)))?;
     *self.output.value=Some(converted);self.phase=4;

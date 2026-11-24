@@ -108,8 +108,8 @@
     "densityKgM3": 650,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 2500000000.0,
-    "strengthPa": 13000000.0,
+    "elasticModulusPa": 2500000000,
+    "strengthPa": 13000000,
     "source": "authored-estimate",
     "reference": "en-312-2010"
    },
@@ -138,8 +138,8 @@
     "densityKgM3": 900,
     "conductivityWmK": 0.2,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 4000000000.0,
-    "strengthPa": 30000000.0,
+    "elasticModulusPa": 4000000000,
+    "strengthPa": 30000000,
     "source": "authored-estimate",
     "reference": "iso-10456-2007"
    },
@@ -154,8 +154,8 @@
     "densityKgM3": 450,
     "conductivityWmK": 0.3,
     "specificHeatJKgK": 1100,
-    "elasticModulusPa": 70000000000.0,
-    "strengthPa": 160000000.0,
+    "elasticModulusPa": 70000000000,
+    "strengthPa": 160000000,
     "source": "authored-estimate",
     "reference": "rabek-1995"
    },
@@ -170,8 +170,8 @@
     "densityKgM3": 480,
     "conductivityWmK": 0.19,
     "specificHeatJKgK": 1470,
-    "elasticModulusPa": 3000000000.0,
-    "strengthPa": 60000000.0,
+    "elasticModulusPa": 3000000000,
+    "strengthPa": 60000000,
     "source": "authored-estimate",
     "reference": "rabek-1995"
    },
@@ -186,8 +186,8 @@
     "densityKgM3": 520,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1400,
-    "elasticModulusPa": 2200000000.0,
-    "strengthPa": 40000000.0,
+    "elasticModulusPa": 2200000000,
+    "strengthPa": 40000000,
     "source": "authored-estimate",
     "reference": "rabek-1995"
    },
@@ -202,8 +202,8 @@
     "densityKgM3": 520,
     "conductivityWmK": 0.3,
     "specificHeatJKgK": 600,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "douglas-1976"
    },
@@ -246,8 +246,8 @@
     "densityKgM3": 700,
     "conductivityWmK": 0.18,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 11900000000.0,
-    "strengthPa": 103000000.0,
+    "elasticModulusPa": 11900000000,
+    "strengthPa": 103000000,
     "source": "authored-estimate",
     "reference": "fpl-2010"
    },
@@ -262,8 +262,8 @@
     "densityKgM3": 750,
     "conductivityWmK": 0.18,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 11900000000.0,
-    "strengthPa": 103000000.0,
+    "elasticModulusPa": 11900000000,
+    "strengthPa": 103000000,
     "source": "authored-estimate",
     "reference": "fpl-2010"
    },
@@ -278,8 +278,8 @@
     "densityKgM3": 1050,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1400,
-    "elasticModulusPa": 2200000000.0,
-    "strengthPa": 40000000.0,
+    "elasticModulusPa": 2200000000,
+    "strengthPa": 40000000,
     "source": "authored-estimate",
     "reference": "rabek-1995"
    },
@@ -322,8 +322,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 470,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "en-12532-1999"
    },
@@ -338,8 +338,8 @@
     "densityKgM3": 700,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 10000000000.0,
-    "strengthPa": 60000000.0,
+    "elasticModulusPa": 10000000000,
+    "strengthPa": 60000000,
     "source": "authored-estimate",
     "reference": "fpl-2010"
    },
@@ -368,8 +368,8 @@
     "densityKgM3": 700,
     "conductivityWmK": 0.18,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 11900000000.0,
-    "strengthPa": 103000000.0,
+    "elasticModulusPa": 11900000000,
+    "strengthPa": 103000000,
     "source": "authored-estimate",
     "reference": "fpl-2010"
    },
@@ -384,8 +384,8 @@
     "densityKgM3": 650,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 2500000000.0,
-    "strengthPa": 13000000.0,
+    "elasticModulusPa": 2500000000,
+    "strengthPa": 13000000,
     "source": "authored-estimate",
     "reference": "en-312-2010"
    },
@@ -414,8 +414,8 @@
     "densityKgM3": 2700,
     "conductivityWmK": 160,
     "specificHeatJKgK": 900,
-    "elasticModulusPa": 70000000000.0,
-    "strengthPa": 160000000.0,
+    "elasticModulusPa": 70000000000,
+    "strengthPa": 160000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    }
@@ -431,9 +431,9 @@
       "en": "Floor datum of the shop",
       "de": "Bodenbezug im Laden"
      },
-     "x": 0.0,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.05,
      "joint": {
       "type": "fixed"
@@ -446,9 +446,9 @@
       "en": "Rolling carriage of organ and dolly",
       "de": "Rollweg von Orgel und Rollbrett"
      },
-     "x": 0.0,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.05,
      "joint": {
       "type": "prismatic",
@@ -466,12 +466,12 @@
      },
      "x": -0.345,
      "y": 0.111,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.45,
      "joint": {
       "type": "prismatic",
       "axisDeg": 0,
-      "minM": -1.0,
+      "minM": -1,
       "maxM": 0
      },
      "mass": {
@@ -484,7 +484,7 @@
      },
      "section": {
       "areaM2": 0.00418,
-      "secondMomentM4": 1.686e-07,
+      "secondMomentM4": 1.686e-7,
       "extremeFibreM": 0.011,
       "material": "dolly-beech",
       "title": {
@@ -500,9 +500,9 @@
       "en": "Organ cabinet with both manuals",
       "de": "Orgelgehäuse mit beiden Manualen"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.125,
-     "angleDeg": 90.0,
+     "angleDeg": 90,
      "lengthM": 0.983,
      "joint": {
       "type": "prismatic",
@@ -555,7 +555,7 @@
      },
      "section": {
       "areaM2": 0.0132,
-      "secondMomentM4": 1.584e-07,
+      "secondMomentM4": 1.584e-7,
       "extremeFibreM": 0.006,
       "material": "veneer-aged",
       "title": {
@@ -571,9 +571,9 @@
       "en": "13-note pedalboard, folding up on its hinge",
       "de": "13-töniges Pedal, auf seinem Scharnier hochklappbar"
      },
-     "x": 0.0,
+     "x": 0,
      "y": -0.054,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.25,
      "joint": {
       "type": "revolute",
@@ -590,7 +590,7 @@
      },
      "section": {
       "areaM2": 0.006,
-      "secondMomentM4": 7.2e-08,
+      "secondMomentM4": 7.2e-8,
       "extremeFibreM": 0.006,
       "material": "pedal-beech",
       "title": {
@@ -608,7 +608,7 @@
      },
      "x": 0.05,
      "y": -0.09,
-     "angleDeg": -80.0,
+     "angleDeg": -80,
      "lengthM": 0.16,
      "joint": {
       "type": "revolute",
@@ -625,7 +625,7 @@
      },
      "section": {
       "areaM2": 0.00209,
-      "secondMomentM4": 8.43e-08,
+      "secondMomentM4": 8.43e-8,
       "extremeFibreM": 0.011,
       "material": "pedal-sharp",
       "title": {
@@ -643,7 +643,7 @@
      },
      "x": 0.683,
      "y": -0.115,
-     "angleDeg": -90.0,
+     "angleDeg": -90,
      "lengthM": 0.15,
      "joint": {
       "type": "revolute",
@@ -660,7 +660,7 @@
      },
      "section": {
       "areaM2": 0.000495,
-      "secondMomentM4": 1.996e-08,
+      "secondMomentM4": 1.996e-8,
       "extremeFibreM": 0.011,
       "material": "key-acrylic-yellowed",
       "title": {
@@ -677,8 +677,8 @@
       "de": "Orgelbank"
      },
      "x": 0.49,
-     "y": 0.0,
-     "angleDeg": 90.0,
+     "y": 0,
+     "angleDeg": 90,
      "lengthM": 0.575,
      "joint": {
       "type": "fixed"
@@ -686,7 +686,7 @@
      "mass": {
       "kg": 10.065,
       "comX": 0.4764,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "douglas-1976"
@@ -770,25 +770,73 @@
     "frictionCoefficient": 0.02
    },
    {
-    "id": "bench-feet",
+    "id": "bench-foot-back-right",
     "bone": "bench",
-    "x": 0.0,
-    "y": 0.0,
-    "z": -0.03,
+    "x": 0,
+    "y": 0.125,
+    "z": -0.39,
     "kind": "contact",
     "title": {
-     "en": "Four bench feet on the floor",
-     "de": "Vier Bankfüße auf dem Boden"
+     "en": "Bench foot on the floor, back right",
+     "de": "Bankfuß auf dem Boden, hinten rechts"
     },
     "support": "contact",
-    "footprintLengthM": 0.29,
-    "footprintWidthM": 0.76,
+    "footprintLengthM": 0.03,
+    "footprintWidthM": 0.04,
+    "frictionCoefficient": 0.4
+   },
+   {
+    "id": "bench-foot-back-left",
+    "bone": "bench",
+    "x": 0,
+    "y": 0.125,
+    "z": 0.33,
+    "kind": "contact",
+    "title": {
+     "en": "Bench foot on the floor, back left",
+     "de": "Bankfuß auf dem Boden, hinten links"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.03,
+    "footprintWidthM": 0.04,
+    "frictionCoefficient": 0.4
+   },
+   {
+    "id": "bench-foot-front-right",
+    "bone": "bench",
+    "x": 0,
+    "y": -0.125,
+    "z": -0.39,
+    "kind": "contact",
+    "title": {
+     "en": "Bench foot on the floor, front right",
+     "de": "Bankfuß auf dem Boden, vorn rechts"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.03,
+    "footprintWidthM": 0.04,
+    "frictionCoefficient": 0.4
+   },
+   {
+    "id": "bench-foot-front-left",
+    "bone": "bench",
+    "x": 0,
+    "y": -0.125,
+    "z": 0.33,
+    "kind": "contact",
+    "title": {
+     "en": "Bench foot on the floor, front left",
+     "de": "Bankfuß auf dem Boden, vorn links"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.03,
+    "footprintWidthM": 0.04,
     "frictionCoefficient": 0.4
    },
    {
     "id": "cheek-foot-right",
     "bone": "cabinet",
-    "x": -0.0,
+    "x": 0,
     "y": 0.015,
     "z": -0.541,
     "kind": "contact",
@@ -804,7 +852,7 @@
    {
     "id": "cheek-foot-left",
     "bone": "cabinet",
-    "x": -0.0,
+    "x": 0,
     "y": 0.015,
     "z": 0.541,
     "kind": "contact",
@@ -821,7 +869,7 @@
     "id": "pedalboard-floor",
     "bone": "pedalboard",
     "x": 0.125,
-    "y": 0.0,
+    "y": 0,
     "z": -0.17,
     "kind": "contact",
     "title": {
@@ -921,7 +969,7 @@
     "id": "bench-seat",
     "bone": "bench",
     "x": 0.575,
-    "y": 0.0,
+    "y": 0,
     "z": -0.03,
     "kind": "load",
     "title": {
@@ -934,7 +982,7 @@
     "bone": "cabinet",
     "x": 0.56,
     "y": 0.2792,
-    "z": 0.0,
+    "z": 0,
     "kind": "emitter",
     "title": {
      "en": "Vent slots of the amplifier in the back panel",
@@ -987,7 +1035,7 @@
        "id": "cheek-left",
        "bone": "cabinet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.45,
        "region": "cabinet-veneer",
@@ -2029,7 +2077,7 @@
        "id": "castor-bl-leg-1",
        "bone": "dolly",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.45,
        "region": "dolly",
@@ -3830,7 +3878,7 @@
        "id": "upper-whites-7",
        "bone": "cabinet",
        "role": "detail",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.9,
        "region": "keys",
@@ -5344,7 +5392,7 @@
        "id": "castor-bl-leg-1",
        "bone": "dolly",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.45,
        "region": "dolly",
@@ -7144,7 +7192,7 @@
        "id": "lower-black-cs-2",
        "bone": "cabinet",
        "role": "detail",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.08,
        "region": "keys",
@@ -8735,7 +8783,7 @@
        "id": "cheek-left",
        "bone": "cabinet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.45,
        "region": "cabinet-veneer",
@@ -9351,7 +9399,7 @@
        "id": "castor-bl-housing",
        "bone": "dolly",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.45,
        "region": "dolly",
@@ -10128,7 +10176,7 @@
        "id": "castor-bl-wheel",
        "bone": "dolly",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.15,
        "region": "dolly",
@@ -10902,7 +10950,7 @@
        "id": "cheek-left",
        "bone": "cabinet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.45,
        "region": "cabinet-veneer",
@@ -11246,7 +11294,7 @@
        "id": "castor-bl",
        "bone": "dolly",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.25,
        "region": "dolly",
@@ -11716,7 +11764,7 @@
        "id": "castor-bl",
        "bone": "dolly",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.25,
        "region": "dolly",
@@ -12257,7 +12305,10 @@
      "castor-back-left",
      "castor-front-right",
      "castor-front-left",
-     "bench-feet"
+     "bench-foot-back-right",
+     "bench-foot-back-left",
+     "bench-foot-front-right",
+     "bench-foot-front-left"
     ],
     "thermal": {
      "operating": {
@@ -12340,7 +12391,10 @@
      "castor-back-left",
      "castor-front-right",
      "castor-front-left",
-     "bench-feet"
+     "bench-foot-back-right",
+     "bench-foot-back-left",
+     "bench-foot-front-right",
+     "bench-foot-front-left"
     ],
     "thermal": {
      "operating": {
@@ -12414,7 +12468,7 @@
     },
     "bones": {
      "carriage": {
-      "dx": -1.0
+      "dx": -1
      }
     },
     "ground": "auto",
@@ -12423,7 +12477,10 @@
      "castor-back-left",
      "castor-front-right",
      "castor-front-left",
-     "bench-feet"
+     "bench-foot-back-right",
+     "bench-foot-back-left",
+     "bench-foot-front-right",
+     "bench-foot-front-left"
     ],
     "thermal": {
      "operating": {
@@ -12544,7 +12601,10 @@
      "cheek-foot-right",
      "cheek-foot-left",
      "pedalboard-floor",
-     "bench-feet",
+     "bench-foot-back-right",
+     "bench-foot-back-left",
+     "bench-foot-front-right",
+     "bench-foot-front-left",
      "castor-back-right",
      "castor-back-left",
      "castor-front-right",
@@ -12753,7 +12813,22 @@
       "toS": 8
      },
      {
-      "anchor": "bench-feet",
+      "anchor": "bench-foot-back-right",
+      "fromS": 0,
+      "toS": 8
+     },
+     {
+      "anchor": "bench-foot-back-left",
+      "fromS": 0,
+      "toS": 8
+     },
+     {
+      "anchor": "bench-foot-front-right",
+      "fromS": 0,
+      "toS": 8
+     },
+     {
+      "anchor": "bench-foot-front-left",
       "fromS": 0,
       "toS": 8
      }
@@ -12860,7 +12935,22 @@
       "toS": 60
      },
      {
-      "anchor": "bench-feet",
+      "anchor": "bench-foot-back-right",
+      "fromS": 0,
+      "toS": 60
+     },
+     {
+      "anchor": "bench-foot-back-left",
+      "fromS": 0,
+      "toS": 60
+     },
+     {
+      "anchor": "bench-foot-front-right",
+      "fromS": 0,
+      "toS": 60
+     },
+     {
+      "anchor": "bench-foot-front-left",
       "fromS": 0,
       "toS": 60
      }
@@ -12978,7 +13068,7 @@
       }
      },
      {
-      "t": 1.0,
+      "t": 1,
       "pose": "played",
       "ease": "smooth",
       "bones": {
@@ -13034,7 +13124,22 @@
       "toS": 2
      },
      {
-      "anchor": "bench-feet",
+      "anchor": "bench-foot-back-right",
+      "fromS": 0,
+      "toS": 2
+     },
+     {
+      "anchor": "bench-foot-back-left",
+      "fromS": 0,
+      "toS": 2
+     },
+     {
+      "anchor": "bench-foot-front-right",
+      "fromS": 0,
+      "toS": 2
+     },
+     {
+      "anchor": "bench-foot-front-left",
       "fromS": 0,
       "toS": 2
      },
@@ -13314,7 +13419,7 @@
        "kind": "metal",
        "material": "panel-faded",
        "thicknessM": 0.001,
-       "resistanceM2KW": 6e-06,
+       "resistanceM2KW": 0.000006,
        "heatCapacityJM2K": 2430,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -13443,7 +13548,7 @@
      "areaM2": 0.33,
      "characteristicLengthM": 0.16,
      "geometry": "vertical-plate",
-     "skyViewFactor": 0.0,
+     "skyViewFactor": 0,
      "layers": [
       {
        "id": "heat-sink",
@@ -13454,7 +13559,7 @@
        "kind": "metal",
        "material": "amp-aluminium",
        "thicknessM": 0.003,
-       "resistanceM2KW": 1.9e-05,
+       "resistanceM2KW": 0.000019,
        "heatCapacityJM2K": 7290,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -13512,7 +13617,10 @@
     "castor-back-left",
     "castor-front-right",
     "castor-front-left",
-    "bench-feet"
+    "bench-foot-back-right",
+    "bench-foot-back-left",
+    "bench-foot-front-right",
+    "bench-foot-front-left"
    ],
    "assumptions": [
     {
@@ -13544,11 +13652,11 @@
       "tone": 0.45,
       "profile": [
        [
-        -0.0,
+        0,
         0.275
        ],
        [
-        0.0,
+        0,
         -0.245
        ],
        [
@@ -13597,11 +13705,11 @@
       "tone": 0.45,
       "profile": [
        [
-        -0.0,
+        0,
         0.275
        ],
        [
-        0.0,
+        0,
         -0.245
        ],
        [
@@ -13650,11 +13758,11 @@
       "tone": 0.3,
       "profile": [
        [
-        -0.0,
+        0,
         0.2782
        ],
        [
-        -0.0,
+        0,
         0.275
        ],
        [
@@ -13738,11 +13846,11 @@
       "tone": 0.4,
       "profile": [
        [
-        -0.0,
+        0,
         0.275
        ],
        [
-        -0.0,
+        0,
         0.05
        ],
        [
@@ -14109,8 +14217,8 @@
       "repeat": {
        "count": 16,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.053
        ]
       }
@@ -14146,8 +14254,8 @@
       "repeat": {
        "count": 6,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.045
        ]
       }
@@ -14183,8 +14291,8 @@
       "repeat": {
        "count": 11,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.0235
        ]
       }
@@ -14220,8 +14328,8 @@
       "repeat": {
        "count": 14,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.0235
        ]
       }
@@ -14257,8 +14365,8 @@
       "repeat": {
        "count": 26,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.0235
        ]
       }
@@ -14294,8 +14402,8 @@
       "repeat": {
        "count": 4,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.1645
        ]
       }
@@ -14331,8 +14439,8 @@
       "repeat": {
        "count": 4,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.1645
        ]
       }
@@ -14368,8 +14476,8 @@
       "repeat": {
        "count": 4,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.1645
        ]
       }
@@ -14405,8 +14513,8 @@
       "repeat": {
        "count": 3,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.1645
        ]
       }
@@ -14442,8 +14550,8 @@
       "repeat": {
        "count": 3,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.1645
        ]
       }
@@ -14479,8 +14587,8 @@
       "repeat": {
        "count": 4,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.1645
        ]
       }
@@ -14516,8 +14624,8 @@
       "repeat": {
        "count": 4,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.1645
        ]
       }
@@ -14553,8 +14661,8 @@
       "repeat": {
        "count": 4,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.1645
        ]
       }
@@ -14590,8 +14698,8 @@
       "repeat": {
        "count": 3,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.1645
        ]
       }
@@ -14627,8 +14735,8 @@
       "repeat": {
        "count": 3,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.1645
        ]
       }
@@ -14642,19 +14750,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.15,
-        0.0
+        0
        ],
        [
         0.15,
         0.022
        ],
        [
-        0.0,
+        0,
         0.022
        ]
       ],
@@ -14761,19 +14869,19 @@
       "tone": 0.42,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.3931,
-        0.0
+        0
        ],
        [
         0.3931,
         0.012
        ],
        [
-        0.0,
+        0,
         0.012
        ]
       ],
@@ -14791,11 +14899,11 @@
       "tone": 0.35,
       "profile": [
        [
-        -0.0,
+        0,
         0.034
        ],
        [
-        0.0,
+        0,
         -0.21
        ],
        [
@@ -14850,11 +14958,11 @@
       "profile": [
        [
         -0.11,
-        0.0
+        0
        ],
        [
         0.16,
-        0.0
+        0
        ],
        [
         0.16,
@@ -14878,19 +14986,19 @@
       "tone": 0.55,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
         0.012
        ],
        [
-        0.0,
+        0,
         0.012
        ]
       ],
@@ -14907,7 +15015,7 @@
       "tone": 0.5,
       "profile": [
        [
-        0.0,
+        0,
         0.012
        ],
        [
@@ -14919,7 +15027,7 @@
         0.085
        ],
        [
-        0.0,
+        0,
         0.085
        ]
       ],
@@ -14958,8 +15066,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.48
        ]
       }
@@ -15024,8 +15132,8 @@
       "repeat": {
        "count": 8,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.0575
        ]
       }
@@ -15329,7 +15437,7 @@
       "tone": 0.6,
       "profile": [
        [
-        0.0,
+        0,
         -0.011
        ],
        [
@@ -15341,7 +15449,7 @@
         0.011
        ],
        [
-        0.0,
+        0,
         0.011
        ]
       ],
@@ -15445,7 +15553,7 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
+        0,
         0.011
        ],
        [
@@ -15457,7 +15565,7 @@
         0.014
        ],
        [
-        0.0,
+        0,
         0.014
        ]
       ],
@@ -15725,8 +15833,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.033
        ]
       }
@@ -15929,8 +16037,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.033
        ]
       }
@@ -16133,8 +16241,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.033
        ]
       }
@@ -16337,8 +16445,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.033
        ]
       }
@@ -16381,11 +16489,11 @@
       "tone": 0.4,
       "profile": [
        [
-        -0.0,
+        0,
         0.14
        ],
        [
-        -0.0,
+        0,
         0.11
        ],
        [
@@ -16411,8 +16519,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.72
        ]
       }
@@ -16426,11 +16534,11 @@
       "tone": 0.4,
       "profile": [
        [
-        0.0,
+        0,
         -0.11
        ],
        [
-        0.0,
+        0,
         -0.14
        ],
        [
@@ -16456,8 +16564,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.72
        ]
       }
@@ -16551,8 +16659,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.74
        ]
       }
@@ -17056,7 +17164,7 @@
        "translation": [
         0.48,
         0.19,
-        0.0
+        0
        ]
       },
       "region": "amplifier"
@@ -17084,8 +17192,8 @@
       "repeat": {
        "count": 8,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.045
        ]
       }
@@ -17106,7 +17214,7 @@
        "translation": [
         0.56,
         0.2787,
-        0.0
+        0
        ]
       },
       "tags": [
@@ -17396,9 +17504,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "key-cover",
@@ -17440,7 +17548,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.01,
         0.2025
        ]
@@ -17462,7 +17570,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.0315,
         -0.11755
        ]
@@ -17563,7 +17671,7 @@
       "anchor": "castor-front-left"
      },
      {
-      "id": "support-bench-feet",
+      "id": "support-bench-foot-back-right",
       "kind": "box",
       "bone": "bench",
       "material": "bench-beech",
@@ -17571,19 +17679,88 @@
       "tone": 0.2,
       "size": [
        0.0015,
-       0.29,
-       0.76
+       0.04,
+       0.04
       ],
       "transform": {
        "translation": [
         -0.00075,
-        0.0,
-        -0.03
+        0.125,
+        -0.39
        ]
       },
       "member": "bench",
       "part": "support",
-      "anchor": "bench-feet"
+      "anchor": "bench-foot-back-right"
+     },
+     {
+      "id": "support-bench-foot-back-left",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.0015,
+       0.04,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        -0.00075,
+        0.125,
+        0.33
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-back-left"
+     },
+     {
+      "id": "support-bench-foot-front-right",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.0015,
+       0.04,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        -0.00075,
+        -0.125,
+        -0.39
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-front-right"
+     },
+     {
+      "id": "support-bench-foot-front-left",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.0015,
+       0.04,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        -0.00075,
+        -0.125,
+        0.33
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-front-left"
      },
      {
       "id": "mass-amplifier",
@@ -17601,7 +17778,7 @@
        "translation": [
         0.48,
         0.175,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -17623,7 +17800,7 @@
        "translation": [
         0.3,
         0.1,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -17645,7 +17822,7 @@
        "translation": [
         0.75,
         0.2,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -17676,11 +17853,11 @@
       "tone": 0.45,
       "profile": [
        [
-        -0.0,
+        0,
         0.275
        ],
        [
-        0.0,
+        0,
         -0.255
        ],
        [
@@ -17725,11 +17902,11 @@
       "tone": 0.45,
       "profile": [
        [
-        -0.0,
+        0,
         0.275
        ],
        [
-        0.0,
+        0,
         -0.255
        ],
        [
@@ -17774,11 +17951,11 @@
       "tone": 0.3,
       "profile": [
        [
-        -0.0,
+        0,
         0.2782
        ],
        [
-        -0.0,
+        0,
         0.275
        ],
        [
@@ -17862,11 +18039,11 @@
       "tone": 0.4,
       "profile": [
        [
-        -0.0,
+        0,
         0.275
        ],
        [
-        -0.0,
+        0,
         0.05
        ],
        [
@@ -18210,7 +18387,7 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
+        0,
         -0.063
        ],
        [
@@ -18222,7 +18399,7 @@
         0.022
        ],
        [
-        0.0,
+        0,
         0.022
        ]
       ],
@@ -18269,19 +18446,19 @@
       "tone": 0.42,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.3931,
-        0.0
+        0
        ],
        [
         0.3931,
         0.012
        ],
        [
-        0.0,
+        0,
         0.012
        ]
       ],
@@ -18299,11 +18476,11 @@
       "tone": 0.35,
       "profile": [
        [
-        -0.0,
+        0,
         0.034
        ],
        [
-        0.0,
+        0,
         -0.21
        ],
        [
@@ -18358,11 +18535,11 @@
       "profile": [
        [
         -0.11,
-        0.0
+        0
        ],
        [
         0.16,
-        0.0
+        0
        ],
        [
         0.16,
@@ -18386,19 +18563,19 @@
       "tone": 0.5,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.06,
-        0.0
+        0
        ],
        [
         0.06,
         0.085
        ],
        [
-        0.0,
+        0,
         0.085
        ]
       ],
@@ -18416,11 +18593,11 @@
       "profile": [
        [
         0.06,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -18589,7 +18766,7 @@
       "tone": 0.6,
       "profile": [
        [
-        0.0,
+        0,
         -0.011
        ],
        [
@@ -18601,7 +18778,7 @@
         0.014
        ],
        [
-        0.0,
+        0,
         0.014
        ]
       ],
@@ -19129,11 +19306,11 @@
       "tone": 0.4,
       "profile": [
        [
-        -0.0,
+        0,
         0.145
        ],
        [
-        -0.0,
+        0,
         0.105
        ],
        [
@@ -19151,8 +19328,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.72
        ]
       }
@@ -19166,11 +19343,11 @@
       "tone": 0.4,
       "profile": [
        [
-        0.0,
+        0,
         -0.105
        ],
        [
-        0.0,
+        0,
         -0.145
        ],
        [
@@ -19188,8 +19365,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.72
        ]
       }
@@ -19495,7 +19672,7 @@
        "translation": [
         0.48,
         0.175,
-        0.0
+        0
        ]
       },
       "region": "amplifier"
@@ -19516,7 +19693,7 @@
        "translation": [
         0.56,
         0.2792,
-        0.0
+        0
        ]
       },
       "tags": [
@@ -19722,9 +19899,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "key-cover",
@@ -19766,7 +19943,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.01,
         0.2025
        ]
@@ -19788,7 +19965,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.0315,
         -0.11755
        ]
@@ -19889,7 +20066,7 @@
       "anchor": "castor-front-left"
      },
      {
-      "id": "support-bench-feet",
+      "id": "support-bench-foot-back-right",
       "kind": "box",
       "bone": "bench",
       "material": "bench-beech",
@@ -19897,19 +20074,88 @@
       "tone": 0.2,
       "size": [
        0.003,
-       0.29,
-       0.76
+       0.04,
+       0.04
       ],
       "transform": {
        "translation": [
         -0.0015,
-        0.0,
-        -0.03
+        0.125,
+        -0.39
        ]
       },
       "member": "bench",
       "part": "support",
-      "anchor": "bench-feet"
+      "anchor": "bench-foot-back-right"
+     },
+     {
+      "id": "support-bench-foot-back-left",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.003,
+       0.04,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        -0.0015,
+        0.125,
+        0.33
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-back-left"
+     },
+     {
+      "id": "support-bench-foot-front-right",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.003,
+       0.04,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        -0.0015,
+        -0.125,
+        -0.39
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-front-right"
+     },
+     {
+      "id": "support-bench-foot-front-left",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.003,
+       0.04,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        -0.0015,
+        -0.125,
+        0.33
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-front-left"
      },
      {
       "id": "mass-amplifier",
@@ -19927,7 +20173,7 @@
        "translation": [
         0.48,
         0.175,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -19949,7 +20195,7 @@
        "translation": [
         0.3,
         0.1,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -19971,7 +20217,7 @@
        "translation": [
         0.75,
         0.2,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -20002,11 +20248,11 @@
       "tone": 0.45,
       "profile": [
        [
-        -0.0,
+        0,
         0.275
        ],
        [
-        0.0,
+        0,
         -0.255
        ],
        [
@@ -20051,11 +20297,11 @@
       "tone": 0.45,
       "profile": [
        [
-        -0.0,
+        0,
         0.275
        ],
        [
-        0.0,
+        0,
         -0.255
        ],
        [
@@ -20100,11 +20346,11 @@
       "tone": 0.3,
       "profile": [
        [
-        -0.0,
+        0,
         0.2782
        ],
        [
-        -0.0,
+        0,
         0.275
        ],
        [
@@ -20130,11 +20376,11 @@
       "tone": 0.4,
       "profile": [
        [
-        -0.0,
+        0,
         0.275
        ],
        [
-        -0.0,
+        0,
         0.061
        ],
        [
@@ -20440,19 +20686,19 @@
       "tone": 0.42,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.3931,
-        0.0
+        0
        ],
        [
         0.3931,
         0.03
        ],
        [
-        0.0,
+        0,
         0.03
        ]
       ],
@@ -20469,11 +20715,11 @@
       "tone": 0.35,
       "profile": [
        [
-        -0.0,
+        0,
         0.034
        ],
        [
-        0.0,
+        0,
         -0.21
        ],
        [
@@ -20499,11 +20745,11 @@
       "profile": [
        [
         -0.11,
-        0.0
+        0
        ],
        [
         0.16,
-        0.0
+        0
        ],
        [
         0.16,
@@ -20527,19 +20773,19 @@
       "tone": 0.5,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.06,
-        0.0
+        0
        ],
        [
         0.06,
         0.085
        ],
        [
-        0.0,
+        0,
         0.085
        ]
       ],
@@ -20557,11 +20803,11 @@
       "profile": [
        [
         0.06,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -20585,7 +20831,7 @@
       "tone": 0.6,
       "profile": [
        [
-        0.0,
+        0,
         -0.016
        ],
        [
@@ -20597,7 +20843,7 @@
         0.014
        ],
        [
-        0.0,
+        0,
         0.014
        ]
       ],
@@ -20730,11 +20976,11 @@
       "tone": 0.4,
       "profile": [
        [
-        -0.0,
+        0,
         0.145
        ],
        [
-        -0.0,
+        0,
         0.105
        ],
        [
@@ -20752,8 +20998,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.72
        ]
       }
@@ -20767,11 +21013,11 @@
       "tone": 0.4,
       "profile": [
        [
-        0.0,
+        0,
         -0.105
        ],
        [
-        0.0,
+        0,
         -0.145
        ],
        [
@@ -20789,8 +21035,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.72
        ]
       }
@@ -20972,7 +21218,7 @@
        "translation": [
         0.48,
         0.175,
-        0.0
+        0
        ]
       },
       "region": "amplifier"
@@ -20993,7 +21239,7 @@
        "translation": [
         0.56,
         0.2797,
-        0.0
+        0
        ]
       },
       "tags": [
@@ -21135,7 +21381,7 @@
        "translation": [
         0.605,
         -0.107,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -21178,9 +21424,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "key-cover",
@@ -21222,7 +21468,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.01,
         0.2025
        ]
@@ -21244,7 +21490,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.0315,
         -0.11755
        ]
@@ -21345,7 +21591,7 @@
       "anchor": "castor-front-left"
      },
      {
-      "id": "support-bench-feet",
+      "id": "support-bench-foot-back-right",
       "kind": "box",
       "bone": "bench",
       "material": "bench-beech",
@@ -21353,19 +21599,88 @@
       "tone": 0.2,
       "size": [
        0.006,
-       0.29,
-       0.76
+       0.04,
+       0.04
       ],
       "transform": {
        "translation": [
         -0.003,
-        0.0,
-        -0.03
+        0.125,
+        -0.39
        ]
       },
       "member": "bench",
       "part": "support",
-      "anchor": "bench-feet"
+      "anchor": "bench-foot-back-right"
+     },
+     {
+      "id": "support-bench-foot-back-left",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.006,
+       0.04,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        -0.003,
+        0.125,
+        0.33
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-back-left"
+     },
+     {
+      "id": "support-bench-foot-front-right",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.006,
+       0.04,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        -0.003,
+        -0.125,
+        -0.39
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-front-right"
+     },
+     {
+      "id": "support-bench-foot-front-left",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.006,
+       0.04,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        -0.003,
+        -0.125,
+        0.33
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-front-left"
      },
      {
       "id": "mass-amplifier",
@@ -21383,7 +21698,7 @@
        "translation": [
         0.48,
         0.175,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -21405,7 +21720,7 @@
        "translation": [
         0.3,
         0.1,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -21427,7 +21742,7 @@
        "translation": [
         0.75,
         0.2,
-        0.0
+        0
        ]
       },
       "member": "cabinet",

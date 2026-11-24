@@ -1000,8 +1000,8 @@
       {
         "id": "tp-shade-3",
         "bone": "fol-core",
-        "x": 0.3414,
-        "y": 2.4238,
+        "x": 0.1914,
+        "y": 2.2738,
         "kind": "emitter",
         "title": {
           "en": "Transpiration of the shade leaves, anchor 3",

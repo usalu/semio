@@ -6,7 +6,13 @@ Feature: Frames share their borders
     When the second frame opens while the first frame's record is pending
     Then the glue the first frame left below itself is cancelled
     And the second frame moves up by exactly one hairline
-    And the shared edge is one hairline, in the accent colour when one of the two frames has one
+    And the shared edge is one hairline in the neutral border colour, whatever accent either frame has
+
+  Scenario: Only vertical edges carry an accent colour
+    Given a frame with an accent colour in the shared language-neutral fixture
+    When its edges are drawn
+    Then its horizontal edges, shared with the sections above and below, are neutral
+    And its vertical edges may carry its accent colour
 
     Examples:
       | case               |
@@ -31,9 +37,17 @@ Feature: Frames share their borders
   Scenario: The text column is a closed frame
     Given the page geometry in the shared language-neutral fixture
     When a page with running bars is shipped
-    Then the navbar rule is the top edge and the footer rule the bottom edge of the text area, each overlapping it by one hairline
+    Then the navbar rule is the top edge of the text area, overlapping it by one hairline
+    And the footer rule closes the column one body padding below the text area, so prose never touches it
+    And a window part that breaks at the page end is drawn across that padding onto the footer rule
     And two side borders run from the navbar rule to the footer rule
     And prose is inset from them by the window body padding while frames span the column
+
+  Scenario: A long table that breaks across pages stays open at the break
+    Given a long table in the shared language-neutral fixture
+    When it breaks across pages
+    Then the rule below its last row on the page is taken back, so the row runs down to the footer rule
+    And the table's real last row keeps its closing rule
 
   Scenario: A list is split into one cell per point
     Given a list in the shared language-neutral fixture

@@ -2,6 +2,7 @@ import {createHash} from "node:crypto";
 import {appendFileSync,mkdirSync,readFileSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {FLEET_POLICY_V1} from "../🪪️identity/🟦️.ts";
+import {fleetCacheRootV1,readLocalFleetCacheFactsV1} from "../../../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 
 const fleet=FLEET_POLICY_V1,EMPTY=createHash("sha256").digest("hex");
 type Environment=Readonly<Record<string,string|undefined>>;
@@ -11,16 +12,23 @@ export type FleetSettingsV1=Readonly<{endpoint:string;instance:string;token:stri
 
 const whole=(value:string|undefined,minimum:number):number|undefined=>{const number=value===undefined||!/^\d{1,6}$/u.test(value)?NaN:Number(value);return Number.isInteger(number)&&number>=minimum?number:undefined;};
 
+/** 🔑️ The access the fleet facts of this machine grant, for a process whose environment names the endpoint but not the access (an empty value counts as not named): the same answer the one resolver of the remote cache gives, so such a process is no longer read-only by accident. */
+function accessOfFactsV1(environment:Environment):string|undefined{
+ try{const root=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||fleetCacheRootV1(environment);return root===undefined?undefined:readLocalFleetCacheFactsV1(root)?.facts.cache.access;}catch{return undefined;}
+}
+
 /** ⚙️ Reads the fleet tier's settings from the environment the launcher exports (`SEMIO_REMOTE_CACHE_*`, the variables of the remote cache contract); `undefined` when the tier is off: no endpoint, `SEMIO_UNIT_CACHE_REMOTE=off`, or a read-only access that never claims or uploads still downloads, so only the endpoint decides. */
 export function readFleetSettingsV1(root:string,environment:Environment):FleetSettingsV1|undefined{
  const endpoint=environment.SEMIO_REMOTE_CACHE_ENDPOINT;
  if(!endpoint||environment.SEMIO_UNIT_CACHE_REMOTE==="off"||environment.SEMIO_UNIT_CACHE==="off")return undefined;
- const access=environment.SEMIO_REMOTE_CACHE_ACCESS??"read-only";
+ const access=environment.SEMIO_REMOTE_CACHE_ACCESS||accessOfFactsV1(environment)||"read-only";
  return Object.freeze({endpoint:endpoint.replace(/\/+$/u,""),instance:environment.SEMIO_REMOTE_CACHE_INSTANCE||"main",token:environment.SEMIO_REMOTE_CACHE_TOKEN||undefined,upload:access==="read-write"&&environment.SEMIO_REMOTE_CACHE_UPLOAD!=="false",timeoutMilliseconds:whole(environment.SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS,1)===undefined?undefined:whole(environment.SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS,1)!*1000,retries:whole(environment.SEMIO_REMOTE_CACHE_RETRIES,0),stateDirectory:join(root,fleet.layout.state),signedRoot:environment.SEMIO_REMOTE_CACHE_SIGNED==="1"?environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined:undefined,identity:endpoint+"|"+(environment.SEMIO_REMOTE_CACHE_GENERATION??"")+"|"+(environment.SEMIO_REMOTE_CACHE_TOKEN?createHash("sha256").update(environment.SEMIO_REMOTE_CACHE_TOKEN).digest("hex").slice(0,8):"")});
 }
 
 /** 🚦️ Why a request did not give an answer: the server is unreachable or failing, refuses the credential, or does not know the route. */
 export type FleetFaultV1="down"|"denied"|"unsupported";
+/** 📮️ What the server answered to a write: `stored`; `capacity` (507, its store is full: retry after it evicted); `busy` (any other refusal that can pass: 5xx, 429, 401, 403); `refused` (400 or 413: the bytes will never be taken); `down` (no answer); `diverged` and `stale` for an action result only. */
+export type FleetVerdictV1="stored"|"capacity"|"busy"|"refused"|"down"|"diverged"|"stale";
 /** 🎟️ The server's answer to a claim, or the fault that makes the caller compute locally. */
 export type FleetClaimV1={state:"granted";untilMilliseconds:number}|{state:"held";by:string;untilMilliseconds:number;expectedMilliseconds?:number}|{state:"stored"}|{state:"full"}|{state:"unavailable";fault:FleetFaultV1};
 
@@ -35,7 +43,9 @@ export interface FleetClientV1{
  getBlob(hash:string,size:number):Promise<Uint8Array|undefined>;
  hasBlob(hash:string):Promise<boolean|undefined>;
  putBlob(hash:string,bytes:Uint8Array):Promise<boolean>;
+ storeBlob(hash:string,bytes:Uint8Array):Promise<FleetVerdictV1>;
  putResult(key:string,bytes:Uint8Array,slot:string):Promise<boolean|"diverged"|"stale">;
+ storeResult(key:string,bytes:Uint8Array,slot:string):Promise<FleetVerdictV1>;
  claim(key:string,owner:string,ttlMilliseconds:number,expectedMilliseconds?:number):Promise<FleetClaimV1>;
  renew(key:string,owner:string,ttlMilliseconds:number):Promise<"granted"|"lost"|"fault">;
  release(key:string,owner:string):Promise<void>;
@@ -81,6 +91,16 @@ export function createFleetClientV1(settings:FleetSettingsV1,world:Readonly<{fet
    }
   }
  }
+ const verdictOf=(answer:{status:number}|FleetFaultV1):FleetVerdictV1=>{
+  if(typeof answer==="string")return "down";
+  const status=answer.status;
+  return status===200?"stored":status===507?"capacity":status===409?"diverged":status===422?"stale":status===400||status===413?"refused":"busy";
+ };
+ const storeBlob=async(hash:string,bytes:Uint8Array):Promise<FleetVerdictV1>=>{
+  if(hash===EMPTY)return "stored";
+  return verdictOf(await call("PUT",`${base}/cas/${hash}`,blobTimeout(bytes.length),{body:sendable(bytes),headers:{"content-type":"application/octet-stream"},transfer:true}));
+ };
+ const storeResult=async(key:string,bytes:Uint8Array,slot:string):Promise<FleetVerdictV1>=>verdictOf(await call("PUT",`${base}/ac/${key}`,fleet.timeouts.claimMilliseconds*4,{body:sendable(bytes),headers:{"content-type":"application/octet-stream",[fleet.slotHeader]:slot}}));
  const json=async<T>(response:Response):Promise<T|undefined>=>{try{return await response.json() as T;}catch{return undefined;}};
  const blobTimeout=(size:number)=>bounded(fleet.timeouts.blobMilliseconds)+Math.ceil(size/fleet.timeouts.blobBytesPerSecond*1000);
  return Object.freeze<FleetClientV1>({
@@ -115,14 +135,12 @@ export function createFleetClientV1(settings:FleetSettingsV1,world:Readonly<{fet
    if(typeof answer==="string")return undefined;
    return answer.status===200?true:answer.status===404?false:undefined;
   },
-  async putBlob(hash,bytes){
-   if(hash===EMPTY)return true;
-   const answer=await call("PUT",`${base}/cas/${hash}`,blobTimeout(bytes.length),{body:sendable(bytes),headers:{"content-type":"application/octet-stream"},transfer:true});
-   return typeof answer!=="string"&&answer.status===200;
-  },
+  storeBlob,
+  async putBlob(hash,bytes){return await storeBlob(hash,bytes)==="stored";},
+  storeResult,
   async putResult(key,bytes,slot){
-   const answer=await call("PUT",`${base}/ac/${key}`,fleet.timeouts.claimMilliseconds*4,{body:sendable(bytes),headers:{"content-type":"application/octet-stream",[fleet.slotHeader]:slot}});
-   return typeof answer!=="string"&&answer.status===409?"diverged":typeof answer!=="string"&&answer.status===422?"stale":typeof answer!=="string"&&answer.status===200;
+   const verdict=await storeResult(key,bytes,slot);
+   return verdict==="diverged"||verdict==="stale"?verdict:verdict==="stored";
   },
   async claim(key,owner,ttlMilliseconds,expectedMilliseconds){
    const answer=await call("POST",`${base}/claim/ac/${key}`,fleet.timeouts.claimMilliseconds,{body:JSON.stringify({owner,ttlMilliseconds,...(expectedMilliseconds===undefined?{}:{expectedMilliseconds})})});

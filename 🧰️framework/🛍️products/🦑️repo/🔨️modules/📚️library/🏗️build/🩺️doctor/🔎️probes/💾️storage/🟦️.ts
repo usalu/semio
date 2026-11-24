@@ -1,11 +1,13 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
-import {existsSync,lstatSync,readdirSync,realpathSync,statSync} from "node:fs";
+import {existsSync,lstatSync,readdirSync,realpathSync,renameSync,statSync,writeFileSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import type {PartitionFactsV1,StorageFactsV1} from "../../🟦️.ts";
 import {readJsonFileV1,type DoctorPortsV1} from "../../🔌️ports/🟦️.ts";
 import type {DoctorProbeV1,DoctorRepairRunV1} from "../📋️contract/🟦️.ts";
 import {tryImageLeaseV1} from "./🔒️image-lease/🟦️.ts";
+import {hostShareCapacityV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📐️elastic/🟦️.ts";
+import {NATIVE_IMAGE_GROW_V1,createNativeImageDarwinGrowPortV1,growNativeImageV1,nativeImageGrowAdmissionV1,nativeImageGrowTextV1,nativeImageGrownReceiptV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📈️grow/🟦️.ts";
 import {requireMaterializedPathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNativeImageHostOwnersV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/👤️owners/🟦️.ts";
 import {attachNativeImageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🔗️attach/🟦️.ts";
@@ -16,6 +18,9 @@ import {nativeImageStrandedMountV1,recoverNativeImageStrandedV1} from "../../../
 
 const BACKING="fixed.dmg",MOUNT="m",PUBLICATION=".publication",HDIUTIL="/usr/bin/hdiutil";
 const entry=(path:string)=>{try{return lstatSync(path);}catch{return undefined;}};
+
+/** 📏️ The bytes the writers of one partition need on this platform, as the cache policy declares them (`needBytes`), `null` for a partition without a declared need. */
+const declaredNeedV1=(id:string,platform:string):number|null=>(budget.partitions as Record<string,{needBytes?:Record<string,number>}>)[id]?.needBytes?.[platform]??null;
 
 /** 💾️ Reads one partition from its receipt, its backing file, its mount and its publication residue, without opening it. */
 function partition(ports:DoctorPortsV1,id:string,directory:string,roster:Record<string,unknown>|undefined):PartitionFactsV1{
@@ -40,7 +45,7 @@ function partition(ports:DoctorPortsV1,id:string,directory:string,roster:Record<
  const residue=["intent","receipt"].find(name=>existsSync(join(directory,PUBLICATION,name+".json"))) as "intent"|"receipt"|undefined;
  let age:number|null=null;
  if(residue)try{age=Math.max(0,Math.floor((ports.now()-statSync(join(directory,PUBLICATION,residue+".json")).mtimeMs)/1000));}catch{age=0;}
- return {id,state,...strandedFacts,capacityBytes,freeBytes,imageBytes:backingEntry?backingEntry.size:null,backing:directoryHost?"none":backingEntry?"present":"missing",publication:residue??"none",publicationAgeSeconds:age,image};
+ return {id,state,...strandedFacts,capacityBytes,freeBytes,imageBytes:backingEntry?backingEntry.size:null,backing:directoryHost?"none":backingEntry?"present":"missing",publication:residue??"none",publicationAgeSeconds:age,image,needBytes:directoryHost?null:declaredNeedV1(id,ports.platform)};
 }
 
 /** 📡️ Reads the kernel inventory of attached images where the platform has images; unreadable reads as absent so the probe never fails on it. */
@@ -117,9 +122,63 @@ async function repairImages(ports:DoctorPortsV1,dryRun:boolean):Promise<DoctorRe
  return {removed:repaired,bytes:0,...notes.length>0?{reason:notes.join("; ")}:{}};
 }
 
+/** 🧭️ The partitions the grow repair touches: a mounted image of a partition with a declared need whose filesystem plus one unit is below it. Pure and language-agnostic.
+ * @see ./🧪️tests/🟦️.ts */
+export function imageGrowPlanV1(storage:Pick<StorageFactsV1,"partitions"> | undefined,trailerBytes:number,unitBytes:number):readonly string[]{
+ return (storage?.partitions??[]).filter(row=>row.image!=="damaged"&&row.state==="mounted"&&row.imageBytes!==null&&typeof row.needBytes==="number"&&row.needBytes>0&&row.imageBytes-trailerBytes+unitBytes<row.needBytes).map(row=>row.id);
+}
+
+/** 📈️ What one grow pass did with one image: `grown` (with the bytes added), or `skipped` for `held` (an opener keeps the image), `current` (it already holds the target) or `unfit` (the host cannot hold the larger envelope: the numbers in MiB, `needed` being the free bytes the host lacks), each with the bilingual line. */
+export type ImageGrowRowV1=Readonly<{id:string;state:"grown";addedBytes:number}|{id:string;state:"skipped";kind:"held"|"current"|"unfit";values:Readonly<Record<string,number|string>>;note:string}|{id:string;state:"failed";note:string}>;
+
+/** 📈️ Grows the images that are smaller than the declared need of this platform, each under its exclusive lease (tried once, a running opener keeps the image and nothing changes): the image is detached while idle, its backing is stretched without writing a byte, it is attached again and its receipt is rewritten with the new sizes; progress and cancellation follow the signal of the ports. A host that cannot hold the larger envelope is named unfit and the image stays as it is. A dry run only names them. Only macOS has images (an empty answer elsewhere). */
+export async function growImagesV1(ports:DoctorPortsV1,dryRun:boolean):Promise<readonly ImageGrowRowV1[]>{
+ if(ports.platform!=="darwin")return [];
+ const plan=imageGrowPlanV1(await readStorage(ports),NATIVE_IMAGE_GROW_V1.trailerBytes,NATIVE_IMAGE_GROW_V1.unitBytes),relative=budget.partitions as Record<string,{directory:string;capacityBytes:number;hostSharePercent?:number}>,rows:ImageGrowRowV1[]=[];
+ for(const id of plan){
+  if(dryRun){rows.push({id,state:"grown",addedBytes:0});continue;}
+  try{rows.push(await growImage(ports,id,requireMaterializedPathV1(directoryOf(resolve(ports.root),relative[id]!.directory)),relative[id]!));}
+  catch(error){if(ports.signal.aborted)throw error;rows.push({id,state:"failed",note:`${id}: ${(error instanceof Error?error.message:String(error)).split("\n")[0]!.slice(0,200)}`});}
+ }
+ return Object.freeze(rows);
+}
+
+/** 📈️ The repair of the images below their need: the pass above as one repair run. */
+async function repairGrow(ports:DoctorPortsV1,dryRun:boolean):Promise<DoctorRepairRunV1>{
+ if(ports.platform!=="darwin")return {removed:0,bytes:0,status:"unavailable",reason:`Not applicable on ${ports.platform}: its partitions are plain directories with no image to grow / Nicht anwendbar auf ${ports.platform}: Die Partitionen sind gewöhnliche Verzeichnisse ohne wachsendes Image`};
+ const rows=await growImagesV1(ports,dryRun);
+ if(rows.length===0)return {removed:0,bytes:0,status:"nothing"};
+ const grown=rows.filter(row=>row.state==="grown"),notes=rows.flatMap(row=>row.state==="grown"?[]:[row.note]),failed=rows.find(row=>row.state==="failed");
+ if(dryRun)return {removed:rows.length,bytes:0};
+ if(grown.length===0&&failed!==undefined)throw Error(failed.note);
+ if(grown.length===0)return {removed:0,bytes:0,status:"unavailable",reason:notes.join("; ")};
+ return {removed:grown.length,bytes:grown.reduce((sum,row)=>sum+(row.state==="grown"?row.addedBytes:0),0),...notes.length>0?{reason:notes.join("; ")}:{}};
+}
+
+/** 📈️ Grows one image: the target is the declared need or the host share of the free bytes, whichever is larger, never above the declared capacity. */
+async function growImage(ports:DoctorPortsV1,id:string,directory:string,row:Readonly<{capacityBytes:number;hostSharePercent?:number}>):Promise<ImageGrowRowV1>{
+ const both=(key:"held"|"current"|"unfit",values:Readonly<Record<string,number|string>>)=>nativeImageGrowTextV1("en",key,values)+" / "+nativeImageGrowTextV1("de",key,values);
+ const lease=await tryImageLeaseV1(ports,id,directory);
+ if(lease==="busy"){const values={image:id};return {id,state:"skipped",kind:"held",values,note:both("held",values)};}
+ try{
+  const real=realpathSync(directory),image=join(real,BACKING),mount=join(real,MOUNT),receiptPath=join(real,"image.json"),receipt=readJsonFileV1(receiptPath,65536) as Record<string,unknown>|undefined,MiB=NATIVE_IMAGE_GROW_V1.unitBytes;
+  if(receipt===undefined||typeof receipt.filesystemBytes!=="number")throw Error(`The receipt of ${id} is unreadable / Der Beleg von ${id} ist nicht lesbar`);
+  const need=declaredNeedV1(id,ports.platform)??0,hostFree=nativeFreeSpaceSyncV1(real)?.availableBytes,capacity=hostShareCapacityV1(row.capacityBytes,row.hostSharePercent??0,hostFree??0,need),target=capacity-MiB,current=receipt.filesystemBytes;
+  const verdict=nativeImageGrowAdmissionV1({currentBytes:current,targetBytes:target,hostFreeBytes:hostFree});
+  const values={image:id,from:Math.round(current/MiB),to:Math.round(target/MiB),free:Math.floor((hostFree??0)/MiB),needed:Math.ceil((target+NATIVE_IMAGE_GROW_V1.initialBytes-current)/MiB)};
+  if(verdict==="already")return {id,state:"skipped",kind:"current",values,note:both("current",values)};
+  if(verdict==="host-short")return {id,state:"skipped",kind:"unfit",values,note:both("unfit",values)};
+  const port=createNativeImageDarwinGrowPortV1({image,cwd:real,mountPoint:mount,run:(program,args)=>ports.command(program,[...args]),signal:ports.signal});
+  await growNativeImageV1(port,{check:()=>ports.signal.throwIfAborted(),progress:(done,total)=>ports.progress(`storage-grow:${id}:${done}/${total}`),backingBytes:()=>lstatSync(image).size},target);
+  const temporary=receiptPath+".grow",written=nativeImageGrownReceiptV1(receipt,target);
+  writeFileSync(temporary,JSON.stringify(written),{mode:0o600});renameSync(temporary,receiptPath);
+  return {id,state:"grown",addedBytes:target-current};
+ }finally{lease?.release();}
+}
+
 /** 💽️ The disk-level facts: image state, free space against budget, unsettled publications and the free space of the disk that holds the caches; the repair puts stranded and detached images back at their mount point. */
 export const storageProbeV1:DoctorProbeV1=Object.freeze({
  area:"storage",phase:1,
- repairs:[Object.freeze({id:"storage-images",area:"storage" as const,run:(ports:DoctorPortsV1,_context:unknown,dryRun:boolean)=>repairImages(ports,dryRun)})],
+ repairs:[Object.freeze({id:"storage-images",area:"storage" as const,run:(ports:DoctorPortsV1,_context:unknown,dryRun:boolean)=>repairImages(ports,dryRun)}),Object.freeze({id:"storage-grow",area:"storage" as const,run:(ports:DoctorPortsV1,_context:unknown,dryRun:boolean)=>repairGrow(ports,dryRun)})],
  async read(ports){return {sections:{storage:await readStorage(ports)}};},
 });

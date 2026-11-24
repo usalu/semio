@@ -42,6 +42,9 @@ registerFieldExtractorV1("package-identity",(_text,_pointer,path,readOther)=>{
  return undefined;
 },{text:false});
 
+/** 🪪️ The identity of the code that extracts the fields of `format` (the source of its extractor), or undefined while none is registered: a stamp taken over rows of that format holds only while the extractor is the one it was taken under. */
+export function fieldExtractorIdentityV1(format){const registered=extractors.get(format);return registered===undefined?undefined:String(registered.extract)+"\0"+registered.text;}
+
 /** 🧮️ The fact of one field: its format, pointer and the digest of the value extracted from `read()` (the file text, or `undefined` when the file is absent); `!absent-file`, `!unparsable` and `!missing` digests keep every failure distinct from every value. */
 export function fieldFactV1(path,format,pointer,read,readOther=()=>{throw Error("No other reads");},paths=[]){
  const registered=extractors.get(format);

@@ -177,10 +177,10 @@ export function tryAcquireSlotV1(root:string,count:number):ClaimV1|undefined{
 }
 
 /** 🎰️ Host-wide compile slots. Waiters take a numbered ticket and only the oldest live ticket may claim a free slot, so grants are first-in-first-out and no waiter starves; tickets and slots of dead processes are reaped. */
-export async function acquireSlotV1(root:string,count:number,options:Readonly<{signal?:AbortSignal;onWait?:(waitedMs:number)=>void}>={}):Promise<ClaimV1>{
+export async function acquireSlotV1(root:string,count:number,options:Readonly<{signal?:AbortSignal;onWait?:(waitedMs:number)=>void;since?:number}>={}):Promise<ClaimV1>{
  if(!Number.isSafeInteger(count)||count<1)throw Error("Positive compile slot count required");
  const slots=join(root,policy.layout.slots),tickets=join(root,policy.layout.tickets);mkdirSync(slots,{recursive:true});mkdirSync(tickets,{recursive:true});
- const started=Date.now(),name=String(started).padStart(15,"0")+"-"+randomBytes(4).toString("hex")+"-"+process.pid,ticket=join(tickets,name);
+ const started=Date.now(),name=String(Math.min(started,options.since??started)).padStart(15,"0")+"-"+randomBytes(4).toString("hex")+"-"+process.pid,ticket=join(tickets,name);
  const writeTicket=()=>{const fd=openSync(ticket,"w");try{writeSync(fd,JSON.stringify({pid:process.pid,token:name,atMs:started}));}finally{closeSync(fd);}};
  const listener=watchChangesV1([slots,tickets]);writeTicket();
  const beat=setInterval(()=>{try{const now=new Date();utimesSync(ticket,now,now);}catch{}},policy.slot.heartbeatMilliseconds);beat.unref?.();

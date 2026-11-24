@@ -1,0 +1,6 @@
+{
+  "cover": [
+    { "view": "front", "from": "foot-1", "spans": { "foot-1": [-0.231, -0.199], "foot-3": [0.199, 0.231] } }
+  ],
+  "solidify": [{ "under": "carcass", "twins": { "foot-4": "foot-2", "casing": "side" } }]
+}

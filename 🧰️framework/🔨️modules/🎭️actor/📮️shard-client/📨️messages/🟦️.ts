@@ -83,12 +83,16 @@ export function publishShardWorkerTurnSpans(timings: ShardWorkerTurnTimings, ans
  * and the phase still names the boundary. */
 export type ShardCarriedBeat = { readonly turnSeq: number; readonly phase: string | null };
 
+/** 🧯️ The typed fault a worker rejection carries beside its text, so a host reads a code instead of parsing a message. */
+export type ShardReplyFault = { readonly code: string; readonly message: string; readonly params?: Readonly<Record<string, string>> };
+
 export type InboundMessage =
+  | { readonly kind: "original-succession-request"; readonly request: bigint; readonly actorId: string; readonly activationGeneration: bigint; readonly operation: bigint; readonly generation: bigint }
   | { readonly kind: "original-turn-receipt"; readonly actorId: string; readonly activationGeneration: bigint; readonly receipt: OriginalOperationReceipt }
   | { readonly kind: "original-producer-held"; readonly actorId: string; readonly activationGeneration: bigint; readonly operation: bigint; readonly generation: bigint; readonly refusal: unknown }
   | { readonly kind: "original-source-close"; readonly actorId: string; readonly activationGeneration: bigint; readonly operation: bigint; readonly generation: bigint; readonly sourceClosed: boolean }
   | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown; readonly timings?: ShardWorkerTurnTimings; readonly beat?: ShardCarriedBeat }
-  | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly stack?: string; readonly type?: string; readonly framesBytes?: number; readonly retryableLifecycle?: boolean; readonly beat?: ShardCarriedBeat }
+  | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly fault?: ShardReplyFault; readonly stack?: string; readonly type?: string; readonly framesBytes?: number; readonly retryableLifecycle?: boolean; readonly beat?: ShardCarriedBeat }
   /** 🐝️ `phase` names the generated worker's await boundary this beat was emitted at
    * (`module-fetch`/`module-ready`/`actor-ready`, or `progress` from its while-busy ticker); absent on
    * the unconditional start-of-request beat. Diagnostic only — {@link evaluateShardLiveness} treats

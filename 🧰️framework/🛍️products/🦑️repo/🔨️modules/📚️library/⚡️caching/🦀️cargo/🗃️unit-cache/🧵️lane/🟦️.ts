@@ -1,6 +1,6 @@
 import {createHash,randomBytes} from "node:crypto";
 import {closeSync,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeFileSync,writeSync} from "node:fs";
-import {join} from "node:path";
+import {basename,join,relative,resolve,sep} from "node:path";
 import {processAliveV1,tryClaimV1} from "../🔒️lock/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 
@@ -28,7 +28,7 @@ export function crateKeyV1(crates:readonly string[]):string{
 }
 
 /** 📖️ A lane's metadata file; `crateKey` is the affinity key of the crate set the lane's incremental state was last built for. */
-export type LaneRecordV1=Readonly<{version:1;id:string;createdMs:number;session?:string;agent?:string;crateKey?:string;crates?:readonly string[]}>;
+export type LaneRecordV1=Readonly<{version:1;id:string;createdMs:number;session?:string;agent?:string;crateKey?:string;crates?:readonly string[];holdUntilMs?:number;usedMs?:number;flavour?:string}>;
 
 /** 📚️ Reads a lane's metadata file. */
 export function readLaneV1(root:string,id:string):LaneRecordV1|undefined{try{return JSON.parse(readFileSync(lanePathsV1(root,id).metadata,"utf8"));}catch{return undefined;}}
@@ -44,12 +44,13 @@ const writeAtomicV1=(path:string,text:string):void=>{const temporary=path+"."+ra
 export function recordLaneSizeV1(root:string,id:string,bytes:number,incrementalBytes:number,nowMs:number):void{try{writeAtomicV1(lanePathsV1(root,id).size,JSON.stringify({bytes,incrementalBytes,measuredMs:nowMs}));}catch{}}
 
 /** 🚪️ Registers one running command in its lane and records who uses it for which crate set. The marker is kept fresh by a heartbeat and removed on release; garbage collection never touches a lane with a fresh marker. */
-export function enterLaneV1(root:string,id:string,owner?:LaneOwnerV1,crates?:readonly string[]):Readonly<{paths:ReturnType<typeof lanePathsV1>;release():void}>{
+export function enterLaneV1(root:string,id:string,owner?:LaneOwnerV1,crates?:readonly string[],flavour?:string):Readonly<{paths:ReturnType<typeof lanePathsV1>;release():void}>{
  const paths=lanePathsV1(root,id);
  for(const directory of[paths.target,paths.build,paths.live,paths.stamps])mkdirSync(directory,{recursive:true});
  const before=readLaneV1(root,id),names=crates===undefined?before?.crates:[...new Set(crates)].sort(),who=owner??(before?.session===undefined?undefined:{session:before.session,agent:before.agent!});
- writeAtomicV1(paths.metadata,JSON.stringify({version:1,id,createdMs:before?.createdMs??Date.now(),...who===undefined?{}:{session:who.session,agent:who.agent},...names===undefined?{}:{crateKey:crateKeyV1(names),crates:names.slice(0,policy.pool.listedCrates)}}));
- const touch=()=>{try{const now=new Date();utimesSync(paths.metadata,now,now);}catch{}};
+ const kept=flavour??before?.flavour;
+ writeAtomicV1(paths.metadata,JSON.stringify({version:1,id,createdMs:before?.createdMs??Date.now(),usedMs:Date.now(),...kept===undefined?{}:{flavour:kept},...who===undefined?{}:{session:who.session,agent:who.agent},...names===undefined?{}:{crateKey:crateKeyV1(names),crates:names.slice(0,policy.pool.listedCrates)}}));
+ const touch=()=>{try{const now=new Date(),record=readLaneV1(root,id);if(record!==undefined)writeAtomicV1(paths.metadata,JSON.stringify({...record,usedMs:now.getTime()}));utimesSync(paths.metadata,now,now);}catch{}};
  const marker=join(paths.live,process.pid+"-"+randomBytes(3).toString("hex")),write=()=>{const fd=openSync(marker,"w");try{writeSync(fd,JSON.stringify({pid:process.pid}));}finally{closeSync(fd);}};write();
  const beat=setInterval(()=>{try{const now=new Date();utimesSync(marker,now,now);}catch{}},policy.slot.heartbeatMilliseconds);beat.unref?.();
  let released=false;
@@ -83,7 +84,30 @@ export function incrementalDirectoriesV1(build:string):string[]{
 }
 
 /** 🛡️ Whether a lane is a retained product lane: a stable product workspace used within `retainMilliseconds` belongs to a release generation that is still open, so neither the pool nor the collector evicts it for its count or byte share (only free-space pressure may, after every other lane). */
-export function laneRetainedV1(id:string,lastUsedMs:number,nowMs:number):boolean{return id.startsWith(policy.pool.product.prefix)&&nowMs-lastUsedMs<policy.pool.product.retainMilliseconds;}
+export function laneRetainedV1(id:string,lastUsedMs:number,nowMs:number,holdUntilMs?:number):boolean{return id.startsWith(policy.pool.product.prefix)&&nowMs-lastUsedMs<policy.pool.product.retainMilliseconds||holdUntilMs!==undefined&&nowMs<holdUntilMs;}
+
+/** 🕰️ When a lane was last used: the later of its recorded use stamp (`usedMs`, content that a restore or copy keeps) and the modification time of its metadata (heartbeat of older records), else the modification time of the lane directory, else `0`. */
+export function laneUsedMsV1(root:string,id:string):number{
+ const paths=lanePathsV1(root,id),stamp=(path:string):number=>{try{return Math.floor(statSync(path).mtimeMs);}catch{return 0;}};
+ const record=readLaneV1(root,id);return Math.max(Number.isSafeInteger(record?.usedMs)?record!.usedMs!:0,stamp(paths.metadata),record===undefined?stamp(paths.base):0);
+}
+
+/** 🌡️ Whether a lane of a declared build flavour was used within `recentMilliseconds`: the lanes a build of that flavour needs are not shed for the pool's soft bounds, only by free-space pressure and never when the starting build requests them. */
+export function laneRecentV1(flavour:string|undefined,lastUsedMs:number,nowMs:number):boolean{return flavour!==undefined&&nowMs-lastUsedMs<policy.pool.recentMilliseconds;}
+
+/** 🏷️ The build flavour a shared compiler build directory stands for: its own directory name (one per build mode, see the compiler layout), `undefined` when the name is no flavour. Pure. */
+export function laneFlavourV1(sharedBuild:string):string|undefined{const name=basename(sharedBuild);return new RegExp(policy.pool.flavourPattern,"u").test(name)?name:undefined;}
+
+/** ⏳️ Holds a lane for the command that replaces the one using it (a pass the host killed a unit of restarts in the lane it compiled in, which keeps the Cargo fingerprints, incremental state and identity stamps of every unit the pass finished): until `restartHoldMilliseconds` have passed the lane is retained (see `laneRetainedV1`), and the next entry into the lane clears the hold. Best effort and silent for a lane without metadata. */
+export function holdLaneV1(root:string,id:string,nowMs:number):boolean{
+ try{const before=readLaneV1(root,id);if(before===undefined)return false;writeAtomicV1(lanePathsV1(root,id).metadata,JSON.stringify({...before,holdUntilMs:nowMs+policy.pool.restartHoldMilliseconds}));return true;}catch{return false;}
+}
+
+/** ⏳️ Holds the pooled lane whose build directory is `buildDirectory` under `cacheRoot` (see `holdLaneV1`); `false` for any other directory, such as the default lane's or a fresh generation's. */
+export function holdLaneOfBuildDirectoryV1(cacheRoot:string,buildDirectory:string,nowMs:number):boolean{
+ const lanes=join(resolve(cacheRoot),layout.lanes),parts=relative(lanes,resolve(buildDirectory)).split(sep);
+ return parts.length===1&&parts[0]!==""&&resolve(lanePathsV1(resolve(cacheRoot),parts[0]!).build)===resolve(buildDirectory)&&!policy.pool.reserved.includes(parts[0]!)&&holdLaneV1(resolve(cacheRoot),parts[0]!,nowMs);
+}
 
 /** 🧬️ The identifiers of the lanes that exist in a cache root. */
 export function laneIdsV1(root:string):string[]{try{return readdirSync(join(root,layout.lanes)).filter(name=>idPattern.test(name)).sort();}catch{return[];}}
@@ -91,9 +115,9 @@ export function laneIdsV1(root:string):string[]{try{return readdirSync(join(root
 /** 🔭️ Measures every lane of a cache root for the garbage collector (logical bytes; reflinked files count in full, which only makes collection earlier) and records each size beside the lane, where the pool reads it. */
 export function listLanesV1(root:string,nowMs:number):{id:string;bytes:number;incrementalBytes:number;lastUsedMs:number;live:boolean;retained:boolean}[]{
  const base=join(root,layout.lanes);let ids:string[];try{ids=readdirSync(base).filter(name=>idPattern.test(name)&&!policy.pool.reserved.includes(name));}catch{return[];}
- return ids.map(id=>{const paths=lanePathsV1(root,id),limit={files:2_000_000};let lastUsedMs=0;try{lastUsedMs=Math.floor(statSync(paths.metadata).mtimeMs);}catch{}
+ return ids.map(id=>{const paths=lanePathsV1(root,id),limit={files:2_000_000},lastUsedMs=laneUsedMsV1(root,id);
   const incrementalBytes=incrementalDirectoriesV1(paths.build).reduce((sum,path)=>sum+treeBytes(path,limit),0),bytes=treeBytes(paths.base,limit);recordLaneSizeV1(root,id,bytes,incrementalBytes,nowMs);
-  return{id,bytes,incrementalBytes,lastUsedMs,live:laneLiveV1(paths,nowMs),retained:laneRetainedV1(id,lastUsedMs,nowMs)};});
+  return{id,bytes,incrementalBytes,lastUsedMs,live:laneLiveV1(paths,nowMs),retained:laneRetainedV1(id,lastUsedMs,nowMs,readLaneV1(root,id)?.holdUntilMs)||laneRecentV1(readLaneV1(root,id)?.flavour,lastUsedMs,nowMs)};});
 }
 
 /** 📐️ The logical bytes a lane holds right now, measured with the same bound as the collector's measurement; `0` for a lane that does not exist. */

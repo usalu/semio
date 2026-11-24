@@ -6,6 +6,23 @@ extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_pack as pack;
+
+/// 🧪️ Runs one original lookup turn under a real original action and returns its recorded step.
+pub fn test_step(
+    grant: semio_framework_value::retained_clone::RetainedCloneGrant,
+    mut step: impl FnMut(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>,
+) -> semio_framework_value::retained_clone::RetainedCloneStep {
+    semio_framework_value_clone_source_testing::drive::drive_reply::<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>(
+        grant,
+        256,
+        |result| result.as_ref().map_or_else(semio_framework_value::ValueError::retained_progress, |step| step.progress()),
+        |effect, reply, recover| {
+            assert!(!recover);
+            Ok(reply.complete(step(effect)))
+        },
+    ).result.unwrap()
+}
 
 #[path = "."]
 pub mod affine {

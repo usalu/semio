@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "markerTag": "DIV",
+  "markerTag": "SPAN",
   "rowTag": "LI",
   "listTag": "OL",
   "card": "course-tasks",

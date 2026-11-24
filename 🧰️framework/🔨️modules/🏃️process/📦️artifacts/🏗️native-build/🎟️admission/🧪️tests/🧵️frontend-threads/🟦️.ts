@@ -75,7 +75,7 @@ test("Law: the compiled artifact does not depend on the front-end thread count: 
  }finally{rmSync(scratch,{recursive:true,force:true});}
 },300000);
 
-test("a cdylib final with a granted jobserver runs its ThinLTO back end on more than one thread and a one-job grant stays serial",()=>{
+test("a cdylib final runs its ThinLTO back end serially whatever the granted jobserver, so its memory never grows with idle cores",()=>{
  const toolchain=/channel\s*=\s*"([^"]+)"/u.exec(readFileSync(resolve(fileURLToPath(new URL("../../../../../../../../rust-toolchain.toml",import.meta.url))),"utf8"))?.[1];
  if(process.platform==="win32"||!toolchain||spawnSync("rustc",[`+${toolchain}`,"--version"],{encoding:"utf8"}).status!==0||!existsSync("/usr/bin/time"))return;
  const scratch=mkdtempSync(join(scratchRoot(),"ft-par-"));let handle:number|undefined;
@@ -92,9 +92,8 @@ test("a cdylib final with a granted jobserver runs its ThinLTO back end on more 
    const seconds=(label:string)=>Number(new RegExp(`^${label} ([0-9.]+)$`,"mu").exec(run.stderr)?.[1]);
    return{ratio:(seconds("user")+seconds("sys"))/seconds("real")};
   };
-  const parallel=measure(4,"parallel"),serial=measure(1,"serial");
-  expect(parallel.ratio,"4 granted cores, one unit running: the codegen and LTO workers use the three idle tokens").toBeGreaterThan(1.25);
-  expect(parallel.ratio,"one granted core stays on one thread").toBeGreaterThan(serial.ratio);
-  expect(serial.ratio).toBeLessThan(1.25);
+  const granted=measure(4,"granted"),single=measure(1,"single");
+  expect(granted.ratio,"4 granted cores, one unit running: the codegen and LTO workers stay on one thread").toBeLessThan(1.25);
+  expect(single.ratio).toBeLessThan(1.25);
  }finally{if(handle!==undefined)closeSync(handle);rmSync(scratch,{recursive:true,force:true});}
 },600000);

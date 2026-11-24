@@ -22,25 +22,26 @@ fn parses_strict_mutation_leaf_fixture() {
 }
 
 #[test]
-fn hashes_workspace_provenance_with_sha2_oracle() {
+fn hashes_the_authority_content_with_a_sha2_oracle_and_never_the_workspace_path() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛂️mutation-source-authority/🔣️.json")).unwrap();
-    let (workspace, compiler_cwd, source) = mutation_source_authority_tests::materialize("valid", &fixture);
+    let (_, compiler_cwd, source) = mutation_source_authority_tests::materialize("valid", &fixture);
     let authority = mutation_source_authority(&source, &compiler_cwd).unwrap();
     let first = mutation_leaf_workspace_token(&authority).unwrap();
-    let second = mutation_leaf_workspace_token(&authority).unwrap();
-    let workspace = mutation_leaf_portable_path(&fs::canonicalize(workspace).unwrap()).unwrap();
     let taxonomy = mutation_authority_relative(&authority.workspace_root, &authority.taxonomy_path).unwrap();
-    let mut input = b"semio.mutation-source-provenance/v1\0".to_vec();
-    for value in [workspace.as_bytes(), taxonomy.as_bytes()] {
+    let content: [u8; 32] = sha2::Sha256::digest(fs::read(&authority.taxonomy_path).unwrap()).into();
+    let mut input = b"semio.mutation-source-provenance/v2\0".to_vec();
+    for value in [taxonomy.as_bytes(), content.as_slice()] {
         input.extend_from_slice(&(value.len() as u64).to_be_bytes());
         input.extend_from_slice(value);
     }
     let expected: [u8; 32] = sha2::Sha256::digest(&input).into();
-    assert_eq!(first, second);
     assert_eq!(first, expected);
     let (_, other_cwd, other_source) = mutation_source_authority_tests::materialize("valid", &fixture);
-    let other = mutation_leaf_workspace_token(&mutation_source_authority(&other_source, &other_cwd).unwrap()).unwrap();
-    assert_ne!(first, other);
+    let other = mutation_source_authority(&other_source, &other_cwd).unwrap();
+    assert_eq!(first, mutation_leaf_workspace_token(&other).unwrap());
+    let edited = fs::read_to_string(&other.taxonomy_path).unwrap().replace("\"mutationDomainOwners\":{}", "\"mutationDomainOwners\":{},\"unrelated\":0");
+    fs::write(&other.taxonomy_path, edited).unwrap();
+    assert_ne!(first, mutation_leaf_workspace_token(&other).unwrap());
 }
 
 #[test]

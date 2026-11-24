@@ -631,8 +631,6 @@ export type PresencePresentation = {
   readonly submission?: { readonly phase: "confirming" | "saving" | "submitting" | "results"; readonly done?: number; readonly total?: number };
   readonly leaderboard?: Leaderboard;
   readonly leaderboardAt?: Timestamp;
-  readonly overall?: Leaderboard;
-  readonly overallAt?: Timestamp;
   readonly crowd?: CrowdView;
   readonly awards?: readonly Slug[];
 };

@@ -566,12 +566,12 @@
   {
    "name": "linking backend",
    "sharing": true,
-   "requiredBytes": 6710886400
+   "requiredBytes": 23152558080
   },
   {
    "name": "copying backend",
    "sharing": false,
-   "requiredBytes": 33889976320
+   "requiredBytes": 25622164276
   }
  ],
  "stale": [

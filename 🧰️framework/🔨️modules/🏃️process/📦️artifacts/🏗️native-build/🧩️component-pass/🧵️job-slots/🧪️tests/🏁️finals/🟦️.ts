@@ -2,7 +2,7 @@ import {afterAll,expect,test}from"bun:test";
 import {mkdtempSync,rmSync}from"node:fs";
 import {tmpdir}from"node:os";
 import {join}from"node:path";
-import {awaitFleetFitV1,offloadGateV1,readUnitExpenseV1,writeUnitCostV1,writeUnitPeakV1}from"../../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts";
+import {awaitFleetFitV1,offloadDeclaredThreadsV1,offloadGateV1,readUnitExpenseV1,writeUnitCostV1,writeUnitPeakV1}from"../../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts";
 import{OFFLOAD_POLICY_V1}from"../../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/📐️policy/🟦️.ts";
 import{planComponentJobSlotsV1,planComponentJobsV1,runPassesInJobSlotsV1}from"../../🟦️.ts";
 
@@ -23,7 +23,7 @@ test("N finals run on workers while the local jobs run and the cheap units stay 
  let remoteRunning=0,askedByCheap=0,fleetCalls=0,clock=0,remoteDuringCheap=0,cheapLocal=0,remoteFinals=0,localFinalsDone=0;
  const slotsAtPeak=()=>workers===0?0:Math.max(0,Math.floor(spare/peak)*workers-remote.held);
  const fleet=(async()=>{fleetCalls++;return new Response(JSON.stringify({slots:slotsAtPeak(),candidates:workers}),{status:200});})as typeof fetch;
- for(let index=0;index<6;index++){writeUnitPeakV1(root,`semio_hub_${index}_component`,6000);writeUnitCostV1(root,`semio_hub_${index}_component`,900000);}
+ for(let index=0;index<6;index++){writeUnitPeakV1(root,`semio_hub_${index}_component`,6000,offloadDeclaredThreadsV1(true));writeUnitCostV1(root,`semio_hub_${index}_component`,900000);}
  writeUnitCostV1(root,"semio_cheap_unit",800);
  const expense=(crate:string)=>readUnitExpenseV1(root,crate,crate.endsWith("_component")?["cdylib"]:["lib"],crate.endsWith("_component")?"wasm32-wasip2":undefined);
  const unit=async(crate:string):Promise<"remote"|"local">=>{
@@ -43,14 +43,14 @@ test("N finals run on workers while the local jobs run and the cheap units stay 
  expect(slots.light,"the light jobs are the worker slots less the first job: counted once").toBe(workers);
  expect(slots.jobs).toBe(slots.light+slots.local);
  const passes=Array.from({length:8},(_,index)=>({id:"hub_"+(index%6),target:"wasm32-wasip2"}));
- let running=0,maximumRunning=0,local=0,maximumLocal=0,reservedMaximum=0,reserved=0;
+ let running=0,maximumRunning=0,local=0,maximumLocal=0,reservedMaximum=0;const reserving=new Set<unknown>();
  await runPassesInJobSlotsV1(passes,{jobs:slots.jobs,check:()=>undefined,
-  local:{maximum:slots.local,floorMegabytes:4000,peak:()=>peak,sample:async()=>({availableMegabytes:20000,ownedMegabytes:0,pressure:"normal"}),pollMilliseconds:5,report:(_pass,event)=>{if(event.kind==="started"){reserved+=peak;reservedMaximum=Math.max(reservedMaximum,reserved);}}},
+  local:{maximum:slots.local,floorMegabytes:4000,peak:()=>peak,sample:async()=>({availableMegabytes:20000,ownedMegabytes:0,pressure:"normal"}),pollMilliseconds:5,report:(pass,event)=>{if(event.kind==="started"){reserving.add(pass);reservedMaximum=Math.max(reservedMaximum,reserving.size*peak);}}},
   run:async(pass,slot)=>{
    running++;maximumRunning=Math.max(maximumRunning,running);if(slot==="local"){local++;maximumLocal=Math.max(maximumLocal,local);}
    for(let index=0;index<3;index++)expect(await unit("semio_cheap_unit")).toBe("local");
    await unit(`semio_${pass.id}_component`);
-   running--;if(slot==="local")local--;
+   running--;if(slot==="local")local--;reserving.delete(pass);
   }});
  expect(maximumRunning,"never more concurrent jobs than planned").toBeLessThanOrEqual(slots.jobs);
  expect(maximumLocal,"never more local jobs than the local plan").toBeLessThanOrEqual(slots.local);

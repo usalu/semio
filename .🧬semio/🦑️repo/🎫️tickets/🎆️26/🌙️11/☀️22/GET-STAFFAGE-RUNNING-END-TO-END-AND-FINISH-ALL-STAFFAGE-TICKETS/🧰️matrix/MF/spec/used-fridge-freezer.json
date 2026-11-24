@@ -1,0 +1,62 @@
+{
+  "ops": [
+    {
+      "op": "shape-copy",
+      "from": "200",
+      "scale": "500",
+      "view": "front",
+      "id": "top-bar",
+      "after": "tube-l"
+    },
+    {
+      "op": "shape-copy",
+      "from": "200",
+      "scale": "500",
+      "view": "plan",
+      "id": "top-bar",
+      "after": "tube-l"
+    }
+  ],
+  "cover": [
+    {
+      "scales": [
+        "50",
+        "100"
+      ],
+      "view": "front",
+      "from": "roller-rr",
+      "spans": {
+        "roller-rr": [
+          -0.27,
+          -0.24
+        ],
+        "roller-rl": [
+          0.24,
+          0.27
+        ]
+      }
+    }
+  ],
+  "solidify": [
+    {
+      "under": "carry-tilt",
+      "twins": {
+        "cabinet-front": "side-panel",
+        "cabinet-top": "side-panel",
+        "foot-fl": "foot-fr"
+      },
+      "cuts": {
+        "cabinet-front": [
+          0.072,
+          0.758
+        ]
+      },
+      "on": {
+        "plinth": "side-panel"
+      }
+    },
+    {
+      "under": "truck-frame"
+    }
+  ]
+}

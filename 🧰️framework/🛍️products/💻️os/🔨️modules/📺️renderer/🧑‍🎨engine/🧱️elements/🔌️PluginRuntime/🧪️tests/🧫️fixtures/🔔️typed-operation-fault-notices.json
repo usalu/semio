@@ -1,0 +1,59 @@
+{
+  "schema": "semio.plugin.typed-operation-fault-notices/v1",
+  "receiver": 7,
+  "operation": "4294967297",
+  "generation": 1,
+  "faultLane": 11,
+  "terminalLane": 10,
+  "terminology": "native",
+  "table": [
+    {
+      "code": "stdio.pdf.page-number-out-of-range",
+      "label": {
+        "native": { "en": "Page {page} does not exist. Enter a page number from 1 to {last}.", "de": "Seite {page} existiert nicht. Geben Sie eine Seitenzahl von 1 bis {last} ein." },
+        "reuse": { "en": "Page {page} does not exist. Enter a page number from 1 to {last}.", "de": "Seite {page} existiert nicht. Geben Sie eine Seitenzahl von 1 bis {last} ein." }
+      }
+    },
+    {
+      "code": "stdio.pdf.unknown-field",
+      "label": {
+        "native": { "en": "The document has no field {field}.", "de": "Das Dokument hat kein Feld {field}." },
+        "reuse": { "en": "The document has no field {field}.", "de": "Das Dokument hat kein Feld {field}." }
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "known code with two params",
+      "page": { "origin": "app", "code": "stdio.pdf.page-number-out-of-range", "severity": "warning", "message": "Page 9 does not exist.", "scope": {}, "params": { "page": "9", "last": "2" }, "retryable": false },
+      "expected": {
+        "en": { "text": "Page 9 does not exist. Enter a page number from 1 to 2.", "kind": "warning", "code": "stdio.pdf.page-number-out-of-range" },
+        "de": { "text": "Seite 9 existiert nicht. Geben Sie eine Seitenzahl von 1 bis 2 ein.", "kind": "warning", "code": "stdio.pdf.page-number-out-of-range" }
+      }
+    },
+    {
+      "id": "known code with one param and no severity",
+      "page": { "code": "stdio.pdf.unknown-field", "message": "no field", "params": { "field": "/info/producer" } },
+      "expected": {
+        "en": { "text": "The document has no field /info/producer.", "kind": "error", "code": "stdio.pdf.unknown-field" },
+        "de": { "text": "Das Dokument hat kein Feld /info/producer.", "kind": "error", "code": "stdio.pdf.unknown-field" }
+      }
+    },
+    {
+      "id": "unknown code",
+      "page": { "origin": "app", "code": "stdio.pdf.never-declared", "severity": "error", "message": "internal text", "scope": {}, "retryable": false },
+      "expected": {
+        "en": { "text": "The operation was refused (stdio.pdf.never-declared).", "kind": "error", "code": "stdio.pdf.never-declared" },
+        "de": { "text": "Der Vorgang wurde abgelehnt (stdio.pdf.never-declared).", "kind": "error", "code": "stdio.pdf.never-declared" }
+      }
+    }
+  ],
+  "undecodable": {
+    "text": "typed-operation cancelled before its next publication unit",
+    "code": "interactive-job.undecodable-fault",
+    "expected": {
+      "en": { "text": "The operation was refused (interactive-job.undecodable-fault).", "kind": "error", "code": "interactive-job.undecodable-fault" },
+      "de": { "text": "Der Vorgang wurde abgelehnt (interactive-job.undecodable-fault).", "kind": "error", "code": "interactive-job.undecodable-fault" }
+    }
+  }
+}

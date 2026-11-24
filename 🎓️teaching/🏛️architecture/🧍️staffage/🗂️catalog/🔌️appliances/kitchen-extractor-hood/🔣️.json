@@ -628,6 +628,28 @@
               "rx": 0.075,
               "ry": 0.075,
               "material": "galvanised-steel"
+            },
+            {
+              "id": "damper-spindle",
+              "bone": "chimney",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.6,
+              "region": "chimney",
+              "material": "stainless-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.012,
+                  0.0
+                ],
+                [
+                  0.158,
+                  0.0
+                ]
+              ],
+              "closed": false
             }
           ],
           "front": [
@@ -764,8 +786,8 @@
           "elevation": {
             "plane": 0.08,
             "label": {
-              "en": "Longitudinal blower section",
-              "de": "Längsschnitt durch das Gebläse"
+              "en": "A-A",
+              "de": "A-A"
             }
           }
         }
@@ -1072,8 +1094,8 @@
           "elevation": {
             "plane": 0.08,
             "label": {
-              "en": "Longitudinal blower section",
-              "de": "Längsschnitt durch das Gebläse"
+              "en": "A-A",
+              "de": "A-A"
             }
           }
         }

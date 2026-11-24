@@ -4,13 +4,17 @@ import {nativeStatfsV1} from "../../../../../../../../../🔨️modules/🏃️p
 import {dirname,join,resolve,sep} from "node:path";
 import {waitingDelayV1 as delay} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {acquireResourceLease,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {concurrentEventV1,concurrentLeaseResourceV1,concurrentPinNamesV1,concurrentPinResourceV1,concurrentPointerNameV1,concurrentProtocolV1 as protocol,concurrentStaleTemporariesV1,concurrentTextV1,concurrentWaitStepV1,encodeConcurrentPointerV1,parseConcurrentPointerV1,type ConcurrentEventV1,type ConcurrentLeaseKindV1,type ConcurrentPointerV1} from "../🟦️.ts";
+import {observeDependencyStoreHoldersV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/💰️funding/🟦️.ts";
+import {concurrentEventV1,concurrentLeaseResourceV1,type ConcurrentHolderV1,concurrentPinNamesV1,concurrentPinResourceV1,concurrentPointerNameV1,concurrentProtocolV1 as protocol,concurrentStaleTemporariesV1,concurrentTextV1,concurrentWaitStepV1,encodeConcurrentPointerV1,parseConcurrentPointerV1,type ConcurrentEventV1,type ConcurrentLeaseKindV1,type ConcurrentPointerV1} from "../🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 
+/** 👁️ Is what one look at the lease registry found for one resource: the holders that are alive (an ancestor of this process can never be waited for) and those whose process is gone or whose pid was reused (their registration is removed by the look). */
+export type ConcurrentHoldersViewV1=Readonly<{live:readonly (ConcurrentHolderV1&Readonly<{ancestor:boolean}>)[];gone:readonly ConcurrentHolderV1[]}>;
 /** 🔌️ Are the effects of a politely waiting acquisition, replaceable by a law that must neither sleep nor touch a lease. */
 export type ConcurrentLeasePortsV1=Readonly<{
  acquire:(resource:string,mode:"shared"|"exclusive")=>Promise<ResourceLease|null>;
  ready?:()=>Promise<boolean>;
+ observe?:(resource:string)=>ConcurrentHoldersViewV1;
  sleep:(milliseconds:number,signal:AbortSignal)=>Promise<void>;
  now:()=>number;
  report:(event:ConcurrentEventV1)=>void|Promise<void>;
@@ -25,6 +29,7 @@ export function concurrentLeasePortsV1(directory:string,control:ResourceLeaseCon
    catch(error){if(error instanceof Error&&error.message.startsWith("Resource lease timed out:"))return null;throw error;}
   },
   ready,
+  observe:resource=>{try{const seen=observeDependencyStoreHoldersV1(directory,resource);return Object.freeze({live:seen.live.map(holder=>Object.freeze({pid:holder.pid,command:holder.command,sinceMs:holder.sinceMs,silentMs:holder.silentMs??0,mode:holder.mode,ancestor:holder.ancestor})),gone:seen.gone.map(holder=>Object.freeze({pid:holder.pid,command:holder.command,sinceMs:holder.sinceMs,silentMs:holder.silentMs??0,mode:holder.mode}))});}catch{return Object.freeze({live:Object.freeze([]),gone:Object.freeze([])});}},
   sleep:async(milliseconds,abort)=>{try{await delay(milliseconds,undefined,{signal:abort});}catch(error){abort.throwIfAborted();throw error;}},
   now:()=>Date.now(),
   report,
@@ -35,7 +40,7 @@ export function concurrentLeasePortsV1(directory:string,control:ResourceLeaseCon
 /** 🤝️ Acquires one workspace lease without ever queueing: it probes every round, asks `ready` every few seconds whether another process already did the work (then returns null: coalesced) and reports progress until the declared maximum. */
 export async function acquireConcurrentLeaseV1(kind:ConcurrentLeaseKindV1,workspace:string,mode:"shared"|"exclusive",ports:ConcurrentLeasePortsV1,maximumMilliseconds:number):Promise<ResourceLease|null>{
  const resource=concurrentLeaseResourceV1(kind,workspace),started=ports.now();
- let lastRecheck=started,lastProgress=started;
+ let lastRecheck=started,lastProgress=started,ancestorSince:number|undefined;
  for(;;){
   ports.signal.throwIfAborted();
   const lease=await ports.acquire(resource,mode);
@@ -43,7 +48,16 @@ export async function acquireConcurrentLeaseV1(kind:ConcurrentLeaseKindV1,worksp
   const now=ports.now(),step=concurrentWaitStepV1({elapsedMs:now-started,sinceRecheckMs:now-lastRecheck,sinceProgressMs:now-lastProgress,canRecheck:ports.ready!==undefined,maximumMs:maximumMilliseconds});
   if(step.expired)throw Error("Dependency "+kind+" lease wait exceeded its declared maximum");
   if(step.recheck){lastRecheck=now;if(await ports.ready!()){await ports.report(concurrentEventV1({event:"coalesced",resource:kind,elapsedMs:now-started}));return null;}}
-  if(step.progress){lastProgress=now;await ports.report(concurrentEventV1({event:"waiting",resource:kind,elapsedMs:now-started}));}
+  if(step.progress){
+   lastProgress=now;
+   const seen=ports.observe?.(resource),named=seen?.live.find(holder=>!holder.ancestor)??seen?.live[0];
+   for(const holder of seen?.gone??[])await ports.report(concurrentEventV1({event:"holder-gone",resource:kind,holder}));
+   if(seen!==undefined&&seen.live.length>0&&seen.live.every(holder=>holder.ancestor)){
+    ancestorSince??=now;
+    if(now-ancestorSince>=protocol.wait.ancestorGraceMilliseconds){const holder=seen.live[0]!;throw Error(concurrentTextV1("en","ancestorHolds",{pid:holder.pid,command:holder.command,resource:kind,seconds:Math.round((now-ancestorSince)/1000)})+" | "+concurrentTextV1("de","ancestorHolds",{pid:holder.pid,command:holder.command,resource:kind,seconds:Math.round((now-ancestorSince)/1000)}));}
+   }else ancestorSince=undefined;
+   await ports.report(concurrentEventV1({event:"waiting",resource:kind,elapsedMs:now-started,limitMs:maximumMilliseconds,...named===undefined?{}:{holder:{pid:named.pid,command:named.command,sinceMs:named.sinceMs,silentMs:named.silentMs,mode:named.mode}}}));
+  }
   await ports.sleep(protocol.wait.probeMilliseconds,ports.signal);
  }
 }

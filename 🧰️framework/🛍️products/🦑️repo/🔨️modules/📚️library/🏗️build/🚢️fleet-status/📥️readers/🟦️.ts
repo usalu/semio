@@ -11,7 +11,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {fleetTextV1} from "../🟦️.ts";
 import type {HostWardenMirrorV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts";
-import type {FleetBazelSlotFactV1,FleetCapacityWaiterFactV1,FleetCasFactV1,FleetOffloadFactV1,FleetFactsV1,FleetGrantFactV1,FleetHolderFactV1,FleetLanguageV1,FleetSealedEntryFactV1,FleetWorkerMemoryV1,FleetSourceV1,FleetStandingFactV1,FleetWaiterFactV1} from "../🟦️.ts";
+import type {FleetBazelSlotFactV1,FleetCapacityWaiterFactV1,FleetCasFactV1,FleetOffloadFactV1,FleetFactsV1,FleetGrantFactV1,FleetHolderFactV1,FleetLanguageV1,FleetSealedEntryFactV1,FleetWorkerMappingV1,FleetWorkerMemoryV1,FleetWorkerTreeV1,FleetSourceV1,FleetStandingFactV1,FleetWaiterFactV1} from "../🟦️.ts";
 
 /** 📥️ The readers of the fleet status: each one asks an existing status reader of the build (leases, capacity, Bazel slots, cache ledger, sealed store, graph generation pointer) and turns the answer into the facts the aggregation reads. A reader never takes a lease, never loads the graph and never writes; a reader that fails is reported in `sources` and leaves its section out.
  * @see ../🟦️.ts the aggregation, ../🧬️schema/🔣️.json the facts */
@@ -145,7 +145,41 @@ export async function readFleetWorkersV1(context:FleetReaderContextV1):Promise<P
  const store=context.environment.SEMIO_FLEET_STORE_ROOT??fleetStoreRootV1(context.root);
  if(store===undefined||store==="")return {};
  const rows=readReadyWorkersV1({store,nowMs:context.now()});
- return rows.length===0?{}:{workers:{offlineSeconds:READY_OFFLINE_SECONDS_V1,rows}};
+ if(rows.length===0)return {};
+ const trees=await readWorkerTreesV1(store,context),at=context.now();
+ return {workers:{offlineSeconds:READY_OFFLINE_SECONDS_V1,rows:rows.map(row=>{const mapping=readWorkerMappingV1(join(store,"v1","origins",row.origin,"slice-memory.json"),at,policy.readers.maximumMemoryRecordBytes,policy.readers.mappingFreshSeconds);return{...row,...trees?.has(row.origin)?{tree:trees.get(row.origin)!}:{},...mapping===undefined?{}:{mapping}};})}};
+}
+
+/** 🔒️ The mapping grant queue a worker's graph read published in its `slice-memory.json` (`sources.owners.presence.mappingQueue`, the owners taken beside it): undefined for a missing, oversized, torn, stale or unrelated file, never throws. @see ../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔒️mapping/🟦️.ts */
+export function readWorkerMappingV1(file:string,nowMs:number,limit:number,freshSeconds:number):FleetWorkerMappingV1|undefined{
+ try{
+  const stat=statSync(file),age=Math.max(0,Math.floor((nowMs-stat.mtimeMs)/1000));
+  if(stat.size>limit||age>freshSeconds)return undefined;
+  const owners=(JSON.parse(readFileSync(file,"utf8")) as {sources?:{owners?:{taken?:unknown;presence?:{mappingQueue?:Record<string,any>}}}}).sources?.owners,queue=owners?.presence?.mappingQueue;
+  if(queue===undefined||queue===null||typeof queue!=="object")return undefined;
+  const waits=Array.isArray(queue.waiting)?queue.waiting as {step:"slot"|"grant";waitedMilliseconds:number}[]:[],longest=waits.reduce((best,row)=>row.waitedMilliseconds>best.waitedMilliseconds?row:best,{step:"grant" as const,waitedMilliseconds:0}),head=queue.head,shared=queue.granted?.shared??{},num=(value:unknown):number=>typeof value==="number"&&Number.isFinite(value)&&value>=0?value:0;
+  return Object.freeze({taken:typeof owners?.taken==="number"?owners.taken:null,waiting:waits.length,step:waits.length===0?null:longest.step,longestWaitedSeconds:Math.floor(num(longest.waitedMilliseconds)/1000),holderKind:head?.holderKind==="shared"||head?.holderKind==="exclusive"?head.holderKind:null,holderPid:typeof head?.holderPid==="number"?head.holderPid:null,holderCommand:typeof head?.holderCommand==="string"?head.holderCommand.slice(0,120):null,holderSeconds:typeof head?.holderSeconds==="number"?head.holderSeconds:null,queued:typeof head?.queued==="number"?head.queued:null,sharedGrants:num(shared.count),sharedWaitedSeconds:Math.floor(num(shared.waitedMilliseconds)/1000),sharedLongestSeconds:Math.floor(num(shared.maximumMilliseconds)/1000),exclusiveHeldSeconds:Math.floor(num(queue.exclusiveHeld?.waitedMilliseconds)/1000),ageSeconds:age});
+ }catch{return undefined;}
+}
+
+/** 🌳️ The paths whose state differs between two views: the union of the paths of the lines only one side shows (the first three characters of a line are its state), each counted once. */
+export function treeDifferenceV1(onlyThere:readonly string[],onlyHere:readonly string[]):Readonly<{files:number;onlyThere:number;onlyHere:number}>{
+ const pathOf=(line:string):string=>line.slice(3),there=new Set(onlyThere.map(pathOf)),here=new Set(onlyHere.map(pathOf)),all=new Set([...there,...here]);
+ return Object.freeze({files:all.size,onlyThere:[...there].filter(path=>!here.has(path)).length,onlyHere:[...here].filter(path=>!there.has(path)).length});
+}
+
+/** 🌳️ How the tree of every worker differs from the tree of this machine, by the replica's own view comparison (`viewDiffV1`: the multiset difference of the sorted view lines each origin publishes with its digest) and not by a walk over the checkout: `null` for an origin whose view is missing or torn, no entry for an origin whose view equals the reference, `files` 0 for it as well; `undefined` when this machine is not an origin of the store or attests no view. */
+export async function readWorkerTreesV1(store:string,context:FleetReaderContextV1):Promise<ReadonlyMap<string,FleetWorkerTreeV1|null>|undefined>{
+ try{
+  const [{viewDiffV1,readAttestationsV1,fleetReportV1},{remoteExecutionOriginV1}]=await Promise.all([import("../../../../🤝️shared-worktree/🩺️attest/🟦️.ts"),import("../../🌐️remote-execution/🌡️load/🟦️.ts")]);
+  const reference=remoteExecutionOriginV1(context.root,context.environment),report=await viewDiffV1(store,reference);
+  if(report.here===null)return undefined;
+  const [attestations,fleet]=await Promise.all([readAttestationsV1(store),fleetReportV1(store,context.now())]),stale=attestations[reference]?.view?.stale===true,verdicts=new Map(fleet.rows.map(row=>[row.originId,row.verdict])),found=new Map<string,FleetWorkerTreeV1|null>();
+  for(const [origin,attestation] of Object.entries(attestations))if(origin!==reference&&attestation.view!==null)found.set(origin,Object.freeze({reference,files:0,onlyThere:0,onlyHere:0,stale,verdict:verdicts.get(origin)??"missing"}));
+  for(const row of report.differing)found.set(row.originId,Object.freeze({reference,...treeDifferenceV1(row.onlyThere,row.onlyHere),stale,verdict:verdicts.get(row.originId)??"missing"}));
+  for(const origin of report.unavailable)found.set(origin,null);
+  return found;
+ }catch{return undefined;}
 }
 
 /** 🛡️ Turns a validated `memory.json` record (a warden state or the absent record) into the memory fact of one origin; null for no record. The last alarm is the newest of the state. */
@@ -174,13 +208,12 @@ export const readFleetMemoryV1:FleetReaderV1=async context=>{
  return {memory:{local,origins}};
 };
 
-/** 🗄️ Host store: the cap in force with its watermarks and the last finished collection from the usage hint the collector leaves, and the leases of transient offload inputs (count and bytes). It reads no object tree: only the hint, the lease ledger and one stat per leased blob (bytes are null above `maximumLeaseStats`). */
+/** 🗄️ Host store: the cap in force with its watermarks and the last finished collection from the usage hint the collector leaves, and the leased and expired transient inputs (objects and bytes) from the census the last complete scan left. It reads no object tree and no lease ledger: only the hint and the census (bytes are null while no census exists). */
 export const readFleetCasV1:FleetReaderV1=async context=>{
- const [{CAS_POLICY_V1},{casRootV1,casObjectPathV1},{casEffectiveCapBytesV1,measureCasPartitionV1},{readCasUsageHintV1},{readCasTransientsV1}]=await Promise.all([import("../../🗄️cas/🧬️schema/🟦️.ts"),import("../../🗄️cas/🗃️store/🟦️.ts"),import("../../🗄️cas/🌡️partition/🟦️.ts"),import("../../🗄️cas/🧹️collector/🟦️.ts"),import("../../🗄️cas/📌️pins/🟦️.ts")]);
+ const [{CAS_POLICY_V1},{casRootV1},{casEffectiveCapBytesV1,casReserveBytesV1,measureCasPartitionV1},{readCasUsageHintV1,readCasCensusV1}]=await Promise.all([import("../../🗄️cas/🧬️schema/🟦️.ts"),import("../../🗄️cas/🗃️store/🟦️.ts"),import("../../🗄️cas/🌡️partition/🟦️.ts"),import("../../🗄️cas/🧹️collector/🟦️.ts")]);
  const root=casRootV1(context.environment,process.platform,context.environment.HOME||context.environment.USERPROFILE||homedir()),hint=await readCasUsageHintV1(root),partition=measureCasPartitionV1(root),effective=partition===undefined?CAS_POLICY_V1.capBytes:casEffectiveCapBytesV1(CAS_POLICY_V1,partition,hint?.bytes);
- const at=context.now(),rows=[...(await readCasTransientsV1(root))],live=rows.filter(([,until])=>until>at),expired=rows.filter(([,until])=>until<=at),limit=policy.readers.maximumLeaseStats;
- const bytes=(group:readonly (readonly [string,number])[]):number|null=>{if(group.length>limit)return null;let total=0;for(const [digest] of group)try{total+=statSync(casObjectPathV1(root,digest)).size;}catch{}return total;};
- const cas:FleetCasFactV1={root,capBytes:CAS_POLICY_V1.capBytes,effectiveCapBytes:effective,highWatermarkBytes:Math.floor(effective*CAS_POLICY_V1.highWatermark),lowWatermarkBytes:Math.floor(effective*CAS_POLICY_V1.lowWatermark),incrementBytes:CAS_POLICY_V1.incrementBytes,leases:{leased:live.length,expired:expired.length,leasedBytes:bytes(live),expiredBytes:bytes(expired)},lastCollection:hint===undefined?null:{atMs:hint.atMs,bytes:hint.bytes}};
+ const census=await readCasCensusV1(root);
+ const cas:FleetCasFactV1={root,...partition===undefined?{}:{reserve:{reserveBytes:casReserveBytesV1(CAS_POLICY_V1,partition),freeBytes:partition.freeBytes}},capBytes:CAS_POLICY_V1.capBytes,effectiveCapBytes:effective,highWatermarkBytes:Math.floor(effective*CAS_POLICY_V1.highWatermark),lowWatermarkBytes:Math.floor(effective*CAS_POLICY_V1.lowWatermark),incrementBytes:CAS_POLICY_V1.incrementBytes,leases:{leased:census?.classes.leased.objects??0,expired:census?.classes.expired.objects??0,leasedBytes:census?.classes.leased.bytes??null,expiredBytes:census?.classes.expired.bytes??null},lastCollection:hint===undefined?null:{atMs:hint.atMs,bytes:hint.bytes}};
  return {cas};
 };
 
@@ -194,7 +227,8 @@ export const readFleetOffloadV1:FleetReaderV1=async context=>{
  if(pids.length>0&&process.platform!=="win32"){const listed=spawnSync("ps",["-o","pid=,ppid=","-p",pids.join(",")],{encoding:"utf8",timeout:2000});for(const line of String(listed.stdout??"").split("\n")){const [pid,parent]=line.trim().split(/\s+/u).map(Number);if(Number.isSafeInteger(pid)&&Number.isSafeInteger(parent)&&parent>0)parents.set(pid!,parent!);}}
  const builds=new Map<number,{pid:number;local:number;fleet:number}>();
  for(const row of held){const pid=parents.get(row.pid)??row.pid,build=builds.get(pid)??{pid,local:0,fleet:0};builds.set(pid,{...build,[row.fleet?"fleet":"local"]:build[row.fleet?"fleet":"local"]+1});}
- const counters=readOffloadCountersV1(context.root),offload:FleetOffloadFactV1={local:held.filter(row=>!row.fleet).length,fleet:held.filter(row=>row.fleet).length,builds:[...builds.values()],out:counters.out,refused:counters.refused,fellBack:counters.fellBack,reasons:readOffloadReasonCountersV1(context.root)};
+ const cacheRoot=context.environment.SEMIO_UNIT_CACHE_ROOT||join(repositoryCachePartitionRootDataV1(context.root,"rust"),"u"),spool=await(async()=>{try{const {spoolBoundV1,spoolLengthV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📤️uploader/🟦️.ts");return{depth:spoolLengthV1(cacheRoot),bound:spoolBoundV1(cacheRoot)};}catch{return undefined;}})();
+ const counters=readOffloadCountersV1(context.root),offload:FleetOffloadFactV1={local:held.filter(row=>!row.fleet).length,fleet:held.filter(row=>row.fleet).length,builds:[...builds.values()],out:counters.out,refused:counters.refused,fellBack:counters.fellBack,reasons:readOffloadReasonCountersV1(context.root),...spool===undefined?{}:{spool}};
  return {offload};
 };
 

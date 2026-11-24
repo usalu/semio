@@ -39,7 +39,7 @@ semio-s-artifact-stdio-semio-value-model = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
 
 [features]
-test-support = ["dep:serde"]
+test-support = ["dep:serde", "semio-s-plugin-norm-compliance/compliance-testing"]
 
 [dev-dependencies]
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

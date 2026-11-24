@@ -41,7 +41,7 @@ fn every_check_outcome_routes_to_its_row_or_the_document_badge() {
                 let route = route_of(&document, check).unwrap_or_else(|| panic!("check {} (subject {:?}) has no owner", check.id, check.subject.entity_id));
                 match route {
                     CheckRoute::Entity(id) => {
-                        assert!(drawn.contains(id.as_str()), "check {} routes to {id}, which the scene does not draw", check.id);
+                        assert!(drawn.contains(id.as_str()), "check {} routes to {id}, which the scene does not draw (drawn: {drawn:?})", check.id);
                         assert_eq!(focus_of_outcome(&document, &report, &check.id).as_deref(), Some(id.as_str()), "{}", check.id);
                     }
                     CheckRoute::Document => {
@@ -55,7 +55,17 @@ fn every_check_outcome_routes_to_its_row_or_the_document_badge() {
     assert!(seen > 400, "{seen} checks routed");
 }
 
-/// 🌡️ A sheet, a shell and a fire scenario are toned by the worst applicable check routed to them, in the filed and the unfiled report.
+/// 🌡️ The severity rank of a check status in the tone of a row: failures, then warnings and unverified bases, then passes; informative rows never tone.
+fn severity(status: norm::CheckStatus) -> u8 {
+    match status {
+        norm::CheckStatus::Fail => 3,
+        norm::CheckStatus::Warning | norm::CheckStatus::UnverifiedBasis => 2,
+        norm::CheckStatus::Pass => 1,
+        norm::CheckStatus::Info | norm::CheckStatus::NotApplicable => 0,
+    }
+}
+
+/// 🌡️ A sheet, a shell and a fire scenario are toned by the most severe applicable check routed to them, then by the highest utilisation, in the filed and the unfiled report.
 #[test]
 fn a_row_is_toned_by_the_worst_check_routed_to_it() {
     let document = En1999Snapshot::full_showcase();
@@ -64,10 +74,11 @@ fn a_row_is_toned_by_the_worst_check_routed_to_it() {
         let rows = kit::Rows::of(&document);
         let ids = document.cold_formed.iter().map(|e| e.id.as_str()).chain(document.shells.iter().map(|e| e.id.as_str())).chain(document.fire_scenarios.iter().map(|e| e.id.as_str()));
         for id in ids {
-            let worst = report.checks.iter().filter(|c| finite_applicable(c) && rows.owner(c).as_deref() == Some(id)).map(|c| c.utilization.max(0.0)).fold(None, |best: Option<f64>, u| Some(best.map_or(u, |b| b.max(u))));
-            let bound = scene.entities.iter().find(|e| e.entity.id == id).unwrap_or_else(|| panic!("{id} is not drawn")).utilisation.as_ref().map(|b| b.ratio);
+            let worst = report.checks.iter().filter(|c| finite_applicable(c) && rows.owner(c).as_deref() == Some(id)).max_by(|a, b| (severity(a.status), a.utilization.max(0.0)).partial_cmp(&(severity(b.status), b.utilization.max(0.0))).expect("finite")).map(|c| c.utilization.max(0.0));
+            let binding = scene.entities.iter().find(|e| e.entity.id == id).unwrap_or_else(|| panic!("{id} is not drawn")).utilisation.clone();
+            let bound = binding.as_ref().map(|b| b.ratio);
             match (worst, bound) {
-                (Some(w), Some(b)) => assert!((w - b).abs() < 1e-9, "{id}: bound {b} vs worst routed {w}"),
+                (Some(w), Some(b)) => assert!((w - b).abs() < 1e-9, "{id}: bound {b} ({:?}) vs worst routed {w}: {:?}", binding.as_ref().map(|x| &x.check_id), report.checks.iter().filter(|c| finite_applicable(c) && rows.owner(c).as_deref() == Some(id)).map(|c| (c.id.as_str(), c.utilization, c.status)).collect::<Vec<_>>()),
                 (None, None) => {}
                 other => panic!("{id}: worst routed and bound disagree: {other:?}"),
             }

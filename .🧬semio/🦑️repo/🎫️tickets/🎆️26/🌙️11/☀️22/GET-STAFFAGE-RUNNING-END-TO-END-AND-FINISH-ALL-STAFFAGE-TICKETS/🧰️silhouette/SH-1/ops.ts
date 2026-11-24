@@ -1,4 +1,4 @@
-/** 🧷️ The repair ops of the people of HW-10 … HW-18 and how they apply to an asset: `shape`, `shape-add`, `shape-set`, `shape-remove` (a drawn shape of `representations[scale].geometry[view]`), `solid`, `solid-add`, `solid-set`, `solid-remove` (a solid of `volumes[scale][list]`, `list` defaults to `body`), `region-set` (a thermal region), `dims` (declared dimensions) and `set` (a value at a JSON path whose steps are keys, indices or `{ id }` matches). */
+/** 🧷️ The repair ops of the people of HW-10 … HW-18 and how they apply to an asset: `shape`, `shape-add`, `shape-set`, `shape-remove` (a drawn shape of `representations[scale].geometry[view]`), `solid`, `solid-add`, `solid-set`, `solid-remove` (a solid of `volumes[scale][list]`, `list` defaults to `body`), `region-set` (a thermal region), `dims` (declared dimensions), `order` (the drawing order of the shapes of one view by id, the last step of a repair so that the ops give the same file when they run again on their own result) and `set` (a value at a JSON path whose steps are keys, indices or `{ id }` matches). */
 export type Op = { readonly op: string; readonly scale?: string; readonly view?: string; readonly list?: string; readonly id?: string; readonly after?: string; readonly shape?: any; readonly solid?: any; readonly set?: any; readonly path?: readonly (string | number | { readonly id: string })[]; readonly value?: unknown };
 
 const at = (list: any[], id: string, what: string): number => {
@@ -28,6 +28,11 @@ export function applyOp(asset: any, o: Op): void {
     else if (o.op === "solid-set") Object.assign(l[at(l, o.id!, "solid")], o.set);
     else if (o.op === "solid-remove") l.splice(at(l, o.id!, "solid"), 1);
     else throw new Error(`unknown op ${o.op}`);
+  } else if (o.op === "order") {
+    const l = asset.representations[o.scale!].geometry[o.view!] as any[];
+    const rank = new Map<string, number>(((o as any).ids as string[]).map((id, i) => [id, i]));
+    const sorted = l.map((x, i) => ({ x, i })).sort((a, b) => (rank.get(a.x.id) ?? Infinity) - (rank.get(b.x.id) ?? Infinity) || a.i - b.i).map((e) => e.x);
+    l.splice(0, l.length, ...sorted);
   } else if (o.op === "region-set") Object.assign(asset.thermal.regions[at(asset.thermal.regions, o.id!, "region")], o.set);
   else if (o.op === "dims") Object.assign(asset.dimensions, o.set);
   else if (o.op === "set") {

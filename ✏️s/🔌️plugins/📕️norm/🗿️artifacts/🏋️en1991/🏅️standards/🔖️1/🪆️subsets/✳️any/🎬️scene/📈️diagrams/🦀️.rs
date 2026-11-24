@@ -1,18 +1,26 @@
 //! 📈️ Diagrams: the peak velocity pressure profile q_p(z) with the wind faces, c_pe against the loaded area, the snow shape coefficients μ₁, μ₂ and μ₃, the fire curves (standard, external,
 //! hydrocarbon, parametric), the traffic influence line with the tandem axles, and the silo pressure profiles.
 
-use super::kit::{owner_of, Owner};
-use super::model::{DerailmentCase, DynamicElement, En1991Snapshot, FireMode, InternalExplosion, StructureKind};
-use super::norm::CheckReport;
-use super::scene::diagram_kit::{curves, Xy};
-use super::scene::*;
-use super::scene::projection_kit::diagram_parts::{column, stroke, axis};
-use super::thermal_fire::gas_temperature_k;
-use super::wind::{cpe_candidates, qp_at};
-use super::traffic::{RAIL_AXLES, RAIL_AXLE_SPACING, RAIL_LEAD, SW0_GAP, SW0_LENGTH, SW2_GAP, SW2_LENGTH};
-use super::{checks, silo};
-use super::wave3;
-use super::wave3_rows;
+extern crate semio_s_artifact_norm_en1991_checks as checks;
+extern crate semio_s_artifact_norm_en1991_model as model;
+extern crate semio_s_artifact_norm_en1991_scene_fields as fields;
+extern crate semio_s_artifact_norm_en1991_scene_members as members;
+extern crate semio_s_artifact_norm_en1991_scene_members_projection as projection;
+extern crate semio_s_plugin_norm_compliance as norm;
+extern crate semio_s_plugin_norm_structural_scene as scene;
+
+use members::{kit, silo, thermal_fire, wave3, wave3_rows, wind};
+use projection::traffic;
+
+use kit::{owner_of, Owner};
+use model::{DerailmentCase, DynamicElement, En1991Snapshot, FireMode, InternalExplosion, StructureKind};
+use norm::CheckReport;
+use scene::diagram_kit::{curves, Xy};
+use scene::*;
+use scene::projection_kit::diagram_parts::{column, stroke, axis};
+use thermal_fire::gas_temperature_k;
+use wind::{cpe_candidates, qp_at};
+use traffic::{RAIL_AXLES, RAIL_AXLE_SPACING, RAIL_LEAD, SW0_GAP, SW0_LENGTH, SW2_GAP, SW2_LENGTH};
 use checks::{part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_7, part_2, part_3, part_4};
 
 #[path = "🧷️row-curves/🦀️.rs"]
@@ -38,7 +46,7 @@ fn line(id: &str, en: &str, de: &str, points: Vec<Xy>, tone: Tone, width: f64, d
 }
 
 fn utilisation_tone(ratio: f64) -> Tone {
-    super::scene::utilisation_tone(ratio)
+    scene::utilisation_tone(ratio)
 }
 
 fn utilisation_of(report: &CheckReport, check_id: &str) -> Option<f64> {
@@ -162,10 +170,10 @@ fn fire_curves(d: &En1991Snapshot, report: &CheckReport) -> Option<Diagram2d> {
     }
     let t_max = (d.fire_duration / 60.0 * 1.2).max(120.0);
     let times: Vec<f64> = curves::sample(|t| t, 0.0, t_max, SAMPLES).into_iter().map(|q| q[0]).collect();
-    let nominal: [(&str, &str, &str, fn(f64) -> f64, super::model::part_1_2::FireCurve); 3] = [
-        ("fire-standard", "Standard (ISO 834)", "Einheits-Temperaturzeitkurve (ISO 834)", part_1_2::standard_gas_temp_c, super::model::part_1_2::FireCurve::Standard),
-        ("fire-external", "External fire curve", "Außenbrandkurve", part_1_2::external_gas_temp_c, super::model::part_1_2::FireCurve::External),
-        ("fire-hydrocarbon", "Hydrocarbon curve", "Hydrocarbonkurve", part_1_2::hydrocarbon_gas_temp_c, super::model::part_1_2::FireCurve::Hydrocarbon),
+    let nominal: [(&str, &str, &str, fn(f64) -> f64, model::part_1_2::FireCurve); 3] = [
+        ("fire-standard", "Standard (ISO 834)", "Einheits-Temperaturzeitkurve (ISO 834)", part_1_2::standard_gas_temp_c, model::part_1_2::FireCurve::Standard),
+        ("fire-external", "External fire curve", "Außenbrandkurve", part_1_2::external_gas_temp_c, model::part_1_2::FireCurve::External),
+        ("fire-hydrocarbon", "Hydrocarbon curve", "Hydrocarbonkurve", part_1_2::hydrocarbon_gas_temp_c, model::part_1_2::FireCurve::Hydrocarbon),
     ];
     let mut series = Vec::new();
     let mut columns = vec![column("Time t", "Zeit t", "min", times.clone())];
@@ -943,7 +951,7 @@ fn snow_guard_forces(d: &En1991Snapshot, report: &CheckReport) -> Option<Diagram
 
 /// 🔥 Localised fire: the Hasemi heat flux ĥ of the first fire over the horizontal distance r along the ceiling, with the flux and the assumed flux of every fire whose flame reaches the ceiling (EN 1991-1-2, Annex C).
 fn local_fire_flux(d: &En1991Snapshot, report: &CheckReport) -> Option<Diagram2d> {
-    let flux_at = |r: &super::model::LocalFire, distance: f64| {
+    let flux_at = |r: &model::LocalFire, distance: f64| {
         let z_prime = part_1_2::local_fire_virtual_source_m(r.heat_release_rate, r.fire_diameter);
         let l_h = part_1_2::local_fire_horizontal_flame_m(r.heat_release_rate, r.ceiling_height);
         part_1_2::hasemi_flux_w_m2(part_1_2::hasemi_y(distance, r.ceiling_height, z_prime, l_h)) / 1000.0
@@ -1096,8 +1104,8 @@ fn diagrams_unbased(document: &En1991Snapshot, report: &CheckReport, focus: Opti
     }
     if want(Group::Bridge) {
         out.extend(influence(document, report));
-        out.extend(super::fields::travel::diagram(document));
-        out.extend(super::fields::travel::envelope_diagrams(document));
+        out.extend(fields::travel::diagram(document));
+        out.extend(fields::travel::envelope_diagrams(document));
         out.extend(rail_influence(document, report));
         out.extend(lane_loads(document, report));
         out.extend(lane_plan(document, report));
@@ -1111,7 +1119,7 @@ fn diagrams_unbased(document: &En1991Snapshot, report: &CheckReport, focus: Opti
         out.extend(silo_pressure(document, report));
     }
     if want(Group::Crane) {
-        out.extend(super::fields::travel::crane_envelope_diagrams(document));
+        out.extend(fields::travel::crane_envelope_diagrams(document));
     }
     if want(Group::Gravity) {
         out.extend(psi_chart(document, report));
@@ -1188,7 +1196,7 @@ fn diagrams_unbased(document: &En1991Snapshot, report: &CheckReport, focus: Opti
         out.extend(helicopter_landing(document, report));
     }
     for case in document.cases.iter().filter(|c| focus.is_none_or(|f| f == c.id)) {
-        out.extend(super::scene::projection_kit::design_case::case_diagram(&case.id, &loc(&case.label_en, &case.label_de), report, None));
+        out.extend(scene::projection_kit::design_case::case_diagram(&case.id, &loc(&case.label_en, &case.label_de), report, None));
     }
     out.extend(outcomes::family_outcomes(document, report, focus));
     out

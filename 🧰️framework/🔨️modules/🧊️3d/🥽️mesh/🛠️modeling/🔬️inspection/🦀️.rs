@@ -18,7 +18,7 @@ pub struct MeshCandidateInspection<'a>{pub phase:u8,pub soup:&'a Soup,pub a:u32,
 pub struct MeshDecimationInspection<'a>{pub snapshot:&'a Snapshot,pub phase:u8,pub candidate:Option<MeshCandidateInspection<'a>>,pub build:Option<MeshTopologyInspection<'a>>}
 pub enum MeshModelingInspection<'a>{
     Bevel(MeshBevelInspection<'a>),Decimate(MeshDecimationInspection<'a>),Mirror(MeshSnapshotInspection<'a>),Merge(MeshSnapshotInspection<'a>),
-    Subdivide(MeshTessellationInspection<'a>),LoopCut(MeshSnapshotInspection<'a>),Orient(MeshOrientationInspection<'a>),FillHoles(MeshSnapshotInspection<'a>),
+    Subdivide(MeshTessellationInspection<'a>),LoopCut(MeshSnapshotInspection<'a>),Orient(MeshOrientationInspection<'a>),FillHoles(MeshSnapshotInspection<'a>),Bridge(MeshSnapshotInspection<'a>),BoundaryExtrude(MeshSnapshotInspection<'a>),
     Inflate(MeshSnapshotInspection<'a>),Import(()),Knife(MeshTessellationInspection<'a>),Transform(MeshTransformInspection<'a>),
 }
 impl MeshModelingJob{
@@ -33,6 +33,8 @@ impl MeshModelingJob{
             Work::LoopCut(work)=>MeshModelingInspection::LoopCut(MeshSnapshotInspection{snapshot:&work.snapshot}),
             Work::Orient(work)=>MeshModelingInspection::Orient(MeshOrientationInspection{snapshot:&work.snapshot,edges:&work.edges,keys:&work.keys,adjacency:&work.adjacency,component:&work.component,flipped:&work.flipped,stack:&work.stack,active:work.active,face:work.face,corner:work.corner,cursor:work.cursor,neighbor:work.neighbor,reversing:work.reversing,incidence:work.incidence,flip_count:work.flip_count,phase:work.phase,build:work.build.as_ref().map(Build::inspection)}),
             Work::FillHoles(work)=>MeshModelingInspection::FillHoles(MeshSnapshotInspection{snapshot:&work.snapshot}),
+            Work::Bridge(work)=>MeshModelingInspection::Bridge(MeshSnapshotInspection{snapshot:&work.snapshot}),
+            Work::BoundaryExtrude(work)=>MeshModelingInspection::BoundaryExtrude(MeshSnapshotInspection{snapshot:&work.snapshot}),
             Work::Inflate(work)=>MeshModelingInspection::Inflate(MeshSnapshotInspection{snapshot:&work.snapshot}),
             Work::Import(_)=>MeshModelingInspection::Import(()),
             Work::Knife(work)=>MeshModelingInspection::Knife(MeshTessellationInspection{snapshot:&work.snapshot,tessellation:work.tessellation.as_ref(),tessellation_retirement:work.tessellation_retirement.as_ref().map(|_|())}),

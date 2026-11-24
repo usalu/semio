@@ -1,5 +1,5 @@
 #!/usr/bin/env repo
-import {spawn,spawnSync} from "node:child_process";
+import {spawnSync} from "node:child_process";
 import {existsSync,mkdtempSync,mkdirSync,readFileSync,readdirSync,realpathSync,rmdirSync,statSync,unlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {basename,join,resolve} from "node:path";
@@ -13,7 +13,8 @@ import {brokerOfV1,brokerWouldWaitV1,recallProvenanceV1,replayCachedUnitV1} from
 import {collectGarbageSingleFlightV1,collectGarbageV1,measureGcV1,measureVolumeV1,planGcV1,watchUnitCachePressureV1} from "./🧹️gc/🟦️.ts";
 import {fillRatesV1,readFillSamplesV1} from "./🧹️gc/📈️fill/🟦️.ts";
 import {keyGapV1,sourceEnvironmentV1,unitSourcesV1} from "./🔏️key/🔗️sources/🟦️.ts";
-import {readGapsV1,recordGapsV1} from "./🔏️key/🕳️gaps/🟦️.ts";
+import {manifestCoversV1,manifestDeclarationV1,manifestFilesV1,manifestIdV1,manifestOfV1,manifestUnionV1,manifestWithinBoundsV1,observedManifestV1,obtainManifestV1,refreshManifestV1,shareManifestV1,writeManifestV1,type InputManifestV1} from "./🛰️fleet/📋️manifest/🟦️.ts";
+import {fleetClientV1} from "./🛰️fleet/🟦️.ts";
 import {buildRunKeyV1,markBuildScriptIdentityV1} from "./🏗️buildscript/🔑️run-key/🟦️.ts";
 import {linkRootArgumentsV1,remappedNameV1,rustSourceRemapArgumentsV1,remappedV1,remapsOfV1} from "./🧭️remap/🟦️.ts";
 import {pathSensitiveV1} from "./🧭️remap/🔍️embedding/🟦️.ts";
@@ -21,7 +22,7 @@ import {externIdentityV1,markExternIdentityV1,markProducerKeyV1,producerKeyV1} f
 import {currentHashV1,dependencyDirectoriesV1,interfaceEligibilityV1,interfaceIdentityV1,rebaseRestoredUnitV1,restoredClosureViolationV1,settleUnitInterfaceV1,writeDependenciesV1} from "./🔭️interface/🟦️.ts";
 import {announcedPathsV1,expectedOutputsV1,missingOutputsV1,uncoveredOutputsV1} from "./✅️complete/🟦️.ts";
 import {localKeyV1,platformOfV1,portableKeyV1,portableRootsV1,portableTextV1,slotMetadataV1,toolRootsV1} from "./🛰️fleet/🪪️identity/🟦️.ts";
-import {awaitFleetSettlesV1,fleetUnidentifiedReasonV1,holdFleetKeyV1,leakedRootKindsV1,obtainFleetUnitV1,offerFleetUnitV1,prepareFleetV1,publishRootHintV1,rootHintV1,rootPathsV1,ROOT_KINDS_V1,shareFleetUnitV1,unitBasicsV1,unsharedReasonV1,unitToolchainV1,type FleetHoldV1,type FleetUnitV1} from "./🛰️fleet/🟦️.ts";
+import {awaitFleetSettlesV1,fleetUnidentifiedReasonV1,holdFleetKeyV1,leakedRootKindsV1,obtainFleetUnitV1,offerFleetUnitV1,prepareFleetV1,publishRootHintV1,rootHintV1,rootPathsV1,ROOT_KINDS_V1,shareFleetUnitAwaitingV1,shareFleetUnitV1,unitBasicsV1,unsharedReasonV1,unitToolchainV1,type FleetHoldV1,type FleetUnitV1} from "./🛰️fleet/🟦️.ts";
 import {drainUploadsV1} from "./🛰️fleet/📤️uploader/🟦️.ts";
 import {countFallbackV1,countSkipV1,countUnitV1,readFallbacksV1,skipNameV1} from "./🛰️fleet/📊️counters/🟦️.ts";
 import {offloadCrateTypeRefusalV1,offloadModeV1} from "../../../🏗️build/🌐️remote-execution/🚀️offload/📐️policy/🟦️.ts";
@@ -42,7 +43,7 @@ export function readSettingsV1(environment:Environment):Settings|undefined{
  return Object.freeze({root:resolve(root),lane,laneRoot,inner:Object.freeze(inner),slots:Number(environment.SEMIO_UNIT_CACHE_SLOTS??0),lightSlots:Number(environment.SEMIO_UNIT_CACHE_LIGHT_SLOTS??0),focus:new Set((environment.SEMIO_UNIT_CACHE_FOCUS??"").split(",").filter(Boolean)),stamps:laneRoot?join(laneRoot,policy.layout.stamps):lanePathsV1(resolve(root),lane).stamps});
 }
 
-type Outcome=Readonly<{status:number;stdout:string;stderr:string}>;
+type Outcome=Readonly<{status:number;stdout:string;stderr:string;peakRssBytes?:number}>;
 /** 📜️ Keeps existing response references and unrepresentable arguments in place while shortening a Windows compiler invocation. */
 function compilerArgumentsV1(inner:readonly string[],args:readonly string[]):Readonly<{args:readonly string[];close:()=>void}>{
  if(process.platform!=="win32"||[...inner,...args].reduce((n,arg)=>n+2*arg.length+3,0)<32767)return{args,close:()=>{}};
@@ -52,18 +53,28 @@ function compilerArgumentsV1(inner:readonly string[],args:readonly string[]):Rea
  try{for(const arg of args){if(arg===""||arg.startsWith("@")||/[\r\n]/u.test(arg)){flush();result.push(arg);}else pending.push(arg);}flush();return{args:result,close};}catch(error){close();throw error;}
 }
 function run(inner:readonly string[],args:readonly string[],environment:Environment,capture:boolean):Promise<Outcome>{
- return new Promise((done,fail)=>{
-  const jobs=jobserverPlanV1(environment),message=jobserverClosedMessageV1(jobs);
-  if(message)process.stderr.write(message+"\n");
-  const prepared=compilerArgumentsV1(inner,args);let child:ReturnType<typeof spawn>;
-  try{child=spawn(inner[0]!,[...inner.slice(1),...prepared.args],{env:jobserverChildEnvironmentV1(environment,jobs),stdio:jobserverStdioV1(jobs.descriptors,capture)});}catch(error){prepared.close();jobs.release?.();throw error;}
-  const out:Buffer[]=[],err:Buffer[]=[];let failure:Error|undefined;
-  const forward=(signal:NodeJS.Signals)=>{child.kill(signal);};
-  for(const signal of["SIGINT","SIGTERM"] as const)process.once(signal,()=>forward(signal));
-  if(capture){child.stdout!.on("data",chunk=>{out.push(chunk);process.stdout.write(chunk);});child.stderr!.on("data",chunk=>{err.push(chunk);process.stderr.write(chunk);});}
-  child.on("error",error=>{failure??=error;});
-  child.on("close",(status,signal)=>{prepared.close();jobs.release?.();if(failure){fail(failure);return;}done({status:status??(signal?128+({SIGINT:2,SIGTERM:15,SIGKILL:9} as Record<string,number>)[signal]!:1),stdout:Buffer.concat(out).toString("utf8"),stderr:Buffer.concat(err).toString("utf8")});});
- });
+ const jobs=jobserverPlanV1(environment),message=jobserverClosedMessageV1(jobs);
+ if(message)process.stderr.write(message+"\n");
+ const prepared=compilerArgumentsV1(inner,args);let child:Bun.Subprocess<"inherit","pipe"|"inherit","pipe"|"inherit">;
+ try{child=Bun.spawn([inner[0]!,...inner.slice(1),...prepared.args],{env:jobserverChildEnvironmentV1(environment,jobs),stdio:jobserverStdioV1(jobs.descriptors,capture)}) as typeof child;}catch(error){prepared.close();jobs.release?.();return Promise.reject(error);}
+ for(const signal of["SIGINT","SIGTERM"] as const)process.once(signal,()=>child.kill(signal));
+ const out:Buffer[]=[],err:Buffer[]=[];
+ const pump=async(stream:unknown,chunks:Buffer[],sink:NodeJS.WriteStream):Promise<void>=>{if(!(stream instanceof ReadableStream))return;for await(const chunk of stream as AsyncIterable<Uint8Array>){const buffer=Buffer.from(chunk);chunks.push(buffer);sink.write(buffer);}};
+ return Promise.all([child.exited,pump(child.stdout,out,process.stdout),pump(child.stderr,err,process.stderr)]).then(([code])=>{
+  const signal=child.signalCode,peak=child.resourceUsage()?.maxRSS;
+  return{status:signal?128+({SIGINT:2,SIGTERM:15,SIGKILL:9} as Record<string,number>)[signal]!:code,stdout:Buffer.concat(out).toString("utf8"),stderr:Buffer.concat(err).toString("utf8"),...(peak!==undefined&&peak>0?{peakRssBytes:peak}:{})};
+ }).finally(()=>{prepared.close();jobs.release?.();});
+}
+
+/** 🏔️ Compares the peak resident memory a compiler run of this unit reached with the unit ceiling of the admission policy and writes the bilingual alarm line to the build log when an unlisted unit is above it (the same verdict `unitCeilingAlarmV1` gives the component pass; the peak itself is in the `miss` event of the lane log). */
+async function reportUnitCeilingV1(crate:string,target:string|undefined,types:readonly string[],environment:Environment,peakRssBytes:number):Promise<void>{
+ try{
+  const ceiling=(await import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧬️schema/🔣️.json")).default.definitions.Policy.const.unitCeiling.megabytes as number;
+  if(peakRssBytes<=ceiling*1048576)return;
+  const admission=await import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts");
+  const key=`${crate}@${crate}|${target??"host"}|${environment.SEMIO_BUILD_MODE??"-"}|${types.join(",")||"-"}`,alarm=admission.unitCeilingAlarmV1(admission.ADMISSION_POLICY_V1.unitCeiling,{key,peakRssBytes});
+  if(alarm)process.stderr.write(`[unit-cache] ${alarm}\n`);
+ }catch{}
 }
 
 /** 🪞️ Drops the compiler path Cargo puts before the arguments when it runs the stand-in as `<wrapper> <rustc> <arguments>`; every compiler argument list starts with a flag, a response file or a stdin dash. */
@@ -108,11 +119,11 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
  };
  argv=sourceRemapped();
  let args=expandRustcArgumentsV1(argv,cwd);const unit=parseRustcUnitV1(args),refused=rustcBypassV1(unit,args),natives=refused==="native-link"?await(async()=>{try{return (await import("../../../🏗️build/🌐️remote-execution/🚀️offload/🗺️paths/🟦️.ts")).nativeKeyInputsV1({args,cwd,digest:path=>digestFileV1(path,settings.stamps)});}catch{return undefined;}})():undefined,bypass=natives===undefined?refused:undefined,crate=unit.crateName||"-";
- const event=(kind:UnitEventV1["kind"],key:string|null,milliseconds:number,waitedMs=0,reason?:string)=>emitUnitEventV1(settings.root,{lane:settings.lane,kind,crate,key,milliseconds,waitedMs,...(reason?{reason}:{})});
+ const event=(kind:UnitEventV1["kind"],key:string|null,milliseconds:number,waitedMs=0,reason?:string,peakRssBytes?:number)=>emitUnitEventV1(settings.root,{lane:settings.lane,kind,crate,key,milliseconds,waitedMs,...(reason?{reason}:{}),...(peakRssBytes?{peakRssBytes}:{})});
  let shared=false,held:ClaimV1|undefined,ranMs=0;
  const compile=async(capture:boolean):Promise<Outcome>=>{
   let slot=held;held=undefined;
-  if(slot===undefined&&settings.slots>0&&unit.source.endsWith(".rs")){slot=await acquireSlotV1(settings.root,settings.slots,{onWait:waited=>event("slot-wait",null,0,waited)});}
+  if(slot===undefined&&settings.slots>0&&unit.source.endsWith(".rs")){slot=await acquireSlotV1(settings.root,settings.slots,{since:started,onWait:waited=>event("slot-wait",null,0,waited)});}
   const began=Date.now();
   try{return await run(settings.inner,[...(shared&&unit.incremental!==undefined&&!settings.focus.has(crate)?withoutIncrementalV1(argv):argv),...linkRootArgumentsV1(args,resolve(cwd,unit.outDir)),...compilerTemporaryArgumentsV1(settings.laneRoot?join(settings.laneRoot,policy.layout.compilerTemporaries):lanePathsV1(settings.root,settings.lane).temporaries,args)],environment,capture);}finally{ranMs=Date.now()-began;slot?.release();}
  };
@@ -126,14 +137,19 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
  let key:string,parts="",keyInput:Parameters<typeof unitKeyV1>[0],sourcesRead:Awaited<ReturnType<typeof unitSourcesV1>>=null,keyedNames:ReadonlySet<string>=new Set();
  const digests=new Map<string,string>(),rawExterns:string[]=[],producers:string[]=[],metadataOnly=unit.emit.every(kind=>kind==="metadata"||kind==="dep-info");let ifaceKeyed=false;
  const remaps=remapsOfV1(args),covered=remappedV1(remaps,cwd),manifestDir=environment.CARGO_MANIFEST_DIR,tools=toolRootsV1(environment,(()=>{try{return rustSysrootV1(settings.root,settings.inner,environment);}catch{return undefined;}})()),roots=portableRootsV1({cwd,workspace:workspaceOf,hints:[manifestDir,environment.PWD],...tools});
- const basicsEarly=unitBasicsV1({root:settings.root,environment,inner:settings.inner,unit,args,cwd}),slotEarly=basicsEarly?.slot,recorded=slotEarly===undefined?[]:readGapsV1(settings.root,slotEarly,roots);
+ const basicsEarly=unitBasicsV1({root:settings.root,environment,inner:settings.inner,unit,args,cwd}),slotEarly=basicsEarly?.slot,manifestId=slotEarly===undefined||!unit.source.endsWith(".rs")?undefined:manifestIdV1(slotEarly),manifestClient=manifestId===undefined?undefined:fleetClientV1(settings.root,environment);
+ const manifestHeld=manifestId===undefined?undefined:await obtainManifestV1(settings.root,manifestId,manifestClient),manifestUsed0=manifestHeld?.state?.manifest,recorded=manifestUsed0===undefined?[]:manifestFilesV1(manifestUsed0,roots);
+ let manifestUsed=manifestUsed0;
+ if(manifestHeld?.from==="fleet")event("manifest-fetch",null,Date.now()-started,0,"fleet");
  let sensitive:readonly string[]=[];
+ let fixed:Pick<Parameters<typeof unitKeyV1>[0],"toolchain"|"normalized"|"externs">|undefined;
+ const inputsOf=(sources:NonNullable<typeof sourcesRead>):Parameters<typeof unitKeyV1>[0]=>({...fixed!,sourceSha256:sources.sha256,environment:[...keyEnvironmentV1(environment,settings.laneRoot),...sourceEnvironmentV1(sources.names,environment,new Set(keyEnvironmentV1(environment,settings.laneRoot).map(row=>row[0])),(name,text)=>sourceValueV1(name,text,settings.laneRoot)),...covered?[["⟨recorded-name⟩",remappedNameV1(remaps,cwd)] as [string,string]]:[]]});
  try{
-  const sourceFile=resolve(cwd,unit.source),sources=await unitSourcesV1(sourceFile,manifestDir,environment.OUT_DIR,path=>digestFileV1(path,settings.stamps),recorded);if(sources===null)throw Error("source");
+  const sourceFile=resolve(cwd,unit.source),sources=await unitSourcesV1(sourceFile,manifestDir,environment.OUT_DIR,path=>digestFileV1(path,settings.stamps),recorded,manifestUsed0?.env??[]);if(sources===null)throw Error("source");
   const sourceSha=sources.sha256;sourcesRead=sources;
   for(const row of unit.externs){if(row.path==="")continue;const path=resolve(cwd,row.path),sha=digestFileV1(path,settings.stamps);if(sha===null)throw Error("extern "+row.name);rawExterns.push(sha);const producer=producerKeyV1(path,sha);if(producer!==undefined)producers.push(producer);const identity=metadataOnly?interfaceIdentityV1(path,sha):undefined;if(identity!==undefined)ifaceKeyed=true;digests.set(row.path,identity??externIdentityV1(path,sha,settings.stamps)??sha);}
   sensitive=covered?pathSensitiveV1({source:resolve(cwd,unit.source),manifest:manifestDir,cwd}):[...new Set([manifestDir,cwd].filter((path):path is string=>path!==undefined))].sort();
-  keyInput={toolchain:unitToolchainV1({root:settings.root,environment,inner:settings.inner,unit,args},()=>toolchainIdentityV1(settings.root,settings.inner,environment)),normalized:normalizeRustcArgumentsV1(args,digests,settings.laneRoot),sourceSha256:sourceSha,externs:[...unit.externs.map(row=>({name:row.flags+row.name,sha256:row.path===""?"builtin":digests.get(row.path)!})),...natives??[]],environment:[...keyEnvironmentV1(environment,settings.laneRoot),...sourceEnvironmentV1(sources.names,environment,new Set(keyEnvironmentV1(environment,settings.laneRoot).map(row=>row[0])),(name,text)=>sourceValueV1(name,text,settings.laneRoot)),...covered?[["⟨recorded-name⟩",remappedNameV1(remaps,cwd)] as [string,string]]:[]]};key=localKeyV1(keyInput,roots,sensitive);{const metadata=slotMetadataV1(keyInput,roots,basicsEarly?.slotParts);argv=withCanonicalMetadataV1(argv,metadata);args=withCanonicalMetadataV1(args,metadata);}parts=unitKeyPartsV1(keyInput);keyedNames=new Set([...keyInput.environment.map(row=>row[0]),...sources.names]);
+  fixed={toolchain:unitToolchainV1({root:settings.root,environment,inner:settings.inner,unit,args},()=>toolchainIdentityV1(settings.root,settings.inner,environment)),normalized:normalizeRustcArgumentsV1(args,digests,settings.laneRoot),externs:[...unit.externs.map(row=>({name:row.flags+row.name,sha256:row.path===""?"builtin":digests.get(row.path)!})),...natives??[]]};keyInput=inputsOf(sources);key=localKeyV1(keyInput,roots,sensitive);{const metadata=slotMetadataV1(keyInput,roots,basicsEarly?.slotParts);argv=withCanonicalMetadataV1(argv,metadata);args=withCanonicalMetadataV1(args,metadata);}parts=unitKeyPartsV1(keyInput);keyedNames=new Set([...keyInput.environment.map(row=>row[0]),...sources.names]);
  }catch(error){const outcome=await compile(false);const unreadable=/^extern /u.test(String((error as Error)?.message));event("bypass",null,Date.now()-started,0,"unreadable-input"+(unreadable?": "+(error as Error).message:""));if(environment.SEMIO_REMOTE_CACHE_ENDPOINT)countSkipV1(workspaceOf,unreadable?"unreadable-extern":"unreadable-source");return outcome.status;}
  const producer=interfaceEligibilityV1(unit,args)===undefined,crateHashOf=(path:string):string|undefined=>currentHashV1(path,file=>digestFileV1(file,settings.stamps),settings.inner,environment);
  const settle=(outputs:readonly string[],entry:Parameters<typeof settleUnitInterfaceV1>[0]["entry"]):void=>{
@@ -171,7 +187,7 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
   const handlers=(["SIGINT","SIGTERM"] as const).map(name=>{const handler=()=>{received=name==="SIGINT"?130:143;controller.abort();};process.once(name,handler);return[name,handler] as const;});
   try{
    const offload=await import("../../../🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts");
-   const spend=offload.readUnitExpenseV1(settings.root,crate,unit.crateTypes,unit.target),gate=await offload.offloadGateV1({mode,door:environment.SEMIO_OFFLOAD_PRESSURE==="door",expensive:()=>spend.expense.expensive,workerFits:waitMilliseconds=>offload.awaitFleetFitV1(environment,{peakMegabytes:spend.peak,signal:controller.signal,waitMilliseconds,pollMilliseconds:offload.OFFLOAD_POLICY_V1.finals.pollMilliseconds}),localSlot:async waitMilliseconds=>{if(settings.slots<1||!unit.source.endsWith(".rs"))return false;if(held!==undefined)return true;try{held=waitMilliseconds>0?await acquireSlotV1(settings.root,settings.slots,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(waitMilliseconds)])}):tryAcquireSlotV1(settings.root,settings.slots);}catch{held=undefined;}return held!==undefined;},worth:()=>offload.worthARoundTripV1(settings.root,crate),slotQueueMilliseconds:()=>offload.slotQueueMillisecondsV1(settings.root,settings.slots),host:async()=>(await offload.sharedUnitAdmissionV1(settings.root,ports.admission)).verdict,broker:async()=>{const wait=facts?await brokerWouldWaitV1(environment,facts):undefined;return wait===undefined?"unknown":wait?"wait":"admit";}});
+   const spend=offload.readUnitExpenseV1(settings.root,crate,unit.crateTypes,unit.target),gate=await offload.offloadGateV1({mode,door:environment.SEMIO_OFFLOAD_PRESSURE==="door",expensive:()=>spend.expense.expensive,workerFits:waitMilliseconds=>offload.awaitFleetFitV1(environment,{peakMegabytes:spend.peak,signal:controller.signal,waitMilliseconds,pollMilliseconds:offload.OFFLOAD_POLICY_V1.finals.pollMilliseconds}),localSlot:async waitMilliseconds=>{if(settings.slots<1||!unit.source.endsWith(".rs"))return false;if(held!==undefined)return true;try{held=waitMilliseconds>0?await acquireSlotV1(settings.root,settings.slots,{since:started,signal:AbortSignal.any([controller.signal,AbortSignal.timeout(waitMilliseconds)])}):tryAcquireSlotV1(settings.root,settings.slots);}catch{held=undefined;}return held!==undefined;},worth:()=>offload.worthARoundTripV1(settings.root,crate),slotQueueMilliseconds:()=>offload.slotQueueMillisecondsV1(settings.root,settings.slots),host:async()=>(await offload.sharedUnitAdmissionV1(settings.root,ports.admission)).verdict,broker:async()=>{const wait=facts?await brokerWouldWaitV1(environment,facts):undefined;return wait===undefined?"unknown":wait?"wait":"admit";}});
    if(!gate.offload){offload.declineOffloadV1(settings.root,environment,{crate,key,reason:gate.reason==="local-slot"||gate.reason==="unmeasured"||gate.reason==="final-wait"?gate.reason:"cheap",silent:true});return undefined;}
    const light=settings.lightSlots>0?await acquireLightSlotV1(settings.root,settings.lightSlots,{signal:controller.signal,onWait:waited=>event("slot-wait",null,0,waited)}):undefined;
    const answer=await offload.offloadRustcUnitV1({args,environment,cwd,recorded:recorded.map(row=>row.path),root:settings.root,lane:settings.lane,crate,key,compiler:settings.inner,digest:path=>digestFileV1(path,settings.stamps),signal:controller.signal,queue:gate.queue}).finally(()=>light?.release());
@@ -180,19 +196,51 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
   }catch{return received===undefined?undefined:{status:received,stdout:"",stderr:"",origin:""};}
   finally{for(const [name,handler] of handlers)process.off(name,handler);}
  };
- try{if(await serve()){event("hit",key,Date.now()-started);lookup("local-hit");countUnitV1(workspaceOf,"localHit");if(environment.SEMIO_REMOTE_CACHE_ENDPOINT&&environment.SEMIO_REMOTE_CACHE_ACCESS==="read-write"){const basics=unitBasicsV1({root:settings.root,environment,inner:settings.inner,unit,args,cwd}),shared=basics?prepareFleetV1({root:settings.root,environment,basics,unit,args,cwd,laneRoot:settings.laneRoot,localKey:key,keyInput,toolchain:keyInput.toolchain,crate,sensitive,expected:neutralExpected,tools}):undefined;if(shared&&newestEntryV1(settings.root,key)?.session!==true)offerFleetUnitV1(shared);}return 0;}}catch{}
+ const declareManifest=()=>manifestDeclarationV1({toolchain:keyInput.toolchain,entry:resolve(cwd,unit.source),entrySha256:digestFileV1(resolve(cwd,unit.source),settings.stamps),cwd,workspace:workspaceOf});
+ const shareHeldManifest=async():Promise<void>=>{if(manifestId!==undefined&&manifestHeld?.from==="local"&&manifestHeld.state?.shared===false&&manifestClient?.settings.upload===true&&manifestClient.usable()){const shared=await shareManifestV1(settings.root,manifestId,manifestHeld.state.manifest,declareManifest(),manifestClient);event("manifest-publish",null,0,0,shared+": "+manifestHeld.state.manifest.files.length+" files, "+manifestHeld.state.manifest.env.length+" names");}};
+ try{if(await serve()){event("hit",key,Date.now()-started);await shareHeldManifest();lookup("local-hit");countUnitV1(workspaceOf,"localHit");if(environment.SEMIO_REMOTE_CACHE_ENDPOINT&&environment.SEMIO_REMOTE_CACHE_ACCESS==="read-write"){const basics=unitBasicsV1({root:settings.root,environment,inner:settings.inner,unit,args,cwd}),shared=basics?prepareFleetV1({root:settings.root,environment,basics,unit,args,cwd,laneRoot:settings.laneRoot,localKey:key,keyInput,toolchain:keyInput.toolchain,crate,sensitive,expected:neutralExpected,tools}):undefined;if(shared&&newestEntryV1(settings.root,key)?.session!==true)offerFleetUnitV1(shared);}return 0;}}catch{}
  const basics=unitBasicsV1({root:settings.root,environment,inner:settings.inner,unit,args,cwd}),prepare=(paths:readonly string[])=>basics?prepareFleetV1({root:settings.root,environment,basics,unit,args,cwd,laneRoot:settings.laneRoot,localKey:key,keyInput,toolchain:keyInput.toolchain,crate,sensitive:paths,expected:neutralExpected,tools}):undefined;
- let fleet=prepare(sensitive),rooted:readonly string[]|undefined;shared=fleet!==undefined;const neutral=fleet,named={cwd,manifest:manifestDir,workspace:workspaceOf,"cargo-home":environment.CARGO_HOME,"rustup-home":environment.RUSTUP_HOME,lane:settings.laneRoot};
+ let fleet=prepare(sensitive),rooted:readonly string[]|undefined;shared=fleet!==undefined;let neutral=fleet;const named={cwd,manifest:manifestDir,workspace:workspaceOf,"cargo-home":environment.CARGO_HOME,"rustup-home":environment.RUSTUP_HOME,lane:settings.laneRoot};
  const adopt=async():Promise<FleetUnitV1|undefined>=>{if(rooted!==undefined||neutral===undefined||sensitive.length>0)return undefined;const kinds=await rootHintV1(neutral),paths=kinds&&rootPathsV1(kinds,named),alt=paths?prepare(paths):undefined;if(alt&&kinds){rooted=kinds;fleet=alt;return alt;}return undefined;};
  if(!fleet){const why=fleetUnidentifiedReasonV1(settings.root,environment);if(why!==undefined){event("remote-skip",key,0,0,why);countSkipV1(workspaceOf,why);countFallbackV1(settings.root,why);}}
  const breaker=fleet?.client.state()??"ok";if(fleet&&breaker!=="ok"){event("remote-skip",key,0,0,"breaker: "+breaker+", the upload waits in the spool");countFallbackV1(settings.root,"breaker-"+breaker);}
+
+ let hold:FleetHoldV1|undefined,refreshed=false;
+ const rekey=async(manifest:InputManifestV1):Promise<boolean>=>{
+  const sources=await unitSourcesV1(resolve(cwd,unit.source),manifestDir,environment.OUT_DIR,path=>digestFileV1(path,settings.stamps),manifestFilesV1(manifest,roots),manifest.env);if(sources===null)return false;
+  manifestUsed=manifest;sourcesRead=sources;keyInput=inputsOf(sources);key=localKeyV1(keyInput,roots,sensitive);parts=unitKeyPartsV1(keyInput);keyedNames=new Set([...keyInput.environment.map(row=>row[0]),...sources.names]);return true;
+ };
+ const refreshManifest=async():Promise<boolean>=>{
+  if(refreshed||manifestId===undefined||manifestHeld?.from!=="local")return false;
+  refreshed=true;
+  const newer=await refreshManifestV1(manifestClient,manifestId);if(newer===undefined||manifestCoversV1(manifestUsed,newer))return false;
+  const union=manifestUnionV1(manifestUsed,newer);if(!manifestWithinBoundsV1(union)||!await rekey(union))return false;
+  writeManifestV1(settings.root,manifestId,union,manifestCoversV1(newer,union));return true;
+ };
+ const completeInputsV1=async(outputs:readonly string[]):Promise<string[]>=>{
+  if(sourcesRead===null)return[];
+  const depInfo=outputs.find(path=>path.endsWith(".d"));if(depInfo===undefined)return["dep-info"];
+  let found:string[];try{found=keyGapV1({cwd,covered:new Set(sourcesRead.files.map(file=>resolve(file))),keyedNames,depInfo:readFileSync(depInfo,"utf8"),...manifestDir===undefined?{}:{crateDirectory:manifestDir}});}catch{return["dep-info"];}
+  const observed=observedManifestV1(found,{cwd,roots}),grown=!manifestCoversV1(manifestUsed,observed),learned=grown?manifestUnionV1(manifestUsed,observed):manifestUsed??manifestOfV1([],[]);
+  if(!manifestWithinBoundsV1(learned))return["manifest-bound"];
+  if(grown){
+   if(!await rekey(learned))return["dep-info"];
+   if(fleet){await hold?.release();hold=undefined;rooted=undefined;fleet=prepare(sensitive);neutral=fleet;if(fleet&&fleet.client.state()==="ok")hold=await holdFleetKeyV1(fleet);}
+  }
+  if(manifestId!==undefined&&(grown||manifestHeld?.state===undefined)){writeManifestV1(settings.root,manifestId,learned,false);if(manifestHeld?.from!=="unknown"){const shared=await shareManifestV1(settings.root,manifestId,learned,declareManifest(),manifestClient);event("manifest-publish",null,0,0,shared+": "+learned.files.length+" files, "+learned.env.length+" names");}}
+  return[];
+ };
+ await shareHeldManifest();
+ if(await refreshManifest()){
+  try{if(await serve()){event("hit",key,Date.now()-started,0,"manifest-refreshed");lookup("local-hit");countUnitV1(workspaceOf,"localHit");return 0;}}catch{}
+  fleet=prepare(sensitive);neutral=fleet;shared=fleet!==undefined;
+ }
  let claim:ClaimV1|undefined;
  try{claim=await acquireUnitClaimV1(join(settings.root,policy.layout.locks),key.slice(0,40),{});}catch{claim=undefined;}
  const waited=claim?.waitedMs??0;
  if(waited>50||!claim)event(claim?"lock-wait":"lock-timeout",key,0,waited);
  try{
   if(claim){try{if(await serve()){event("hit",key,Date.now()-started,waited,"after-wait");lookup("local-hit");countUnitV1(workspaceOf,"localHit");return 0;}}catch{}}
-  let hold:FleetHoldV1|undefined;
   if(fleet&&breaker==="ok"){
    await adopt();
    const decision=await obtainFleetUnitV1(fleet!,(kind,milliseconds,waitedMs,reason)=>event(kind,key,milliseconds,waitedMs,reason),{},adopt);
@@ -204,28 +252,27 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
   const outcome=remote??await compile(true);
   if(remote){process.stdout.write(remote.stdout);process.stderr.write(remote.stderr);}
   if(outcome.status!==0){await hold?.release();event("failed",key,Date.now()-compiled,waited);return outcome.status;}
-  if(!remote){const took=ranMs;void import("../../../🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").then(module=>{module.writeUnitCostV1(settings.root,crate,took);}).catch(()=>undefined);}event("miss",key,Date.now()-compiled,waited,(unit.incremental===undefined?parts:parts+" incremental:lane")+(remote?" offloaded:"+remote.origin:""));countUnitV1(workspaceOf,"miss");lookup("miss",fleet?.key);
+  if(!remote){const took=ranMs;void import("../../../🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").then(module=>{module.writeUnitCostV1(settings.root,crate,took);}).catch(()=>undefined);}event("miss",key,Date.now()-compiled,waited,(unit.incremental===undefined?parts:parts+" incremental:lane")+(remote?" offloaded:"+remote.origin:""),remote?undefined:outcome.peakRssBytes);if(!remote&&outcome.peakRssBytes)void reportUnitCeilingV1(crate,unit.target,unit.crateTypes,environment,outcome.peakRssBytes);countUnitV1(workspaceOf,"miss");lookup("miss",fleet?.key);
   const outputs=[...new Set([...announcedPathsV1(outcome.stderr),...announcedPathsV1(outcome.stdout)])].map(path=>resolve(cwd,path)).filter(path=>existsSync(path)),lacking=uncoveredOutputsV1(outputs.map(path=>basename(path)),expected);
   try{
+   const gap=outputs.length===0||lacking.length>0?[]:await completeInputsV1(outputs);
    markExternIdentityV1(outputs,portableKeyV1(keyInput,roots),sensitive,settings.stamps,crateHashOf);
    markProducerKeyV1(outputs,key,settings.stamps);
    let tables=true;
    for(const path of outputs.filter(path=>path.endsWith(".rmeta"))){const written=writeDependenciesV1(path,settings.inner,environment);if(written!==undefined)outputs.push(written);else if(ifaceKeyed)tables=false;}
    const incrementalBuild=unit.incremental!==undefined&&remote===undefined&&!(shared&&!settings.focus.has(crate));
    const provenance=facts&&!remote?await recallProvenanceV1(environment,facts):undefined;
-   if(provenance!==undefined&&provenance.peakRssBytes>0)void import("../../../🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").then(module=>{module.writeUnitPeakV1(settings.root,crate,provenance.peakRssBytes/1048576);}).catch(()=>undefined);
+   if(provenance!==undefined&&provenance.peakRssBytes>0)void import("../../../🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").then(module=>{module.writeUnitPeakV1(settings.root,crate,provenance.peakRssBytes/1048576,1);}).catch(()=>undefined);
    const publish=(spill=false)=>publishUnitV1(settings.root,{key,crate,cwd,outDir,laneRoot:settings.laneRoot,outputs,expected,stdout:outcome.stdout,stderr:outcome.stderr,stampDirectory:settings.stamps,extra,provenance:provenance??null,retention:{workspace:workspaceOf,externs:[...keyInput.externs.map(row=>row.sha256),...rawExterns],units:[...producers,...[buildRunKeyV1(environment.OUT_DIR)].filter((name):name is string=>name!==undefined)],toolchain:keyInput.toolchain},...(basics?{slot:basics.slot}:{}),...(incrementalBuild?{session:true}:{}),...(spill?{spill:true}:{})});
    let entry:ReturnType<typeof publishUnitV1>;
    if(outputs.length===0||lacking.length>0||!tables)entry=undefined;else try{entry=publish();}catch{await new Promise(done=>setTimeout(done,250));try{entry=publish();}catch(error){if(!fleet)throw error;entry=publish(true);if(entry)event("publish",key,Date.now()-compiled,0,"spill: the host store refused the objects, the fleet upload reads them from the spill folder");}}
    if(entry)event("publish",key,Date.now()-compiled,0);
    else{const why=outputs.length===0?"no-outputs":lacking.length>0?"incomplete: "+lacking.join(","):!tables?"interface: the compiler did not list the crate hashes":outputs.some(path=>path.endsWith(".d"))?"refused":"no-dep-info";event("publish-skip",key,Date.now()-compiled,0,why);if(fleet)countSkipV1(workspaceOf,"publish-"+skipNameV1(why));}
    if(entry)settle(outputs,entry);
-   const gap=fleet&&entry&&sourcesRead!==null?(()=>{const depInfo=outputs.find(path=>path.endsWith(".d"));if(depInfo===undefined)return["dep-info"];try{return keyGapV1({cwd,covered:new Set(sourcesRead.files.map(file=>resolve(file))),keyedNames,depInfo:readFileSync(depInfo,"utf8")});}catch{return["dep-info"];}})():[];
-   if(gap.length>0&&slotEarly!==undefined)recordGapsV1(settings.root,slotEarly,{cwd,paths:gap.filter(path=>path!=="dep-info"&&!path.startsWith("env:")),roots});
    const leak=fleet&&entry&&sensitive.length===0&&gap.length===0?leakedRootKindsV1(outputs,named):undefined,kinds=leak?.kinds.filter(kind=>(ROOT_KINDS_V1 as readonly string[]).includes(kind)),shareable=leak!==undefined&&kinds!==undefined&&kinds.length===leak.kinds.length&&rootPathsV1(kinds,named)!==undefined&&(rooted===undefined||kinds.every(kind=>rooted!.includes(kind)));
    if(fleet&&entry&&incrementalBuild){event("remote-skip",key,0,0,"incremental: the unit was compiled with an incremental session, whose bytes differ on every run");countSkipV1(workspaceOf,"incremental");await hold?.release();}
    else if(fleet&&entry&&gap.length>0){event("remote-skip",key,0,0,"key-incomplete: "+gap.slice(0,4).join(", ")+(gap.length>4?" and "+(gap.length-4)+" more":""));countSkipV1(workspaceOf,"key-incomplete");await hold?.release();}
-   else if(fleet&&entry&&(leak===undefined||(shareable&&rooted!==undefined))){if(!shareFleetUnitV1(fleet,{claimed:hold,costMs:Date.now()-compiled})){countSkipV1(workspaceOf,unsharedReasonV1(fleet));await hold?.release();}}
+   else if(fleet&&entry&&(leak===undefined||(shareable&&rooted!==undefined))){if(!await shareFleetUnitAwaitingV1(fleet,{claimed:hold,costMs:Date.now()-compiled})){countSkipV1(workspaceOf,unsharedReasonV1(fleet));await hold?.release();}}
    else if(fleet&&entry&&shareable&&neutral&&!neutral.client.usable()){
     const paths0=rootPathsV1(kinds!,named),alt0=paths0?prepare(paths0):undefined;
     await hold?.release();
@@ -259,7 +306,7 @@ export async function manageV1(args:readonly string[]):Promise<unknown>{
  }
  if(command==="churn"){const minutes=Number(value("--since-minutes")??0),limit=Number(value("--limit")??50),wanted=value("--crate"),report=churnReportV1(readLookupsV1(root,minutes>0?Date.now()-minutes*60000:0).filter(row=>wanted===undefined||row.crate===wanted),Number.isSafeInteger(limit)&&limit>0?limit:50);return report;}
  if(command==="forget"){const crate=value("--crate");if(!crate)throw Error("--crate <name> required");return forgetCrateEntriesV1(root,crate);}
- if(command==="fleet-upload"){const idle=rest.includes("--once")?0:undefined;return await drainUploadsV1(root,process.env,idle===undefined?{}:{idleMilliseconds:idle});}
+ if(command==="fleet-upload"){const idle=rest.includes("--once")?0:undefined;return await drainUploadsV1(root,process.env,{...idle===undefined?{}:{idleMilliseconds:idle},...rest.includes("--takeover")?{takeover:true}:{}});}
  const capacity=Number(value("--capacity")??0);if(!Number.isSafeInteger(capacity)||capacity<1)throw Error("--capacity <bytes> required");
  if(command==="plan")return planGcV1(measureGcV1(root,capacity,Date.now()));
  if(command==="gc"&&!rest.includes("--single-flight"))return collectGarbageV1(root,capacity);

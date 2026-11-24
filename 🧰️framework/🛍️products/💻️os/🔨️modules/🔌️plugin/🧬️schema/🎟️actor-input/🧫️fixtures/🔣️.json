@@ -89,6 +89,27 @@
       "packHex": "0107726573746f7265010111100207096f7065726174696f6e0600070573746174650c03040104020403"
     },
     {
+      "operation": "succeed",
+      "wire": {
+        "operation": "succeed",
+        "succession": {
+          "operation": 1,
+          "generation": 1,
+          "epoch": 4097,
+          "successor": 9,
+          "grant": {
+            "maximumItems": 2147483648,
+            "maximumCopyBytes": 2147483648,
+            "maximumCapacityBytes": 2147483648,
+            "maximumReleaseBytes": 2147483648,
+            "maximumDepth": 64
+          },
+          "fuel": 1099511627776
+        }
+      },
+      "packHex": "010773756363656564010111100207096f7065726174696f6e0600070a73756363657373696f6e1006070565706f636804812007046675656c04808080808020070a67656e65726174696f6e040107056772616e74100507146d6178696d756d4361706163697479427974657304808080800807106d6178696d756d436f70794279746573048080808008070c6d6178696d756d44657074680440070c6d6178696d756d4974656d7304808080800807136d6178696d756d52656c65617365427974657304808080800807096f7065726174696f6e04010709737563636573736f720409"
+    },
+    {
       "operation": "sqlite-schema",
       "wire": {
         "operation": "sqlite-schema",
@@ -347,6 +368,66 @@
       "reason": "missing operation",
       "wire": {
         "state": []
+      }
+    },
+    {
+      "reason": "succession without its predecessor epoch",
+      "wire": {
+        "operation": "succeed",
+        "succession": {
+          "operation": 1,
+          "generation": 1,
+          "successor": 9,
+          "grant": {
+            "maximumItems": 2147483648,
+            "maximumCopyBytes": 2147483648,
+            "maximumCapacityBytes": 2147483648,
+            "maximumReleaseBytes": 2147483648,
+            "maximumDepth": 64
+          },
+          "fuel": 1099511627776
+        }
+      }
+    },
+    {
+      "reason": "succession with a zero successor",
+      "wire": {
+        "operation": "succeed",
+        "succession": {
+          "operation": 1,
+          "generation": 1,
+          "epoch": 4097,
+          "successor": 0,
+          "grant": {
+            "maximumItems": 2147483648,
+            "maximumCopyBytes": 2147483648,
+            "maximumCapacityBytes": 2147483648,
+            "maximumReleaseBytes": 2147483648,
+            "maximumDepth": 64
+          },
+          "fuel": 1099511627776
+        }
+      }
+    },
+    {
+      "reason": "succession that refills its predecessor",
+      "wire": {
+        "operation": "succeed",
+        "succession": {
+          "operation": 1,
+          "generation": 1,
+          "epoch": 4097,
+          "successor": 9,
+          "grant": {
+            "maximumItems": 2147483648,
+            "maximumCopyBytes": 2147483648,
+            "maximumCapacityBytes": 2147483648,
+            "maximumReleaseBytes": 2147483648,
+            "maximumDepth": 64
+          },
+          "fuel": 1099511627776,
+          "refill": true
+        }
       }
     }
   ]

@@ -1,0 +1,61 @@
+# Draw clipboard: copy never finishes in the browser guest r36 (2026-11-24)
+
+Status: root cause NOT proven. A native browser-grant reproducer is written but has never run, because no native build could start (section 5). Nothing in the clipboard production code was changed.
+
+## 1. What is proven from code (read, not run)
+
+- Registration: `copy`, `cut` and `paste` are framework reserved routes (`framework_reserved_job!(FrameworkCopyJob ...)`, `...CutJob`, `...PasteJob` in `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️reserved/🦀️.rs`, ordinals 7, 8, 9; copy lane `HostOnly`, cut and paste `Artifact, Child, Interaction`). Draw overrides the body: `DrawingPlayApp::build_reserved_tool_job` (`D/✏️editor/🖥️play-app/🦀️.rs:226`) admits `crate::clipboard_job::DrawingClipboardJob` through `admit_reserved_work` for the ids in `DRAWING_CLIPBOARD_RESERVED_IDS`. So copy, cut and paste are one job type, not Draw commands. The factory is registered (no `interactive-job.missing-factory`), and the job is admitted, because the command answers `command-complete` with the typed operation id.
+- Puzzle's clipboard job (`🧩️puzzle/.../✏️editor/✂️clipboard-job/🦀️.rs`, 8 KB) is a plain outbox job. It has no `SnapshotRead` custody. Draw's job (`D/✏️editor/📋️clipboard/🧵️job/🦀️.rs`, 64 KB) is the only one that first duplicates and seals the captured `SnapshotRead<DrawingSnapshot>` (`seal_source`), and that is the structural difference.
+- `DrawingClipboardJob::step` has two guard returns that give `InteractiveJobStep::Outcome(None)` (a yield with no work, no fuel spent, no effect, no error):
+  1. input capture (first step): `cx.fuel_remaining()==0 || retained_grant().maximum_items==0 || maximum_copy_bytes < 2*size_of::<Option<ArtifactReservedToolInput>>()`;
+  2. `seal_source`: `retained_clone_grant_admits(grant, SnapshotRead::duplicate_original_demands())` (copy bytes, depth 2), then `retained_clone_grant_admits(grant, sealing.next_demand())`, and inside `SnapshotReadSourceStaging::funded` also `effect.remaining_work_units() >= next_advance_work_demand()`; when any of them fails, `step` answers `progress(0)` without an error.
+  Both are silent: nothing faults, nothing is emitted, and the only symptom is a drain that runs turns with the cost of an idle turn. The measured drain (about 150 fuel and 2.3 items per turn, 29,000 turns, no effect, no wake, in `local-query-stall-2026-11-24.md` section 4) matches an unfunded silent yield (a funded job would spend fuel and items in proportion to work). It does not match a job that runs and loops: `turn()` would then burn fuel until `should_yield`.
+- The clipboard-write effect is only created in publish phases 37 and 38 (`workspace.effects.push(Effect::ClipboardWrite ...)`), which need the sealed source (phases 2 and 3 read from `workspace.source`) and the JSON encoder (phase 4). So a job that is stuck before phase 2 produces exactly the observed picture: command-complete, no `clipboard-write`, no `spawn-job`. (`spawn-job` is not expected: reserved jobs run inside the guest's mounted typed operation, not as a host-stepped spawned job.)
+- `cut` and `paste` use the same step entry (seal first, then the phase machine), so a stuck seal would hold them too. The report that they "complete without changing rows" is not explained by this; see not verified.
+
+## 2. Inferred, not proven
+
+- The most likely cause is an unfunded demand in `seal_source` (or its input capture) that is silently refused under the browser's per-turn grant, as opposed to the native fixture's. The candidates, in order: the sealing projection quote (`SnapshotReadSourceStaging::next_demand`, `projection_stage_quote`), the work-unit gate in `funded`, the capture gate. I did not measure any of these numbers.
+- Why this would differ from native: the native fixture renews each turn from the fixture caller (16,777,216 items, 528 MiB copy, 2,000,000 fuel), narrowed by `MountedOwnerPolicyV1::INTERACTIVE_COMPONENT` (64 items, 512 KiB copy, 16 MiB capacity, 1 MiB release). The browser shard grants 50,000,000 fuel and an actor-source remainder that shrinks per turn. `arm_host_turn_grant` / `arm_host_turn_fuel` / `arm_host_lifetime` exist to model exactly that and are used by the PDF, Procedural and Sourcing native laws.
+- Not the cause (read): Draw's registration, the `DrawingClipboardJob::turn` loop (it would spend fuel), the host drain (it only submits idle turns and re-arms on `more-work`).
+
+## 3. Reproducer written (never compiled)
+
+File: `D/✏️editor/📋️clipboard/🧪️tests/🪟️runtime/🦀️.rs` (included as `clipboard_runtime` by `D/✏️editor/🧪️tests/🔬️unit/🦀️.rs`, crate `semio-s-artifact-draw-drawing-editor-interaction-tests`). Added, below the existing `registered_clipboard_copy_paste_cut_preserve_atomic_inverse_and_live_selection`:
+
+- `browser_clipboard_settled` / `browser_clipboard`: dispatch a verb through the real `DrawingAppFixture`, with the shard's turn fuel (50,000,000), the interactive per-turn grant (`INTERACTIVE_COMPONENT.preparation`) and a host lifetime armed, then settle the typed operation with `settle_registered_typed_operation_within` and a hard bound of 4,096 turns. A stall surfaces as the fixture's own "original fixture settlement stopped after N turns (fuel, stage, demand, grant, ...)" refusal, which names the unfunded demand and the grant. That message is the missing measurement.
+- `browser_grants_copy_emits_clipboard_write_and_paste_inserts_the_layer`: select the rectangle, copy, require exactly one `Effect::ClipboardWrite`, paste that fragment, require one more layer, a new selected id that exists in the document.
+- `browser_grants_copy_without_selection_is_refused_within_the_turn_limit`: copy with an empty selection must be refused, and must not stall.
+
+No assertion was weakened or removed. The existing test is unchanged.
+
+## 4. Verification of the earlier PagedUtf8 controlled-decode fix (`native-tests-2026-11-23d.md` item 9)
+
+Still unverified. No native test of the crate ran to a result in this pass (section 5).
+
+## 5. Commands and exact results
+
+All from the drawing workspace `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing`, `SEMIO_OFFLOAD=never SEMIO_BUILD_MODE=prototype SEMIO_LANGUAGE=en repo cargo --store=isolated --configuration=prototype -- test --no-fail-fast -p semio-s-artifact-draw-drawing-editor-interaction-tests clipboard -- --test-threads=1` (logs in `🗑️generated/clip-native-1..10.txt`).
+
+| run | result |
+|---|---|
+| 1 | `semio-plugin-instance-typed-ops` did not compile (`match settled` on a `bool` against `ToolSettlementUnit`, three E0308): another agent's in-flight edit of the framework typed-operation settlement; later fixed by its owner. Also ENOSPC. |
+| 2, 4 | ENOSPC at 660 to 710 of about 1,300 crates. The isolated Rust image `.cache/b/r/fixed.dmg` is 26 GiB (declared 96 GiB); the incremental directory is about half of what is written. Every failed run leaves the lane at 4.3 GiB (evicted), so a retry recompiles everything (about 20 minutes). |
+| 3 | refused: `CARGO_PROFILE_*` env is not allowed ("profile environment belongs to issued consumption"). |
+| 5 | with `CARGO_INCREMENTAL=0` (accepted; incremental dir stays 0 B, about 6 MB per crate, so a full build fits): reached `semio-s-artifact-draw-drawing-editor-interaction` and failed with E0599, `PagedUtf8::as_str` missing in `✏️editor/📌️panels/🗂️layers/🦀️.rs:65` (the model's `shape_kind` is a `PagedUtf8` now). I fixed it (see files). |
+| 6 | failed before compiling: `Internal error: Rust crate Source boundary exceeded before compiler: semio-s-artifact-stdio-pdf-lift (active lines 4010/4000) (reference 1f43f6c1)`. |
+| 7 to 10 | the same boundary refusal on every attempt (`clip-native-10.txt.attempts` counts 11 attempts over about 30 minutes; the script `retry.sh` in the session scratchpad retries every minute and starts the real run as soon as the boundary clears). |
+
+The blocker is the PDF base lift crate: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/🧩️lifter-and-document/🧭️document-lift/🧭️controlled/🦀️.rs` (modified 16:59, +289/-84 lines of an ExtGState / page-resources change in the working tree). The crate is 10 active lines over the 4000 line boundary. The `repo cargo` source admission checks every crate of the test's dependency closure (`semio-framework-job-registry` pulls the whole plugin set), so no Draw native test can start until that crate is split or trimmed by whoever owns it. Because only I may compile, that owner cannot see this failure. I did not touch the PDF crate.
+
+## 6. Files
+
+- Changed: `D/✏️editor/📋️clipboard/🧪️tests/🪟️runtime/🦀️.rs` (three new tests and helpers), `D/✏️editor/📌️panels/🗂️layers/🦀️.rs` (`layer_icon` uses `PagedUtf8::eq_str`; one-line compile fix required to build the crate).
+- Read: `D/✏️editor/📋️clipboard/🧵️job/🦀️.rs`, `🛫️encode`, `🧪️tests`, `D/✏️editor/🖥️play-app/🦀️.rs`, `🧰️framework/.../🔌️plugin/👷️job/🏛️reserved/🦀️.rs`, `.../📜️declaration/👷️job/🎟️request/🏭️reserved/🦀️.rs`, `🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🪜️staging/🦀️.rs` and `.../👥️duplicate/🦀️.rs`, `🧰️framework/.../🧪️testing/🧪️artifact-app-laws/.../🎟️fixture-dispatch-steps-and-document-loading/🦀️.rs`, Puzzle `✂️clipboard-job`.
+
+## 7. Not verified
+
+- Every statement in sections 1 and 2 about runtime behaviour; the reproducer has not compiled, let alone run.
+- Whether `copy` with an armed browser grant stalls natively at all. If it passes natively, the remaining differences are wasm32 struct sizes, the host wall clock deadline per turn, and the shrinking actor stock, none of which a native test models.
+- The `PagedUtf8` fix, the three earlier remaining interaction failures, memory of a full Draw native run.
+- No fix was made: with no measured demand there is no honest root-cause change. The next step, once the PDF boundary is cleared, is to run the reproducer and read the refusal message (stage, demand, grant); if the demand exceeds the grant, raise nothing at the host but quote the sealing demand into the grant the clipboard job funds, or split the seal into fundable steps.

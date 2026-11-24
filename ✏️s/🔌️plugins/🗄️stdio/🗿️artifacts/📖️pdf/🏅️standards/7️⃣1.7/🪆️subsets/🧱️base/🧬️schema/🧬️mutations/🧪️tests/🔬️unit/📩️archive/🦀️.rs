@@ -110,7 +110,7 @@ fn original_archive_object_pair_keeps_the_typed_role_inverse() {
     assert_eq!(remove.id, insert.id);
     let prior = vec![PdfAdmittedStreamRole {
         identity: PdfGraphIdentity { owner: ObjRef { num: 2, r#gen: 0 }, path: Vec::new() },
-        dependencies: Vec::new(),
+        dependencies: vec![PdfGraphIdentity { owner: ObjRef { num: 2, r#gen: 0 }, path: Vec::new() }],
         value: PdfStreamRoleValue::MetadataText { text: "Neutral restored role.".into() },
     }];
     let removed = insert.admitted_stream_roles.as_ref().unwrap();
@@ -132,7 +132,7 @@ fn original_archive_objects_restore_actual_snapshot_and_role_lane() {
     base.objects.push(PdfIndirectObject { id, value: PdfObject::Null });
     base.admitted_stream_roles.push(PdfAdmittedStreamRole {
         identity: PdfGraphIdentity { owner: id, path: Vec::new() },
-        dependencies: Vec::new(),
+        dependencies: vec![PdfGraphIdentity { owner: id, path: Vec::new() }],
         value: PdfStreamRoleValue::MetadataText { text: "Neutral restored role.".into() },
     });
     assert_eq!(semio_s_artifact_stdio_contract::mutation_inverse(&forward, &base).unwrap(), vec![inverse.clone()]);

@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "catalog", "authored", "cases"],
+  "properties": {
+    "version": {"const": 1},
+    "catalog": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z]+(?:-[a-z0-9]+)*$"}},
+    "authored": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "printCatalog", "consumer", "producer", "expected"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1, "maxLength": 64},
+          "printCatalog": {"type": "boolean"},
+          "consumer": {"type": "string", "minLength": 1},
+          "producer": {"type": "string", "pattern": "^[^:]+:[^:]+$"},
+          "expected": {"enum": ["applied", "deferred", "refused"]}
+        }
+      }
+    }
+  }
+}

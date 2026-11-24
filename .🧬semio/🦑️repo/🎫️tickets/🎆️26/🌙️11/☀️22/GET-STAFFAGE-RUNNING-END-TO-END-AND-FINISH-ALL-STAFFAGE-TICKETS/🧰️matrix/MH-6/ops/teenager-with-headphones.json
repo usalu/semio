@@ -1,0 +1,8 @@
+[
+  {"op": "plan-revolve", "scale": "50", "id": "neck"},
+  {"op": "plan-revolve", "scale": "100", "id": "neck"},
+  {"op": "plan-revolve", "scale": "200", "id": "neck"},
+  {"op": "plan-revolve", "scale": "500", "id": "sil-neck"},
+  {"op": "remove", "scale": "50", "view": "plan", "id": "hand-r-close-p"},
+  {"op": "extrude", "scale": "500", "id": "sil-head", "view": "plan"}
+]

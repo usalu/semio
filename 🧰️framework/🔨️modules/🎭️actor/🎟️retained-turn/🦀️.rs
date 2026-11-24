@@ -135,6 +135,10 @@ mod original_job_arguments;
 mod original_job_source_wire;
 pub use original_job_source_wire::{OriginalJobSourceWireCursor,OriginalJobSourceWireHeader};
 
+#[path="🔁️succession/🦀️.rs"]
+mod original_actor_succession;
+pub use original_actor_succession::OriginalActorSuccession;
+
 #[path="💼️job/⏸️park/🦀️.rs"]
 mod original_actor_park;
 pub use original_actor_park::{OriginalActorParkAdmission,OriginalActorParkAdmissionFailure,OriginalActorParkedTurn,OriginalActorParkedOutcome,OriginalActorParkedReturn};

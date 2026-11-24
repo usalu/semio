@@ -1,0 +1,45 @@
+--- /Users/ueli/.sinc/play/🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧬️schema/🔣️.json	2026-11-22 23:59:56
++++ /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/o27/root/🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧬️schema/🔣️.json	2026-11-24 15:09:24
+@@ -10,7 +10,7 @@
+         "minimumShareBasisPoints": 5000,
+         "megabytesPerUnit": 512,
+         "reserveMegabytes": 2048,
+-        "pressureWarnDivisor": 2,
++        "localPressureWarnDivisor": 2,
+         "fixedClasses": {
+           "bun-bundle": {
+             "maximumUnits": 4,
+@@ -21,7 +21,14 @@
+         "minimumUnitMegabytes": 256,
+         "minimumUnitSamples": 8,
+         "fleetJobsMaximum": 48,
+-        "lightUnitMegabytes": 96
++        "lightUnitMegabytes": 96,
++        "lightUnitMeasurement": {
++          "samples": 19,
++          "minimumMegabytes": 40.7,
++          "medianMegabytes": 48,
++          "maximumMegabytes": 51.4,
++          "source": "ps rss of the waiting unit-cache wrapper processes (script.ts and buildscript.ts) of the running play build, 2026-11-24 15:07; 96 is about twice the maximum"
++        }
+       }
+     },
+     "Pressure": {
+@@ -168,7 +175,7 @@
+             "fleet-all": "every idle fleet slot of the same platform is used",
+             "fleet-cap": "the authored job cap bounds the fleet share",
+             "fleet-memory": "the free memory carries fewer light remote jobs",
+-            "fleet-pressure": "memory pressure is raised, so fewer remote jobs wait here"
++            "fleet-pressure": "memory pressure is critical, so no remote job waits here"
+           },
+           "errors": {
+             "definitionRequired": "Closed compile units value required: {detail}",
+@@ -193,7 +200,7 @@
+             "fleet-all": "jeder freie Flottenplatz derselben Plattform wird genutzt",
+             "fleet-cap": "die festgelegte Job-Obergrenze begrenzt den Flottenanteil",
+             "fleet-memory": "der freie Speicher trägt weniger leichte entfernte Jobs",
+-            "fleet-pressure": "der Speicherdruck ist erhöht, daher warten weniger entfernte Jobs hier"
++            "fleet-pressure": "der Speicherdruck ist kritisch, daher wartet hier kein entfernter Job"
+           },
+           "errors": {
+             "definitionRequired": "Geschlossener Compile-Einheiten-Wert erforderlich: {detail}",

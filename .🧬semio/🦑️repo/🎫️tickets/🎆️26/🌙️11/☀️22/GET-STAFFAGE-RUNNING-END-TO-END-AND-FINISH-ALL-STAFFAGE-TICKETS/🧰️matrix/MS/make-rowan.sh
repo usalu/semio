@@ -1,0 +1,6 @@
+#!/bin/zsh
+# 🌳️ The multiview repair of `rowan` at 1:200 (idempotent, the last step of its chain, after the ops of `🧰️silhouette/SV-2/repair/rowan.json`): the foliage masses ride on limbs that the wind and snow poses turn by up to 25 degrees, and their front and plan shapes were one flat sheet per mass, so a mass and its twin drifted apart (0.69 m in the gale against a tolerance of 0.2 m). Front and plan of 1:200 are redrawn from the 1:200 body with `🧰️silhouette/R4-P/redraw.ts`: every part (a bone and the tone of its solids, so the berries stay berries) as plates 0.6 m apart in depth that the bone carries. In the default pose the plates of a part are exactly its silhouette. 1:100 and 1:50 are not redrawn: there the plates of neighbouring masses interleave and their outlines read as contour lines in the solid view (measured and rejected, see the report). make-rowan.sh [--in file] [--out file]
+source "${0:A:h}/env.sh"
+in="$(file_of rowan)"; out="$in"
+while [[ $# -gt 0 ]]; do case "$1" in --in) in="$2"; shift 2;; --out) out="$2"; shift 2;; *) shift;; esac; done
+cd "$S/📦️packages/🟦️typescript" && timeout 1500 "$B" "$U/🧰️silhouette/R4-P/redraw.ts" rowan --in "$in" --out "$out" --scales 200 --views front,plan --slab "${SLAB:-0.6}" --tones | tail -3 | cut -c1-150

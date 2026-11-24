@@ -1,0 +1,8 @@
+[
+  { "op": "copy", "scale": "50", "id": "hand-r", "from": "elevation", "to": ["front"] },
+  { "op": "copy", "scale": "100", "id": "hand-r", "from": "elevation", "to": ["front"] },
+  { "op": "front-sweep", "scale": "500", "id": "hand-r", "view": "plan" },
+  { "op": "copy", "scale": "100", "id": "forearm-r", "from": "elevation", "to": ["front"] },
+  { "op": "front-sweep", "scale": "100", "id": "shoe-r", "view": "plan" },
+  { "op": "copy", "scale": "500", "id": "shank-l", "bone": "shank-l", "fromId": "shank-r", "fromBone": "shank-r", "from": "elevation", "to": ["elevation"] }
+]

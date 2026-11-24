@@ -1,6 +1,7 @@
 import {createHash} from "node:crypto";
 import {readFileSync,statSync} from "node:fs";
 import {encodeProtobufV1,REAPI_V1} from "../../📡️wire/📦️protobuf/🟦️.ts";
+import {readRemoteCachePolicyV1} from "../../../🌐️remote-cache/🟦️.ts";
 import type {RemoteExecutionContentV1} from "../../🗄️content/🟦️.ts";
 import type {RemoteExecutionPropertyV1} from "../../🟦️.ts";
 import {OFFLOAD_POLICY_V1,offloadActionSecondsV1,offloadCrateTypesOfV1,offloadTargetOfV1,type OffloadReasonV1} from "../📐️policy/🟦️.ts";
@@ -10,16 +11,16 @@ const policy=OFFLOAD_POLICY_V1;
 /** 🔢️ A digest in the protocol's own field names. */
 export type OffloadDigestV1=Readonly<{hash:string;size_bytes:number}>;
 /** 🎬️ One built and uploaded action: its digest and what it ships. */
-export type OffloadActionV1=Readonly<{digest:OffloadDigestV1;files:number;bytes:number;uploaded:number}>;
+export type OffloadActionV1=Readonly<{digest:OffloadDigestV1;files:number;bytes:number;uploaded:number;release:()=>Promise<void>;repair:(named:readonly OffloadDigestV1[],signal?:AbortSignal)=>Promise<Readonly<{blobs:number;bytes:number}>|undefined>}>;
 /** 🖥️ The compiler identity a worker must already have: the commit hash and host triple of `rustc -vV`, the 16-hex toolchain digest the scheduler matches on (the first 16 hex of the SHA-256 of the exact `rustc -vV` text, the text the unit cache keys on) and the target triples of its sysroot. */
 export type OffloadToolchainV1=Readonly<{commit:string;host:string;digest:string;targets:readonly string[]}>;
 
 const sha=(data:Uint8Array|string):string=>createHash("sha256").update(data).digest("hex");
 const digestOf=(data:Uint8Array):OffloadDigestV1=>({hash:sha(data),size_bytes:data.length});
 
-/** 🏷️ The platform properties of an offloaded rustc action: the machine kind of the requester, its exact compiler (`semio-target`, `semio-toolchain`), the target libraries the unit needs when it is not the host, the machine it is pinned to (`semio-pin=<origin>`, which only that machine offers) and the control properties of the scheduler (`semio-offload=if-idle`, or `queue` when the unit waits for a machine instead of being declined, `semio-origin` and, for a unit with a predicted peak, `semio-peak-mb`). Sorted, so equal units are equal actions. */
-export function offloadPlatformV1(host:readonly RemoteExecutionPropertyV1[],toolchain:OffloadToolchainV1,target:string|undefined,origin:string|undefined,peakMegabytes:number=0,placement:Readonly<{queue?:boolean;pin?:string;sdk?:string}>={}):readonly RemoteExecutionPropertyV1[]{
- const p=policy.property,rows=[...host.filter(row=>row.name!==p.target&&row.name!==p.toolchain),{name:p.offload,value:placement.queue===true||placement.pin!==undefined?p.queueValue:p.offloadValue},...placement.pin===undefined?[]:[{name:p.pin,value:placement.pin}],...placement.sdk===undefined?[]:[{name:p.sdk,value:placement.sdk}],{name:p.format,value:p.formatValue},{name:p.target,value:toolchain.host},{name:p.toolchain,value:toolchain.digest},...origin?[{name:p.origin,value:origin}]:[],...peakMegabytes>0?[{name:p.peak,value:String(Math.ceil(peakMegabytes))}]:[]];
+/** 🏷️ The platform properties of an offloaded rustc action: the machine kind of the requester, its exact compiler (`semio-target`, `semio-toolchain`), the target libraries the unit needs when it is not the host, the machine it is pinned to (`semio-pin=<origin>`, which only that machine offers), the identity of the linkers a linked unit's bitcode goes to (`semio-linker`, which only a machine with the very same `rust-lld` and `wasm-component-ld` offers) and the control properties of the scheduler (`semio-offload=if-idle`, or `queue` when the unit waits for a machine instead of being declined, `semio-origin` and, for a unit with a predicted peak, `semio-peak-mb`). Sorted, so equal units are equal actions. */
+export function offloadPlatformV1(host:readonly RemoteExecutionPropertyV1[],toolchain:OffloadToolchainV1,target:string|undefined,origin:string|undefined,peakMegabytes:number=0,placement:Readonly<{queue?:boolean;pin?:string;sdk?:string;linker?:string}>={}):readonly RemoteExecutionPropertyV1[]{
+ const p=policy.property,rows=[...host.filter(row=>row.name!==p.target&&row.name!==p.toolchain),{name:p.offload,value:placement.queue===true||placement.pin!==undefined?p.queueValue:p.offloadValue},...placement.pin===undefined?[]:[{name:p.pin,value:placement.pin}],...placement.sdk===undefined?[]:[{name:p.sdk,value:placement.sdk}],...placement.linker===undefined?[]:[{name:p.linker,value:placement.linker}],{name:p.format,value:p.formatValue},{name:p.target,value:toolchain.host},{name:p.toolchain,value:toolchain.digest},...origin?[{name:p.origin,value:origin}]:[],...peakMegabytes>0?[{name:p.peak,value:String(Math.ceil(peakMegabytes))}]:[]];
  if(target!==undefined&&target!==toolchain.host)rows.push({name:p.targetPrefix+target,value:"1"});
  return rows.sort((left,right)=>left.name<right.name?-1:left.name>right.name?1:0);
 }
@@ -58,6 +59,8 @@ export type OffloadActionSpecV1=Readonly<{files:ReadonlyMap<string,string>;execu
 export async function shipOffloadActionV1(input:Readonly<{spec:OffloadActionSpecV1;content:RemoteExecutionContentV1;instance:string;platform:readonly RemoteExecutionPropertyV1[];signal?:AbortSignal;digest?:(path:string)=>string|null}>):Promise<OffloadActionV1|Readonly<{declined:OffloadReasonV1;detail:string}>>{
  const {spec,content,instance,platform,signal}=input,blobs=new Map<string,{digest:OffloadDigestV1;path?:string;bytes?:Uint8Array}>(),root:Node={files:new Map(),directories:new Map()};
  let bytes=0;
+ const entryLimit=(()=>{const server=readRemoteCachePolicyV1().server;return Math.min(server.maximumEntryBytes,Math.floor(server.maximumBytes/2));})();
+ for(const real of spec.files.values()){let size=0;try{size=statSync(real).size;}catch{continue;}if(size>entryLimit)return{declined:"inputs-too-large",detail:`${real.split(/[\\/]/u).slice(-2).join("/")} is ${size} bytes, the content store takes at most ${entryLimit} per entry`};}
  for(const [path,real] of [...spec.files].sort((left,right)=>left[0]<right[0]?-1:1)){
   let size:number,hash:string|null;
   try{const stat=statSync(real);size=stat.size;hash=input.digest?.(real)??sha(readFileSync(real));}catch{return{declined:"unreadable-input",detail:real};}
@@ -80,14 +83,20 @@ export async function shipOffloadActionV1(input:Readonly<{spec:OffloadActionSpec
   output_files:[],output_directories:[],output_paths:[...spec.outputPaths],platform:{properties},working_directory:"",
  }));
  const action=stage(encodeProtobufV1(REAPI_V1.action,{command_digest:command,input_root_digest:rootDigest,timeout:{seconds:spec.seconds},platform:{properties}}));
- const absent=new Set((await content.missing(instance,[...blobs.values()].map(row=>({hash:row.digest.hash,size:row.digest.size_bytes})),signal,"input")).map(row=>row.hash));
- const rows=[...blobs.values()].filter(row=>absent.has(row.digest.hash));let next=0;
-  const travelling=rows.reduce((sum,row)=>sum+row.digest.size_bytes,0);
+ const lease=`input:${action.hash.slice(0,32)}` as const,release=async():Promise<void>=>{try{await content.release?.(instance,[...blobs.keys()],lease,AbortSignal.timeout(policy.timeouts.requestMilliseconds));}catch{}};
+ const absent=new Set((await content.missing(instance,[...blobs.values()].map(row=>({hash:row.digest.hash,size:row.digest.size_bytes})),signal,lease)).map(row=>row.hash));
+ type Row={digest:OffloadDigestV1;path?:string;bytes?:Uint8Array};
+ const rows=[...blobs.values()].filter(row=>absent.has(row.digest.hash)),sizeOf=(list:readonly Row[]):number=>list.reduce((sum,row)=>sum+row.digest.size_bytes,0),travelling=sizeOf(rows);
  if(travelling>policy.limits.maximumUploadBytes)return{declined:"inputs-too-large",detail:`upload ${travelling}`};
- await Promise.all(Array.from({length:Math.min(8,rows.length)},async()=>{
-  for(;;){const row=rows[next++];if(row===undefined)return;await content.write(instance,{hash:row.digest.hash,size:row.digest.size_bytes},row.bytes??readFileSync(row.path!),signal,"input");}
- }));
- return{digest:action,files:spec.files.size,bytes,uploaded:rows.length};
+ const send=async(list:readonly Row[],stop?:AbortSignal):Promise<void>=>{let next=0;await Promise.all(Array.from({length:Math.min(8,list.length)},async()=>{for(;;){const row=list[next++];if(row===undefined)return;await content.write(instance,{hash:row.digest.hash,size:row.digest.size_bytes},row.bytes??readFileSync(row.path!),stop,lease);}}));};
+ await send(rows,signal);
+ const repair=async(named:readonly OffloadDigestV1[],stop?:AbortSignal):Promise<Readonly<{blobs:number;bytes:number}>|undefined>=>{
+  for(const row of named)if(row.size_bytes>0&&!blobs.has(row.hash))return undefined;
+  const wanted=new Set(named.map(row=>row.hash)),gone=new Set((await content.missing(instance,[...blobs.values()].map(row=>({hash:row.digest.hash,size:row.digest.size_bytes})),stop,lease)).map(row=>row.hash)),again=[...blobs.values()].filter(row=>gone.has(row.digest.hash)||wanted.has(row.digest.hash)),resend=sizeOf(again);
+  if(resend>policy.limits.maximumUploadBytes)return undefined;
+  await send(again,stop);return{blobs:again.length,bytes:resend};
+ };
+ return{digest:action,files:spec.files.size,bytes,uploaded:rows.length,release,repair};
 }
 
 /** 🏗️ Builds the action of one planned rustc unit: its compiler command in argv form, the two virtual output paths and the time the unit may run, shipped like every offloaded action. */

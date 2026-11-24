@@ -169,7 +169,7 @@ async function warmCargoResolutionV1(workspaceRoot, scripts, manifest, context) 
       const bytes = (path) => { try { return readFileSync(join(workspaceRoot, path)); } catch (error) { if (error?.code === "ENOENT" || error?.code === "ENOTDIR") return null; throw error; } };
       const digest = (buffer) => createHash("sha256").update(buffer).digest("hex");
       const host = { read: async (path) => { const buffer = bytes(path); return buffer === null ? null : { value: tomlParser(buffer.toString("utf8")), sha: digest(buffer) }; }, digest: async (path) => { const buffer = bytes(path); return buffer === null ? null : digest(buffer); } };
-      resolutionRuns.set(key, run = createCargoResolutionContextV1(host, resolutionPolicy, createCargoReceiptWriterV1(repositoryBuildGraphWriterDirectoryV1(workspaceRoot, "inference"), withBuildGraphOptionalPublicationV1), GRAPH_MEMORY_POLICY_V1.maximumParsedManifests));
+      resolutionRuns.set(key, run = createCargoResolutionContextV1(host, resolutionPolicy, createCargoReceiptWriterV1(repositoryBuildGraphWriterDirectoryV1(workspaceRoot, "inference"), withBuildGraphOptionalPublicationV1, typeof scripts?.context?.cargoReceiptArchive === "string" ? scripts.context.cargoReceiptArchive : undefined), GRAPH_MEMORY_POLICY_V1.maximumParsedManifests));
     }
     await cargoResolutionPartsV1(run, manifest, { tolerant: true });
     await flushCargoReceiptsV1(run);

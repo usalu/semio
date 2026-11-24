@@ -1,0 +1,372 @@
+{
+  "generated": {
+    "pages": [
+      {
+        "fonts": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "images": [
+          "Im1",
+          "Im2"
+        ],
+        "usedFonts": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "paintedImages": [
+          "Im1",
+          "Im2"
+        ],
+        "text": [
+          "Alpha one",
+          "Beta two",
+          "Gamma three"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "images": [
+          "Im1",
+          "Im2"
+        ],
+        "usedFonts": [
+          "F3",
+          "F2"
+        ],
+        "paintedImages": [
+          "Im2"
+        ],
+        "text": [
+          "Delta four",
+          "Epsilon five"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F1",
+          "F4"
+        ],
+        "images": [
+          "Im2"
+        ],
+        "usedFonts": [
+          "F4",
+          "F1"
+        ],
+        "paintedImages": [
+          "Im2"
+        ],
+        "text": [
+          "Café über",
+          "Zeta six"
+        ],
+        "independentText": false
+      }
+    ],
+    "fontCount": 4,
+    "imageCount": 2,
+    "extGStateCount": 1,
+    "propertiesCount": 1
+  },
+  "report": {
+    "pages": [
+      {
+        "fonts": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "images": [],
+        "usedFonts": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "paintedImages": [],
+        "text": [
+          "Report page 1 line 1 in F1",
+          "Report page 1 line 2 in F2",
+          "Report page 1 line 3 in F3",
+          "Report page 1 line 4 in F1"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "images": [],
+        "usedFonts": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "paintedImages": [],
+        "text": [
+          "Report page 2 line 1 in F2",
+          "Report page 2 line 2 in F3",
+          "Report page 2 line 3 in F1",
+          "Report page 2 line 4 in F2"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "images": [],
+        "usedFonts": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "paintedImages": [],
+        "text": [
+          "Report page 3 line 1 in F3",
+          "Report page 3 line 2 in F1",
+          "Report page 3 line 3 in F2",
+          "Report page 3 line 4 in F3"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "images": [],
+        "usedFonts": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "paintedImages": [],
+        "text": [
+          "Report page 4 line 1 in F1",
+          "Report page 4 line 2 in F2",
+          "Report page 4 line 3 in F3",
+          "Report page 4 line 4 in F1"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F1",
+          "F4",
+          "F5"
+        ],
+        "images": [
+          "Im1"
+        ],
+        "usedFonts": [
+          "F1",
+          "F4",
+          "F5"
+        ],
+        "paintedImages": [
+          "Im1"
+        ],
+        "text": [
+          "Report page 5 line 1 in F4",
+          "Report page 5 line 2 in F5",
+          "Report page 5 line 3 in F1",
+          "Report page 5 line 4 in F4"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F1",
+          "F4",
+          "F5"
+        ],
+        "images": [
+          "Im1"
+        ],
+        "usedFonts": [
+          "F1",
+          "F4",
+          "F5"
+        ],
+        "paintedImages": [
+          "Im1"
+        ],
+        "text": [
+          "Report page 6 line 1 in F5",
+          "Report page 6 line 2 in F1",
+          "Report page 6 line 3 in F4",
+          "Report page 6 line 4 in F5"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F1",
+          "F4",
+          "F5"
+        ],
+        "images": [
+          "Im1"
+        ],
+        "usedFonts": [
+          "F1",
+          "F4",
+          "F5"
+        ],
+        "paintedImages": [
+          "Im1"
+        ],
+        "text": [
+          "Report page 7 line 1 in F1",
+          "Report page 7 line 2 in F4",
+          "Report page 7 line 3 in F5",
+          "Report page 7 line 4 in F1"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F1",
+          "F4",
+          "F5"
+        ],
+        "images": [
+          "Im1"
+        ],
+        "usedFonts": [
+          "F1",
+          "F4",
+          "F5"
+        ],
+        "paintedImages": [
+          "Im1"
+        ],
+        "text": [
+          "Report page 8 line 1 in F4",
+          "Report page 8 line 2 in F5",
+          "Report page 8 line 3 in F1",
+          "Report page 8 line 4 in F4"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F2",
+          "F5"
+        ],
+        "images": [
+          "Im1",
+          "Im2"
+        ],
+        "usedFonts": [
+          "F2",
+          "F5"
+        ],
+        "paintedImages": [
+          "Im1",
+          "Im2"
+        ],
+        "text": [
+          "Report page 9 line 1 in F2",
+          "Report page 9 line 2 in F5",
+          "Report page 9 line 3 in F2",
+          "Report page 9 line 4 in F5"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F2",
+          "F5"
+        ],
+        "images": [
+          "Im1",
+          "Im2"
+        ],
+        "usedFonts": [
+          "F2",
+          "F5"
+        ],
+        "paintedImages": [
+          "Im1",
+          "Im2"
+        ],
+        "text": [
+          "Report page 10 line 1 in F5",
+          "Report page 10 line 2 in F2",
+          "Report page 10 line 3 in F5",
+          "Report page 10 line 4 in F2"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F2",
+          "F5"
+        ],
+        "images": [
+          "Im1",
+          "Im2"
+        ],
+        "usedFonts": [
+          "F2",
+          "F5"
+        ],
+        "paintedImages": [
+          "Im1",
+          "Im2"
+        ],
+        "text": [
+          "Report page 11 line 1 in F2",
+          "Report page 11 line 2 in F5",
+          "Report page 11 line 3 in F2",
+          "Report page 11 line 4 in F5"
+        ],
+        "independentText": true
+      },
+      {
+        "fonts": [
+          "F2",
+          "F5"
+        ],
+        "images": [
+          "Im1",
+          "Im2"
+        ],
+        "usedFonts": [
+          "F2",
+          "F5"
+        ],
+        "paintedImages": [
+          "Im1",
+          "Im2"
+        ],
+        "text": [
+          "Report page 12 line 1 in F5",
+          "Report page 12 line 2 in F2",
+          "Report page 12 line 3 in F5",
+          "Report page 12 line 4 in F2"
+        ],
+        "independentText": true
+      }
+    ],
+    "fontCount": 5,
+    "imageCount": 2,
+    "extGStateCount": 0,
+    "propertiesCount": 0
+  }
+}

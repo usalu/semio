@@ -5352,6 +5352,93 @@
               "y": -0.6,
               "w": 0.15,
               "h": 1.2
+            },
+            {
+              "id": "guide-left",
+              "bone": "box",
+              "role": "detail",
+              "z": 2,
+              "filled": true,
+              "tone": 0.8,
+              "region": "box-and-rails",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": 0.075,
+              "y": 0.57,
+              "w": 0.02,
+              "h": 0.03
+            },
+            {
+              "id": "guide-right",
+              "bone": "box",
+              "role": "detail",
+              "z": 2,
+              "filled": true,
+              "tone": 0.8,
+              "region": "box-and-rails",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": 0.075,
+              "y": -0.6,
+              "w": 0.02,
+              "h": 0.03
+            },
+            {
+              "id": "frame-jamb",
+              "bone": "facade",
+              "role": "detail",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.82,
+              "region": "window-frame",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.227,
+              "y": -0.6,
+              "w": 0.07,
+              "h": 1.2
+            },
+            {
+              "id": "glass",
+              "bone": "facade",
+              "role": "glazing",
+              "z": 0.6,
+              "filled": false,
+              "tone": 0.2,
+              "region": "glazing-behind",
+              "material": "glass",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.188,
+                  -0.55
+                ],
+                [
+                  -0.188,
+                  0.55
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "sill-board",
+              "bone": "facade",
+              "role": "detail",
+              "z": 0.4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "facade-wall",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.157,
+              "y": -0.6,
+              "w": 0.187,
+              "h": 1.2
             }
           ]
         },
@@ -6743,6 +6830,76 @@
               "y": -0.6,
               "w": 0.15,
               "h": 1.2
+            },
+            {
+              "id": "guide-left",
+              "bone": "box",
+              "role": "detail",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "box-and-rails",
+              "material": "aluminium",
+              "penMm": 0.2,
+              "kind": "rect",
+              "x": 0.075,
+              "y": 0.57,
+              "w": 0.02,
+              "h": 0.03
+            },
+            {
+              "id": "guide-right",
+              "bone": "box",
+              "role": "detail",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "box-and-rails",
+              "material": "aluminium",
+              "penMm": 0.2,
+              "kind": "rect",
+              "x": 0.075,
+              "y": -0.6,
+              "w": 0.02,
+              "h": 0.03
+            },
+            {
+              "id": "window",
+              "bone": "facade",
+              "role": "detail",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.8,
+              "region": "window-frame",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": -0.227,
+              "y": -0.6,
+              "w": 0.07,
+              "h": 1.2
+            },
+            {
+              "id": "glass",
+              "bone": "facade",
+              "role": "glazing",
+              "z": 0.6,
+              "filled": false,
+              "tone": 0.2,
+              "region": "glazing-behind",
+              "material": "glass",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.188,
+                  -0.55
+                ],
+                [
+                  -0.188,
+                  0.55
+                ]
+              ],
+              "closed": false
             }
           ]
         },
@@ -8134,6 +8291,76 @@
                 "z1": 0.565,
                 "sweep": "w"
               }
+            },
+            {
+              "id": "guide-left",
+              "bone": "box",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "box-and-rails",
+              "material": "aluminium",
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": 0.075,
+              "y": 0.57,
+              "w": 0.02,
+              "h": 0.03
+            },
+            {
+              "id": "guide-right",
+              "bone": "box",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "box-and-rails",
+              "material": "aluminium",
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": 0.075,
+              "y": -0.6,
+              "w": 0.02,
+              "h": 0.03
+            },
+            {
+              "id": "window",
+              "bone": "facade",
+              "role": "detail",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.8,
+              "region": "window-frame",
+              "material": "aluminium",
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": -0.227,
+              "y": -0.6,
+              "w": 0.07,
+              "h": 1.2
+            },
+            {
+              "id": "glass",
+              "bone": "facade",
+              "role": "glazing",
+              "z": 0.6,
+              "filled": false,
+              "tone": 0.2,
+              "region": "glazing-behind",
+              "material": "glass",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.188,
+                  -0.525
+                ],
+                [
+                  -0.188,
+                  0.525
+                ]
+              ],
+              "closed": false
             }
           ]
         },

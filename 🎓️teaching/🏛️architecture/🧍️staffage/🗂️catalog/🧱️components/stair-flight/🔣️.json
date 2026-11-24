@@ -5497,6 +5497,36 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "bone": "stringer",
+              "role": "body",
+              "filled": true,
+              "tone": 0.35,
+              "region": "stringer-steel",
+              "material": "steel",
+              "id": "base-plate",
+              "z": 1.5,
+              "kind": "rect",
+              "x": 0.090001,
+              "y": -0.13,
+              "w": 0.299998,
+              "h": 0.26
+            },
+            {
+              "bone": "stringer",
+              "role": "body",
+              "filled": true,
+              "tone": 0.35,
+              "region": "stringer-steel",
+              "material": "steel",
+              "id": "head-plate",
+              "z": 1.5,
+              "kind": "rect",
+              "x": 4.464999,
+              "y": -0.13,
+              "w": 0.015004,
+              "h": 0.26
             }
           ]
         },

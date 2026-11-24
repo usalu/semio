@@ -23,6 +23,7 @@ pub enum ActorInputWire {
     Poll { events: Vec<DslValue>, shape: TurnShape },
     StartJob { source: Option<semio_framework::kernel::OriginalJobSource> },
     Restore { state: Vec<u8> },
+    Succeed { succession: semio_framework::kernel::OriginalActorSuccession },
     SqliteSchema { dialect: String },
     SqliteExport { input: SnapshotInput },
     SqliteImport { input: SnapshotInput },
@@ -113,6 +114,28 @@ fn job_source(value: &DslValue) -> Read<Option<semio_framework::kernel::Original
     let value = closed(value, &["job", "kind", "input", "checkpoint"])?;
     Ok(Some(semio_framework::kernel::OriginalJobSource { job: uint(field(value, "job")?)?, kind: text(field(value, "kind")?)?, input: optional_bytes(field(value, "input")?)?, checkpoint: optional_bytes(field(value, "checkpoint")?)? }))
 }
+fn extent(value: &DslValue) -> Read<usize> {
+    usize::try_from(uint(value)?).map_err(|_| ActorInputRefusal)
+}
+fn succession(value: &DslValue) -> Read<semio_framework::kernel::OriginalActorSuccession> {
+    let value = closed(value, &["operation", "generation", "epoch", "successor", "grant", "fuel"])?;
+    let grant = closed(field(value, "grant")?, &["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"])?;
+    let identity = |name: &str| uint(field(value, name)?).and_then(|identity| if identity == 0 { Err(ActorInputRefusal) } else { Ok(identity) });
+    Ok(semio_framework::kernel::OriginalActorSuccession {
+        operation: identity("operation")?,
+        generation: identity("generation")?,
+        epoch: identity("epoch")?,
+        successor: identity("successor")?,
+        grant: semio_framework_value::RetainedCloneGrant {
+            maximum_items: extent(field(grant, "maximumItems")?)?,
+            maximum_copy_bytes: extent(field(grant, "maximumCopyBytes")?)?,
+            maximum_capacity_bytes: extent(field(grant, "maximumCapacityBytes")?)?,
+            maximum_release_bytes: extent(field(grant, "maximumReleaseBytes")?)?,
+            maximum_depth: extent(field(grant, "maximumDepth")?)?,
+        },
+        fuel: uint(field(value, "fuel")?)?,
+    })
+}
 
 fn number(value: u64) -> DslValue {
     DslValue::Number(Number::UInt(value))
@@ -141,6 +164,17 @@ fn snapshot_value(input: &SnapshotInput) -> DslValue {
 fn grant_value(native: &SnapshotGrant) -> DslValue {
     object(vec![("maximum_items", number(native.maximum_items)), ("maximum_copy_bytes", number(native.maximum_copy_bytes)), ("maximum_capacity_bytes", number(native.maximum_capacity_bytes)), ("maximum_release_bytes", number(native.maximum_release_bytes)), ("maximum_depth", number(native.maximum_depth))])
 }
+fn succession_value(succession: &semio_framework::kernel::OriginalActorSuccession) -> DslValue {
+    let grant = &succession.grant;
+    object(vec![
+        ("operation", number(succession.operation)),
+        ("generation", number(succession.generation)),
+        ("epoch", number(succession.epoch)),
+        ("successor", number(succession.successor)),
+        ("grant", object(vec![("maximumItems", number(grant.maximum_items as u64)), ("maximumCopyBytes", number(grant.maximum_copy_bytes as u64)), ("maximumCapacityBytes", number(grant.maximum_capacity_bytes as u64)), ("maximumReleaseBytes", number(grant.maximum_release_bytes as u64)), ("maximumDepth", number(grant.maximum_depth as u64))])),
+        ("fuel", number(succession.fuel)),
+    ])
+}
 fn optional_octets(value: &Option<Vec<u8>>) -> DslValue {
     value.as_deref().map_or(DslValue::Null, octets)
 }
@@ -155,6 +189,7 @@ impl ActorInputWire {
             Self::Poll { .. } => "poll",
             Self::StartJob { .. } => "start-job",
             Self::Restore { .. } => "restore",
+            Self::Succeed { .. } => "succeed",
             Self::SqliteSchema { .. } => "sqlite-schema",
             Self::SqliteExport { .. } => "sqlite-export",
             Self::SqliteImport { .. } => "sqlite-import",
@@ -177,6 +212,7 @@ impl ActorInputWire {
             Self::Poll { events, shape } => object(vec![tag, ("events", DslValue::Array(events.clone())), ("shape", object(vec![("maxEffects", number(u64::from(shape.max_effects))), ("maxPatchBytes", number(u64::from(shape.max_patch_bytes))), ("maxFrames", number(u64::from(shape.max_frames)))]))]),
             Self::StartJob { source } => object(vec![tag, ("source", source.as_ref().map_or(DslValue::Null, |source| object(vec![("job", number(source.job)), ("kind", schema_text(&source.kind)), ("input", optional_octets(&source.input)), ("checkpoint", optional_octets(&source.checkpoint))])))]),
             Self::Restore { state } => object(vec![tag, ("state", octets(state))]),
+            Self::Succeed { succession } => object(vec![tag, ("succession", succession_value(succession))]),
             Self::SqliteSchema { dialect } => object(vec![tag, ("dialect", schema_text(dialect))]),
             Self::SqliteExport { input } | Self::SqliteImport { input } => object(vec![tag, ("input", snapshot_value(input))]),
             Self::SqliteTakeFile { ticket } | Self::SqliteTakePayload { ticket } => object(vec![tag, ("ticket", number(*ticket))]),
@@ -197,6 +233,7 @@ impl ActorInputWire {
             "poll" => &["operation", "events", "shape"],
             "start-job" => &["operation", "source"],
             "restore" => &["operation", "state"],
+            "succeed" => &["operation", "succession"],
             "sqlite-schema" => &["operation", "dialect"],
             "sqlite-export" | "sqlite-import" | "sqlite-close" => &["operation", "input"],
             "sqlite-take-file" | "sqlite-take-payload" => &["operation", "ticket"],
@@ -217,6 +254,7 @@ impl ActorInputWire {
             }
             "start-job" => Self::StartJob { source: job_source(field(value, "source")?)? },
             "restore" => Self::Restore { state: bytes(field(value, "state")?)? },
+            "succeed" => Self::Succeed { succession: succession(field(value, "succession")?)? },
             "sqlite-schema" => Self::SqliteSchema { dialect: text(field(value, "dialect")?)? },
             "sqlite-export" => Self::SqliteExport { input: snapshot(field(value, "input")?)? },
             "sqlite-import" => Self::SqliteImport { input: snapshot(field(value, "input")?)? },

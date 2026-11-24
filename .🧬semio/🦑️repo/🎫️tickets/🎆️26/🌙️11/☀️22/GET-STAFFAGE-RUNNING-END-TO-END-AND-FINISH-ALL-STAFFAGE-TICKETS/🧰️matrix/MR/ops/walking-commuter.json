@@ -1,0 +1,4 @@
+[
+  { "op": "front-sweep", "scale": "50", "id": "thigh-l", "lateral": "plan" },
+  { "op": "front-sweep", "scale": "50", "id": "thigh-r", "lateral": "plan" }
+]

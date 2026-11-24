@@ -10,7 +10,7 @@ import {localKeyV1,localTextV1,portableKeyV1,portableRootsV1,portableTextV1,remo
 import {buildRunKeyInputV1,buildScriptIdentityV1,markBuildScriptIdentityV1} from "../../🏗️buildscript/🔑️run-key/🟦️.ts";
 import {packRunV1,unpackRunV1,runFileNameV1,runFilePathV1} from "../../🏗️buildscript/📦️run-wire/🟦️.ts";
 import {compilerWrittenV1,keyGapV1,unitSourcesV1} from "../../🔏️key/🔗️sources/🟦️.ts";
-import {readGapsV1,recordGapsV1} from "../../🔏️key/🕳️gaps/🟦️.ts";
+import {manifestFilesV1,manifestOfV1,observedManifestV1,readManifestV1,writeManifestV1} from "../../🛰️fleet/📋️manifest/🟦️.ts";
 import type {BuildEntryV1} from "../../💾️store/🟦️.ts";
 import {buildKeyEnvironmentV1} from "../../🔏️key/🟦️.ts";
 import {countSkipV1,countUnitV1,readBuildCountersV1,readSkipReasonsV1,skipNameV1,writeBuildCountersV1} from "../../🛰️fleet/📊️counters/🟦️.ts";
@@ -268,7 +268,7 @@ test("a build script run that still names a directory of its machine after its r
  expect(packRunV1({...leaking,outputs:Array.from({length:70},(_,index)=>({...leaking.outputs[1]!,path:"f"+index}))},header,rootsA,read)).toBe("too-many-files");
 });
 
-test("the files a finished compilation read although the scan missed them are recorded per unit identity and keyed by the next compilation; the observation file a proc-macro writes for the receipt is no input",()=>{
+test("the files a finished compilation read although the scan missed them are kept in the unit slot's input manifest and keyed by the next compilation; the observation file a proc-macro writes for the receipt is no input",()=>{
  const machine=homeA(),root=directory("gap"),base=directory("gap-tree"),entry=join(base,"lib.rs"),extra=join(base,"files","data.json"),roots=portableRootsV1({cwd:base,workspace:base});
  mkdirSync(join(base,"files"));writeFileSync(entry,"fn main(){}");writeFileSync(extra,"{\"a\":1}");
  const slot="6".repeat(64),digest=(path:string)=>path.endsWith("data.json")?sha256V1("one"):sha256V1("entry");
@@ -276,15 +276,15 @@ test("the files a finished compilation read although the scan missed them are re
  const gap=keyGapV1({cwd:base,covered:new Set([entry]),keyedNames:new Set(),depInfo:dep});
  expect(gap).toEqual(["files/data.json"]);
  expect(compilerWrittenV1("/x/target/semio-compiler-resources/17-9-3/observation.json")).toBe(true);expect(compilerWrittenV1("/x/semio-compiler-resources/17-9/observation.json")).toBe(false);
- expect(readGapsV1(root,slot,roots)).toEqual([]);
- expect(recordGapsV1(root,slot,{cwd:base,paths:gap,roots})).toBe(true);expect(recordGapsV1(root,slot,{cwd:base,paths:gap,roots}),"a second record of the same file changes nothing").toBe(false);
- const recorded=readGapsV1(root,slot,roots);expect(recorded).toEqual([{name:"@@semio-cwd@@/files/data.json",path:extra}]);
+ const id="7".repeat(64);expect(readManifestV1(root,id)).toBeUndefined();
+ writeManifestV1(root,id,observedManifestV1(gap,{cwd:base,roots}),false);
+ const recorded=manifestFilesV1(readManifestV1(root,id)!.manifest,roots);expect(recorded).toEqual([{name:"@@semio-cwd@@/files/data.json",path:extra}]);
  return unitSourcesV1(entry,undefined,undefined,digest,recorded).then(async keyed=>{
   const plain=await unitSourcesV1(entry,undefined,undefined,digest);
   expect(keyed!.sha256).not.toBe(plain!.sha256);expect(keyed!.rows.map(row=>row[0])).toContain("⟨gap⟩/@@semio-cwd@@/files/data.json");
   const other=await unitSourcesV1(entry,undefined,undefined,path=>path.endsWith("data.json")?sha256V1("two"):sha256V1("entry"),recorded);
   expect(other!.sha256,"a changed file moves the key").not.toBe(keyed!.sha256);
   expect(keyGapV1({cwd:base,covered:new Set(keyed!.files.map(file=>resolve(file))),keyedNames:new Set(),depInfo:dep}),"the recorded file is covered now").toEqual([]);
-  const moved=directory("gap-moved");expect(readGapsV1(root,slot,portableRootsV1({cwd:moved,workspace:moved}))[0]!.path).toBe(join(moved,"files","data.json"));
+  const moved=directory("gap-moved");expect(manifestFilesV1(readManifestV1(root,id)!.manifest,portableRootsV1({cwd:moved,workspace:moved}))[0]!.path).toBe(join(moved,"files","data.json"));
  });
 });

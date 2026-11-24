@@ -280,6 +280,7 @@ export async function registerTransactionCoordinatorTests(vitest: PluginRuntimeV
           readHistory: async () => ({ cursor: 0 }) as unknown as HistoryPatch,
           readLocalInteraction: async (instanceId) => fakeLocalInteraction(instanceId),
           subscribeOperationDiagnostics: () => () => {},
+          subscribeOperationFaults: () => () => {},
           subscribeOperationCompletions: () => () => {},
         subscribeOperationProgress: () => () => {},
           readWindowConfigPacks: async () => [],

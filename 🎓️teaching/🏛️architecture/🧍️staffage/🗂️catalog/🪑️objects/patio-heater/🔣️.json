@@ -5430,6 +5430,20 @@
               "material": "alu-reflector"
             },
             {
+              "id": "dome-rib",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.22,
+              "ry": 0.22,
+              "region": "reflector"
+            },
+            {
               "id": "top-cap",
               "bone": "reflector",
               "role": "detail",
@@ -5465,8 +5479,8 @@
             "de": "Ein Heizpilz 8 mm breit und 22,5 mm hoch: Wanne, Gehäuse mit Deckelfuge und Zugangsklappe, hinteres Rad, Mast mit zwei Kupplungslinien, Ventilgehäuse mit Knopf, Strahlergitter mit Schutzstäben und Deckel, Abstandshalter und die Haube mit Knauf. Vorderansicht: die gedrehte Silhouette mit Knopffläche auf der Rosette. Draufsicht: Haubenscheibe mit Knauf. Die Zugangstür ist in allen drei Ansichten als Blatt auf ihrem Bandknochen über der dunklen Öffnung und der Flasche dahinter gezeichnet, so dass die Pose zum Flaschenwechsel das offene Gehäuse zeigt."
           },
           "retained": {
-            "en": "Pan, housing, post, head, knob and dome at real size; the wheel stays as it shows the rear of the heater.",
-            "de": "Wanne, Gehäuse, Mast, Kopf, Knopf und Haube in realer Größe; das Rad bleibt, weil es die Rückseite zeigt."
+            "en": "Pan, housing, post, head, knob and dome at real size; the wheel stays as it shows the rear of the heater. Plan: the stiffening rib of the dome as one circle.",
+            "de": "Wanne, Gehäuse, Mast, Kopf, Knopf und Haube in realer Größe; das Rad bleibt, weil es die Rückseite zeigt. Draufsicht: die Versteifungssicke des Schirms als ein Kreis."
           },
           "merged": {
             "en": "Rim bead into the dome outline, screen bands and cap into one emitter outline, knob grip into the knob.",

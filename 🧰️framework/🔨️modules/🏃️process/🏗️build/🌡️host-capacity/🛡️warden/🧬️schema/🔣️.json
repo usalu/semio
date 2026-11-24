@@ -4,8 +4,8 @@
   "title": "Host warden: the one process per machine that acts on the memory of processes that already run (suspend, resume, cancel), from the same host sample and the same ladder the admission gates read.",
   "definitions": {
     "Policy": {
-      "description": "The authored numbers of the ladder and of the loop. Shares are basis points of the physical memory, bounded by a minimum and a maximum in megabytes, so a 4 GB host and a 128 GB host both get a usable line. defaultMode is the mode of a machine without a valid mode file: observe decides and alarms without signalling, enforce acts; the whole fleet is switched by changing this one value, every warden restarts itself on the changed source digest. ensureMilliseconds is the time a process trusts its own earlier ensure before it looks at the warden again.",
-      "descriptionDe": "Die festgelegten Zahlen der Leiter und der Schleife. defaultMode ist der Modus einer Maschine ohne gueltige mode-Datei: observe entscheidet und alarmiert ohne Signale, enforce handelt; die ganze Flotte wird durch diesen einen Wert umgeschaltet, jeder Waechter startet sich beim geaenderten Quelltext-Digest selbst neu. ensureMilliseconds ist die Zeit, in der ein Prozess seinem eigenen frueheren Ensure vertraut, bevor er wieder nach dem Waechter sieht.",
+      "description": "The authored numbers of the ladder and of the loop. Shares are basis points of the physical memory, bounded by a minimum and a maximum in megabytes, so a 4 GB host and a 128 GB host both get a usable line. Headroom is the memory the host can still give out before the OS halts applications: the available memory plus the swap room, and the swap room is the free swap plus the swap that can still grow, which is the free space of the swap volume minus swapDiskReserveMegabytes (never below 0; 0 where the swap volume is unknown or cannot grow), the sum bounded by swapRoomMaximumBasisPoints of the physical memory; a host that reports no swap has no headroom and keeps the available-memory law. Headroom below the headroomGuard line is guard, below the headroomDanger line is danger. defaultMode is the mode of a machine without a valid mode file: observe decides and alarms without signalling, enforce acts; the whole fleet is switched by changing this one value, every warden restarts itself on the changed source digest. ensureMilliseconds is the time a process trusts its own earlier ensure before it looks at the warden again.",
+      "descriptionDe": "Die festgelegten Zahlen der Leiter und der Schleife. Die Reserve (headroom) ist der Speicher, den der Host noch vergeben kann, bevor das Betriebssystem Anwendungen anhaelt: der verfuegbare Speicher plus der Swap-Spielraum; der Spielraum ist der freie Swap plus der noch wachsende Swap, also der freie Platz des Swap-Volumes abzueglich swapDiskReserveMegabytes (nie unter 0; 0 wo das Swap-Volume unbekannt ist oder nicht wachsen kann), die Summe begrenzt auf swapRoomMaximumBasisPoints des physischen Speichers; ein Host ohne Swap hat keine Reserve und behaelt das Gesetz des verfuegbaren Speichers. Reserve unter der Linie headroomGuard ist guard, unter der Linie headroomDanger ist danger. defaultMode ist der Modus einer Maschine ohne gueltige mode-Datei: observe entscheidet und alarmiert ohne Signale, enforce handelt; die ganze Flotte wird durch diesen einen Wert umgeschaltet, jeder Waechter startet sich beim geaenderten Quelltext-Digest selbst neu. ensureMilliseconds ist die Zeit, in der ein Prozess seinem eigenen frueheren Ensure vertraut, bevor er wieder nach dem Waechter sieht.",
       "const": {
         "guardBasisPoints": 1000,
         "guardMinimumMegabytes": 1024,
@@ -15,6 +15,14 @@
         "dangerMaximumMegabytes": 2048,
         "resumeBasisPoints": 1500,
         "swapActiveMegabytesPerSecond": 16,
+        "swapDiskReserveMegabytes": 4096,
+        "swapRoomMaximumBasisPoints": 5000,
+        "headroomGuardBasisPoints": 2500,
+        "headroomGuardMinimumMegabytes": 2048,
+        "headroomGuardMaximumMegabytes": 8192,
+        "headroomDangerBasisPoints": 1250,
+        "headroomDangerMinimumMegabytes": 1024,
+        "headroomDangerMaximumMegabytes": 4096,
         "calmTicks": 3,
         "suspendMaximumSeconds": 120,
         "maximumSuspendsPerTick": 4,
@@ -45,16 +53,19 @@
       }
     },
     "Kinds": {
-      "description": "Ordered kinds of subjects: the first entry whose pattern matches the command line of a process below a root names its kind. rank is the cost to redo (ascending = cheapest first), actions are what the warden may do, signal is what a cancel sends, scope is what a signal reaches (process: the pid, group: its process group, tree: the pid and every descendant, parent first). source is the repository path of the code that starts the process; a test proves every pattern names a path that exists there.",
+      "description": "Ordered kinds of subjects: the first entry whose pattern matches the command line of a process that is a subject candidate (below a root, or matching an identity) names its kind. A pattern may name the anchors <workspace> and <browsers> (see Anchors); a kind whose anchor is empty does not match. rank is the cost to redo (ascending = cheapest first), actions are what the warden may do, signal is what a cancel sends, scope is what a signal reaches (process: the pid, group: its process group, tree: the pid and every descendant, parent first). source is the repository path of the code that starts the process; a test proves every pattern names a path that exists there.",
       "const": [
         {"name": "remote-unit", "rank": 10, "pattern": "^(?:\\S*/)?rustc(?:\\.exe)?\\s.*/remote-execution/work/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/👷️worker/🟦️.ts"},
-        {"name": "local-unit", "rank": 20, "pattern": "^(?:\\S*/)?rustc(?:\\.exe)?(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts"},
+        {"name": "local-unit", "rank": 20, "pattern": "^(?:\\S*/)?(?:rustc|rustdoc|clippy-driver)(?:\\.exe)?(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts"},
         {"name": "pool-child", "rank": 25, "pattern": "🌐️owner-pool/🧒️child/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/🟨️.mjs"},
         {"name": "farm-worker", "rank": 30, "pattern": "🏊️project-farm/👷️worker/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs"},
         {"name": "warm-deriver", "rank": 35, "pattern": "🧮️derive/♨️warm/⌨️main/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/♨️warm/⌨️main/🟦️.ts"},
         {"name": "heavy-question", "rank": 40, "pattern": "🪆️heavy-questions/📜️script.ts", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🪆️heavy-questions/📜️script.ts"},
+        {"name": "browser", "rank": 45, "pattern": "^<browsers>/(?!.*(?:\\s--type=|crashpad))", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts"},
         {"name": "test", "rank": 50, "pattern": "^(?:\\S*/)?bun(?:\\.exe)?\\s+test(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"},
+        {"name": "test-binary", "rank": 55, "pattern": "^<workspace>/(?:\\S*/)?deps/[^/\\s]+-[0-9a-f]{16}(?:\\.exe)?(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"},
         {"name": "slice-worker", "rank": 60, "pattern": "👷️slice-pool/👷️worker.ts", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts"},
+        {"name": "cargo", "rank": 65, "pattern": "^(?:\\S*/)?cargo(?:\\.exe)?(?:\\s|$)", "actions": ["cancel"], "signal": "SIGTERM", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"},
         {"name": "stage", "rank": 90, "pattern": "🚦️ready/🏃️wrapper/🟦️.ts", "actions": ["cancel"], "signal": "SIGTERM", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🏃️wrapper/🟦️.ts"}
       ]
     },
@@ -65,6 +76,30 @@
         "^\\S*/semio/runtimes/bun/",
         "^(?:\\S*/)?semio-build-scheduler(?:\\.exe)?(?:\\s|$)"
       ]
+    },
+    "Anchors": {
+      "description": "Where this machine keeps what the repository starts. workspace is a pattern over a command line whose first group is the root of a workspace: every process that runs from the pinned cache of a workspace (its Bun runtime or its toolchains) names that workspace, so no root is hardcoded. browsers lists the directories of the repository browser runtime below a workspace; a test proves the entry equals what the repository computes with ensureRepositoryBrowserPathV1. The names <workspace> and <browsers> in Identities and Kinds stand for the alternation of every workspace root and of every browser directory found; a pattern whose anchor is empty is inactive.",
+      "const": {
+        "names": ["workspace", "browsers"],
+        "workspace": "^(\\S+?)/\\.cache/b/t/m/(?:bun|r)/",
+        "browsers": ["<workspace>/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright"]
+      }
+    },
+    "Identities": {
+      "description": "Patterns over the command line of processes that are subject candidates by what they are, whatever their ancestry (an agent shell, a ticket script, a terminal): the pinned toolchain binaries of a workspace (cargo, rustc, rustdoc, clippy-driver), the cargo test and bench executables of a workspace (a deps directory of any target directory below it, the executable named with the 16 hex digits of its metadata hash), and every process of the repository browser runtime. Never patterns, protected paths and the kinds still apply; a toolchain or a browser of the user (cargo home, Homebrew, rustup, the user-level Playwright cache, applications) matches none of them.",
+      "const": [
+        "^<workspace>/\\.cache/b/t/m/r/[^/]+/toolchains/[^/]+/bin/",
+        "^<workspace>/(?:\\S*/)?deps/[^/\\s]+-[0-9a-f]{16}(?:\\.exe)?(?:\\s|$)",
+        "^<browsers>/"
+      ]
+    },
+    "Swap": {
+      "description": "How the host warden reads the swap of the machine, every intervalMilliseconds (the numbers change slowly and each read spawns a command): macOS prints the swap file occupancy with usage (total, used, free) and the free space of the swap volume with disk (the first volume that answers; the swap files live on the data volume and cannot grow when it is full), Linux reads SwapTotal and SwapFree from meminfo (a swap partition or file does not grow; a host without swap reports null), Windows reports null (observe only). The free swap and the free swap volume are reported in whole megabytes, null where unknown.",
+      "const": {
+        "intervalMilliseconds": 2000,
+        "darwin": {"usage": ["sysctl", "-n", "vm.swapusage"], "disk": ["df", "-k"], "volumes": ["/System/Volumes/VM", "/System/Volumes/Data", "/"]},
+        "linux": {"meminfo": "/proc/meminfo"}
+      }
     },
     "Never": {
       "description": "Patterns over the command line of processes that are never subjects, whatever they hold: the warden itself, the sidecar launcher and every sidecar role (cache server, agent, scheduler, graph, pool puller, Ready supervisor; the Ready stage wrapper below them is the one exception), the remote-execution entry, server and scheduler, the replica daemon and the fleet boot entry.",
@@ -99,14 +134,16 @@
     "Host": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["totalMegabytes", "availableMegabytes", "swapUsedMegabytes", "swapOutMegabytesPerSecond", "compressedMegabytes", "pressure"],
+      "required": ["totalMegabytes", "availableMegabytes", "swapUsedMegabytes", "swapOutMegabytesPerSecond", "compressedMegabytes", "pressure", "swapFreeMegabytes", "swapVolumeFreeMegabytes"],
       "properties": {
         "totalMegabytes": {"type": "integer", "minimum": 1},
         "availableMegabytes": {"type": "integer", "minimum": 0},
         "swapUsedMegabytes": {"type": ["integer", "null"], "minimum": 0},
         "swapOutMegabytesPerSecond": {"type": ["number", "null"], "minimum": 0},
         "compressedMegabytes": {"type": ["integer", "null"], "minimum": 0},
-        "pressure": {"$ref": "#/definitions/Pressure"}
+        "pressure": {"$ref": "#/definitions/Pressure"},
+        "swapFreeMegabytes": {"type": ["integer", "null"], "minimum": 0},
+        "swapVolumeFreeMegabytes": {"type": ["integer", "null"], "minimum": 0}
       }
     },
     "ProcessRow": {
@@ -168,7 +205,7 @@
     "Decision": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["level", "calmTicks", "hold", "guardMegabytes", "dangerMegabytes", "resumeMegabytes", "actions"],
+      "required": ["level", "calmTicks", "hold", "guardMegabytes", "dangerMegabytes", "resumeMegabytes", "swapRoomMegabytes", "headroomMegabytes", "headroomGuardMegabytes", "headroomDangerMegabytes", "actions"],
       "properties": {
         "level": {"$ref": "#/definitions/Level"},
         "calmTicks": {"type": "integer", "minimum": 0},
@@ -176,6 +213,10 @@
         "guardMegabytes": {"type": "integer", "minimum": 0},
         "dangerMegabytes": {"type": "integer", "minimum": 0},
         "resumeMegabytes": {"type": "integer", "minimum": 0},
+        "swapRoomMegabytes": {"type": ["integer", "null"], "minimum": 0},
+        "headroomMegabytes": {"type": ["integer", "null"], "minimum": 0},
+        "headroomGuardMegabytes": {"type": "integer", "minimum": 0},
+        "headroomDangerMegabytes": {"type": "integer", "minimum": 0},
         "actions": {"type": "array", "items": {"$ref": "#/definitions/Action"}}
       }
     },
@@ -198,13 +239,16 @@
         "host": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["availableMegabytes", "guardMegabytes", "dangerMegabytes", "swapOutMegabytesPerSecond", "pressure"],
+          "required": ["availableMegabytes", "guardMegabytes", "dangerMegabytes", "swapOutMegabytesPerSecond", "pressure", "headroomMegabytes", "headroomGuardMegabytes", "headroomDangerMegabytes"],
           "properties": {
             "availableMegabytes": {"type": "integer", "minimum": 0},
             "guardMegabytes": {"type": "integer", "minimum": 0},
             "dangerMegabytes": {"type": "integer", "minimum": 0},
             "swapOutMegabytesPerSecond": {"type": ["number", "null"], "minimum": 0},
-            "pressure": {"$ref": "#/definitions/Pressure"}
+            "pressure": {"$ref": "#/definitions/Pressure"},
+            "headroomMegabytes": {"type": ["integer", "null"], "minimum": 0},
+            "headroomGuardMegabytes": {"type": "integer", "minimum": 0},
+            "headroomDangerMegabytes": {"type": "integer", "minimum": 0}
           }
         },
         "text": {
@@ -271,7 +315,7 @@
     "State": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "atMs", "pid", "mode", "code", "host", "level", "hold", "guardMegabytes", "dangerMegabytes", "resumeMegabytes", "subjects", "suspended", "counters", "lastAlarms", "overhead"],
+      "required": ["version", "atMs", "pid", "mode", "code", "host", "level", "hold", "guardMegabytes", "dangerMegabytes", "resumeMegabytes", "swapRoomMegabytes", "headroomMegabytes", "headroomGuardMegabytes", "headroomDangerMegabytes", "subjects", "suspended", "counters", "lastAlarms", "overhead"],
       "properties": {
         "version": {"const": 1},
         "atMs": {"type": "integer", "minimum": 0},
@@ -284,6 +328,10 @@
         "guardMegabytes": {"type": "integer", "minimum": 0},
         "dangerMegabytes": {"type": "integer", "minimum": 0},
         "resumeMegabytes": {"type": "integer", "minimum": 0},
+        "swapRoomMegabytes": {"type": ["integer", "null"], "minimum": 0},
+        "headroomMegabytes": {"type": ["integer", "null"], "minimum": 0},
+        "headroomGuardMegabytes": {"type": "integer", "minimum": 0},
+        "headroomDangerMegabytes": {"type": "integer", "minimum": 0},
         "subjects": {
           "type": "object",
           "additionalProperties": false,
@@ -323,9 +371,11 @@
     "Messages": {
       "const": {
         "en": {
-          "alarm": "[warden] {action} {kind} pid {pid} ({owner}, {megabytes} MB): {reason}; host {available} MB available (guard {guard} MB, danger {danger} MB), swap {swap}, pressure {pressure}{observed}",
+          "alarm": "[warden] {action} {kind} pid {pid} ({owner}, {megabytes} MB): {reason}; host {available} MB available (guard {guard} MB, danger {danger} MB), swap {swap}, pressure {pressure}{headroom}{observed}",
           "actions": {"suspend": "suspended", "resume": "resumed", "cancel": "cancelled"},
-          "reasons": {"guard": "available memory is below the guard line", "danger": "available memory is below the danger line", "overdue": "suspended for too long", "calm": "memory is calm again"},
+          "headroom": ", headroom {headroom} MB (guard {headroomGuard} MB, danger {headroomDanger} MB)",
+          "triggers": {"guard": {"available": "available memory is below the guard line", "headroom": "available memory plus swap that can still grow is below the headroom guard line", "pressure": "memory pressure is warn", "swap": "swap-out rate is high and available memory is below the resume line"}, "danger": {"available": "available memory is below the danger line", "headroom": "available memory plus swap that can still grow is below the headroom danger line", "pressure": "memory pressure is critical"}},
+          "reasons": {"overdue": "suspended for too long", "calm": "memory is calm again"},
           "pressures": {"normal": "normal", "warn": "warn", "critical": "critical"},
           "observed": " [observe mode: nothing was signalled]",
           "swapUnknown": "unknown",
@@ -338,9 +388,11 @@
           "reasonsStopped": {"idle": "no subject for {minutes} minutes", "code": "its own source changed", "signal": "termination requested", "locked": "lock held by another warden", "limit": "tick limit reached"}
         },
         "de": {
-          "alarm": "[Wächter] {action} {kind} pid {pid} ({owner}, {megabytes} MB): {reason}; Host {available} MB verfügbar (Wache {guard} MB, Gefahr {danger} MB), Swap {swap}, Druck {pressure}{observed}",
+          "alarm": "[Wächter] {action} {kind} pid {pid} ({owner}, {megabytes} MB): {reason}; Host {available} MB verfügbar (Wache {guard} MB, Gefahr {danger} MB), Swap {swap}, Druck {pressure}{headroom}{observed}",
           "actions": {"suspend": "angehalten", "resume": "fortgesetzt", "cancel": "abgebrochen"},
-          "reasons": {"guard": "der verfügbare Speicher liegt unter der Wachlinie", "danger": "der verfügbare Speicher liegt unter der Gefahrenlinie", "overdue": "zu lange angehalten", "calm": "der Speicher ist wieder ruhig"},
+          "headroom": ", Reserve {headroom} MB (Wache {headroomGuard} MB, Gefahr {headroomDanger} MB)",
+          "triggers": {"guard": {"available": "der verfügbare Speicher liegt unter der Wachlinie", "headroom": "der verfügbare Speicher plus noch wachsender Swap liegt unter der Wachlinie der Reserve", "pressure": "der Speicherdruck ist Warnung", "swap": "die Swap-Auslagerungsrate ist hoch und der verfügbare Speicher liegt unter der Wiederaufnahmelinie"}, "danger": {"available": "der verfügbare Speicher liegt unter der Gefahrenlinie", "headroom": "der verfügbare Speicher plus noch wachsender Swap liegt unter der Gefahrenlinie der Reserve", "pressure": "der Speicherdruck ist kritisch"}},
+          "reasons": {"overdue": "zu lange angehalten", "calm": "der Speicher ist wieder ruhig"},
           "pressures": {"normal": "normal", "warn": "Warnung", "critical": "kritisch"},
           "observed": " [Beobachtungsmodus: nichts wurde signalisiert]",
           "swapUnknown": "unbekannt",

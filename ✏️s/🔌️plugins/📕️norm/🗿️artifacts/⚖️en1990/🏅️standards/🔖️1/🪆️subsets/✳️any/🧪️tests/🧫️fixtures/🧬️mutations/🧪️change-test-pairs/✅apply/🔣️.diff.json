@@ -75,7 +75,10 @@
           "stdDev": null,
           "variationKnown": null,
           "conversionFactor": null,
-          "required": null
+          "required": null,
+          "pairs": "probe",
+          "theoryVariation": null,
+          "theoryMean": null
         }
       }
     ]

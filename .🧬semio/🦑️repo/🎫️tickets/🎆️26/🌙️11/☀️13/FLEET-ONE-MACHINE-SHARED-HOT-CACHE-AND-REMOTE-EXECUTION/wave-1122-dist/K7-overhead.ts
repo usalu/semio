@@ -1,0 +1,17 @@
+import {mkdtempSync,rmSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {fleetClientV1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/🟦️.ts";
+import {manifestFilesV1,manifestIdV1,manifestOfV1,obtainManifestV1,writeManifestV1} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📋️manifest/🟦️.ts";
+const root=mkdtempSync(join(tmpdir(),"k7-bench-")),slot="a".repeat(64),id=manifestIdV1(slot),N=2000;
+const environment={SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:9",SEMIO_REMOTE_CACHE_INSTANCE:"main",SEMIO_REMOTE_CACHE_ACCESS:"read-write"};
+const time=async(label:string,body:()=>Promise<unknown>|unknown,n=N)=>{const t=performance.now();for(let i=0;i<n;i++)await body();const ms=(performance.now()-t)/n;console.log(label.padEnd(58),ms.toFixed(4),"ms/call");return ms;};
+let first=performance.now();fleetClientV1(root,environment);console.log("fleetClientV1 first call (was paid in prepareFleetV1 before)".padEnd(58),(performance.now()-first).toFixed(3),"ms");
+await time("manifestIdV1 (sha256 of the slot)",()=>manifestIdV1(slot));
+await time("fleetClientV1 (memoised)",()=>fleetClientV1(root,environment));
+writeManifestV1(root,id,manifestOfV1(["@@semio-cwd@@/a/data.json"],[]),true);
+await time("obtainManifestV1 local copy (warm hit path)",()=>obtainManifestV1(root,id,undefined));
+await time("manifestFilesV1 (one file)",async()=>{const m=(await obtainManifestV1(root,id,undefined)).state!.manifest;return manifestFilesV1(m,[]);});
+const other=manifestIdV1("b".repeat(64));
+await time("obtainManifestV1 no copy, tier off",()=>obtainManifestV1(root,other,undefined));
+rmSync(root,{recursive:true,force:true});

@@ -1,0 +1,12 @@
+humans	person-carrying-shopping-bags	1 / 134; flat+solid; 7 other id; 4 extent	18; descendant 18			
+humans	person-checking-watch	0 / 6; solid				
+humans	person-cooking	0 / 2; solid; 1 extent				
+humans	person-drinking-coffee	8 / 45; flat+solid; 10 other id; 3 extent				
+humans	person-eating-standing	1 / 10; flat+solid; 3 other id; 3 extent				
+humans	person-hanging-laundry	2 / 37; flat+solid				
+humans	person-in-rain-poncho	0 / 68; flat; 18 extent	24; descendant 18, off 4, other bone 2			
+humans	person-in-winter-coat	2 / 32; flat+solid; 4 extent	18; descendant 18			
+humans	person-on-crutches	0 / 12; flat; 3 extent	8; off 8			
+humans	person-pushing-bicycle	4 / 55; solid	284; descendant 208, other bone 76			
+humans	person-queuing	2 / 8; solid	1; descendant 1			
+humans	person-signing	5 / 72; flat+solid; 14 other id				

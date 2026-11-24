@@ -35,15 +35,56 @@
     },
     "newFactor": {
       "type": "string",
+      "enum": [
+        "gamma",
+        "psi0",
+        "psi1",
+        "psi2",
+        "xi",
+        "k_fi"
+      ],
       "x-semio-ui": {
         "label": {
           "en": "Factor kind",
           "de": "Faktorart"
         },
-        "widget": "text",
+        "widget": "select",
+        "options": {
+          "gamma": {
+            "en": "γ partial factor",
+            "de": "γ Teilsicherheitsbeiwert"
+          },
+          "psi0": {
+            "en": "ψ₀ combination value",
+            "de": "ψ₀ Kombinationsbeiwert"
+          },
+          "psi1": {
+            "en": "ψ₁ frequent value",
+            "de": "ψ₁ Beiwert für häufige Werte"
+          },
+          "psi2": {
+            "en": "ψ₂ quasi-permanent value",
+            "de": "ψ₂ Beiwert für quasi-ständige Werte"
+          },
+          "xi": {
+            "en": "ξ reduction factor",
+            "de": "ξ Abminderungsbeiwert"
+          },
+          "k_fi": {
+            "en": "K_FI consequence factor",
+            "de": "K_FI Zuverlässigkeitsfaktor"
+          }
+        },
+        "description": {
+          "en": "gamma, psi0, psi1, psi2, xi or k_fi: the annex factor this row replaces for the project.",
+          "de": "gamma, psi0, psi1, psi2, xi oder k_fi: der Anhangfaktor, den diese Zeile projektbezogen ersetzt."
+        },
         "role": "value",
         "group": "value",
         "order": 20
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1990_model::FactorKind"
       }
     }
   }

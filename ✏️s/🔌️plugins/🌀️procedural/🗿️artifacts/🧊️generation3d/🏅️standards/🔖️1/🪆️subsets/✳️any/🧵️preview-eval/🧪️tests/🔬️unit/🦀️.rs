@@ -230,13 +230,15 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
             link.requested = None;
         }
 
+        let unserved: Vec<String> = if servable { Vec::new() } else { vec!["fixture.unserved".into()] };
         let mut emit = semio_plugin::Emit::<u8>::default();
         emit.artifact_mutations = vec![0_u8; mutations];
-        let owes = owe_attached_previews_for_mutations(&mut session, &mut link, &windows, servable, &mut emit, tick_grant()).expect("the previews are owed");
+        let owes = owe_attached_previews_for_mutations(&mut session, &mut link, &windows, &unserved, &mut emit, tick_grant()).expect("the previews are owed");
         assert_eq!(owes, expected["owes"].as_bool().unwrap(), "{id}: a gesture owes the previews exactly when it moved the document");
-        let carried: Vec<&str> = emit.effects.iter().map(|effect| match effect {
-            Effect::DispatchAction { action, .. } => action.as_str(),
-            other => panic!("{id}: a gesture carries only dispatches, found {other:?}"),
+        let carried: Vec<&str> = emit.effects.iter().filter_map(|effect| match effect {
+            Effect::DispatchAction { action, .. } => Some(action.as_str()),
+            Effect::PublishEvent { topic, .. } if topic == semio_os_flow::ON_DEMAND_REQUEST_TOPIC && !servable => None,
+            other => panic!("{id}: a gesture carries only dispatches and, while parked, one activation request, found {other:?}"),
         }).collect();
         assert_eq!(carried, expected["gestureEffects"].as_array().unwrap().iter().map(text).collect::<Vec<_>>(), "{id}: what the gesture's own emit carries — a settled, finalized run leaves nothing that would ask the host for another poll");
         let owed: Vec<&str> = windows.iter().filter(|(window_id, _)| session.window_tick_owed(window_id)).map(|(window_id, _)| *window_id).collect();
@@ -259,8 +261,8 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
         stage(&mut spinning, &mut spinning_link);
         let mut spinning_emit = semio_plugin::Emit::<u8>::default();
         spinning_emit.artifact_mutations = vec![0_u8; mutations];
-        owe_attached_previews_for_mutations(&mut spinning, &mut spinning_link, &windows, servable, &mut spinning_emit, tick_grant()).expect("the previews are owed");
-        let starts = spinning_emit.effects.len() + replay_pending_effects(&mut spinning, &mut spinning_link, &windows, polls, lag, servable, poll_start_view);
+        owe_attached_previews_for_mutations(&mut spinning, &mut spinning_link, &windows, &unserved, &mut spinning_emit, tick_grant()).expect("the previews are owed");
+        let starts = spinning_emit.effects.iter().filter(|effect| matches!(effect, Effect::DispatchAction { .. })).count() + replay_pending_effects(&mut spinning, &mut spinning_link, &windows, polls, lag, servable, poll_start_view);
         println!("[STATS] gestureRearm {id}: owes={owes} owed={owed:?} hops={hops:?} carried={carried:?} starts={starts}");
         assert_eq!(starts as u64, expected["starts"].as_u64().unwrap(), "{id}: one gesture owes at most one run start, however slowly the run view catches up");
         session.retire_cold();
@@ -306,7 +308,7 @@ fn a_history_verb_owes_the_previews_the_evaluation_a_gesture_would_have() {
     preview_eval_run_effects(&mut gesturing, &mut gesture_link, &windows, None, true, PreviewEvalDocumentStamp::default());
     let mut emit = semio_plugin::Emit::<u8>::default();
     emit.artifact_mutations = vec![0_u8];
-    owe_attached_previews_for_mutations(&mut gesturing, &mut gesture_link, &windows, true, &mut emit, tick_grant()).expect("the previews are owed");
+    owe_attached_previews_for_mutations(&mut gesturing, &mut gesture_link, &windows, &[], &mut emit, tick_grant()).expect("the previews are owed");
     assert_eq!(emit.effects.len(), 1, "the gesture carries its own run start");
     let second = preview_eval_run_effects(&mut gesturing, &mut gesture_link, &windows, None, true, moved);
     assert!(second.is_empty(), "the poll that sees the same move must ask for no second run, got {second:?}");
@@ -732,4 +734,56 @@ fn preview_tessellation_fault_settles_its_window_and_blocks_only_that_detail() {
     assert!(session.note_pending_tessellate(semio_os_flow::preview_tessellate_node_hash(handle, next.to_bits()), handle.into(), next));
     session.retire_cold();
     caller.retire(stock);
+}
+
+static ON_DEMAND_RUN_EFFECTS_FIXTURE_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧭️on-demand-run-effects.json"));
+
+/// ⚖️ LAW: a preview parked on an unregistered node-kind namespace owes the host exactly one typed activation request per registry generation, stays parked (no run, no fault) while it waits, and resumes by itself once the registry serves the kind. The ladder is the language-agnostic corpus the kernel's `nodeKindRequests` test reads too (`🧭️node-kind-trigger`), and the registry is the real process-wide one, so registration is observed through the same generation the host's `setContributions` push moves.
+#[test]
+fn a_parked_preview_asks_once_per_generation_and_resumes_after_registration() {
+    let _serialized = semio_os_flow::lock_flow_extension_registry_for_test();
+    let fixture: serde_json::Value = serde_json::from_str(*ON_DEMAND_RUN_EFFECTS_FIXTURE_JSON).expect("the on-demand run effects fixture parses");
+    assert_eq!(fixture["format"], "semio.generation3d.on-demand-run-effects");
+    assert_eq!(text(&fixture["topic"]), semio_os_flow::ON_DEMAND_REQUEST_TOPIC);
+    let window = (text(&fixture["window"]["id"]), "procedural-view-preview");
+    let extension = &fixture["extension"];
+    let manifest = extension["manifest"].to_string();
+    let graph = semio_framework_artifact_flow_flow::FlowHostSnapshot {
+        schema: "flow.host_snapshot".into(),
+        widgets: vec![semio_framework_artifact_flow_flow::Widget::Neuron { id: text(&fixture["node"]["id"]).into(), neuron_kind: text(&fixture["node"]["kind"]).into(), params: semio_os_flow::neural::Dictionary::new(), input_ports: Vec::new(), output_ports: Vec::new(), preview: false }],
+        synapses: Vec::new(),
+        ..Default::default()
+    };
+    let mut session = FlowEvalSession::new();
+    session.arm_window_tick(window.0, tick_grant()).expect("the window owes an evaluation");
+    let mut link = PreviewEvalRunLink::default();
+    let _ = semio_os_flow::uninstall_flow_extension(text(&extension["id"]));
+    for row in fixture["ladder"].as_array().unwrap() {
+        let id = text(&row["id"]);
+        match text(&row["step"]) {
+            "install" => semio_os_flow::install_flow_extension_manifest(text(&extension["pluginId"]), &manifest).expect("the extension registers"),
+            "uninstall" => semio_os_flow::uninstall_flow_extension(text(&extension["id"])).expect("the extension withdraws"),
+            _ => {}
+        }
+        let unserved = semio_os_flow::unserved_flow_operator_kinds(&graph, &semio_os_flow::flow_operator_registry());
+        let servable = unserved.is_empty();
+        let mut effects = preview_eval_run_effects(&mut session, &mut link, &[window], None, servable, PreviewEvalDocumentStamp::default());
+        let requests: Vec<serde_json::Value> = on_demand_run_effects(&mut link, unserved).into_iter().map(|effect| match effect {
+            Effect::PublishEvent { topic, payload } => {
+                assert_eq!(topic, semio_os_flow::ON_DEMAND_REQUEST_TOPIC, "{id}");
+                serde_json::from_slice(&payload).expect("the request is UTF-8 JSON")
+            }
+            other => panic!("{id}: an activation request is a published event, found {other:?}"),
+        }).collect();
+        let actions: Vec<&str> = effects.drain(..).map(|effect| match effect {
+            Effect::DispatchAction { action, .. } if action == TOOL_RUN_START_ACTION_ID => "start",
+            other => panic!("{id}: the run owes only its start, found {other:?}"),
+        }).collect();
+        println!("[STATS] onDemandRunEffects {id}: requests={requests:?} actions={actions:?}");
+        assert_eq!(requests, row["expectedRequests"].as_array().unwrap().clone(), "{id}: requests");
+        assert_eq!(actions, row["expectedRunActions"].as_array().unwrap().iter().map(text).collect::<Vec<_>>(), "{id}: run actions");
+    }
+    let _ = semio_os_flow::uninstall_flow_extension(text(&extension["id"]));
+    graph.retire_cold();
+    session.retire_cold();
 }

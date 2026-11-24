@@ -127,6 +127,7 @@ export function parseArtifactActorMsg(message: Record<string, unknown>): Artifac
   return message as ArtifactActorMsg;
 }
 
+/** 🚦️ The wire form of an event; an absent `writeFailure` stays absent instead of becoming a pack `null` the shell would read as a failure. */
 export function wireArtifactEvent(event: ArtifactEvent): unknown {
   if (event.kind === "documentBackbone") {
     return { kind: "documentBackbone", message: Array.from(parseInboundDocumentBackboneMessage(event.message)) };
@@ -138,9 +139,14 @@ export function wireArtifactEvent(event: ArtifactEvent): unknown {
     decodeDocumentArchiveBytes(event.archive);
     return event;
   }
+  if (event.kind === "status" && event.writeFailure === undefined) {
+    const { writeFailure: _absent, ...status } = event;
+    return status;
+  }
   return event;
 }
 
+/** 🚦️ The event a wire payload carries; a `null` `writeFailure` (a twin that serializes absence as null) reads as absent. */
 export function parseArtifactEvent(event: Record<string, unknown>): ArtifactEvent {
   if (event.kind === "documentBackbone") {
     if (Object.keys(event).sort().join(",") !== "kind,message" || !Array.isArray(event.message) || event.message.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || !event.message.every((entry) => Number.isInteger(entry) && entry >= 0 && entry <= 255)) throw new Error("backbone worker response: invalid document backbone message");
@@ -157,6 +163,10 @@ export function parseArtifactEvent(event: Record<string, unknown>): ArtifactEven
   if (event.kind === "documentArchiveAbsent") {
     if (Object.keys(event).join(",") !== "kind") throw new Error("backbone worker response: invalid document archive absence");
     return { kind: "documentArchiveAbsent" };
+  }
+  if (event.kind === "status" && event.writeFailure === null) {
+    const { writeFailure: _absent, ...status } = event;
+    return status as ArtifactEvent;
   }
   if (event.kind === "commandOutcome") {
     const batchId = commandBatchIdOfValueV1(event.batchId);

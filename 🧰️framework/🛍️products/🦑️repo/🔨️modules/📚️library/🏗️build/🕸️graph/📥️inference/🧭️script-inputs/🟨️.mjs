@@ -26,7 +26,7 @@ import { createHash } from "node:crypto";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { activeTypeScriptProgramReuseV1, sharedSourceFilesV1 } from "./♨️reuse/🟨️.mjs";
-import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, observeDetachedV1, shareObservationRowsV1, detachedFailureV1, retainDetachedFailureV1, observationLayerHoldsV1, observationRoundV1, observationRowsHoldV1, recordClosureFactV1, registerClosureProviderV1, observedFieldV1, registerFieldExtractorV1, retainObservedRowsV1, observeDetachedSyncV1, withObservationPassRoundV1 , registerProjectClosureTravelV1, observationLayerHoldsAsyncV1, observationRowsHoldAsyncV1, observationRowFreshV1, OBSERVATION_LIMITS_V1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, observeDetachedV1, shareObservationRowsV1, detachedFailureV1, retainDetachedFailureV1, observationLayerHoldsV1, observationRoundV1, observationRowsHoldV1, recordClosureFactV1, registerClosureProviderV1, observedFieldV1, registerFieldExtractorV1, retainObservedRowsV1, observeDetachedSyncV1, withObservationPassRoundV1 , registerProjectClosureTravelV1, observationLayerHoldsAsyncV1, observationRowsHoldAsyncV1, observationRowFreshV1, observationWitnessV1, observationWitnessHoldsV1, OBSERVATION_LIMITS_V1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { sourceTreeFilterV1 } from "../../../../🏗️build/👁️observation/📂️source-names/🟨️.mjs";
 import { readCargoExecutionContractV1, selectCargoExecutionOperationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { REVISION_POLICY_V1 } from "../../../📥️inputs/🔏️revision/🟨️.mjs";
@@ -898,13 +898,6 @@ const toolTablesV1 = new WeakMap();
 const stopDigests = new WeakMap();
 const stopDigestV1 = stops => stopDigests.get(stops) ?? stopDigests.set(stops, memoDigestV1(stops)).get(stops);
 
-/** 🪧️ Whether a target keeps the whole walk of its own scripts and declared modules, so no declared tool is cut out of it: it names module globs, a TypeScript project, runtime source entries or a module literal.
- * @see ./🔌️provider-closures/🔣️.json */
-function keepsWholeWalkV1(target) {
-  const semio = target.metadata?.semio;
-  return semio?.closure?.modules !== undefined || semio?.closure?.typescript !== undefined || semio?.runtimeSourceEntries !== undefined || Array.isArray(target.inputs) && target.inputs.some(declaredModuleLiteralV1);
-}
-
 /** 🛑️ The declared tool entry modules (absolute path and tool name, sorted) at which the walk of a target stops: a module the walk imports that is the entry of a declared tool is a tool boundary (for a generic command only a tool whose view carries the external packages, like the cover of an entry script), the tool's closure belongs to the tool's group of the providers project, and the rows of the tool's modules are no row of any command closure that imports it, so an edit inside a tool moves one group and no owner.
  * @see ./🔌️provider-closures/🔣️.json */
 function toolStopsV1(scripts, packages) {
@@ -931,11 +924,10 @@ function toolTableV1(scripts) {
   return table;
 }
 
-/** 🪝️ The script entries of one target that a declared tool command already covers, and the references to name instead of walking them. A tool covers an entry when its entry module is the entry and the command selects no router words (or the tool states that its closure is the whole router); a target that declares module globs, module inputs, runtime entries or a TypeScript project, or a resource no covering tool carries, keeps its whole walk. `packages` asks for tools whose view carries the external packages (a generic command keys on them).
+/** 🪝️ The script entries of one target that a declared tool command already covers, and the references to name instead of walking them. A tool covers an entry when its entry module is the entry and the command selects no router words (or the tool states that its closure is the whole router); a resource no covering tool carries keeps the whole walk of the target. `packages` asks for tools whose view carries the external packages (a generic command keys on them).
  * @see ./🔌️provider-closures/🟨️.mjs */
 function toolCoverV1(scripts, target, entries, words, resources, packages) {
   const none = { covered: [], references: [] };
-  if (keepsWholeWalkV1(target)) return none;
   const table = toolTableV1(scripts), covered = [], names = new Set();
   for (const entry of entries) {
     const name = table.entries.get(entry);
@@ -949,6 +941,18 @@ function toolCoverV1(scripts, target, entries, words, resources, packages) {
   if (resources.some(path => ![...names].some(name => table.resources.get(name).has(path)))) return none;
   const project = providerProjectV1(scripts);
   return { covered, references: [...names].sort().map(name => toolReferenceV1(project, name)) };
+}
+
+/** 🪝️ The declared modules of a target (module literals, module globs, runtime entries) that are themselves the entry of a declared tool: the tool names them by one reference and the target does not walk them, so an edit inside the tool moves the group of the tool and no entry of any target that declares it (the toolchain script every component target lists as an input used to carry the whole walk of two thousand modules into the entry of each of them). A tool whose view carries no external packages does not cover a generic command, as in {@link toolCoverV1}.
+ * @see ./🔌️provider-closures/🔣️.json */
+function toolCoverDeclaredV1(scripts, entries, commandEntries, tools, packages) {
+  const table = toolTableV1(scripts), project = providerProjectV1(scripts), names = new Set();
+  for (const entry of [...entries]) {
+    const name = commandEntries.has(entry) ? undefined : table.entries.get(entry);
+    if (name === undefined || packages && !PROVIDER_CLOSURE_POLICY_V1.views[PROVIDER_CLOSURE_POLICY_V1.tools.closures[name].view].packages) continue;
+    entries.delete(entry); names.add(name);
+  }
+  for (const name of [...names].sort()) tools.references.push(toolReferenceV1(project, name));
 }
 
 const byNameV1 = ([left], [right]) => left < right ? -1 : left > right ? 1 : 0;
@@ -994,12 +998,14 @@ async function toolFinishV1(scripts, workspaceRoot, own, entryCover, mode, cross
 
 /** 📽️ Captures outer scripts and explicitly declared child scripts in their own working directories; with `cover` ("native", "generic" or "queries") the entries a declared tool command covers are named by reference to the tool group and not walked. */
 export async function targetScriptSources(target, workspaceRoot, scripts, projectRoot = ".",nativeManifest, cover) {
- const {resources,entries,words,fallback}=await targetScriptEntriesV1(target,workspaceRoot,projectRoot,nativeManifest),tools=cover===undefined?{covered:[],references:[]}:toolCoverV1(scripts,target,entries,words,resources,cover==="generic"),stops=cover===undefined||keepsWholeWalkV1(target)?[]:toolStopsV1(scripts,cover==="generic");
+ const {resources,entries,words,fallback}=await targetScriptEntriesV1(target,workspaceRoot,projectRoot,nativeManifest),tools=cover===undefined?{covered:[],references:[]}:toolCoverV1(scripts,target,entries,words,resources,cover==="generic"),stops=cover===undefined?[]:toolStopsV1(scripts,cover==="generic");
  for(const entry of tools.covered)entries.delete(entry);
+ const commandEntries=new Set(entries);
  const commands=new Map([...words].filter(([,known])=>known).map(([script,known])=>[script,[...known]])),baseSize=entries.size,base=baseSize?await boundedScriptInputsV1([...entries],workspaceRoot,scripts,true,resources,commands,stops):undefined;
  if(buildInputSourceRoleV1(true,false,[target.metadata?.semio?.sourceInputObservation])==="compile")for(const declared of declaredModuleInputsV1(target.inputs,workspaceRoot,projectRoot,scripts,base&&scripts.compiledNames.get(base)))entries.add(declared);
  for(const declared of declaredModuleGlobEntriesV1(target.metadata?.semio?.closure?.modules,workspaceRoot,projectRoot,scripts))entries.add(declared);
  for(const input of readBuildRuntimeSourceEntriesV1(target.metadata?.semio?.runtimeSourceEntries)){const path=resolve(workspaceRoot,input.replace("{projectRoot}",projectRoot).replace("{workspaceRoot}","."));if(path.length>REVISION_POLICY_V1.maximumPathUnits)throw Error("Bounded physical runtime Source entry required");const entry=declaredModuleInputV1(input,workspaceRoot,projectRoot);if(!entry)throw Error("Bounded physical runtime Source entry required");entries.add(entry);}
+ if(cover!==undefined)toolCoverDeclaredV1(scripts,entries,commandEntries,tools,cover==="generic");
  let closure=entries.size===baseSize?base:entries.size?await boundedScriptInputsV1([...entries],workspaceRoot,scripts,true,resources,commands,stops):undefined,generatedDependencies=scripts.generatedImports.size&&closure?generatedTargetsV1(scripts,closure,workspaceRoot):[];const walked=closure,project=closure?declaredProjectClosureV1(target.metadata?.semio?.closure?.typescript,workspaceRoot,projectRoot,scripts,closure):undefined;
  if(project){closure=project.closure;generatedDependencies=[...new Set([...(scripts.generatedImports.size?generatedTargetsV1(scripts,closure,workspaceRoot):[]),...project.generatedDependencies])].sort();}
  const references=walked?providerReferencesV1(scripts,scripts.walkPorts.get(walked)??[],"scheduling"):[],pruned=closure&&withoutSchedulingV1(closure),own=pruned&&references.length?[...pruned,...references]:pruned,finished=await toolFinishV1(scripts,workspaceRoot,own,tools,cover,walked?scripts.walkTools.get(walked)??[]:[]),kept=finished.list;
@@ -1172,7 +1178,7 @@ const closureScriptsV1 = createBoundedCacheV1({ name: "inference:closure-scripts
   closureFailuresV1 = createBoundedCacheV1({ name: "inference:closure-failures", maxEntries: 1024, maxBytes: 1024 }),
   knownClosureInputsV1 = createBoundedCacheV1({ name: "inference:closure-inputs", maxEntries: 65536, maxBytes: 67108864, sizeOf: inputs => 128 + JSON.stringify(inputs).length });
 
-const closureCountsV1 = { derived: 0, loaded: 0, stale: 0, checked: 0, fetched: 0, reasked: 0, reaskFailed: 0, reaskEqual: 0, reaskDifferent: 0 };
+const closureCountsV1 = { derived: 0, loaded: 0, stale: 0, checked: 0, stamped: 0, stampsKept: 0, fetched: 0, reasked: 0, reaskFailed: 0, reaskEqual: 0, reaskDifferent: 0 };
 /** 🔢️ How many closure entries this process derived, loaded from the durable store, found stale there and verified row by row (once per discovery pass, however many owners ask) since the last reset. */
 export function closureEntryCountsV1() { return { ...closureCountsV1 }; }
 
@@ -1245,14 +1251,14 @@ export function closureLayerListV1(log, view) {
 const closureStoreBindingsV1 = createBoundedCacheV1({ name: "inference:closure-store-bindings", maxEntries: 256, maxBytes: 256 });
 /** 📁️ The directory of the durable closure entries of a workspace: the graph's inference data directory of the running writer, or undefined where no graph writer is running (the entries then live in this process only). */
 export function closureStoreDirectoryV1(workspaceRoot) { try { return join(workspaceDataDirectory(workspaceRoot), "ce"); } catch { return undefined; } }
-/** 🔗️ Binds the directory a worker process reads the closure entries of its parent from; a worker never writes there, its parent persists the entries it derives itself. */
-export function bindClosureStoreV1(workspaceRoot, directory, writable = false) { closureStoreBindingsV1.set(workspaceRoot, { directory, writable }); closureStoresV1.delete(workspaceRoot); }
+/** 🔗️ Binds the directory a worker process reads the closure entries of its parent from; a worker never writes there, its parent persists the entries it derives itself. `writable` lets a long-lived pool child persist what it derives for the next child of its machine; `limits` (a part of the declared inference limits) bounds that store on disk. */
+export function bindClosureStoreV1(workspaceRoot, directory, writable = false, limits = undefined) { closureStoreBindingsV1.set(workspaceRoot, { directory, writable, ...limits === undefined ? {} : { limits: { ...INFERENCE_LIMITS_V1, ...limits } } }); closureStoresV1.delete(workspaceRoot); }
 
 const closureStoreOfV1 = workspaceRoot => {
   let store = closureStoresV1.get(workspaceRoot);
   if (store !== undefined) return store;
   const bound = closureStoreBindingsV1.get(workspaceRoot), directory = bound?.directory ?? closureStoreDirectoryV1(workspaceRoot);
-  store = directory === undefined ? null : createClosureStoreV1({ directory, readOnly: bound !== undefined && !bound.writable });
+  store = directory === undefined ? null : createClosureStoreV1({ directory, readOnly: bound !== undefined && !bound.writable, ...bound?.limits === undefined ? {} : { limits: bound.limits } });
   closureStoresV1.set(workspaceRoot, store);
   return store;
 };
@@ -1281,6 +1287,14 @@ async function bundleRowsHoldV1(workspaceRoot, bundle) {
   const scripts = closureScriptsV1.get(workspaceRoot);
   if (!scripts) return true;
   return observationRowsHoldAsyncV1(bundle.rows, cooperativeStepV1(scripts, "build:closure-entry-rows"));
+}
+/** 🧪️ Whether the layers of a bundle hold in this tree (false while no scripts are bound, where nothing can be decided and nothing is stamped). */
+async function bundleLayersHoldV1(workspaceRoot, bundle) {
+  const scripts = closureScriptsV1.get(workspaceRoot);
+  if (!scripts) return false;
+  const step = cooperativeStepV1(scripts, "build:closure-entry-rows");
+  for (const layer of bundle.layers) if (!await observationLayerHoldsAsyncV1(layer, step)) return false;
+  return true;
 }
 /** 🧪️ Whether the rows and the layers of a bundle hold in this tree (true while no scripts are bound, where nothing can be decided). */
 async function bundleHoldsV1(workspaceRoot, bundle) {
@@ -1336,15 +1350,15 @@ export const closureTravelV1 = Object.freeze({
     return [...seen].filter(([, described]) => described !== undefined).map(([recipeKey, described]) => ({ recipeKey, stamp: described.stamp, bundle: { ...described.bundle, sidecar: canonicalSidecarV1(described.bundle.sidecar) } }));
   },
   async import(workspaceRoot, bundles) {
-    const directory = closureStoreBindingsV1.get(workspaceRoot)?.directory ?? closureStoreDirectoryV1(workspaceRoot);
+    const bound = closureStoreBindingsV1.get(workspaceRoot), directory = bound?.directory ?? closureStoreDirectoryV1(workspaceRoot);
     if (directory === undefined) return 0;
-    const store = createClosureStoreV1({ directory });
+    const store = createClosureStoreV1({ directory, ...bound?.limits === undefined ? {} : { limits: bound.limits } });
     let taken = 0;
     for (const { recipeKey, bundle, source, neutral } of bundles) {
       try {
         if (closureRecipeKeyV1(bundle?.recipe) !== recipeKey) continue;
-        const id = workspaceRoot + "\0" + recipeKey, stored = await store.load(id);
-        if (stored === undefined ? await bundleRowsHoldV1(workspaceRoot, bundle) : await bundleSupersedesStoredV1(workspaceRoot, store, stored, bundle)) { await store.adopt(id, bundle); importRefusalsV1.delete(id); taken++; }
+        const id = workspaceRoot + "\0" + recipeKey, stored = await store.load(id), started = Date.now();
+        if (stored === undefined ? await bundleRowsHoldV1(workspaceRoot, bundle) : await bundleSupersedesStoredV1(workspaceRoot, store, stored, bundle)) { const saved = await store.adopt(id, bundle); importRefusalsV1.delete(id); taken++; if (saved?.digest !== undefined && (stored !== undefined || await bundleLayersHoldV1(workspaceRoot, bundle))) await stampKnownEntryV1(store, saved.digest, bundle.rows, bundle.layers, started); }
         else if (stored === undefined) rememberImportRefusalV1(id, bundle);
         if (typeof source === "string" && TRAVEL_DIGEST_V1.test(source)) await store.remember(source, recipeKey);
         if (typeof neutral === "string" && TRAVEL_DIGEST_V1.test(neutral)) await store.rememberNeutral(neutral, recipeKey);
@@ -1570,10 +1584,58 @@ function storedLayerComputeV1(entry, digest) {
   return holds;
 }
 
+/** 🔌️ Registers the structural parsers of this process before any stored row is judged: an `analysis` row names the parser that made it, and a process that has not prepared its parsers yet (a fresh pool child, whose first look at a stored entry comes before its first derivation) finds the parser of every row unregistered, so every entry that rests on a parsed file reads as stale and is walked again although nothing moved. */
+function preparedAnalysesV1() { try { if (typeof prepareSourceAnalysesV1 === "function") prepareSourceAnalysesV1(); } catch {} }
+/** 🪪️ The stamps and live verdicts of one validation round, shared by every entry the round verifies: a path is stamped once and a live row probed once per round. */
+const stampMemosV1 = new WeakMap();
+const stampsOnV1 = () => process.env.SEMIO_VERIFICATION_STAMPS !== "off";
+/** 🪪️ Whether the verification stamp the store holds for an entry still matches the disk (see `observationWitnessV1`): a process that finds every row of an entry holding leaves the stamp for every later process of the machine, so the layers of an unchanged entry are verified once per machine and not once per child; false (verify in full) while there is no stamp or any stamped path moved. */
+async function entryStampHoldsV1(entry, round, step) {
+  const store = entry.store; if (!stampsOnV1() || typeof store?.loadStamp !== "function" || typeof entry.digest !== "string") return false;
+  const witness = store.loadStamp(entry.digest); if (witness === undefined) return false;
+  let memos = round !== null && typeof round === "object" ? stampMemosV1.get(round) : undefined;
+  if (memos === undefined) { memos = { tuples: new Map(), verdicts: new Map() }; if (round !== null && typeof round === "object") stampMemosV1.set(round, memos); }
+  const holds = await observationWitnessHoldsV1(witness, { ...memos, step });
+  if (holds) closureCountsV1.stamped++;
+  return holds;
+}
+/** 🪪️ Leaves the verification stamp of an entry whose rows all held (`started` is when that verification began): the rows of its layers are read through the row dictionary, each distinct row once. */
+async function keepEntryStampV1(entry, started, step) {
+  const store = entry.store; if (!stampsOnV1() || typeof store?.saveStamp !== "function" || typeof entry.digest !== "string") return;
+  try {
+    const rows = [], seen = new Map();
+    for (const digest of entry.digests) {
+      const listing = store.layerListingSync(digest); let listed = listing !== undefined;
+      if (listed) {
+        let ids = seen.get(listing.dictionary); if (ids === undefined) seen.set(listing.dictionary, ids = new Set());
+        for (const id of listing.ids) { if (ids.has(id)) continue; const row = listing.rowSync(id); if (row === undefined) { listed = false; break; } ids.add(id); rows.push(row); }
+      }
+      if (!listed) for (const batch of store.layerBatchesSync(digest, ROW_LOG_POLICY_V1.batchRows)) rows.push(...batch);
+      await step();
+    }
+    const witness = observationWitnessV1(rows, { since: started });
+    if (witness === undefined) return;
+    await store.saveStamp(entry.digest, witness); closureCountsV1.stampsKept++;
+  } catch {}
+}
+
+/** 🪪️ Leaves the verification stamp of an entry whose rows are in memory and held when they were observed or verified at `started`: no stored layer is read back (a derived or taken entry was stamped only by the next process that verified its layers from disk, once per child, reading and indexing every layer file). A path written after `started` refuses the stamp, so it is never kept over a write inside the walk or the verification. */
+async function stampKnownEntryV1(store, digest, rows, layers, started) {
+  if (!stampsOnV1() || typeof store?.saveStamp !== "function" || typeof digest !== "string" || started === undefined) return;
+  try {
+    const all = [...rows], seen = new Set(all);
+    for (const layer of layers) for (const row of layer) if (!seen.has(row)) { seen.add(row); all.push(row); }
+    const witness = observationWitnessV1(all, { since: started });
+    if (witness === undefined) return;
+    await store.saveStamp(digest, witness); closureCountsV1.stampsKept++;
+  } catch {}
+}
+
 /** 🫧️ The verdict of {@link closureEntryHoldsV1}, checked row by row with cooperative steps and remembered for the round, so a stored entry of tens of thousands of rows never blocks the event loop. */
 async function closureEntryHoldsAsyncV1(entry, scripts) {
   const signal = scripts?.context?.ownerSignal ?? scripts?.context?.invocation?.control.signal ?? scripts?.context?.phaseControl?.signal;
   signal?.throwIfAborted();
+  preparedAnalysesV1();
   const round = closurePassV1 ?? observationRoundV1();
   if (round && entry.checked?.round === round) return entry.checked.holds;
   const entryFile = verdictFileV1("e", entry.digest), filed = readVerdictV1(entryFile);
@@ -1582,7 +1644,11 @@ async function closureEntryHoldsAsyncV1(entry, scripts) {
   const step = cooperativeStepV1(scripts, "build:closure-entry-rows");
   let holds = (entry.layers !== undefined || entry.digests !== undefined) && await observationRowsHoldAsyncV1(entry.rows, step);
   if (holds && entry.layers) for (const layer of entry.layers) if (!await observationLayerHoldsAsyncV1(layer, step)) { holds = false; break; }
-  if (holds && !entry.layers) for (const digest of entry.digests) if (!await storedLayerHoldsAsyncV1(entry, digest, step, signal)) { holds = false; break; }
+  if (holds && !entry.layers && !await entryStampHoldsV1(entry, round, step)) {
+    const started = Date.now();
+    for (const digest of entry.digests) if (!await storedLayerHoldsAsyncV1(entry, digest, step, signal)) { holds = false; break; }
+    if (holds) await keepEntryStampV1(entry, started, step);
+  }
   signal?.throwIfAborted();
   writeVerdictV1(entryFile, holds);
   if (round) entry.checked = { round, holds };
@@ -1590,6 +1656,7 @@ async function closureEntryHoldsAsyncV1(entry, scripts) {
 }
 
 const closureEntryHoldsV1 = entry => {
+  preparedAnalysesV1();
   const round = closurePassV1 ?? observationRoundV1();
   if (round && entry.checked?.round === round) return entry.checked.holds;
   const entryFile = verdictFileV1("e", entry.digest), filed = readVerdictV1(entryFile);
@@ -1711,12 +1778,14 @@ async function reaskClosureEntryV1(workspaceRoot, id, recipe, scripts, store, { 
 const staleTakesV1 = new WeakMap();
 
 /** ♻️ The entry of one recipe from the cache, a flight in progress, or a new detached computation; an unparseable source is remembered as a failure for as long as the facts it rests on hold. */
-const closureFleetLanesV1 = new Map();
+const closureFleetLanesV1 = new Map(), closureOffersFlushV1 = { registered: false };
+/** 📤️ Waits until the offers this process queued for the fleet are stored (or refused), for a caller that is about to end the process; the owners never wait for them. */
+export async function flushClosureOffersV1() { for (const lane of [...closureFleetLanesV1.values()]) await (await lane)?.flush().catch(() => undefined); }
 /** 🧶️ The fleet lane of closure entries of one workspace (see `🪪️graph-state/📦️project-records/🚚️entry-lane`), or undefined when no fleet cache is configured here or `SEMIO_CLOSURE_FLEET=off`; opened once. */
 export function closureFleetLaneV1(workspaceRoot) {
   if (process.env.SEMIO_CLOSURE_FLEET === "off") return Promise.resolve(undefined);
   let lane = closureFleetLanesV1.get(workspaceRoot);
-  if (lane === undefined) { lane = import("../../../🪪️graph-state/📦️project-records/🚚️entry-lane/🟦️.ts").then(module => module.createClosureEntryLaneV1({ root: workspaceRoot, environment: process.env }), () => undefined).catch(() => undefined); closureFleetLanesV1.set(workspaceRoot, lane); }
+  if (lane === undefined) { lane = import("../../../🪪️graph-state/📦️project-records/🚚️entry-lane/🟦️.ts").then(module => { const directory = closureStoreBindingsV1.get(workspaceRoot)?.directory ?? closureStoreDirectoryV1(workspaceRoot), opened = module.createClosureEntryLaneV1({ root: workspaceRoot, environment: process.env, ...directory === undefined ? {} : { outbox: join(directory, "o"), documents: join(directory, "d") } }); if (opened !== undefined) { try { opened.adopt(closureTravelV1); } catch {} if (!closureOffersFlushV1.registered) { closureOffersFlushV1.registered = true; process.once("beforeExit", () => { void opened.flush().catch(() => undefined); }); } } return opened; }, () => undefined).catch(() => undefined); closureFleetLanesV1.set(workspaceRoot, lane); }
   return lane;
 }
 /** 🧶️ Takes the entries of `recipes` that this workspace's store lacks from the fleet in one batch, before any of them is derived; answers how many were taken. */
@@ -1754,7 +1823,7 @@ export async function claimDerivationV1(id, store, scripts) {
   return undefined;
 }
 /** 🗄️ Keeps a derived closure entry: its rows shared, the entry saved to the durable store (when there is one) and held in memory, counted as derived. */
-async function keepDerivedClosureV1(id, recipe, store, { value, rows, layers }) { shareObservationRowsV1(rows); for (const layer of layers) shareObservationRowsV1(layer); closureCountsV1.derived++; const pass = closurePassV1, entry = { recipe, value, rows, layers, answers: new Map(), checked: pass ? { round: pass, holds: true } : null, bytes: 0, store, digests: undefined }; try { const saved = store ? await store.save(id, { ...entry, sidecar: closureSidecarV1(layers) }) : undefined; entry.bytes = saved?.bytes ?? closureEntryBytesV1(entry); entry.digests = saved?.digests; if (saved?.digests) { entry.sidecar = closureSidecarV1(layers); seedLayerDigestsV1(entry); entry.layers = undefined; } } catch { entry.bytes = closureEntryBytesV1(entry); } closureEntriesV1.set(id, entry); return entry; }
+async function keepDerivedClosureV1(id, recipe, store, { value, rows, layers }, started = undefined) { shareObservationRowsV1(rows); for (const layer of layers) shareObservationRowsV1(layer); closureCountsV1.derived++; const pass = closurePassV1, entry = { recipe, value, rows, layers, answers: new Map(), checked: pass ? { round: pass, holds: true } : null, bytes: 0, store, digests: undefined }; try { const saved = store ? await store.save(id, { ...entry, sidecar: closureSidecarV1(layers) }) : undefined; entry.bytes = saved?.bytes ?? closureEntryBytesV1(entry); entry.digests = saved?.digests; if (saved?.digests) { await stampKnownEntryV1(store, saved.digest, rows, layers, started); entry.sidecar = closureSidecarV1(layers); seedLayerDigestsV1(entry); entry.layers = undefined; } } catch { entry.bytes = closureEntryBytesV1(entry); } closureEntriesV1.set(id, entry); return entry; }
 
 async function produceClosureEntryV1(workspaceRoot, recipe) {
   const id = workspaceRoot + "\0" + closureRecipeKeyV1(recipe), known = closureEntriesV1.get(id);
@@ -1768,7 +1837,7 @@ async function produceClosureEntryV1(workspaceRoot, recipe) {
     if (!scripts) throw refuseBuildV1("missing", "closure.scripts-unbound", { workspace: String(workspaceRoot) });
     const signal = scripts.context?.ownerSignal ?? scripts.context?.phaseControl?.signal ?? scripts.context?.invocation?.control?.signal;
     signal?.throwIfAborted();
-    const store = closureStoreOfV1(workspaceRoot), derive = () => { assertNotReadParentV1("derive", recipe?.fn ?? ""); return walkClosureRecipeV1(workspaceRoot, recipe, scripts); }, deriveAndKeep = () => derive().then(derived => keepDerivedClosureV1(id, recipe, store, derived));
+    const store = closureStoreOfV1(workspaceRoot), derive = () => { assertNotReadParentV1("derive", recipe?.fn ?? ""); return walkClosureRecipeV1(workspaceRoot, recipe, scripts); }, deriveAndKeep = () => { const started = Date.now(); return derive().then(derived => keepDerivedClosureV1(id, recipe, store, derived, started)); };
     flight = (store ? store.load(id) : Promise.resolve(undefined)).then(async stored => { signal?.throwIfAborted(); const entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null }; if (entry && await closureEntryHoldsAsyncV1(entry, scripts)) { signal?.throwIfAborted(); closureCountsV1.loaded++; closureEntriesV1.set(id, entry); return entry; } if (entry) closureCountsV1.stale++;
       const claim = await claimDerivationV1(id, store, scripts);
       try {
@@ -1780,7 +1849,7 @@ async function produceClosureEntryV1(workspaceRoot, recipe) {
       const taken = await lane.take(recipe, closureTravelV1, signal).catch(() => { signal?.throwIfAborted(); return undefined; });
       if (taken?.outcome === "taken") { const again = await store.load(id), next = again && { ...again, layers: undefined, store, answers: new Map(), checked: null }; if (next && await closureEntryHoldsAsyncV1(next, scripts)) { signal?.throwIfAborted(); closureCountsV1.fetched++; closureEntriesV1.set(id, next); return next; } }
       let derived; try { signal?.throwIfAborted(); derived = await deriveAndKeep(); } catch (error) { await taken?.hold?.release().catch(() => undefined); throw error; }
-      if (derived.digests) await Promise.race([lane.offer(recipe, closureTravelV1, taken?.hold).catch(() => undefined), new Promise(done => { setTimeout(done, 15000).unref?.(); })]); else await taken?.hold?.release().catch(() => undefined);
+      if (derived.digests) lane.enqueue(recipe, closureTravelV1, taken?.hold); else await taken?.hold?.release().catch(() => undefined);
       return derived;
       } finally { claim?.release?.(); } }).then(entry => entry, error => { const facts = error?.code === "BUILD_SOURCE_UNPARSEABLE" ? detachedFailureV1(error) : undefined; if (facts) closureFailuresV1.set(id, { error, rows: facts.rows, layers: facts.layers, checked: null }); throw error; }).finally(() => closureInflightV1.delete(id));
     closureInflightV1.set(id, flight);

@@ -66,7 +66,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null )
     });
   }
   const { bootFrameworkOsWgpu } = await import("@semio-tech/framework-renderer-wgpu");
-  const mounted = await bootFrameworkOsWgpu({ catalog: rows, plugin: pluginFilter || undefined, plugins, appId, appRole, locks, defaults, brand: brand?.id, formatCatalog: options.formatCatalog });
+  const mounted = await bootFrameworkOsWgpu({ catalog: rows, plugin: pluginFilter || undefined, appId, appRole, locks, defaults, brand: brand?.id, formatCatalog: options.formatCatalog });
   return { dispose: () => { void mounted(); } };
 }
 return { dispose() {} };

@@ -14,12 +14,13 @@ afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true})
 type Scenario=typeof fixtures.scenarios[number];
 const label=(verdict:StalenessVerdictV1):string=>verdict.state==="stale"?`stale:${verdict.reason}`:verdict.state;
 const write=(root:string,files:Readonly<Record<string,string>>)=>{for(const [path,text] of Object.entries(files)){const full=join(root,path);mkdirSync(dirname(full),{recursive:true});writeFileSync(full,text);}};
+const tombstonesOf=(scenario:Scenario)=>new Map((scenario.retired as readonly Readonly<{blob:string;path?:string;content?:string;toolchain?:string}>[]).map(row=>[sha(row.blob),row.path===undefined?{toolchain:sha(row.toolchain!)}:{path:row.path,sha256:sha(row.content!)}]));
 const entriesOf=(scenario:Scenario):StalenessEntryV1[]=>scenario.entries.map(row=>({key:row.key,storedAt:row.storedAt,refs:row.refs.map(sha),declaration:row.declared?{...declareV1({kind:(row.kind??"rust-unit") as "rust-unit",toolchain:sha(row.toolchain!),sources:Object.entries(row.sources!).sort(([a],[b])=>a<b?-1:1).map(([path,text])=>({path,sha256:sha(text)})),externs:row.externs!.map(sha),self:row.self===undefined?undefined:sha(row.self),units:(row.units??[]).map(sha)}),...row.version===undefined?{}:{version:row.version as 2}}:undefined}));
 
 test("the verdicts equal the expectation of every scenario of the shared fixture and the independent Python model",async()=>{
  for(const scenario of fixtures.scenarios){
   const root=directory("judge"),tree=await openTreeDigestsV1(root);write(root,scenario.tree);
-  const verdicts=await judgeStalenessV1(entriesOf(scenario),{now:scenario.now,graceMilliseconds:scenario.grace,digest:tree.digest,toolchains:scenario.toolchains===null?undefined:new Set(scenario.toolchains.map(sha)),retired:new Set(scenario.retired.map(sha))});
+  const verdicts=await judgeStalenessV1(entriesOf(scenario),{now:scenario.now,graceMilliseconds:scenario.grace,digest:tree.digest,toolchains:scenario.toolchains===null?undefined:new Set(scenario.toolchains.map(sha)),retired:tombstonesOf(scenario)});
   expect(Object.fromEntries([...verdicts].map(([key,verdict])=>[key,label(verdict)])),scenario.name).toEqual(scenario.expected);
  }
 });

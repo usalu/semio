@@ -95,6 +95,6 @@ test("raised pressure, unreadable memory and a failing check keep every further 
 });
 test("light jobs of the fleet fill their slots first, local jobs beyond the first take the rest only while memory carries them",async()=>{
  const sample={current:{availableMegabytes:30000,ownedMegabytes:0,pressure:"normal" as LocalJobPressureV1}},run=lane({p0:500,p1:500,p2:500,p3:500,p4:500},sample,4,2);
- await until(()=>run.started.length===4);expect(run.started).toEqual(["p0","p1","p2","p3"]);expect(run.slots).toEqual({p0:"local",p1:"light",p2:"light",p3:"local"});
+ await until(()=>run.started.length===4);expect(run.started).toEqual(["p0","p1","p2","p3"]);expect(run.slots).toEqual({p0:"local",p1:"fleet",p2:"fleet",p3:"local"});
  for(const id of["p0","p1","p2","p3"])run.finish(id);await until(()=>run.started.length===5);run.finish("p4");await run.done;
 });

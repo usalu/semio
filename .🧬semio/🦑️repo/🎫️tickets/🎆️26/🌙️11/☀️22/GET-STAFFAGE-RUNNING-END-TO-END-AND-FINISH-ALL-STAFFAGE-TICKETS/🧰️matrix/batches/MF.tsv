@@ -1,0 +1,20 @@
+cafe-chair	{"sync": 2}
+office-swivel-chair	{"sync": 4}
+used-bedside-table	{"sync": 6, "anchor": 12}
+used-high-chair	{"sync": 17}
+used-hinged-wardrobe	{"sync": 7, "anchor": 6}
+used-kitchen-base-cabinet	{"sync": 1}
+used-park-armchair	{"sync": 12, "anchor": 8}
+used-recliner-chair	{"sync": 6, "anchor": 8}
+used-wingback-armchair	{"sync": 4}
+electric-fan-heater	{"anchor": 18}
+gas-hob	{"anchor": 3}
+used-dishwasher	{"sync": 8}
+used-electric-cooker	{"sync": 3, "anchor": 2}
+used-electric-guitar-and-combo	{"anchor": 16}
+used-electronic-drum-kit	{"anchor": 20}
+used-electronic-organ	{"anchor": 24}
+used-fridge-freezer	{"sync": 6, "anchor": 70}
+used-microwave-oven	{"sync": 2, "anchor": 1}
+used-tumble-dryer	{"sync": 4, "anchor": 12}
+used-washing-machine	{"sync": 14, "anchor": 28}

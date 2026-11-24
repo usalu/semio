@@ -35,7 +35,7 @@ placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
 }
 cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
 }
-factor-overrides [id:TEXT factor:TEXT target:TEXT value:NUM justification:TEXT] {
+factor-overrides [id:TEXT factor:ENUM target:TEXT value:NUM justification:TEXT] {
 }
 traffic-groups [id:TEXT group:ENUM variable-id:TEXT] {
 }

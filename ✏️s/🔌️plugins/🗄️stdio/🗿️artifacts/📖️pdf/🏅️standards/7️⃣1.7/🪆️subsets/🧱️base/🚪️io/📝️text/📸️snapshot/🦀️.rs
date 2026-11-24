@@ -190,6 +190,7 @@ impl pack::snapshot::ArtifactDsl for PdfSnapshot {
     fn envelope_id() -> &'static str {
         STDIO_PDF17_DOCUMENT_SCHEMA
     }
+    /// 🛡️ A token or node spans at least one byte, so both budgets equal the input length; the byte budget alone bounds the work.
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((envelope, rest)) => {
@@ -198,7 +199,7 @@ impl pack::snapshot::ArtifactDsl for PdfSnapshot {
             }
             Err(_) => text,
         };
-        let record=semio_framework_dsl_record::parse(body,&spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits{max_bytes:272*1024*1024,max_tokens:4_000_000,max_nodes:2_000_000,..semio_framework_diagnostic::Limits::default()},mode:semio_framework_dsl_record::SourceMode::Document})?;
+        let record=semio_framework_dsl_record::parse(body,&spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits{max_bytes:272*1024*1024,max_tokens:body.len(),max_nodes:body.len(),..semio_framework_diagnostic::Limits::default()},mode:semio_framework_dsl_record::SourceMode::Document})?;
         from_record(record)
     }
     fn print_dsl(&self) -> String {

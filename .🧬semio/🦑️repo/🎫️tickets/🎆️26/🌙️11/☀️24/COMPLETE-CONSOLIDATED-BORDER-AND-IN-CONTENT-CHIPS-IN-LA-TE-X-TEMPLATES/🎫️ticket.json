@@ -1,13 +1,15 @@
 {
   "title": "Complete Consolidated Border and In-Content Chips in LaTeX Templates",
   "emoji": "🖋️",
-  "status": "open",
+  "status": "closed",
   "description": "The semio design system was changed to consolidated border with in-content chips from the out-content chips with separate elements. The latex templates are not correctly reflecting this. Complete the design system also on latex.",
-  "summary": "LaTeX packages now follow the shared-border splitting logic: neighbouring frames (headings, windows, tables, registers, lists, row tiles) share one hairline, the text column is a closed frame between the navbar and footer rules with inset prose, heading chips are in-content with no rule below the chip row, and lists are split into one bordered cell per point. Verified on junction fixtures (edges coincide within 0.01 pt), report, thesis, flyer and the energy assignment; paper, phd and Zukunft Bau produce no PDF in the local harness (also with unmodified packages for paper) and were not checked. See summary.md.",
+  "summary": "Every horizontal edge is now neutral; only vertical edges may carry an accent.\n\n- **Frame primitives:** the open, close and record primitives no longer carry a colour, so no accent passes from one frame to the next.\n- **Section edges:** the heading top edge, the window top edge and the long-table top edge are drawn in the neutral border colour.\n- **Chips:** their top and bottom edges are neutral, and their side edges keep the ladder colour.\n- **Unchanged from earlier rounds:** shared borders, the closed text column, in-content chips, lists split into cells, and the long table that stays open at a page break.\n\nThe colour audit (`edge-colors.py`) finds no non-neutral frame or chip edge in the junction and chapter fixtures, the report (light and dark), the thesis, or the energy and parametrization assignments. All of them rebuilt without errors.\n\nThe frame junction test (with the new edge colour rule), the page chrome test, the quick pipeline verification and the assignment test (20 of 20) pass when run directly with bun. The `repo` targets still fail in `repo`'s build graph.\n\nSee summary.md.",
   "goal": "🎯runningprint",
   "sessions": [
     "1c919c59-2b6c-42fe-a221-dbc869d331e0",
-    "8e26a1ac-92d8-492f-9289-bff2b91c1119"
+    "8e26a1ac-92d8-492f-9289-bff2b91c1119",
+    "14493d00-eeef-4a4a-9df8-b4bb3daf9415",
+    "8cd354c9-f0d0-4408-866d-548496243704"
   ],
   "interactions": [
     {
@@ -52,6 +54,79 @@
       "checkpoint": "",
       "prompt": "Verify the remaining templates (paper, phd, Zukunft Bau, parametrization and typology assignments, dark theme) and close the known rough edges of the shared-border design in LaTeX.",
       "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 07:41:10",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "3b15468f901294ad97d37119cf8ad8d2a2ca8663",
+      "summary": "LaTeX packages follow the shared-border splitting logic: neighbouring frames share one hairline, the text column is a closed frame between the navbar and footer rules with inset prose, heading chips are in-content with no rule below the chip row, lists are split into one bordered cell per point, and row tiles overlap by a hairline. Verified on junction fixtures (edges coincide within 0.01 pt) and on report (light and dark), thesis, paper, phd, flyer, Zukunft Bau Zwischenbericht and the energy, parametrization and typology assignments: all compile with no errors and no overfull boxes. Not run: repo test targets, the page chrome test owned by another session, viz gallery, German assignment editions. See summary.md."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 08:27:56",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Run the page chrome test and check the header and footer bands against the design, compile the remaining documents (German editions, Forschungsbericht, Kompaktbericht, viz-api, viz gallery), run the test targets, and resolve the table and prose behaviour at the footer rule.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 08:28:26",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "3b15468f901294ad97d37119cf8ad8d2a2ca8663",
+      "summary": "LaTeX packages follow the shared-border splitting logic throughout: neighbouring frames share one hairline, the text column is a closed frame between the navbar and footer rules with inset prose, heading chips are in-content with no rule below the chip row, lists are split into one bordered cell per point, row tiles overlap by a hairline, and prose keeps body padding above the footer rule while split windows land on it. Compiled without errors: report (light and dark), thesis, paper, phd, flyer, Zukunft Bau Zwischenbericht, Forschungsbericht and Kompaktbericht, the three course assignments in English and German, viz-api and gallery document viz-1 (viz-api's 105 overfull boxes are identical with the unmodified packages; all others have none). Frame junction test, page chrome test, quick pipeline verification and the assignment test pass when run directly with bun; the repo test targets themselves failed in repo's build graph before any test ran. See summary.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🧪️tests🗃️🏷️pagechrome⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🧪️tests🗃️🧩️framejunctions⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🧪️tests🗃️🧩️framejunctions💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🧪️tests🗃️🧩️framejunctions💾🥒️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print📃readme"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🎮️commands🗃️🧪️printpipelineverification🗃️🧪️tests🗃️🖨️pipeline🗃️⚡️quickpipelineverification💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🖋️latex💾semioassignment"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🖋️latex💾semiowindow"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 18:11:54",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Horizontal shared edges must be neutral; only vertical borders belong to a part and may carry its accent colour.",
+      "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 18:12:27",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "3b15468f901294ad97d37119cf8ad8d2a2ca8663",
+      "summary": "Every horizontal edge is now neutral; only vertical edges may carry an accent.\n\n- **Frame primitives:** the open, close and record primitives no longer carry a colour, so no accent passes from one frame to the next.\n- **Section edges:** the heading top edge, the window top edge and the long-table top edge are drawn in the neutral border colour.\n- **Chips:** their top and bottom edges are neutral, and their side edges keep the ladder colour.\n- **Unchanged from earlier rounds:** shared borders, the closed text column, in-content chips, lists split into cells, and the long table that stays open at a page break.\n\nThe colour audit (`edge-colors.py`) finds no non-neutral frame or chip edge in the junction and chapter fixtures, the report (light and dark), the thesis, or the energy and parametrization assignments. All of them rebuilt without errors.\n\nThe frame junction test (with the new edge colour rule), the page chrome test, the quick pipeline verification and the assignment test (20 of 20) pass when run directly with bun. The `repo` targets still fail in `repo`'s build graph.\n\nSee summary.md."
     }
   ]
 }

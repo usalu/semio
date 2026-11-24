@@ -13616,7 +13616,7 @@
        "role": "detail",
        "z": 5,
        "filled": true,
-       "tone": 0.25,
+       "tone": 0.12,
        "region": "hair",
        "material": "hair",
        "solid": {
@@ -13924,7 +13924,7 @@
        "role": "detail",
        "z": 5,
        "filled": true,
-       "tone": 0.25,
+       "tone": 0.2,
        "region": "face-skin",
        "material": "skin",
        "solid": {

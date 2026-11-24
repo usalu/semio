@@ -274,7 +274,7 @@ const prismBone = (view: string, bone: string, state: any, solids: readonly any[
   for (const shape of made) { out.push({ op: "shape-add", scale: sc, view, after, shape, group: `prism|${view}|${bone}` }); after = shape.id; }
   return out;
 };
-/** Redraws one drawn shape from the body solid of the same id on the same bone: the candidates are the body of revolution about the bone axis whose profile is the radial envelope of the solid along the axis (a round limb) and the tightest prism of the solid (a flat or boxy part), a shape that is already revolved stays revolved; the better one for the view is kept and the shape keeps its id, order, tone, material and regions. */
+/** Redraws one drawn shape from the body solid of the same id on the same bone: the candidates are the body of revolution about the bone axis whose profile is the radial envelope of the solid along the axis (a round limb; only for a solid that sits on the axis, a part beside it would become a ring) and the tightest prism of the solid (a flat or boxy part), a shape that is already revolved stays revolved; the better one for the view is kept and the shape keeps its id, order, tone, material and regions. */
 const refitFrom = (view: string, id: string, state: any, solids: readonly any[]): any[] | undefined => {
   const shape = geo(asset, view).find((x: any) => x.id === id);
   const def = ((asset as any).volumes[sc].body as any[]).find((x) => x.id === id);
@@ -290,7 +290,9 @@ const refitFrom = (view: string, id: string, state: any, solids: readonly any[])
   {
     const lo = Math.min(...local.map((q) => q[0]!)), hi = Math.max(...local.map((q) => q[0]!));
     const n = 16, step = (hi - lo) / n;
-    if (step > 1e-5) {
+    const [meanV, meanW] = [local.reduce((t, q) => t + q[1]!, 0) / local.length, local.reduce((t, q) => t + q[2]!, 0) / local.length];
+    const reach = Math.max(...local.map((q) => Math.hypot(q[1]!, q[2]!)));
+    if (step > 1e-5 && Math.hypot(meanV, meanW) <= 0.3 * reach) {
       const radii = Array.from({ length: n + 1 }, (_, i) => { const a = lo + i * step; let r = 0; for (const q of local) if (Math.abs(q[0]! - a) <= step * 0.75) r = Math.max(r, Math.hypot(q[1]!, q[2]!)); return r; });
       const upper = radii.map((r, i) => ({ x: lo + i * step, y: Math.max(r, 1e-4) }));
       out.push(keep([...upper, ...upper.slice().reverse().map((p) => ({ x: p.x, y: -p.y }))], { kind: "revolved", axisBone: shape.bone, axis: "u", axisX: 0, axisZ: 0, mirror: true }));
@@ -517,6 +519,7 @@ for (let iter = 0; iter < maxIter; iter++) {
       done.add(`${c.view}|r|${id}`);
       if (tr && bannedIn[c.view]!.has(tr.bone)) { continue; }
       if (!tr) { log(`cannot trace ${c.view} ${bone} for ${id}`); continue; }
+      if (process.env.REPLACE === undefined && bonesSolids.get(bone)!.length > 1) { log(`no trace of the whole bone ${bone} in place of the single shape ${c.view} ${id}: it would paint over its neighbours`); continue; }
       act = () => {
         const base = geo(asset, c.view).find((s: any) => s.id === id);
         const sh = mkShapeMulti(base, id, tr.bone, tr.local);
@@ -533,6 +536,7 @@ for (let iter = 0; iter < maxIter; iter++) {
       done.add(`${c.view}|r|${id}`);
       if (tr && bannedIn[c.view]!.has(tr.bone)) { continue; }
       if (!tr) { log(`cannot trace ${c.view} ${bone} for ${id}`); continue; }
+      if (process.env.REPLACE === undefined && bonesSolids.get(bone)!.length > 1) { log(`no trace of the whole bone ${bone} in place of the single shape ${c.view} ${id}: it would paint over its neighbours`); continue; }
       act = () => {
         const base = geo(asset, c.view).find((s: any) => s.id === id);
         const o = { op: "shape", scale: sc, view: c.view, id, shape: mkShapeMulti(base, id, tr.bone, tr.local) };

@@ -1,0 +1,12 @@
+{
+  "admission": [
+    {"name": "target below current", "currentBytes": 8589934592, "targetBytes": 4294967296, "hostFreeBytes": 1, "expected": "already"},
+    {"name": "target equals current", "currentBytes": 8589934592, "targetBytes": 8589934592, "hostFreeBytes": 1, "expected": "already"},
+    {"name": "host holds the whole envelope", "currentBytes": 8180000000, "targetBytes": 29177675776, "hostFreeBytes": 40000000000, "expected": "grow"},
+    {"name": "host is short", "currentBytes": 8179000320, "targetBytes": 29177675776, "hostFreeBytes": 8616000000, "expected": "host-short"},
+    {"name": "host unknown does not restrict", "currentBytes": 67108864, "targetBytes": 209715200, "hostFreeBytes": null, "expected": "grow"}
+  ],
+  "receipt": [
+    {"name": "darwin worker grown to need", "filesystemBytes": 29177675776, "size": 29177716736, "maximumPhysicalBytes": 29178724352}
+  ]
+}

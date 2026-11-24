@@ -9,7 +9,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -84,6 +86,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": []
    }
   },
@@ -95,7 +101,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -170,6 +178,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "suspend",
@@ -187,7 +199,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 20,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -262,6 +276,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "suspend",
@@ -279,7 +297,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 10,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -354,6 +374,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": []
    }
   },
@@ -365,7 +389,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "warn"
+    "pressure": "warn",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -440,6 +466,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "suspend",
@@ -457,7 +487,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "warn"
+    "pressure": "warn",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -532,6 +564,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": []
    }
   },
@@ -543,7 +579,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -618,6 +656,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "cancel",
@@ -645,7 +687,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "critical"
+    "pressure": "critical",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -720,6 +764,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "cancel",
@@ -742,7 +790,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -769,6 +819,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": []
    }
   },
@@ -780,7 +834,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -846,6 +902,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "suspend",
@@ -863,7 +923,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -905,6 +967,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "suspend",
@@ -922,7 +988,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1012,6 +1080,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "suspend",
@@ -1044,7 +1116,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1143,6 +1217,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "suspend",
@@ -1175,7 +1253,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1250,6 +1330,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "cancel",
@@ -1282,7 +1366,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1321,6 +1407,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "cancel",
@@ -1338,7 +1428,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1377,6 +1469,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "resume",
@@ -1394,7 +1490,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1421,6 +1519,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "resume",
@@ -1438,7 +1540,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1465,6 +1569,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": []
    }
   },
@@ -1476,7 +1584,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1539,6 +1649,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "cancel",
@@ -1561,7 +1675,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1615,6 +1731,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "cancel",
@@ -1637,7 +1757,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1688,6 +1810,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "cancel",
@@ -1710,7 +1836,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1737,6 +1865,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": []
    }
   },
@@ -1748,7 +1880,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1799,6 +1933,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "resume",
@@ -1816,7 +1954,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1843,6 +1983,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": []
    }
   },
@@ -1854,7 +1998,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1881,6 +2027,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": []
    }
   },
@@ -1892,7 +2042,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1919,6 +2071,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "resume",
@@ -1936,7 +2092,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -1987,6 +2145,10 @@
     "guardMegabytes": 1024,
     "dangerMegabytes": 512,
     "resumeMegabytes": 1024,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 2048,
+    "headroomDangerMegabytes": 1024,
     "actions": [
      {
       "action": "suspend",
@@ -2004,7 +2166,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -2079,6 +2243,10 @@
     "guardMegabytes": 1024,
     "dangerMegabytes": 512,
     "resumeMegabytes": 1024,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 2048,
+    "headroomDangerMegabytes": 1024,
     "actions": []
    }
   },
@@ -2090,7 +2258,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -2165,6 +2335,10 @@
     "guardMegabytes": 4096,
     "dangerMegabytes": 2048,
     "resumeMegabytes": 19660,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 8192,
+    "headroomDangerMegabytes": 4096,
     "actions": [
      {
       "action": "suspend",
@@ -2182,7 +2356,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "warn"
+    "pressure": "warn",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -2257,6 +2433,10 @@
     "guardMegabytes": 4096,
     "dangerMegabytes": 2048,
     "resumeMegabytes": 19660,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 8192,
+    "headroomDangerMegabytes": 4096,
     "actions": [
      {
       "action": "suspend",
@@ -2274,7 +2454,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": null,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -2349,6 +2531,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": []
    }
   },
@@ -2360,7 +2546,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "critical"
+    "pressure": "critical",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [],
    "previous": {
@@ -2374,6 +2562,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": []
    }
   },
@@ -2385,7 +2577,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -2436,6 +2630,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": []
    }
   },
@@ -2447,7 +2645,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -2498,6 +2698,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "suspend",
@@ -2515,7 +2719,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -2566,6 +2772,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "suspend",
@@ -2588,7 +2798,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "critical"
+    "pressure": "critical",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -2639,6 +2851,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "cancel",
@@ -2661,7 +2877,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -2736,6 +2954,10 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": []
    }
   },
@@ -2747,7 +2969,9 @@
     "swapUsedMegabytes": 0,
     "swapOutMegabytesPerSecond": 0,
     "compressedMegabytes": 0,
-    "pressure": "normal"
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
    },
    "subjects": [
     {
@@ -2777,11 +3001,1294 @@
     "guardMegabytes": 1638,
     "dangerMegabytes": 819,
     "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
     "actions": [
      {
       "action": "resume",
       "id": "p130",
       "reason": "calm"
+     }
+    ]
+   }
+  },
+  {
+   "name": "headroom guard: the swap volume is nearly full, free swap and growable swap do not cover the line although available memory is above the guard line",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": 1000,
+    "swapVolumeFreeMegabytes": 1500
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": 1000,
+    "headroomMegabytes": 4000,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p101",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "headroom danger: no free swap and no disk to grow it, available memory above the guard line but headroom below the danger line",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1900,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": 0,
+    "swapVolumeFreeMegabytes": 0
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": 0,
+    "headroomMegabytes": 1900,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p101",
+      "reason": "danger"
+     },
+     {
+      "action": "cancel",
+      "id": "p102",
+      "reason": "danger"
+     },
+     {
+      "action": "suspend",
+      "id": "p103",
+      "reason": "danger"
+     },
+     {
+      "action": "suspend",
+      "id": "p104",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "headroom calm: a roomy disk lets swap grow, so low-ish available memory above the guard line stays calm",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": 1000,
+    "swapVolumeFreeMegabytes": 61000
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": 8192,
+    "headroomMegabytes": 11192,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": []
+   }
+  },
+  {
+   "name": "headroom unknown: a host without swap keeps the available-memory law",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": []
+   }
+  },
+  {
+   "name": "headroom unknown: below the guard line a host without swap is guard by available memory",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p101",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "headroom boundary: free disk equal to the reserve grows nothing",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": 1000,
+    "swapVolumeFreeMegabytes": 4096
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": 1000,
+    "headroomMegabytes": 4000,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p101",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "headroom boundary: free disk 100 MB above the reserve grows 100 MB, headroom exactly on the guard line is calm",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": 996,
+    "swapVolumeFreeMegabytes": 4196
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": 1096,
+    "headroomMegabytes": 4096,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": []
+   }
+  },
+  {
+   "name": "headroom bound: the swap room is bounded by half of the physical memory",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 100000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": 9000,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": 8192,
+    "headroomMegabytes": 108192,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": []
+   }
+  },
+  {
+   "name": "headroom small host: lines hit their minimums on a 4 GB host",
+   "host": {
+    "totalMegabytes": 4096,
+    "availableMegabytes": 1100,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": 100,
+    "swapVolumeFreeMegabytes": 0
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1024,
+    "dangerMegabytes": 512,
+    "resumeMegabytes": 1024,
+    "swapRoomMegabytes": 100,
+    "headroomMegabytes": 1200,
+    "headroomGuardMegabytes": 2048,
+    "headroomDangerMegabytes": 1024,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p101",
+      "reason": "guard"
+     },
+     {
+      "action": "suspend",
+      "id": "p102",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "headroom small host: danger on a 4 GB host when headroom is below the minimum danger line",
+   "host": {
+    "totalMegabytes": 4096,
+    "availableMegabytes": 1020,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": 0,
+    "swapVolumeFreeMegabytes": 0
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1024,
+    "dangerMegabytes": 512,
+    "resumeMegabytes": 1024,
+    "swapRoomMegabytes": 0,
+    "headroomMegabytes": 1020,
+    "headroomGuardMegabytes": 2048,
+    "headroomDangerMegabytes": 1024,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p101",
+      "reason": "danger"
+     },
+     {
+      "action": "cancel",
+      "id": "p102",
+      "reason": "danger"
+     },
+     {
+      "action": "suspend",
+      "id": "p103",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "headroom hysteresis: calm ticks do not resume while the headroom is below the guard line",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": 1000,
+    "swapVolumeFreeMegabytes": 1500
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": true,
+     "suspendedSeconds": 10,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "guard",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": 1000,
+    "headroomMegabytes": 4000,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": []
+   }
+  },
+  {
+   "name": "headroom resume: three calm ticks with a roomy swap resume the most expensive suspended subject",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": 1000,
+    "swapVolumeFreeMegabytes": 61000
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": true,
+     "suspendedSeconds": 10,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 2
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 3,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": 8192,
+    "headroomMegabytes": 11192,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "resume",
+      "id": "p101",
+      "reason": "calm"
+     }
+    ]
+   }
+  },
+  {
+   "name": "headroom with pressure critical: danger by pressure whatever the headroom",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "critical",
+    "swapFreeMegabytes": 1000,
+    "swapVolumeFreeMegabytes": 61000
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": 8192,
+    "headroomMegabytes": 11192,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p101",
+      "reason": "danger"
+     },
+     {
+      "action": "suspend",
+      "id": "p102",
+      "reason": "danger"
      }
     ]
    }
@@ -3976,10 +5483,1087 @@
      "signal": "SIGKILL"
     }
    ]
+  },
+  {
+   "name": "identity: pinned toolchain processes started from a shell are subjects whatever their ancestry (cargo, rustc, rustdoc, clippy-driver), the other binaries of the toolchain are not",
+   "options": {
+    "workspaces": [
+     "/Users/u/ws"
+    ]
+   },
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 20,
+     "parent": 1,
+     "group": 20,
+     "rssKilobytes": 900000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:20:00 2026",
+     "command": "/Applications/Claude.app/Contents/MacOS/Claude"
+    },
+    {
+     "pid": 21,
+     "parent": 20,
+     "group": 21,
+     "rssKilobytes": 5000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:21:00 2026",
+     "command": "/bin/zsh -c cargo build --release"
+    },
+    {
+     "pid": 30,
+     "parent": 21,
+     "group": 30,
+     "rssKilobytes": 40000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:30:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/cargo build --release -j 8"
+    },
+    {
+     "pid": 31,
+     "parent": 30,
+     "group": 31,
+     "rssKilobytes": 1200000,
+     "stopped": false,
+     "elapsedSeconds": 30,
+     "start": "Tue Nov 24 03:31:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/rustc --crate-name semio_core --edition=2021 src/lib.rs"
+    },
+    {
+     "pid": 32,
+     "parent": 30,
+     "group": 32,
+     "rssKilobytes": 700000,
+     "stopped": false,
+     "elapsedSeconds": 10,
+     "start": "Tue Nov 24 03:32:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/rustc --crate-name semio_ui --edition=2021 src/lib.rs"
+    },
+    {
+     "pid": 33,
+     "parent": 30,
+     "group": 33,
+     "rssKilobytes": 300000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:33:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/rustdoc --crate-name semio_core src/lib.rs"
+    },
+    {
+     "pid": 34,
+     "parent": 30,
+     "group": 34,
+     "rssKilobytes": 250000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:34:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/clippy-driver rustc --crate-name semio_x src/lib.rs"
+    },
+    {
+     "pid": 35,
+     "parent": 21,
+     "group": 35,
+     "rssKilobytes": 80000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:35:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/rust-lldb target/debug/x"
+    }
+   ],
+   "expect": [
+    {
+     "id": "30.04f62074",
+     "pid": 30,
+     "parent": 21,
+     "kind": "cargo",
+     "rank": 65,
+     "elapsedSeconds": 60,
+     "megabytes": 39,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:30:00 2026",
+     "owner": "cargo build --release -j 8",
+     "scope": "tree",
+     "signal": "SIGTERM"
+    },
+    {
+     "id": "31.07782a3e",
+     "pid": 31,
+     "parent": 30,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 30,
+     "megabytes": 1171,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:31:00 2026",
+     "owner": "rustc --crate-name semio_core --edition=2021 src/lib.rs",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "32.8b423d06",
+     "pid": 32,
+     "parent": 30,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 683,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:32:00 2026",
+     "owner": "rustc --crate-name semio_ui --edition=2021 src/lib.rs",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "33.4524186c",
+     "pid": 33,
+     "parent": 30,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 292,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:33:00 2026",
+     "owner": "rustdoc --crate-name semio_core src/lib.rs",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "34.0904c4c4",
+     "pid": 34,
+     "parent": 30,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 244,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:34:00 2026",
+     "owner": "clippy-driver rustc --crate-name semio_x src/lib.rs",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "identity: the rustc, cargo and Homebrew tools of the user, the Claude app and an IDE are no subjects",
+   "options": {
+    "workspaces": [
+     "/Users/u/ws"
+    ]
+   },
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 20,
+     "parent": 1,
+     "group": 20,
+     "rssKilobytes": 900000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:20:00 2026",
+     "command": "/Applications/Claude.app/Contents/MacOS/Claude"
+    },
+    {
+     "pid": 21,
+     "parent": 20,
+     "group": 21,
+     "rssKilobytes": 700000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:21:00 2026",
+     "command": "/Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer"
+    },
+    {
+     "pid": 22,
+     "parent": 1,
+     "group": 22,
+     "rssKilobytes": 600000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:22:00 2026",
+     "command": "/Applications/Visual Studio Code.app/Contents/MacOS/Electron"
+    },
+    {
+     "pid": 23,
+     "parent": 1,
+     "group": 23,
+     "rssKilobytes": 3000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:23:00 2026",
+     "command": "/bin/zsh"
+    },
+    {
+     "pid": 30,
+     "parent": 23,
+     "group": 30,
+     "rssKilobytes": 40000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:30:00 2026",
+     "command": "/Users/u/.cargo/bin/cargo build"
+    },
+    {
+     "pid": 31,
+     "parent": 30,
+     "group": 31,
+     "rssKilobytes": 900000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:31:00 2026",
+     "command": "/Users/u/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name a src/lib.rs"
+    },
+    {
+     "pid": 32,
+     "parent": 30,
+     "group": 32,
+     "rssKilobytes": 800000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:32:00 2026",
+     "command": "/opt/homebrew/bin/rustc --crate-name b src/lib.rs"
+    },
+    {
+     "pid": 33,
+     "parent": 23,
+     "group": 33,
+     "rssKilobytes": 100000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:33:00 2026",
+     "command": "/Users/u/other/target/debug/deps/foo-1a2b3c4d5e6f7a8b --test-threads=4"
+    },
+    {
+     "pid": 34,
+     "parent": 23,
+     "group": 34,
+     "rssKilobytes": 100000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:34:00 2026",
+     "command": "rustc --crate-name c src/lib.rs"
+    }
+   ],
+   "expect": []
+  },
+  {
+   "name": "identity: cargo test and bench executables of the workspace (any target directory, hashed name below deps) are test-binary subjects, those of other projects and binaries outside deps are not",
+   "options": {
+    "workspaces": [
+     "/Users/u/ws"
+    ]
+   },
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 21,
+     "parent": 1,
+     "group": 21,
+     "rssKilobytes": 3000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:21:00 2026",
+     "command": "/bin/zsh"
+    },
+    {
+     "pid": 30,
+     "parent": 21,
+     "group": 30,
+     "rssKilobytes": 40000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:30:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/cargo test -p semio-core"
+    },
+    {
+     "pid": 31,
+     "parent": 30,
+     "group": 31,
+     "rssKilobytes": 500000,
+     "stopped": false,
+     "elapsedSeconds": 20,
+     "start": "Tue Nov 24 03:31:00 2026",
+     "command": "/Users/u/ws/target/debug/deps/semio_core-1a2b3c4d5e6f7a8b --test-threads=4"
+    },
+    {
+     "pid": 32,
+     "parent": 30,
+     "group": 32,
+     "rssKilobytes": 300000,
+     "stopped": false,
+     "elapsedSeconds": 5,
+     "start": "Tue Nov 24 03:32:00 2026",
+     "command": "/Users/u/ws/.🧬semio/🦑️repo/🎫️tickets/native/🗑️generated/native-wasm/release/deps/bench_x-9f8e7d6c5b4a3910 --bench"
+    },
+    {
+     "pid": 33,
+     "parent": 21,
+     "group": 33,
+     "rssKilobytes": 200000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:33:00 2026",
+     "command": "/Users/u/ws/build/native/debug/deps/gesture-0123abcd4567ef89"
+    },
+    {
+     "pid": 34,
+     "parent": 21,
+     "group": 34,
+     "rssKilobytes": 100000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:34:00 2026",
+     "command": "/Users/u/other/target/debug/deps/foo-1a2b3c4d5e6f7a8b --test-threads=4"
+    },
+    {
+     "pid": 35,
+     "parent": 21,
+     "group": 35,
+     "rssKilobytes": 100000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:35:00 2026",
+     "command": "/Users/u/ws/target/debug/semio-cli --help"
+    },
+    {
+     "pid": 36,
+     "parent": 31,
+     "group": 36,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:36:00 2026",
+     "command": "/bin/sh -c sleep 5"
+    }
+   ],
+   "expect": [
+    {
+     "id": "30.04f62074",
+     "pid": 30,
+     "parent": 21,
+     "kind": "cargo",
+     "rank": 65,
+     "elapsedSeconds": 60,
+     "megabytes": 39,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:30:00 2026",
+     "owner": "cargo test -p semio-core",
+     "scope": "tree",
+     "signal": "SIGTERM"
+    },
+    {
+     "id": "31.07782a3e",
+     "pid": 31,
+     "parent": 30,
+     "kind": "test-binary",
+     "rank": 55,
+     "elapsedSeconds": 20,
+     "megabytes": 489,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:31:00 2026",
+     "owner": "semio_core-1a2b3c4d5e6f7a8b --test-threads=4",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "32.8b423d06",
+     "pid": 32,
+     "parent": 30,
+     "kind": "test-binary",
+     "rank": 55,
+     "elapsedSeconds": 5,
+     "megabytes": 292,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:32:00 2026",
+     "owner": "bench_x-9f8e7d6c5b4a3910 --bench",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "33.4524186c",
+     "pid": 33,
+     "parent": 21,
+     "kind": "test-binary",
+     "rank": 55,
+     "elapsedSeconds": 60,
+     "megabytes": 195,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:33:00 2026",
+     "owner": "gesture-0123abcd4567ef89",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "identity: the repository browser runtime is a browser subject by its main process, its helpers count into it, the user's browsers and the user-level Playwright cache are no subjects",
+   "options": {
+    "workspaces": [
+     "/Users/u/ws"
+    ]
+   },
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 21,
+     "parent": 1,
+     "group": 21,
+     "rssKilobytes": 3000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:21:00 2026",
+     "command": "/bin/zsh"
+    },
+    {
+     "pid": 40,
+     "parent": 21,
+     "group": 40,
+     "rssKilobytes": 150000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:40:00 2026",
+     "command": "/Users/u/ws/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright/chromium-1248/chrome-mac-arm64/Chromium.app/Contents/MacOS/Chromium --headless --remote-debugging-pipe"
+    },
+    {
+     "pid": 41,
+     "parent": 40,
+     "group": 41,
+     "rssKilobytes": 600000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:41:00 2026",
+     "command": "/Users/u/ws/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright/chromium-1248/chrome-mac-arm64/Chromium.app/Contents/Frameworks/Chromium Framework.framework/Helpers/Chromium Helper (Renderer).app/Contents/MacOS/Chromium Helper (Renderer) --type=renderer"
+    },
+    {
+     "pid": 42,
+     "parent": 40,
+     "group": 42,
+     "rssKilobytes": 9000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:42:00 2026",
+     "command": "/Users/u/ws/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright/chromium-1248/chrome-mac-arm64/Chromium.app/Contents/Frameworks/Chromium Framework.framework/Helpers/chrome_crashpad_handler --monitor-self-annotation=ptype=crashpad-handler"
+    },
+    {
+     "pid": 43,
+     "parent": 21,
+     "group": 43,
+     "rssKilobytes": 120000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:43:00 2026",
+     "command": "/Users/u/ws/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright/chromium_headless_shell-1248/chrome-headless-shell-mac-arm64/chrome-headless-shell --headless"
+    },
+    {
+     "pid": 44,
+     "parent": 1,
+     "group": 44,
+     "rssKilobytes": 800000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:44:00 2026",
+     "command": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    },
+    {
+     "pid": 45,
+     "parent": 1,
+     "group": 45,
+     "rssKilobytes": 300000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:45:00 2026",
+     "command": "/Users/u/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/Chromium.app/Contents/MacOS/Chromium --headless"
+    }
+   ],
+   "expect": [
+    {
+     "id": "40.92a0f380",
+     "pid": 40,
+     "parent": 21,
+     "kind": "browser",
+     "rank": 45,
+     "elapsedSeconds": 60,
+     "megabytes": 741,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:40:00 2026",
+     "owner": "Chromium --headless --remote-debugging-pipe",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "43.901cf4c9",
+     "pid": 43,
+     "parent": 21,
+     "kind": "browser",
+     "rank": 45,
+     "elapsedSeconds": 60,
+     "megabytes": 117,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:43:00 2026",
+     "owner": "chrome-headless-shell --headless",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "identity anchors: without a known workspace no identity is active, so the same shell-launched rustc, test binary and browser are no subjects",
+   "options": {
+    "workspaces": []
+   },
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 21,
+     "parent": 1,
+     "group": 21,
+     "rssKilobytes": 3000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:21:00 2026",
+     "command": "/bin/zsh"
+    },
+    {
+     "pid": 30,
+     "parent": 21,
+     "group": 30,
+     "rssKilobytes": 500000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:30:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/rustc --crate-name a src/lib.rs"
+    },
+    {
+     "pid": 31,
+     "parent": 21,
+     "group": 31,
+     "rssKilobytes": 500000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:31:00 2026",
+     "command": "/Users/u/ws/target/debug/deps/semio_core-1a2b3c4d5e6f7a8b --test-threads=4"
+    },
+    {
+     "pid": 32,
+     "parent": 21,
+     "group": 32,
+     "rssKilobytes": 150000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:32:00 2026",
+     "command": "/Users/u/ws/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright/chromium-1248/chrome-mac-arm64/Chromium.app/Contents/MacOS/Chromium --headless"
+    }
+   ],
+   "expect": []
+  },
+  {
+   "name": "identity: protected paths and never patterns still exclude an identity subject and its descendants",
+   "options": {
+    "workspaces": [
+     "/Users/u/ws"
+    ],
+    "protect": [
+     "/Users/u/ws/🔒️play/"
+    ]
+   },
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 21,
+     "parent": 1,
+     "group": 21,
+     "rssKilobytes": 3000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:21:00 2026",
+     "command": "/bin/zsh"
+    },
+    {
+     "pid": 30,
+     "parent": 21,
+     "group": 30,
+     "rssKilobytes": 40000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:30:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/cargo build --manifest-path /Users/u/ws/🔒️play/Cargo.toml"
+    },
+    {
+     "pid": 31,
+     "parent": 30,
+     "group": 31,
+     "rssKilobytes": 500000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:31:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/rustc --crate-name p src/lib.rs"
+    },
+    {
+     "pid": 32,
+     "parent": 21,
+     "group": 32,
+     "rssKilobytes": 500000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:32:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/rustc --crate-name w /Users/u/ws/🛡️warden/x.rs"
+    },
+    {
+     "pid": 33,
+     "parent": 21,
+     "group": 33,
+     "rssKilobytes": 500000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:33:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/rustc --crate-name ok src/lib.rs"
+    }
+   ],
+   "expect": [
+    {
+     "id": "33.4524186c",
+     "pid": 33,
+     "parent": 21,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 488,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:33:00 2026",
+     "owner": "rustc --crate-name ok src/lib.rs",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "identity: a rustc below a root keeps the owner of the root, a rustc outside every root is its own owner",
+   "options": {
+    "workspaces": [
+     "/Users/u/ws"
+    ],
+    "prefixes": [
+     "/Users/u/ws/"
+    ]
+   },
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 10,
+     "parent": 1,
+     "group": 10,
+     "rssKilobytes": 50000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:10:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/u/ws/x/script.ts repo build"
+    },
+    {
+     "pid": 11,
+     "parent": 10,
+     "group": 11,
+     "rssKilobytes": 600000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:11:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/rustc --crate-name a src/lib.rs"
+    },
+    {
+     "pid": 21,
+     "parent": 1,
+     "group": 21,
+     "rssKilobytes": 3000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:21:00 2026",
+     "command": "/bin/zsh"
+    },
+    {
+     "pid": 22,
+     "parent": 21,
+     "group": 22,
+     "rssKilobytes": 600000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:22:00 2026",
+     "command": "/Users/u/ws/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/rustc --crate-name b src/lib.rs"
+    }
+   ],
+   "expect": [
+    {
+     "id": "11.c46058cf",
+     "pid": 11,
+     "parent": 10,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 585,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:11:00 2026",
+     "owner": "bun x/script.ts repo build",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "22.dddb6ffa",
+     "pid": 22,
+     "parent": 21,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 585,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:22:00 2026",
+     "owner": "rustc --crate-name b src/lib.rs",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
   }
  ],
  "tables": {
   "darwin": "    1     0     1  12144 Ss   10-09:04:35 Fri Nov 13 17:42:44 2026     /sbin/launchd\n 2908 66505 66484 865040 R       02:55:19 Mon Nov 23 23:52:00 2026     /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run\n 9362     1  9362  16656 Ss   01-05:11:39 Sun Nov 22 21:35:40 2026     /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🟦️.ts cache\n26616 26264 97578 679024 RN         00:36 Tue Nov 24 02:46:43 2026     rustc --crate-name semio_framework_kernel_identity --edition=2021 /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🪪️identity/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -Z embed-metadata=no -C opt-level=s -C linker-plugin-lto -C codegen-units=16 --remap-path-prefix=/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel=🧰️framework/🔨️modules/🎠️kernel --remap-path-prefix=/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🪪️identity/📦️packages/🦀️rust=semio-framework-kernel-identity-0.1.0 --remap-path-prefix=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b=/cargo/build-dir --remap-path-prefix=/Users/ueli/Documents/semio/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/lib/rustlib/src/rust=/rustc/9f36de775bc636c8e88c31a173c2bcb6995956a0 --warn=rust_2018_idioms --warn=future_incompatible --warn=clippy::all --warn=unused_qualifications --warn=unused_lifetimes --warn=unsafe_op_in_unsafe_fn --warn=clippy::unnecessary_wraps --warn=clippy::semicolon_if_nothing_returned --warn=clippy::redundant_clone --warn=clippy::needless_pass_by_value --warn=clippy::map_unwrap_or --warn=clippy::inefficient_to_string --warn=clippy::cloned_instead_of_copied --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values()) -C metadata=5d518a18a525a2ba -C extra-filename=-1ea076fb7180216f --out-dir /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-kernel-identity/1ea076fb7180216f/out --target wasm32-wasip2 -C strip=symbols -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/proc-macro2/5f1747865948dc93/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/quote/025137066dac1322/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/semio-framework-value-derive/ccf30cc681b12fd3/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/semio-framework-value-derive-expansion/94a56f5c98355f74/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/serde_derive/e4727d3da3863338/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/syn/08bd6c06df5b1904/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/unicode-ident/e2269eccff0054bc/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/itoa/16454adb1adb5957/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/memchr/9ee5b5dd2b0b5faf/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor/86293383cadca981/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor-failure/345c095b003fa525/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor-job-publication/d827cc05251701df/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor-pack/7ff2eb7953f5bdf1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor-retained-context/efb4e38e9a7f40cc/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor-retained-turn/ef5447c2ea3b08f1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor-vocabulary/7d9159998aaf1059/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-async/81aa39c236cd1d71/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-async-slots/7fdefea4621a51e3/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-async-timer/f7b1d318542db196/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-deflate/334a175dfab855dc/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-diagnostic/271070f1fca5bbc3/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl/0cd6d274d87fee51/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-lexical/1b24b423b627ee37/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-notation/16c8bee9153c2710/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-record/912934e84558f6c5/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-record-emission/c9cf781b2bca4ce2/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-record-model/c9c319a019c65860/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-record-ownership/66f592949e2e7a74/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-syntax/2a86840b18221c5f/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-token/fc70ce6c1158cc09/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-hash/b5fec1ef898e1420/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-io-base64/e8d6e30858f89979/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-io-control/121f79e06f4e74ec/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-io-failure-owner/94150ee4dc5339dd/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job/67505871ae70ad18/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-capture/4bc7f2775c18d418/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-clock/af886b0073c7e968/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-context/24c231161ea1738d/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-failure/c54e38f2fe7d7c3b/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-native-encoding/bbe271d8925f1fde/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-native-turn/76e31b522620a4aa/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-outcome/4f0ad79a66f72970/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-outcome-borrow/7b345c75409b7994/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-park/943298ffc9573241/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-payload/2bb5494f2fd18bd5/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-receiving/5c4f7f94f6b3b10a/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-recorded-clock/ad068611ea9be124/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-replacement/35a1596fe5cf57d0/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-return/7049697576beeeb9/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-return-book/e271529a6c7abeea/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-return-budget/f9921fe516379897/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-return-escrow-publication/3b02ca4c960661b6/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-work-grant/c5c8ca3981eb03d1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-mutation-diff/721ebaccfc49c9e7/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-pack-error/c822af566d836811/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-pack-json/1a13170e4e589712/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-pack-json-canonical/6274548323c9a2ff/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-pack-json-float/f68bc8df6a1b7cad/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-pack-source/d8a99a030f3f7036/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication/7b42d218ef83320d/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-causal/e515c96c01bb66de/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-codec/7d0abf235853c903/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-command-ingress/c04e67c3d93c3517/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-conflict/f50b2f3d7f7af37c/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-crypto/630ef92369d0cbf0/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-edit/8381474aaf8dc582/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-error/aecb8ac51b2d422e/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-format/ea5a80e9b5b3bbc2/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-frames/ae8f8a8c91f8f544/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-history/9c95247eaaa25ba1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-history-index/ef84fedcc4dcd145/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-ids/bba556538a09e707/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-interaction/8d607d3f08a8a045/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-local-interaction/55b1267f4364a973/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-mutation/cdedd22232455030/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-mutation-messages/4ba7a3b6ffc8eabf/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-presence/e4defb3b6786bcef/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-retained/fc6d621c89028207/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-retained-field/71a9bb5e3a6fb53e/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-retained-field-prep/8711fea779b326b0/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-retained-key/f37c9a817f619ef1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-wire-core/1c755bb97aaad6d2/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-schema-state/98673b236b58ffa1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-trace/1c38aea7c0621674/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value/400d896a65b82351/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-allocation-return/f42f7dd02abeb083/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-call/e7eb648b58b15c63/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-clone-selection/d1fc3e3fc58f7510/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-clone-source/41ab69cd3538bcf4/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-clone-source-lease/6aad50b911a43dbf/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-control-contract/7963629c036e73db/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-control-physical/804dd784fdfc5214/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-control-reply/3d1183796f132194/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-equality/915d005d6781be8a/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-factory/2327abd2ae24492c/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-intrinsic/69c0600fd2a7c13f/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-array-backing/bf03bbabc23d8126/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-bounded-ordering/b1fe19c707019fb3/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-clone-backing/84fc98fe59fd5348/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-clone-engine/9e48873124908820/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-cursor-backing/10b83f0ca0b2e332/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-decode-handoff/9a7dcf76d27cd420/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-decoding/32126d330f91b76e/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-default/8344ceedff5fe6cb/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-dynamic-clone/1100abede916b6e3/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-encoding/3e288287aef5fc68/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-list-receiver/3629209ed846c2ff/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-number/8b067f029636ca16/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-ordered-engine/5b606d3420c2f710/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-outcome/085a76bb894cef8a/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-owned/0595edfdd22f7600/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-receiver-protocol/46b370d62f0d2f38/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-receiving-contract/9f538856cb1eab0a/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-receiving-frame/15db57d9b8c15aea/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-receiving-original/c2c8d3ce056d8461/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-reservation/ba4020f2933812ac/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-schema/1691348236c33000/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-schema-engine/872c799f23ac0cfd/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-shared-engine/c60f749a01ff513e/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-shared-field/0806dfd4790a5046/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-shared-slots/b7b36de926b95954/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-slice-equality/1c0983b8f4f34b7d/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-sorted/5960cd3ac69e5d6e/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-source/d951662c6987531d/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-storage/afe91f71592ffe83/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-tree-engine/66f72047d699ec5d/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-ordered/0a2c95dac3b3d347/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-original-slot/28dee66af0fcb05f/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-original-vector/197eb6ce1b85f077/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-paged/7956d03d8707f768/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-paged-clone/e17280b327048c48/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-paged-list/5865a5994eb75c77/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-paged-text/f77668b140ca6787/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-persistent/d4b65d612a4f7248/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-read/75760270e0697cc1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-receiving/3cadb1727f1d086d/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-retained-clone/9d7997a3ba441966/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-retained-map/c2f60ae60cf71648/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-retained-map-edit/5fcb99f47bce0528/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-retained-work/3d607109b948f4fa/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-retirement/59522cba1c650f62/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-retirement-contract/b49a3f263105738a/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-shared-issuance/41de882639547c47/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-shared-utf8/7f69111c615a7af3/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-snapshot-projection/912add794263385f/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-sort/e6f99d79831a3e47/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-source-turn/403dd8086899e106/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/serde/ce29b5acfd613309/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/serde_core/8e1aee4e314cfbde/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/serde_json/745380748d982563/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/zmij/a861f6f07b315ceb/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/semio-framework-kernel-identity/1ea076fb7180216f/out --extern semio_framework_actor=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor/86293383cadca981/out/libsemio_framework_actor-86293383cadca981.rmeta --extern replication=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication/7b42d218ef83320d/out/libprotocol-7b42d218ef83320d.rmeta --extern semio_framework_value=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value/400d896a65b82351/out/libsemio_framework_value-400d896a65b82351.rmeta --extern semio_framework_value_derive=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/semio-framework-value-derive/ccf30cc681b12fd3/out/libsemio_framework_value_derive-ccf30cc681b12fd3.dylib --extern semio_framework_value_native_owned=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-owned/0595edfdd22f7600/out/libsemio_framework_value_native_owned-0595edfdd22f7600.rmeta --extern serde=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/serde/ce29b5acfd613309/out/libserde-ce29b5acfd613309.rmeta -Z threads=0 -C link-arg=--max-memory=536870912 -C link-arg=-zstack-size=8388608 -Z threads=0 -C link-arg=--max-memory=536870912 -C link-arg=-zstack-size=8388608 -Z checksum-hash-algorithm=blake3 --remap-path-scope=all -Z temps-dir=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/z\n88190 77783 88190  26048 Ss+        23:10 Tue Nov 24 02:24:09 2026     /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun ./📜️script.ts micro-commit diff\n",
   "linux": "    1     0     1  11652 Ss   12-03:04:05 Mon Nov 10 08:00:00 2026 /sbin/init\n 4242  4200  4242 204800 T       01:02:03 Tue Nov 24 02:42:24 2026 /home/dev/.cache/b/t/m/bun/abc/bun /home/dev/ws/x/script.ts repo test\n 4243  4242  4242      0 Z          00:05 Tue Nov  3 02:43:24 2026 [sh] <defunct>\n 4250     1  4250   9000 S+         00:59 Tue Nov 24 02:44:24 2026 /usr/bin/python3 -m http.server\n 4300  4242  4242 512000 Tl   2-01:00:00 Tue Nov 24 02:45:24 2026 rustc --crate-name a /home/dev/ws/a.rs\n"
- }
+ },
+ "discoveries": [
+  {
+   "name": "workspaces are the roots of the pinned cache that command lines run from, plus the seed; sorted and unique",
+   "seed": [
+    "/Users/u/own"
+   ],
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 10,
+     "parent": 1,
+     "group": 10,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:10:00 2026",
+     "command": "/Users/u/ws1/.cache/b/t/m/bun/90987a/bun /Users/u/ws1/x/script.ts"
+    },
+    {
+     "pid": 11,
+     "parent": 10,
+     "group": 11,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:11:00 2026",
+     "command": "/Users/u/ws1/.cache/b/t/m/bun/90987a/bun worker"
+    },
+    {
+     "pid": 12,
+     "parent": 1,
+     "group": 12,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:12:00 2026",
+     "command": "/Users/u/ws2/.cache/b/t/m/r/9171f2/toolchains/n/bin/rustc --crate-name a"
+    },
+    {
+     "pid": 13,
+     "parent": 1,
+     "group": 13,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:13:00 2026",
+     "command": "/Users/u/Library/Caches/semio/runtimes/bun/9098/bun x.ts"
+    },
+    {
+     "pid": 14,
+     "parent": 1,
+     "group": 14,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:14:00 2026",
+     "command": "/Users/u/.cargo/bin/cargo build"
+    }
+   ],
+   "expect": [
+    "/Users/u/own",
+    "/Users/u/ws1",
+    "/Users/u/ws2"
+   ]
+  },
+  {
+   "name": "no pinned process: only the seed, none: empty",
+   "seed": [],
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 13,
+     "parent": 1,
+     "group": 13,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:13:00 2026",
+     "command": "/Users/u/.cargo/bin/cargo build"
+    }
+   ],
+   "expect": []
+  },
+  {
+   "name": "a pinned path that is not at the start of the command line names no workspace",
+   "seed": [],
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 13,
+     "parent": 1,
+     "group": 13,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:13:00 2026",
+     "command": "/bin/sh -c /Users/u/ws3/.cache/b/t/m/bun/x/bun a.ts"
+    }
+   ],
+   "expect": []
+  }
+ ],
+ "swaps": [
+  {
+   "name": "macOS: free swap of vm.swapusage and Available column of df -k in whole megabytes",
+   "platform": "darwin",
+   "texts": {
+    "usage": "total = 3072.00M  used = 1832.19M  free = 1239.81M  (encrypted)\n",
+    "disk": "Filesystem   1024-blocks      Used Available Capacity iused      ifree %iused  Mounted on\n/dev/disk3s6   239362496   4194436  61939692     7%       4 619396920    0%   /System/Volumes/VM\n"
+   },
+   "expect": {
+    "swapFreeMegabytes": 1239,
+    "swapVolumeFreeMegabytes": 60487
+   }
+  },
+  {
+   "name": "macOS: free swap in gigabytes and a nearly full volume",
+   "platform": "darwin",
+   "texts": {
+    "usage": "total = 6.00G  used = 4.50G  free = 1.50G  (encrypted)",
+    "disk": "Filesystem 1024-blocks Used Available Capacity iused ifree %iused Mounted on\n/dev/disk3s5 239362496 237000000 2362496 99% 1 2 0% /System/Volumes/Data\n"
+   },
+   "expect": {
+    "swapFreeMegabytes": 1536,
+    "swapVolumeFreeMegabytes": 2307
+   }
+  },
+  {
+   "name": "macOS: no swap file yet is zero free swap",
+   "platform": "darwin",
+   "texts": {
+    "usage": "total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+    "disk": "Filesystem   1024-blocks      Used Available Capacity iused      ifree %iused  Mounted on\n/dev/disk3s6   239362496   4194436  61939692     7%       4 619396920    0%   /System/Volumes/VM\n"
+   },
+   "expect": {
+    "swapFreeMegabytes": 0,
+    "swapVolumeFreeMegabytes": 60487
+   }
+  },
+  {
+   "name": "macOS: commands that failed are null",
+   "platform": "darwin",
+   "texts": {
+    "usage": null,
+    "disk": null
+   },
+   "expect": {
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   }
+  },
+  {
+   "name": "macOS: text that does not parse is null",
+   "platform": "darwin",
+   "texts": {
+    "usage": "garbage",
+    "disk": "df: /nope: No such file or directory\n"
+   },
+   "expect": {
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   }
+  },
+  {
+   "name": "Linux: SwapFree of meminfo, a swap that cannot grow has no volume",
+   "platform": "linux",
+   "texts": {
+    "meminfo": "MemTotal:       16384000 kB\nSwapTotal:       8388604 kB\nSwapFree:        5000000 kB\n"
+   },
+   "expect": {
+    "swapFreeMegabytes": 4882,
+    "swapVolumeFreeMegabytes": null
+   }
+  },
+  {
+   "name": "Linux: a host without swap is null",
+   "platform": "linux",
+   "texts": {
+    "meminfo": "MemTotal:       16384000 kB\nSwapTotal:             0 kB\nSwapFree:              0 kB\n"
+   },
+   "expect": {
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   }
+  },
+  {
+   "name": "Linux: no meminfo is null",
+   "platform": "linux",
+   "texts": {
+    "meminfo": null
+   },
+   "expect": {
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   }
+  },
+  {
+   "name": "Windows is observed only: null",
+   "platform": "win32",
+   "texts": {},
+   "expect": {
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   }
+  }
+ ]
 }

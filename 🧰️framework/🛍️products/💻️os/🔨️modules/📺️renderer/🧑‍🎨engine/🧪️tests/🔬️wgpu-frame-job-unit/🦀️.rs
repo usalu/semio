@@ -475,3 +475,46 @@ fn original_frame_directive_inline_retirement_preserves_the_full_independent_gra
     assert_eq!(caller.limited(grant,|cx|job.close_step(cx)).unwrap(),InteractiveJobCloseStep::Complete{progress:Default::default()});assert_eq!(caller.receipt(),Default::default());
     let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));caller.finish();
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn a_pending_frame_phase_admits_a_yield_that_the_job_borrows_back_and_acknowledges() {
+    let (runtime, _witness) = runtime_with_presented_input_candidate();
+    let operation = OperationId(101);
+    let generation = Generation(101);
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),operation,generation);
+    let mut active = ActiveFrameBuild::new(runtime, FrameBuildInputs::default(), operation, generation, original.alias(), fixture_frame_grant());
+    let mut descriptor=original.turn(|cx|active.step_turn(cx)).expect("first frame phase step").expect("a pending phase admits an explicit yield").into_descriptor();
+    assert_eq!(descriptor.kind(),JobOutcomeKind::Yield);
+    assert!(matches!(active.borrow_outcome(&descriptor).expect("the frame job borrows its own yield"),JobOutcomeView::Yield{..}));
+    let step=original.turn(|cx|semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|grant|descriptor.acknowledge(grant))).expect("the yield acknowledgement is paid by the same caller");
+    assert_eq!(step.progress().copied_items,1);
+    drop(descriptor);
+    close_active_frame(active,&mut original);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn a_frame_build_survives_its_first_yield_and_resumes_the_same_session_for_further_steps() {
+    let (runtime, _witness) = runtime_with_presented_input_candidate();
+    let generation = Generation(103);
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(fixture_frame_grant(),103);
+    let mut handle = FrameBuildHandle::new();
+    let (mut births, mut yields, mut was_live, mut was_yield) = (0usize, 0usize, false, false);
+    for _ in 0..262_144 {
+        original.turn_funded(1<<16,|cx|handle.poll_runtime_on_original_caller(runtime.clone(),FrameBuildInputs::default(),generation,cx)).expect("every yield and resume is paid by the same original caller");
+        let live = handle.session.is_some();
+        births += usize::from(live && !was_live);
+        was_live = live;
+        let yielded = handle.original_outcome_kind == Some(JobOutcomeKind::Yield);
+        yields += usize::from(yielded && !was_yield);
+        was_yield = yielded;
+        if yields >= 3 { break; }
+    }
+    assert!(yields >= 3, "a frame build yields after each step and keeps stepping, saw {yields} yields");
+    assert_eq!(births, 1, "the yields resume one admitted session instead of closing it after its first step");
+    for _ in 0..262_144 {
+        if original.turn(|cx|handle.close_original_frame_step(cx)).expect("same original frame close") { break; }
+    }
+    assert!(handle.terminal_is_empty());
+}

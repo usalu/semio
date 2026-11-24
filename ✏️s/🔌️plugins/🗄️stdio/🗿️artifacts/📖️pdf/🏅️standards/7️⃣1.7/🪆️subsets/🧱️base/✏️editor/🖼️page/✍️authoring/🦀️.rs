@@ -1160,6 +1160,10 @@ impl<A: ArtifactApp<Snapshot = PdfSnapshot, Mutation = PdfMutation>> ArtifactCom
         (self.payload)(command).map(|_| self.maximum_items)
     }
 
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, OriginalTurnFailure> {
         if cx.is_cancelled() {
             return Err(refused("pdf-authoring-cancelled"));

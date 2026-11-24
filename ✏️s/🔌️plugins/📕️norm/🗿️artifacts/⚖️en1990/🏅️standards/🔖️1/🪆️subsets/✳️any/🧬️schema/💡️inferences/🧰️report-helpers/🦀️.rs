@@ -100,12 +100,12 @@ fn apply_wind_cap(document: &En1990Snapshot, member_id: &str, actions: &mut [Act
 
 /// 🧭️ The generator context of one limit-state family of the document, `None` when structure kind or reliability class are invalid.
 pub fn context_for(document: &En1990Snapshot, set: FactorSet) -> Option<Context> {
-    let k_fi = factor_overrides::global_override(document, "k_fi");
+    let k_fi = factor_overrides::global_override(document, FactorKind::KFi);
     let mut ctx = Context::new(document.annex, document.structure_kind.domain(), set, k_fi.or_else(|| k_fi_for_rc(document.reliability_class.number()))?);
     if k_fi.is_some() {
         ctx = ctx.with_k_fi_override();
     }
-    Some(match factor_overrides::global_override(document, "xi") {
+    Some(match factor_overrides::global_override(document, FactorKind::Xi) {
         Some(xi) => ctx.with_xi(xi),
         None => ctx,
     })

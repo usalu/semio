@@ -17,3 +17,7 @@ pub mod admitted_input;
 #[cfg(all(target_arch="wasm32",target_env="p2"))]
 #[path="🌉️call/🎭️exports/🦀️.rs"]
 pub mod exports;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔁️succession/🦀️.rs"]
+mod succession_laws;

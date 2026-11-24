@@ -129,19 +129,19 @@ impl Generation3dInstanceOperationOwner {
     /// 🩹️ Owes the attached previews exactly what this gesture's own emit says it owes them — a
     /// landed artifact mutation moved the document the evaluation reads, nothing else did — and puts
     /// the run start the debt needs on that same emit when no run is live to be woken instead.
-    pub(super) fn owe_attached_previews_for_mutations(&mut self, windows: &[(&str, &'static str)], servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, Fault> {
+    pub(super) fn owe_attached_previews_for_mutations(&mut self, windows: &[(&str, &'static str)], unserved: &[String], emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, Fault> {
         let Self { eval_session, run_link, closing, .. } = self;
         let session = eval_session.as_mut().filter(|_| !*closing).ok_or_else(|| Fault::from("generation3d-eval-session-closing"))?;
-        semio_s_artifact_procedural_3d_preview_eval::owe_attached_previews_for_mutations(session, run_link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
+        semio_s_artifact_procedural_3d_preview_eval::owe_attached_previews_for_mutations(session, run_link, windows, unserved, emit, grant).map_err(|error| Fault::from(error.to_string()))
     }
 
     /// 🚦️ Owes the attached previews an evaluation and puts the run start that debt needs on the
     /// gesture's own emit — what a route that owes unconditionally (a generation command, an example
     /// switch, a contributions install, a closing import chunk) hands back.
-    pub(super) fn owe_attached_previews_carrying(&mut self, windows: &[(&str, &'static str)], servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
+    pub(super) fn owe_attached_previews_carrying(&mut self, windows: &[(&str, &'static str)], unserved: &[String], emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
         let Self { eval_session, run_link, closing, .. } = self;
         let session = eval_session.as_mut().filter(|_| !*closing).ok_or_else(|| Fault::from("generation3d-eval-session-closing"))?;
-        semio_s_artifact_procedural_3d_preview_eval::owe_attached_previews_carrying(session, run_link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
+        semio_s_artifact_procedural_3d_preview_eval::owe_attached_previews_carrying(session, run_link, windows, unserved, emit, grant).map_err(|error| Fault::from(error.to_string()))
     }
 }
 

@@ -1,6 +1,7 @@
 /** 🧩️ Declares the component-target inference component: print documents, Cargo targets, component builds and the release pipeline. */
 export const component: "component-targets";
 export function wire(registry: Record<string, any>): void;
+export function printDocumentTargetNamesV1(project: any, workspaceRoot: string): Set<string>;
 export function printDocumentTargets(project: any, root: string, workspaceRoot: string, scripts: any, intern?: (inputs: any) => any): Promise<any>;
 export function cargoTargets(root: string, workspaceRoot: string, commandInputs: any, scripts: any): Promise<any>;
 export function componentBuildTargets(root: string, workspaceRoot: string): any;

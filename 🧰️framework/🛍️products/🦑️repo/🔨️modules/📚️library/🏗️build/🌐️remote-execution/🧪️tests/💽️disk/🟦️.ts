@@ -74,6 +74,21 @@ test("a worker on a volume that runs short of disk stays registered, says disk-f
  controller.abort();await agent.catch(()=>undefined);
 },120000);
 
+test("a worker whose work volume holds fewer slots than it offers collects the finished action sandboxes of dead workers first, at most once a minute, and refuses for disk only when that did not help",async()=>{
+ cluster=await startClusterV1({workers:0,root:temporary("cluster"),scheduler:{refusalCooldownSeconds:1}});
+ const root=temporary("agent"),controller=new AbortController();let free=1.2*GIB,collected=0,freesSpace=true;
+ const collect=async():Promise<void>=>{collected++;if(freesSpace)free=40*GIB;};
+ const host={version:1,atMs:Date.now()+86_400_000,platform:"darwin",cores:8,totalMegabytes:65536,availableMegabytes:60000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:0.5,openFiles:1000,openFilesMaximum:200000,attachedImages:0};
+ const agent=runRemoteExecutionAgentV1({root,environment:{SEMIO_UNIT_CACHE_TOOLCHAIN:"rustc 1.0.0-nightly (abcdef 2026-07-20)\nhost: aarch64-apple-darwin\n",SEMIO_FLEET_ORIGIN:"g1-collect"},origin:"g1-collect",scheduler:cluster.server.workerUrl,concurrency:4,directory:join(root,"work"),sandbox:"isolated-root",materialize:"copy",maximumBlobBytes:1048576,inlineOutputBytes:0,loadIntervalSeconds:1,signal:controller.signal,view:async()=>({host,grants:[],waiters:[]}) as never,disk,freeBytes:()=>free,collect,admitRetryMilliseconds:300,actions:"rustc",network:"deny",confinement:"best-effort"});
+ const row=async():Promise<any>=>(await (await fetch(cluster!.server.workerUrl+"/v1/fleet/load")).json()).machines.find((machine:any)=>machine.origin==="g1-collect");
+ await eventuallyV1(async()=>{const now=await row();return now?.worker?.state==="idle"&&now.worker.why===undefined;},30000,"the collection brought the space back before the worker refused");
+ expect(collected).toBe(1);
+ freesSpace=false;free=1.2*GIB;
+ await eventuallyV1(async()=>(await row())?.worker?.why?.code==="disk-full",30000,"a collection that finds nothing leaves the disk-full verdict");
+ expect(collected,"the collection is not repeated within a minute").toBeLessThanOrEqual(2);
+ controller.abort();await agent.catch(()=>undefined);
+},120000);
+
 const launcher=(directory:string,entryBody:string,restart:string,extraEnvironment:Record<string,string>={})=>{
  const entry=join(directory,"entry.ts"),runner=join(directory,"runner.ts"),sidecar=join(import.meta.dir,"..","..","🛰️sidecar","🟦️.ts");
  writeFileSync(entry,entryBody);

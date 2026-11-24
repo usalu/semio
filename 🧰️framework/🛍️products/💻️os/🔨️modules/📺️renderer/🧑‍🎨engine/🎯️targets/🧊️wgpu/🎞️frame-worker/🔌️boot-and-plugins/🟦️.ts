@@ -100,17 +100,17 @@ async function instantiateRendererWasm(bindings: RendererBindings, url: string):
   const cached = tag ? await monitoredSuspension("wasm-cache-read", () => readCachedRendererModule(url, tag), suspensionLedger) : undefined;
   if (cached) {
     progress(`wasm-instantiate:cached ${(cached.byteLength / 1_048_576).toFixed(1)} MB`, 0.18);
-    await monitoredSuspension("wasm-instantiate", () => bindings.default!(cached.module), suspensionLedger);
+    await monitoredSuspension("wasm-instantiate", () => bindings.default!({ module_or_path: cached.module }), suspensionLedger);
     return;
   }
   progress("wasm-compile", 0.06);
   const compiled = await monitoredSuspension("wasm-compile", () => compileRendererModule(url), suspensionLedger);
   progress("wasm-instantiate", 0.18);
   if (!compiled) {
-    await monitoredSuspension("wasm-instantiate", () => bindings.default!(url), suspensionLedger);
+    await monitoredSuspension("wasm-instantiate", () => bindings.default!({ module_or_path: url }), suspensionLedger);
     return;
   }
-  await monitoredSuspension("wasm-instantiate", () => bindings.default!(compiled.module), suspensionLedger);
+  await monitoredSuspension("wasm-instantiate", () => bindings.default!({ module_or_path: compiled.module }), suspensionLedger);
   if (tag) void writeCachedRendererModule(url, tag, compiled.module, compiled.byteLength, performance.now());
   else void evictCachedRendererModule(url);
 }
@@ -153,7 +153,7 @@ export async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot
     setWorkerCatalog(pluginCatalogV1(catalogRows));
     setExplicitPluginModules(admitWgpuPluginModules(message.plugins ?? catalogRows.targets.map(({ pluginId, moduleUrl }) => ({ pluginId, moduleUrl })), scope.location.href));
     const selection = admitWgpuPluginRegistrySelection(message.pluginRegistrySelection);
-    const bootVariant = message.plugins === undefined && selection === "variant" ? message.descriptor.pluginVariant : undefined;
+    const bootVariant = selection === "variant" ? message.descriptor.pluginVariant : undefined;
     const prepared = await prepareWgpuPluginModules(workerCatalog!, explicitPluginModules!, componentPackageReceiptSource, {
       ...(bootVariant === undefined ? {} : { bootVariant }),
       signal: bootAbort.signal,
@@ -191,6 +191,11 @@ export async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot
     if (bootExample.state === "cancelled") throw new Error("example-activation.cancelled: the boot was closed while the example's extensions loaded");
     progress("renderer-runtime", 0.65);
     let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap!(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => frameTurns?.requestRuntimeWake()), suspensionLedger);
+    const originalFrameOwner=frameOriginalWorkOwner();
+    const originalFrameAdmission=await originalFrameOwner.admit();
+    setOriginalFrameSource(new OriginalBrowserFrameSource(bootstrap,originalFrameOwner,originalFrameAdmission,()=>BigInt(Math.floor(performance.now()*1000))));
+    (scope as unknown as {semioOriginalFrameClockUs:()=>bigint}).semioOriginalFrameClockUs=()=>originalFrameSource!.operationClockUs();
+    await originalFrameSource!.admit();
     while (true) {
       await macrotask();
       const step = declaredStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()) as BrowserRendererBootStep, suspensionLedger);
@@ -203,11 +208,7 @@ export async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot
       if (step.complete) break;
     }
     setRuntime(declaredStep("renderer-finish", () => bootstrap.finish(), suspensionLedger));
-    const originalFrameOwner=frameOriginalWorkOwner();
-    const originalFrameAdmission=await originalFrameOwner.admit();
-    setOriginalFrameSource(new OriginalBrowserFrameSource(runtime!,originalFrameOwner,originalFrameAdmission,()=>BigInt(Math.floor(performance.now()*1000))));
-    (scope as unknown as {semioOriginalFrameClockUs:()=>bigint}).semioOriginalFrameClockUs=()=>originalFrameSource!.operationClockUs();
-    await originalFrameSource!.admit();
+    originalFrameSource!.attach(runtime!);
     setFrameTurnTasks(declaredStep("frame-turn-task-owner", () => new WorkerTurnTaskQueue(), suspensionLedger));
     setFrameTurns(declaredStep("frame-turn-scheduler", () => new FrameTurnScheduler(frameTurnTasks!.schedule, runFrameTurn, () => {
       setFrameInput(undefined);

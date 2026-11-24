@@ -2,6 +2,7 @@
 import { encodeAppFrame } from "@semio-tech/framework-os";
 import type { ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client";
 import { cancelSpawnedJobV1, resetSpawnedJobsForTestsV1, spawnedJobsSnapshotV1 } from "../../../🧱️elements/🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
+import jobCancellation from "../../🧫️fixtures/🛑️job-cancellation/🔣️.json";
 import type { InvocationWireTestKit } from "../🧰️invocation-wire-test-kit/🟦️.tsx";
 import type { CompletionPublicationHelpers } from "../🛠️requester-helper/🟦️.tsx";
 
@@ -155,6 +156,42 @@ export function registerCompletionAndJobSliceTests(kit: InvocationWireTestKit, h
           cancel: (job) => { cancelled.push(job); },
         },
       });
+    });
+    it("sends a guest's cancel-job only while the guest still owns the job", async () => {
+      const { encodeAppFrame } = await import("@semio-tech/framework-os");
+      const { default: fixture } = await import("../../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
+      const bytes = (value: unknown) => Array.from(encodePackValue(value));
+      for (const row of jobCancellation.cases) {
+        const cancelled: bigint[] = [], stepped: bigint[] = [], submitted: ShardEventEnvelope[][] = [];
+        let instance = 0;
+        await withRequester(async (_actor, events) => {
+          submitted.push([...events]);
+          const completed = events.find(event => event.kind === "job-completed")?.payload as { job: bigint } | undefined;
+          if (completed?.job === BigInt(row.settles)) return { uiPatches: [], effects: [{ tag: "cancel-job", val: { job: BigInt(row.cancels) } }], nextWake: null, status: { tag: "idle" } };
+          if (submitted.length > 1) return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+          return {
+            uiPatches: [],
+            effects: [
+              ...row.spawns.map(job => ({ tag: "spawn-job", val: { job: BigInt(job), kind: "semio.draw.mounted-vector", input: new Uint8Array([1]), placement: { tag: "isolated" } } })),
+              { tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: 0, output: bytes(fixture.response), diagnostics: bytes([]), ui_scope: bytes({ kind: "none" }), history_patch: [], messages: [], mutations: [], inverse_group: [] } })) } },
+            ],
+            nextWake: null,
+            status: { tag: "idle" },
+          };
+        }, async (handle, opened) => {
+          instance = opened;
+          await handle.captureExtensionCompletion!(instance, BigInt(fixture.requestIds[2]!)).complete({ ok: encodePackValue(fixture.response) });
+          for (let turn = 0; turn < 1_024 && submitted.flat().filter(event => event.kind === "job-completed").length < row.spawns.length; turn += 1) await new Promise(resolve => setTimeout(resolve, 0));
+          for (let turn = 0; turn < 16; turn += 1) await new Promise(resolve => setTimeout(resolve, 0));
+          expect(submitted.flat().filter(event => event.kind === "job-completed"), row.id).toHaveLength(row.spawns.length);
+          expect(cancelled, row.id).toEqual(row.sent.map(job => BigInt(job)));
+        }, {
+          jobs: {
+            step: job => { stepped.push(job); return job === BigInt(row.settles) || cancelled.includes(job) ? { status: "failed", value: new TextEncoder().encode("drawing.geometry.cancelled") } : { status: "running" }; },
+            cancel: job => { cancelled.push(job); },
+          },
+        });
+      }
     });
     it("lists a driven job in the task-manager ledger and routes a cancel to the guest's own cancel-job", async () => {
       const { encodeAppFrame } = await import("@semio-tech/framework-os");

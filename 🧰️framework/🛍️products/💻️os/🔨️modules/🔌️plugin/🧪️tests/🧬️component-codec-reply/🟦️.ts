@@ -163,6 +163,52 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
       }
     });
 
+    it("lets one Work overrun fail its own poll without latching the refusal for later calls", async () => {
+      const { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } = await import("node:fs");
+      const { join } = await import("node:path");
+      const { pathToFileURL } = await import("node:url");
+      const { pluginComponentBridgeSource } = await import("../../🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts");
+      const { hostShimSource } = await import("../../🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts");
+      const { APP_CHANNEL_VERSION } = await import("@semio-tech/framework-os");
+      const law = JSON.parse(readFileSync(new URL("./🧫️fixtures/🚫️work-overrun-refusal.json", import.meta.url), "utf8"));
+      const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
+      if (!artifactBase) throw Error("SEMIO_TEST_ARTIFACT_DIR is required for generated bridge evidence");
+      mkdirSync(artifactBase, { recursive: true });
+      const directory = mkdtempSync(join(artifactBase, "work-overrun-"));
+      const stock = new KernelOriginalBootstrapStock(originalBootstrapStockFromWire(stockFixture));
+      const original = stock.admit();
+      const held: unknown[] = [];
+      try {
+        writeFileSync(join(directory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component", "fixture.wasm"));
+        writeFileSync(join(directory, "🟨️.js"), hostShimSource());
+        writeFileSync(join(directory, "fixture_component.js"), `
+          const receipt = (budget) => ({ input: budget.input, spent: { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n }, workUnitsSpent: 0n });
+          let staged; let polls = 0;
+          export const reactor = {
+            channelVersion: async () => ${APP_CHANNEL_VERSION},
+            stageActorContextBudget: (budget) => { staged = budget; },
+            admitActorContext: async () => ({ ...receipt(staged), ready: true }),
+            admitActorInput: async (_wire) => ({ ...receipt(staged), ready: true, disposition: "admitted" }),
+            poll: async () => { polls += 1; globalThis.__pollCalls = polls; if (polls > 1) throw Error(${JSON.stringify(law.expectedLaterCall)}); throw Object.assign(Error("[object Object] (see error.payload)"), { payload: { ...receipt(staged), failure: ${JSON.stringify(law.failure)} } }); },
+          };
+        `);
+        const bridge = await import(pathToFileURL(join(directory, "🌉️bridge.js")).href);
+        const clock = () => BigInt(Math.floor(performance.now() * 1000));
+        const api = await bridge.createActorApi("work-overrun", 1n, original, clock, {
+          receipt(receipt: Parameters<typeof stock.receive>[1]) { stock.receive(original, receipt); },
+          hold(refusal: unknown) { held.push(refusal); stock.hold(original, refusal); },
+        });
+        const poll = () => api.poll([], undefined, undefined, { maxEffects: 1, maxPatchBytes: 1, maxFrames: 1 });
+        await expect(poll()).rejects.toThrow(law.expectedMessage);
+        expect(held).toHaveLength(law.expectedHeldCount);
+        expect(api.originalSource.nativeRefusal).toBeUndefined();
+        await expect(poll()).rejects.toThrow(law.expectedLaterCall);
+        expect((globalThis as Record<string, unknown>).__pollCalls).toBe(law.expectedPollCalls);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    });
+
     it("answers codec requests with a beat, schedules guest crossings in order, and closes a suspended actor", async () => {
       const vm = await import("node:vm");
       const { readFileSync } = await import("node:fs");

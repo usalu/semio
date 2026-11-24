@@ -46,10 +46,16 @@ async function storedNotice(device: Device): Promise<readonly string[]> {
  * repeated for every member of the moving cast are read once, and so is nothing inside a crowd figure (its columns are the
  * answers of the learners who played at the same time) or in the roster of who is online: that is data of other learners, not wording of the client. */
 async function wording(device: Device, scope?: ReturnType<typeof screen>): Promise<readonly string[]> {
-  if (scope === undefined && (await device.page.locator('.course-app:not([data-pets="off"]):not([data-pets="still"]) [data-layered-pane="prefs"][data-opened]').count()) > 0) await expect.poll(() => device.page.locator('[data-layered-pane="prefs"] [data-pets-player]').count(), { message: "the cast is back on stage after the language changed, so its deeds are read in both languages" }).toBeGreaterThan(0);
-  const texts = await (scope ?? device.page.locator("#course-main, header, footer")).evaluateAll((roots) =>
-    roots.flatMap((root) => [...root.querySelectorAll<HTMLElement>("button, h1, h2, h3, h4, legend, label, th[scope=col], summary")].filter((element) => element.closest("[inert], [hidden], [aria-hidden=true], [data-crowd-figure], [data-presence-footer] > ul") === null && element.checkVisibility({ visibilityProperty: true }) && (element.closest("[data-pets-player]") === null || element.closest("[data-pets-player]") === element.closest("[data-pets-play]")?.querySelector("[data-pets-player]"))).map((element) => (element.getAttribute("aria-label") ?? element.innerText).replace(/\s+/gu, " ").trim())),
-  );
+  const cast = scope === undefined && (await device.page.locator('.course-app:not([data-pets="off"]):not([data-pets="still"]) [data-layered-pane="prefs"][data-opened]').count()) > 0;
+  let texts: string[] = [];
+  await expect(async () => {
+    const read = await (scope ?? device.page.locator("#course-main, header, footer")).evaluateAll((roots) => ({
+      staged: document.querySelector('[data-layered-pane="prefs"] [data-pets-player]') !== null,
+      texts: roots.flatMap((root) => [...root.querySelectorAll<HTMLElement>("button, h1, h2, h3, h4, legend, label, th[scope=col], summary")].filter((element) => element.closest("[inert], [hidden], [aria-hidden=true], [data-crowd-figure], [data-presence-footer] > ul") === null && element.checkVisibility({ visibilityProperty: true }) && (element.closest("[data-pets-player]") === null || element.closest("[data-pets-player]") === element.closest("[data-pets-play]")?.querySelector("[data-pets-player]"))).map((element) => (element.getAttribute("aria-label") ?? element.innerText).replace(/\s+/gu, " ").trim())),
+    }));
+    expect(read.staged || !cast, "the cast is on stage while the screen is read, so its deeds are read in both languages").toBe(true);
+    texts = read.texts;
+  }).toPass();
   return texts.filter((text) => /\p{L}{2,}/u.test(text) && !["English", "Deutsch"].includes(text));
 }
 

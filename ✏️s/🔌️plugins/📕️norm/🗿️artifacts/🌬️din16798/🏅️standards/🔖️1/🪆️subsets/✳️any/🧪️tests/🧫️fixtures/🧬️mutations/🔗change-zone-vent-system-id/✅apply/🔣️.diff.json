@@ -34,7 +34,9 @@
           "noiseDb": null,
           "turbulenceIntensityPercent": null,
           "ventMethod": null,
-          "ventSystemId": "vent-meeting"
+          "ventSystemId": "vent-meeting",
+          "unoccupiedVentilation": null,
+          "clearUnoccupiedVentilation": null
         }
       }
     ]

@@ -1,4 +1,5 @@
 import outputPage from "./💼️job/📄️output-page/🧬️schema/🔣️.json" with {type:"json"};
+import stockPolicy from "./🔁️succession/📋️policy.json" with {type:"json"};
 import { actorInputWireSourceV1, createActorInputWireV1 } from "./📨️actor-input-wire/🟦️.ts";
 const actorInputWire=createActorInputWireV1();
 /** 🎟️ Kernel admission and worker custody of one original operation. */
@@ -8,7 +9,13 @@ export interface OriginalRetainedInput { readonly operation:bigint;readonly gene
 export interface OriginalOperationResources { readonly grant:OriginalRetainedGrant;readonly fuel:number;readonly maximumElapsedUs:bigint }
 export interface OriginalOperationAdmission extends OriginalOperationResources { readonly operation:bigint;readonly generation:bigint }
 export interface OriginalOperationTurn { readonly input:OriginalRetainedInput;readonly fuel:number;readonly deadlineUs:bigint;readonly cancelled:boolean }
-export interface OriginalOperationReceipt { readonly input:OriginalRetainedInput;readonly spent:OriginalRetainedProgress;readonly workUnitsSpent:number;readonly nativeReceipt?:OriginalWireReceipt;readonly nativeRemaining?:OriginalRetainedGrant }
+export interface OriginalOperationReceipt { readonly input:OriginalRetainedInput;readonly spent:OriginalRetainedProgress;readonly workUnitsSpent:number;readonly nativeReceipt?:OriginalWireReceipt;readonly nativeRemaining?:OriginalRetainedGrant;readonly successor?:bigint }
+/** 🔁️ The kernel-issued successor one named predecessor turn admits (`🔁️succession/🧬️schema/🔣️.json`, Rust `OriginalActorSuccession`). */
+export interface OriginalOperationSuccession { readonly operation:bigint;readonly generation:bigint;readonly epoch:bigint;readonly successor:bigint;readonly grant:OriginalRetainedGrant;readonly fuel:number }
+/** 🪫️ The stock axis a Source ran out of; `maximumElapsedUs` is the Source identity's own deadline, which no successor extends. */
+export type OriginalStockAxis="maximumItems"|"maximumCopyBytes"|"maximumCapacityBytes"|"maximumReleaseBytes"|"fuel"|"maximumElapsedUs";
+/** 🪫️ The framework fault of an exhausted Source, readable by every host without parsing its message. */
+export interface OriginalStockFault { readonly origin:"framework";readonly code:"plugin.original-stock-exhausted";readonly severity:"error";readonly message:string;readonly scope:{};readonly params:{readonly axis:OriginalStockAxis;readonly remaining:string;readonly floor:string};readonly retryable:true }
 export type OriginalWireGrant={readonly [K in keyof OriginalRetainedGrant]:bigint};
 export interface OriginalWireInput {readonly operation:bigint;readonly generation:bigint;readonly epoch:bigint;readonly grant:OriginalWireGrant}
 export interface OriginalWireReceipt {readonly input:OriginalWireInput;readonly spent:{readonly [K in keyof OriginalRetainedProgress]:bigint};readonly remaining?:OriginalWireGrant}
@@ -33,6 +40,11 @@ export class KernelOriginalOperationIssuer {
  constructor(admitResources:(request:OriginalOperationResources)=>OriginalOperationResources){ this.admitResources = admitResources; }
  admit(request:OriginalOperationResources):OriginalOperationAdmission{const operation=identity(this.#next);if(operation===U64)throw Error('original-turn.identity-exhausted');const admitted=this.admitResources(request);const owned=grant(admitted.grant),fuel=amount(admitted.fuel),elapsed=admitted.maximumElapsedUs;if(typeof elapsed!=='bigint'||elapsed<0n||elapsed>U64)throw Error('original-turn.invalid-duration');this.#next+=1n;return Object.freeze({operation,generation:1n,grant:owned,fuel,maximumElapsedUs:elapsed})}
 }
+/** 🚱️ A Source below its floor refuses new work with the typed fault while its cleanup and succession stay funded. */
+export class OriginalStockExhausted extends Error {
+ readonly fault:OriginalStockFault;
+ constructor(axis:OriginalStockAxis,remaining:bigint,floor:bigint,cause:unknown){super(`plugin.original-stock-exhausted: ${axis} has ${remaining} of its floor ${floor}`,{cause});this.fault=Object.freeze({origin:"framework",code:"plugin.original-stock-exhausted",severity:"error",message:this.message,scope:{},params:{axis,remaining:remaining.toString(),floor:floor.toString()},retryable:true})}
+}
 /** ⚠️ A returned original receipt stays identifiable when its physical effects exceed authority. */
 export class OriginalOperationReceiptRefusal extends Error {
  readonly receipt: OriginalOperationReceipt;
@@ -41,13 +53,25 @@ export class OriginalOperationReceiptRefusal extends Error {
 /** 🧵️ One same-worker clock binding issues remaining authority after each exact original return. */
 export class OriginalOperationSource {
  readonly operation:bigint;readonly generation:bigint;readonly deadlineUs:bigint;
- #remaining:OriginalRetainedGrant;#fuel:number;#epoch=1n;#outstanding:OriginalOperationTurn|undefined;#cancelled=false;#closed=false;#receiptRefusal:OriginalOperationReceipt|undefined;#producerRefusal:unknown;#nativeRefusal:unknown;#lastClock:bigint;#physical:OriginalOperationPhysicalSpent=Object.freeze({copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0,workUnitsSpent:0});
+ #remaining:OriginalRetainedGrant;#fuel:number;#tenure:{readonly operation:bigint;readonly grant:OriginalRetainedGrant;readonly fuel:number};#epoch=1n;#outstanding:OriginalOperationTurn|undefined;#cancelled=false;#closed=false;#receiptRefusal:OriginalOperationReceipt|undefined;#producerRefusal:unknown;#nativeRefusal:unknown;#lastClock:bigint;#physical:OriginalOperationPhysicalSpent=Object.freeze({copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0,workUnitsSpent:0});
  private readonly clock: ()=>bigint;
- constructor(admission:OriginalOperationAdmission,clock:()=>bigint){this.clock = clock; this.operation=identity(admission.operation);this.generation=identity(admission.generation);this.#remaining=grant(admission.grant);this.#fuel=amount(admission.fuel);const now=clock();if(typeof now!=='bigint'||now<0n||now>U64||typeof admission.maximumElapsedUs!=='bigint'||admission.maximumElapsedUs<0n||admission.maximumElapsedUs>U64-now)throw Error('original-turn.deadline-overflow');this.#lastClock=now;this.deadlineUs=now+admission.maximumElapsedUs}
+ constructor(admission:OriginalOperationAdmission,clock:()=>bigint){this.clock = clock; this.operation=identity(admission.operation);this.generation=identity(admission.generation);this.#remaining=grant(admission.grant);this.#fuel=amount(admission.fuel);this.#tenure=Object.freeze({operation:this.operation,grant:this.#remaining,fuel:this.#fuel});const now=clock();if(typeof now!=='bigint'||now<0n||now>U64||typeof admission.maximumElapsedUs!=='bigint'||admission.maximumElapsedUs<0n||admission.maximumElapsedUs>U64-now)throw Error('original-turn.deadline-overflow');this.#lastClock=now;this.deadlineUs=now+admission.maximumElapsedUs}
  operationClockUs():bigint{const now=this.clock();if(typeof now!=='bigint'||now<this.#lastClock||now>U64)throw Error('original-turn.clock-refused');this.#lastClock=now;return now}
  get fuelRemaining():number{return this.#fuel}
  get retainedRemaining():OriginalRetainedGrant{return this.#remaining}
  get outstanding():boolean{return this.#outstanding!==undefined}
+ get cancelled():boolean{return this.#cancelled}
+ /** 🪪️ The kernel operation whose stock funds this Source now; its own identity never changes. */
+ get tenure():bigint{return this.#tenure.operation}
+ #below(divisor:number):readonly [OriginalStockAxis,number,number]|undefined{for(const [axis] of currencies){const floor=Math.ceil(this.#tenure.grant[axis]/divisor);if(this.#remaining[axis]<floor)return [axis,this.#remaining[axis],floor]}const floor=Math.ceil(this.#tenure.fuel/divisor);return this.#fuel<floor?["fuel",this.#fuel,floor]:undefined}
+ /** 🪫️ Below its low-water mark a Source asks the kernel for a successor as soon as its actor is quiescent. */
+ get lowWater():boolean{return this.#below(ORIGINAL_STOCK_LOW_WATER)!==undefined}
+ /** 🚱️ New work needs stock above the floor; cleanup and succession spend the floor. */
+ requireStock(cause?:unknown):void{const below=this.#below(ORIGINAL_STOCK_FLOOR);if(below!==undefined)throw new OriginalStockExhausted(below[0],BigInt(below[1]),BigInt(below[2]),cause);if(this.operationClockUs()>=this.deadlineUs)throw new OriginalStockExhausted("maximumElapsedUs",0n,1n,cause)}
+ /** 🔁️ Names the exact turn after the next one as the predecessor that pays for and closes its own stock. */
+ quoteSuccession(successor:OriginalOperationAdmission):OriginalOperationSuccession{if(this.#cancelled||identity(successor.operation)<=this.#tenure.operation)throw Error('original-turn.succession-refused');return Object.freeze({operation:this.operation,generation:this.generation,epoch:identity(this.#epoch+1n),successor:successor.operation,grant:grant(successor.grant),fuel:amount(successor.fuel)})}
+ /** 🤝️ Receives the predecessor's last receipt, then replaces only the funds; identity, epoch order, clock and deadline continue. */
+ succeed(receipt:OriginalOperationReceipt,successor:OriginalOperationAdmission):void{if(this.#cancelled||this.#closed||receipt.successor!==identity(successor.operation)||successor.operation<=this.#tenure.operation)throw Error('original-turn.succession-refused');const next=grant(successor.grant),fuel=amount(successor.fuel);this.receive(receipt);this.#remaining=next;this.#fuel=fuel;this.#tenure=Object.freeze({operation:successor.operation,grant:next,fuel})}
  get receiptRefusal():OriginalOperationReceipt|undefined{return this.#receiptRefusal}
  get nativeRefusal():unknown{return this.#nativeRefusal}
  holdNativeRefusal(call:unknown):void{if(this.#nativeRefusal!==undefined||call===undefined)throw Error("original-turn.native-return-refused");this.#nativeRefusal=call}
@@ -73,8 +97,10 @@ const ORIGINAL_JOB_WORK_FUEL=1<<24;
 const ORIGINAL_JOB_OUTPUT_PAGE_BYTES:number=outputPage.properties.outputPageBytes.const;
 const ORIGINAL_JOB_CONTROL_WALL_US=30_000_000n;
 const ORIGINAL_JOB_PENDING_PAGES=1024;
-const ORIGINAL_SELF_ISSUED_RESERVE_BYTES=4<<20;
-const ORIGINAL_SELF_ISSUED_RESERVE_ITEMS=1<<12;
+/** 🪫️ The low-water and floor fractions of one operation's stock, from `🔁️succession/📋️policy.json`. */
+const ORIGINAL_STOCK_LOW_WATER:number=stockPolicy.lowWaterDivisor;
+const ORIGINAL_STOCK_FLOOR:number=stockPolicy.floorDivisor;
+const ORIGINAL_STOCK_DEFERRAL:number=stockPolicy.maximumDeferral;
 const ORIGINAL_SELF_ISSUED_ELAPSED_US=1n<<52n;
 /** 🎁️ jco lifts `option<t>` as a tagged `{tag:"none"|"some"}` variant and lowers it from `t|undefined`; the host reads the bare value. */
 export function optionValue(value:any):any{if(value===null||value===undefined)return undefined;if(typeof value==="object"&&(value.tag==="none"||value.tag==="some"))return value.tag==="none"?undefined:value.val;return value}
@@ -129,15 +155,15 @@ export class OriginalJobFunds {
   }
  }
  async step(jobs:OriginalGuestJobs,job:bigint,control:OriginalJobControl={}):Promise<{status:string;progress?:Uint8Array;value?:Uint8Array}>{let outcome=control.held?.get(job)?.outcome;if(outcome===undefined){const call=await this.#request((budget)=>jobs.stepJob(job,budget));outcome=optionValue(call.outcome);if(outcome===undefined)return {status:"running"}}const bytes=await this.#collect(jobs,job,outcome!,control);if(outcome.state==="running")return {status:"running",progress:bytes.length>0?bytes:undefined};if(outcome.state==="done")return {status:"done",value:bytes};if(outcome.state==="failed")return {status:"failed",value:bytes};throw Error("original-job.outcome-state")}
- async cancel(jobs:OriginalGuestJobs,job:bigint,control:OriginalJobControl={}):Promise<void>{const unfinished=control.held?.get(job)?.outcome;if(unfinished!==undefined){await this.#collect(jobs,job,unfinished,{signal:control.signal,held:control.held});if(unfinished.state!=="running")return}const call=await this.#request((budget)=>jobs.cancelJob(job,budget));control.held?.delete(job);if(!call.admitted)throw Error("original-job.cancel-refused")}
+ async cancel(jobs:OriginalGuestJobs,job:bigint,control:OriginalJobControl={}):Promise<void>{const unfinished=control.held?.get(job)?.outcome;if(unfinished!==undefined){await this.#collect(jobs,job,unfinished,{signal:control.signal,held:control.held});if(unfinished.state!=="running")return}for(let pending=0;!(await this.#request((budget)=>jobs.cancelJob(job,budget))).admitted;pending++)this.#pending(pending,"original-job.cancel-stalled");control.held?.delete(job)}
  async #collect(jobs:OriginalGuestJobs,job:bigint,outcome:{readonly state:string;readonly byteLength:bigint},control:OriginalJobControl):Promise<Uint8Array>{const expected=outcome.byteLength;const held:{parts:Uint8Array[];length:bigint;outcome?:typeof outcome}=control.held?.get(job)??{parts:[],length:0n};held.outcome=outcome;control.held?.set(job,held);let pending=0;for(;;){if(control.signal?.aborted)throw Error("original-job.aborted");const call=await this.#request((budget)=>jobs.readJobOutput(job,budget),true);const chunk=optionValue(call.chunk);if(chunk===undefined)break;const page=optionValue(chunk.bytes);if(page!==undefined){if(chunk.offset!==held.length)throw Error("original-job.output-offset");held.parts.push(page);held.length+=BigInt(page.length);pending=0;control.onProgress?.({job,bytes:held.length,expected})}if(chunk.outputClosed)break;if(page===undefined)this.#pending(pending++,"original-job.output-stalled")}if(held.length!==expected)throw Error("original-job.output-length");for(let pending=0;;pending++){const ack=await this.#request((budget)=>jobs.acknowledgeJobOutput(job,budget));if(ack.acknowledged)break;this.#pending(pending,"original-job.output-ack-stalled")}const bytes=new Uint8Array(Number(held.length));let at=0;for(const part of held.parts){bytes.set(part,at);at+=part.length}control.held?.delete(job);return bytes}
 }
 
 /** 🏛️ Issues a new actor turn for each guest crossing while preserving the job request deadline. */
-export async function originalSourceJob<T>(source:OriginalOperationSource,report:(receipt:OriginalOperationReceipt)=>void,wallUs:bigint,run:(funds:OriginalJobFunds)=>Promise<T>):Promise<T>{
+export async function originalSourceJob<T>(source:OriginalOperationSource,report:(receipt:OriginalOperationReceipt)=>void,wallUs:bigint,run:(funds:OriginalJobFunds)=>Promise<T>,cleanup=false):Promise<T>{
  const clock=()=>source.operationClockUs(),started=clock();
  const drive:OriginalJobCrossing=async(call,output)=>{
-  if(source.fuelRemaining===0)throw Error("original-job.work-exhausted");
+  if(!cleanup)source.requireStock();
   const turn=source.issue();
   const funds=new OriginalJobFunds(source.operation,started,wallUs,clock,turn);
   const budget=output?funds.outputCrossing():funds.crossing();
@@ -163,7 +189,7 @@ export async function originalSourceJob<T>(source:OriginalOperationSource,report
 export class OriginalSelfIssuedTurns {
  readonly #guest:OriginalGuestExports;readonly #source:OriginalOperationSource;readonly #clock:()=>bigint;readonly #held:OriginalJobOutputHold=new Map();#ready=false;
  constructor(guest:OriginalGuestExports,clock:()=>bigint){this.#guest=guest;this.#clock=clock;this.#source=new OriginalOperationSource(Object.freeze({operation:1n,generation:1n,grant:ORIGINAL_SELF_ISSUED_GRANT,fuel:Number.MAX_SAFE_INTEGER,maximumElapsedUs:ORIGINAL_SELF_ISSUED_ELAPSED_US}),clock)}
- #stock():void{const left=this.#source.retainedRemaining;if(left.maximumItems<ORIGINAL_SELF_ISSUED_RESERVE_ITEMS||left.maximumCopyBytes<ORIGINAL_SELF_ISSUED_RESERVE_BYTES||left.maximumCapacityBytes<ORIGINAL_SELF_ISSUED_RESERVE_BYTES||left.maximumReleaseBytes<ORIGINAL_SELF_ISSUED_RESERVE_BYTES)throw Object.assign(Error("original-turn.stock-exhausted"),{remaining:left})}
+ #stock():void{this.#source.requireStock()}
  #receive(call:any,workUnitsSpent:bigint):void{this.#source.receive(originalReceiptFromWit(call,workUnitsSpent))}
  #hold(failure:unknown):void{try{if(this.#source.outstanding&&this.#source.nativeRefusal===undefined)this.#source.holdNativeRefusal(failure??Error("original-turn.native-return-refused"))}catch{}}
  async #context():Promise<void>{while(!this.#ready){this.#stock();const turn=this.#source.issue();let call:any;try{call=await this.#guest.reactor.admitActorContext(originalContextBudgetWit(turn))}catch(failure){this.#hold(failure);throw failure}this.#receive(call,call.workUnitsSpent);if(optionValue(call.refusal)!==undefined)throw Object.assign(Error("original-turn.context-refused"),{originalCall:call});this.#ready=call.ready;if(!this.#ready&&call.spent.copiedItems===0n&&call.spent.copiedBytes===0n&&call.spent.retainedCapacityBytes===0n&&call.spent.releasedBytes===0n)throw Object.assign(Error("original-turn.context-held"),{originalCall:call})}}
@@ -171,12 +197,38 @@ export class OriginalSelfIssuedTurns {
  async poll(events:readonly unknown[],shape:OriginalTurnShape):Promise<any>{if(events.length>1)throw Error("actor-poll.event-count: a reactor turn admits at most one event");await this.#context();await this.#admit({operation:"poll",events:events.map(actorInputWire.event),shape});this.#stock();const turn=this.#source.issue();let result;try{result=await this.#guest.reactor.poll(originalContextBudgetWit(turn))}catch(failure:any){try{if(failure&&failure.input&&failure.spent&&typeof failure.workUnitsSpent==="bigint")this.#receive(failure,failure.workUnitsSpent)}catch{}this.#hold(failure);throw failure}this.#receive(result.retainedReceipt,result.retainedReceipt.workUnitsSpent);return result}
  async startJob(job:bigint,kind:string,input:Uint8Array):Promise<void>{await this.#context();return originalSourceJob(this.#source,()=>{},originalJobWallUs(),(funds)=>funds.start(this.#guest,job,kind,input))}
  stepJob(job:bigint,budget:{readonly deadlineMs:number},control:OriginalJobControl={}):Promise<{status:string;progress?:Uint8Array;value?:Uint8Array}>{return originalSourceJob(this.#source,()=>{},originalJobWallUs(budget),(funds)=>funds.step(this.#guest.jobs,job,{...control,held:this.#held}))}
- cancelJob(job:bigint):Promise<void>{return originalSourceJob(this.#source,()=>{},originalJobWallUs(),(funds)=>funds.cancel(this.#guest.jobs,job,{held:this.#held}))}
+ cancelJob(job:bigint):Promise<void>{return originalSourceJob(this.#source,()=>{},originalJobWallUs(),(funds)=>funds.cancel(this.#guest.jobs,job,{held:this.#held}),true)}
+}
+
+/** 📮️ The kernel route of one actor's receipts, held refusals and successor draws. */
+export interface OriginalKernelReturn {readonly receipt:(receipt:OriginalOperationReceipt)=>void;readonly hold:(refusal:unknown)=>void;readonly succeed:()=>Promise<OriginalOperationAdmission>}
+/** 🔁️ Asks the kernel for a successor below low water and admits it through the guest's paid context admission, only while no job, held output or turn is outstanding; a refusal defers the next attempt and never loses the successor. */
+export class OriginalStockSuccession {
+ readonly #source:OriginalOperationSource;readonly #reactor:OriginalGuestReactor;readonly #kernel:OriginalKernelReturn;readonly #held:OriginalJobOutputHold;readonly #jobs=new Set<bigint>();#successor:OriginalOperationAdmission|undefined;#refusal:unknown;#wait=0;#deferral=1;
+ constructor(source:OriginalOperationSource,reactor:OriginalGuestReactor,kernel:OriginalKernelReturn,held:OriginalJobOutputHold){this.#source=source;this.#reactor=reactor;this.#kernel=kernel;this.#held=held}
+ /** 🧾️ Why the last attempt did not renew the stock. */
+ get refusal():unknown{return this.#refusal}
+ started(job:bigint):void{this.#jobs.add(job)}
+ settled(job:bigint):void{this.#jobs.delete(job);this.#wait=0}
+ #defer(refusal:unknown):void{this.#refusal=refusal;this.#wait=this.#deferral;this.#deferral=Math.min(this.#deferral*2,ORIGINAL_STOCK_DEFERRAL)}
+ async #cross(call:(budget:OriginalContextBudgetWit)=>Promise<any>,successor?:OriginalOperationAdmission):Promise<any>{const source=this.#source,turn=source.issue();let reply:any;try{reply=await call(originalContextBudgetWit(turn))}catch(failure){source.holdNativeRefusal(failure);this.#kernel.hold(failure);throw failure}let receipt:OriginalOperationReceipt|undefined;const admitted=successor!==undefined&&reply.ready&&optionValue(reply.refusal)===undefined,proven=admitted&&reply.spent.copiedItems===1n&&reply.spent.retainedCapacityBytes===0n&&reply.spent.releasedBytes===0n&&reply.workUnitsSpent===1n;try{receipt=originalReceiptFromWit(reply,reply.workUnitsSpent);if(proven){receipt={...receipt,successor:successor!.operation};source.succeed(receipt,successor!)}else source.receive(receipt)}catch(failure){if(receipt)this.#kernel.receipt(receipt);source.holdNativeRefusal(reply);this.#kernel.hold(reply);throw failure}this.#kernel.receipt(receipt);if(admitted&&!proven){const unproven=Error("original-turn.succession-unproven: the guest answered ready without the one paid succession receipt; rebuild the plugin");source.holdNativeRefusal(unproven);this.#kernel.hold(unproven);throw unproven}return reply}
+ async advance():Promise<void>{
+  const source=this.#source;
+  if(!source.lowWater||source.cancelled||source.outstanding||this.#held.size>0||this.#jobs.size>0)return;
+  if(this.#wait>0){this.#wait-=1;return}
+  try{this.#successor??=await this.#kernel.succeed()}catch(refusal){this.#defer(refusal);return}
+  const successor=this.#successor,wire=actorInputWire.encode({operation:"succeed",succession:source.quoteSuccession(successor)});
+  const admitted=await this.#cross((budget)=>this.#reactor.admitActorInput(wire,budget));
+  if(optionValue(admitted.refusal)!==undefined||!admitted.ready||admitted.disposition==="returned"){this.#defer(optionValue(admitted.refusal)??"input-held");return}
+  const context=await this.#cross((budget)=>this.#reactor.admitActorContext(budget),successor);
+  if(optionValue(context.refusal)!==undefined||!context.ready){this.#defer(optionValue(context.refusal)??"stock-short");return}
+  this.#successor=undefined;this.#refusal=undefined;this.#deferral=1;
+ }
 }
 
 /** 🌐️ Embeds the same defining original source into the actual component worker without a second implementation. */
-export function originalOperationWorkerSource():string{return `const U64=0xffffffffffffffffn;const currencies=${JSON.stringify(currencies)};const ORIGINAL_SELF_ISSUED_GRANT=${JSON.stringify(ORIGINAL_SELF_ISSUED_GRANT)};const ORIGINAL_JOB_WORK_FUEL=${ORIGINAL_JOB_WORK_FUEL};const ORIGINAL_JOB_OUTPUT_PAGE_BYTES=${ORIGINAL_JOB_OUTPUT_PAGE_BYTES};const ORIGINAL_JOB_CONTROL_WALL_US=${ORIGINAL_JOB_CONTROL_WALL_US}n;const ORIGINAL_JOB_PENDING_PAGES=${ORIGINAL_JOB_PENDING_PAGES};const ORIGINAL_SELF_ISSUED_RESERVE_BYTES=${ORIGINAL_SELF_ISSUED_RESERVE_BYTES};const ORIGINAL_SELF_ISSUED_RESERVE_ITEMS=${ORIGINAL_SELF_ISSUED_RESERVE_ITEMS};const ORIGINAL_SELF_ISSUED_ELAPSED_US=${ORIGINAL_SELF_ISSUED_ELAPSED_US}n;${amount.toString()}\n${identity.toString()}\n${grant.toString()}\n${optionValue.toString()}\n${OriginalOperationReceiptRefusal.toString()}\n${OriginalOperationSource.toString()}\n${originalGrantWit.toString()}\n${originalTurnWit.toString()}\n${actorInputWireSourceV1()}
-${originalContextBudgetWit.toString()}\n${originalJobWallUs.toString()}\n${originalReceiptFromWit.toString()}\n${OriginalJobFunds.toString()}\n${originalSourceJob.toString()}\n${OriginalSelfIssuedTurns.toString()}`;}
+export function originalOperationWorkerSource():string{return `const U64=0xffffffffffffffffn;const currencies=${JSON.stringify(currencies)};const ORIGINAL_SELF_ISSUED_GRANT=${JSON.stringify(ORIGINAL_SELF_ISSUED_GRANT)};const ORIGINAL_JOB_WORK_FUEL=${ORIGINAL_JOB_WORK_FUEL};const ORIGINAL_JOB_OUTPUT_PAGE_BYTES=${ORIGINAL_JOB_OUTPUT_PAGE_BYTES};const ORIGINAL_JOB_CONTROL_WALL_US=${ORIGINAL_JOB_CONTROL_WALL_US}n;const ORIGINAL_JOB_PENDING_PAGES=${ORIGINAL_JOB_PENDING_PAGES};const ORIGINAL_STOCK_LOW_WATER=${ORIGINAL_STOCK_LOW_WATER};const ORIGINAL_STOCK_FLOOR=${ORIGINAL_STOCK_FLOOR};const ORIGINAL_STOCK_DEFERRAL=${ORIGINAL_STOCK_DEFERRAL};const ORIGINAL_SELF_ISSUED_ELAPSED_US=${ORIGINAL_SELF_ISSUED_ELAPSED_US}n;${amount.toString()}\n${identity.toString()}\n${grant.toString()}\n${optionValue.toString()}\n${OriginalOperationReceiptRefusal.toString()}\n${OriginalStockExhausted.toString()}\n${OriginalOperationSource.toString()}\n${originalGrantWit.toString()}\n${originalTurnWit.toString()}\n${actorInputWireSourceV1()}
+${originalContextBudgetWit.toString()}\n${originalJobWallUs.toString()}\n${originalReceiptFromWit.toString()}\n${OriginalJobFunds.toString()}\n${originalSourceJob.toString()}\n${OriginalStockSuccession.toString()}\n${OriginalSelfIssuedTurns.toString()}`;}
 
 /** 🧾️ Preserves the native exact receipt before any semantic browser projection. */
 export function originalReceiptFromWit(receipt:OriginalWireReceipt,workUnitsSpent:bigint):OriginalOperationReceipt{const extent=(value:bigint):number=>{if(typeof value!=="bigint"||value<0n||value>BigInt(Number.MAX_SAFE_INTEGER))throw Error("original-turn.native-extent-refused");return Number(value)};const raw=receipt.input,input={operation:raw.operation,generation:raw.generation,epoch:raw.epoch,grant:{maximumItems:extent(raw.grant.maximumItems),maximumCopyBytes:extent(raw.grant.maximumCopyBytes),maximumCapacityBytes:extent(raw.grant.maximumCapacityBytes),maximumReleaseBytes:extent(raw.grant.maximumReleaseBytes),maximumDepth:extent(raw.grant.maximumDepth)}};const spent={copiedItems:extent(receipt.spent.copiedItems),copiedBytes:extent(receipt.spent.copiedBytes),retainedCapacityBytes:extent(receipt.spent.retainedCapacityBytes),releasedBytes:extent(receipt.spent.releasedBytes)},remaining=receipt.remaining;const nativeRemaining=remaining?{maximumItems:extent(remaining.maximumItems),maximumCopyBytes:extent(remaining.maximumCopyBytes),maximumCapacityBytes:extent(remaining.maximumCapacityBytes),maximumReleaseBytes:extent(remaining.maximumReleaseBytes),maximumDepth:extent(remaining.maximumDepth)}:undefined;return {input,spent,workUnitsSpent:extent(workUnitsSpent),nativeReceipt:receipt,nativeRemaining}}

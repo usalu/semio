@@ -8,7 +8,7 @@ import {encodeProtobufV1,REAPI_V1} from "../../📡️wire/📦️protobuf/🟦�
 import type {RemoteExecutionContentV1} from "../../🗄️content/🟦️.ts";
 import {remoteExecutionPeakEntryV1,requireRemoteExecutionShapeV1,remoteExecutionPeakOfMetadataV1,type RemoteExecutionDigestV1,type RemoteExecutionWorkerRegistrationV1} from "../../🟦️.ts";
 import {readOffloadOutputsV1} from "../../🚀️offload/🔌️client/🟦️.ts";
-import {readFamilyPeakV1,readUnitPeakV1,writeUnitPeakV1} from "../../🚀️offload/🚦️admission/🟦️.ts";
+import {offloadDeclaredThreadsV1,readFamilyPeakV1,readUnitPeakV1,writeUnitPeakV1} from "../../🚀️offload/🚦️admission/🟦️.ts";
 import {placementChargeMegabytesV1} from "../../🗓️scheduler/⚖️placement/🟦️.ts";
 import {RemoteExecutionSchedulerV1} from "../../🗓️scheduler/🟦️.ts";
 import {createRemoteExecutionMeterV1,remoteExecutionGroupMegabytesV1,remoteExecutionProcessTableV1} from "../../👷️worker/📏️task-memory/🟦️.ts";
@@ -55,11 +55,11 @@ test("a peak a worker measured reaches the learned-peak ledger of the unit's cra
  const result=encodeProtobufV1(REAPI_V1.actionResult,{exit_code:0,execution_metadata:{worker:"w",auxiliary_metadata:[remoteExecutionPeakEntryV1(6549.2)]}});
  const outputs=await readOffloadOutputsV1(content,"main",(await import("../../📡️wire/📦️protobuf/🟦️.ts")).decodeProtobufV1(REAPI_V1.actionResult,result),"out",[]);
  expect(outputs.peakMegabytes).toBe(6550);
- for(const crate of ["a_component","b_component","c_component"])writeUnitPeakV1(root,crate,outputs.peakMegabytes!+(crate==="a_component"?0:crate==="b_component"?-1000:-2000));
- expect(readUnitPeakV1(root,"a_component")).toBe(6550);
- expect(readUnitPeakV1(root,"b_component")).toBe(5550);
+ for(const crate of ["a_component","b_component","c_component"])writeUnitPeakV1(root,crate,outputs.peakMegabytes!+(crate==="a_component"?0:crate==="b_component"?-1000:-2000),offloadDeclaredThreadsV1(true));
+ expect(readUnitPeakV1(root,"a_component",offloadDeclaredThreadsV1(true))).toBe(6550);
+ expect(readUnitPeakV1(root,"b_component",offloadDeclaredThreadsV1(true))).toBe(5550);
  expect(readFamilyPeakV1(root)).toBeDefined();
- writeUnitPeakV1(root,"a_component",2000);expect(readUnitPeakV1(root,"a_component")!).toBeLessThan(6550);
+ writeUnitPeakV1(root,"a_component",2000,offloadDeclaredThreadsV1(true));expect(readUnitPeakV1(root,"a_component",offloadDeclaredThreadsV1(true))!).toBeLessThan(6550);
 });
 
 const sha=(data:Uint8Array)=>createHash("sha256").update(data).digest("hex");

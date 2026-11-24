@@ -760,6 +760,17 @@ export function appFaultNoticeV1(fault: { readonly code: string; readonly severi
   return notice === null ? null : { text: notice.text, kind: fault.severity ?? "error", code: notice.code };
 }
 
+/** 🧾️ The words a refusal nobody declared a notice for is told with, per locale; `{code}` is the fault's own code, kept in the text so a person can quote it and in `data-notice-code` for diagnostics. */
+export const UNDECLARED_FAULT_NOTICE_V1: Readonly<Record<"en" | "de", string>> = {
+  en: "The operation was refused ({code}).",
+  de: "Der Vorgang wurde abgelehnt ({code}).",
+};
+
+/** 📢️ The notice of a guest fault settled after its call returned — a typed operation's refusal: the app's declared notice ({@link appFaultNoticeV1}) in the shell's language, else {@link UNDECLARED_FAULT_NOTICE_V1} naming the code. Never `null`, never a swallowed code; the fault's own severity, an error when it carries none. */
+export function settledFaultNoticeV1(fault: { readonly code: string; readonly severity?: Severity; readonly causes?: readonly { readonly code?: string }[]; readonly params?: Readonly<Record<string, string>> }, app: Pick<AppDefinition, "faultNotices"> | undefined, terminology: string): ShellNoticeV1 {
+  return appFaultNoticeV1(fault, app, terminology) ?? { text: UNDECLARED_FAULT_NOTICE_V1[currentShellLocaleV1()].replace("{code}", fault.code), kind: fault.severity ?? "error", code: fault.code };
+}
+
 /** 🔊️ The notice of a reserved verb's silent `{rejected: <code>}` result: a history-edit or a history-lane refusal, else `null` —
  * and `null` for a silent refusal ({@link HISTORY_SILENT_REFUSALS_V1}). */
 export function historyOutputNoticeV1(output: unknown, editCount: number): ShellNoticeV1 | null {

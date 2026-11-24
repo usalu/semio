@@ -1,8 +1,9 @@
 {
   "title": "Perfect Handcrafted 3D Models per Scale and Mode for Every Staffage",
   "emoji": "🗿",
-  "status": "open",
+  "status": "closed",
   "description": "Completely have perfect handcrafted 3D models for every staffage, different and consistent for each scale and each mode (dark/light line and solid, thermodynamic, forces, moments), end to end: schema, kernel, authoring of all 152 assets, exports, viewer, tests with third-party oracles.",
+  "summary": "Closed on 2026-11-24 by the umbrella ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS. Acceptance measured on the catalog of 375 assets: catalog-silhouette 385/385 (was 183/385 on 2026-11-23; 202 assets repaired in 17 fixer batches, reports `silhouette-*.md` in the umbrella ticket), product check CLI 375/375, three-views 775/775, catalog-physics 840/840, breathing 290/290, asset-validation 83/83, asset-power 24/24, schema-conformance 43/43, plan-projection 13/13, manifest 0 issues. Two shared test edits in the silhouette oracle (reference rasteriser without the 10 MB input limit; polygon reference on an integer grid with retries), no threshold changed. Stated debt: bamboo-clump passes through raster-fitted squares; leaves of agave, hosta-clump, date-palm are slab stacks exact only in the default pose; several people and wheelchair-user pass exactly at the limit; weeping-willow file 9.5 MB; engine requests collected in the umbrella `requests.md`.",
   "goal": "animate",
   "sessions": [
     "811f4228-4005-4343-93ee-0589db33a675"
@@ -18,6 +19,15 @@
       "prompt": "Completely have perfect handcrafted 3D models for every staffage, different and consistent for each scale and each mode (dark/light line and solid, thermodynamic, forces, moments), end to end: schema, kernel, authoring of all 152 assets, exports, viewer, tests with third-party oracles.",
       "llm": "fable-5-2",
       "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 12:18:54",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "3b15468f901294ad97d37119cf8ad8d2a2ca8663",
+      "summary": "Closed on 2026-11-24 by the umbrella ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS. Acceptance measured on the catalog of 375 assets: catalog-silhouette 385/385 (was 183/385 on 2026-11-23; 202 assets repaired in 17 fixer batches, reports `silhouette-*.md` in the umbrella ticket), product check CLI 375/375, three-views 775/775, catalog-physics 840/840, breathing 290/290, asset-validation 83/83, asset-power 24/24, schema-conformance 43/43, plan-projection 13/13, manifest 0 issues. Two shared test edits in the silhouette oracle (reference rasteriser without the 10 MB input limit; polygon reference on an integer grid with retries), no threshold changed. Stated debt: bamboo-clump passes through raster-fitted squares; leaves of agave, hosta-clump, date-palm are slab stacks exact only in the default pose; several people and wheelchair-user pass exactly at the limit; weeping-willow file 9.5 MB; engine requests collected in the umbrella `requests.md`."
     }
   ]
 }

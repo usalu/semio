@@ -8,6 +8,7 @@ import type { ShardWorkerLike } from "@semio-tech/framework-actor/shard-client";
 import type { PluginWasmHandle, WireTurnResult } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 import { flushMicrotasks, createPluginRuntimeSupport, type PluginRuntimeVitest, type PluginRuntimeDependencies } from "../🛠️plugin-runtime-helpers/🟦️.tsx";
+import { PAGE_IDLE_REFUSAL_LIMIT } from "../../🧱️elements/🔌️PluginRuntime/🚚️handle-turn-drive/🟦️.ts";
 
 export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVitest, dependencies: PluginRuntimeDependencies): Promise<void> {
   const { describe, expect, it, vi } = vitest;
@@ -361,6 +362,64 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
           }
         }
       });
+
+
+      it("faults a command page the idle guest keeps refusing instead of holding the actor lane", async () => {
+        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
+        const invocation = { address: { pluginId: "page-order", appId: "fixture", windowKindId: "editor", actionId: "registerBrushMesh" }, arguments: { payload: "m".repeat(7_800) } };
+        const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
+        const idle = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+        const offers: number[] = [];
+        let counting = false;
+        let lifetime: { readonly activationGeneration: bigint; readonly instanceId: number; readonly guestLifetime: bigint } | null = null;
+        const worker: ShardWorkerLike = {
+          onmessage: null, onerror: null, terminate() {},
+          postMessage(raw) {
+            const message = raw as { readonly kind: string; readonly requestId?: string; readonly events?: readonly ShardEventEnvelope[]; readonly commandPage?: { readonly cursor: { readonly pageIndex: number; readonly pageCount: number } } };
+            if (!message.requestId) return;
+            let value: unknown = idle;
+            if (message.kind === "turn") {
+              const first = message.events?.[0];
+              if (first?.kind === "instance-open") {
+                const payload = first.payload as { readonly instance: number; readonly activationGeneration: bigint; readonly requestSequence: number };
+                lifetime = { activationGeneration: payload.activationGeneration, instanceId: payload.instance, guestLifetime: 1n };
+                value = { ...idle, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "captured", lifetime, requestSequence: payload.requestSequence }) };
+              } else if (first?.kind === "instance-close") {
+                value = { ...idle, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "accepted", lifetime: lifetime!, requestSequence: (first.payload as { readonly requestSequence: number }).requestSequence, closeGeneration: 1n }) };
+              } else if (first?.kind === "instance-lifecycle-ack") {
+                const receipt = (first.payload as { readonly receipt: { readonly kind: string; readonly requestSequence: number } }).receipt;
+                value = receipt.kind === "accepted" ? { ...idle, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "retired", lifetime: lifetime!, requestSequence: receipt.requestSequence, closeGeneration: 1n }) } : idle;
+              } else if (message.commandPage) {
+                const { pageIndex, pageCount } = message.commandPage.cursor;
+                if (counting) offers.push(pageIndex);
+                value = { ...idle, commandIngress: { tag: counting ? "backpressure" : pageIndex + 1 === pageCount ? "command-complete" : "page-accepted", val: {} } };
+              }
+            }
+            queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId: message.requestId, ok: true, value } }));
+          },
+        };
+        const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+        testState.sharedShardClient = client;
+        testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: (actorId: string) => client.dispose(actorId) } as unknown as ActivationRegistry;
+        globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "page-order", apps: [] } }), { headers: { "content-type": "application/json" } }));
+        let handle: PluginWasmHandle | null = null;
+        try {
+          handle = await loadPluginModule("page-order", "https://fixture.invalid/plugin.js");
+          const instance = await handle.createApp("fixture");
+          counting = true;
+          await expect(handle.handleAction(instance, JSON.stringify({ ...invocation, address: { ...invocation.address, instanceId: String(instance) } }), { locale: "en", terminology: "native", windowInstances: [] } as never)).rejects.toThrow("plugin.command-page-refused");
+          counting = false;
+          expect(offers).toHaveLength(PAGE_IDLE_REFUSAL_LIMIT);
+          expect(offers.every(index => index === 0)).toBe(true);
+        } finally {
+          try { await handle?.dispose(); } finally {
+            client.disposeAll();
+            testState.sharedActivationRegistry = previous.registry;
+            testState.sharedShardClient = previous.shard;
+            globalThis.fetch = previous.fetch;
+          }
+        }
+      }, 30_000);
 
 
       it("retries actual actor retirement with the original witness after final acknowledgement failure", async () => {

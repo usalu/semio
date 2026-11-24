@@ -99,8 +99,8 @@ const JOINT_ROW_TYPE: &[NormFieldChoice] = &[
     choice("Inner", "Other inner row", "Weitere innere Reihe"),
 ];
 const JOINT_ROW_BOLT_CLASS: &[NormFieldChoice] = &[
-    choice("8.8", "8.8", "8.8"),
-    choice("10.9", "10.9", "10.9"),
+    choice("8.8", "Class 8.8", "Festigkeitsklasse 8.8"),
+    choice("10.9", "Class 10.9", "Festigkeitsklasse 10.9"),
 ];
 
 const FRAME_NODE_SUPPORT: &[NormFieldChoice] = &[
@@ -150,17 +150,17 @@ const JOINT_PLATE_ROLE: &[NormFieldChoice] = &[
     choice("webCover", "Splice web cover plate", "Stoßlasche am Steg"),
 ];
 const JOINT_PLATE_BOLT_CLASS: &[NormFieldChoice] = &[
-    choice("4.6", "4.6", "4.6"),
-    choice("5.6", "5.6", "5.6"),
-    choice("8.8", "8.8", "8.8"),
-    choice("10.9", "10.9", "10.9"),
+    choice("4.6", "Class 4.6", "Festigkeitsklasse 4.6"),
+    choice("5.6", "Class 5.6", "Festigkeitsklasse 5.6"),
+    choice("8.8", "Class 8.8", "Festigkeitsklasse 8.8"),
+    choice("10.9", "Class 10.9", "Festigkeitsklasse 10.9"),
 ];
 
 const FOUNDATION_ANCHOR_CLASS: &[NormFieldChoice] = &[
-    choice("4.6", "4.6", "4.6"),
-    choice("5.6", "5.6", "5.6"),
-    choice("8.8", "8.8", "8.8"),
-    choice("10.9", "10.9", "10.9"),
+    choice("4.6", "Class 4.6", "Festigkeitsklasse 4.6"),
+    choice("5.6", "Class 5.6", "Festigkeitsklasse 5.6"),
+    choice("8.8", "Class 8.8", "Festigkeitsklasse 8.8"),
+    choice("10.9", "Class 10.9", "Festigkeitsklasse 10.9"),
 ];
 
 const ANNEX: &[NormFieldChoice] = &[

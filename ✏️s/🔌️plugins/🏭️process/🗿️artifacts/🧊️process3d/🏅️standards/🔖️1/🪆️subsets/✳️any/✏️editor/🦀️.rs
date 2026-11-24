@@ -124,6 +124,9 @@ use workshop::{add_workshop_machine, remove_workshop_machine, update_workshop_ma
 use world::{place_capability, world_face_drag_end, world_pointer_down, world_pointer_move};
 #[path = "🫧️transient/👆️placement/🦀️.rs"]
 mod placement_hover;
+#[path = "🌱️initialization/🦀️.rs"]
+mod initialization;
+pub use initialization::{Process3dConfigGenesis, Process3dInstanceDeclarations, Process3dNativeRegistration};
 //#endregion 🔖️Commands
 
 //#region 🔖️Commands

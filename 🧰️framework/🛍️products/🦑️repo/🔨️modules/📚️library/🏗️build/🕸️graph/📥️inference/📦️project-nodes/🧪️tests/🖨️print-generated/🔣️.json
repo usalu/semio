@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "catalog": ["flyer", "thesis"],
+  "authored": ["build", "generate", "test"],
+  "cases": [
+    {"id": "authored-consumer", "printCatalog": true, "consumer": "test", "producer": "p:generate", "expected": "applied"},
+    {"id": "catalogue-document-consumer", "printCatalog": true, "consumer": "build-flyer", "producer": "p:generate", "expected": "deferred"},
+    {"id": "catalogue-watch-consumer", "printCatalog": true, "consumer": "watch-thesis", "producer": "p:generate", "expected": "deferred"},
+    {"id": "unknown-consumer-with-catalogue", "printCatalog": true, "consumer": "build-poster", "producer": "p:generate", "expected": "refused"},
+    {"id": "document-consumer-without-catalogue", "printCatalog": false, "consumer": "build-flyer", "producer": "p:generate", "expected": "refused"}
+  ]
+}

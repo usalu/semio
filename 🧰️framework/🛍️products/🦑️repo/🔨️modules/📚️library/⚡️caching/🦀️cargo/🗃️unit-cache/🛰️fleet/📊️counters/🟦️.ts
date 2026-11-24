@@ -53,13 +53,37 @@ export function readFallbacksV1(root:string):Readonly<Record<string,number>>{
  return Object.freeze(found);
 }
 
+/** 📮️ How deep the upload spool of a unit cache root is: the jobs waiting, the bound beyond which a compile waits for room, and when the depth was taken. */
+export type SpoolDepthV1=Readonly<{depth:number;bound:number;atMs:number}>;
+const spoolFile=(workspace:string)=>join(directory(workspace),"spool");
+let notedAt=0,notedDepth=-1;
+
+/** 📮️ Remembers the depth of the upload spool for `repo fleet status` (one small file, replaced atomically; the upload worker calls it with every listing of the spool, so at most once per five seconds unless the depth changed). Never throws. */
+export function noteSpoolV1(workspace:string|undefined,depth:number,bound:number,force=false):void{
+ if(!workspace)return;
+ const now=Date.now();if(!force&&depth===notedDepth&&now-notedAt<5000)return;
+ try{
+  notedAt=now;notedDepth=depth;
+  const file=spoolFile(workspace),temporary=file+"."+randomBytes(3).toString("hex");
+  mkdirSync(directory(workspace),{recursive:true});writeFileSync(temporary,JSON.stringify({depth,bound,atMs:now}));renameSync(temporary,file);
+ }catch{}
+}
+
+/** 📮️ The last noted spool depth of a workspace; `undefined` when none was noted or the file is not of the closed shape. */
+export function readSpoolV1(workspace:string):SpoolDepthV1|undefined{
+ try{
+  const value=JSON.parse(readFileSync(spoolFile(workspace),"utf8")) as {depth?:unknown;bound?:unknown;atMs?:unknown};
+  return Number.isInteger(value.depth)&&Number.isInteger(value.bound)&&Number.isInteger(value.atMs)&&(value.depth as number)>=0&&(value.bound as number)>=1&&(value.atMs as number)>=0?Object.freeze({depth:value.depth as number,bound:value.bound as number,atMs:value.atMs as number}):undefined;
+ }catch{return undefined;}
+}
+
 /** 📖️ The counters as package D's load reporter reads them (`Counters` of the fleet schema): the sizes of the counter files and the skipped units by reason (their sum is the skipped count), the time since the first count and zero offload counts, which the offload client owns. */
-export function readBuildCountersV1(workspace:string):Readonly<{version:1;wallMs:number;unit:Record<UnitCountKindV1,number>;skipReasons:Readonly<Record<string,number>>;keySamples?:KeySamplesRefV1;offload:Readonly<{out:number;refused:number;fellBack:number}>}>{
+export function readBuildCountersV1(workspace:string):Readonly<{version:1;wallMs:number;unit:Record<UnitCountKindV1,number>;skipReasons:Readonly<Record<string,number>>;keySamples?:KeySamplesRefV1;spool?:SpoolDepthV1;offload:Readonly<{out:number;refused:number;fellBack:number}>}>{
  const base=directory(workspace),size=(name:string)=>{try{return statSync(join(base,name)).size;}catch{return 0;}};
  let since=Date.now();try{since=Number(readFileSync(join(base,"since"),"utf8"))||since;}catch{}
- const keySamples=readKeySamplesRefV1(workspace),skipReasons=readSkipReasonsV1(workspace),skipped=Object.values(skipReasons).reduce((total,count)=>total+count,0);
+ const keySamples=readKeySamplesRefV1(workspace),spool=readSpoolV1(workspace),skipReasons=readSkipReasonsV1(workspace),skipped=Object.values(skipReasons).reduce((total,count)=>total+count,0);
  let offload={out:0,refused:0,fellBack:0};try{const previous=JSON.parse(readFileSync(machinePathV1(workspace,".cache","f","build-counters.json"),"utf8")) as {offload?:typeof offload};if(previous.offload)offload={out:Number(previous.offload.out)||0,refused:Number(previous.offload.refused)||0,fellBack:Number(previous.offload.fellBack)||0};}catch{}
- return Object.freeze({version:1,wallMs:Math.max(0,Date.now()-since),unit:{...Object.fromEntries(KINDS.map(kind=>[kind,size(kind)])),skipped} as Record<UnitCountKindV1,number>,skipReasons,...keySamples===undefined?{}:{keySamples},offload});
+ return Object.freeze({version:1,wallMs:Math.max(0,Date.now()-since),unit:{...Object.fromEntries(KINDS.map(kind=>[kind,size(kind)])),skipped} as Record<UnitCountKindV1,number>,skipReasons,...keySamples===undefined?{}:{keySamples},...spool===undefined?{}:{spool},offload});
 }
 
 /** 💾️ Writes `<worktree>/.cache/f/build-counters.json` (atomically) from the counter files; the file keeps the `offload` object another writer put there. */

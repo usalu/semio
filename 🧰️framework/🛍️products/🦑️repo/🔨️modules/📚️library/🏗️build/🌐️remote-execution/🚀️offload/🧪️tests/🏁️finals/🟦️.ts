@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { testPythonV1 } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import { OFFLOAD_POLICY_V1, offloadExpenseV1 } from "../../📐️policy/🟦️.ts";
-import { awaitFleetFitV1, readFamilyCostV1, readUnitExpenseV1, writeUnitCostV1, writeUnitPeakV1 } from "../../🚦️admission/🟦️.ts";
+import { awaitFleetFitV1, offloadDeclaredThreadsV1, readFamilyCostV1, readUnitExpenseV1, writeUnitCostV1, writeUnitPeakV1 } from "../../🚦️admission/🟦️.ts";
 import vectors from "./🔣️.json" with { type: "json" };
 
 const roots: string[] = [], fresh = (): string => { const root = mkdtempSync(join(tmpdir(), "semio-finals-")); roots.push(root); return root; };
@@ -16,9 +16,9 @@ const LINKED = { types: ["cdylib"], target: "wasm32-wasip2" }, PLAIN = { types: 
 function materialize(state: State): string {
   const root = fresh();
   state.familyCosts.forEach((value, index) => writeUnitCostV1(root, `family_${index}_component`, value));
-  state.familyPeaks.forEach((value, index) => writeUnitPeakV1(root, `peak_${index}_component`, value));
+  state.familyPeaks.forEach((value, index) => writeUnitPeakV1(root, `peak_${index}_component`, value, offloadDeclaredThreadsV1(true)));
   if (state.cost !== null) writeUnitCostV1(root, "subject", state.cost);
-  if (state.learned !== null) writeUnitPeakV1(root, "subject", state.learned);
+  if (state.learned !== null) writeUnitPeakV1(root, "subject", state.learned, offloadDeclaredThreadsV1(state.linked));
   return root;
 }
 const oracle = (states: State[]): { expensive: boolean; source: string; peak: number }[] => {

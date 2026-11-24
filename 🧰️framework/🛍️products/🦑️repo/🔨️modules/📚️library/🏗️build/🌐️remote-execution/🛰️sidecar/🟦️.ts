@@ -5,11 +5,12 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {applyServicePriorityV1,servicePriorityTextV1} from "./🪜️priority/🟦️.ts";
 import {startSidecarIdleCompactionV1} from "../../🧹️cache-gc/🛌️idle/⏲️loop/🟦️.ts";
 import type {RemoteExecutionSidecarContextV1,RemoteExecutionSidecarRoleV1,SidecarWorkV1} from "./🧰️shared/🟦️.ts";
+import {sidecarHandsOverV1} from "./🧰️shared/🟦️.ts";
 
-export {remoteExecutionPortsV1,remoteExecutionWorkerApiV1} from "./🧰️shared/🟦️.ts";
+export {remoteExecutionPortsV1,remoteExecutionWorkerApiV1,sidecarHandsOverV1,settleSidecarSuccessorV1} from "./🧰️shared/🟦️.ts";
 export type {RemoteExecutionSidecarContextV1,RemoteExecutionSidecarRoleV1,SidecarWorkV1} from "./🧰️shared/🟦️.ts";
 
-const ROLE_MODULES:Readonly<Record<RemoteExecutionSidecarRoleV1,string>>={agent:"👷️agent",scheduler:"🗓️scheduler",cache:"🗄️cache",graph:"🕸️graph",pool:"🏊️pool",ready:"🚦️ready"};
+const ROLE_MODULES:Readonly<Record<RemoteExecutionSidecarRoleV1,string>>={agent:"👷️agent",scheduler:"🗓️scheduler",cache:"🗄️cache",graph:"🕸️graph",pool:"🏊️pool",ready:"🚦️ready",spool:"📮️spool"};
 
 /** 🕰️ The measured numbers of a restart: how often the closure is looked at, the quiet period, the maximum deferral and the grace for the work in flight. See `./🧬️schema/🔣️.json`. */
 export const sidecarRestartPolicyV1=Object.freeze({...schema.definitions.Restart.const});
@@ -84,6 +85,7 @@ export async function runRemoteExecutionSidecarV1(role:RemoteExecutionSidecarRol
  if(role==="graph")return (await import("./🕸️graph/🟦️.ts")).superviseGraphServerV1(context);
  if(role==="pool")return (await import("./🏊️pool/🟦️.ts")).runPool(context);
  if(role==="ready")return (await import("./🚦️ready/🟦️.ts")).runReady(context);
+ if(role==="spool")return (await import("./📮️spool/🟦️.ts")).runSpool(context);
  return (await import("./🗓️scheduler/🟦️.ts")).runScheduler(context);
 }
 
@@ -154,12 +156,12 @@ export async function runRemoteExecutionSidecarLauncherV1(role:RemoteExecutionSi
 
 if(import.meta.main){
  const role=process.argv[2];
- if(role!=="agent"&&role!=="scheduler"&&role!=="cache"&&role!=="graph"&&role!=="pool"&&role!=="ready"){process.stderr.write("usage: sidecar agent|scheduler|cache|graph|pool|ready\n");process.exit(2);}
+ if(role!=="agent"&&role!=="scheduler"&&role!=="cache"&&role!=="graph"&&role!=="pool"&&role!=="ready"&&role!=="spool"){process.stderr.write("usage: sidecar agent|scheduler|cache|graph|pool|ready|spool\n");process.exit(2);}
  if(process.env.SEMIO_SIDECAR_CHILD!=="1")await runRemoteExecutionSidecarLauncherV1(role,import.meta.path,process.env);
  const controller=new AbortController(),launcher=process.ppid,watch=remoteExecutionSidecarWatchV1(role),work:SidecarWorkV1={busy:false,restartPending:false};
  let changed=false;
  const drain=new AbortController(),override=(name:string,fallback:number):number=>Number(process.env[name])||fallback,restart=sidecarRestartPolicyForV1(role);
- const restarting=createSidecarRestartV1({role,watch,work,policy:{quietMilliseconds:override("SEMIO_SIDECAR_QUIET_MILLISECONDS",restart.quietMilliseconds),maximumDeferralMilliseconds:override("SEMIO_SIDECAR_MAXIMUM_DEFERRAL_MILLISECONDS",restart.maximumDeferralMilliseconds),graceMilliseconds:override("SEMIO_SIDECAR_GRACE_MILLISECONDS",restart.graceMilliseconds),serveDeferralMilliseconds:override("SEMIO_SIDECAR_SERVE_DEFERRAL_MILLISECONDS",restart.serveDeferralMilliseconds),progressStallMilliseconds:override("SEMIO_SIDECAR_PROGRESS_STALL_MILLISECONDS",restart.progressStallMilliseconds),minimumIntervalMilliseconds:override("SEMIO_SIDECAR_MINIMUM_INTERVAL_MILLISECONDS",restart.minimumIntervalMilliseconds),drainMaximumMilliseconds:override("SEMIO_SIDECAR_DRAIN_MAXIMUM_MILLISECONDS",sidecarRestartPolicyV1.agent.drainMaximumMilliseconds),drainPollMilliseconds:override("SEMIO_SIDECAR_DRAIN_POLL_MILLISECONDS",sidecarRestartPolicyV1.agent.drainPollMilliseconds)},begin:()=>{changed=true;},drain:()=>{drain.abort();},abort:()=>{if(role==="cache"&&process.send!==undefined&&process.env.SEMIO_SIDECAR_SUCCESSOR!=="1"){try{process.send({type:"successor"});setTimeout(()=>{controller.abort();},REMOTE_EXECUTION_SIDECAR_RESTART_V1.handoverMilliseconds+30_000).unref();return;}catch{}}controller.abort();},write:line=>{process.stderr.write(`${new Date().toISOString()} ${line}\n`);}});
+ const restarting=createSidecarRestartV1({role,watch,work,policy:{quietMilliseconds:override("SEMIO_SIDECAR_QUIET_MILLISECONDS",restart.quietMilliseconds),maximumDeferralMilliseconds:override("SEMIO_SIDECAR_MAXIMUM_DEFERRAL_MILLISECONDS",restart.maximumDeferralMilliseconds),graceMilliseconds:override("SEMIO_SIDECAR_GRACE_MILLISECONDS",restart.graceMilliseconds),serveDeferralMilliseconds:override("SEMIO_SIDECAR_SERVE_DEFERRAL_MILLISECONDS",restart.serveDeferralMilliseconds),progressStallMilliseconds:override("SEMIO_SIDECAR_PROGRESS_STALL_MILLISECONDS",restart.progressStallMilliseconds),minimumIntervalMilliseconds:override("SEMIO_SIDECAR_MINIMUM_INTERVAL_MILLISECONDS",restart.minimumIntervalMilliseconds),drainMaximumMilliseconds:override("SEMIO_SIDECAR_DRAIN_MAXIMUM_MILLISECONDS",sidecarRestartPolicyV1.agent.drainMaximumMilliseconds),drainPollMilliseconds:override("SEMIO_SIDECAR_DRAIN_POLL_MILLISECONDS",sidecarRestartPolicyV1.agent.drainPollMilliseconds)},begin:()=>{changed=true;},drain:()=>{drain.abort();},abort:()=>{if(sidecarHandsOverV1(role,process.send!==undefined,process.env)){try{process.send({type:"successor"});setTimeout(()=>{controller.abort();},REMOTE_EXECUTION_SIDECAR_RESTART_V1.handoverMilliseconds+30_000).unref();return;}catch{}}controller.abort();},write:line=>{process.stderr.write(`${new Date().toISOString()} ${line}\n`);}});
  setInterval(()=>{restarting.tick();},override("SEMIO_SIDECAR_WATCH_MILLISECONDS",restart.watchMilliseconds)).unref();
  if(role!=="pool")for(const name of ["SIGTERM","SIGINT"] as const)process.on(name,()=>{controller.abort();});
  setInterval(()=>{if(process.ppid!==launcher)role==="pool"?process.exit(0):controller.abort();},2000).unref();

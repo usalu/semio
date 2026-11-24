@@ -13,6 +13,9 @@
       "$ref": "#/$defs/restore"
     },
     {
+      "$ref": "#/$defs/succeed"
+    },
+    {
       "$ref": "#/$defs/sqliteSchema"
     },
     {
@@ -545,6 +548,87 @@
         },
         "envelopes": {
           "$ref": "#/$defs/bytes"
+        }
+      }
+    },
+    "succession": {
+      "type": "object",
+      "required": [
+        "operation",
+        "generation",
+        "epoch",
+        "successor",
+        "grant",
+        "fuel"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "successor": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "grant": {
+          "type": "object",
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "maximumItems": {
+              "$ref": "#/$defs/u64"
+            },
+            "maximumCopyBytes": {
+              "$ref": "#/$defs/u64"
+            },
+            "maximumCapacityBytes": {
+              "$ref": "#/$defs/u64"
+            },
+            "maximumReleaseBytes": {
+              "$ref": "#/$defs/u64"
+            },
+            "maximumDepth": {
+              "$ref": "#/$defs/u64"
+            }
+          }
+        },
+        "fuel": {
+          "$ref": "#/$defs/u64"
+        }
+      }
+    },
+    "succeed": {
+      "type": "object",
+      "required": [
+        "operation",
+        "succession"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "succeed"
+        },
+        "succession": {
+          "$ref": "#/$defs/succession"
         }
       }
     }

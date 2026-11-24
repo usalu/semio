@@ -1,0 +1,5 @@
+[
+  { "choose": [[{ "op": "copy", "id": "hand-l", "from": "plan", "to": ["elevation", "front"] }]], "scale": "50", "label": "hand-l" },
+  { "choose": [[{ "op": "copy", "id": "hand-r", "from": "front", "to": ["elevation"] }]], "scale": "50", "label": "hand-r" },
+  { "choose": [[{ "op": "copy", "id": "hand-l", "from": "elevation", "to": ["front"] }], [{ "op": "copy", "id": "hand-l", "fromScale": "200", "from": "elevation", "to": ["elevation", "front", "plan"] }]], "scale": "100", "label": "hand-l" }
+]

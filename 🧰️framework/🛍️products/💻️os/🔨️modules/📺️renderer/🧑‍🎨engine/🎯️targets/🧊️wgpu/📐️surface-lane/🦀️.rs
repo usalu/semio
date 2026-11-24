@@ -3,7 +3,7 @@
 use semio_plugin_ownership::reserved_job_session::RefusedWorkerSource;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, InteractiveJobStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, OriginalJobReturnClaim, OriginalTurnFailure, StepContext};
 use semio_framework_value::{RetainedCloneStep, RetainedCloneProgress, RetainedWorkOutcome, RetirementDemand, ValueError};
-use semio_framework_job_worker::MountedWorkerJobSession;
+use semio_framework_job_worker::{MountedWorkerJobSession, WorkerJobPoll};
 use semio_framework_job_worker_authority::{BatchDriveConfig, WorkerJobCloseStep};
 use semio_framework_trace::{InteractiveStage, OperationId};
 use std::mem::size_of;
@@ -256,7 +256,9 @@ impl MountedSurfaceResizeLane {
                 return Ok(());
             }
             if session.checked_out_job().is_some() { session.resume().map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "resize lost its empty-outcome worker"))?; }
-            else { session.pump_one_for_interactive_turn(cx)?; }
+            else if matches!(session.pump_one_for_interactive_turn(cx)?, WorkerJobPoll::Outcome | WorkerJobPoll::Terminal) {
+                if !session.take_checked_out_retained_step_receipt().is_some_and(|(issued, progress)| progress.fits(issued)) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "resize worker omitted its exact original receipt").into()); }
+            }
             return Ok(());
         }
         if cx.should_yield() || cx.retained_grant().maximum_items == 0 || cx.retained_grant().maximum_depth == 0 { return Ok(()); }

@@ -103,6 +103,7 @@ pub fn project(input: &SceneInput, layout: &Layout, site: &Site, handles: &Index
         let response = respond(site, building);
         project_building(input, layout, site, handles, building, &response, out);
     }
+    hosted_rows(input, layout, site, handles, out);
     seismic_joints(input, layout, out);
 }
 
@@ -145,14 +146,12 @@ fn project_building(input: &SceneInput, layout: &Layout, site: &Site, handles: &
     recess(input, b, &o, &bp, out);
     nonstructural(input, site, handles, b, r, &o, &bp, out);
     let roof = v3(o.x + b.plan_width_m / 2.0, o.y + b.plan_length_m / 2.0, o.z + height);
-    for (index, a) in input.document.assessments.iter().filter(|a| a.supported_building_id == b.id).enumerate() {
-        assessed_member(input, handles, b, a, &assessed_origin(&o, b, index), out);
+    for a in input.document.assessments.iter().filter(|a| a.supported_building_id == b.id) {
         let binding = binding_prefix(input.report, &format!("en1998.3.{}.", a.id));
         let at = v3(roof.x, roof.y, roof.z + 1.5);
         let text = loc(&format!("Assessment {}: limit state {}, knowledge level {}", a.id, a.limit_state.token().to_uppercase(), format!("{:?}", a.knowledge_level).to_uppercase()), &format!("Bewertung {}: Grenzzustand {}, Kenntnisstand {}", a.id, a.limit_state.token().to_uppercase(), format!("{:?}", a.knowledge_level).to_uppercase()));
         out.annotate(Annotation::Label { id: format!("{}:assessment-{}", b.id, a.id), anchor: at.clone(), text, tone: tone_of(&binding) }, &at);
     }
-    critical_regions(input, handles, site, b, r, &o, out);
 }
 
 /// 🧱 Per storey and plan direction a label with the wall-area density Σ l·t / A of the masonry wall rows against the required share of a simple masonry building (EN 1998-1 §9.7), warning below it; the wall bodies come from [`walls::wall_bodies`].
@@ -420,8 +419,13 @@ fn drift_map(input: &SceneInput, b: &En1998Building, r: &Response, o: &Vec3, bp:
 
 /// 🏛️ The assessed member of an assessment as a cantilever of the shear span L_V with the section h by b: fixed end, the chord rotation demand as static deflection, draggable dimensions for L_V, h and the stirrup spacing, and the Annex A capacities in the label.
 fn assessed_member(input: &SceneInput, handles: &Index, b: &En1998Building, a: &super::model::En1998Assessment, base: &Vec3, out: &mut Out) {
-    let Some(member) = part_3::RcMember::of(a) else { return };
     let path = path_of("assessments", &a.id);
+    let tag_name = loc(&format!("Assessment {} ({})", a.id, b.name), &format!("Bewertung {} ({})", a.id, b.name));
+    let mut tag = Spec::new(EntityKind::Solid, a.id.clone(), path.clone(), box_solid(v3(base.x - 0.2, base.y - 0.2, base.z + 2.5), v3(0.4, 0.4, 0.4)), MaterialRole::Neutral, tag_name, LAYER_ASSESSED);
+    tag.binding = governing_binding(input, a);
+    tag.detail = loc(&format!("Assessment {}: limit state {}, knowledge level {:?}", a.id, a.limit_state.token().to_uppercase(), a.knowledge_level), &format!("Bewertung {}: Grenzzustand {}, Kenntnisstand {:?}", a.id, a.limit_state.token().to_uppercase(), a.knowledge_level));
+    out.push(tag, &[base.clone()]);
+    let Some(member) = part_3::RcMember::of(a) else { return };
     let id = format!("{}:member", a.id);
     let tip = v3(base.x + member.l_v, base.y, base.z);
     let binding = governing_binding(input, a);
@@ -526,9 +530,21 @@ fn region_binding(input: &SceneInput, b: &En1998Building, r: &super::model::En19
 }
 
 /// 🔩 The critical regions of a building as member glyphs with their hoop layout (EN 1998-1 5.4.3, 5.5.3): the member of the region over its clear length, one hoop ring per spacing over the length with the given hoops, the critical region length l_cr and the hoop spacing as dimension lines, the hoops coloured by their checks and the member by length and ρ_tot, grips for the hoop spacing, the hoop diameter and the hooped length.
-fn critical_regions(input: &SceneInput, handles: &Index, site: &Site, b: &En1998Building, response: &Response, o: &Vec3, out: &mut Out) {
-    for (index, r) in input.document.critical_regions.iter().filter(|r| r.building_id == b.id && region_drawn(r)).enumerate() {
-        region_glyph(input, handles, site, b, response, r, &region_origin(o, index), out);
+/// 🪆️ The rows a building hosts, each projected by its own document entity so that the part of the row, not the part of the building, holds its glyphs: the assessed member of an assessment and the member glyph of a critical region.
+fn hosted_rows(input: &SceneInput, layout: &Layout, site: &Site, handles: &Index, out: &mut Out) {
+    let d = input.document;
+    for b in &d.buildings {
+        let o = layout.origin(&b.id);
+        for (index, a) in d.assessments.iter().filter(|a| a.supported_building_id == b.id).enumerate() {
+            if out.own("assessments", &a.id) {
+                assessed_member(input, handles, b, a, &assessed_origin(&o, b, index), out);
+            }
+        }
+        for (index, r) in d.critical_regions.iter().filter(|r| r.building_id == b.id && region_drawn(r)).enumerate() {
+            if out.own("criticalRegions", &r.id) {
+                region_glyph(input, handles, site, b, &respond(site, b), r, &region_origin(&o, index), out);
+            }
+        }
     }
 }
 

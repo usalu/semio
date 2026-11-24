@@ -15,7 +15,7 @@
   },
   "objects": {
     "forward": "{\"mutation\":\"insertObject\",\"id\":{\"num\":5,\"gen\":0},\"value\":{\"kind\":\"null\"},\"admittedStreamRoles\":{\"removed\":[0],\"modified\":[],\"added\":[]}}",
-    "inverse": "{\"mutation\":\"removeObject\",\"id\":{\"num\":5,\"gen\":0},\"admittedStreamRoles\":{\"added\":[{\"index\":0,\"value\":{\"identity\":{\"owner\":{\"num\":2,\"gen\":0},\"path\":[]},\"dependencies\":[],\"value\":{\"kind\":\"metadataText\",\"text\":\"Neutral restored role.\"}}}]}}"
+    "inverse": "{\"mutation\":\"removeObject\",\"id\":{\"num\":5,\"gen\":0},\"admittedStreamRoles\":{\"added\":[{\"index\":0,\"value\":{\"identity\":{\"owner\":{\"num\":2,\"gen\":0},\"path\":[]},\"dependencies\":[{\"owner\":{\"num\":2,\"gen\":0},\"path\":[]}],\"value\":{\"kind\":\"metadataText\",\"text\":\"Neutral restored role.\"}}}]}}"
   },
   "ordinaryLeaves": [
     {

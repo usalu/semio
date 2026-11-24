@@ -1,0 +1,22 @@
+{
+  "title": "Fix Phantom Build-Flyer Target Admission for Print",
+  "emoji": "🕸️",
+  "status": "open",
+  "description": "`repo run @semio-tech/print:test -- quick` fails with BUILD_OWNER_FAILED (Unknown admitted build target: @semio-tech/print:build-flyer) and `repo run @semio-tech/print:test-assignment` hangs in dependencies:store-input-replay/current-input. Find why the build graph admits build-flyer for print, fix at the source, make both targets run, and make the print README advertise only existing targets.",
+  "goal": "🎯runningprint",
+  "sessions": [
+    "bb5fccc7-87a9-4bb4-a3a4-e06515100be2"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-24 17:33:25",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "`repo run @semio-tech/print:test -- quick` fails with BUILD_OWNER_FAILED (Unknown admitted build target: @semio-tech/print:build-flyer) and `repo run @semio-tech/print:test-assignment` hangs in dependencies:store-input-replay/current-input. Find why the build graph admits build-flyer for print, fix at the source, make both targets run, and make the print README advertise only existing targets.",
+      "llm": "opus-5-5"
+    }
+  ]
+}

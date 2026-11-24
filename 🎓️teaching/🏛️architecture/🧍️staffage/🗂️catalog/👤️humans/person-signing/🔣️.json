@@ -21656,9 +21656,8 @@
               "role": "body",
               "z": 1.02,
               "filled": true,
-              "tone": 0.62,
+              "tone": 0.8,
               "region": "sneakers",
-              "hatch": "denim",
               "material": "cotton-sock",
               "solid": {
                 "kind": "extruded",
@@ -27089,7 +27088,7 @@
               "role": "body",
               "z": 4.52,
               "filled": true,
-              "tone": 0.45,
+              "tone": 0.35,
               "region": "hoodie",
               "material": "fleece-sweatshirt",
               "solid": {
@@ -28353,7 +28352,7 @@
               "role": "body",
               "z": 4.52,
               "filled": true,
-              "tone": 0.45,
+              "tone": 0.35,
               "region": "hoodie",
               "material": "fleece-sweatshirt",
               "solid": {
@@ -43242,7 +43241,7 @@
               "role": "body",
               "z": 4.5,
               "filled": true,
-              "tone": 0.4,
+              "tone": 0.45,
               "region": "hoodie",
               "material": "fleece-sweatshirt",
               "solid": {
@@ -43830,7 +43829,7 @@
               "role": "body",
               "z": 4.5,
               "filled": true,
-              "tone": 0.4,
+              "tone": 0.45,
               "region": "hoodie",
               "material": "fleece-sweatshirt",
               "solid": {
@@ -45672,7 +45671,7 @@
               "role": "body",
               "z": 2.3,
               "filled": true,
-              "tone": 0.4,
+              "tone": 0.45,
               "region": "hoodie",
               "material": "fleece-sweatshirt",
               "solid": {
@@ -46060,7 +46059,7 @@
               "role": "body",
               "z": 2.3,
               "filled": true,
-              "tone": 0.4,
+              "tone": 0.45,
               "region": "hoodie",
               "material": "fleece-sweatshirt",
               "solid": {

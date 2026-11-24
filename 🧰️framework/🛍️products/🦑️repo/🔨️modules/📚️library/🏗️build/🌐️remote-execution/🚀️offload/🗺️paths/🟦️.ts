@@ -14,7 +14,7 @@ export type OffloadDeclineV1=Readonly<{declined:OffloadReasonV1;detail:string}>;
 /** 📦️ Everything an offloaded compilation needs, path-independent: the compiler arguments and environment with every requester path replaced by a virtual one, the input files by virtual path, and the mappings that translate the other machine's answer back. */
 export type OffloadPlanV1=Readonly<{arguments:readonly string[];environment:Readonly<Record<string,string>>;files:ReadonlyMap<string,string>;mappings:readonly OffloadMappingV1[];outDir:string;crateName:string;target:string|undefined;extraFilename:string}>;
 
-const MINIMUM_SHIPPED_DEPTH=3;
+const MINIMUM_SHIPPED_DEPTH=3,REACHED_FILES=policy.limits.maximumInputFiles;
 const depthOf=(path:string):number=>path.split(/[\\/]/u).filter(part=>part!=="").length;
 const SYSTEM=["/usr/","/bin/","/sbin/","/Library/","/System/","/Applications/","/opt/","/dev/"];
 const within=(parent:string,path:string):boolean=>path===parent||path.startsWith(parent.endsWith(sep)?parent:parent+sep);
@@ -54,6 +54,50 @@ export function climbAboveV1(entry:string,reached:readonly string[],shipped:stri
   if(manifest!==undefined)for(const match of text.matchAll(BINDINGS))for(const quoted of match[1]!.matchAll(QUOTED))measure(manifest,quoted[1]!);
  }
  return climb;
+}
+const DERIVES=/(?<![A-Za-z0-9_])derive\s*\(([^()]*)\)/gu,WORKSPACE_DERIVES=/(?<![A-Za-z0-9_])(?:MutationLeaf|Mutations)(?![A-Za-z0-9_])/u;
+/** 🔖️ The workspace file that the mutation derive names itself in, the file name of its generated authority projection (`MUTATION_AUTHORITY_LOCATOR` of `🔖️mutation-source-authority`, checked against that source by a test). */
+export const MUTATION_AUTHORITY_FILE_V1="🔣️mutation-authority.json";
+/** 🔖️ The files of `files` that apply the mutation derive (`#[derive(MutationLeaf)]`, `#[derive(Mutations)]`, also inside a `cfg_attr`): the derive finds its workspace by the `package.json` and `📋️project.json` markers above each of them and reads the generated authority projection, the schema index, the leaf descriptors and the schema documents by workspace-relative locators; its output names only workspace-relative paths and the digest of the authority, so another root gives the same bytes. Empty when no file applies it. */
+export function workspaceDeriveFilesV1(files:Iterable<string>,read:(path:string)=>string|undefined=path=>{try{return readFileSync(path,"utf8");}catch{return undefined;}}):readonly string[]{
+ const found:string[]=[];
+ for(const file of files){
+  const text=file.endsWith(".rs")?read(file):undefined;
+  if(text===undefined)continue;
+  for(const match of text.matchAll(DERIVES))if(WORKSPACE_DERIVES.test(match[1]!)){found.push(file);break;}
+ }
+ return found;
+}
+/** 🧭️ The workspace root the derive finds for `file`: the nearest ancestor whose `package.json` declares `workspaces` and that holds a `📋️project.json`, following the exact-ancestor delegation `semio.mutationSourceAuthority.workspaceRoot` (`..` segments) of a nested one; `undefined` when there is none. Its location is the one the unit must find again in the sandbox, because the derive names every path relative to it. */
+export function deriveWorkspaceRootV1(file:string,read:(path:string)=>string|undefined=path=>{try{return readFileSync(path,"utf8");}catch{return undefined;}}):string|undefined{
+ const anchor=(at:string):string|null|undefined=>{
+  const text=read(join(at,"package.json"));
+  if(text===undefined)return null;
+  let json:{workspaces?:unknown;semio?:{mutationSourceAuthority?:{workspaceRoot?:unknown}}}|null;
+  try{json=JSON.parse(text);}catch{return undefined;}
+  if(typeof json!=="object"||json===null||typeof json.workspaces!=="object"||json.workspaces===null)return null;
+  const delegation=json.semio?.mutationSourceAuthority?.workspaceRoot;
+  if(delegation!==undefined){
+   if(typeof delegation!=="string"||delegation==="")return undefined;
+   let target=at;for(const part of delegation.split("/")){if(part!=="..")return undefined;target=dirname(target);}
+   const found=anchor(target);return found===null?undefined:found;
+  }
+  return read(join(at,"📋️project.json"))!==undefined?at:undefined;
+ };
+ for(let at=dirname(file);;at=dirname(at)){
+  const found=anchor(at);
+  if(found!==null)return found;
+  if(dirname(at)===at)return undefined;
+ }
+}
+/** 🧭️ The workspace markers the derive looks for on the way from `file` up to `root` (both included): the `package.json` and `📋️project.json` that exist there, whose content is deliberately not a compile input (an edit of either never invalidates a derive user). */
+export function deriveMarkersV1(file:string,root:string):readonly string[]{
+ const found:string[]=[];
+ for(let at=dirname(file);within(root,at);at=dirname(at)){
+  for(const name of["package.json","📋️project.json"]){const marker=join(at,name);if(existsSync(marker))found.push(marker);}
+  if(at===root||dirname(at)===at)break;
+ }
+ return found;
 }
 /** 🔗️ The files that the root source reaches beyond itself (see `reachedFilesV1`); the empty list beyond the bound. */
 export function includedSourcesV1(entry:string,read?:(path:string)=>string|undefined,maximumFiles?:number,manifest?:string):readonly string[]{return reachedFilesV1(entry,read,maximumFiles,manifest)??[];}
@@ -101,12 +145,12 @@ export function offloadRealTextV1(text:string,mappings:readonly OffloadMappingV1
 export function moduleRemapArgumentsV1(args:readonly string[],environment:Environment,cwd:string,workspace:string|undefined):readonly string[]|undefined{
  const manifest=environment.CARGO_MANIFEST_DIR,pass=scan(args);
  if(workspace===undefined||manifest===undefined||!isAbsolute(manifest)||"declined" in pass||pass.source===undefined||!within(manifest,cwd))return undefined;
- const sourceReal=resolve(cwd,pass.source),reached=reachedFilesV1(sourceReal,undefined,undefined,manifest);
+ const sourceReal=resolve(cwd,pass.source),reached=reachedFilesV1(sourceReal,undefined,REACHED_FILES,manifest);
  if(reached===undefined)return undefined;
  const shipped=[sourceReal,...reached].reduce((root,path)=>within(root,path)?root:commonAncestor(root,path),manifest);
- if(within(cwd,shipped)||shipped===manifest||depthOf(shipped)<MINIMUM_SHIPPED_DEPTH||!within(workspace,shipped)||workspace===shipped||remappedNameV1(remapsOfV1(args),shipped)!==shipped)return undefined;
+ if(within(cwd,shipped)||shipped===manifest||depthOf(shipped)<MINIMUM_SHIPPED_DEPTH||!within(workspace,shipped)||remappedNameV1(remapsOfV1(args),shipped)!==shipped)return undefined;
  const first=args.findIndex(argument=>argument==="--remap-path-prefix"||argument.startsWith("--remap-path-prefix=")),rewritten=args.map(argument=>argument===pass.source&&!isAbsolute(argument)?sourceReal:argument),at=first<0?rewritten.length:first;
- return Object.freeze([...rewritten.slice(0,at),`--remap-path-prefix=${shipped}=${relative(workspace,shipped).split(sep).join("/")}`,...rewritten.slice(at)]);
+ return Object.freeze([...rewritten.slice(0,at),`--remap-path-prefix=${shipped}=${shipped===workspace?".":relative(workspace,shipped).split(sep).join("/")}`,...rewritten.slice(at)]);
 }
 
 const SEARCH_KINDS=OFFLOAD_POLICY_V1.link.searchKinds;
@@ -198,13 +242,19 @@ export function planOffloadV1(input:Readonly<{args:readonly string[];environment
  if(pass.outDir===undefined||pass.source===undefined)return decline("not-portable","out-dir or source");
  const manifest=environment.CARGO_MANIFEST_DIR,remaps=remapsOfV1(args),nameOf=(path:string):string=>remappedNameV1(remaps,path);
  if(manifest===undefined||!isAbsolute(manifest))return decline("unmapped-path","CARGO_MANIFEST_DIR");
- const sourceReal=resolve(cwd,pass.source),reached=[sourceReal,...includedSourcesV1(sourceReal,undefined,undefined,manifest)];
- const shipped=reached.reduce((root,path)=>within(root,path)?root:commonAncestor(root,path),manifest),anchored=within(cwd,shipped);
- if(!anchored&&shipped!==manifest&&(depthOf(shipped)<MINIMUM_SHIPPED_DEPTH||reachedFilesV1(sourceReal,undefined,undefined,manifest)===undefined))return decline("unmapped-path","source outside CARGO_MANIFEST_DIR: working directory "+cwd+", manifest "+manifest+", sources up to "+shipped);
+ const sourceReal=resolve(cwd,pass.source),reached=[sourceReal,...includedSourcesV1(sourceReal,undefined,REACHED_FILES,manifest)];
+ const infoPath=join(resolve(cwd,pass.outDir),pass.crate+pass.extra+".d"),textual=workspaceDeriveFilesV1(reached);
+ const applied=textual.length>0&&exactReadsV1(infoPath,cwd,input.recorded??[]).some(path=>basename(path)===MUTATION_AUTHORITY_FILE_V1),deriving=applied||textual.length>0&&!existsSync(infoPath)?textual:[];
+ const roots=deriving.map(file=>deriveWorkspaceRootV1(file));
+ const where=deriving.length===0?"":relative(cwd,deriving[0]!).split(sep).join("/");
+ if(roots.some(root=>root===undefined))return decline("not-portable","the mutation derive in "+where+" finds no workspace (a package.json declaring workspaces and a 📋️project.json side by side) above its source");
+ const shipped=[...reached,...roots as string[]].reduce((root,path)=>within(root,path)?root:commonAncestor(root,path),manifest),anchored=within(cwd,shipped);
+ if(!anchored&&shipped!==manifest&&(depthOf(shipped)<MINIMUM_SHIPPED_DEPTH||reachedFilesV1(sourceReal,undefined,REACHED_FILES,manifest)===undefined))return decline("unmapped-path","source outside CARGO_MANIFEST_DIR: working directory "+cwd+", manifest "+manifest+", sources up to "+shipped);
+ if(deriving.length>0&&!applied)return decline("not-portable","the mutation derive in "+where+" reads workspace files that no compile of this unit has recorded yet (no dependency file, no input manifest): it compiles here first, then it offloads");
  const climb=anchored?0:climbAboveV1(sourceReal,reached.slice(1),shipped,manifest),above=climb>0?shipped.split(/[\\/]/u).filter(part=>part!=="").slice(-climb):[],root=[virtual.package,...above].join("/");
  const packageVirtual=anchored?relative(cwd,manifest).split(sep).join("/"):shipped===manifest?root:root+"/"+relative(shipped,manifest).split(sep).join("/"),shippedVirtual=anchored?relative(cwd,shipped).split(sep).join("/"):root,files=new Map<string,string>(),mappings:OffloadMappingV1[]=[];
  const ignored=["target",".git","node_modules",".cache",virtual.base];
- const reachedAll=reachedFilesV1(sourceReal,undefined,undefined,manifest),closure=new Map<string,string>();
+ const reachedAll=reachedFilesV1(sourceReal,undefined,REACHED_FILES,manifest),closure=new Map<string,string>();
  if(reachedAll!==undefined&&[sourceReal,...reachedAll].every(path=>within(shipped,path))){
   for(const path of [sourceReal,...reachedAll,join(manifest,"Cargo.toml")])if(existsSync(path))closure.set(relative(shipped,path).split(sep).join("/"),path);
   for(const real of exactReadsV1(join(resolve(cwd,pass.outDir),pass.crate+pass.extra+".d"),cwd,input.recorded??[]))if(within(shipped,real))closure.set(relative(shipped,real).split(sep).join("/"),real);
@@ -214,6 +264,7 @@ export function planOffloadV1(input:Readonly<{args:readonly string[];environment
  if(walked===undefined)return decline("inputs-too-large","package "+shipped);
  const place=(path:string,real:string):void=>{files.set(path,real);};
  for(const [path,real] of walked)place(shippedVirtual===""?path:shippedVirtual+"/"+path,real);
+ for(const [index,file] of deriving.entries())for(const marker of deriveMarkersV1(file,roots[index]!))place(shippedVirtual===""?relative(shipped,marker).split(sep).join("/"):shippedVirtual+"/"+relative(shipped,marker).split(sep).join("/"),marker);
  if(!anchored)mappings.push({real:shipped,virtual:root});
  const cwdName=nameOf(cwd);
  if(!anchored&&shipped!==manifest&&nameOf(shipped)===shipped)return decline("unmapped-path","no --remap-path-prefix covers the module directory "+shipped+": the compiler would record this machine's paths");
@@ -249,7 +300,6 @@ export function planOffloadV1(input:Readonly<{args:readonly string[];environment
   }
   if((value=take("--extern"))!==undefined){
    const equals=value.indexOf("="),spec=equals<0?value:value.slice(0,equals),path=equals<0?"":value.slice(equals+1),real=path===""?"":resolve(cwd,path);
-   if(spec==="semio_os_kernel_dsl_derive"||real!==""&&basename(real).includes("libsemio_os_kernel_dsl_derive"))return decline("unmapped-path","proc-macro source authority "+spec);
    if(path===""){rewritten.push(...joined?["--extern="+spec]:["--extern",spec]);continue;}
    const directory=dirname(real),name=virtualOf(directory),mapped=spec+"="+name+"/"+basename(real);
    if(!existsSync(real))return decline("unreadable-input","extern "+path);
@@ -317,6 +367,11 @@ export function planOffloadV1(input:Readonly<{args:readonly string[];environment
     if(!files.has(path)&&existsSync(real))place(path,real);
    }
   }catch{return decline("unreadable-input","dependency file");}
+ }
+ for(const real of input.recorded??[]){
+  if(within(shipped,real)||!within(cwd,real)||mappings.some(row=>row.virtual!==virtual.out&&within(row.real,real)))continue;
+  const path=relative(cwd,real).split(sep).join("/");
+  if(!files.has(path)&&existsSync(real))place(path,real);
  }
  for(const argument of rewritten){
   if(argument.includes(cwd))return decline("unmapped-path",argument.slice(0,80));

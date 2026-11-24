@@ -326,13 +326,14 @@ fn stiffener_entities(input: &SceneInput, layout: &Layout, member: &AluminiumMem
 fn run_geometry(d: &En1999Snapshot, member: &AluminiumMember, section: &AluminiumSection, run: &WeldRun, frame: &Frame) -> Option<(Vec3, Vec3, f64, f64, bool, PlateElement)> {
     let element = section.elements.iter().find(|e| e.id == run.element_id)?.clone();
     let rings = checks::rings(&d.outline_vertices, &section.id);
-    let (y, z, web) = if checks::outline_props(&rings).is_some() {
-        let ring = rings.iter().find(|r| r.elements.iter().any(|e| *e == run.element_id))?;
-        let i = ring.elements.iter().position(|e| *e == run.element_id)?;
+    let named = if checks::outline_props(&rings).is_some() { rings.iter().find_map(|ring| ring.elements.iter().position(|e| *e == run.element_id).map(|i| (ring, i))) } else { None };
+    let (y, z, web) = if let Some((ring, i)) = named {
         let (p, q) = (ring.points[i], ring.points[(i + 1) % ring.points.len()]);
         let len = ((q.0 - p.0).powi(2) + (q.1 - p.1).powi(2)).sqrt().max(1e-9);
         let t = (run.offset / len).clamp(0.0, 1.0);
         (p.0 + t * (q.0 - p.0), p.1 + t * (q.1 - p.1), (q.1 - p.1).abs() > (q.0 - p.0).abs())
+    } else if checks::is_free(section) {
+        return None;
     } else {
         let (_, resolved) = checks::resolved(member, section, &[run]);
         let index = resolved.elements.iter().position(|e| e.id == run.element_id)?;

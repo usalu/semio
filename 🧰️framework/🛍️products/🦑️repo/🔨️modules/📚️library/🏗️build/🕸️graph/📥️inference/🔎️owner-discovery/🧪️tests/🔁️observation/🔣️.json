@@ -7,6 +7,7 @@
       "native": true,
       "authored": false,
       "component": false,
+      "print": false,
       "expected": "native"
     },
     {
@@ -15,6 +16,7 @@
       "native": true,
       "authored": true,
       "component": false,
+      "print": false,
       "expected": "authored"
     },
     {
@@ -23,6 +25,7 @@
       "native": true,
       "authored": true,
       "component": true,
+      "print": false,
       "expected": "component"
     },
     {
@@ -31,7 +34,17 @@
       "native": false,
       "authored": true,
       "component": false,
+      "print": false,
       "expected": "authored"
+    },
+    {
+      "id": "print-catalog-precedence",
+      "cargo": false,
+      "native": false,
+      "authored": true,
+      "component": false,
+      "print": true,
+      "expected": "print"
     }
   ],
   "catalog": [

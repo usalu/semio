@@ -3,13 +3,15 @@
   "emoji": "🚀",
   "status": "closed",
   "description": "Get the Architektur und Technologie course ready to be redeployed. The course is German by default. Remove the huge how-it-works introduction text that exceeds the screen size.",
-  "summary": "The three rehearsal failures of the fourth round are resolved (the layered-home spec measures the grid's room beneath the bands, spec and README follow the reduced-motion rule the code and its unit test hold, the language spec waits for the pet cast) and the pan is mapped over the visible grid room; both-languages and first-visit pass on the static release build. The course is still not ready to redeploy: one layered-home pan check, all four phone specs and all four adaptive-layout specs fail on the rehearsal, several shards did not run, the graph route gives no result, the two energy PDFs are one edit behind, and the course product unit suite fell from 4 to 26 failures within two hours while peers added icons to controls and reworked the sign-in radios and the challenge chooser without their tests. Details: 🚀️redeploy-readiness.md.",
+  "summary": "Pets specs went from 13 to 20 of 24 on the release rehearsal (the kit follows the border-line terrain; on swiped pages the card keeps the press), and the exclusive shard now runs through a control endpoint in site-rehearsal.ts: presence, shortage, away and faults pass 11 of 12. Course product suite 1177 of 1177, site suite 876 of 876, course typecheck clean, release build passes the publish artifact check. Open: mischief, ladder and grapple specs need a pet-engine decision for edge-to-edge cards; the cooperative card scroll spec fails at 375 x 200; chaos and reconnect did not run; the site typecheck shows 22 errors in repo-library files peers were editing; the graph route gives no result; the two energy PDFs are from 2026-11-20. Details: 🚀️redeploy-readiness.md.",
   "goal": "runningproducts",
   "sessions": [
     "2abfb7a1-06ba-4337-ba05-b71fbeabd8d3",
     "9475f8af-98f1-463b-b1be-1b30426fae00",
     "228615ea-cc73-4435-a985-2325fc18b733",
-    "9b759459-352c-42dc-8040-10da168561ee"
+    "9b759459-352c-42dc-8040-10da168561ee",
+    "9e002d49-87f4-4aba-9694-2fe4f4928909",
+    "29209e5d-e839-455e-acd6-82e7e79622f8"
   ],
   "interactions": [
     {
@@ -171,6 +173,93 @@
       "client": "claude-code",
       "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
       "summary": "The three rehearsal failures of the fourth round are resolved (the layered-home spec measures the grid's room beneath the bands, spec and README follow the reduced-motion rule the code and its unit test hold, the language spec waits for the pet cast) and the pan is mapped over the visible grid room; both-languages and first-visit pass on the static release build. The course is still not ready to redeploy: one layered-home pan check, all four phone specs and all four adaptive-layout specs fail on the rehearsal, several shards did not run, the graph route gives no result, the two energy PDFs are one edit behind, and the course product unit suite fell from 4 to 26 failures within two hours while peers added icons to controls and reworked the sign-in radios and the challenge chooser without their tests. Details: 🚀️redeploy-readiness.md."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 08:28:18",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Bring the unit suites, typechecks and the rehearsal projects to green on the current tree after the peers' control and radio rework.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 08:28:50",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "3b15468f901294ad97d37119cf8ad8d2a2ca8663",
+      "summary": "On the current tree both typechecks are clean, the course product suite is 1177 of 1177 and the site suite 876 of 876, the release build passes the publish artifact check, and on the graph-free release rehearsal the boot, desktop (first-visit, quiz-runs, challenge-levels, live-leaderboard, layered-home, both-languages), phone and layout projects pass. Fixed on the way: inline icon whitespace in control text, the radios' accessible names, the phone layout around the navigation and footer bands, an introduction box that never settled, and stale tests and end-to-end helpers behind the peers' control rework. Still open: 9 pets specs that encode the former pet world, the exclusive shard (not runnable without the gate's control endpoint), the graph route (stuck in the graph read) and the two energy PDFs from 2026-11-20. Details: 🚀️redeploy-readiness.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🏠️home💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🗄️content💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎯️targets🗃️⚛️react🗃️🎓️introduction💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️⚖️footerandforcedcolors💻🎨️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🧪️tests🗃️📐️adaptivelayout💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 10:30:43",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Work through the pets specs and run the exclusive shard of the rehearsal.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 10:30:58",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "3b15468f901294ad97d37119cf8ad8d2a2ca8663",
+      "summary": "Pets specs went from 13 to 20 of 24 on the release rehearsal (the kit follows the border-line terrain; on swiped pages the card keeps the press), and the exclusive shard now runs through a control endpoint in site-rehearsal.ts: presence, shortage, away and faults pass 11 of 12. Course product suite 1177 of 1177, site suite 876 of 876, course typecheck clean, release build passes the publish artifact check. Open: mischief, ladder and grapple specs need a pet-engine decision for edge-to-edge cards; the cooperative card scroll spec fails at 375 x 200; chaos and reconnect did not run; the site typecheck shows 22 errors in repo-library files peers were editing; the graph route gives no result; the two energy PDFs are from 2026-11-20. Details: 🚀️redeploy-readiness.md.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️23/ARCHITECTURE-COURSE-REDEPLOY-READINESS/🚀️redeploy-readiness.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️23/ARCHITECTURE-COURSE-REDEPLOY-READINESS/site-rehearsal.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️23/ARCHITECTURE-COURSE-REDEPLOY-READINESS/swipe-probe.mjs"
+        },
+        {
+          "path": ".claude/launch.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🐕️pet-walk/🧰️pet-kit/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🐕️pet-walk/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/👥️shared-presence/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📖️quiz-page/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🐾️pets/🎪️stage/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧫️fixtures/🐾️pet-contexts/📋️task-topics/🔣️.json"
+        }
+      ]
     }
   ]
 }

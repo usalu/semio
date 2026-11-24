@@ -4,7 +4,7 @@
  */
 
 import { decodeAppFrame, encodeAppFrame } from "@semio-tech/framework/app-channel";
-import { FRAMEWORK_RESERVED_JOB_KIND } from "@semio-tech/framework";
+import { FRAMEWORK_RESERVED_JOB_KIND, SemioFaultError } from "@semio-tech/framework";
 import { type PluginDispatchHintV1 } from "@semio-tech/framework";
 import { createShardCommandIngressPages, type ShardEventEnvelope, type ShardJobStep } from "@semio-tech/framework/actor/shard-client/wire";
 import { hostContinuations } from "@semio-tech/framework/async/continuation";
@@ -21,7 +21,7 @@ import {
 } from "../🪝️wire-codec/🟦️.ts";
 import { createOriginalMediaExchange } from "./original-media-exchange.ts";
 import { originalMediaRequest } from "./original-media-wire.ts";
-import { typedOperationAcknowledgements, withTypedOperationCall, type TypedOperationCall } from "../📬️typed-result/🟦️.ts";
+import { publishOperationFault, typedOperationAcknowledgements, withTypedOperationCall, type TypedOperationCall } from "../📬️typed-result/🟦️.ts";
 import {
   beginIsolatedJobDrive,
   DEFAULT_SHARD_BUDGET,
@@ -53,7 +53,9 @@ function createSpawnedJobProgressLane() {
    * full refresh per {@link PLUGIN_JOB_PROGRESS_REFRESH_MS} per job, so a job publishing on every slice
    * repaints at a bounded cadence while a job that reports nothing costs no repaint at all. */
   const PLUGIN_JOB_PROGRESS_REFRESH_MS = 120;
-  const lastJobProgressRefreshMs = new Map<string, number>();
+  /** 🪙️ How many times its own cost a progress refresh leaves to the job before the next one, so showing progress takes at most a fifth of the drive. */
+  const PLUGIN_JOB_PROGRESS_SHARE = 4;
+  const nextJobProgressRefreshMs = new Map<string, number>();
   const spawnedJobProgressListeners = new Map<number, Set<() => void>>();
   const subscribeSpawnedJobProgress = (instanceId: number, listener: () => void): (() => void) => {
     const listeners = spawnedJobProgressListeners.get(instanceId) ?? new Set<() => void>();
@@ -70,20 +72,28 @@ function createSpawnedJobProgressLane() {
       catch (error) {  }
     }
   };
-  const publishSpawnedJobProgress = (instanceId: number, key: string): void => {
+  const publishSpawnedJobProgress = (instanceId: number, key: string): boolean => {
     const now = performance.now();
-    if (now - (lastJobProgressRefreshMs.get(key) ?? -Infinity) < PLUGIN_JOB_PROGRESS_REFRESH_MS) return;
-    lastJobProgressRefreshMs.set(key, now);
+    if (now < (nextJobProgressRefreshMs.get(key) ?? -Infinity)) return false;
+    nextJobProgressRefreshMs.set(key, now + PLUGIN_JOB_PROGRESS_REFRESH_MS);
     notifySpawnedJobProgress(instanceId);
+    return true;
+  };
+  /** ⏳️ The lane time a batch waited is what the refreshes before it cost the job; the next one is held back by a multiple of it. */
+  const settleSpawnedJobLaneWait = (key: string, waitedMs: number): void => {
+    nextJobProgressRefreshMs.set(key, Math.max(nextJobProgressRefreshMs.get(key) ?? -Infinity, performance.now() + PLUGIN_JOB_PROGRESS_SHARE * waitedMs));
   };
   /** 🏁️ A job's terminal is its last progress: once its completion turn has installed the surfaces it dirtied, the shell repaints them
    * unthrottled. That turn routes no shell frame, so without this the final frame waited for an unrelated later refresh. */
   const publishSpawnedJobTerminal = (instanceId: number, key: string): void => {
-    lastJobProgressRefreshMs.delete(key);
+    nextJobProgressRefreshMs.delete(key);
     notifySpawnedJobProgress(instanceId);
   };
-  return { lastJobProgressRefreshMs, subscribeSpawnedJobProgress, publishSpawnedJobProgress, publishSpawnedJobTerminal };
+  return { nextJobProgressRefreshMs, subscribeSpawnedJobProgress, publishSpawnedJobProgress, settleSpawnedJobLaneWait, publishSpawnedJobTerminal };
 }
+
+/** 🛑️ Consecutive `backpressure` answers while idle (no deferred events, no command owner, nothing to advance) after which a command page is refused for good: offering it again cannot change the answer, and spinning holds the actor's whole command lane, which also starves its job slices. Measured 2026-11-24: healthy refusals repeat a few times at most. */
+export const PAGE_IDLE_REFUSAL_LIMIT = 256;
 
 /** 💼️ Phase 6 of {@link loadPluginModule}: the host half of `Effect::SpawnJob` (isolated and reserved-tool job drives),
  * the shell-facing spawned-job progress lane and the one choke point every turn's host effects pass through.
@@ -93,11 +103,20 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
   const { pluginId, shardClient, state, closingInstances, actorIdByInstance, documentBindings, turnOutcomes } = scope;
   const { requireActorId, submitTurn } = instances;
   const { acceptUiPatches } = ui;
-  const { lastJobProgressRefreshMs, subscribeSpawnedJobProgress, publishSpawnedJobProgress, publishSpawnedJobTerminal } = createSpawnedJobProgressLane();
+  const { nextJobProgressRefreshMs, subscribeSpawnedJobProgress, publishSpawnedJobProgress, settleSpawnedJobLaneWait, publishSpawnedJobTerminal } = createSpawnedJobProgressLane();
   /** 💼️ In-flight `spawn-job` drives, keyed `actorId#job`. A guest re-emitting the same `job` id
    * (a replayed turn, a checkpoint restore) must never open a second `start-job` for one owner. */
   const drivingJobs = new Set<string>();
   const finishedReservedJobs = new Set<string>();
+  /** 🏃️ The jobs the guest still owns: admitted by `start-job` and not yet terminal, in the actor's own ingress order. */
+  const runningJobs = new Set<string>();
+  /** 🛑️ Cancels a job only while the guest owns it, as `ShardLoop::pump` does with its `running_jobs`: a terminal reached ahead
+   * of the cancel in the actor's ingress order already released the job, and the guest refuses a cancel without an owner. */
+  const cancelSpawnedJob = (instanceId: number, actorId: string, job: bigint): void => {
+    void serializeCommandIngressForActor(actorId, async () => {
+      if (runningJobs.has(`${actorId}#${job}`)) await shardClient.cancelJob(actorId, job);
+    }).catch(error => turnOutcomes.push({ instanceId, error }));
+  };
   const pendingReservedJobDrives: Promise<void>[] = [];
   const flushReservedJobDrives = async (): Promise<void> => {
     const batch = pendingReservedJobDrives.splice(0);
@@ -130,7 +149,6 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
       activation.assertActive();
       return settlePluginTurn(actorId, await submitTurn(actorId, [{ kind: "job-completed", payload }], { lane: "Background", activation }), "Background", new Set(), (turn) => acceptUiPatches(instanceId, turn), true, activation, call);
     });
-    console.error("[DEBUG] job completion turn", String(job), outcome.status, wireTurnStatusTag(settled.status), settled.uiPatches.length, settled.effects.length);
     const frames: Uint8Array[] = [];
     const leftover: WireVariant[] = [];
     for (const effect of routeHostEffects(instanceId, settled.effects, documentBindings.get(instanceId)?.port)) {
@@ -178,27 +196,34 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
       job,
       kind,
       startedAtMs: Date.now(),
-      cancel: () => void serializeCommandIngressForActor(actorId, () => shardClient.cancelJob(actorId, job)).catch((error) => turnOutcomes.push({ instanceId, error })),
+      cancel: () => cancelSpawnedJob(instanceId, actorId, job),
     });
     try {
       beginIsolatedJobDrive();
-      await serializeCommandIngressForActor(actorId, () => shardClient.startJob(actorId, job, kind, input));
+      await serializeCommandIngressForActor(actorId, async () => {
+        await shardClient.startJob(actorId, job, kind, input);
+        runningJobs.add(key);
+      });
       let step = 0;
       while (live()) {
         const batch = isolatedJobStepsPerSerializedAdmission(PLUGIN_JOB_STEPS_PER_YIELD);
         const progressed = { value: false };
+        const requestedMs = performance.now();
         const outcome = await serializeCommandIngressForActor(actorId, async () => {
+          settleSpawnedJobLaneWait(key, performance.now() - requestedMs);
           let last: ShardJobStep | undefined;
           for (let i = 0; i < batch; i += 1) {
             last = await shardClient.stepJob(actorId, job, jobStepBudget);
             step += 1;
             if (last.status === "running" && last.progress && last.progress.byteLength > 0) progressed.value = true;
-            if (last.status !== "running") return last;
+            if (last.status !== "running") {
+              runningJobs.delete(key);
+              return last;
+            }
           }
           return last ?? { status: "failed" as const, value: new TextEncoder().encode("plugin.job-step-empty") };
         });
         if (outcome.status !== "running") {
-          console.error("[DEBUG] isolated job terminal", String(job), kind, outcome.status, step, live(), outcome.status === "failed" ? new TextDecoder().decode(outcome.value) : "");
           if (live()) {
             await deliverJobCompletion(instanceId, actorId, job, outcome);
             if (live()) publishSpawnedJobTerminal(instanceId, key);
@@ -206,18 +231,18 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
           return;
         }
         ledgerEntry.step(step, progressed.value);
-        if (progressed.value || isolatedJobUiPollEverySteps(step)) requestIsolatedJobUiPoll();
-        if (progressed.value && live()) publishSpawnedJobProgress(instanceId, key);
+        const published = progressed.value && live() && publishSpawnedJobProgress(instanceId, key);
+        if (published || isolatedJobUiPollEverySteps(step)) requestIsolatedJobUiPoll();
         await yieldPluginUiContinuation();
       }
     } catch (error) {
-      console.error("[DEBUG] isolated job error", String(job), String(error));
       turnOutcomes.push({ instanceId, error });
     } finally {
       ledgerEntry.end();
       endIsolatedJobDrive();
+      runningJobs.delete(key);
       drivingJobs.delete(key);
-      lastJobProgressRefreshMs.delete(key);
+      nextJobProgressRefreshMs.delete(key);
     }
   };
 
@@ -232,11 +257,13 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
     try {
       beginIsolatedJobDrive();
       await shardClient.startJob(actorId, job, kind, input);
+      runningJobs.add(key);
       while (live()) {
         const batch = isolatedJobStepsPerSerializedAdmission(PLUGIN_JOB_STEPS_PER_YIELD);
         for (let i = 0; i < batch && live(); i += 1) {
           const outcome = await shardClient.stepJob(actorId, job, jobStepBudget);
           if (outcome.status === "running") continue;
+          runningJobs.delete(key);
           finishedReservedJobs.add(key);
           if (live()) await deliverJobCompletionTurn(instanceId, actorId, job, outcome);
           return;
@@ -245,6 +272,7 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
       }
     } finally {
       endIsolatedJobDrive();
+      runningJobs.delete(key);
       drivingJobs.delete(key);
     }
   };
@@ -286,9 +314,7 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
     if (effect.tag === "cancel-job") {
       const value = effect.val as { job?: unknown } | undefined;
       if (typeof value?.job !== "bigint") throw new Error("plugin.cancel-job-authority-invalid");
-      const job = value.job;
-      const actorId = requireActorId(instanceId);
-      void serializeCommandIngressForActor(actorId, () => shardClient.cancelJob(actorId, job)).catch(error => turnOutcomes.push({ instanceId, error }));
+      cancelSpawnedJob(instanceId, requireActorId(instanceId), value.job);
       return false;
     }
     const value = effect.val as { target?: WireVariant; payload?: unknown } | undefined;
@@ -377,6 +403,7 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
             return folded;
           };
           let terminal: string | undefined;
+          let idleRefusals = 0;
           for (let pageIndex = 0; pageIndex < pages.length;) {
             if (importSignal?.aborted) await cancelImportAtBoundary();
             if (performance.now() - crossingStartedMs >= COMMAND_CONTINUATION_WALL_MS) throw new Error(`plugin ${pluginId}: command ingress plugin.command-page-stalled: page ${pageIndex}/${pages.length} stayed refused (action=${inspected.actionId ?? "none"})`);
@@ -386,7 +413,12 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
             if (importSignal?.aborted) await cancelImportAtBoundary();
             terminal = foldIngress();
             // 🚦️ A refused page is NOT consumed: the guest keeps its assembly at the pages it admitted, so offer the SAME page again (the native driver's `CommandBatchDriver::observe` does the same) instead of moving on and tripping `plugin.command-page-order`.
-            if ((offered.deferredEvents ?? 0) > 0 || terminal === "backpressure") { await yieldPluginUiContinuation(); continue; }
+            if ((offered.deferredEvents ?? 0) > 0 || terminal === "backpressure") {
+              idleRefusals = terminal === "backpressure" && (offered.deferredEvents ?? 0) === 0 && wireTurnStatusTag(offered.status) === "idle" ? idleRefusals + 1 : 0;
+              if (idleRefusals >= PAGE_IDLE_REFUSAL_LIMIT) throw new Error(`plugin ${pluginId}: command ingress plugin.command-page-refused: the reactor answered backpressure while idle ${idleRefusals} times in a row for page ${pageIndex}/${pages.length} (action=${inspected.actionId ?? "none"}); it owns no command and has no work, so its retained stock cannot fund the page`);
+              await yieldPluginUiContinuation();
+              continue;
+            }
             if (terminal !== "page-accepted") break;
             pageIndex += 1;
           }
@@ -502,6 +534,7 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
         }
       } while (rearmedDrains.has(instanceId) && live());
     } catch (error) {
+      if (error instanceof SemioFaultError) publishOperationFault(instanceId, error);
       turnOutcomes.push({ instanceId, error });
     } finally {
       drainingInstances.delete(instanceId);

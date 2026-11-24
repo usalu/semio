@@ -8,7 +8,7 @@
         "version": 1,
         "namespace": "semio.cargo.unit-cache.fleet/v1",
         "layout": { "state": "fl", "fallbacks": "fb", "spool": "up", "costs": "cost",
-          "gaps": "gaps", "down": "down", "denied": "denied", "noClaims": "noclaims", "reachable": "reachable", "uploader": "uploader.lock", "spawned": "uploader.spawned" },
+          "manifests": "manifests", "down": "down", "denied": "denied", "noClaims": "noclaims", "reachable": "reachable", "uploader": "uploader.lock", "spawned": "uploader.spawned", "uploaderIdentity": "uploader.identity", "spoolRegistry": "unit-spools" },
         "tokens": { "cwd": "@@semio-cwd@@", "workspace": "@@semio-ws@@", "cargoHome": "@@semio-cargo-home@@", "rustupHome": "@@semio-rustup-home@@", "sysroot": "@@semio-sysroot@@" },
         "slotType": "type.semio.tech/semio.cargo.unit-cache.slot.v1",
         "worker": "semio-unit-cache",
@@ -27,8 +27,9 @@
         },
         "breaker": { "downFaults": 2, "downMilliseconds": 15000, "deniedMilliseconds": 15000, "noClaimsMilliseconds": 600000, "reachableMilliseconds": 300000 },
         "claim": { "ttlMilliseconds": 30000, "heartbeatMilliseconds": 8000, "finalTtlMilliseconds": 90000, "minimumWaitMilliseconds": 30000, "maximumWaitMilliseconds": 1200000, "defaultExpectedMilliseconds": 90000, "waitFactor": 2, "maximumRounds": 40, "retries": 2, "retryBackoffMilliseconds": 750 },
-        "limits": { "maximumEntryBytes": 268435456, "maximumBlobBytes": 268435456, "maximumBlobs": 64, "maximumManifestBytes": 4194304, "maximumDownloadConcurrency": 4, "maximumUploadConcurrency": 3, "maximumUploadJobs": 8, "maximumSpool": 4096 },
-        "uploader": { "heartbeatMilliseconds": 2000, "staleMilliseconds": 10000, "idleMilliseconds": 15000, "pollMilliseconds": 200, "spawnThrottleMilliseconds": 3000, "jobMilliseconds": 120000, "maximumJobAgeMilliseconds": 3600000, "maximumAttempts": 4, "retryBackoffMilliseconds": 15000 },
+        "limits": { "maximumEntryBytes": 268435456, "maximumBlobBytes": 268435456, "maximumBlobs": 64, "maximumManifestBytes": 4194304, "maximumDownloadConcurrency": 4, "maximumUploadConcurrency": 3, "maximumUploadJobs": 8 },
+        "spool": { "minimumEntries": 4096, "maximumEntries": 262144, "freeSharePercent": 1, "entryBytes": 8192, "waitMilliseconds": 30000, "boundTtlMilliseconds": 30000 },
+        "uploader": { "heartbeatMilliseconds": 2000, "staleMilliseconds": 10000, "idleMilliseconds": 900000, "pollMilliseconds": 200, "waitingPollMilliseconds": 2000, "spawnThrottleMilliseconds": 3000, "jobMilliseconds": 120000, "maximumJobAgeMilliseconds": 21600000, "retryBackoffMilliseconds": 15000, "maximumBackoffMilliseconds": 300000, "takeoverMilliseconds": 30000, "sweepMilliseconds": 5000, "registryRefreshMilliseconds": 600000, "registryRetentionMilliseconds": 3600000 },
         "linkedCrateTypes": ["proc-macro", "bin", "cdylib", "dylib", "staticlib"],
         "hostIndependent": { "targetPrefixes": ["wasm32-"], "crateTypes": ["lib", "rlib"], "token": "any" }
       }
@@ -139,7 +140,8 @@
         "platform": { "$ref": "#/definitions/Platform" },
         "queuedMs": { "type": "integer", "minimum": 0 },
         "attempts": { "type": "integer", "minimum": 0 },
-        "notBeforeMs": { "type": "integer", "minimum": 0 }
+        "notBeforeMs": { "type": "integer", "minimum": 0 },
+        "deferredBy": { "description": "The fleet identity (endpoint, instance and credential) whose client was not usable (breaker open, credential denied) when the job was put off: a drainer with another identity takes it at once instead of after `notBeforeMs`.", "type": "string", "minLength": 1 }
       }
     },
     "KeySamplesRef": {
@@ -199,6 +201,17 @@
           }
         },
         "keySamples": { "$ref": "#/definitions/KeySamplesRef" },
+        "spool": {
+          "description": "How deep the upload spool of the machine's unit cache root was when the upload worker last listed it: the jobs waiting for the fleet cache, the bound beyond which a compile waits for room, and when the depth was taken.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["depth", "bound", "atMs"],
+          "properties": {
+            "depth": { "type": "integer", "minimum": 0 },
+            "bound": { "type": "integer", "minimum": 1 },
+            "atMs": { "type": "integer", "minimum": 0 }
+          }
+        },
         "skipReasons": {
           "description": "Units compiled here and not shared with the fleet, by reason name; the counts add up to unit.skipped, which is their sum.",
           "type": "object",

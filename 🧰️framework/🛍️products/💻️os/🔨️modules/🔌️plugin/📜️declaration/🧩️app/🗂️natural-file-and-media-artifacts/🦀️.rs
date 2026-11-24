@@ -48,7 +48,7 @@ pub trait NaturalFileDecodeCursor<T>: Send {
     fn retirement_demands(&self, body:usize) -> Result<RetirementDemand,ValueError>;
     fn terminal_is_empty(&self) -> bool;
 
-    /// 🧹️ Chains quoted close actions inside one funded effect: every action runs against what the turn's retirement grant still owns, so a turn retires as much as its grant, fuel and work admit instead of one action.
+    /// 🧹️ Chains quoted close actions inside one funded effect: every action runs against what the turn's retirement grant still owns, so a turn retires as much as its grant, fuel and work admit instead of one action. The chain ends at the first action that allocated, since one effect owns one allocation attempt and a second paged-list reservation inside it is refused as occupied.
     fn close_chained(&mut self, effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, ValueError> {
         use semio_framework_value::retained_clone::{retained_clone_grant_admits, RetainedCloneGrant, RetainedCloneProgress};
         let grant = effect.grant();
@@ -73,6 +73,7 @@ pub trait NaturalFileDecodeCursor<T>: Send {
                 retained_capacity_bytes: total.retained_capacity_bytes + progress.retained_capacity_bytes, released_bytes: total.released_bytes + progress.released_bytes,
             };
             if complete { return Ok(PluginLifecycleStep::Complete(total)); }
+            if effect.actual().is_some() { break; }
             if !moved || self.terminal_is_empty() || effect.remaining_work_units()? < 2 { break; }
             let next = left(total);
             if next.maximum_items == 0 || !retained_clone_grant_admits(next, self.retirement_demands(next.maximum_copy_bytes)?) { break; }

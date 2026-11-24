@@ -23,28 +23,33 @@ pub(super) fn check_building_base_shear(
 
     let (stiff_x, stiff_y) = cracked_stiffness::storeys_xy(building);
     let (t1, t1_input_ok) = part_1::fundamental_period_s(building.t1_method, building.ct, building.t1_given_s, total_height, &masses, &stiff_x, &stiff_y);
-    if !t1_input_ok && building.t1_method == semio_s_artifact_norm_en1998_model::T1Method::Rayleigh {
-        report.push(
-            CheckResult::assess(
-                format!("en1998.1.{bid}.t1Rayleigh"),
-                "DIN EN 1998-1",
-                ClauseId::new("EN 1998-1", "1", "4.3.3.2.2"),
-                SubjectRef::new(bid, format!("{bpath}.t1Method"), blabel.clone()),
-                lc("Rayleigh period needs storey stiffnesses", "Rayleigh-Periode braucht Geschosssteifigkeiten"),
-            )
-            .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
-            .annex(annex)
-            .explanation(lc(
-                "Method rayleigh needs positive storey stiffnesses in x or y; the C_t estimate is used for the remaining checks.",
-                "Das Verfahren rayleigh braucht positive Geschosssteifigkeiten in x oder y; für die übrigen Nachweise gilt die C_t-Schätzung.",
-            ))
-            .remedy(Remedy::one_of(
-                SubjectRef::new(bid, format!("{bpath}.t1Method"), lc("T1 method", "T1-Verfahren")),
-                vec!["ct".into(), "given".into()],
-                lc("Use method ct or given, or provide storey stiffnesses.", "Verfahren ct oder given wählen oder Geschosssteifigkeiten angeben."),
-            ))
-            .build(),
-        );
+    {
+        let rayleigh = building.t1_method == semio_s_artifact_norm_en1998_model::T1Method::Rayleigh;
+        let base = CheckResult::assess(
+            format!("en1998.1.{bid}.t1Rayleigh"),
+            "DIN EN 1998-1",
+            ClauseId::new("EN 1998-1", "1", "4.3.3.2.2"),
+            SubjectRef::new(bid, format!("{bpath}.t1Method"), blabel.clone()),
+            lc("Rayleigh period needs storey stiffnesses", "Rayleigh-Periode braucht Geschosssteifigkeiten"),
+        )
+        .annex(annex);
+        report.push(if !rayleigh {
+            base.not_applicable(lc("The fundamental period does not use the Rayleigh method.", "Die Grundperiode verwendet nicht das Rayleigh-Verfahren.")).build()
+        } else if t1_input_ok {
+            base.utilization(q_dim(0.0), q_dim(1.0)).explanation(lc("Method rayleigh has the positive storey stiffnesses it needs.", "Das Verfahren rayleigh hat die positiven Geschosssteifigkeiten, die es braucht.")).build()
+        } else {
+            base.status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+                .explanation(lc(
+                    "Method rayleigh needs positive storey stiffnesses in x or y; the C_t estimate is used for the remaining checks.",
+                    "Das Verfahren rayleigh braucht positive Geschosssteifigkeiten in x oder y; für die übrigen Nachweise gilt die C_t-Schätzung.",
+                ))
+                .remedy(Remedy::one_of(
+                    SubjectRef::new(bid, format!("{bpath}.t1Method"), lc("T1 method", "T1-Verfahren")),
+                    vec!["ct".into(), "given".into()],
+                    lc("Use method ct or given, or provide storey stiffnesses.", "Verfahren ct oder given wählen oder Geschosssteifigkeiten angeben."),
+                ))
+                .build()
+        });
     }
 
     {
@@ -110,7 +115,7 @@ pub(super) fn check_building_base_shear(
             &format!("planRegular={}, elevationRegular={}", building.plan_regular, building.elevation_regular),
             &format!("Grundrissregelmässigkeit={}, Aufrissregelmässigkeit={}", building.plan_regular, building.elevation_regular),
         ));
-        if !building.plan_regular {
+        if !building.plan_regular && building.elevation_regular {
             b = b.remedy(Remedy::exactly(
                 SubjectRef::new(bid, format!("{bpath}.planRegular"), lc("Plan regularity", "Regelmässigkeit im Grundriss")),
                 q_dim(0.0),
@@ -118,7 +123,7 @@ pub(super) fn check_building_base_shear(
                 lc("Restore plan regularity (or use modal analysis).", "Regelmässigkeit im Grundriss herstellen (oder Modale Analyse verwenden)."),
             ));
         }
-        if !building.elevation_regular {
+        if !building.elevation_regular && building.plan_regular {
             b = b.remedy(Remedy::exactly(
                 SubjectRef::new(bid, format!("{bpath}.elevationRegular"), lc("Elevation regularity", "Regelmässigkeit im Aufriss")),
                 q_dim(0.0),
@@ -171,7 +176,7 @@ pub(super) fn check_building_base_shear(
                 &format!("e0x={e0x:.3} m, e0y={e0y:.3} m, rx={rx:.3} m, ry={ry:.3} m, ls={ls:.3} m, {}", source(false)),
                 &format!("e0x={e0x:.3} m, e0y={e0y:.3} m, rx={rx:.3} m, ry={ry:.3} m, ℓₛ={ls:.3} m, {}", source(true)),
             ));
-            if u_e > 1.0 || ls > r_min {
+            if (u_e > 1.0 || ls > r_min) && r_min > 0.0 {
                 let (axis, field, com, cos) = if y_governs { ("y", "centreOfMassYM", storey.centre_of_mass_y_m, cs_y) } else { ("x", "centreOfMassXM", storey.centre_of_mass_x_m, cs_x) };
                 ch = ch.remedy(Remedy::at_most(
                     SubjectRef::new(bid, format!("{stpath}.{field}"), lc(&format!("Centre of mass {axis}"), &format!("Massenschwerpunkt {axis}"))),

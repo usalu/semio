@@ -1,0 +1,57 @@
+{
+  "annex": null,
+  "thetaRmC": null,
+  "outdoorCo2Ppm": null,
+  "envelopeN50HInv": null,
+  "envelopeVolumeM3": null,
+  "cellarAreaM2": null,
+  "cellarVentilationM3H": null,
+  "nightSetbackK": null,
+  "zones": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "zone-office",
+        "patch": {
+          "name": null,
+          "usageType": null,
+          "floorAreaM2": null,
+          "occupants": null,
+          "comfortCategory": null,
+          "pollutionClass": null,
+          "comfortModel": null,
+          "tOpWinterC": null,
+          "tOpSummerC": null,
+          "airSpeedMS": null,
+          "clothingClo": null,
+          "metabolicRateMet": null,
+          "rhPercent": null,
+          "outdoorAirSuppliedM3H": null,
+          "co2Ppm": null,
+          "illuminanceLx": null,
+          "noiseDb": null,
+          "turbulenceIntensityPercent": null,
+          "ventMethod": null,
+          "ventSystemId": null,
+          "unoccupiedVentilation": {
+            "operation": "nonResidentialPurge",
+            "assessedAreaM2": 200.0,
+            "zoneVolumeM3": 600.0,
+            "minutesBeforeOccupancy": 60.0,
+            "residentialDesignRateLPerSM2": 0.0,
+            "outdoorAirM3H": 700.0
+          },
+          "clearUnoccupiedVentilation": null
+        }
+      }
+    ]
+  },
+  "ventSystems": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

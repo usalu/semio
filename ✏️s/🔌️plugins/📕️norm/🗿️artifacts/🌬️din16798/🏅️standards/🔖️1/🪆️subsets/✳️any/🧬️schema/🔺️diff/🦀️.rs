@@ -14,11 +14,42 @@ use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
 use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
 //#region 🔖️Rows
-protocol::row_patch! {
+/// 🧷️ Sparse patch of one row with absolute setters (`set`) and one optional record (`optional`) whose absence is an explicit flag, because a nested `Option` collapses "unchanged" and "cleared" on the wire.
+macro_rules! optional_record_patch {
+    ($(#[$meta:meta])* $vis:vis $patch:ident of $row:ty { set { $($set:ident : $set_ty:ty),* $(,)? } optional { $opt:ident : $opt_ty:ty => $flag:ident } }) => {
+        $(#[$meta])*
+        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord)]
+        #[value(rename_all = "camelCase", default)]
+        $vis struct $patch { $(pub $set: Option<$set_ty>,)* pub $opt: Option<$opt_ty>, pub $flag: Option<bool> }
+
+        impl protocol::list_delta::RowPatch<$row> for $patch {
+            fn commit_into(&self, row: &mut $row, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+                $(if let Some(value) = &self.$set { row.$set = value.clone(); })*
+                if self.$flag == Some(true) { row.$opt = None; } else if let Some(value) = &self.$opt { row.$opt = Some(value.clone()); }
+                Ok(())
+            }
+            fn absorb(&mut self, later: Self) {
+                $(if later.$set.is_some() { self.$set = later.$set; })*
+                if later.$flag == Some(true) { self.$flag = Some(true); self.$opt = None; } else if later.$opt.is_some() { self.$opt = later.$opt; self.$flag = None; }
+            }
+            fn inverse(&self, row: &$row) -> Self {
+                let touched = self.$opt.is_some() || self.$flag == Some(true);
+                Self {
+                    $($set: self.$set.as_ref().map(|_| row.$set.clone()),)*
+                    $opt: if touched { row.$opt.clone() } else { None },
+                    $flag: if touched && row.$opt.is_none() { Some(true) } else { None },
+                }
+            }
+            fn is_empty(&self) -> bool { true $(&& self.$set.is_none())* && self.$opt.is_none() && self.$flag != Some(true) }
+        }
+    };
+}
+
+optional_record_patch! {
     #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `ZoneDocument`.
-    pub Din16798ZonePatch of semio_s_artifact_norm_din16798_model::ZoneDocument { set { name: String, usage_type: String, floor_area_m2: f64, occupants: u32, comfort_category: String, pollution_class: String, comfort_model: String, t_op_winter_c: f64, t_op_summer_c: f64, air_speed_m_s: f64, clothing_clo: f64, metabolic_rate_met: f64, rh_percent: f64, outdoor_air_supplied_m3_h: f64, co2_ppm: f64, illuminance_lx: f64, noise_db: f64, turbulence_intensity_percent: f64, vent_method: String, vent_system_id: String } }
+    pub Din16798ZonePatch of semio_s_artifact_norm_din16798_model::ZoneDocument { set { name: String, usage_type: String, floor_area_m2: f64, occupants: u32, comfort_category: String, pollution_class: String, comfort_model: String, t_op_winter_c: f64, t_op_summer_c: f64, air_speed_m_s: f64, clothing_clo: f64, metabolic_rate_met: f64, rh_percent: f64, outdoor_air_supplied_m3_h: f64, co2_ppm: f64, illuminance_lx: f64, noise_db: f64, turbulence_intensity_percent: f64, vent_method: String, vent_system_id: String } optional { unoccupied_ventilation: semio_s_artifact_norm_din16798_model::UnoccupiedVentilation => clear_unoccupied_ventilation } }
 }
 
 /// 🔑️ Key extractor of the foreign `ZoneDocument` rows (`id`).

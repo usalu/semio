@@ -313,7 +313,7 @@ def cas_section(facts):
     f=facts.get("cas")
     if not f: return {}
     used=f["lastCollection"]["bytes"] if f["lastCollection"] else None;last=f["lastCollection"]
-    return {"cas":{"root":f["root"],"usedBytes":used,"usedBasisPoints":None if used is None or f["effectiveCapBytes"]==0 else used*10000//f["effectiveCapBytes"],"capBytes":f["capBytes"],"effectiveCapBytes":f["effectiveCapBytes"],"highWatermarkBytes":f["highWatermarkBytes"],"lowWatermarkBytes":f["lowWatermarkBytes"],"incrementBytes":f["incrementBytes"],"leases":f["leases"],"lastCollection":None if last is None else {"atMs":last["atMs"],"ageSeconds":max(0,(facts["atMs"]-last["atMs"])//1000),"bytes":last["bytes"]}}}
+    return {"cas":{"root":f["root"],**({"reserve":{"reserveBytes":f["reserve"]["reserveBytes"],"freeBytes":f["reserve"]["freeBytes"],"distanceBytes":f["reserve"]["freeBytes"]-f["reserve"]["reserveBytes"]}} if "reserve" in f else {}),"usedBytes":used,"usedBasisPoints":None if used is None or f["effectiveCapBytes"]==0 else used*10000//f["effectiveCapBytes"],"capBytes":f["capBytes"],"effectiveCapBytes":f["effectiveCapBytes"],"highWatermarkBytes":f["highWatermarkBytes"],"lowWatermarkBytes":f["lowWatermarkBytes"],"incrementBytes":f["incrementBytes"],"leases":f["leases"],"lastCollection":None if last is None else {"atMs":last["atMs"],"ageSeconds":max(0,(facts["atMs"]-last["atMs"])//1000),"bytes":last["bytes"]}}}
 
 def retention_section(facts):
     fl=facts.get("fleet")

@@ -414,6 +414,12 @@ pub fn flatten_curve_segments(segments: &[PathSegment]) -> Vec<PathSegment> {
 
 const CURVE_LINE_SAMPLE_STEPS: usize = 16;
 
+#[cfg(any(test, feature = "testkit"))]
+pub mod testkit {
+    /// 🧪️ The fixed number of line samples one quad or cubic segment flattens to.
+    pub const CURVE_LINE_SAMPLE_STEPS: usize = super::CURVE_LINE_SAMPLE_STEPS;
+}
+
 fn sample_quad_points(from: [f64; 2], ctrl: [f64; 2], to: [f64; 2], steps: usize) -> Vec<[f64; 2]> {
     (1..=steps)
         .map(|step| {

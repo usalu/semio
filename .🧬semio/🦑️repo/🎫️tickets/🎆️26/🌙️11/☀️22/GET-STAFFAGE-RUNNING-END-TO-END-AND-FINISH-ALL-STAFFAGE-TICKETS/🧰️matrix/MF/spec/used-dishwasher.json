@@ -1,0 +1,9 @@
+{
+  "ops": [
+    { "op": "shape", "scale": "200", "view": "plan", "id": "hose-bundle", "shape": { "id": "hose-bundle", "bone": "hoses", "role": "body", "z": 2, "filled": true, "tone": 0.45, "kind": "poly", "points": [[-0.024, -0.14], [0, -0.14], [0, 0.447], [-0.024, 0.447]], "closed": true, "solid": { "kind": "extruded", "sweep": "w", "z0": -0.17, "z1": 0.274 }, "region": "hoses", "material": "pvc-hose" } },
+    { "op": "shape-add", "scale": "200", "view": "plan", "after": "hose-bundle", "shape": { "id": "aquastop", "bone": "hoses", "role": "body", "z": 2, "filled": true, "tone": 0.45, "kind": "poly", "points": [[-0.045, -0.14], [0, -0.14], [0, -0.04], [-0.045, -0.04]], "closed": true, "solid": { "kind": "extruded", "sweep": "w", "z0": -0.24, "z1": -0.17 }, "region": "hoses", "material": "pvc-hose" } }
+  ],
+  "solidify": [
+    { "under": "body", "on": { "tape-1": "inlet-coil", "tape-2": "cable-coil" }, "ranges": { "cabinet": [-0.545, 0] } }
+  ]
+}

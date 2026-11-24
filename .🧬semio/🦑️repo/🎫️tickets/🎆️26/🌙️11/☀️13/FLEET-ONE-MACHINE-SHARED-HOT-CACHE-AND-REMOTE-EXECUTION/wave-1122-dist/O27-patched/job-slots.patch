@@ -1,0 +1,19 @@
+--- /Users/ueli/.sinc/play/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧵️job-slots/🟦️.ts	2026-11-24 14:48:47
++++ /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/o27/root/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧵️job-slots/🟦️.ts	2026-11-24 15:09:24
+@@ -136,7 +136,7 @@
+  return value as T;
+ }
+ 
+-/** 🧵️ Sizes the concurrent component jobs of one build: the local grant plus the worker slots that can take a wasm final (`fleetSlots`, counted at the predicted peak of the final), bounded by the authored cap (`componentJobsMaximum`) and by the memory the local residue of an offloaded job (`componentJobResidueMegabytes`: the cargo process, its fingerprint checks and the input shipping) may hold beside the local compiles; none under critical and half under raised memory pressure. Without a fleet answer the plan is the local grant, so a build with the fleet down behaves as before.
++/** 🧵️ Sizes the concurrent component jobs of one build: the local grant plus the worker slots that can take a wasm final (`fleetSlots`, counted at the predicted peak of the final), bounded by the authored cap (`componentJobsMaximum`) and by the memory the local residue of an offloaded job (`componentJobResidueMegabytes`: the cargo process, its fingerprint checks and the input shipping) may hold beside the local compiles; none under critical memory pressure. Raised pressure takes nothing off the fleet share: a remote job holds only its small known footprint here, so the memory term alone bounds it. Without a fleet answer the plan is the local grant, so a build with the fleet down behaves as before.
+  * @see ./🧬️schema/🔣️.json
+  * @see ./🧪️tests/🧵️plan/🐍️oracle/🐍️.py */
+ export function planComponentJobsV1(hostValue:ComponentJobsHostV1):ComponentJobsDecisionV1{
+@@ -147,7 +147,6 @@
+  limit(Math.max(0,policy.componentJobsMaximum-host.local),"jobs-cap");
+  if(host.availableMegabytes!==null)limit(Math.floor(Math.max(0,host.availableMegabytes-policy.reserveMegabytes-host.local*host.unitMegabytes)/policy.componentJobResidueMegabytes),"jobs-memory");
+  if(host.pressure==="critical")limit(0,"jobs-pressure");
+- else if(host.pressure==="warn")limit(Math.floor(remote/policy.pressureWarnDivisor),"jobs-pressure");
+  return Object.freeze(requireDefinition<ComponentJobsDecisionV1>("ComponentJobsDecision",{jobs:host.local+remote,local:host.local,remote,reason}));
+ }
+ 

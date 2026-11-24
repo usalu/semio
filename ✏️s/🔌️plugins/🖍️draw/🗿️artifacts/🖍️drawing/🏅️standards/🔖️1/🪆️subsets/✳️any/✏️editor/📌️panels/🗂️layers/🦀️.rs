@@ -62,7 +62,10 @@ fn layer_icon(layer: &DrawingLayerNode) -> &str {
         DrawingLayerNode::Boolean(_) => "combine",
         DrawingLayerNode::Trace(_) => "scan-line",
         DrawingLayerNode::Path(_) => "pen-tool",
-        DrawingLayerNode::Shape(_) => "square",
+        DrawingLayerNode::Shape(body) => {
+            let kind = &body.shape_kind;
+            if kind.eq_str("ellipse") || kind.eq_str("circle") { "circle" } else if kind.eq_str("line") { "minus" } else if kind.eq_str("polygon") { "hexagon" } else { "square" }
+        }
         DrawingLayerNode::Text(_) => "type",
         DrawingLayerNode::Image(_) => "image",
     }
@@ -86,7 +89,7 @@ pub fn layers_rows<'a>(document: &'a DrawingSnapshot, labels: &DrawingPlayLabels
         LayersRow::Add("drawing-play-layers.add.boolean", labels.add_boolean, "combine", "boolean"),
         LayersRow::Add("drawing-play-layers.add.ellipse", labels.add_ellipse, "circle", "shape:ellipse"),
         LayersRow::Add("drawing-play-layers.add.line", labels.add_line, "minus", "shape:line"),
-        LayersRow::Add("drawing-play-layers.add.polygon", labels.add_polygon, "pentagon", "shape:polygon"),
+        LayersRow::Add("drawing-play-layers.add.polygon", labels.add_polygon, "hexagon", "shape:polygon"),
         LayersRow::Add("drawing-play-layers.add.image", labels.add_image, "image", "image"),
         LayersRow::Add("drawing-play-layers.add.trace", labels.add_trace, "scan-line", "trace"),
     ];

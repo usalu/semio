@@ -1993,13 +1993,34 @@
        "z": 1.5,
        "filled": true,
        "tone": 0.3,
-       "kind": "rect",
-       "x": -0.266,
-       "y": 0.144,
-       "w": 0.032,
-       "h": 0.02,
        "region": "base",
-       "material": "pp-grey"
+       "material": "pp-grey",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.266
+        ],
+        [
+         0,
+         -0.234
+        ],
+        [
+         0.02,
+         -0.234
+        ],
+        [
+         0.02,
+         -0.266
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.519,
+        "z1": 0.521
+       }
       },
       {
        "id": "foot-front-l",
@@ -2008,13 +2029,34 @@
        "z": 1.5,
        "filled": true,
        "tone": 0.3,
-       "kind": "rect",
-       "x": 0.234,
-       "y": 0.144,
-       "w": 0.032,
-       "h": 0.02,
        "region": "base",
-       "material": "pp-grey"
+       "material": "pp-grey",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.234
+        ],
+        [
+         0,
+         0.266
+        ],
+        [
+         0.02,
+         0.266
+        ],
+        [
+         0.02,
+         0.234
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.519,
+        "z1": 0.521
+       }
       },
       {
        "id": "plinth",
@@ -2023,13 +2065,50 @@
        "z": 3,
        "filled": true,
        "tone": 0.85,
-       "kind": "rect",
-       "x": -0.2994,
-       "y": 0.154,
-       "w": 0.5988,
-       "h": 0.115,
        "region": "plinth",
-       "material": "pp-plinth"
+       "material": "pp-plinth",
+       "kind": "poly",
+       "points": [
+        [
+         0.012,
+         0
+        ],
+        [
+         0.015,
+         0
+        ],
+        [
+         0.015,
+         0.1
+        ],
+        [
+         0.02,
+         0.1
+        ],
+        [
+         0.02,
+         0.115
+        ],
+        [
+         0,
+         0.115
+        ],
+        [
+         0,
+         0.1
+        ],
+        [
+         0.012,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2994,
+        "z1": 0.2994
+       }
       },
       {
        "id": "cabinet",
@@ -2038,13 +2117,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": -0.3,
-       "y": 0.164,
-       "w": 0.6,
-       "h": 0.8,
        "region": "cabinet",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.3
+        ],
+        [
+         0,
+         0.3
+        ],
+        [
+         0.8,
+         0.3
+        ],
+        [
+         0.8,
+         -0.3
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.545,
+        "z1": 0
+       }
       },
       {
        "id": "worktop",
@@ -2053,13 +2153,34 @@
        "z": 5,
        "filled": true,
        "tone": 0.75,
-       "kind": "rect",
-       "x": -0.3,
-       "y": 0.964,
-       "w": 0.6,
-       "h": 0.03,
        "region": "worktop",
-       "material": "laminate-chipboard"
+       "material": "laminate-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.03
+        ],
+        [
+         0,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3,
+        "z1": 0.3
+       }
       },
       {
        "id": "tub-back",
@@ -2159,14 +2280,35 @@
        "z": 2.5,
        "filled": false,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.258,
-       "y": 0.301,
-       "w": 0.516,
-       "h": 0.163,
        "region": "racks",
        "material": "coated-wire",
-       "penMm": 0.18
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0.032,
+         -0.258
+        ],
+        [
+         0.032,
+         0.258
+        ],
+        [
+         0.195,
+         0.258
+        ],
+        [
+         0.195,
+         -0.258
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.455,
+        "z1": 0.457
+       }
       },
       {
        "id": "bl-front-wire-1",
@@ -2280,14 +2422,35 @@
        "z": 2.5,
        "filled": false,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.25,
-       "y": 0.601,
-       "w": 0.5,
-       "h": 0.168,
        "region": "racks",
        "material": "coated-wire",
-       "penMm": 0.18
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0.002,
+         -0.25
+        ],
+        [
+         0.002,
+         0.25
+        ],
+        [
+         0.17,
+         0.25
+        ],
+        [
+         0.17,
+         -0.25
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.448,
+        "z1": 0.45
+       }
       },
       {
        "id": "door-leaf",
@@ -2989,6 +3152,8 @@
        "z": 5,
        "filled": true,
        "tone": 0.75,
+       "region": "worktop",
+       "material": "laminate-chipboard",
        "kind": "poly",
        "points": [
         [
@@ -3017,8 +3182,12 @@
         ]
        ],
        "closed": true,
-       "region": "worktop",
-       "material": "laminate-chipboard"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.03
+       }
       },
       {
        "id": "bl-plan",
@@ -3027,14 +3196,35 @@
        "z": 4.5,
        "filled": false,
        "tone": 0.45,
-       "kind": "rect",
-       "x": 0.073,
-       "y": -0.258,
-       "w": 0.449,
-       "h": 0.516,
        "region": "racks",
        "material": "coated-wire",
-       "penMm": 0.18
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0.008,
+         -0.258
+        ],
+        [
+         0.457,
+         -0.258
+        ],
+        [
+         0.457,
+         0.258
+        ],
+        [
+         0.008,
+         0.258
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.193,
+        "z1": 0.195
+       }
       },
       {
        "id": "bl-plan-cutlery",
@@ -3043,13 +3233,34 @@
        "z": 4.55,
        "filled": true,
        "tone": 0.55,
-       "kind": "rect",
-       "x": 0.39,
-       "y": -0.24,
-       "w": 0.115,
-       "h": 0.115,
        "region": "racks",
-       "material": "pp-grey"
+       "material": "pp-grey",
+       "kind": "poly",
+       "points": [
+        [
+         0.325,
+         -0.24
+        ],
+        [
+         0.44,
+         -0.24
+        ],
+        [
+         0.44,
+         -0.125
+        ],
+        [
+         0.325,
+         -0.125
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.193,
+        "z1": 0.195
+       }
       },
       {
        "id": "bu-plan",
@@ -3058,14 +3269,35 @@
        "z": 4.6,
        "filled": false,
        "tone": 0.45,
-       "kind": "rect",
-       "x": 0.073,
-       "y": -0.25,
-       "w": 0.442,
-       "h": 0.5,
        "region": "racks",
        "material": "coated-wire",
-       "penMm": 0.18
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0.008,
+         -0.25
+        ],
+        [
+         0.45,
+         -0.25
+        ],
+        [
+         0.45,
+         0.25
+        ],
+        [
+         0.008,
+         0.25
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.168,
+        "z1": 0.17
+       }
       },
       {
        "id": "door-leaf",
@@ -3116,13 +3348,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.024,
-       "y": -0.207,
-       "w": 0.024,
-       "h": 0.294,
        "region": "hoses",
-       "material": "pvc-hose"
+       "material": "pvc-hose",
+       "kind": "poly",
+       "points": [
+        [
+         -0.024,
+         0.153
+        ],
+        [
+         0,
+         0.153
+        ],
+        [
+         0,
+         0.447
+        ],
+        [
+         -0.024,
+         0.447
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.207,
+        "z1": 0.087
+       }
       },
       {
        "id": "inlet-coil",
@@ -3131,13 +3384,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.02,
-       "y": -0.065,
-       "w": 0.02,
-       "h": 0.25,
        "region": "hoses",
-       "material": "pvc-hose"
+       "material": "pvc-hose",
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.105
+        ],
+        [
+         0,
+         -0.105
+        ],
+        [
+         0,
+         0.145
+        ],
+        [
+         -0.02,
+         0.145
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.185
+       }
       },
       {
        "id": "cable-coil",
@@ -3146,13 +3420,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.008,
-       "y": 0.126,
-       "w": 0.008,
-       "h": 0.148,
        "region": "hoses",
-       "material": "pvc-cable"
+       "material": "pvc-cable",
+       "kind": "poly",
+       "points": [
+        [
+         -0.008,
+         0.266
+        ],
+        [
+         0,
+         0.266
+        ],
+        [
+         0,
+         0.414
+        ],
+        [
+         -0.008,
+         0.414
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.126,
+        "z1": 0.274
+       }
       },
       {
        "id": "aquastop",
@@ -3161,13 +3456,34 @@
        "z": 2.6,
        "filled": true,
        "tone": 0.4,
-       "kind": "rect",
-       "x": -0.045,
-       "y": -0.24,
-       "w": 0.045,
-       "h": 0.07,
        "region": "hoses",
-       "material": "pp-grey"
+       "material": "pp-grey",
+       "kind": "poly",
+       "points": [
+        [
+         -0.045,
+         -0.14
+        ],
+        [
+         0,
+         -0.14
+        ],
+        [
+         0,
+         -0.04
+        ],
+        [
+         -0.045,
+         -0.04
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.24,
+        "z1": -0.17
+       }
       },
       {
        "id": "plug",
@@ -3176,13 +3492,34 @@
        "z": 2.6,
        "filled": true,
        "tone": 0.4,
-       "kind": "rect",
-       "x": -0.036,
-       "y": 0.182,
-       "w": 0.036,
-       "h": 0.036,
        "region": "hoses",
-       "material": "pp-grey"
+       "material": "pp-grey",
+       "kind": "poly",
+       "points": [
+        [
+         -0.036,
+         0.31
+        ],
+        [
+         0,
+         0.31
+        ],
+        [
+         0,
+         0.37
+        ],
+        [
+         -0.036,
+         0.37
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.182,
+        "z1": 0.218
+       }
       },
       {
        "id": "tape-1",
@@ -3191,11 +3528,32 @@
        "z": 2.9,
        "filled": true,
        "tone": 0.55,
-       "kind": "rect",
-       "x": -0.025,
-       "y": -0.085,
-       "w": 0.025,
-       "h": 0.05
+       "kind": "poly",
+       "points": [
+        [
+         -0.025,
+         -0.085
+        ],
+        [
+         0,
+         -0.085
+        ],
+        [
+         0,
+         -0.035
+        ],
+        [
+         -0.025,
+         -0.035
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.143,
+        "z1": 0.145
+       }
       },
       {
        "id": "tape-2",
@@ -3204,11 +3562,32 @@
        "z": 2.9,
        "filled": true,
        "tone": 0.55,
-       "kind": "rect",
-       "x": -0.009,
-       "y": 0.18,
-       "w": 0.009,
-       "h": 0.04
+       "kind": "poly",
+       "points": [
+        [
+         -0.009,
+         0.18
+        ],
+        [
+         0,
+         0.18
+        ],
+        [
+         0,
+         0.22
+        ],
+        [
+         -0.009,
+         0.22
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.412,
+        "z1": 0.414
+       }
       },
       {
        "id": "ring-mark-1",
@@ -3217,11 +3596,144 @@
        "z": 5.1,
        "filled": false,
        "tone": 0.3,
-       "kind": "ellipse",
-       "cx": 0.34,
-       "cy": 0.12,
-       "rx": 0.055,
-       "ry": 0.055
+       "kind": "poly",
+       "points": [
+        [
+         0.395,
+         0.12
+        ],
+        [
+         0.393943,
+         0.13073
+        ],
+        [
+         0.390813,
+         0.141048
+        ],
+        [
+         0.385731,
+         0.150556
+        ],
+        [
+         0.378891,
+         0.158891
+        ],
+        [
+         0.370556,
+         0.165731
+        ],
+        [
+         0.361048,
+         0.170813
+        ],
+        [
+         0.35073,
+         0.173943
+        ],
+        [
+         0.34,
+         0.175
+        ],
+        [
+         0.32927,
+         0.173943
+        ],
+        [
+         0.318952,
+         0.170813
+        ],
+        [
+         0.309444,
+         0.165731
+        ],
+        [
+         0.301109,
+         0.158891
+        ],
+        [
+         0.294269,
+         0.150556
+        ],
+        [
+         0.289187,
+         0.141048
+        ],
+        [
+         0.286057,
+         0.13073
+        ],
+        [
+         0.285,
+         0.12
+        ],
+        [
+         0.286057,
+         0.10927
+        ],
+        [
+         0.289187,
+         0.098952
+        ],
+        [
+         0.294269,
+         0.089444
+        ],
+        [
+         0.301109,
+         0.081109
+        ],
+        [
+         0.309444,
+         0.074269
+        ],
+        [
+         0.318952,
+         0.069187
+        ],
+        [
+         0.32927,
+         0.066057
+        ],
+        [
+         0.34,
+         0.065
+        ],
+        [
+         0.35073,
+         0.066057
+        ],
+        [
+         0.361048,
+         0.069187
+        ],
+        [
+         0.370556,
+         0.074269
+        ],
+        [
+         0.378891,
+         0.081109
+        ],
+        [
+         0.385731,
+         0.089444
+        ],
+        [
+         0.390813,
+         0.098952
+        ],
+        [
+         0.393943,
+         0.10927
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.028,
+        "z1": 0.03
+       }
       },
       {
        "id": "ring-mark-2",
@@ -3318,11 +3830,32 @@
        "z": 5.1,
        "filled": true,
        "tone": 0.9,
-       "kind": "rect",
-       "x": 0.08,
-       "y": -0.27,
-       "w": 0.1,
-       "h": 0.06
+       "kind": "poly",
+       "points": [
+        [
+         0.08,
+         -0.27
+        ],
+        [
+         0.18,
+         -0.27
+        ],
+        [
+         0.18,
+         -0.21
+        ],
+        [
+         0.08,
+         -0.21
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.028,
+        "z1": 0.03
+       }
       },
       {
        "id": "price-tag",
@@ -3331,11 +3864,32 @@
        "z": 5.1,
        "filled": true,
        "tone": 0.97,
-       "kind": "rect",
-       "x": 0.47,
-       "y": 0.16,
-       "w": 0.08,
-       "h": 0.1
+       "kind": "poly",
+       "points": [
+        [
+         0.47,
+         0.16
+        ],
+        [
+         0.55,
+         0.16
+        ],
+        [
+         0.55,
+         0.26
+        ],
+        [
+         0.47,
+         0.26
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.028,
+        "z1": 0.03
+       }
       },
       {
        "id": "price-tag-line",
@@ -4269,13 +4823,34 @@
        "z": 1.5,
        "filled": true,
        "tone": 0.3,
-       "kind": "rect",
-       "x": -0.266,
-       "y": 0.144,
-       "w": 0.032,
-       "h": 0.02,
        "region": "base",
-       "material": "pp-grey"
+       "material": "pp-grey",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.266
+        ],
+        [
+         0,
+         -0.234
+        ],
+        [
+         0.02,
+         -0.234
+        ],
+        [
+         0.02,
+         -0.266
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.519,
+        "z1": 0.521
+       }
       },
       {
        "id": "foot-front-l",
@@ -4284,13 +4859,34 @@
        "z": 1.5,
        "filled": true,
        "tone": 0.3,
-       "kind": "rect",
-       "x": 0.234,
-       "y": 0.144,
-       "w": 0.032,
-       "h": 0.02,
        "region": "base",
-       "material": "pp-grey"
+       "material": "pp-grey",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.234
+        ],
+        [
+         0,
+         0.266
+        ],
+        [
+         0.02,
+         0.266
+        ],
+        [
+         0.02,
+         0.234
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.519,
+        "z1": 0.521
+       }
       },
       {
        "id": "plinth",
@@ -4299,13 +4895,50 @@
        "z": 3,
        "filled": true,
        "tone": 0.85,
-       "kind": "rect",
-       "x": -0.2994,
-       "y": 0.154,
-       "w": 0.5988,
-       "h": 0.115,
        "region": "plinth",
-       "material": "pp-plinth"
+       "material": "pp-plinth",
+       "kind": "poly",
+       "points": [
+        [
+         0.012,
+         0
+        ],
+        [
+         0.015,
+         0
+        ],
+        [
+         0.015,
+         0.1
+        ],
+        [
+         0.02,
+         0.1
+        ],
+        [
+         0.02,
+         0.115
+        ],
+        [
+         0,
+         0.115
+        ],
+        [
+         0,
+         0.1
+        ],
+        [
+         0.012,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2994,
+        "z1": 0.2994
+       }
       },
       {
        "id": "cabinet",
@@ -4314,13 +4947,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": -0.3,
-       "y": 0.164,
-       "w": 0.6,
-       "h": 0.8,
        "region": "cabinet",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.3
+        ],
+        [
+         0,
+         0.3
+        ],
+        [
+         0.8,
+         0.3
+        ],
+        [
+         0.8,
+         -0.3
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.545,
+        "z1": 0
+       }
       },
       {
        "id": "worktop",
@@ -4329,13 +4983,34 @@
        "z": 5,
        "filled": true,
        "tone": 0.75,
-       "kind": "rect",
-       "x": -0.3,
-       "y": 0.964,
-       "w": 0.6,
-       "h": 0.03,
        "region": "worktop",
-       "material": "laminate-chipboard"
+       "material": "laminate-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.03
+        ],
+        [
+         0,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3,
+        "z1": 0.3
+       }
       },
       {
        "id": "tub-back",
@@ -4435,14 +5110,35 @@
        "z": 2.5,
        "filled": false,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.258,
-       "y": 0.301,
-       "w": 0.516,
-       "h": 0.163,
        "region": "racks",
        "material": "coated-wire",
-       "penMm": 0.13
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         0.032,
+         -0.258
+        ],
+        [
+         0.032,
+         0.258
+        ],
+        [
+         0.195,
+         0.258
+        ],
+        [
+         0.195,
+         -0.258
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.455,
+        "z1": 0.457
+       }
       },
       {
        "id": "bl-front-wire-1",
@@ -4556,14 +5252,35 @@
        "z": 2.5,
        "filled": false,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.25,
-       "y": 0.601,
-       "w": 0.5,
-       "h": 0.168,
        "region": "racks",
        "material": "coated-wire",
-       "penMm": 0.13
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         0.002,
+         -0.25
+        ],
+        [
+         0.002,
+         0.25
+        ],
+        [
+         0.17,
+         0.25
+        ],
+        [
+         0.17,
+         -0.25
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.448,
+        "z1": 0.45
+       }
       },
       {
        "id": "door-leaf",
@@ -4780,13 +5497,34 @@
        "z": 5,
        "filled": true,
        "tone": 0.75,
-       "kind": "rect",
-       "x": 0,
-       "y": -0.3,
-       "w": 0.6,
-       "h": 0.6,
        "region": "worktop",
-       "material": "laminate-chipboard"
+       "material": "laminate-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.03
+        ],
+        [
+         0,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3,
+        "z1": 0.3
+       }
       },
       {
        "id": "bl-plan",
@@ -4795,14 +5533,35 @@
        "z": 4.5,
        "filled": false,
        "tone": 0.45,
-       "kind": "rect",
-       "x": 0.073,
-       "y": -0.258,
-       "w": 0.449,
-       "h": 0.516,
        "region": "racks",
        "material": "coated-wire",
-       "penMm": 0.13
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         0.008,
+         -0.258
+        ],
+        [
+         0.457,
+         -0.258
+        ],
+        [
+         0.457,
+         0.258
+        ],
+        [
+         0.008,
+         0.258
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.193,
+        "z1": 0.195
+       }
       },
       {
        "id": "bl-plan-cutlery",
@@ -4811,13 +5570,34 @@
        "z": 4.55,
        "filled": true,
        "tone": 0.55,
-       "kind": "rect",
-       "x": 0.39,
-       "y": -0.24,
-       "w": 0.115,
-       "h": 0.115,
        "region": "racks",
-       "material": "pp-grey"
+       "material": "pp-grey",
+       "kind": "poly",
+       "points": [
+        [
+         0.325,
+         -0.24
+        ],
+        [
+         0.44,
+         -0.24
+        ],
+        [
+         0.44,
+         -0.125
+        ],
+        [
+         0.325,
+         -0.125
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.193,
+        "z1": 0.195
+       }
       },
       {
        "id": "bu-plan",
@@ -4826,14 +5606,35 @@
        "z": 4.6,
        "filled": false,
        "tone": 0.45,
-       "kind": "rect",
-       "x": 0.073,
-       "y": -0.25,
-       "w": 0.442,
-       "h": 0.5,
        "region": "racks",
        "material": "coated-wire",
-       "penMm": 0.13
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         0.008,
+         -0.25
+        ],
+        [
+         0.45,
+         -0.25
+        ],
+        [
+         0.45,
+         0.25
+        ],
+        [
+         0.008,
+         0.25
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.168,
+        "z1": 0.17
+       }
       },
       {
        "id": "door-leaf",
@@ -4884,13 +5685,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.024,
-       "y": -0.207,
-       "w": 0.024,
-       "h": 0.294,
        "region": "hoses",
-       "material": "pvc-hose"
+       "material": "pvc-hose",
+       "kind": "poly",
+       "points": [
+        [
+         -0.024,
+         0.153
+        ],
+        [
+         0,
+         0.153
+        ],
+        [
+         0,
+         0.447
+        ],
+        [
+         -0.024,
+         0.447
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.207,
+        "z1": 0.087
+       }
       },
       {
        "id": "inlet-coil",
@@ -4899,13 +5721,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.02,
-       "y": -0.065,
-       "w": 0.02,
-       "h": 0.25,
        "region": "hoses",
-       "material": "pvc-hose"
+       "material": "pvc-hose",
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.105
+        ],
+        [
+         0,
+         -0.105
+        ],
+        [
+         0,
+         0.145
+        ],
+        [
+         -0.02,
+         0.145
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.185
+       }
       },
       {
        "id": "cable-coil",
@@ -4914,13 +5757,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.008,
-       "y": 0.126,
-       "w": 0.008,
-       "h": 0.148,
        "region": "hoses",
-       "material": "pvc-cable"
+       "material": "pvc-cable",
+       "kind": "poly",
+       "points": [
+        [
+         -0.008,
+         0.266
+        ],
+        [
+         0,
+         0.266
+        ],
+        [
+         0,
+         0.414
+        ],
+        [
+         -0.008,
+         0.414
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.126,
+        "z1": 0.274
+       }
       },
       {
        "id": "aquastop",
@@ -4929,13 +5793,34 @@
        "z": 2.6,
        "filled": true,
        "tone": 0.4,
-       "kind": "rect",
-       "x": -0.045,
-       "y": -0.24,
-       "w": 0.045,
-       "h": 0.07,
        "region": "hoses",
-       "material": "pp-grey"
+       "material": "pp-grey",
+       "kind": "poly",
+       "points": [
+        [
+         -0.045,
+         -0.14
+        ],
+        [
+         0,
+         -0.14
+        ],
+        [
+         0,
+         -0.04
+        ],
+        [
+         -0.045,
+         -0.04
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.24,
+        "z1": -0.17
+       }
       },
       {
        "id": "plug",
@@ -4944,13 +5829,34 @@
        "z": 2.6,
        "filled": true,
        "tone": 0.4,
-       "kind": "rect",
-       "x": -0.036,
-       "y": 0.182,
-       "w": 0.036,
-       "h": 0.036,
        "region": "hoses",
-       "material": "pp-grey"
+       "material": "pp-grey",
+       "kind": "poly",
+       "points": [
+        [
+         -0.036,
+         0.31
+        ],
+        [
+         0,
+         0.31
+        ],
+        [
+         0,
+         0.37
+        ],
+        [
+         -0.036,
+         0.37
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.182,
+        "z1": 0.218
+       }
       },
       {
        "id": "ring-mark-1",
@@ -4959,11 +5865,144 @@
        "z": 5.1,
        "filled": false,
        "tone": 0.3,
-       "kind": "ellipse",
-       "cx": 0.34,
-       "cy": 0.12,
-       "rx": 0.055,
-       "ry": 0.055
+       "kind": "poly",
+       "points": [
+        [
+         0.395,
+         0.12
+        ],
+        [
+         0.393943,
+         0.13073
+        ],
+        [
+         0.390813,
+         0.141048
+        ],
+        [
+         0.385731,
+         0.150556
+        ],
+        [
+         0.378891,
+         0.158891
+        ],
+        [
+         0.370556,
+         0.165731
+        ],
+        [
+         0.361048,
+         0.170813
+        ],
+        [
+         0.35073,
+         0.173943
+        ],
+        [
+         0.34,
+         0.175
+        ],
+        [
+         0.32927,
+         0.173943
+        ],
+        [
+         0.318952,
+         0.170813
+        ],
+        [
+         0.309444,
+         0.165731
+        ],
+        [
+         0.301109,
+         0.158891
+        ],
+        [
+         0.294269,
+         0.150556
+        ],
+        [
+         0.289187,
+         0.141048
+        ],
+        [
+         0.286057,
+         0.13073
+        ],
+        [
+         0.285,
+         0.12
+        ],
+        [
+         0.286057,
+         0.10927
+        ],
+        [
+         0.289187,
+         0.098952
+        ],
+        [
+         0.294269,
+         0.089444
+        ],
+        [
+         0.301109,
+         0.081109
+        ],
+        [
+         0.309444,
+         0.074269
+        ],
+        [
+         0.318952,
+         0.069187
+        ],
+        [
+         0.32927,
+         0.066057
+        ],
+        [
+         0.34,
+         0.065
+        ],
+        [
+         0.35073,
+         0.066057
+        ],
+        [
+         0.361048,
+         0.069187
+        ],
+        [
+         0.370556,
+         0.074269
+        ],
+        [
+         0.378891,
+         0.081109
+        ],
+        [
+         0.385731,
+         0.089444
+        ],
+        [
+         0.390813,
+         0.098952
+        ],
+        [
+         0.393943,
+         0.10927
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.028,
+        "z1": 0.03
+       }
       }
      ]
     },
@@ -5374,13 +6413,34 @@
        "z": 1.4,
        "filled": true,
        "tone": 0.4,
-       "kind": "rect",
-       "x": -0.2994,
-       "y": 0.144,
-       "w": 0.5988,
-       "h": 0.11,
        "region": "base",
-       "material": "base-unit"
+       "material": "base-unit",
+       "kind": "poly",
+       "points": [
+        [
+         0.0006,
+         0
+        ],
+        [
+         0.51,
+         0
+        ],
+        [
+         0.51,
+         0.11
+        ],
+        [
+         0.0006,
+         0.11
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2994,
+        "z1": 0.2994
+       }
       },
       {
        "id": "plinth",
@@ -5389,13 +6449,34 @@
        "z": 3,
        "filled": true,
        "tone": 0.85,
-       "kind": "rect",
-       "x": -0.2994,
-       "y": 0.154,
-       "w": 0.5988,
-       "h": 0.115,
        "region": "plinth",
-       "material": "pp-plinth"
+       "material": "pp-plinth",
+       "kind": "poly",
+       "points": [
+        [
+         -0.015,
+         0
+        ],
+        [
+         0.02,
+         0
+        ],
+        [
+         0.02,
+         0.115
+        ],
+        [
+         -0.015,
+         0.115
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2994,
+        "z1": 0.2994
+       }
       },
       {
        "id": "cabinet",
@@ -5404,13 +6485,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.88,
-       "kind": "rect",
-       "x": -0.3,
-       "y": 0.164,
-       "w": 0.6,
-       "h": 0.8,
        "region": "cabinet",
-       "material": "painted-steel"
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.3
+        ],
+        [
+         0,
+         0.3
+        ],
+        [
+         0.8,
+         0.3
+        ],
+        [
+         0.8,
+         -0.3
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.545,
+        "z1": 0
+       }
       },
       {
        "id": "worktop",
@@ -5419,13 +6521,34 @@
        "z": 5,
        "filled": true,
        "tone": 0.75,
-       "kind": "rect",
-       "x": -0.3,
-       "y": 0.964,
-       "w": 0.6,
-       "h": 0.03,
        "region": "worktop",
-       "material": "laminate-chipboard"
+       "material": "laminate-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.03
+        ],
+        [
+         0,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3,
+        "z1": 0.3
+       }
       },
       {
        "id": "tub-back",
@@ -5495,14 +6618,35 @@
        "z": 2.5,
        "filled": false,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.258,
-       "y": 0.301,
-       "w": 0.516,
-       "h": 0.163,
        "region": "racks",
        "material": "coated-wire",
-       "penMm": 0.13
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         0.032,
+         -0.258
+        ],
+        [
+         0.032,
+         0.258
+        ],
+        [
+         0.195,
+         0.258
+        ],
+        [
+         0.195,
+         -0.258
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.455,
+        "z1": 0.457
+       }
       },
       {
        "id": "bu-front",
@@ -5511,14 +6655,35 @@
        "z": 2.5,
        "filled": false,
        "tone": 0.45,
-       "kind": "rect",
-       "x": -0.25,
-       "y": 0.601,
-       "w": 0.5,
-       "h": 0.168,
        "region": "racks",
        "material": "coated-wire",
-       "penMm": 0.13
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         0.002,
+         -0.25
+        ],
+        [
+         0.002,
+         0.25
+        ],
+        [
+         0.17,
+         0.25
+        ],
+        [
+         0.17,
+         -0.25
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.448,
+        "z1": 0.45
+       }
       },
       {
        "id": "door-leaf",
@@ -5601,13 +6766,34 @@
        "z": 5,
        "filled": true,
        "tone": 0.75,
-       "kind": "rect",
-       "x": 0,
-       "y": -0.3,
-       "w": 0.6,
-       "h": 0.6,
        "region": "worktop",
-       "material": "laminate-chipboard"
+       "material": "laminate-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.03
+        ],
+        [
+         0,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3,
+        "z1": 0.3
+       }
       },
       {
        "id": "bl-plan",
@@ -5616,14 +6802,35 @@
        "z": 4.5,
        "filled": false,
        "tone": 0.45,
-       "kind": "rect",
-       "x": 0.073,
-       "y": -0.258,
-       "w": 0.449,
-       "h": 0.516,
        "region": "racks",
        "material": "coated-wire",
-       "penMm": 0.13
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         0.008,
+         -0.258
+        ],
+        [
+         0.457,
+         -0.258
+        ],
+        [
+         0.457,
+         0.258
+        ],
+        [
+         0.008,
+         0.258
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.193,
+        "z1": 0.195
+       }
       },
       {
        "id": "bu-plan",
@@ -5632,14 +6839,35 @@
        "z": 4.6,
        "filled": false,
        "tone": 0.45,
-       "kind": "rect",
-       "x": 0.073,
-       "y": -0.25,
-       "w": 0.442,
-       "h": 0.5,
        "region": "racks",
        "material": "coated-wire",
-       "penMm": 0.13
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         0.008,
+         -0.25
+        ],
+        [
+         0.45,
+         -0.25
+        ],
+        [
+         0.45,
+         0.25
+        ],
+        [
+         0.008,
+         0.25
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.168,
+        "z1": 0.17
+       }
       },
       {
        "id": "door-leaf",
@@ -5672,31 +6900,65 @@
        "kind": "poly",
        "points": [
         [
-         0,
-         -0.24
-        ],
-        [
-         -0.045,
-         -0.24
-        ],
-        [
-         -0.045,
-         -0.17
-        ],
-        [
          -0.024,
-         -0.17
-        ],
-        [
-         -0.024,
-         0.274
+         -0.14
         ],
         [
          0,
-         0.274
+         -0.14
+        ],
+        [
+         0,
+         0.447
+        ],
+        [
+         -0.024,
+         0.447
         ]
        ],
        "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": 0.274
+       },
+       "region": "hoses",
+       "material": "pvc-hose"
+      },
+      {
+       "id": "aquastop",
+       "bone": "hoses",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         -0.045,
+         -0.14
+        ],
+        [
+         0,
+         -0.14
+        ],
+        [
+         0,
+         -0.04
+        ],
+        [
+         -0.045,
+         -0.04
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.24,
+        "z1": -0.17
+       },
        "region": "hoses",
        "material": "pvc-hose"
       }

@@ -186,15 +186,12 @@ pub struct ControlledImageBinding {
 }
 
 impl ControlledImageBinding {
-    /// 📃️ Reads the one indirect image binding in a qualified XObject subdictionary.
-    pub fn from_xobjects(value: &PdfObject) -> Option<Self> {
-        let PdfObject::Dict(entries) = value else { return None; };
-        let [entry] = entries.as_slice() else { return None; };
-        let owner = entry.value.as_ref()?;
-        let length = entry.key.len();
+    /// 📃️ Binds one authored XObject resource name to its exact indirect native object.
+    pub fn new(owner: ObjRef, authored: &[u8]) -> Option<Self> {
+        let length = authored.len();
         if length == 0 || length > MAX_NAME { return None; }
         let mut name = [0; MAX_NAME];
-        name[..length].copy_from_slice(entry.key.as_bytes());
+        name[..length].copy_from_slice(authored);
         Some(Self { owner, name, length })
     }
 
@@ -205,6 +202,7 @@ struct ImageAdmission {
     binding: ControlledImageBinding,
     samples: Option<ControlledImageCursor>,
     role_position: Option<usize>,
+    role_target: usize,
 }
 
 /// 🪟️ Coordinates page bindings and the independently owned image roles of one native lift.
@@ -212,29 +210,34 @@ struct ImageAdmission {
 pub struct ControlledImageResources {
     owners: [ObjRef; Self::MAX_COUNT],
     active: Option<ImageAdmission>,
-    page_image: Option<usize>,
+    page_images: [u8; Self::MAX_COUNT],
+    page_length: usize,
 }
 
 impl ControlledImageResources {
     /// 📏️ Limits the number of distinct image resources on the controlled path.
-    pub const MAX_COUNT: usize = 8;
+    pub const MAX_COUNT: usize = 32;
 
-    /// 📑️ Binds a new page to its inherited image, if present.
-    pub fn set_page(&mut self, image: Option<usize>) { self.page_image = image; }
+    /// 📑️ Starts a new page with no bound image resources.
+    pub fn clear_page(&mut self) { self.page_length = 0; }
 
-    /// 🔗️ Resolves the active page's qualified authored name to its stable typed image ID.
-    pub fn page_name<'a>(&self, snapshot: &'a PdfSnapshot) -> Option<&'a str> {
-        self.page_image.map(|index| snapshot.images[index].id.as_str())
+    /// 📌️ Binds one admitted image slot to the active page; false when the page exceeds the slot table.
+    pub fn push_page(&mut self, slot: usize) -> bool {
+        let Some(entry) = self.page_images.get_mut(self.page_length) else { return false; };
+        let Ok(slot) = u8::try_from(slot) else { return false; };
+        *entry = slot;
+        self.page_length += 1;
+        true
     }
 
-    /// 🧭️ Confirms the resolved page resource at the content role's own ancestry.
-    pub fn matches_page(&self, snapshot: &PdfSnapshot, binding: &ControlledImageBinding) -> bool {
-        self.page_image.is_some_and(|index| self.owners[index] == binding.owner && snapshot.images[index].id == binding.name())
+    /// 🔗️ Reports whether the active page binds an image whose typed ID is the authored XObject name.
+    pub fn page_contains(&self, snapshot: &PdfSnapshot, name: &str) -> bool {
+        self.page_images[..self.page_length].iter().any(|slot| snapshot.images[usize::from(*slot)].id == name)
     }
 
     /// 🌱 Starts admission of a resource inspected through its exact page or branch dictionary.
     pub fn begin(&mut self, binding: ControlledImageBinding) {
-        self.active = Some(ImageAdmission { binding, samples: None, role_position: None });
+        self.active = Some(ImageAdmission { binding, samples: None, role_position: None, role_target: 0 });
     }
 
     /// 📦️ Quotes empty owned table or sample backing separately from writes.
@@ -248,7 +251,7 @@ impl ControlledImageResources {
     pub fn inline_body_bytes(&self, snapshot: &PdfSnapshot) -> usize {
         let Some(active) = self.active.as_ref() else { return 0; };
         if let Some(position) = active.role_position {
-            return if position >= snapshot.images.len() { 2 * size_of::<PdfAdmittedStreamRole>() } else { 0 };
+            return if position > active.role_target { 2 * size_of::<PdfAdmittedStreamRole>() } else { 0 };
         }
         if active.samples.is_none() { return size_of::<ControlledImageCursor>(); }
         if active.samples.as_ref().is_some_and(ControlledImageCursor::done) {
@@ -257,12 +260,12 @@ impl ControlledImageResources {
     }
 
     /// 🔎️ Inspects qualified images and completes their native role prefix under the current grant.
-    pub fn advance(&mut self, source: &mut dyn ObjectSource, snapshot: &mut PdfSnapshot, grant: CosGrant) -> Option<CosReceipt> {
+    pub fn advance(&mut self, source: &mut dyn ObjectSource, snapshot: &mut PdfSnapshot, grant: CosGrant, content_roles: usize) -> Option<CosReceipt> {
         if grant.work == 0 { return Some(sample_receipt(Ok(CosStatus::More), 0)); }
         let active = self.active.as_mut()?;
         let count = snapshot.images.len();
         if let Some(position) = active.role_position {
-            if position >= count {
+            if position > active.role_target {
                 snapshot.admitted_stream_roles.swap(position - 1, position);
                 active.role_position = Some(position - 1);
                 return Some(sample_receipt(Ok(CosStatus::More), 1));
@@ -282,6 +285,7 @@ impl ControlledImageResources {
             let [image, role] = samples.take_images(binding.name()).expect("qualified PDF image is fully sampled");
             let identity = PdfGraphIdentity { owner: binding.owner, path: Vec::new() };
             active.role_position = Some(snapshot.admitted_stream_roles.len());
+            active.role_target = snapshot.admitted_stream_roles.len() - content_roles;
             snapshot.admitted_stream_roles.push(PdfAdmittedStreamRole {
                 dependencies: vec![identity.clone()], identity, value: PdfStreamRoleValue::Image { image: role },
             });

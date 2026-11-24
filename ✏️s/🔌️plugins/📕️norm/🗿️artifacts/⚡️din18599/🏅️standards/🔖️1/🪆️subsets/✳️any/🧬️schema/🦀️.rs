@@ -58,7 +58,7 @@ pub struct Din18599Artifact {
     pub climate: MonthlyClimate,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    #[cfg_attr(any(test, feature = "test-support"), serde(with = "crate::document::child_identity_oracle"))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(with = "semio_s_plugin_norm_compliance::child_identity_oracle"))]
     pub climate_table: Din18599ClimateChild,
 }
 //#endregion 🔖️Artifact

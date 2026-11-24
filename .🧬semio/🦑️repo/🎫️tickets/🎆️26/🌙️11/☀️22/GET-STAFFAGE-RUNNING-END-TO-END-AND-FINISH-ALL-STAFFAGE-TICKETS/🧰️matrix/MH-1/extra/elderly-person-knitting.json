@@ -1,0 +1,340 @@
+[
+ {
+  "drop": {
+   "op": "front-sweep",
+   "id": "hand-l"
+  }
+ },
+ {
+  "drop": {
+   "op": "front-sweep",
+   "id": "hand-r"
+  }
+ },
+ {
+  "drop": {
+   "op": "plan-revolve",
+   "id": "cardigan"
+  }
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "plan-along",
+     "id": "cardigan",
+     "clip": true
+    }
+   ],
+   [
+    {
+     "op": "extrude",
+     "id": "cardigan",
+     "view": "plan"
+    }
+   ]
+  ],
+  "scale": "50",
+  "label": "cardigan-plan"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "set",
+     "view": "elevation",
+     "id": "hand-l",
+     "set": {
+      "solid": {
+       "kind": "extruded",
+       "sweep": "w",
+       "z0": 0.105,
+       "z1": 0.195
+      }
+     }
+    },
+    {
+     "op": "copy",
+     "id": "hand-l",
+     "from": "elevation",
+     "to": [
+      "front",
+      "plan"
+     ]
+    }
+   ]
+  ],
+  "scale": "50",
+  "label": "hand-l"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "set",
+     "view": "elevation",
+     "id": "hand-r",
+     "set": {
+      "solid": {
+       "kind": "extruded",
+       "sweep": "w",
+       "z0": -0.195,
+       "z1": -0.105
+      }
+     }
+    },
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "from": "elevation",
+     "to": [
+      "front",
+      "plan"
+     ]
+    }
+   ]
+  ],
+  "scale": "50",
+  "label": "hand-r"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "plan-along",
+     "id": "cardigan",
+     "clip": true
+    }
+   ],
+   [
+    {
+     "op": "extrude",
+     "id": "cardigan",
+     "view": "plan"
+    }
+   ]
+  ],
+  "scale": "100",
+  "label": "cardigan-plan"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "set",
+     "view": "elevation",
+     "id": "hand-l",
+     "set": {
+      "solid": {
+       "kind": "extruded",
+       "sweep": "w",
+       "z0": 0.105,
+       "z1": 0.195
+      }
+     }
+    },
+    {
+     "op": "copy",
+     "id": "hand-l",
+     "from": "elevation",
+     "to": [
+      "front",
+      "plan"
+     ]
+    }
+   ]
+  ],
+  "scale": "100",
+  "label": "hand-l"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "set",
+     "view": "elevation",
+     "id": "hand-r",
+     "set": {
+      "solid": {
+       "kind": "extruded",
+       "sweep": "w",
+       "z0": -0.195,
+       "z1": -0.105
+      }
+     }
+    },
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "from": "elevation",
+     "to": [
+      "front",
+      "plan"
+     ]
+    }
+   ]
+  ],
+  "scale": "100",
+  "label": "hand-r"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "plan-along",
+     "id": "cardigan",
+     "clip": true
+    }
+   ],
+   [
+    {
+     "op": "extrude",
+     "id": "cardigan",
+     "view": "plan"
+    }
+   ]
+  ],
+  "scale": "200",
+  "label": "cardigan-plan"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "set",
+     "view": "elevation",
+     "id": "hand-l",
+     "set": {
+      "solid": {
+       "kind": "extruded",
+       "sweep": "w",
+       "z0": 0.105,
+       "z1": 0.195
+      }
+     }
+    },
+    {
+     "op": "copy",
+     "id": "hand-l",
+     "from": "elevation",
+     "to": [
+      "front",
+      "plan"
+     ]
+    }
+   ]
+  ],
+  "scale": "200",
+  "label": "hand-l"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "set",
+     "view": "elevation",
+     "id": "hand-r",
+     "set": {
+      "solid": {
+       "kind": "extruded",
+       "sweep": "w",
+       "z0": -0.195,
+       "z1": -0.105
+      }
+     }
+    },
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "from": "elevation",
+     "to": [
+      "front",
+      "plan"
+     ]
+    }
+   ]
+  ],
+  "scale": "200",
+  "label": "hand-r"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "plan-along",
+     "id": "cardigan",
+     "clip": true
+    }
+   ],
+   [
+    {
+     "op": "extrude",
+     "id": "cardigan",
+     "view": "plan"
+    }
+   ]
+  ],
+  "scale": "500",
+  "label": "cardigan-plan"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "set",
+     "view": "elevation",
+     "id": "hand-l",
+     "set": {
+      "solid": {
+       "kind": "extruded",
+       "sweep": "w",
+       "z0": 0.105,
+       "z1": 0.195
+      }
+     }
+    },
+    {
+     "op": "copy",
+     "id": "hand-l",
+     "from": "elevation",
+     "to": [
+      "front",
+      "plan"
+     ]
+    }
+   ]
+  ],
+  "scale": "500",
+  "label": "hand-l"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "set",
+     "view": "elevation",
+     "id": "hand-r",
+     "set": {
+      "solid": {
+       "kind": "extruded",
+       "sweep": "w",
+       "z0": -0.195,
+       "z1": -0.105
+      }
+     }
+    },
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "from": "elevation",
+     "to": [
+      "front",
+      "plan"
+     ]
+    }
+   ]
+  ],
+  "scale": "500",
+  "label": "hand-r"
+ }
+]

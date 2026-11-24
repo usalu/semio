@@ -178,6 +178,10 @@ fn summary(input: &SceneInput) -> LocalizedCopy {
 mod unit;
 
 #[cfg(test)]
+#[path = "📈️diagrams/✂️shear/🧪️tests/🦀️.rs"]
+mod shear_tests;
+
+#[cfg(test)]
 #[path = "🧪️tests/🔬️live/🦀️.rs"]
 mod live_law;
 

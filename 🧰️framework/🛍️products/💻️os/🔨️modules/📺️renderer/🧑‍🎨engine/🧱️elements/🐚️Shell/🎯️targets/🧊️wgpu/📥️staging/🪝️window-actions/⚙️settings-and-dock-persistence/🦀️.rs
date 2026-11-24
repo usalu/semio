@@ -195,6 +195,11 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                 semio_framework::kernel::Effect::ClipboardWrite { fragment } => {
                     self.docs.workspace_clipboard = Some(fragment);
                 }
+                #[cfg(target_arch = "wasm32")]
+                semio_framework::kernel::Effect::PublishEvent { topic, payload } if topic == "os.on-demand.request" => match String::from_utf8(payload) {
+                    Ok(request) => self.settle.deferred_actions.push(ActionDescriptor { controller_id: "framework".into(), action: "activateOnDemand".into(), args: Some(semio_framework_value::DslValue::object([("request".to_string(), semio_framework_value::DslValue::String(request))])) }),
+                    Err(error) => debug_log(&format!("[TRACE] wgpu shell on-demand activation request is not text: {error}")),
+                },
                 other => {
                     debug_log(&format!("[TRACE] wgpu-shell effect dropped tag={other:?}"));
                 }

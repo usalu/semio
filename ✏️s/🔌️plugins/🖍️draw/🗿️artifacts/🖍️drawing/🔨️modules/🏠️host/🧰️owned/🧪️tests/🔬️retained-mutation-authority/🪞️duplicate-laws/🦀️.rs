@@ -173,6 +173,7 @@ fn retained_drawing_cancel_stale_each_precommit_replay_candidate_container_stage
             };
             let operation = semio_framework_job::OperationId(8_003);
             let generation = semio_framework_job::Generation(83);
+            let held = HeldMutation::new(&mutation, &source);
             let mut authority = borrowed_candidate(operation, generation).expect("Drawing candidate fixed owner arenas admit");
             let cancel = semio_framework_job::root_cancel_token();
             let mut preview_sequence = 0;
@@ -182,7 +183,7 @@ fn retained_drawing_cancel_stale_each_precommit_replay_candidate_container_stage
                 }
                 let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
                 let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
-                assert!(!authority.step(&mut source, &mutation, &mut context).expect("Drawing stage fixture advances"));
+                assert!(!held.step(&mut authority, &mut source, &mut context).expect("Drawing stage fixture advances"));
             }
             assert_eq!(authority.phase, stage, "fixture reaches each replay/candidate/container stage exactly");
             if !stale {
@@ -198,7 +199,7 @@ fn retained_drawing_cancel_stale_each_precommit_replay_candidate_container_stage
                 &mut preview_sequence,
                 &mut rejected_retained,
             );
-            assert_eq!(authority.step(&mut source, &mutation, &mut rejected), Err(if stale { "drawing-store.mutation-candidate-stale-authority" } else { "drawing-store.mutation-candidate-cancelled" }),);
+            assert_eq!(held.step(&mut authority, &mut source, &mut rejected), Err(if stale { "drawing-store.mutation-candidate-stale-authority" } else { "drawing-store.mutation-candidate-cancelled" }),);
             close_candidate(&mut authority, Some(&mut source));
             drop(authority);
             assert_eq!(source.id, last_valid_id, "cancel/stale close never publishes a partial candidate");
@@ -217,6 +218,7 @@ fn retained_drawing_committed_candidate_finishes_exact_owner_return_after_late_c
         let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { identities: duplicate_assignments(&source,&target), layer_id: target });
         let operation = semio_framework_job::OperationId(8_004);
         let generation = semio_framework_job::Generation(84);
+        let held = HeldMutation::new(&mutation, &source);
         let mut authority = borrowed_candidate(operation, generation).expect("Drawing candidate fixed owner arenas admit");
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;
@@ -226,7 +228,7 @@ fn retained_drawing_committed_candidate_finishes_exact_owner_return_after_late_c
             }
             let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
             let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
-            assert!(!authority.step(&mut source, &mutation, &mut context).expect("Drawing candidate reaches its committed phase"));
+            assert!(!held.step(&mut authority, &mut source, &mut context).expect("Drawing candidate reaches its committed phase"));
         }
         assert_eq!(authority.phase, DrawingMutationCandidatePhase::Complete);
         if !stale {
@@ -237,7 +239,7 @@ fn retained_drawing_committed_candidate_finishes_exact_owner_return_after_late_c
         for _ in 0..100_000 {
             let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
             let mut context = semio_framework_job::StepContext::new(operation, terminal_generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
-            if authority.step(&mut source, &mutation, &mut context).expect("a committed candidate finishes exact arena return despite a late context change") {
+            if held.step(&mut authority, &mut source, &mut context).expect("a committed candidate finishes exact arena return despite a late context change") {
                 terminal = true;
                 break;
             }

@@ -1,6 +1,7 @@
 //! 🧰️ Drawing retained mutation law kit: the string destination admission, the nested and byte bound snapshots, the drain, close, apply and digest helpers shared by the laws.
 
 use super::*;
+use semio_framework_value_clone_source_testing::FixtureSource;
 
 fn admit_string_destination(value: &mut DrawingNativeText) {
     let length = value.len();
@@ -13,7 +14,7 @@ fn admit_string_destination(value: &mut DrawingNativeText) {
 }
 
 pub(super) fn reserve_native_layer_slots(value: &mut DrawingNativeLayers, minimum: usize) {
-    while value.capacity() < minimum { value.reserve_one(usize::MAX).unwrap_or_else(|_| panic!("cold native Drawing fixture page allocation admits")); }
+    while value.capacity() < minimum { value.reserve_one_cold(usize::MAX).unwrap_or_else(|_| panic!("cold native Drawing fixture page allocation admits")); }
 }
 
 pub(super) fn native_layer_backing(value: &DrawingNativeLayers) -> usize { value.first().map_or(0, |layer| layer as *const _ as usize) }
@@ -60,7 +61,7 @@ pub(super) fn nested_snapshot() -> DrawingSnapshot {
     initialize_drawing_mutation_arena_pool_for_test();
     let mut snapshot = semio_s_artifact_draw_drawing_model::default_drawing_document("drawing-retained-mutation", None);
     let shape = semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Shape")).to_string().into()).expect("nonempty authored identity"), "Shape");
-    let boolean = semio_s_artifact_draw_drawing_model::create_drawing_boolean_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Boolean")).to_string().into()).expect("nonempty authored identity"), "Boolean", "union", vec![semio_s_artifact_draw_drawing_model::layer_id(&shape).into()]);
+    let boolean = semio_s_artifact_draw_drawing_model::create_drawing_boolean_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Boolean")).to_string().into()).expect("nonempty authored identity"), "Boolean", "union", vec![semio_s_artifact_draw_drawing_model::layer_id(&shape).clone()].into());
     let trace = semio_s_artifact_draw_drawing_model::create_drawing_trace_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Trace")).to_string().into()).expect("nonempty authored identity"), "Trace", "asset-a");
     let mut group = semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group");
     if let DrawingLayerNode::Group(value) = &mut group {
@@ -158,17 +159,35 @@ pub(super) fn borrowed_candidate(operation: semio_framework_job::OperationId, ge
     Err("drawing-store.mutation-arena-pool-contended")
 }
 
+/// 🧪️ Holds one mutation under original source custody, together with the sealed original snapshot a duplicate reads its clone source from.
+pub(super) struct HeldMutation {
+    mutation: FixtureSource<DrawingMutation>,
+    base: Option<FixtureSource<DrawingSnapshot>>,
+}
+
+impl HeldMutation {
+    pub(super) fn new(mutation: &DrawingMutation, source: &DrawingSnapshot) -> Self {
+        let base = matches!(mutation, DrawingMutation::DuplicateLayer(_)).then(|| FixtureSource::from_owner(source.clone()));
+        Self { mutation: FixtureSource::from_owner(mutation.clone()), base }
+    }
+
+    pub(super) fn step(&self, authority: &mut DrawingMutationCandidateAuthority, source: &mut DrawingSnapshot, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        authority.step_with_custody(source, self.base.as_ref().map(|base| base.borrow()), self.mutation.borrow(), cx)
+    }
+}
+
 pub(super) fn apply(mut source: DrawingSnapshot, mutation: &DrawingMutation) -> Result<DrawingSnapshot, (DrawingSnapshot, &'static str)> {
     initialize_drawing_mutation_arena_pool_for_test();
     let operation = semio_framework_job::OperationId(8_001);
     let generation = semio_framework_job::Generation(81);
+    let held = HeldMutation::new(mutation, &source);
     let mut authority = borrowed_candidate(operation, generation).expect("Drawing candidate fixed owner arenas admit");
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     for _ in 0..200_000 {
         let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
-        match authority.step(&mut source, mutation, &mut context) {
+        match held.step(&mut authority, &mut source, &mut context) {
             Ok(true) => {
                 authority.take().expect("Drawing mutation overlay exact terminal commit witness");
                 assert!(authority.terminal_is_empty());
@@ -195,11 +214,12 @@ pub(super) fn live_workset(source: &mut DrawingSnapshot, mutation: &DrawingMutat
     let generation = semio_framework_job::Generation(84);
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
+    let held = HeldMutation::new(mutation, source);
     let mut authority = borrowed_candidate(operation, generation)?;
     for _ in 0..100_000 {
         let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
-        authority.step(source, mutation, &mut context)?;
+        held.step(&mut authority, source, &mut context)?;
         if let Some(workset) = authority.workset {
             close_candidate(&mut authority, Some(source));
             drop(authority);
@@ -217,11 +237,12 @@ pub(super) fn planned_clone_workset(source: &mut DrawingSnapshot, mutation: &Dra
     let generation = semio_framework_job::Generation(86);
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
+    let held = HeldMutation::new(mutation, source);
     let mut authority = borrowed_candidate(operation, generation)?;
     for _ in 0..100_000 {
         let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
-        authority.step(source, mutation, &mut context)?;
+        held.step(&mut authority, source, &mut context)?;
         if authority.phase == DrawingMutationCandidatePhase::BindOverlay {
             let workset = authority.workset.ok_or("drawing-store.test-clone-workset-missing")?;
             let totals = authority.clone_work.as_ref().and_then(DrawingLayerCloneWorkAuthority::totals).ok_or("drawing-store.test-clone-work-false-terminal")?;
@@ -263,7 +284,7 @@ pub(super) fn digest(mutation: &DrawingMutation) -> Result<[u8; 32], &'static st
             Ok(false) => {}
             Err(error) => {
                 while !authority.terminal_is_empty() {
-                    let _ = authority.close_step(DRAWING_OWNED_FIELD_BYTES);
+                    let _ = authority.close_step();
                 }
                 drop(authority);
                 return Err(error);
@@ -298,7 +319,7 @@ pub(super) fn rich_layer() -> DrawingLayerNode {
         ));
         value.children.push(semio_s_artifact_draw_drawing_model::create_drawing_text_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Text")).to_string().into()).expect("nonempty authored identity"), "Text"));
         value.children.push(semio_s_artifact_draw_drawing_model::create_drawing_image_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Image")).to_string().into()).expect("nonempty authored identity"), "Image", "asset-reference"));
-        value.children.push(semio_s_artifact_draw_drawing_model::create_drawing_boolean_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Boolean")).to_string().into()).expect("nonempty authored identity"), "Boolean", "union", vec!["a".into(), "b".into()].into()));
+        value.children.push(semio_s_artifact_draw_drawing_model::create_drawing_boolean_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Boolean")).to_string().into()).expect("nonempty authored identity"), "Boolean", "union", vec![semio_framework_value::paged::PagedUtf8::<{usize::MAX}>::from("a"), semio_framework_value::paged::PagedUtf8::<{usize::MAX}>::from("b")].into()));
         value.children.push(semio_s_artifact_draw_drawing_model::create_drawing_trace_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Trace")).to_string().into()).expect("nonempty authored identity"), "Trace", "trace-source"));
     }
     group

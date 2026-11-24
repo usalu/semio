@@ -1,0 +1,137 @@
+{
+ "profiles": [
+  {
+   "counts": {
+    "closure": {
+     "derived": 0,
+     "loaded": 32,
+     "stale": 0,
+     "checked": 30,
+     "stamped": 30,
+     "stampsKept": 0,
+     "fetched": 0,
+     "reasked": 0,
+     "reaskFailed": 0,
+     "reaskEqual": 0,
+     "reaskDifferent": 0
+    },
+    "lane": {
+     "fetched": 0,
+     "prefetched": 0,
+     "computed": 0,
+     "published": 0,
+     "refused": 0,
+     "missed": 0,
+     "imported": 0
+    },
+    "verdicts": {
+     "read": 2,
+     "written": 30,
+     "waited": 0
+    },
+    "layers": {
+     "hits": 0,
+     "joined": 0,
+     "checked": 0,
+     "indexed": 0,
+     "milliseconds": 0
+    }
+   },
+   "name": "@semio-tech/dag-dag-rs"
+  }
+ ],
+ "phases": [
+  {
+   "label": "start",
+   "wallMs": 2,
+   "cpuMs": 2,
+   "rssMB": 29,
+   "peakMB": 29,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "bootstrap",
+   "wallMs": 3271,
+   "cpuMs": 982,
+   "rssMB": 148,
+   "peakMB": 148,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "import-modules",
+   "wallMs": 2,
+   "cpuMs": 2,
+   "rssMB": 148,
+   "peakMB": 148,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "open-session",
+   "wallMs": 350,
+   "cpuMs": 9,
+   "rssMB": 152,
+   "peakMB": 152,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "job:@semio-tech/dag-dag-rs",
+   "wallMs": 2365,
+   "cpuMs": 793,
+   "rssMB": 234,
+   "peakMB": 234,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "run:@semio-tech/dag-dag-rs",
+   "wallMs": 13556,
+   "cpuMs": 3338,
+   "rssMB": 462,
+   "peakMB": 482,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0,
+   "kind": "language:rust",
+   "error": "Error: Native dependency has no build project owner: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/👥️member/📦️packages/🦀️rust (required by @semio-tech/dag-dag-rs:build; candidates=4857)\n    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🟨️.mjs:308:37)\n   ",
+   "recordSummary": "undefined is not an object (evaluating 'portable.observations')"
+  }
+ ],
+ "calls": {
+  "lstatSync": 2,
+  "openSync": 1,
+  "p.readFile": 32
+ },
+ "bytes": {},
+ "distinctFilesRead": 32,
+ "spawns": [],
+ "topPaths": [
+  [
+   "p.readFile /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-H/scratchpad/gr18",
+   32
+  ],
+  [
+   "lstatSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+   2
+  ],
+  [
+   "openSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+   1
+  ]
+ ],
+ "hashes": 0,
+ "hashBytes": 0,
+ "load": [
+  118.8056640625,
+  79.94580078125,
+  70.25341796875
+ ]
+}

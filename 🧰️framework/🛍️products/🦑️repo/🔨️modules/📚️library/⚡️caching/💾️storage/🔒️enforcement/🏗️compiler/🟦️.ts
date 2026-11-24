@@ -30,6 +30,7 @@ import {repositoryCompilerLaunchEnvironmentV1} from "./🚪️ingress/🟦️.ts
 import {withRepositoryNativeCompilerV1} from "./🛠️native-compiler/🟦️.ts";
 import {ensureRepositoryWindowsCompilerV1,withRepositoryWindowsCompilerV1} from "./🛠️native-compiler/🪟️windows/🟦️.ts";
 import {unitCacheRootV1,unitCacheWrapperV1} from "../../../🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
+import {laneFlavourV1} from "../../../🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
 import {withCompilerLaneViewV1,withCompilerProductViewV1,type CompilerLaneRequestV1} from "./🛤️lane/🟦️.ts";
 import {compilerProductKeyV1} from "./🎯️product/🟦️.ts";
 import {refuseCachingV1} from "../../../📖️texts/🟦️.ts";
@@ -79,7 +80,7 @@ export function withRepositoryCompilerLaneV1<T>(workspace:string,mode:BuildMode,
 export function withRepositoryCompilerStoreLaneV1<T>(store:RepositoryCompilerStoreV1,control:ResourceLeaseControl,request:CompilerLaneRequestV1,body:(view:RepositoryCompilerStoreV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
  const owner=compilerStoreOwners.get(store);if(!owner?.live)throw refuseCachingV1("stale","compiler.retained-store-required");
  requireNativeStorageReservationV1(owner.storage,owner.control);requireIssuedResourceControlRefinementV1(owner.control,control);
- return withCompilerLaneViewV1({host:owner.host,store,control,request,register:view=>{compilerStoreOwners.set(view,owner);}},body);
+ return withCompilerLaneViewV1({host:owner.host,store,control,request:{...request,...laneFlavourV1(store.buildDirectory)===undefined?{}:{flavour:laneFlavourV1(store.buildDirectory)!}},register:view=>{compilerStoreOwners.set(view,owner);}},body);
 }
 
 /** 🎯️ Selects an intended product path under the exact live compiler owner before taking its exclusive execution claim. */
@@ -88,7 +89,7 @@ export async function withRepositoryCompilerStoreProductV1<T>(store:RepositoryCo
  requireIssuedResourceControlInvocationV1(control,owner.invocation);requireNativeStorageReservationV1(owner.storage,owner.control);requireIssuedResourceControlRefinementV1(owner.control,control);
  const captured=Object.freeze({...request,arguments:Object.freeze([...request.arguments]),crates:Object.freeze([...request.crates])}),product=await compilerProductKeyV1({version:1,root:owner.workspace,manifest:resolve(owner.workspace,captured.manifest),mode:owner.mode,command:captured.command,producer:captured.producer,arguments:captured.arguments,toolchain:store.toolchain.digest},control);
  if(!owner.live)throw refuseCachingV1("stale","compiler.retained-store-required");requireNativeStorageReservationV1(owner.storage,owner.control);
- return withCompilerProductViewV1({host:owner.host,store,control,request:{crates:captured.crates},product,register:view=>{compilerStoreOwners.set(view,owner);}},body);
+ return withCompilerProductViewV1({host:owner.host,store,control,request:{crates:captured.crates,...laneFlavourV1(store.buildDirectory)===undefined?{}:{flavour:laneFlavourV1(store.buildDirectory)!}},product,register:view=>{compilerStoreOwners.set(view,owner);}},body);
 }
 
 type RetainedCompilerStoreV1={readonly store:RepositoryCompilerStoreV1;readonly control:ResourceLeaseControl;readonly invocation:ScriptInvocation;live:boolean};

@@ -98,8 +98,8 @@
       "accepted": false
     },
     {
-      "name": "dependency-scope-anchor",
-      "accepted": true
+      "name": "lockfile-nested-anchor",
+      "accepted": false
     },
     {
       "name": "symlink-ancestor",

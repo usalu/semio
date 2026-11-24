@@ -49,7 +49,6 @@ pub struct MutationAuthorityCommon {
 pub struct MutationAggregateSourceAuthority {
     #[doc(hidden)] pub workspace_root: PathBuf,
     #[doc(hidden)] pub mutation_root: PathBuf,
-    #[cfg(any(test, feature = "testkit"))]
     #[doc(hidden)] pub source_path: PathBuf,
     #[doc(hidden)] pub taxonomy_path: PathBuf,
     pub(super) mutation_payload_facet: String,
@@ -127,7 +126,6 @@ pub struct MutationAggregateSourceAuthority {
     Ok(MutationAggregateSourceAuthority {
         workspace_root: common.workspace_root,
         mutation_root: mutation_root.to_path_buf(),
-        #[cfg(any(test, feature = "testkit"))]
         source_path: common.source_path,
         taxonomy_path: common.taxonomy_path,
         mutation_payload_facet: common.mutation_payload_facet,
@@ -316,8 +314,7 @@ pub(super) fn mutation_authority_no_follow(root: &Path, target: &Path, directory
 }
 //#endregion 🔖️MutationSourceAuthority
 
-/// 🩺️ Offloaded: `E0463`, which the offload client reads as incomplete inputs (local retry); else the compile error.
+/// 🩺️ A refused authority read: the compile error at the derive input.
 #[doc(hidden)] pub fn mutation_authority_refusal(spanned:&impl quote::ToTokens,message:String)->TokenStream{
-    if crate::compiler_resources::input_root_v1().is_some() { return "extern crate semio_offload_inputs_incomplete;".parse().unwrap(); }
     syn::Error::new_spanned(spanned,message).to_compile_error().into()
 }

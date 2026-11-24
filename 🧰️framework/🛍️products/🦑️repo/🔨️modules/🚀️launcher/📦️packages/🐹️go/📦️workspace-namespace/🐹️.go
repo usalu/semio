@@ -11,7 +11,7 @@ import (
 	"unicode/utf16"
 )
 
-// 🏷️WorkspaceNamespaceClassification identifies the bootstrap phase (cold, unmanaged, managed, or detached when the managed store is not attached) without granting dependency readiness or content authority.
+// 🏷️WorkspaceNamespaceClassification identifies the bootstrap phase (cold, unmanaged, managed, or detached when the managed store is not attached or its generation image has no ready receipt yet) without granting dependency readiness or content authority.
 type WorkspaceNamespaceClassification struct {
 	Kind            string `json:"kind"`
 	Authority       bool   `json:"authority"`
@@ -327,8 +327,12 @@ func ClassifyWorkspaceNamespace(root string, policy WorkspaceLinksPolicy) (Works
 	if len(utf16.Encode([]rune(target))) > policy.MaximumPathLength {
 		return classification, fmt.Errorf("managed workspace target exceeds its path budget")
 	}
+	receiptPath := filepath.Join(filepath.Dir(target), contract.receiptName)
+	if _, err := os.Lstat(receiptPath); os.IsNotExist(err) {
+		return WorkspaceNamespaceClassification{Kind: "detached"}, nil
+	}
 	var raw json.RawMessage
-	if err := readWorkspaceManifest(filepath.Join(filepath.Dir(target), contract.receiptName), contract.maximumReceiptBytes, &raw); err != nil {
+	if err := readWorkspaceManifest(receiptPath, contract.maximumReceiptBytes, &raw); err != nil {
 		return classification, err
 	}
 	var ready workspaceManagedReady

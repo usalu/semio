@@ -64,7 +64,8 @@ function replyError(requestId, error, frames, retryableLifecycle) {
   else if (error && typeof error === "object" && (typeof error.stack === "string" || typeof error.message === "string")) reason = String(error);
   else if (error && typeof error === "object") { try { reason = JSON.stringify(error); } catch { reason = String(error); } }
   else reason = String(error);
-  self.postMessage({ kind: "result", requestId, ok: false, error: reason + detail, stack, type, framesBytes, retryableLifecycle: retryableLifecycle === true, beat: beat("fault") });
+  const fault = error && typeof error === "object" && error.fault && typeof error.fault.code === "string" ? error.fault : undefined;
+  self.postMessage({ kind: "result", requestId, ok: false, error: reason + detail, fault, stack, type, framesBytes, retryableLifecycle: retryableLifecycle === true, beat: beat("fault") });
 }
 
 // 🩺️ Hands every component this worker hosts the guest-side diagnostics switch through
@@ -96,6 +97,23 @@ async function armGuestRuntimeDiagnostics() {
   return guestRuntimeDiagnostics;
 }
 
+const pendingSuccessions = new Map();
+let successionSeq = 0n;
+function requestSuccession(actorId, activationGeneration, originalAdmission) {
+  const request = ++successionSeq;
+  return new Promise((resolve, reject) => {
+    pendingSuccessions.set(request, { resolve, reject });
+    self.postMessage({ kind: "original-succession-request", request, actorId, activationGeneration, operation: originalAdmission.operation, generation: originalAdmission.generation });
+  });
+}
+function settleSuccession(msg) {
+  const pending = pendingSuccessions.get(msg.request);
+  if (!pending) return;
+  pendingSuccessions.delete(msg.request);
+  if (msg.admission !== undefined) pending.resolve(msg.admission);
+  else pending.reject(msg.refusal);
+}
+
 async function loadActor(actorId, activationGeneration, moduleUrl, originalAdmission) {
   if (typeof activationGeneration !== "bigint" || activationGeneration <= lastActivationGeneration || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
   if (actors.has(actorId) || activatingActors.has(actorId)) throw new Error("actor-close.activation-already-owned");
@@ -113,7 +131,7 @@ async function loadActor(actorId, activationGeneration, moduleUrl, originalAdmis
     const bridge = await import(/* @vite-ignore */ moduleUrl);
     faultPhase = "instantiate";
     postBeat("module-ready");
-    const api = await bridge.createActorApi(actorId, activationGeneration, originalAdmission, operationClockUs, { receipt: receipt => self.postMessage({ kind: "original-turn-receipt", actorId, activationGeneration, receipt }), hold: refusal => self.postMessage({ kind: "original-producer-held", actorId, activationGeneration, operation: originalAdmission.operation, generation: originalAdmission.generation, refusal }) });
+    const api = await bridge.createActorApi(actorId, activationGeneration, originalAdmission, operationClockUs, { receipt: receipt => self.postMessage({ kind: "original-turn-receipt", actorId, activationGeneration, receipt }), hold: refusal => self.postMessage({ kind: "original-producer-held", actorId, activationGeneration, operation: originalAdmission.operation, generation: originalAdmission.generation, refusal }), succeed: () => requestSuccession(actorId, activationGeneration, originalAdmission) });
     faultPhase = "actor-ready";
     postBeat("actor-ready");
     const entry = { api, moduleUrl, activationGeneration, pendingAssets: [] };

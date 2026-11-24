@@ -763,19 +763,36 @@
     "support": "pin"
    },
    {
-    "id": "kick-tower-base",
+    "id": "kick-tower-rail-r",
     "bone": "kick-tower",
     "x": 0,
     "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Kick tower rails on the floor",
-     "de": "Kufen des Kickturms auf dem Boden"
+     "en": "Right rail of the kick tower on the floor",
+     "de": "Rechte Kufe des Kickturms auf dem Boden"
     },
     "support": "contact",
     "footprintLengthM": 0.32,
-    "footprintWidthM": 0.36,
-    "frictionCoefficient": 0.6
+    "footprintWidthM": 0.03,
+    "frictionCoefficient": 0.6,
+    "z": -0.18
+   },
+   {
+    "id": "kick-tower-rail-l",
+    "bone": "kick-tower",
+    "x": 0,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Left rail of the kick tower on the floor",
+     "de": "Linke Kufe des Kickturms auf dem Boden"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.32,
+    "footprintWidthM": 0.03,
+    "frictionCoefficient": 0.6,
+    "z": 0.18
    },
    {
     "id": "kick-pedal-base",
@@ -42067,7 +42084,8 @@
      "foot-l-rear",
      "foot-r-front",
      "foot-r-rear",
-     "kick-tower-base",
+     "kick-tower-rail-r",
+     "kick-tower-rail-l",
      "kick-pedal-base",
      "hihat-pedal-base",
      "throne-foot-a",
@@ -42153,7 +42171,8 @@
     "contacts": [
      "grip-l",
      "grip-r",
-     "kick-tower-base",
+     "kick-tower-rail-r",
+     "kick-tower-rail-l",
      "kick-pedal-base",
      "hihat-pedal-base",
      "throne-foot-a",
@@ -42253,7 +42272,8 @@
      "foot-l-rear",
      "foot-r-front",
      "foot-r-rear",
-     "kick-tower-base",
+     "kick-tower-rail-r",
+     "kick-tower-rail-l",
      "kick-pedal-base",
      "hihat-pedal-base",
      "throne-foot-a",
@@ -42417,7 +42437,8 @@
      "foot-l-rear",
      "foot-r-front",
      "foot-r-rear",
-     "kick-tower-base",
+     "kick-tower-rail-r",
+     "kick-tower-rail-l",
      "kick-pedal-base",
      "hihat-pedal-base",
      "throne-foot-a",
@@ -42572,7 +42593,8 @@
      "foot-l-rear",
      "foot-r-front",
      "foot-r-rear",
-     "kick-tower-base",
+     "kick-tower-rail-r",
+     "kick-tower-rail-l",
      "kick-pedal-base",
      "hihat-pedal-base",
      "throne-foot-a",
@@ -42689,7 +42711,12 @@
     ],
     "contacts": [
      {
-      "anchor": "kick-tower-base",
+      "anchor": "kick-tower-rail-r",
+      "fromS": 0,
+      "toS": 8
+     },
+     {
+      "anchor": "kick-tower-rail-l",
       "fromS": 0,
       "toS": 8
      },
@@ -42867,7 +42894,12 @@
     ],
     "contacts": [
      {
-      "anchor": "kick-tower-base",
+      "anchor": "kick-tower-rail-r",
+      "fromS": 0,
+      "toS": 0.75
+     },
+     {
+      "anchor": "kick-tower-rail-l",
       "fromS": 0,
       "toS": 0.75
      },
@@ -43008,7 +43040,12 @@
     ],
     "contacts": [
      {
-      "anchor": "kick-tower-base",
+      "anchor": "kick-tower-rail-r",
+      "fromS": 0,
+      "toS": 14
+     },
+     {
+      "anchor": "kick-tower-rail-l",
       "fromS": 0,
       "toS": 14
      },
@@ -43507,7 +43544,8 @@
    "gravityMS2": 9.80665,
    "dynamics": "quasi-static",
    "supports": [
-    "kick-tower-base",
+    "kick-tower-rail-r",
+    "kick-tower-rail-l",
     "kick-pedal-base",
     "hihat-pedal-base",
     "throne-foot-a",
@@ -47279,7 +47317,7 @@
       "part": "member"
      },
      {
-      "id": "support-kick-tower-base",
+      "id": "support-kick-tower-rail-r",
       "kind": "box",
       "bone": "kick-tower",
       "material": "rubber-epdm",
@@ -47288,13 +47326,13 @@
       "size": [
        0.32,
        0.0075,
-       0.36
+       0.03
       ],
       "transform": {
        "translation": [
         0.00375,
         0,
-        0
+        -0.18
        ],
        "rotation": [
         0,
@@ -47305,7 +47343,36 @@
       },
       "member": "kick-tower",
       "part": "support",
-      "anchor": "kick-tower-base"
+      "anchor": "kick-tower-rail-r"
+     },
+     {
+      "id": "support-kick-tower-rail-l",
+      "kind": "box",
+      "bone": "kick-tower",
+      "material": "rubber-epdm",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.32,
+       0.0075,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.00375,
+        0,
+        0.18
+       ],
+       "rotation": [
+        0,
+        0,
+        -0.70711,
+        0.70711
+       ]
+      },
+      "member": "kick-tower",
+      "part": "support",
+      "anchor": "kick-tower-rail-l"
      },
      {
       "id": "support-kick-pedal-base",
@@ -50870,7 +50937,7 @@
       "part": "member"
      },
      {
-      "id": "support-kick-tower-base",
+      "id": "support-kick-tower-rail-r",
       "kind": "box",
       "bone": "kick-tower",
       "material": "rubber-epdm",
@@ -50879,13 +50946,13 @@
       "size": [
        0.32,
        0.015,
-       0.36
+       0.03
       ],
       "transform": {
        "translation": [
         0.0075,
         0,
-        0
+        -0.18
        ],
        "rotation": [
         0,
@@ -50896,7 +50963,36 @@
       },
       "member": "kick-tower",
       "part": "support",
-      "anchor": "kick-tower-base"
+      "anchor": "kick-tower-rail-r"
+     },
+     {
+      "id": "support-kick-tower-rail-l",
+      "kind": "box",
+      "bone": "kick-tower",
+      "material": "rubber-epdm",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.32,
+       0.015,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.0075,
+        0,
+        0.18
+       ],
+       "rotation": [
+        0,
+        0,
+        -0.70711,
+        0.70711
+       ]
+      },
+      "member": "kick-tower",
+      "part": "support",
+      "anchor": "kick-tower-rail-l"
      },
      {
       "id": "support-kick-pedal-base",
@@ -54289,7 +54385,7 @@
       "part": "member"
      },
      {
-      "id": "support-kick-tower-base",
+      "id": "support-kick-tower-rail-r",
       "kind": "box",
       "bone": "kick-tower",
       "material": "rubber-epdm",
@@ -54298,13 +54394,13 @@
       "size": [
        0.32,
        0.03,
-       0.36
+       0.03
       ],
       "transform": {
        "translation": [
         0.015,
         0,
-        0
+        -0.18
        ],
        "rotation": [
         0,
@@ -54315,7 +54411,36 @@
       },
       "member": "kick-tower",
       "part": "support",
-      "anchor": "kick-tower-base"
+      "anchor": "kick-tower-rail-r"
+     },
+     {
+      "id": "support-kick-tower-rail-l",
+      "kind": "box",
+      "bone": "kick-tower",
+      "material": "rubber-epdm",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.32,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.015,
+        0,
+        0.18
+       ],
+       "rotation": [
+        0,
+        0,
+        -0.70711,
+        0.70711
+       ]
+      },
+      "member": "kick-tower",
+      "part": "support",
+      "anchor": "kick-tower-rail-l"
      },
      {
       "id": "support-kick-pedal-base",
@@ -56656,7 +56781,7 @@
       "part": "member"
      },
      {
-      "id": "support-kick-tower-base",
+      "id": "support-kick-tower-rail-r",
       "kind": "box",
       "bone": "kick-tower",
       "material": "rubber-epdm",
@@ -56665,13 +56790,13 @@
       "size": [
        0.32,
        0.075,
-       0.36
+       0.03
       ],
       "transform": {
        "translation": [
         0.0375,
         0,
-        0
+        -0.18
        ],
        "rotation": [
         0,
@@ -56682,7 +56807,36 @@
       },
       "member": "kick-tower",
       "part": "support",
-      "anchor": "kick-tower-base"
+      "anchor": "kick-tower-rail-r"
+     },
+     {
+      "id": "support-kick-tower-rail-l",
+      "kind": "box",
+      "bone": "kick-tower",
+      "material": "rubber-epdm",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.32,
+       0.075,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0,
+        0.18
+       ],
+       "rotation": [
+        0,
+        0,
+        -0.70711,
+        0.70711
+       ]
+      },
+      "member": "kick-tower",
+      "part": "support",
+      "anchor": "kick-tower-rail-l"
      },
      {
       "id": "support-kick-pedal-base",

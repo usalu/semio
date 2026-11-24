@@ -12,7 +12,7 @@ pub use semio_framework_actor_pack as pack;
 pub use semio_framework_actor_vocabulary::*;
 pub use semio_framework_actor_job_publication::*;
 pub use retained_turn::{OriginalActorParkAdmission,OriginalActorParkAdmissionFailure, OriginalActorParkedTurn, OriginalActorParkedOutcome, OriginalActorParkedReturn, IssuedRetainedBatch, IssuedRetainedRecipient, OriginalActorTurnLoan, OriginalActorTurnWork, RetainedTurnInput, RetainedTurnReceipt, OriginalActorInput, ActorGuestPhase, OriginalActorGuestReturn, OriginalActorJobProvider, OriginalJobStep, OriginalJobOutputState, OriginalJobOutcome, OriginalJobOutputChunk, OriginalJobOutputReply, OriginalJobOutputAckReply, OriginalJobSource, OriginalJobSourceCursor, OriginalJobTurnLoan, OriginalJobBudget, OriginalJobStartReply, OriginalJobStepReply, OriginalJobCancelReply, OriginalJobCallFailure};
-pub use retained_turn::{OriginalGuestExecutionBudget, OriginalGuestExecutionReceipt, OriginalJobSourceWireCursor, OriginalJobSourceWireHeader};
+pub use retained_turn::{OriginalActorSuccession, OriginalGuestExecutionBudget, OriginalGuestExecutionReceipt, OriginalJobSourceWireCursor, OriginalJobSourceWireHeader};
 
 #[path = "🖼️wire-turn/📬️typed-operation/🦀️.rs"]
 pub mod typed_operation_page;

@@ -1,0 +1,9 @@
+{
+  "cover": [
+    { "view": "plan", "from": "side-right", "id": "cabinet", "z0": -0.3, "z1": 0.3 },
+    { "view": "plan", "from": "base", "z0": -0.3, "z1": 0.3 }
+  ],
+  "solidify": [
+    { "bones": ["unit", "tank", "lint-filter"], "twins": { "foot-1": "foot-0" }, "ranges": { "display": [0.603, 0.605], "button-0": [0.603, 0.605], "button-1": [0.603, 0.605] }, "skip": ["lint-filter"] }
+  ]
+}

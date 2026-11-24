@@ -682,6 +682,58 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         self.maintenance_ladder_settled(true)
     }
 
+    pub fn debug_unsettled(&self) -> String {
+        let live_preview_allowed=false;let overlay = self.render_ref();let mut out=String::new();
+        if !(self.stores.window_config_store.direct_ingress_quiescent()) { out.push_str("[DEBUG] unsettled clause 0\n"); }
+        if !(!(overlay.tool_overlay_retirement_pending() && !(live_preview_allowed && overlay.tool_overlay_waits_for_foreground()))) { out.push_str("[DEBUG] unsettled clause 1\n"); }
+        if !(self.tool_run_ref().tool_run_retirement_demand(0).is_ok_and(|demand| demand == RetirementDemand::default())) { out.push_str("[DEBUG] unsettled clause 2\n"); }
+        if !(self.time_travel_ref().time_travel_retirement_demands(0).is_ok_and(|demand| demand == RetirementDemand::default())) { out.push_str("[DEBUG] unsettled clause 3\n"); }
+        if !(self.history.pending_command_prune.is_none()) { out.push_str("[DEBUG] unsettled clause 4\n"); }
+        if !(!self.history.command_prune_requested()) { out.push_str("[DEBUG] unsettled clause 5\n"); }
+        if !(self.history.command_log.pruned_terminal_is_empty()) { out.push_str("[DEBUG] unsettled clause 6\n"); }
+        if !(self.child_composition.private_child_groups.is_empty()) { out.push_str("[DEBUG] unsettled clause 7\n"); }
+        if !(self.tools.tool_operations.is_empty()) { out.push_str("[DEBUG] unsettled clause 8\n"); }
+        if !(self.tools.original_emission_admission.is_none()) { out.push_str("[DEBUG] unsettled clause 9\n"); }
+        if !(self.tools.original_emission_receipt.is_none()) { out.push_str("[DEBUG] unsettled clause 10\n"); }
+        if !(self.tools.original_emission_result.is_none()) { out.push_str("[DEBUG] unsettled clause 11\n"); }
+        if !(self.tools.original_emission_construction.as_ref().is_none_or(|admission| admission.terminal_is_empty())) { out.push_str("[DEBUG] unsettled clause 12\n"); }
+        if !(self.tools.tool_cancellations.active_operation_count() == 0) { out.push_str("[DEBUG] unsettled clause 13\n"); }
+        if !(self.tools.latest_wins_commands.is_empty()) { out.push_str("[DEBUG] unsettled clause 14\n"); }
+        if !(self.tools.latest_wins_keys.map.as_ref().is_some_and(|map| map.is_empty())) { out.push_str("[DEBUG] unsettled clause 15\n"); }
+        if !(self.tools.latest_wins_keys.can_begin()) { out.push_str("[DEBUG] unsettled clause 16\n"); }
+        if !(self.tools.agent_lane_preview.is_none()) { out.push_str("[DEBUG] unsettled clause 17\n"); }
+        if !(self.media.media_submission_refusal_terminal_is_empty()) { out.push_str("[DEBUG] unsettled clause 18\n"); }
+        if !(self.ingress.action_ingress_sources_idle()) { out.push_str("[DEBUG] unsettled clause 19\n"); }
+        if !(self.media.media_closures.is_empty()) { out.push_str("[DEBUG] unsettled clause 20\n"); }
+        if !(self.media.segmented_closures.is_empty()) { out.push_str("[DEBUG] unsettled clause 21\n"); }
+        if !(self.media.snapshot_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 22\n"); }
+        if !(self.child_composition.child_content_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 23\n"); }
+        if !(self.child_composition.child_member_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 24\n"); }
+        if !(self.roster.peer_roster_publications.is_empty()) { out.push_str("[DEBUG] unsettled clause 25\n"); }
+        if !(self.roster.peer_presence_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 26\n"); }
+        if !(self.roster.presence_peer_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 27\n"); }
+        if !(self.ingest.envelope_ingress.is_empty()) { out.push_str("[DEBUG] unsettled clause 28\n"); }
+        if !(self.ingest.envelope_decode_jobs.is_empty()) { out.push_str("[DEBUG] unsettled clause 29\n"); }
+        if !(self.ingest.store_replacement_jobs.is_empty()) { out.push_str("[DEBUG] unsettled clause 30\n"); }
+        if !(self.ingest.document_archive_loads.is_empty()) { out.push_str("[DEBUG] unsettled clause 31\n"); }
+        if !(self.ingest.envelope_field_decoder_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 32\n"); }
+        if !(self.ingest.envelope_field_decoders.get().is_none_or(|owner|owner.next_returned_ticket().is_none())) { out.push_str("[DEBUG] unsettled clause 33\n"); }
+        if !(self.ingest.envelope_completed_record_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 34\n"); }
+        if !(self.ingest.envelope_completed_records.get().is_none_or(|owner|owner.terminal_is_empty())) { out.push_str("[DEBUG] unsettled clause 35\n"); }
+        if !(!self.stores.store.has_pending_maintenance_retirements()) { out.push_str("[DEBUG] unsettled clause 36\n"); }
+        if !(!self.stores.config_store.has_pending_maintenance_retirements()) { out.push_str("[DEBUG] unsettled clause 37\n"); }
+        if !(!self.stores.draft_store.has_pending_maintenance_retirements()) { out.push_str("[DEBUG] unsettled clause 38\n"); }
+        if !(!self.stores.interaction_store.has_pending_maintenance_retirements()) { out.push_str("[DEBUG] unsettled clause 39\n"); }
+        if !(self.stores.window_config_store.maintenance_retirements_terminal_is_empty()) { out.push_str("[DEBUG] unsettled clause 40\n"); }
+        if !(self.stores.window_transient_store.maintenance_terminal_is_empty()) { out.push_str("[DEBUG] unsettled clause 41\n"); }
+        if !(self.stores.retired_window_transient_stores.is_empty()) { out.push_str("[DEBUG] unsettled clause 42\n"); }
+        if !(self.stores.presence_store.local_read_maintenance_is_idle()) { out.push_str("[DEBUG] unsettled clause 43\n"); }
+        if !(self.ingest.snapshot_read_returns_terminal_is_empty(&*self.stores, &*self.interaction)) { out.push_str("[DEBUG] unsettled clause 44\n"); }
+        if !(!semio_framework_job_worker::worker_job_retirements_are_parked()) { out.push_str("[DEBUG] unsettled clause 45\n"); }
+        if !(self.tools.live_runtime_instance_id.is_none_or(|instance_id| if self.ingest.document_blocks_pending_effects() { A::mounted_jobs_terminal_is_empty(instance_id) } else { A::mounted_job_maintenance_phase(instance_id).is_none() })) { out.push_str("[DEBUG] unsettled clause 46\n"); }
+        out
+    }
+
     fn maintenance_ladder_settled(&self, live_preview_allowed: bool) -> bool {
         let overlay = self.render_ref();
         self.stores.window_config_store.direct_ingress_quiescent()

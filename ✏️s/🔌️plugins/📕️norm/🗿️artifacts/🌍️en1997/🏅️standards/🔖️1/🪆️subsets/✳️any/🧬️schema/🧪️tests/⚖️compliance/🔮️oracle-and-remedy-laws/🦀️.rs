@@ -56,10 +56,7 @@ fn python_oracle_matches_check_project_within_half_percent() {
 fn example_snapshot_validates_against_json_schema() {
     let schema_path = snapshot_schema_path();
     for snap in [compliant_demo(), noncompliant_demo()] {
-        let mut instance_val = serde_json::to_value(&snap).expect("json value");
-        if let Some(serde_json::Value::String(a)) = instance_val.get("annex").cloned() {
-            instance_val["annex"] = serde_json::Value::String(a.to_ascii_lowercase());
-        }
+        let instance_val = serde_json::to_value(&snap).expect("json value");
         let instance = serde_json::to_string(&instance_val).expect("instance");
         let tmp = std::env::temp_dir().join(format!("en1997-instance-{}.json", snap.structure_id));
         std::fs::write(&tmp, &instance).unwrap();

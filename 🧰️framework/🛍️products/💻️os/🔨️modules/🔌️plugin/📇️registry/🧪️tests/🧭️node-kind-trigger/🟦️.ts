@@ -4,7 +4,7 @@ import Ajv from "ajv/dist/2020";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  admitOnDemandRequest, createOnDemandActivator, documentActivationLabel, documentExtensionOwners, exampleDocumentText, guestActivationRequest, nodeKindRequests, ON_DEMAND_REQUEST_TOPIC, openDocumentAfterActivation, openExampleAfterActivation, scanNodeKinds,
+  admitOnDemandRequest, catalogPluginRegistryEntries, createOnDemandActivator, deferredPluginEntries, onDemandPluginEntries, resolvePlaygroundBoot, documentActivationLabel, documentExtensionOwners, exampleDocumentText, guestActivationRequest, nodeKindRequests, ON_DEMAND_REQUEST_TOPIC, openDocumentAfterActivation, openExampleAfterActivation, scanNodeKinds,
   type DocumentActivationReport, type OnDemandActivator, type PluginRegistryEntry,
 } from "@semio-tech/framework-kernel";
 import { createWgpuOnDemandActivator, prepareWgpuPluginModules } from "@semio-tech/framework-renderer-wgpu/plugin-modules";
@@ -261,13 +261,101 @@ describe("both hosts hand the document over only after activation", () => {
     expect(scope.match(/onAction\(buildActiveExampleAction/g)).toHaveLength(1);
     expect(scope).toContain("exampleActivationRef.current?.abort()");
   });
-  test("the WGPU shell forwards the guest request to the same activator door the frame Worker exposes", () => {
+  test("the WGPU shell queues the guest request in the host-effect funnel and installs the resolved owners through its install band", () => {
     const worker = read("🎯️targets", "🧊️wgpu", "🎞️frame-worker", "🟦️.ts");
-    const shell = readFileSync(join(engine, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "📥️staging", "🔀️actions", "🎬️shell-actions", "🎯️dispatch-action", "🦀️.rs"), "utf8");
+    const staging = join(engine, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "📥️staging");
+    const funnel = readFileSync(join(staging, "🪝️window-actions", "⚙️settings-and-dock-persistence", "🦀️.rs"), "utf8");
+    const dispatch = readFileSync(join(staging, "🔀️actions", "🎬️shell-actions", "🎯️dispatch-action", "🦀️.rs"), "utf8");
+    const plugins = readFileSync(join(staging, "🔀️actions", "🎬️shell-actions", "🎯️dispatch-action", "🧩️plugins-chat", "🦀️.rs"), "utf8");
+    const action = plugins.slice(plugins.indexOf("fn framework_activate_on_demand"));
     const bridge = readFileSync(join(engine, "🧱️elements", "🌉️ProgramBridge", "🎯️targets", "🧊️wgpu", "🧰️document-render-plugin-install-and-native-loading", "🦀️.rs"), "utf8");
     expect(worker).toContain("semioWgpuActivateOnDemand");
-    expect(bridge).toContain('js_plugin_install_door("semioWgpuActivateOnDemand")');
-    expect(shell).toContain(`topic == "${ON_DEMAND_REQUEST_TOPIC}"`);
+    expect(worker).toContain("semioWgpuResolveOnDemand");
+    expect(bridge).toContain('js_plugin_install_door("semioWgpuResolveOnDemand")');
+    expect(bridge).toContain('js_plugin_install_door("semioWgpuOnDemandStatuses")');
+    expect(funnel).toContain(`topic == "${ON_DEMAND_REQUEST_TOPIC}"`);
+    expect(dispatch).not.toContain(ON_DEMAND_REQUEST_TOPIC);
+    expect(dispatch).toContain('"activateOnDemand" => return self.framework_activate_on_demand(&action).await');
+    expect(action.indexOf("install_plugin(&plugin_id)")).toBeGreaterThan(action.indexOf("resolve_on_demand_owners"));
+    expect(action.indexOf("push_contributions()")).toBeGreaterThan(action.indexOf("install_plugin(&plugin_id)"));
     expect(readFileSync(join(root, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🌊️flow", "🖥️host", "🚦️eval-status", "🦀️.rs"), "utf8")).toContain(`ON_DEMAND_REQUEST_TOPIC: &str = "${ON_DEMAND_REQUEST_TOPIC}"`);
+  });
+});
+
+describe("the Rust preview parks on an unregistered namespace and the host routes the request (shared corpus)", () => {
+  const corpus = JSON.parse(readFileSync(join(root, "✏️s", "🔌️plugins", "🌀️procedural", "🗿️artifacts", "🧊️generation3d", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "🧪️tests", "🧫️fixtures", "🧭️on-demand-run-effects.json"), "utf8")) as {
+    topic: string; latch: string; surface: string; node: { kind: string }; ladder: { id: string; step: string; expectedRequests: { kind: string; nodeKind: string }[]; expectedRunActions: string[] }[];
+  };
+  const ajv = new Ajv({ strict: false });
+  ajv.addSchema(schema);
+  const check = ajv.getSchema(`${schema.$id}#/$defs/onDemandRequest`)!;
+  const bytes = (text: string) => [...new TextEncoder().encode(text)];
+  test("the corpus topic, latch and surface are the ones the schema's emission contract names", () => {
+    const emission = (schema as { $defs: { onDemandEmission: { properties: { topic: { const: string }; latch: { const: string }; surfaces: { items: { enum: string[] } } } } } }).$defs.onDemandEmission.properties;
+    expect(corpus.topic).toBe(ON_DEMAND_REQUEST_TOPIC);
+    expect(emission.topic.const).toBe(ON_DEMAND_REQUEST_TOPIC);
+    expect(corpus.latch).toBe(emission.latch.const);
+    expect(emission.surfaces.items.enum).toContain(corpus.surface);
+    expect(emission.surfaces.items.enum).toContain("flow.flowEvalTick");
+  });
+  for (const row of corpus.ladder.filter((entry) => entry.expectedRequests.length > 0)) {
+    test(`${row.id}: the TypeScript projection, the schema and the React effect pass all agree with the Rust ladder`, () => {
+      expect(nodeKindRequests([corpus.node.kind])).toEqual(row.expectedRequests);
+      for (const request of row.expectedRequests) {
+        expect(check(request)).toBe(true);
+        expect(guestActivationRequest({ topic: corpus.topic, payload: bytes(JSON.stringify(request)) })).toEqual(request);
+      }
+      const sent: string[] = [];
+      for (const request of row.expectedRequests) applyOnDemandRequestEffect({ publishEvent: { topic: corpus.topic, payload: bytes(JSON.stringify(request)) } }, { semioReactActivateOnDemand: async (json) => { sent.push(json); return "{}"; } });
+      expect(sent.map((json) => JSON.parse(json) as unknown)).toEqual(row.expectedRequests);
+    });
+  }
+  test("the ladder asks once, resumes the run on registration and asks again once the extension is withdrawn", () => {
+    expect(corpus.ladder.map((row) => [row.step, row.expectedRequests.length, row.expectedRunActions.length])).toEqual([["poll", 1, 0], ["poll", 0, 0], ["install", 0, 1], ["uninstall", 1, 0]]);
+  });
+});
+
+describe("the shells hand the deferred catalog rows to the on-demand activator", () => {
+  const catalogRows = () => {
+    const rows = JSON.parse(readFileSync(join(root, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json"), "utf8")) as Record<string, unknown>[];
+    const targets = rows.map((row) => ({ pluginId: row.pluginId, wasmOut: row.wasmOut, moduleUrl: `https://example.test/${String(row.pluginId)}.js`, role: row.role, dependsOn: row.dependsOn, contributes: row.contributes, consumes: row.consumes, activationEvents: row.activationEvents, capabilities: [], ...(row.extends === undefined ? {} : { extends: row.extends }) }));
+    return admitPluginCatalogV1({ version: 1, hosts: [], targets: targets as never, playgrounds: [{ variant: "generation3d", pluginId: "procedural", aliases: [] }] }, authority);
+  };
+  const catalogAuthorityFree = () => pluginCatalogV1(catalogRows());
+  test("the boot plan of generation3d leaves the flow extensions out and the deferred rows are the nine extensions and the playbook module, with the hub already planned", () => {
+    const catalog = catalogAuthorityFree();
+    const boot = resolvePlaygroundBoot(catalog, "generation3d");
+    expect(boot.plugins.map((entry) => entry.pluginId).sort()).toEqual(["flow", "procedural"]);
+    expect(deferredPluginEntries(catalog, boot.plugins).map((entry) => entry.pluginId).sort()).toEqual(["flow-extension-bim", "flow-extension-brep", "flow-extension-dictionary", "flow-extension-draw", "flow-extension-list", "flow-extension-logic", "flow-extension-math", "flow-extension-primitive", "flow-extension-text", "playbook-module-procedural"]);
+    expect(catalogPluginRegistryEntries(catalog).length).toBe(committed.length);
+  });
+  test("root cause: an activator fed only the boot plan serves no request, one fed the catalog rows starts the extension of the node kind", async () => {
+    const catalog = catalogAuthorityFree();
+    const boot = resolvePlaygroundBoot(catalog, "generation3d");
+    const mounted: string[] = [];
+    const active = new Set(boot.plugins.map((entry) => entry.pluginId));
+    const starved = createOnDemandActivator({ candidates: () => onDemandPluginEntries(boot.plugins, boot.plugins), installed: () => boot.plugins, active: () => active, activate: async (entry) => { mounted.push(entry.pluginId); } });
+    expect(await starved.request({ kind: "node-kind", nodeKind: "brep.solid.extrude" })).toEqual({ requested: [], active: [], unavailable: [], cancelled: [] });
+    const fed = createOnDemandActivator({ candidates: () => deferredPluginEntries(catalog, boot.plugins), installed: () => catalogPluginRegistryEntries(catalog), active: () => active, activate: async (entry) => { mounted.push(entry.pluginId); } });
+    expect(fed.owners({ kind: "node-kind", nodeKind: "brep.solid.extrude" })).toEqual(["flow-extension-brep"]);
+    expect(await fed.request({ kind: "node-kind", nodeKind: "brep.solid.extrude" })).toMatchObject({ requested: ["flow-extension-brep"], active: ["flow-extension-brep"], unavailable: [], cancelled: [] });
+    expect(await fed.request({ kind: "node-kind", nodeKind: "math.vector" })).toMatchObject({ requested: ["flow-extension-math"], active: ["flow-extension-math"] });
+    expect(mounted).toEqual(["flow-extension-brep", "flow-extension-math"]);
+    expect(fed.owners({ kind: "node-kind", nodeKind: "brep.solid.extrude" })).toEqual([]);
+  });
+  test("the React hook builds its activator from the catalog, not from the boot plan, and tells the person in their language while it loads and when it is ready", () => {
+    const hook = readFileSync(join(root, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📺️renderer", "🧑‍🎨engine", "🧱️elements", "🏛️ShellHost", "🚀️plugin-lifecycle", "⏳️on-demand-activation", "🟦️.ts"), "utf8");
+    expect(hook).toContain("catalogPluginRegistryEntries(catalog)");
+    expect(hook).toContain("deferredPluginEntries(catalog, registry)");
+    expect(hook).not.toContain("onDemandPluginEntries(plugins, registry)");
+    expect(hook).toContain('if (status.phase === "resolving") return;');
+    expect(hook).toContain("onDemandStatusLabel(status, uiLocaleRef.current)");
+  });
+  test("the wgpu dev boot hands the renderer the whole catalog module list and the frame Worker plans from the variant, so the deferred rows exist there too", () => {
+    const dev = readFileSync(join(root, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🧑‍💻dev", "🟦️.ts"), "utf8");
+    const wgpuCall = dev.slice(dev.indexOf("bootFrameworkOsWgpu({"));
+    expect(wgpuCall.slice(0, wgpuCall.indexOf("})"))).not.toContain("plugins,");
+    const boot = readFileSync(join(root, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📺️renderer", "🧑‍🎨engine", "🎯️targets", "🧊️wgpu", "🎞️frame-worker", "🔌️boot-and-plugins", "🟦️.ts"), "utf8");
+    expect(boot).toContain('const bootVariant = selection === "variant" ? message.descriptor.pluginVariant : undefined;');
   });
 });

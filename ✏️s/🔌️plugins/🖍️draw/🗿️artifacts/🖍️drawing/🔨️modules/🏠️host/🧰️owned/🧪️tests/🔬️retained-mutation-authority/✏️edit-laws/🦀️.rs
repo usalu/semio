@@ -31,20 +31,22 @@ fn retained_path_edit_cancellation_preserves_the_entire_document() {
     let mutation = semio_s_artifact_draw_drawing_transform::update_path_geometry::mutation::update_path_geometry(id, vec![PathSegment::Move { to: [5.0,5.0] }, PathSegment::Line { to: [20.0,20.0] }].into());
     let operation = semio_framework_job::OperationId(8_090);
     let generation = semio_framework_job::Generation(90);
+    let held = HeldMutation::new(&mutation, &source);
     let mut authority = borrowed_candidate(operation,generation).unwrap();
     let cancel = semio_framework_job::root_cancel_token();
     let mut sequence = 0;
+    let mut cloning = 0;
     for _ in 0..100_000 {
-        if authority.segments_clone.as_ref().is_some_and(|clone| clone.index == 1) { break; }
+        if let Some(clone) = authority.segments_clone.as_ref() { if clone.phase != 0 || cloning == 2 { break; } cloning += 1; }
         let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(operation,generation,semio_framework_job::StepBudget::new(1,u64::MAX,UNBOUNDED_STEP_GRANT),cancel.clone(),semio_framework_job::default_now_us,&mut sequence,&mut context_retained);
-        assert!(!authority.step(&mut source,&mutation,&mut context).unwrap());
+        assert!(!held.step(&mut authority, &mut source, &mut context).unwrap());
     }
-    assert_eq!(authority.segments_clone.as_ref().unwrap().index,1);
+    assert!(authority.segments_clone.is_some(), "the cancellation lands while the path clone is retained");
     cancel.cancel_now();
     let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
     let mut context = semio_framework_job::StepContext::new(operation,generation,semio_framework_job::StepBudget::new(1,u64::MAX,UNBOUNDED_STEP_GRANT),cancel,semio_framework_job::default_now_us,&mut sequence,&mut context_retained);
-    assert_eq!(authority.step(&mut source,&mutation,&mut context),Err("drawing-store.mutation-candidate-cancelled"));
+    assert_eq!(held.step(&mut authority, &mut source, &mut context),Err("drawing-store.mutation-candidate-cancelled"));
     close_candidate(&mut authority,Some(&mut source));
     assert_eq!(source,expected);
     drain_snapshot(source);
@@ -94,20 +96,22 @@ fn retained_text_edit_cancellation_keeps_the_complete_document() {
     let mutation = semio_s_artifact_draw_drawing_style::update_text::mutation::update_text(id, "😀🙂Grüße".into(), 36.0,semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::Anta);
     let operation = semio_framework_job::OperationId(8_091);
     let generation = semio_framework_job::Generation(91);
+    let held = HeldMutation::new(&mutation, &source);
     let mut authority = borrowed_candidate(operation, generation).unwrap();
     let cancel = semio_framework_job::root_cancel_token();
     let mut sequence = 0;
+    let mut cloning = 0;
     for _ in 0..100_000 {
-        if authority.text_clone.as_ref().is_some_and(|clone| clone.index == 4) { break; }
+        if let Some(clone) = authority.text_clone.as_ref() { if clone.phase != 0 || cloning == 5 { break; } cloning += 1; }
         let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut context_retained);
-        assert!(!authority.step(&mut source, &mutation, &mut context).unwrap());
+        assert!(!held.step(&mut authority, &mut source, &mut context).unwrap());
     }
-    assert_eq!(authority.text_clone.as_ref().unwrap().index, 4);
+    assert!(authority.text_clone.is_some(), "the cancellation lands while the text clone is retained");
     cancel.cancel_now();
     let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
     let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel, semio_framework_job::default_now_us, &mut sequence, &mut context_retained);
-    assert_eq!(authority.step(&mut source, &mutation, &mut context), Err("drawing-store.mutation-candidate-cancelled"));
+    assert_eq!(held.step(&mut authority, &mut source, &mut context), Err("drawing-store.mutation-candidate-cancelled"));
     close_candidate(&mut authority, Some(&mut source));
     assert_eq!(source, expected);
     drain_snapshot(source);

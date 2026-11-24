@@ -93,7 +93,7 @@ export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: nu
     if (!record) continue;
     const section = record.component.type === "container" && record.component.role === "section";
     if (frame.section && section) yield* violation({ type: "sectionNested", node: frame.id }, frontier, violations);
-    if (controlIsUnnamed(record as never, (frame.parent ?? null) as never)) { console.error("[DEBUG] unnamed control", JSON.stringify(record).slice(0, 600), JSON.stringify(frame.parent ?? null).slice(0, 300)); yield* violation({ type: "unnamedControl", node: frame.id }, frontier, violations); }
+    if (controlIsUnnamed(record as never, (frame.parent ?? null) as never)) yield* violation({ type: "unnamedControl", node: frame.id }, frontier, violations);
     if (!finite(record.component)) yield* violation({ type: "nonFiniteNumber", node: frame.id }, frontier, violations);
     else if (!validSnaps(record.component)) yield* violation({ type: "invalidSnaps", node: frame.id }, frontier, violations);
     else if (!validNumberRange(record.component)) yield* violation({ type: "invalidNumberRange", node: frame.id }, frontier, violations);
@@ -152,7 +152,7 @@ export function* retainedUiGraphTouchedValidation(nodes: RetainedUiGraphNodes, t
         if (typeof step.value === "number") { yield step.value; continue; }
         if ((step.value[1].children ?? []).includes(entry[0])) { parent = step.value[1]; break; }
       }
-      if (controlIsUnnamed(record as never, (parent ?? null) as never)) { console.error("[DEBUG] unnamed control", JSON.stringify(record).slice(0, 600), JSON.stringify(parent ?? null).slice(0, 300)); yield* violation({ type: "unnamedControl", node: entry[0] }, frontier, violations); }
+      if (controlIsUnnamed(record as never, (parent ?? null) as never)) yield* violation({ type: "unnamedControl", node: entry[0] }, frontier, violations);
     }
   }
 }

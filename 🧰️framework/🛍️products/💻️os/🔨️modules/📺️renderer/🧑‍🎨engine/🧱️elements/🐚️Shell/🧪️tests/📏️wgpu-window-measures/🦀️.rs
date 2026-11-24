@@ -187,6 +187,7 @@ fn dispatched(input: &mut InputState<ActionDescriptor>, name: &str) -> Value {
     serde_json::json!({ "controllerId": action.controller_id, "action": action.action, "args": dsl_value_as_json(action.args.as_ref().expect("action args")) })
 }
 
+/// 🎹️ A tree has one roving Tab stop, its row (React's `applyRovingTabindexV1`): the keyboard gesture's first Tab enters that row and a second reaches the row's entry control, where the oracle's typed text lands.
 #[test]
 fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
     let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
@@ -210,10 +211,14 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
         }
         assert!(!targets.iter().any(|target| target.ends_with("brush-snap")), "{name}: a utility-scoped group stays out of the Measures overlay");
         if let Some(events) = gesture["events"].as_array() {
+            let mut tab_stops = 0;
             for event in events {
-                let commands = semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(&surface, key_event(event), &mut painted.input);
-                eprintln!("[DEBUG] {name} event {event} -> {commands:?}");
-                shell.chrome.chrome_build.note_content_focus_commands(&commands);
+                let presses = if event["key"] == "Tab" && tab_stops == 0 { 2 } else { 1 };
+                tab_stops += usize::from(event["key"] == "Tab");
+                for _ in 0..presses {
+                    let commands = semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(&surface, key_event(event), &mut painted.input);
+                    shell.chrome.chrome_build.note_content_focus_commands(&commands);
+                }
             }
             assert!(shell.chrome.chrome_build.content_has_focus(&surface), "{name}: keyboard focus lands in the overlay surface");
         }

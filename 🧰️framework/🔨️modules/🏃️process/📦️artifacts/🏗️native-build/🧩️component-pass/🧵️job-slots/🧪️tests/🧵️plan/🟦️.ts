@@ -34,6 +34,6 @@ test("local grant 1 plus N fitting fleet slots is N+1 jobs, fleet down is 1 and 
 });
 test("the plan is described in English and German with the local and remote share and the peak a final is counted at",()=>{
  const values={operation:"component build",jobs:12,local:1,remote:11,slots:11,peak:6144,reason:"jobs-all"};
- expect(describeComponentJobsV1("en",values)).toBe("[component-jobs] component build: 12 component jobs at once = 1 local + 11 on the fleet (11 worker slots fit one 6144 MB final; every worker slot that fits a wasm final takes one job)");
- expect(describeComponentJobsV1("de",values)).toContain("12 Komponenten-Jobs gleichzeitig = 1 lokal + 11 auf der Flotte");
+ expect(describeComponentJobsV1("en",values)).toBe("[component-jobs] component build: 12 component jobs at once = 1 local slot(s) + 11 fleet slot(s) (11 worker slots fit one 6144 MB final at the start and are read again while the build runs; every worker slot that fits a wasm final takes one job)");
+ expect(describeComponentJobsV1("de",values)).toContain("12 Komponenten-Jobs gleichzeitig = 1 lokale Plätze + 11 Flotten-Plätze");
 });

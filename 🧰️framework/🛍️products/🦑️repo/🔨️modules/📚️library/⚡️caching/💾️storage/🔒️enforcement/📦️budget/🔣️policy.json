@@ -86,9 +86,9 @@
       "maximumLogicalBytes": 38653657088,
       "hostSharePercent": 20,
       "needBytes": {
-        "darwin": 7491026944,
-        "linux": 37808504832,
-        "win32": 37808504832
+        "darwin": 29177675776,
+        "linux": 31656509440,
+        "win32": 31656509440
       },
       "imageShards": {
         "enabled": false,

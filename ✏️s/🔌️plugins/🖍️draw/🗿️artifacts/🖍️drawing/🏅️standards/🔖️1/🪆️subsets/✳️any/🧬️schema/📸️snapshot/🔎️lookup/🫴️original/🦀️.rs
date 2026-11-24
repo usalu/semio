@@ -23,22 +23,6 @@ pub(super) fn close_result(poll:OriginalRetirementPoll)->Result<RetainedCloneSte
         RetainedWorkPoll::Complete(outcome)=>outcome.result.map_err(|failure|failure.into_value_error()),
     }
 }
-#[cfg(test)]
-pub fn test_step(
-    grant: semio_framework_value::retained_clone::RetainedCloneGrant,
-    mut step: impl FnMut(&mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep,ValueError>,
-) -> RetainedCloneStep {
-    use semio_framework_value_clone_source_testing::drive::drive_reply;
-    drive_reply(
-        grant,
-        256,
-        |result| result.as_ref().map_or_else(ValueError::retained_progress, |step|step.progress()),
-        |effect,reply,recover| {
-            assert!(!recover);
-            Ok(reply.complete(step(effect)))
-        },
-    ).result.unwrap()
-}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"Drawing original target lookup custody changed")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn octet(t:&impl Utf8Text,chunk:&mut usize,byte:&mut usize)->Result<Option<u8>,ValueError>{let Some(c)=t.text_chunk(*chunk)else{return Ok(None)};if *byte==c.len(){*chunk+=1;*byte=0;return Ok(None)}let b=c.as_bytes().get(*byte).copied().ok_or_else(invalid)?;*byte+=1;Ok(Some(b))}

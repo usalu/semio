@@ -316,6 +316,36 @@
       "shellFramePayload": null
     },
     {
+      "id": "load-document-maps-to-the-host-document-swap",
+      "why": "Ticket 26/09/09/PROCEDURAL-3D-END-TO-END: `setActiveExample` returns `load-document` and the wgpu door printed `unmapped effect \"load-document\" dropped`, so the example document never reached the host. React's door maps the same effect (`retained-ui-patch`); both now agree on `{loadDocument:{pack,spr}}`.",
+      "effect": {
+        "tag": "load-document",
+        "val": {
+          "docPack": {
+            "base64": "AQID"
+          },
+          "spr": {
+            "base64": "BAU="
+          }
+        }
+      },
+      "friendly": {
+        "loadDocument": {
+          "pack": [
+            1,
+            2,
+            3
+          ],
+          "spr": [
+            4,
+            5
+          ]
+        }
+      },
+      "warns": false,
+      "shellFramePayload": null
+    },
+    {
       "id": "mapped-effect-still-maps",
       "why": "Control row — the new case must not shadow a real friendly projection.",
       "effect": {

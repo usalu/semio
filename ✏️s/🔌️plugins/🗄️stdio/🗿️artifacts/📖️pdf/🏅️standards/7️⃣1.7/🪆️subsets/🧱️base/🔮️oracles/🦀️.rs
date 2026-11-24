@@ -838,6 +838,34 @@ pub fn reference_sampled_function_streams(input:&[u8])->Result<Vec<(u32,Vec<u8>)
 /// 🖼️ Independently reads native image sample streams through lopdf without production PDF APIs.
 pub fn reference_image_sample_streams(input:&[u8])->Result<Vec<(u32,Vec<u8>)>,String>{let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;let mut result=Vec::new();for object in document.objects.values(){if let lopdf::Object::Stream(stream)=object{if stream.dict.get(b"Subtype").ok().and_then(|value|value.as_name().ok())==Some(b"Image".as_slice()){let bits=u32::try_from(stream.dict.get(b"BitsPerComponent").map_err(|error|error.to_string())?.as_i64().map_err(|error|error.to_string())?).map_err(|error|error.to_string())?;result.push((bits,stream.get_plain_content().map_err(|error|error.to_string())?));}}}Ok(result)}
 
+/// 🔮️ Resolves every page's declared font and image XObject names through the independent reader, following the page tree's nearest `/Resources`.
+pub fn reference_page_resources(input: &[u8]) -> Result<Vec<(Vec<String>, Vec<String>)>, String> {
+    use lopdf::{Dictionary, Document, Object};
+    let document = Document::load_mem(input).map_err(|error| error.to_string())?;
+    let resolve = |object: &Object| -> Option<Object> {
+        match object { Object::Reference(id) => document.get_object(*id).ok().cloned(), other => Some(other.clone()) }
+    };
+    let names = |resources: &Dictionary, key: &[u8], images_only: bool| -> Vec<String> {
+        let Some(Object::Dictionary(entries)) = resources.get(key).ok().and_then(&resolve) else { return Vec::new(); };
+        let mut names: Vec<String> = entries.iter().filter(|(_, value)| {
+            !images_only || matches!(resolve(*value), Some(Object::Stream(stream)) if stream.dict.get(b"Subtype").ok().and_then(|subtype| subtype.as_name().ok()) == Some(b"Image".as_slice()))
+        }).map(|(name, _)| String::from_utf8_lossy(name).into_owned()).collect();
+        names.sort();
+        names
+    };
+    document.get_pages().into_values().map(|page| {
+        let mut node = document.get_dictionary(page).map_err(|error| error.to_string())?;
+        for _ in 0..64 {
+            if let Some(Object::Dictionary(resources)) = node.get(b"Resources").ok().and_then(&resolve) {
+                return Ok((names(&resources, b"Font", false), names(&resources, b"XObject", true)));
+            }
+            let Some(parent) = node.get(b"Parent").ok().and_then(|parent| parent.as_reference().ok()) else { break; };
+            node = document.get_dictionary(parent).map_err(|error| error.to_string())?;
+        }
+        Ok((Vec::new(), Vec::new()))
+    }).collect()
+}
+
 /// 📄️ Counts pages through the independent native PDF reader.
 pub fn reference_page_count(input:&[u8])->Result<usize,String> {Ok(lopdf::Document::load_mem(input).map_err(|error|error.to_string())?.get_pages().len())}
 

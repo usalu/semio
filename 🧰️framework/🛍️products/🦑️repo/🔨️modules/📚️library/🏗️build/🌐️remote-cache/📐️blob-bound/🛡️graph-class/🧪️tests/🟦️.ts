@@ -179,3 +179,18 @@ test("an evicted graph entry is journalled with its reason, class and clocks, so
  expect(store.usage().blobs.graph.evictedEntries).toBe(1);
  await store.close();
 });
+
+const manifestDeclaration=(slot:string)=>({slot:sha(slot),declaration:declareV1({kind:"input-manifest",toolchain:sha("t1"),sources:[{path:"a.rs",sha256:sha("a v0")}],externs:[]})});
+test("the input manifests of unit slots share the protected class: unit output pressure never takes them, a newer manifest of the slot replaces the older one, and an edit of the crate does not make one stale",async()=>{
+ const bound={value:undefined as number|undefined},{store,put,live}=await fixture(bound,{sharePercent:20,supersedeGraceMilliseconds:60_000},"enforce");
+ const manifest=keyOf("manifest"),other=keyOf("manifest-of-another-slot");
+ await put(manifest,200,manifestDeclaration("slot-a"),"manifest-one");await put(other,200,manifestDeclaration("slot-b"),"manifest-two");
+ for(const unit of ["u1","u2","u3","u4","u5"])await put(keyOf(unit),1000,unitDeclaration(unit));
+ await sleep(120);bound.value=4000;await store.collect();
+ expect(await live(manifest),"the oldest entries of the store are the manifests and they stay").toBe(true);expect(await live(other)).toBe(true);
+ expect(await live(keyOf("u1")),"the oldest unit output went").toBe(false);
+ expect(store.usage().blobs.graph).toMatchObject({protectedEntries:2});
+ for(let round=0;round<4;round++){await put(keyOf("churn"+round),1000,unitDeclaration("churn"+round));await store.collect();}
+ expect(await live(manifest),"further rounds of unit output pressure").toBe(true);
+ await store.close();
+});

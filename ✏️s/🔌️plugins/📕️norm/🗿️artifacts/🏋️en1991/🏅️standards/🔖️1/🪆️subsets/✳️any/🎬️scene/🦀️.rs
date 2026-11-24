@@ -18,9 +18,8 @@ pub use members::handles;
 pub use members::SceneInput;
 pub use projection::fragment;
 
-#[path = "📈️diagrams/🦀️.rs"]
-pub mod diagrams;
-pub use diagrams::diagrams;
+extern crate semio_s_artifact_norm_en1991_scene_diagrams as scene_diagrams;
+pub use scene_diagrams::diagrams;
 
 use model::En1991Snapshot;
 use norm::CheckReport;

@@ -31,19 +31,15 @@ const COORDINATES: &[(&str, &str, &str, &str, &str, &str)] = &[
 /// 🎚️ The subset surface directories whose state lanes (config, presence, transient) are never document dispatch.
 const SURFACE_DIRS: &[&str] = &["👁️viewer", "✏️editor"];
 
-fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    let (command, artifact, standard, subset, surface) = match args.as_slice() {
+/// 🚪️ Answers one `list-mutations` request: the inventory JSON, or the exit code and message that refuse it.
+fn answer(args: &[String]) -> Result<String, (i32, String)> {
+    let (command, artifact, standard, subset, surface) = match args {
         [command, artifact, standard, subset] => (command, artifact, standard, subset, ""),
         [command, artifact, standard, subset, surface] => (command, artifact, standard, subset, surface.as_str()),
-        _ => {
-            eprintln!("usage: list-mutations <artifact> <standard> <subset> [<surface>]");
-            std::process::exit(2);
-        }
+        _ => return Err((2, "usage: list-mutations <artifact> <standard> <subset> [<surface>]".to_string())),
     };
     let Some((_, _, _, _, owner, prefix)) = COORDINATES.iter().find(|(a, s, u, f, _, _)| command == "list-mutations" && a == artifact && s == standard && u == subset && *f == surface) else {
-        eprintln!("this bridge does not answer {command} {artifact} {standard} {subset} {surface}");
-        std::process::exit(2);
+        return Err((2, format!("this bridge does not answer {command} {artifact} {standard} {subset} {surface}")));
     };
     let owner_prefix = format!("{owner}/");
     let in_state_lane = |leaf: &str| surface.is_empty() && leaf.split('/').any(|segment| SURFACE_DIRS.contains(&segment));
@@ -75,5 +71,21 @@ fn main() {
         ("mutations".to_string(), semio_framework_pack_json::array(rows)),
     ]);
     let out = semio_framework_pack_json::object(fields);
-    println!("{}", semio_framework_pack_json::to_string(&out));
+    Ok(semio_framework_pack_json::to_string(&out))
 }
+
+
+fn main() {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    match answer(&args) {
+        Ok(line) => println!("{line}"),
+        Err((code, message)) => {
+            eprintln!("{message}");
+            std::process::exit(code);
+        }
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️inventory/🦀️.rs"]
+mod inventory_tests;

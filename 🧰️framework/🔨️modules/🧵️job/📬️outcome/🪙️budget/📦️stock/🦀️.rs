@@ -79,6 +79,7 @@ mod tests{
   fn fuel(&self)->u64{self.fuel}
   fn spent(&self)->P{Default::default()}
   fn work(&self)->u128{0}
+  fn succeeded(self,grant:RetainedCloneGrant,fuel:u64)->Self{Self{grant,fuel,..self}}
  }
  fn a(row:&serde_json::Value)->A{A{items:row[0].as_u64().unwrap(),copy_bytes:row[1].as_u64().unwrap(),capacity_bytes:row[2].as_u64().unwrap(),release_bytes:row[3].as_u64().unwrap(),work:row[4].as_u64().unwrap()}}
  fn bound(source:&OriginalReturnSource<Origin>,id:usize,stock:A){let mut loan=source.try_borrow().unwrap();let b=loan.get_mut();let g=RetainedCloneGrant{maximum_items:stock.items as usize,maximum_copy_bytes:stock.copy_bytes as usize,maximum_capacity_bytes:stock.capacity_bytes as usize,maximum_release_bytes:stock.release_bytes as usize,maximum_depth:64};b.bind(Origin{recipient:b as*const _ as usize,source:id,grant:g,fuel:stock.work}).unwrap();let turn=OriginalReturnEscrowTable::admit(g,stock.work);let(table,p)=turn.result.unwrap();b.table=table;b.record_retained(p).unwrap();b.record_work(u64::try_from(turn.work).unwrap())}

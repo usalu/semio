@@ -16,6 +16,8 @@
         "progressCeilingMultiplier": 24,
         "stallMilliseconds": 600000,
         "stallStopMilliseconds": 600000,
+        "grantWaitFreshMilliseconds": 120000,
+        "grantWaitMaximumMilliseconds": 300000,
         "absoluteDeadlineExtraIntervals": 1,
         "stallRestartMaximum": 5,
         "stallRestartBackoffMilliseconds": 30000,

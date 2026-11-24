@@ -392,6 +392,18 @@ impl DrawingMutationCandidateAuthority {
     }
 }
 
+#[cfg(any(test, feature = "testkit"))]
+impl DrawingMutationCandidateAuthority {
+    /// 🧪️ Steps the candidate over an exclusive snapshot and lends the sealed original while a duplicate reads its clone source.
+    pub fn step_with_custody(&mut self, source: &mut DrawingSnapshot, base: Option<RetainedCloneRef<'_, DrawingSnapshot>>, mutation: RetainedCloneRef<'_, DrawingMutation>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        let access = match base {
+            Some(base) if self.needs_shared_snapshot(mutation.get()) => DrawingSourceAccess::Shared(source, base),
+            _ => DrawingSourceAccess::Exclusive(source),
+        };
+        self.step(access, mutation, cx)
+    }
+}
+
 impl DrawingMutationCandidateAuthority {
     pub fn needs_shared_snapshot(&self, mutation: &DrawingMutation) -> bool {
         matches!(mutation, DrawingMutation::DuplicateLayer(_)) && matches!(self.phase, DrawingMutationCandidatePhase::LocateCloneSource | DrawingMutationCandidatePhase::PrepareOwnedValue)

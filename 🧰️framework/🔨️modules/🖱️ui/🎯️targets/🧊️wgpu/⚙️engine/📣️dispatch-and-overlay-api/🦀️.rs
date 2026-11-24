@@ -217,6 +217,7 @@ impl Ui {
             router.set_control_gap(self.theme.gap_standard);
             let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics.with_inline(inline));
             commands.extend(router.dispatch_pointer(tree, root, pointer_id, &event));
+            eprintln!("[DEBUG] ptr window={window_id} presented={presented} down={} up={} overlays={} cmds={} root_children={:?}", matches!(&event, UiEvent::PointerDown { .. }), matches!(&event, UiEvent::PointerUp { .. }), router.open_overlays().len(), commands.len(), router.open_overlays().iter().map(|o| (o.root, o.kind)).collect::<Vec<_>>());
             router.synchronize_retained_caret(tree, reset_caret);
             semio_ui_wgpu_paint::sync_input_refusal_rows(tree, root);
             (commands, tree.take_disclosure_changed())

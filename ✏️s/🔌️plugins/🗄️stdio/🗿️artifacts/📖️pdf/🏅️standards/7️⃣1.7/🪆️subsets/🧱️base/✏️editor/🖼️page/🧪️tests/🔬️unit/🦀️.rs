@@ -1639,6 +1639,19 @@ fn thumbnails_scale_each_page_and_reorder_through_move_page() {
     }
 }
 
+/// 🪟 The strip of a document without pages still renders: the shell requires every default-layout surface at boot, and a blank editor opens with no page.
+#[test]
+fn the_thumbnail_strip_of_a_document_without_pages_renders() {
+    let snapshot = PdfSnapshot::default();
+    assert!(snapshot.pages.is_empty());
+    assert_eq!((empty_label(Locale::En), empty_label(Locale::De)), ("No pages", "Keine Seiten"));
+    let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
+    for locale in [Locale::En, Locale::De] {
+        let strip = render_thumbnail_strip(&snapshot, "s.stdio.pdf@1.7/*#editor", OBJECT_DOMAIN, locale).expect("an empty thumbnail strip");
+        semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(strip), |_| ());
+    }
+}
+
 #[test]
 fn view_intents_reduce_to_the_fixture_script() {
     let (fixture, snapshot) = navigation_fixture();

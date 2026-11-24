@@ -1,0 +1,19 @@
+appliances	duct-fan			100 plan, 200 plan	50 plan	
+appliances	hot-water-cylinder			200 plan, 500 plan		100, 200, 50, 500
+appliances	kitchen-extractor-hood			100 plan, 50 plan		
+appliances	used-crt-television	0 / 0; extent only; 16 extent		200 plan, 500 plan		
+components	curtain-wall-bay			100 front, 100 plan, 200 front, 200 plan		
+components	etics-brick-wall-12			100 front, 200 front, 50 front, 500 front	100 plan, 200 plan, 500 plan	
+components	etics-brick-wall-30			100 front, 200 front, 50 front, 500 front	100 plan, 200 plan, 500 plan	
+components	external-venetian-blind			100 plan, 200 plan, 500 plan		
+components	glulam-beam			100 plan, 500 plan	500 plan	
+components	reclaimed-steel-column			100 plan, 50 plan		
+components	solid-brick-wall-1960			100 front, 200 front, 200 plan, 50 front, 500 front, 500 plan	100 plan, 200 plan, 500 plan	
+components	spiral-stair	2 / 6; flat; 8 other id		100 front, 100 plan, 200 front, 200 plan		
+components	stair-flight			100 front, 100 plan, 200 front, 50 plan		
+components	steel-column			200 plan, 500 plan	100 front, 200 front, 500 front	
+components	used-trench-convector			100 front, 200 front, 500 front		
+furniture	bookshelf			100 plan, 200 plan, 50 plan, 500 plan		
+furniture	dining-table	2 / 8; flat; 10 other id		100 plan, 200 plan, 50 plan, 500 plan		
+furniture	park-bench		12; off 12	200 plan, 500 plan		
+furniture	single-bed		25; descendant 15, off 10	100 plan, 50 plan		

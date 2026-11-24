@@ -3,9 +3,9 @@
 use super::*;
 
 // #region 🔖️Input
-pub(super) const MAX_INTERACTIVE_IMAGE_PIXELS: usize = 262_144;
+pub const MAX_INTERACTIVE_IMAGE_PIXELS: usize = 262_144;
 
-pub(super) const MAX_INTERACTIVE_IMAGE_BYTES: usize = MAX_INTERACTIVE_IMAGE_PIXELS * 4;
+pub const MAX_INTERACTIVE_IMAGE_BYTES: usize = MAX_INTERACTIVE_IMAGE_PIXELS * 4;
 
 /// 🎚️ Frame-ingestion policy shared by [`FrameSource::push_frame`] and [`FrameSource::push_video`]:
 /// `stride` keeps every `stride`-th *offered* frame (applied only to the direct [`FrameSource::push_frame`]

@@ -260,6 +260,13 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
     else commitValue(text);
     return true;
   };
+  const pressNumber = continuous && component.kind === "number";
+  /** 🎹️ A continuous number field's press ends by keyboard like it does by pointer: Enter releases the open press with the last typed value and keeps focus (the next input opens a new press); Escape cancels it (the host drops it with zero trace); blur releases. `onInput` rather than `onChange` so a value typed back to what the controlled field shows still ticks. */
+  const pressKey = (event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (event.nativeEvent.isComposing || !lane.open()) return;
+    if (event.key === "Enter") { event.preventDefault(); lane.commit(); return; }
+    if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); lane.abort("blur"); }
+  };
   const draftConflictId = `${controlDomId(context, record)}-draft-conflict`;
   const recovery = draftConflict ? <>
     <span id={draftConflictId} role="alert" className="sr-only">{draftConflictLabel}</span>
@@ -315,8 +322,9 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
       max={shown(component.max)}
       step={shown(component.step) ?? (component.kind === "number" && component.precision != null ? 10 ** -component.precision : undefined)}
       accept={component.kind === "file" ? (component.accept ?? undefined) : undefined}
-      onChange={commitOnBlur && component.kind !== "file" ? (event) => setDraft(event.target.value) : (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)}
-      onKeyDown={(event) => { if (!lawKey(event) && commitOnBlur) draftKey(event); }}
+      onChange={commitOnBlur && component.kind !== "file" ? (event) => setDraft(event.target.value) : pressNumber ? () => undefined : (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)}
+      onInput={pressNumber ? (event) => commitValue(event.currentTarget.value) : undefined}
+      onKeyDown={(event) => { if (lawKey(event)) return; if (commitOnBlur) draftKey(event); else if (pressNumber) pressKey(event); }}
       onBlur={commitOnBlur ? (event) => { const text = component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value; if (blurCommitsV1(committedByEnterRef.current, text)) commitValue(text); committedByEnterRef.current = null; } : continuous ? () => lane.commit() : undefined}
     />
   );

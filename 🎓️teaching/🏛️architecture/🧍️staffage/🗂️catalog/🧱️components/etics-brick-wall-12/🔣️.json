@@ -1004,6 +1004,248 @@
               "y": 0,
               "w": 0.02,
               "h": 1
+            },
+            {
+              "id": "joint-1",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.083333
+                ],
+                [
+                  0.38,
+                  0.083333
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-2",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.166667
+                ],
+                [
+                  0.38,
+                  0.166667
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-3",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.25
+                ],
+                [
+                  0.38,
+                  0.25
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-4",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.333333
+                ],
+                [
+                  0.38,
+                  0.333333
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-5",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.416667
+                ],
+                [
+                  0.38,
+                  0.416667
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-6",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.5
+                ],
+                [
+                  0.38,
+                  0.5
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-7",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.583333
+                ],
+                [
+                  0.38,
+                  0.583333
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-8",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.666667
+                ],
+                [
+                  0.38,
+                  0.666667
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-9",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.75
+                ],
+                [
+                  0.38,
+                  0.75
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-10",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.833333
+                ],
+                [
+                  0.38,
+                  0.833333
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-11",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.916667
+                ],
+                [
+                  0.38,
+                  0.916667
+                ]
+              ],
+              "closed": false
             }
           ],
           "front": [
@@ -1154,6 +1396,138 @@
               "y": 0,
               "w": 0.15,
               "h": 1
+            },
+            {
+              "id": "joint-1",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.166667
+                ],
+                [
+                  0.38,
+                  0.166667
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-2",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.333333
+                ],
+                [
+                  0.38,
+                  0.333333
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-3",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.5
+                ],
+                [
+                  0.38,
+                  0.5
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-4",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.666667
+                ],
+                [
+                  0.38,
+                  0.666667
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-5",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.833333
+                ],
+                [
+                  0.38,
+                  0.833333
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "insulation-joint",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "masonry-mortar",
+              "kind": "poly",
+              "points": [
+                [
+                  0.38,
+                  0.4
+                ],
+                [
+                  0.53,
+                  0.4
+                ]
+              ],
+              "closed": false
             }
           ],
           "front": [

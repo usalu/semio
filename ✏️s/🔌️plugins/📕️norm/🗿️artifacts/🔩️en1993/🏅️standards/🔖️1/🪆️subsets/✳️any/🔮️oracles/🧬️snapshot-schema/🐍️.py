@@ -8,7 +8,5 @@ except ImportError as err:
     raise SystemExit(1)
 schema = json.loads(Path(sys.argv[1]).read_text())
 instance = json.loads(Path(sys.argv[2]).read_text())
-if isinstance(instance.get("annex"), str):
-    instance["annex"] = instance["annex"].lower()
 jsonschema.validate(instance=instance, schema=schema)
 print("snapshot schema OK")

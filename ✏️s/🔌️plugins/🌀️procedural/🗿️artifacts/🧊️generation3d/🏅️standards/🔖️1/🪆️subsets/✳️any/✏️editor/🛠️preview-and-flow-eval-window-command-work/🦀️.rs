@@ -40,20 +40,20 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
         }
         if !self.started {
             self.started = true;
-            let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
+            let unserved = flow_eval_tick::unserved_kinds(&input.snapshot.host_snapshot);
             if let Generation3dCommand::SetActiveExample(payload) = input.command {
                 let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
                 let cfg = ConfigView { snapshot: input.config, window: None };
                 let mut emit = set_active_example::emit(payload, &doc, &cfg)?;
                 if !emit.artifact_mutations.is_empty() {
-                    self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_deref()), servable, &mut emit, input.operation.retained)?;
+                    self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_deref()), &unserved, &mut emit, input.operation.retained)?;
                 }
                 self.emit = Some(emit);
                 return self.complete();
             }
             let result = generation_command_result_for(input.command, input.snapshot, input.config).ok_or_else(|| Fault::from("generation3d-preview-command-unowned"))?;
             let mut emit = result.emit;
-            self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_deref()), servable, &mut emit, input.operation.retained)?;
+            self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_deref()), &unserved, &mut emit, input.operation.retained)?;
             self.emit = Some(emit);
             return self.complete();
         }

@@ -6,19 +6,9 @@
 //! object under another name is rewritten to the id — so `lift ∘ lower` is the identity on the
 //! typed lanes and content operators can name resources directly.
 
-use crate::standards::v1_7::subsets::base::modules::colour::{array_n, extra_entries, lift_colour_space, lift_ext_g_state, lift_function, lift_shading, matrix_of, numbers_of, rect_of};
-use crate::standards::v1_7::subsets::base::modules::content::{parse_content, FontTable};
-use crate::standards::v1_7::subsets::base::modules::fonts::{base_encoding_from_name, cmap, FontCodec};
-use crate::standards::v1_7::subsets::base::io::text_string::{decode_text_string};
-use crate::standards::v1_7::subsets::base::modules::images::lift_image;
-use crate::standards::v1_7::subsets::base::modules::lexer::{dict_f64, dict_get, dict_i64, dict_name};
-use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
-use crate::standards::v1_7::subsets::base::schema::snapshot::*;
-use std::collections::{HashMap, HashSet};
-use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
-use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArtifactResources,PdfArtifactResourcePort};
-use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue};
-use crate::standards::v1_7::subsets::base::schema::content_mapping::{ResourceMap, rename_content};
+use crate::standards::v1_7::subsets::base::io::error::PdfEngineError;
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, dict_name};
+use crate::standards::v1_7::subsets::base::schema::{graph_source::ObjectSource, snapshot::*, stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue}};
 
 #[path = "🌳️page-tree/🦀️.rs"]
 mod page_tree;
@@ -39,6 +29,3 @@ use navigation_and_annotations::*;
 #[path = "📚️catalog-and-page-mode/🦀️.rs"]
 mod catalog_and_page_mode;
 pub use catalog_and_page_mode::*;
-
-#[allow(unused_imports)]
-use lift_function as _lift_function_is_used_by_colour;

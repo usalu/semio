@@ -1,0 +1,18 @@
+furniture	used-coffee-table	0 / 11; flat; 4 extent	32; off 24, other bone 8	100 front, 200 front		
+furniture	used-extendable-dining-table			100 front, 200 plan, 50 front, 500 plan		
+furniture	used-folding-bookcase-ladder			200 front, 500 front		
+furniture	used-shoe-cabinet		12; descendant 8, other bone 4	200 plan, 500 plan		
+furniture	used-tv-sideboard	0 / 0; extent only; 3 extent		200 plan, 500 plan		
+furniture	used-wall-unit	0 / 0; extent only; 4 extent	4; off 3, descendant 1	100 plan, 200 plan, 500 plan		
+machinery	heat-pump-outdoor-unit			100 plan, 200 plan, 50 plan, 500 plan		
+machinery	plate-heat-exchanger		9; off 9	100 plan, 200 plan		
+machinery	solar-thermal-collector		12; off 12	100 front, 100 plan, 50 front, 50 plan		
+machinery	sorption-wheel			100 plan, 200 plan, 50 plan		
+objects	bicycle-stand			100 front, 100 plan, 200 front, 200 plan, 50 front, 50 plan		
+objects	patio-heater			100 plan, 200 plan		
+objects	storage-crate-stack			100 front, 200 plan, 50 front, 500 plan		100, 200, 50, 500
+objects	tealight	2 / 4; flat; 6 other id		100 plan, 200 plan, 50 plan	100 front, 200 front, 50 front	100, 200, 50
+objects	used-bollard-light			200 plan, 500 plan	200 front, 500 front	100, 200, 50, 500
+objects	used-climbing-net-pyramid			100 plan, 50 plan		
+objects	used-sandpit-digger			100 front, 50 front		
+vegetation	saguaro-cactus			200 plan, 500 plan		

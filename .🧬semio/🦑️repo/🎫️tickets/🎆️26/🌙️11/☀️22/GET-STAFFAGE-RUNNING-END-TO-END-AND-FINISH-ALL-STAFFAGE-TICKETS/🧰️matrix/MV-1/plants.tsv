@@ -1,0 +1,4 @@
+bamboo-clump	--only fol-1,fol-2,fol-4,fol-5 --scales 100,200,500	--steps 10 --keep 0.8
+common-ash		--steps 12
+black-locust			rebind
+english-oak		--steps 8 --undrawn	rebind --stem

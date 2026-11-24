@@ -209,6 +209,14 @@ impl ArtifactViewer for DrawingViewer {
         semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("drawing.child-projection"), error.to_string()))
     }
 
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
+    }
+
     fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot,Self::Mutation>>>> {
         Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot,Self::Mutation>::new()))
     }

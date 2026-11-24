@@ -196,10 +196,11 @@ pub fn json_values_equal(a: &serde_json::Value, b: &serde_json::Value) -> bool {
 /// 🔧️ Rewrites fractionless floats in a `DslValue` tree to their exact integer variant
 /// (`Number::UInt`/`Number::Int`) so a `3.0` reaching this path (e.g. through a plugin/JS
 /// boundary that has no integer type) compares equal to a genuine `3`.
+/// Negative zero, NaN (with its payload) and the infinities keep their exact IEEE word: none of them has an integer twin.
 // 🚫️async: E1 pure recursive transform, consumed by json_values_equal's `==` (external PartialEq) — see R9
 pub fn renormalize_whole_number_floats(value: DslValue) -> DslValue {
     match value {
-        DslValue::Number(semio_framework_value::Number::Float(n)) if n.fract() == 0.0 && n.is_finite() && n.abs() < (1u64 << 53) as f64 => {
+        DslValue::Number(semio_framework_value::Number::Float(n)) if n.fract() == 0.0 && n.is_finite() && n.abs() < (1u64 << 53) as f64 && n.to_bits() != (-0.0f64).to_bits() => {
             if n >= 0.0 {
                 DslValue::Number(semio_framework_value::Number::UInt(n as u64))
             } else {

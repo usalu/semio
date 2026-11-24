@@ -185,11 +185,11 @@ export function dropCasKeepersSyncV1(root:string,policy:Pick<CasPolicyV1,"fanOut
  return dropped;
 }
 
-/** 🔗️ Aligns the keeper links with the live entries: every held object has its link, every link whose holder no longer names the object (or whose holder is gone) is released. Sequential and bounded by the held set. Returns the links created and released. */
+/** 🔗️ Aligns the keeper links with the live entries: every held object has its link, every link whose holder no longer names the object (or whose holder is gone) is released. Sequential and bounded by the held set. Links are made 256 at a time with a turn of the event loop between, so a server that collects in-process keeps answering. Returns the links created and released. */
 export async function reconcileCasKeepersV1(root:string,policy:Pick<CasPolicyV1,"fanOutHexLength">,held:CasHeldV1,signal?:AbortSignal):Promise<{linked:number;released:number}>{
  const mine=new Map<string,Set<string>>();let linked=0,released=0;
  for(const entry of held.entries){let set=mine.get(entry.holder);if(!set){set=new Set();mine.set(entry.holder,set);}for(const digest of entry.digests)set.add(digest);}
- for(const [holder,digests] of mine){signal?.throwIfAborted();linked+=keepCasObjectsSyncV1(root,policy,holder,digests);}
+ for(const [holder,digests] of mine){const all=[...digests];for(let start=0;start<all.length;start+=256){signal?.throwIfAborted();linked+=keepCasObjectsSyncV1(root,policy,holder,all.slice(start,start+256));await new Promise<void>(resume=>setImmediate(resume));}}
  const base=casKeeperDirectoryV1(root);let holders:string[];try{holders=await readdir(base);}catch{return{linked,released};}
  for(const holder of holders){
   const keep=mine.get(holder);let shards:string[];try{shards=await readdir(join(base,holder));}catch{continue;}

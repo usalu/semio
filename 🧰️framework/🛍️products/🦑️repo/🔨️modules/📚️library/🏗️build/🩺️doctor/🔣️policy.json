@@ -40,7 +40,9 @@
     },
     "hostFreeWarnBytes": 21474836480,
     "hostFreeErrorBytes": 5368709120,
-    "publicationErrorSeconds": 600
+    "publicationErrorSeconds": 600,
+    "imageTrailerBytes": 40960,
+    "imageUnitBytes": 1048576
   },
   "tools": {
     "essential": [
@@ -173,6 +175,21 @@
       "safety": {
         "en": "Only images of the declared cache partitions: the exclusive image lease is taken without waiting (a running reclaim or opener keeps the image and nothing changes), the stray mount is detached without force (a busy device refuses), the image attaches only at its own empty, unmounted mount point with owners on, and every target is derived again from the kernel inventory right before it is touched. Only macOS has attachable images; no data of the image is touched.",
         "de": "Nur Images der deklarierten Cache-Partitionen: Die exklusive Image-Lease wird ohne Warten genommen (ein laufender Reclaim oder eine laufende Öffnung behält das Image und nichts ändert sich), der verirrte Einhängepunkt wird ohne Zwang ausgehängt (ein belegtes Gerät lehnt ab), das Image wird nur an seinem eigenen, leeren, nicht eingehängten Einhängepunkt mit Besitzern eingehängt und jedes Ziel wird unmittelbar vor dem Zugriff erneut aus dem Kernel-Inventar abgeleitet. Nur macOS hat einhängbare Images; Daten des Images werden nicht angetastet."
+      }
+    },
+    {
+      "id": "storage-grow",
+      "area": "storage",
+      "rules": [
+        "storage.image-below-need"
+      ],
+      "summary": {
+        "en": "Grow the disk images that are smaller than the declared need of this platform, in place, with progress and cancellation; a host without the free bytes is named unfit.",
+        "de": "Vergrößert die Disk-Images, die kleiner sind als der deklarierte Bedarf dieser Plattform, an Ort und Stelle, mit Fortschritt und Abbruch; ein Host ohne die freien Bytes wird als ungeeignet benannt."
+      },
+      "safety": {
+        "en": "Only images of the declared cache partitions: the exclusive image lease is taken without waiting (a running opener keeps the image and nothing changes), the image is detached only while idle and always attached again, the backing is stretched without writing a byte and no data of the image is touched.",
+        "de": "Nur Images der deklarierten Cache-Partitionen: Die exklusive Image-Lease wird ohne Warten genommen (eine laufende Öffnung behält das Image und nichts ändert sich), das Image wird nur im Leerlauf ausgehängt und immer wieder eingehängt, das Backing wird gestreckt, ohne ein Byte zu schreiben, und keine Daten des Images werden angetastet."
       }
     },
     {

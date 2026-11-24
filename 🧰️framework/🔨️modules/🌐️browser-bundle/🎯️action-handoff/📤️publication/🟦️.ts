@@ -30,7 +30,7 @@ export type BrowserActorCommandBackboneEnvelopeV1 = Readonly<{
   timestamp: Readonly<{ actor: bigint; physical_ms: bigint; logical: bigint }>;
 }>;
 type BrowserActorHostEffectKeyV1 = "requestServiceOperation" | "openExternalUrl" | "replayShellCommand" | "openPluginInstance"
-  | "setPanel" | "setActiveUtility" | "setActiveTool" | "notify" | "openDialog" | "requestFileOpen" | "downloadMediaExport";
+  | "setPanel" | "setActiveUtility" | "setActiveTool" | "notify" | "clipboardWrite" | "openDialog" | "requestFileOpen" | "downloadMediaExport";
 export type BrowserActorHostEffectV1 = {
   [Key in BrowserActorHostEffectKeyV1]: Extract<Effect, Readonly<Record<Key, unknown>>>;
 }[BrowserActorHostEffectKeyV1];
@@ -111,6 +111,17 @@ function integer(value: unknown, maximum = Number.MAX_SAFE_INTEGER): number {
   return value;
 }
 
+function clipboardFragment(value: unknown): unknown {
+  const { schema, mediaType, dslText, packBytes, sourceApp, label } = exact(value, ["schema", "mediaType", "dslText", "sourceApp", "label"], ["packBytes"]);
+  const { class: mediaClass, form } = exact(mediaType, ["class", "form"]);
+  if (packBytes !== undefined && (!Array.isArray(packBytes) || packBytes.length > BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES)) throw new Error("browser-actor-publication: invalid clipboard bytes");
+  return {
+    schema: identity(schema), mediaType: { class: identity(mediaClass), form: identity(form) }, dslText: text(dslText),
+    ...(packBytes === undefined ? {} : { packBytes: packBytes.map(byte => integer(byte, 255)) }),
+    sourceApp: identity(sourceApp), label: text(label),
+  };
+}
+
 function projection(value: unknown): BrowserActorHostEffectV1 {
   const effect = record(value);
   const [key] = Object.keys(effect);
@@ -157,6 +168,8 @@ function projection(value: unknown): BrowserActorHostEffectV1 {
       return { setActiveTool: { toolId: text(exact(data, ["toolId"]).toolId) } };
     case "notify":
       return { notify: { message: text(exact(data, ["message"]).message) } };
+    case "clipboardWrite":
+      return { clipboardWrite: { fragment: clipboardFragment(exact(data, ["fragment"]).fragment) } };
     case "openDialog": {
       const { req, dialogId, args } = exact(data, ["req", "dialogId"], ["args"]);
       return { openDialog: { req: integer(req), dialogId: identity(dialogId), ...(args === undefined ? {} : { args: record(args) }) } };
@@ -348,6 +361,8 @@ function projectWireEffect(value: unknown): unknown {
       return { setActiveTool: val };
     case "notify":
       return { notify: val };
+    case "clipboard-write":
+      return { clipboardWrite: { fragment: exactPack(exact(val, ["fragment"]).fragment, BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES) } };
     case "open-dialog": {
       const { req, params } = exact(val, ["req", "params"]);
       const { dialogId, args } = exact(params, ["dialogId"], ["args"]);

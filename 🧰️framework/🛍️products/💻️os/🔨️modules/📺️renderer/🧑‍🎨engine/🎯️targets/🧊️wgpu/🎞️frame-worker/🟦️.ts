@@ -71,6 +71,10 @@ const lazyPluginInstalls = createLazyPluginInstallDoor({
 (globalThis as { semioWgpuOnDemandStatuses?: (locale: string) => string }).semioWgpuOnDemandStatuses = (locale) =>
   JSON.stringify((onDemandActivator?.statuses() ?? []).map((status) => ({ ...status, label: onDemandStatusLabel(status, locale), announcement: onDemandStatusAnnouncement(status) })));
 
+/** 🔎️ The deferred plugins one request would start, as a JSON array of plugin ids (ascending, none for an unknown request or an already active owner). The wgpu shell installs each through {@link lazyPluginInstalls}, which routes through the activator, so the shell's install band shows the progress and its cancel stops the load. */
+(globalThis as { semioWgpuResolveOnDemand?: (requestJson: string) => string }).semioWgpuResolveOnDemand = (requestJson) =>
+  JSON.stringify(onDemandActivator?.owners(admitOnDemandRequest(JSON.parse(requestJson) as unknown)) ?? []);
+
 (globalThis as { semioWgpuCancelOnDemand?: (pluginId?: string) => number }).semioWgpuCancelOnDemand = (pluginId) => onDemandActivator?.cancel(pluginId) ?? 0;
 
 const dynamicExtensionModules = new Map<string, Awaited<ReturnType<typeof loadPluginModule>>>();

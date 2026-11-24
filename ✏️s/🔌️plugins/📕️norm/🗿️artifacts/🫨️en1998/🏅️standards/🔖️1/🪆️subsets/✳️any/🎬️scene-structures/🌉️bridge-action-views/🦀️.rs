@@ -148,7 +148,8 @@ pub fn bearing_displacement(d: &En1998Snapshot, report: &CheckReport, b: &En1998
         binding.quantise = Some(Quantise::Round { step: 0.01 });
         binding
     });
-    let marker = Marker { id: "design".into(), at: at.clone(), shape: MarkerShape::Diamond, tone: utilisation.map_or(Tone::Neutral, scene::utilisation_tone), label: loc(&format!("T = {t1:.2} s: d_Ed = {:.1} mm", at.y), &format!("T = {t1:.2} s: d_Ed = {:.1} mm", at.y)), utilisation, bound_check: utilisation.map(|_| check_id), binding };
+    let bound = utilisation.map(|_| check_id);
+    let marker = Marker { id: scene::projection_kit::diagram_parts::checked_marker_id("design", &bound), at: at.clone(), shape: MarkerShape::Diamond, tone: utilisation.map_or(Tone::Neutral, scene::utilisation_tone), label: loc(&format!("T = {t1:.2} s: d_Ed = {:.1} mm", at.y), &format!("T = {t1:.2} s: d_Ed = {:.1} mm", at.y)), utilisation, bound_check: bound, binding };
     Some(Diagram2d {
         id: format!("bearing-displacement:{}", b.id),
         title: loc(&format!("Bearing displacement \u{2013} {}", b.id), &format!("Lagerverschiebung \u{2013} {}", b.id)),

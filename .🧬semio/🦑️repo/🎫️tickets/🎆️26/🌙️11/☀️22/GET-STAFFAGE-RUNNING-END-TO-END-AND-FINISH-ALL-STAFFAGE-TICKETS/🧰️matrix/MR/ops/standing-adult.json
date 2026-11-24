@@ -1,0 +1,14 @@
+[
+  { "op": "front-sweep", "scale": "50", "id": "neck" },
+  { "op": "front-sweep", "scale": "100", "id": "neck" },
+  { "op": "front-sweep", "scale": "500", "id": "sil-neck" },
+  { "op": "front-sweep", "scale": "50", "id": "thigh-l" },
+  { "op": "front-sweep", "scale": "50", "id": "thigh-r" },
+  { "op": "front-sweep", "scale": "100", "id": "thigh-l" },
+  { "op": "front-sweep", "scale": "100", "id": "thigh-r" },
+  { "op": "front-sweep", "scale": "500", "id": "sil-thigh-l" },
+  { "op": "front-sweep", "scale": "500", "id": "sil-thigh-r" },
+  { "op": "front-sweep", "scale": "100", "id": "shank-l" },
+  { "op": "front-sweep", "scale": "100", "id": "shank-r" },
+  { "op": "plan-revolve", "scale": "500", "id": "sil-arm-l" }
+]

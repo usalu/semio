@@ -38,6 +38,7 @@
         "progressMilliseconds": 2000,
         "inflightName": "running.json",
         "watchdogWriteMilliseconds": 10000,
+        "watchdogIdleWriteMilliseconds": 30000,
         "watchdogRecordBytes": 786432,
         "watchdogCpuMaximum": 512,
         "cancelName": "cancel",
@@ -62,6 +63,10 @@
         "memoryFloorMinimumMegabytes": 512,
         "memoryWaitMaximumMilliseconds": 600000,
         "inodeSweepRetryMilliseconds": 1800000,
+        "unfitRecheckGrowthMegabytes": 1024,
+        "unfitRecheckMilliseconds": 21600000,
+        "healRetryMilliseconds": 600000,
+        "healCommandMilliseconds": 300000,
         "megabytesPerJob": 1536,
         "tailLines": 20,
         "failureWindowBytes": 1048576,
@@ -124,13 +129,15 @@
     "Exit": {"type": "object", "additionalProperties": false, "required": ["exit", "signal", "spawnFailed", "endedMs"], "properties": {"exit": {"type": ["integer", "null"]}, "signal": {"type": ["string", "null"]}, "spawnFailed": {"type": "boolean"}, "endedMs": {"type": "integer"}}},
     "Watchdog": {
       "type": "object", "additionalProperties": false,
-      "required": ["version", "owner", "peakMegabytes", "progressAt", "stallAt", "armedAt", "progressKey", "phase", "phaseAt", "offset", "seen", "step", "holderSince", "holderEvidence", "semantics", "cpu"],
+      "required": ["version", "owner", "peakMegabytes", "progressAt", "stallAt", "watchedAt", "unwatchedMilliseconds", "armedAt", "progressKey", "phase", "phaseAt", "offset", "seen", "step", "holderSince", "holderEvidence", "semantics", "cpu"],
       "properties": {
         "version": {"const": 1},
         "owner": {"$ref": "#/definitions/WatchdogDigest"},
         "peakMegabytes": {"$ref": "#/definitions/WatchdogInteger"},
         "progressAt": {"$ref": "#/definitions/WatchdogInteger"},
         "stallAt": {"$ref": "#/definitions/WatchdogInteger"},
+        "watchedAt": {"$ref": "#/definitions/WatchdogInteger", "description": "When a supervisor last looked at the stage (written at most every `watchdogWriteMilliseconds` while something changed, at least every `watchdogIdleWriteMilliseconds` while nothing did, and at every detach). The time between it and the next adoption was watched by nobody: a supervisor restarted for new code, booting, or waiting before it adopts."},
+        "unwatchedMilliseconds": {"$ref": "#/definitions/WatchdogInteger", "description": "Time since `stallAt` during which no supervisor watched the stage. It is not quiet time: the stall stop counts only watched time (now - stallAt - unwatchedMilliseconds), so a stage adopted after a supervisor restart is never stopped for the gap of the restart; any progress resets it to 0. The hard cap still counts from the start."},
         "armedAt": {"$ref": "#/definitions/WatchdogInteger"},
         "progressKey": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogDigest"}]},
         "phase": {"enum": [null, "reading", "executing"]},
@@ -253,6 +260,7 @@
           "store-full": "Stage {stage} cannot create files in {path}: the disk or the quota of the user is full ({errno}); free space there. Retrying with back-off.",
           "disk-short": "Stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free ({resource}); free at least {missing} {unit} more there; the stage does not start until space is free there, checking again every minute.",
           "disk-collecting": "Stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free: freeing space by priority now (derivable caches first, the image slack last), progress is in the log; {missing} {unit} are still missing; the stage starts as soon as the need is free.",
+          "disk-unfit": "Worker is unfit (disk): stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free after every derivable cache was collected, {missing} {unit} are missing. It is said once and not retried in a loop: the machine is checked again when {growth} MB more are free or after {hours} h. Disk consumers and their collection commands: {consumers}.",
           "disk-unmeasured": "Stage {stage}: the free space in {path} could not be measured ({reason}: {detail}); that is not the same as a full disk, so the stage starts anyway; the space gate of the stage and the write error itself still stop it.",
           "disk-consumers": "Stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free ({resource}) after automatic collection. Measured disk consumers and their collection commands are {consumers}. Free at least {missing} {unit} more there; the stage does not start until then, collecting and checking again every minute.",
           "loop-failed": "The readiness loop of this worker stopped with an error ({message}); it starts again in {seconds} seconds (try {count} in a row).",
@@ -277,6 +285,7 @@
           "store-full": "Stufe {stage} kann in {path} keine Dateien anlegen: der Datenträger oder die Quote des Benutzers ist voll ({errno}); dort Platz freigeben. Neuer Versuch mit Wartezeit.",
           "disk-short": "Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei ({resource}); gib dort mindestens {missing} {unit} mehr frei; die Stufe startet erst, wenn dort Platz frei ist, und prüft jede Minute neu.",
           "disk-collecting": "Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei: Platz wird jetzt nach Priorität freigegeben (zuerst ableitbare Caches, der Image-Überhang zuletzt), der Fortschritt steht im Protokoll; es fehlen noch {missing} {unit}; die Stufe startet, sobald der Bedarf frei ist.",
+          "disk-unfit": "Arbeiter ist ungeeignet (Platte): Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei, nachdem jeder ableitbare Cache gesammelt wurde, {missing} {unit} fehlen. Das wird einmal gesagt und nicht in einer Schleife wiederholt: die Maschine wird erneut geprüft, wenn {growth} MB mehr frei sind oder nach {hours} h. Plattenverbraucher und ihre Sammelbefehle: {consumers}.",
           "disk-unmeasured": "Stufe {stage}: der freie Platz in {path} konnte nicht gemessen werden ({reason}: {detail}); das ist nicht dasselbe wie ein volles Laufwerk, daher startet die Stufe trotzdem; die Platzprüfung der Stufe und der Schreibfehler selbst halten sie weiterhin an.",
           "disk-consumers": "Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei ({resource}) nach der automatischen Bereinigung. Gemessene Verbraucher und Befehle zur Bereinigung sind {consumers}. Gib dort mindestens {missing} {unit} mehr frei; die Stufe startet erst dann und sammelt und prüft jede Minute neu.",
           "loop-failed": "Die Bereitschaftsschleife dieses Arbeiters ist mit einem Fehler beendet worden ({message}); sie startet in {seconds} Sekunden neu (Versuch {count} in Folge).",
@@ -298,7 +307,7 @@
     },
     "Refusal": {
       "type": "object", "additionalProperties": false, "required": ["code", "en", "de"],
-      "properties": {"code": {"enum": ["human-running", "lease-held", "memory-low", "stage-failed", "tooling-compiler", "stage-timeout", "stage-stalled", "stage-stall-exhausted", "stage-code-changed", "stage-code-stale", "stage-step-overdue", "stage-holder-silent", "store-full", "disk-short", "disk-unmeasured", "disk-collecting", "disk-consumers", "loop-failed", "spawn-failed", "interrupted", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
+      "properties": {"code": {"enum": ["human-running", "lease-held", "memory-low", "stage-failed", "tooling-compiler", "stage-timeout", "stage-stalled", "stage-stall-exhausted", "stage-code-changed", "stage-code-stale", "stage-step-overdue", "stage-holder-silent", "store-full", "disk-short", "disk-unmeasured", "disk-collecting", "disk-consumers", "disk-unfit", "loop-failed", "spawn-failed", "interrupted", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
     },
     "Timings": {
       "description": "Per-stage timings of one worker in the store under `v1/origins/<origin>/ready-timings.json`: newest last. A drained physical stage has no attempt count in this supervisor. A null digest means no verified launch digest was available. An observed end bounds the duration when the wrapper receipt is unavailable.",

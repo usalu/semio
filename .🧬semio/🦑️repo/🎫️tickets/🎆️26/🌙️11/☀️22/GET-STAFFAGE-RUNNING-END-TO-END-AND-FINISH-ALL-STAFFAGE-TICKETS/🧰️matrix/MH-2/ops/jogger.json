@@ -1,0 +1,12 @@
+[
+  {"op": "plan-prism", "scale": "50", "id": "shorts"},
+  {"op": "plan-revolve", "scale": "50", "id": "neck"},
+  {"op": "plan-prism", "scale": "100", "id": "shorts"},
+  {"op": "plan-revolve", "scale": "100", "id": "neck"},
+  {"op": "plan-revolve", "scale": "200", "id": "neck"},
+  {"op": "plan-prism", "scale": "200", "id": "shorts"},
+  {"op": "plan-revolve", "scale": "500", "id": "neck"},
+  {"op": "plan-prism", "scale": "500", "id": "shorts"},
+  {"op": "front-sweep", "scale": "500", "id": "shirt"},
+  {"op": "set", "scale": "50", "view": "plan", "id": "fingers-l-skin", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": 0.1568, "z1": 0.1862}}}
+]

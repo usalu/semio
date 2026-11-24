@@ -1,0 +1,8 @@
+{
+  "ops": [
+    { "op": "anchor-set", "id": "flame-top", "set": { "z": 0.03 } }
+  ],
+  "cover": [
+    { "scales": ["50"], "view": "front", "from": "flame-centre", "id": "flame-centre-mid", "z0": 0.024, "z1": 0.036, "z": 3.4 }
+  ]
+}

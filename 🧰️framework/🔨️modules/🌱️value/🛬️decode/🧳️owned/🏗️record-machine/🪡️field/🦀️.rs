@@ -8,6 +8,8 @@ pub use semio_framework_value_native_schema_engine::source::{NativeTreeKind,Nati
 use semio_framework_value_native_receiver_protocol::{NativeReceiver,NativeAdvanceSelection,OriginalEffectReply,OriginalEffectReplyComplete};
 
 pub trait NativeScalarValue<I:NativeValueSource+?Sized>:RetireOwned{fn read(original:&I)->Result<Self,ValueError> where Self:Sized;fn read_copy_bytes(original:&I)->Result<usize,ValueError>;}
+/// 🍃️ A pair of scalars reads straight from its original two-element sequence, so a record field of that type needs no child receiver.
+impl<I:NativeValueSource+?Sized,A:NativeScalarValue<dyn NativeValueSource>,B:NativeScalarValue<dyn NativeValueSource>> NativeScalarValue<I> for (A,B) where (A,B):RetireOwned{fn read(original:&I)->Result<Self,ValueError>{if original.sequence_len()?!=2{return Err(invalid())}Ok((A::read(original.sequence_child(0)?)?,B::read(original.sequence_child(1)?)?))}fn read_copy_bytes(_:&I)->Result<usize,ValueError>{Ok(size_of::<Option<Self>>())}}
 pub struct NativeScalarReceiver<I:NativeValueSource+?Sized,T:NativeScalarValue<I>>{binding:Option<RetainedCloneBinding>,output:ManuallyDrop<Option<T>>,retirement:RetainedCloneClose,closing:bool,taken:bool,input:std::marker::PhantomData<fn(&I)>}
 impl<I:NativeValueSource+?Sized,T:NativeScalarValue<I>> NativeScalarReceiver<I,T>{pub fn new()->Self{Self{binding:None,output:ManuallyDrop::new(None),retirement:Default::default(),closing:false,taken:false,input:std::marker::PhantomData}}}
 impl<I:NativeValueSource+?Sized,T:NativeScalarValue<I>> NativeReceiver<I,T> for NativeScalarReceiver<I,T>{

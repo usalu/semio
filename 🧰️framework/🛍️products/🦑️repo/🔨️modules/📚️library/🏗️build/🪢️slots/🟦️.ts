@@ -7,7 +7,16 @@ import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../..
 export const SLOT_HEADER_V1="x-semio-slot";
 
 /** 🧾️ What a published entry was built from (`Declaration` of the slot schema): kind, toolchain, workspace sources with digests, the digests of the files of other entries it consumed (`externs`), its own name (`self`, the local key) and the names of the entries it consumed that a digest cannot name (`units`: the producer of every extern file, the build script executable, the build script run its OUT_DIR comes from). */
-export type DeclarationV1=Readonly<{version:2;kind:"rust-unit"|"build-script-run"|"stage-output"|"graph";self?:string;toolchain:string;sources:readonly Readonly<{path:string;sha256:string}>[];externs:readonly string[];units?:readonly string[]}>;
+export type DeclarationV1=Readonly<{version:2;kind:"rust-unit"|"build-script-run"|"stage-output"|"graph"|"input-manifest";self?:string;toolchain:string;sources:readonly Readonly<{path:string;sha256:string}>[];externs:readonly string[];units?:readonly string[]}>;
+
+/** 🪦️ Why retired content stays stale (`Tombstone` of the slot schema without its blob): the workspace source and the digest it was built from, or the toolchain it was built with. */
+export type StaleCauseV1=Readonly<{path:string;sha256:string}>|Readonly<{toolchain:string}>;
+
+/** ⚰️ An output blob enforce retired for stale content, with the cause that keeps it stale (`Tombstone` of the slot schema). */
+export type TombstoneV1=Readonly<{blob:string}>&StaleCauseV1;
+
+/** 🛡️ Whether an entry of this declared kind belongs to the protected metadata class of the cache server (`graph` heads and records, `input-manifest` entries): never judged stale for its sources' digests, kept by its own budget, replaced only by a newer entry of its slot. */
+export const protectedKindV1=(kind:DeclarationV1["kind"]|undefined):boolean=>kind==="graph"||kind==="input-manifest";
 
 /** 🚦️ How staleness acts: `off` judges nothing, `dry-run` only records what it would retire or refuse, `enforce` retires and refuses. */
 export type StalenessModeV1="off"|"dry-run"|"enforce";
@@ -30,7 +39,7 @@ export function isSlotIdV1(value:unknown):value is string{return typeof value===
 const shapes=new Map<string,CompiledJsonSchemaSubset>(),shapeOf=(definition:string):CompiledJsonSchemaSubset=>{let check=shapes.get(definition);if(!check){check=compileJsonSchemaSubset({$ref:`#/definitions/${definition}`},schema);shapes.set(definition,check);}return check;};
 
 /** 🛡️ Validates a document against a named definition of the slot schema and names the first problem. */
-export function requireSlotShapeV1(definition:"Retention"|"Meta"|"Claim"|"AuditReport"|"Declaration"|"Staleness"|"StalenessReport",value:unknown,message:string):void{
+export function requireSlotShapeV1(definition:"Retention"|"Meta"|"Claim"|"AuditReport"|"Declaration"|"Tombstone"|"Staleness"|"StalenessReport",value:unknown,message:string):void{
  const errors=shapeOf(definition).validate(value);
  if(errors.length)throw Error(`${message}: ${errors[0]}`);
 }

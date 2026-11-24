@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "name": "Single office at its typical density",
+      "usage": "office",
+      "areaM2": 200,
+      "occupants": 20,
+      "typicalOccupants": 20.0
+    },
+    {
+      "name": "Meeting room admits five times the persons",
+      "usage": "meeting",
+      "areaM2": 200,
+      "occupants": 20,
+      "typicalOccupants": 100.0
+    },
+    {
+      "name": "Classroom admits five times the persons",
+      "usage": "classroom",
+      "areaM2": 200,
+      "occupants": 20,
+      "typicalOccupants": 100.0
+    },
+    {
+      "name": "Retail follows the department-store density",
+      "usage": "retail",
+      "areaM2": 70,
+      "occupants": 3,
+      "typicalOccupants": 10.0
+    },
+    {
+      "name": "Residential has no typical occupancy",
+      "usage": "residential",
+      "areaM2": 80,
+      "occupants": 3,
+      "typicalOccupants": null
+    },
+    {
+      "name": "Kitchen has no typical occupancy",
+      "usage": "kitchen",
+      "areaM2": 30,
+      "occupants": 2,
+      "typicalOccupants": null
+    }
+  ]
+}

@@ -39,6 +39,7 @@ test("digests, back-off, jobs, tree size and the decision equal an independent i
  const python=spawnSync("python3",["-I",join(import.meta.dir,"🧫️fixtures","🐍️oracle.py"),fixtureFile,schemaFile,nativeSchemaFile],{encoding:"utf8"});
  expect(python.status).toBe(0);
  expect(JSON.parse(python.stdout)).toEqual(JSON.parse(JSON.stringify(ours)));
+ expect(fixture.decide.flatMap((row,index)=>row.input.inflight===null?[]:[[row.name,ours.decide[index]!.action,ours.decide[index]!.stageIndex]]),"a stage in flight is adopted, never held behind a memory wait or a back-off").toEqual([["a stage in flight is adopted while memory is low","run",2],["a stage in flight is adopted during the back-off of an earlier failure","run",2]]);
 });
 
 test("selected Nx materials invalidate only workspace and a restarted observer reuses matching receipts",()=>{
@@ -48,7 +49,7 @@ test("selected Nx materials invalidate only workspace and a restarted observer r
   const changed=current.stages.filter((stage,index)=>stage.digest!==old.stages[index]!.digest).map(stage=>stage.name);
   expect(changed,row.name).toEqual(row.changed);
   const done=Object.fromEntries(old.stages.map(stage=>[stage.name,stage.digest]));
-  const decision=readyDecideV1({server:false,...current,done,marker:true,repo:true,human:false,lease:"free",memoryOk:true,failure:null,now:1});
+  const decision=readyDecideV1({server:false,...current,done,marker:true,repo:true,human:false,lease:"free",inflight:null,memoryOk:true,failure:null,now:1});
   expect(decision.action,row.name).toBe(row.changed.length?"run":"idle");
   expect(decision.stageIndex,row.name).toBe(STAGES.findIndex(stage=>stage.name===row.changed[0]));
   return {changed,decision};
@@ -196,7 +197,7 @@ test("timeouts and spawn failures are recorded with their own code and the stage
  await runReadyV1(w.ports,w.controller.signal);
  const codes=w.updates.filter(update=>update.state==="backoff").map(update=>update.refusal!.code);
  expect(codes[0]).toBe("stage-timeout");expect(codes).toContain("spawn-failed");
- const decided=readyDecideV1({server:false,digest:"e".repeat(64),stages:[{name:"native",digest:"1".repeat(64)}],done:{},marker:false,repo:false,human:false,lease:"free",memoryOk:true,failure:{digest:"d".repeat(64),nextAttemptMs:9_999_999},now:1});
+ const decided=readyDecideV1({server:false,digest:"e".repeat(64),stages:[{name:"native",digest:"1".repeat(64)}],done:{},marker:false,repo:false,human:false,lease:"free",inflight:null,memoryOk:true,failure:{digest:"d".repeat(64),nextAttemptMs:9_999_999},now:1});
  expect(decided.action).toBe("run");
 });
 
@@ -205,7 +206,7 @@ test("the group server never runs a stage and writes nothing",async()=>{
  await runReadyV1(w.ports,w.controller.signal);
  expect(w.shared.calls).toEqual([]);expect(w.updates).toEqual([]);expect(existsSync(join(store,"v1","origins","g1-m99","ready.json"))).toBe(false);
  expect(readyIsServerV1("g1-server","g1")).toBe(true);expect(readyIsServerV1("g1-m03","g1")).toBe(false);expect(readyIsServerV1("g1-server",undefined)).toBe(false);expect(readyIsServerV1("g2-server","g1")).toBe(false);
- expect(readyDecideV1({server:true,digest:"d".repeat(64),stages:[],done:{},marker:false,repo:false,human:false,lease:"free",memoryOk:true,failure:null,now:1}).action).toBe("server");
+ expect(readyDecideV1({server:true,digest:"d".repeat(64),stages:[],done:{},marker:false,repo:false,human:false,lease:"free",inflight:null,memoryOk:true,failure:null,now:1}).action).toBe("server");
 });
 
 test("a person running the setup and too little free memory are observed or waited for, never fought",async()=>{

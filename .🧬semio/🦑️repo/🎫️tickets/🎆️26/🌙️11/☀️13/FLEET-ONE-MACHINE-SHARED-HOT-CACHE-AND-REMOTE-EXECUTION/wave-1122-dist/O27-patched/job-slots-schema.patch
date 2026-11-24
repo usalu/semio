@@ -1,0 +1,28 @@
+--- /Users/ueli/.sinc/play/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧵️job-slots/🧬️schema/🔣️.json	2026-11-24 15:05:55
++++ /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/o27/root/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧵️job-slots/🧬️schema/🔣️.json	2026-11-24 15:09:24
+@@ -12,7 +12,6 @@
+         "componentJobsMaximum": 6,
+         "componentJobResidueMegabytes": 256,
+         "reserveMegabytes": 2048,
+-        "pressureWarnDivisor": 1,
+         "localJobsMaximum": 3,
+         "localJobsPollMilliseconds": 5000,
+         "localJobsProgressMilliseconds": 60000,
+@@ -345,7 +344,7 @@
+             "jobs-all": "every worker slot that fits a wasm final takes one job",
+             "jobs-cap": "the authored job cap bounds the fleet share",
+             "jobs-memory": "the free memory here carries fewer remote jobs",
+-            "jobs-pressure": "memory pressure is raised, so fewer remote jobs wait here"
++            "jobs-pressure": "memory pressure is critical, so no remote job waits here"
+           },
+           "local": {
+             "plan": "[component-jobs] {operation}: {jobs} component job(s) may hold a local reservation at once ({reason}); {available} MB free, {floor} MB kept free, the next finals counted at {peak} MB",
+@@ -388,7 +387,7 @@
+             "jobs-all": "jeder Worker-Platz, der ein Wasm-Endstück trägt, übernimmt einen Job",
+             "jobs-cap": "die festgelegte Job-Obergrenze begrenzt den Flottenanteil",
+             "jobs-memory": "der freie Speicher hier trägt weniger entfernte Jobs",
+-            "jobs-pressure": "der Speicherdruck ist erhöht, daher warten weniger entfernte Jobs hier"
++            "jobs-pressure": "der Speicherdruck ist kritisch, daher wartet hier kein entfernter Job"
+           },
+           "local": {
+             "plan": "[component-jobs] {operation}: {jobs} Komponenten-Job(s) dürfen gleichzeitig eine lokale Reservierung halten ({reason}); {available} MB frei, {floor} MB bleiben frei, die nächsten Endstücke zählen mit {peak} MB",

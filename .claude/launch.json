@@ -92,6 +92,30 @@
       "port": 6062
     },
     {
+      "name": "architecture-course-rehearsal-long",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️23/ARCHITECTURE-COURSE-REDEPLOY-READINESS/site-rehearsal.ts",
+        ".cache/scratch/reh-long",
+        "--project",
+        "presence",
+        "--project",
+        "shortage",
+        "--project",
+        "away",
+        "--project",
+        "faults",
+        "--project",
+        "chaos",
+        "--project",
+        "reconnect",
+        "--no-deps",
+        "--workers",
+        "1"
+      ],
+      "port": 6063
+    },
+    {
       "name": "draw-react-native",
       "runtimeExecutable": "sh",
       "runtimeArgs": [

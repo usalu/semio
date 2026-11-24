@@ -1,0 +1,33 @@
+{
+  "format": "semio.generation3d.on-demand-run-effects",
+  "version": 1,
+  "topic": "os.on-demand.request",
+  "latch": "registry-generation-and-unserved-kinds",
+  "surface": "procedural.generation3d.pending_effects",
+  "window": { "id": "procedural-preview-lazy", "kind": "procedural-view-preview" },
+  "extension": {
+    "pluginId": "flow-extension-lazylaw",
+    "id": "lazylaw",
+    "manifest": {
+      "schema": "flow.extension",
+      "id": "lazylaw",
+      "name": "Lazy Law",
+      "version": "1.0.0",
+      "activationEvents": ["onStartup"],
+      "contributes": {
+        "schemas": [],
+        "operators": [{ "id": "lazylaw.noop", "extension": "lazylaw", "name": "Noop", "abbreviation": "N", "icon": "circle", "summary": "A law operator.", "inputs": [], "outputs": [] }],
+        "widgets": [],
+        "commands": [],
+        "settings": []
+      }
+    }
+  },
+  "node": { "id": "n0", "kind": "lazylaw.noop" },
+  "ladder": [
+    { "id": "a parked document asks once for the namespace of its unserved kind", "step": "poll", "expectedRequests": [{ "kind": "node-kind", "nodeKind": "lazylaw.noop" }], "expectedRunActions": [] },
+    { "id": "a second poll under the same generation asks nothing", "step": "poll", "expectedRequests": [], "expectedRunActions": [] },
+    { "id": "the registration serves the graph and the run starts by itself", "step": "install", "expectedRequests": [], "expectedRunActions": ["start"] },
+    { "id": "a withdrawn extension parks the document and asks again", "step": "uninstall", "expectedRequests": [{ "kind": "node-kind", "nodeKind": "lazylaw.noop" }], "expectedRunActions": [] }
+  ]
+}

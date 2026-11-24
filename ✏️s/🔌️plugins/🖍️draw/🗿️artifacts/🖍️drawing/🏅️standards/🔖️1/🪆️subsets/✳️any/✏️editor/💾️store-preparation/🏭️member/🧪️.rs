@@ -7,6 +7,13 @@ fn original_drawing_catalog_prices_real_wire_and_shared_semantic_sources(){
  let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||DrawingMemberStoreProducer::admit_sources(g));let(mut owners,p)=match result{Ok(v)=>v,Err(_)=>panic!("full original catalog refused")};assert!(p.fits(g));assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));assert!(owners.original_semantic_issuer_is_shared());assert!(owners.one_item_wire_preparation.is_some());
  in_decoder(|control| close_catalog(&mut owners,control));
 }
+/// 🗃️ The document catalog installs one drawing issuer for publication and replay, so a restored archive with history finds its semantic producer.
+#[test]
+fn drawing_document_catalog_replays_persisted_history(){
+ let d=super::super::drawing_document_store_owners_source_demands().unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
+ let Ok((mut owners,p))=super::super::drawing_document_store_owners(g)else{panic!("original document catalog refused")};assert!(p.fits(g));assert!(owners.replay_preparation.is_some());assert!(owners.original_semantic_issuer_is_shared());assert!(owners.one_item_wire_preparation.is_none());
+ in_decoder(|control| close_catalog(&mut owners,control));
+}
 
 use semio_framework_value::{
     ErasedSnapshotRetirement, OriginalRetirementCloseLoan, OriginalRetirementFailure, RetainedAllocationEffect, RetainedWorkPoll,

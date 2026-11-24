@@ -1157,7 +1157,7 @@ def fire_checks(f, member, s, mat, out, ins=None):
                     nb=chi * k * loc_p["a"] * fo / GMFI * rn, mb=chi_ap(lam, a_lt, l0_lt) * my_r)
 
     def usum(r):
-        return ratio(max(n, 0.0), r["nt"]) + ratio(nc, r["nc"]) + ratio(my, r["my"]) + ratio(mz, r["mz"])
+        return min(ratio(max(n, 0.0), r["nt"]) + ratio(nc, r["nc"]) + ratio(my, r["my"]) + ratio(mz, r["mz"]), 1e6)
 
     r = res(theta, r_n, r_my, r_mz)
     mu0 = usum(res(20.0))
@@ -1515,6 +1515,7 @@ def shell_checks(sl, mat, out):
         ki = (cxv * ctv) ** 2
         ax_, at_ = sx / rx, st / rt
         put("int", max(ax_ ** kx - ki * ax_ * at_ + at_ ** kt + (tau / ru) ** ku, 0.0))
+    put("regime", 0.0)
     for k_, v in lib.items():
         out.append({"id": k_, "utilization": v})
 

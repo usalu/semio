@@ -82,13 +82,13 @@
       }
     },
     "Declaration": {
-      "description": "An entry of kind `graph` (a head or a record of the graph exchange) is never judged stale: the server keeps it in its own protected budget and supersedes it only by a newer entry of its slot. What a published entry was built from, so retention can decide against the coordinator's synchronized tree whether it is still current: the toolchain identity (SHA-256 of the compiler identity text the key carries), the workspace sources it read (portable path below the workspace root with forward slashes, and the SHA-256 of the file) and the SHA-256 digests of the files of other entries it consumed (every `--extern` file of a unit whatever its kind: rlib, rmeta, proc-macro library, host unit; input blobs of a stage), its own name `self` (the local key of the entry) and the names `units` of the entries it consumed whose bytes a digest cannot name (the producer of each extern file as the sidecar beside the file records it, the build script executable and the build script run whose OUT_DIR a unit reads): an entry is stale when an entry it names or whose file it consumed is stale, and an entry without workspace sources (registry, host, build script) is live while a live entry reaches it through either kind of edge. It is a field `retention` of the entry manifest, so it travels with the entry and the server reads it when the entry arrives.",
+      "description": "An entry of kind `graph` (a head or a record of the graph exchange) is never judged stale: the server keeps it in its own protected budget and supersedes it only by a newer entry of its slot. An entry of kind `input-manifest` (the files and environment names a unit slot reads beyond its scanned sources) shares that protected class; it is stale only when the one source it names (the entry file of its crate) is gone from the tree, and a manifest that names no source (a crate outside the workspace) is never stale. What a published entry was built from, so retention can decide against the coordinator's synchronized tree whether it is still current: the toolchain identity (SHA-256 of the compiler identity text the key carries), the workspace sources it read (portable path below the workspace root with forward slashes, and the SHA-256 of the file) and the SHA-256 digests of the files of other entries it consumed (every `--extern` file of a unit whatever its kind: rlib, rmeta, proc-macro library, host unit; input blobs of a stage), its own name `self` (the local key of the entry) and the names `units` of the entries it consumed whose bytes a digest cannot name (the producer of each extern file as the sidecar beside the file records it, the build script executable and the build script run whose OUT_DIR a unit reads): an entry is stale when an entry it names or whose file it consumed is stale, and an entry without workspace sources (registry, host, build script) is live while a live entry reaches it through either kind of edge. It is a field `retention` of the entry manifest, so it travels with the entry and the server reads it when the entry arrives.",
       "type": "object",
       "additionalProperties": false,
       "required": ["version", "kind", "toolchain", "sources", "externs"],
       "properties": {
         "version": { "const": 2 },
-        "kind": { "enum": ["rust-unit", "build-script-run", "stage-output", "graph"] },
+        "kind": { "enum": ["rust-unit", "build-script-run", "stage-output", "graph", "input-manifest"] },
         "self": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
         "toolchain": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
         "sources": {
@@ -107,6 +107,30 @@
         "externs": { "type": "array", "maxItems": 20000, "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" } },
         "units": { "type": "array", "maxItems": 20000, "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
       }
+    },
+    "Tombstone": {
+      "description": "An output blob that enforce retired because its content went stale, with the cause that made it stale: the workspace source and the digest the retired content was built from (stale while the tree's file differs or is gone), or the toolchain it was built with (stale while that toolchain is not the fleet's). A consumer of a blob nobody holds is stale only while the cause of its tombstone still holds, so a file edited back to the retired content makes the blob current again. An entry retired because nothing live consumed it (unreached) leaves no tombstone: its content never went stale.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["blob", "path", "sha256"],
+          "properties": {
+            "blob": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "path": { "type": "string", "minLength": 1, "maxLength": 1024 },
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["blob", "toolchain"],
+          "properties": {
+            "blob": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "toolchain": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        }
+      ]
     },
     "Mode": {
       "description": "off judges nothing; dry-run judges and only records what it would retire or refuse; enforce retires stale entries and refuses entries that are stale on arrival.",

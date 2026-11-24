@@ -1,0 +1,20 @@
+reclaimed-cast-iron-column	{"sync": 4}
+reclaimed-precast-stair	{"sync": 12, "anchor": 32}
+reclaimed-trapezoidal-sheet-stack	{"sync": 8}
+sectional-garage-door	{"anchor": 11}
+sliding-door	{"anchor": 15}
+used-air-water-heat-pump-monobloc	{"sync": 3, "anchor": 10}
+used-forced-draught-oil-burner	{"sync": 1}
+used-pellet-boiler	{"sync": 104}
+used-towel-radiator	{"sync": 9}
+used-wall-hung-gas-boiler	{"sync": 15}
+diesel-generator	{"sync": 2}
+evaporative-humidifier	{"anchor": 6}
+forklift	{"sync": 6, "anchor": 28}
+scroll-compressor	{"anchor": 6}
+cargo-bike	{"anchor": 24}
+city-bicycle	{"anchor": 38}
+city-bus	{"anchor": 16}
+city-car	{"sync": 12}
+motor-scooter	{"anchor": 33}
+vintage-car-1929	{"sync": 12, "anchor": 50}

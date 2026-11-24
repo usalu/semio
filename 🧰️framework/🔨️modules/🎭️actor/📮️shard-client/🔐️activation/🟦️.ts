@@ -9,6 +9,7 @@ import type { ActorBytePage } from "../../📃️page/🟦️.ts";
 import type { ShardWorkerLike } from "../🚨️quota/🟦️.ts";
 import type { ShardHeartbeatState } from "../💓️heartbeat/🟦️.ts";
 import type { ShardAsset, ShardBudget, ShardCapabilityGrant, ShardCommandIngressPage, ShardEventEnvelope, ShardInstanceOpenPurpose } from "../📜️wire/🟦️.ts";
+import type { ShardReplyFault } from "../📨️messages/🟦️.ts";
 import type { OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedUiPatchAcknowledgementEntry } from "../🩹️ui-patch/🟦️.ts";
 import { returnContentMatches } from "../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts";
 /** 📦️ The decoded content a consumer binds to a published return; the actor holds it opaquely and never calls into it. */
@@ -43,8 +44,9 @@ export function residentChild(current: ResidentStep, grant: ResidentGrant): Resi
  * clone across `postMessage` cannot carry an `Error` — which is exactly why the collaboration e2e's
  * `Maximum call stack size exceeded` was undiagnosable. The `[TRACE] ` line is deliberate, permanent
  * diagnostic infrastructure the e2e log parses; it is not leftover scaffolding. */
-export function graftWorkerStack(actorId: string, reason: string, stack: string | undefined, kind: string | undefined, framesBytes: number | undefined, retryableLifecycle?: boolean): Error {
+export function graftWorkerStack(actorId: string, reason: string, stack: string | undefined, kind: string | undefined, framesBytes: number | undefined, retryableLifecycle?: boolean, fault?: ShardReplyFault): Error {
   const error = new Error(reason);
+  if (fault !== undefined) Object.assign(error, { fault });
   if (stack) error.stack = `${stack}\n    \u21b3 main: ${error.stack ?? ""}`;
   if (retryableLifecycle === true) Object.defineProperty(error, RETRYABLE_LIFECYCLE_TURN, { value: true });
   return error;

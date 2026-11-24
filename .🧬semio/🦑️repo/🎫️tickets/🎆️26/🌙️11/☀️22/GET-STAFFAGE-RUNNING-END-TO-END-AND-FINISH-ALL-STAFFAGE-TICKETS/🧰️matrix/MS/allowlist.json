@@ -1,0 +1,66 @@
+[
+  {
+    "asset": "boxwood-ball",
+    "view": "front",
+    "reason": {
+      "en": "A clipped ball: at 1:500 the crown is one sphere of 0.8 m (1.6 mm on paper) on the vertical axis of the stems, and every elevation of a sphere is the same circle. The finer bands draw the knobs of the shoot clusters and the five stems, which differ from side to side (normalised distance 0.18 to 0.26).",
+      "de": "Eine geschnittene Kugel: bei 1:500 ist die Krone eine Kugel von 0,8 m (1,6 mm auf Papier) auf der senkrechten Achse der Stämmchen, und jede Ansicht einer Kugel ist derselbe Kreis. Die feineren Bänder zeichnen die Buckel der Triebbüschel und die fünf Stämmchen, die von Seite zu Seite verschieden sind (normierter Abstand 0,18 bis 0,26)."
+    }
+  },
+  {
+    "asset": "ceiling-diffuser",
+    "view": "front",
+    "reason": {
+      "en": "A square ceiling diffuser of 0.595 m with concentric cones under a round neck: the body has four-fold rotational symmetry about the vertical duct axis, so the front elevation and the side elevation are the same figure by nature. The plan (square face, round neck) is another drawing.",
+      "de": "Ein quadratischer Deckenauslass von 0,595 m mit konzentrischen Kegeln unter einem runden Stutzen: der Körper ist vierzählig drehsymmetrisch um die senkrechte Kanalachse, daher sind Vorderansicht und Seitenansicht von Natur aus dieselbe Figur. Der Grundriss (quadratische Platte, runder Stutzen) ist eine andere Zeichnung."
+    }
+  },
+  {
+    "asset": "pendant-lamp",
+    "view": "front",
+    "reason": {
+      "en": "Ceiling rose, cord, lampholder, dome shade and bulb are bodies of revolution about the cord, so every elevation is the same. The front shapes are `revolved` solids of the side-elevation profiles; in the pendulum poses the front shows the shade tilted towards the viewer and differs from the side.",
+      "de": "Deckenrosette, Kabel, Fassung, Kuppelschirm und Glühlampe sind Drehkörper um das Kabel, daher ist jede Ansicht gleich. Die Formen der Vorderansicht sind `revolved`-Körper der Profile der Seitenansicht; in den Pendelposen zeigt die Vorderansicht den zum Betrachter geneigten Schirm und unterscheidet sich von der Seite."
+    }
+  },
+  {
+    "asset": "used-park-lantern",
+    "view": "front",
+    "reason": {
+      "en": "At 1:500 the 4.64 m lantern is 0.98 mm wide: the turned column, the lantern neck, the glazing and the roof are bodies of revolution about the column axis (`revolved` solids in the front) on a square foundation head. The door joint, the hinge knuckle and the chipped foundation corner that tell front from side at 1:50 to 1:200 are omitted at 1:500, where they are below 0.2 mm on paper.",
+      "de": "Bei 1:500 ist die 4,64 m hohe Leuchte 0,98 mm breit: der gedrehte Mast, der Laternenhals, die Verglasung und das Dach sind Drehkörper um die Mastachse (`revolved`-Körper in der Vorderansicht) auf einem quadratischen Fundamentkopf. Türfuge, Gelenkauge und die abgeplatzte Fundamentecke, die bei 1:50 bis 1:200 vorn von der Seite unterscheiden, entfallen bei 1:500, wo sie unter 0,2 mm auf Papier liegen."
+    }
+  },
+  {
+    "asset": "used-playground-roundabout",
+    "view": "front",
+    "reason": {
+      "en": "A round platform on a round pit tray with a centre column, a ring handrail and four bent handrails 90 degrees apart: the rotor has four-fold rotational symmetry about the vertical bearing axis, so at 1:200 and 1:500, where the rust patches, the eyebolt, the hub and the tray seam are omitted, the front elevation is the side elevation by nature. Both are authored (normalised distance 0.008, not a copy).",
+      "de": "Eine runde Plattform auf runder Grubenwanne mit Mittelsäule, Ringhandlauf und vier gebogenen Handläufen im Abstand von 90 Grad: der Rotor ist vierzählig drehsymmetrisch um die senkrechte Lagerachse, daher ist bei 1:200 und 1:500, wo Rostflecken, Ringschraube, Nabe und Wannennaht entfallen, die Vorderansicht von Natur aus die Seitenansicht. Beide sind gezeichnet (normierter Abstand 0,008, keine Kopie)."
+    }
+  },
+  {
+    "asset": "waste-bin",
+    "view": "front",
+    "reason": {
+      "en": "A tapered bin that is square in plan to 10 mm (0.51 m by 0.50 m at the rim, 0.40 m at the foot) under a flat lid: at 1:500 it is 1.0 mm wide and its two elevations are the same trapezium by nature. The lid handle, the hinge barrel and its brackets that tell front from side at 1:50 to 1:200 (normalised distance 0.06 to 0.11) are omitted at 1:500.",
+      "de": "Ein konischer Behälter, im Grundriss bis auf 10 mm quadratisch (0,51 m mal 0,50 m am Rand, 0,40 m am Fuß) unter einem flachen Deckel: bei 1:500 ist er 1,0 mm breit und seine beiden Ansichten sind von Natur aus dasselbe Trapez. Der Deckelgriff, die Gelenkrolle und ihre Laschen, die bei 1:50 bis 1:200 vorn von der Seite unterscheiden (normierter Abstand 0,06 bis 0,11), entfallen bei 1:500."
+    }
+  },
+  {
+    "asset": "norway-spruce",
+    "view": "front",
+    "reason": {
+      "en": "A Norway spruce is monopodial: whorls of branches all round one straight stem make the crown a body of revolution about the stem by nature. The asset keeps an elliptic section (8.48 m by 7.41 m) and an own offset and ellipse per whorl, so the front is a true view of the body and 13 % narrower than the side; at 1:200 and 1:500, where the leading sprays are merged into the tiers, the two outlines differ by 0.5 to 0.7 m on a 30 m tree (normalised distance 0.024 and 0.018). At 1:50 and 1:100 the sprays tell the views apart (0.05 to 0.07).",
+      "de": "Eine Fichte wächst monopodial: Astquirle rings um einen geraden Stamm machen die Krone von Natur aus zu einem Drehkörper um den Stamm. Das Asset behält einen elliptischen Querschnitt (8,48 m mal 7,41 m) und je Quirl einen eigenen Versatz und eine eigene Ellipse, daher ist die Vorderansicht eine wahre Ansicht des Körpers und 13 % schmaler als die Seite; bei 1:200 und 1:500, wo die Leittriebe in den Etagen aufgehen, unterscheiden sich die beiden Umrisse um 0,5 bis 0,7 m an einem 30 m hohen Baum (normierter Abstand 0,024 und 0,018). Bei 1:50 und 1:100 unterscheiden die Zweige die Ansichten (0,05 bis 0,07)."
+    }
+  },
+  {
+    "asset": "windmill-palm",
+    "view": "front",
+    "reason": {
+      "en": "A windmill palm carries a rounded crown of twenty fan leaves in four tiers round one unbranched stem, with five dead leaves folded below it: the crown is rotationally symmetric about the stem by nature. The front is a true view of the body and draws other leaves than the side; the two figures are 0.028 apart at 1:200 (0.037 at 1:500, 0.039 at 1:100, 0.049 at 1:50).",
+      "de": "Eine Hanfpalme trägt eine runde Krone aus zwanzig Fächerblättern in vier Etagen um einen unverzweigten Stamm, darunter fünf abgestorbene, herabhängende Blätter: die Krone ist von Natur aus drehsymmetrisch um den Stamm. Die Vorderansicht ist eine wahre Ansicht des Körpers und zeichnet andere Blätter als die Seite; die beiden Figuren liegen bei 1:200 um 0,028 auseinander (0,037 bei 1:500, 0,039 bei 1:100, 0,049 bei 1:50)."
+    }
+  }
+]

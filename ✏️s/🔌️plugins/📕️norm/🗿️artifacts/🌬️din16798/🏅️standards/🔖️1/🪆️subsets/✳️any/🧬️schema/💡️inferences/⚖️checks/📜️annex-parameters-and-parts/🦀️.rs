@@ -205,6 +205,16 @@ pub mod part_1 {
         }
     }
 
+    /// 👥️ Typical design floor area per person [m²/person] of a usage category, EN 16798-1:2019 Annex B; `None` where the standard defines no typical occupancy for the use.
+    pub fn typical_floor_area_per_person_m2(usage: OccupancyType) -> Option<f64> {
+        match usage {
+            OccupancyType::Office => Some(10.0),
+            OccupancyType::Meeting | OccupancyType::Classroom => Some(2.0),
+            OccupancyType::Retail => Some(7.0),
+            OccupancyType::Residential | OccupancyType::Kitchen | OccupancyType::Corridor => None,
+        }
+    }
+
     /// 🏠 EN 16798-1:2019 Table B.10 default total rates for an office with non-adapted people.
     pub fn predefined_office_rates(cat: ComfortCategory) -> (f64, f64) {
         match cat {

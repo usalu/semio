@@ -196,7 +196,3 @@ pub fn project(input: &SceneInput, layout: &Layout, out: &mut Out) {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

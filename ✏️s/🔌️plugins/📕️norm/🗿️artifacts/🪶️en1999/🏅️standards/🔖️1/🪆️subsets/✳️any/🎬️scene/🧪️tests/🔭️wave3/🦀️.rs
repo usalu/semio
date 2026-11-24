@@ -440,6 +440,7 @@ fn a_hole_stagger_offsets_every_second_bolt_line_and_the_plan_draws_the_critical
 #[test]
 fn a_fire_insulation_lowers_the_member_temperature_of_the_fire_entity_and_has_gauges() {
     let mut document = compliant();
+    document.fire_insulations.clear();
     let fire = document.fire_scenarios[0].clone();
     let section = document.sections.iter().find(|s| s.id == document.members.iter().find(|m| m.id == fire.member_id).expect("member").section_id).expect("section").clone();
     let bare = fire_and_fatigue::member_temperature(&document, &fire, &section);

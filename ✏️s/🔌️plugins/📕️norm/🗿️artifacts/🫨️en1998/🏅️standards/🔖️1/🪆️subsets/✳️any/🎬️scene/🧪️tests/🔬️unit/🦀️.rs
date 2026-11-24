@@ -29,6 +29,17 @@ fn scene_of(document: &En1998Snapshot) -> (StructuralScene, CheckReport) {
     (scene, report)
 }
 
+/// 🎯️ Reads a grip at the parameter it rests at: the keyboard, the value field and a screen reader read the framework parameter `rest_of`, where the grip must write the current value.
+trait AtRest {
+    fn writes_at_rest(&self) -> Vec<scene::ResolvedWrite>;
+}
+
+impl AtRest for scene::Handle {
+    fn writes_at_rest(&self) -> Vec<scene::ResolvedWrite> {
+        self.writes_at(scene::projection_kit::handle_kit::rest_of(&self.kind, &self.anchor).unwrap_or(0.0))
+    }
+}
+
 fn within(a: f64, b: f64, relative: f64, what: &str) {
     assert!((a - b).abs() <= relative * b.abs(), "{what}: {a} != {b}");
 }
@@ -134,7 +145,7 @@ fn every_listed_handle_exists_and_writes_the_current_value_at_zero() {
         }
     }
     let height = all.iter().find(|h| h.id == "bldg-office:s1:h" || h.id.ends_with(":s1:h")).expect("storey height handle");
-    let writes = height.writes_at(0.0);
+    let writes = height.writes_at_rest();
     near(writes[0].value, document.buildings[0].storeys[0].height_m, "height");
     assert!(writes[0].path.ends_with("storeys[id=s1].heightM"));
 }
@@ -201,7 +212,7 @@ fn every_storey_has_slab_columns_mass_centres_and_one_drift_bar_per_system() {
 fn drift_bar_length_is_proportional_to_the_utilisation() {
     let document = En1998Snapshot::compliant_de_office();
     let (scene, report) = scene_of(&document);
-    for e in scene.entities.iter().filter(|e| e.entity.id.contains(":drift-")) {
+    for e in scene.entities.iter().filter(|e| e.entity.id.contains(":drift-") && !e.entity.id.ends_with(":drift-map")) {
         let Geometry::Solid(SolidGeometry { shape: SolidShape::Box { size, .. } }) = &e.geometry else { panic!("drift bar is a box") };
         let util = e.utilisation.as_ref().map_or(0.0, |u| u.ratio).min(3.0);
         near(size.x, (util * 2.0).max(0.05), &e.entity.id);
@@ -267,7 +278,7 @@ fn a_wall_with_retained_water_projects_the_water_volume_its_thrust_and_a_live_gr
     assert!(scene.entities.iter().any(|e| e.entity.id == format!("{id}:water")), "water volume");
     assert!(report.checks.iter().any(|c| c.id == format!("en1998.5.{id}.water")), "water check");
     let all = handles(&document, &[], &scene.entities.iter().map(|e| e.entity.clone()).collect::<Vec<_>>());
-    assert!(all.iter().any(|h| h.id == format!("{id}:water") && h.writes_at(0.0)[0].path.ends_with(".waterHeightM")), "water height grip");
+    assert!(all.iter().any(|h| h.id == format!("{id}:water") && h.writes_at_rest()[0].path.ends_with(".waterHeightM")), "water height grip");
     let mut dry = document.clone();
     dry.retaining_walls[0].water_height_m = 0.0;
     assert!(!scene_of(&dry).0.entities.iter().any(|e| e.entity.id == format!("{id}:water")), "no water without a height");
@@ -299,7 +310,7 @@ fn a_tie_beam_joins_its_footings_carries_the_tie_force_at_both_ends_and_has_live
     assert!(force.is_some_and(|n| n > 0.0));
     let all = handles(&document, &[], &scene.entities.iter().map(|e| e.entity.clone()).collect::<Vec<_>>());
     for (grip, field) in [("tb-1:w", ".width"), ("tb-1:d", ".depth"), ("tb-1:u", ".relativeDisplacement")] {
-        assert!(all.iter().any(|h| h.id == grip && h.writes_at(0.0)[0].path.ends_with(field)), "{grip}");
+        assert!(all.iter().any(|h| h.id == grip && h.writes_at_rest()[0].path.ends_with(field)), "{grip}");
     }
     let mut dangling = document.clone();
     dangling.tie_beams[0].foundation_b_id = "fd-9".into();
@@ -318,7 +329,7 @@ fn a_slope_projects_its_body_both_slip_circles_the_seismic_forces_and_circle_gri
     assert_eq!(body.utilisation.as_ref().map(|u| u.check_id.as_str()), Some(check.id.as_str()));
     let all = handles(&document, &[], &scene.entities.iter().map(|e| e.entity.clone()).collect::<Vec<_>>());
     for (grip, field) in [("sl-1:h", ".height"), ("sl-1:slip-circle:x", ".circleCentreX"), ("sl-1:slip-circle:z", ".circleCentreZ"), ("sl-1:slip-circle:r", ".circleRadius")] {
-        assert!(all.iter().any(|h| h.id == grip && h.writes_at(0.0)[0].path.ends_with(field)), "{grip}");
+        assert!(all.iter().any(|h| h.id == grip && h.writes_at_rest()[0].path.ends_with(field)), "{grip}");
     }
     let diagram = diagrams(&document, &report, None).into_iter().find(|d| d.id == "slope-factor:sl-1").expect("factor diagram");
     assert!(diagram.markers.iter().any(|m| m.bound_check.as_deref() == Some(check.id.as_str())));
@@ -409,7 +420,7 @@ fn torsion_uses_the_plan_dimension_perpendicular_to_the_action() {
         storey.centre_of_stiffness_y_m = 8.0;
     }
     for direction in ["x", "y"] {
-        building.systems[0].direction = direction.into();
+        building.systems[0].direction = if direction == "y" { semio_s_artifact_norm_en1998_model::AnalysisDirection::Y } else { semio_s_artifact_norm_en1998_model::AnalysisDirection::X };
         let r = respond(&site, building);
         let (perpendicular, offset) = if direction == "y" { (30.0, 2.0) } else { (18.0, 1.0) };
         near(r.systems[0].delta, 1.0 + 0.6 * (0.5 * perpendicular + offset) / perpendicular, "torsion factor");
@@ -530,8 +541,8 @@ fn assessed_member_pier_arrows_and_the_pile_are_projected_with_valid_handles_and
             assert!(found.contains(h.as_str()), "{h}");
         }
     }
-    near(all.iter().find(|h| h.id == "as-1:member:span").expect("span").writes_at(0.0)[0].value, document.assessments[0].shear_span_m, "span at zero");
-    near(all.iter().find(|h| h.id == "fd-1:pile:l").expect("pile").writes_at(0.0)[0].value, document.foundations[0].pile_length_m, "pile length at zero");
+    near(all.iter().find(|h| h.id == "as-1:member:span").expect("span").writes_at_rest()[0].value, document.assessments[0].shear_span_m, "span at zero");
+    near(all.iter().find(|h| h.id == "fd-1:pile:l").expect("pile").writes_at_rest()[0].value, document.foundations[0].pile_length_m, "pile length at zero");
     let diagrams = diagrams(&document, &report, None);
     for id in ["liquefaction-profile:fd-1", "annex-f:fd-1", "pile-moments:fd-1"] {
         let diagram = diagrams.iter().find(|d| d.id == id).unwrap_or_else(|| panic!("{id}"));
@@ -560,8 +571,8 @@ fn layered_soil_column_has_interface_handles_and_a_profile_diagram_with_a_table_
     assert_handle_laws(&all);
     for (id, thickness) in [("sl-1:interface", 3.0), ("sl-2:interface", 4.0), ("sl-3:interface", 6.0)] {
         let grip = all.iter().find(|h| h.id == id).unwrap_or_else(|| panic!("{id}"));
-        near(grip.writes_at(0.0)[0].value, thickness, id);
-        assert!(grip.writes_at(0.0)[0].path.ends_with(".thicknessM"));
+        near(grip.writes_at_rest()[0].value, thickness, id);
+        assert!(grip.writes_at_rest()[0].path.ends_with(".thicknessM"));
     }
     for e in scene.entities.iter().filter(|e| e.entity.id.starts_with("sl-")) {
         for h in &e.handles {
@@ -632,7 +643,7 @@ fn diaphragm_force_flow_is_a_plate_with_inertia_wall_and_chord_arrows_bound_to_i
     assert!(scene.annotations.iter().any(|a| a.id() == "dia-1:failure"));
     let all = handles(&document, &[], &scene.entities.iter().map(|e| e.entity.clone()).collect::<Vec<_>>());
     assert_handle_laws(&all);
-    near(all.iter().find(|h| h.id == "dia-1:t").expect("thickness handle").writes_at(0.0)[0].value, 0.001, "thickness at zero");
+    near(all.iter().find(|h| h.id == "dia-1:t").expect("thickness handle").writes_at_rest()[0].value, 0.001, "thickness at zero");
     let dependencies = entity_dependencies(&document, "dia-1");
     assert_eq!(dependencies, vec![document.buildings[0].id.clone()]);
     assert_eq!(entity_kind_of(&document, "dia-1").map(|k| k.id), Some("diaphragm"));
@@ -677,12 +688,12 @@ fn spectrum_surface_follows_the_elastic_spectrum_over_period_and_damping_and_mar
     assert_eq!((grid.rows, grid.columns), (9, 33));
     let site = site(&document);
     let a_g = site.gamma_i * site.a_gr;
-    let origin = grid.points[0].clone();
+    let ground = grid.points[0].z - schema::horizontal::spectrum_surface::ordinate(a_g, site.s, site.tb, site.tc, site.td, 2.0, 0.0);
     for (row, xi) in [(0, 2.0), (2, 5.0), (8, 30.0)] {
         for column in [0_usize, 4, 12, 24, 32] {
             let t = 4.0 * column as f64 / 32.0;
             let expected = schema::horizontal::spectrum_surface::ordinate(a_g, site.s, site.tb, site.tc, site.td, xi, t);
-            near(grid.points[row * 33 + column].z - origin.z, expected, "surface height is the ordinate");
+            near(grid.points[row * 33 + column].z - ground, expected, "surface height is the ordinate");
         }
     }
     assert!(scene.entities.iter().any(|e| e.entity.id == format!("{}:spectrum-surface:t1", building.id)));
@@ -701,12 +712,12 @@ fn overturning_base_has_width_handles_a_moment_glyph_and_the_governing_check() {
     assert_handle_laws(&all);
     for (tag, field, value) in [("bx", "overturningBaseXM", building.plan_width_m), ("by", "overturningBaseYM", building.plan_length_m)] {
         let handle = all.iter().find(|h| h.id == format!("{}:base:{tag}", building.id)).expect("width handle");
-        assert!(handle.writes_at(0.0)[0].path.ends_with(field));
-        near(handle.writes_at(0.0)[0].value, value, "the unset base width is the plan width");
+        assert!(handle.writes_at_rest()[0].path.ends_with(field));
+        near(handle.writes_at_rest()[0].value, value, "the unset base width is the plan width");
     }
     let moment = scene.entities.iter().find(|e| e.entity.id == format!("{}:base:moment", building.id)).expect("moment glyph");
     let Geometry::Load(LoadGlyph::Moment { magnitude, .. }) = &moment.geometry else { panic!("moment") };
-    let governing = report.checks.iter().filter(|c| c.id.ends_with(".overturning")).max_by(|a, b| a.utilization.total_cmp(&b.utilization)).expect("check");
+    let governing = report.checks.iter().filter(|c| c.subject.entity_id == building.id && c.id.ends_with(".overturning")).max_by(|a, b| a.utilization.total_cmp(&b.utilization)).expect("check");
     near(magnitude.value, governing.computed.value, "the glyph shows the check's M_ov");
 }
 
@@ -774,7 +785,7 @@ fn bridge_rows_are_piers_bearings_a_deck_and_transverse_mode_ghosts_bound_to_the
             assert!(found.contains(h.as_str()), "{h}");
         }
     }
-    let writes = all.iter().find(|h| h.id == "pier-1:x").expect("position grip").writes_at(0.0);
+    let writes = all.iter().find(|h| h.id == "pier-1:x").expect("position grip").writes_at_rest();
     near(writes[0].value, 10.0, "position at zero");
     assert!(writes[0].path.ends_with("piers[id=pier-1].xM"));
     for id in ["deck-modes:br-1", "pier-moments:br-1"] {
@@ -808,7 +819,7 @@ fn a_tank_shows_the_wall_pressure_the_sloshing_surface_and_the_freeboard_as_a_dr
     assert!(binding.path.ends_with("tanks[id=tk-1].fillingRatio"));
     near(value.value, document.tanks[0].height_m * (1.0 - document.tanks[0].filling_ratio), "freeboard");
     let all = handles(&document, &[], &scene.entities.iter().map(|e| e.entity.clone()).collect::<Vec<_>>());
-    assert!(all.iter().any(|h| h.id == "tk-1:t" && h.writes_at(0.0)[0].path.ends_with("tanks[id=tk-1].shellThicknessM")));
+    assert!(all.iter().any(|h| h.id == "tk-1:t" && h.writes_at_rest()[0].path.ends_with("tanks[id=tk-1].shellThicknessM")));
     let diagram = diagrams(&document, &report, None).into_iter().find(|d| d.id == "wall-pressure:tk-1").expect("pressure diagram");
     assert_eq!(diagram.validate(), Ok(()));
     assert_eq!(diagram.table_twin.columns.len(), 5);
@@ -830,8 +841,8 @@ fn a_tower_on_a_foundation_spring_shows_the_kernel_modes_the_spring_support_and_
     let all = handles(&document, &[], &scene.entities.iter().map(|e| e.entity.clone()).collect::<Vec<_>>());
     assert_handle_laws(&all);
     let grip = all.iter().find(|h| h.id == "tw-1:base:k").expect("stiffness grip");
-    near(grip.writes_at(0.0)[0].value, 1.0e10, "stiffness at zero");
-    assert!(grip.writes_at(0.0)[0].path.ends_with("towers[id=tw-1].baseRotationalStiffnessNm"));
+    near(grip.writes_at_rest()[0].value, 1.0e10, "stiffness at zero");
+    assert!(grip.writes_at_rest()[0].path.ends_with("towers[id=tw-1].baseRotationalStiffnessNm"));
     let diagrams = diagrams(&document, &report, None);
     for id in ["tower-modes:tw-1", "tower-forces:tw-1"] {
         let diagram = diagrams.iter().find(|d| d.id == id).unwrap_or_else(|| panic!("{id}"));
@@ -866,7 +877,7 @@ fn masonry_wall_rows_become_walls_with_a_density_label_per_storey_and_direction(
     let label = scene.annotations.iter().find(|a| a.id() == format!("{id}:wall-density:x:{first}")).expect("density label");
     let Annotation::Label { text, .. } = label else { panic!("label") };
     assert!(text.en.contains("direction x") && text.de.contains("Richtung x"), "{}", text.en);
-    document.buildings[0].members.retain(|m| !m.material == semio_s_artifact_norm_en1998_model::StructuralMaterial::Masonry);
+    document.buildings[0].members.retain(|m| m.material != semio_s_artifact_norm_en1998_model::StructuralMaterial::Masonry);
     let (plain, _) = scene_of(&document);
     assert!(!plain.annotations.iter().any(|a| a.id().contains(":wall-density:")));
 }
@@ -897,9 +908,9 @@ fn wall_rows_stand_at_their_plan_positions_with_grips_and_drive_the_stiffness_ce
     for tag in ["start-x", "start-y", "length", "direction"] {
         let grip = all.iter().find(|h| h.id == format!("{id}:wall:w-a:{first}:{tag}")).unwrap_or_else(|| panic!("{tag}"));
         assert!(body.handles.iter().any(|h| *h == grip.id), "{tag}");
-        assert!(grip.writes_at(0.0)[0].path.contains("members[id=w-a].wall"), "{tag}");
+        assert!(grip.writes_at_rest()[0].path.contains("members[id=w-a].wall"), "{tag}");
     }
-    near(all.iter().find(|h| h.id == format!("{id}:wall:w-a:{first}:start-x")).expect("start-x").writes_at(0.0)[0].value, 1.0, "start x");
+    near(all.iter().find(|h| h.id == format!("{id}:wall:w-a:{first}:start-x")).expect("start-x").writes_at_rest()[0].value, 1.0, "start x");
     assert!(!all.iter().any(|h| h.id == format!("{id}:{first}:cos:x")), "the walls drive the centre of stiffness, no grip writes the entered value");
     assert!(scene.annotations.iter().any(|a| a.id() == format!("{id}:{first}:walls-cos")), "centre of stiffness label from the walls");
 }
@@ -929,9 +940,9 @@ fn joint_rows_stand_at_their_plan_positions_coloured_by_their_capacity_design_ch
     assert_handle_laws(&all);
     for tag in ["x", "y"] {
         let grip = all.iter().find(|h| h.id == format!("jt-ok:{tag}")).unwrap_or_else(|| panic!("{tag}"));
-        assert!(grip.writes_at(0.0)[0].path == format!("joints[id=jt-ok].{tag}M"), "{tag}");
+        assert!(grip.writes_at_rest()[0].path == format!("joints[id=jt-ok].{tag}M"), "{tag}");
     }
-    near(all.iter().find(|h| h.id == "jt-weak:x").expect("x").writes_at(0.0)[0].value, 12.0, "joint x grip");
+    near(all.iter().find(|h| h.id == "jt-weak:x").expect("x").writes_at_rest()[0].value, 12.0, "joint x grip");
 }
 
 #[test]
@@ -1160,7 +1171,7 @@ fn the_assessed_section_has_width_depth_bar_and_steel_grips_and_a_draggable_dema
     for (tag, field, value) in [("width", "sectionWidthM", a.section_width_m), ("effective-depth", "effectiveDepthM", a.effective_depth_m), ("bar-diameter", "barDiameterMm", a.bar_diameter_mm), ("tension-steel", "tensionSteelAreaM2", a.tension_steel_area_m2)] {
         let grip = all.iter().find(|h| h.id == format!("as-1:member:{tag}")).unwrap_or_else(|| panic!("{tag}"));
         assert_eq!(grip.writes[0].path, format!("assessments[id=as-1].{field}"));
-        near(grip.writes_at(0.0)[0].value, value, tag);
+        near(grip.writes_at_rest()[0].value, value, tag);
     }
     let member = scene.entities.iter().find(|e| e.entity.id == "as-1:member").expect("member");
     assert!(["width", "effective-depth", "bar-diameter", "tension-steel"].iter().all(|t| member.handles.contains(&format!("as-1:member:{t}"))));
@@ -1230,7 +1241,7 @@ fn the_assessed_member_has_a_demand_grip_a_dc_diagram_a_dc_colour_and_a_knowledg
     assert_handle_laws(&all);
     let grip = all.iter().find(|h| h.id == "as-1:member:shear-demand").expect("shear demand grip");
     assert_eq!(grip.writes[0].path, "assessments[id=as-1].shearForceDemandN");
-    near(grip.writes_at(0.0)[0].value, 2.0e5, "shear demand grip");
+    near(grip.writes_at_rest()[0].value, 2.0e5, "shear demand grip");
     let a = &document.assessments[0];
     let ratios = super::schema::part_3_state::member_ratios(a, super::response::annex_params(&document).choice());
     let diagram = diagram_named(&document, &report, "assessment-dc:as-1");
@@ -1264,7 +1275,7 @@ fn an_accelerogram_has_a_time_history_with_a_peak_marker_and_a_scale_grip_that_a
     assert_handle_laws(&all);
     let grip = all.iter().find(|h| h.id == "rec-0:scale").expect("scale grip");
     assert_eq!(grip.writes[0].path, "accelerograms[id=rec-0].scaleFactor");
-    near(grip.writes_at(0.0)[0].value, record.scale_factor, "scale at zero");
+    near(grip.writes_at_rest()[0].value, record.scale_factor, "scale at zero");
     assert!(scene.entities.iter().find(|e| e.entity.id == "rec-0").expect("trace").handles.contains(&"rec-0:scale".to_owned()));
 }
 
@@ -1415,7 +1426,7 @@ fn the_region_member_has_grips_for_hoop_spacing_diameter_and_hooped_length() {
         let id = format!("{}:region:{tag}", region.id);
         let grip = all.iter().find(|h| h.id == id).unwrap_or_else(|| panic!("grip {id}"));
         assert_eq!(grip.writes[0].path, format!("criticalRegions[id={}].{field}", region.id));
-        near(grip.writes_at(0.0)[0].value, value, tag);
+        near(grip.writes_at_rest()[0].value, value, tag);
         assert!(entity.handles.contains(&id), "{id} listed by the member glyph");
     }
 }
@@ -1508,7 +1519,7 @@ fn the_physical_diagrams_mark_modal_periods_joint_ratios_and_the_bearing_displac
 /// 🎚️ Every numeric field of a placement, soil layer and retaining wall row has a viewport grip that writes it, or a documented exemption, and none has both.
 #[test]
 fn every_numeric_field_of_placements_soil_layers_and_retaining_walls_has_a_grip_or_a_documented_exemption() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧬️schema/📸️snapshot/🔣️.json");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🧬️schema/📸️snapshot/🔣️.json");
     let schema: Value = serde_json::from_slice(&std::fs::read(path).expect("snapshot schema")).expect("json");
     let mut document = En1998Snapshot::full_showcase();
     let foundation = document.foundations[0].id.clone();
@@ -1579,7 +1590,7 @@ fn the_pier_base_is_a_foundation_spring_and_its_spectrum_marks_both_periods() {
     let diagram = diagrams(&document, &report, None).into_iter().find(|d| d.id == "pier-base:pb-1").expect("spectrum");
     let ssi = diagram.markers.iter().find(|m| m.id == "ssi").expect("ssi marker");
     near(ssi.at.x, t_ssi, "the lengthened marker stands at T_ssi");
-    assert!(diagram.markers.iter().find(|m| m.id == "fixed").is_some_and(|m| m.at.x < ssi.at.x));
+    assert!(diagram.markers.iter().find(|m| m.id == "reference:fixed").is_some_and(|m| m.at.x < ssi.at.x));
 }
 
 /// 🌊 The cyclic ratio diagram of a foundation stands CSR against the layer resistance over the depth with r_u in the table twin; the marker of the liquefied layer l7 lies on the stress curve at its governing depth.

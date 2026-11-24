@@ -66,15 +66,15 @@ impl Generation2dInstanceOperationOwner {
 
     /// 🩹️ Owes the attached previews exactly what this gesture's own emit says it owes them, and puts
     /// the run start that debt needs on that same emit when no run is live to be woken instead.
-    pub(super) fn owe_attached_previews_for_mutations(&mut self, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, Fault> {
+    pub(super) fn owe_attached_previews_for_mutations(&mut self, windows: &[PreviewEvalWindow<'_>], unserved: &[String], emit: &mut Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, Fault> {
         let (sessions, link) = self.parts()?;
-        semio_s_artifact_procedural_2d_preview_eval::owe_attached_previews_for_mutations(sessions, link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
+        semio_s_artifact_procedural_2d_preview_eval::owe_attached_previews_for_mutations(sessions, link, windows, unserved, emit, grant).map_err(|error| Fault::from(error.to_string()))
     }
 
     /// 🚦️ Owes the attached previews an evaluation unconditionally and carries the run start the debt needs.
-    pub(super) fn owe_attached_previews_carrying(&mut self, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
+    pub(super) fn owe_attached_previews_carrying(&mut self, windows: &[PreviewEvalWindow<'_>], unserved: &[String], emit: &mut Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
         let (sessions, link) = self.parts()?;
-        semio_s_artifact_procedural_2d_preview_eval::owe_attached_previews_carrying(sessions, link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
+        semio_s_artifact_procedural_2d_preview_eval::owe_attached_previews_carrying(sessions, link, windows, unserved, emit, grant).map_err(|error| Fault::from(error.to_string()))
     }
 }
 

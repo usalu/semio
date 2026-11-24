@@ -188,6 +188,35 @@
       }
     }
   },
+  "storage.image-below-need": {
+    "area": "storage",
+    "owner": "storage",
+    "severities": [
+      "error"
+    ],
+    "data": [
+      "partition",
+      "imageBytes",
+      "needBytes"
+    ],
+    "title": {
+      "en": "Image {partition} is smaller than what its writers need",
+      "de": "Image {partition} ist kleiner als das, was seine Schreiber brauchen"
+    },
+    "detail": {
+      "en": "The image holds {imageBytes} bytes, the declared need of this platform is {needBytes}. A full image makes installs die half way (files vanish under the writer) and leaves no room for the remote-execution slots of a worker, so the machine never becomes ready.",
+      "de": "Das Image fasst {imageBytes} Bytes, der deklarierte Bedarf dieser Plattform ist {needBytes}. Ein volles Image lässt Installationen auf halbem Weg scheitern (Dateien verschwinden unter dem Schreiber) und lässt keinen Platz für die Remote-Execution-Slots eines Workers, sodass die Maschine nie bereit wird."
+    },
+    "fix": {
+      "kind": "automatic",
+      "command": "repo doctor --fix --only=storage",
+      "repair": "storage-grow",
+      "note": {
+        "en": "Grows the image in place under its exclusive lease: it is detached while no command uses it, its backing is stretched without writing a byte and it is attached again; a host without the free bytes for the larger envelope is named unfit instead.",
+        "de": "Vergrößert das Image an Ort und Stelle unter seiner exklusiven Lease: es wird ausgehängt, solange kein Befehl es benutzt, sein Backing wird gestreckt, ohne ein Byte zu schreiben, und es wird wieder eingehängt; ein Host ohne die freien Bytes für die größere Hülle wird stattdessen als ungeeignet benannt."
+      }
+    }
+  },
   "storage.image-below-floor": {
     "area": "storage",
     "owner": "storage",

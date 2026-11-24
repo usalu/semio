@@ -10,6 +10,7 @@ import {drainUploadsV1,spoolLengthV1} from "../../📤️uploader/🟦️.ts";
 import {FLEET_POLICY_V1} from "../../🪪️identity/🟦️.ts";
 import {readFallbacksV1} from "../../📊️counters/🟦️.ts";
 import {leakedRootKindsV1,parseRootHintV1,rootHintBytesV1,rootHintKeyV1,rootPathsV1,ROOT_KINDS_V1} from "../../🟦️.ts";
+process.env.SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS="1500";
 
 /** 🌳️ A unit whose compiled bytes hold a real directory that its source never names (a procedural macro that writes the caller's manifest directory into the program) is shared between machines whose directories are equal and between those only: the producer publishes a root hint beside the neutral key and the unit under a key that names the directories; a machine at another root builds it itself. The units without such a directory stay shared among all roots, and a unit built through the fleet equals a clean local build byte for byte. */
 const here=fileURLToPath(new URL(".",import.meta.url)),script=resolve(here,"../../../📜️script.ts"),counter=resolve(here,"../🔢️count/🟦️.ts"),fleet=FLEET_POLICY_V1,base=cargoScratchBaseV1(),cargo=process.env.SEMIO_TEST_CARGO??"cargo";
@@ -68,7 +69,7 @@ const events=(m:Machine)=>{const dir=join(m.cache,"x");return existsSync(dir)?re
 const hits=(m:Machine)=>events(m).filter(row=>row.kind==="remote-hit").map(row=>row.crate).sort();
 async function settle(m:Machine,environment:Record<string,string|undefined>):Promise<void>{
  const deadline=Date.now()+60000;
- while(Date.now()<deadline){const result=await drainUploadsV1(m.cache,{...process.env,...environment,SEMIO_CAS_ROOT:m.cas},{idleMilliseconds:0});if(result!=="busy"&&spoolLengthV1(m.cache)===0&&!existsSync(join(m.cache,fleet.layout.state,"uploader.lock")))return;await new Promise(done=>setTimeout(done,150));}
+ while(Date.now()<deadline){const result=await drainUploadsV1(m.cache,{...process.env,...environment,SEMIO_CAS_ROOT:m.cas},{idleMilliseconds:0,takeover:true});if(result!=="busy"&&spoolLengthV1(m.cache)===0&&!existsSync(join(m.cache,fleet.layout.state,"uploader.lock")))return;await new Promise(done=>setTimeout(done,150));}
  throw Error("uploads did not settle");
 }
 const rlibs=(m:Machine,name:string)=>{const dir=join(m.cache,"l","l1","t","debug","deps");return readdirSync(dir).filter(file=>file.startsWith("lib"+name+"-")&&file.endsWith(".rlib")).map(file=>sha(readFileSync(join(dir,file)).toString("latin1")));};

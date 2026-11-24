@@ -631,10 +631,24 @@
               "tone": 0.88,
               "kind": "rect",
               "x": -0.13,
+              "y": -0.1075,
+              "w": 0.26,
+              "h": 0.0075,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "tray-rim",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.13,
               "y": -0.12,
               "w": 0.26,
-              "h": 0.02,
-              "r": 0.004,
+              "h": 0.0125,
               "region": "casing",
               "material": "abs-plastic"
             },
@@ -667,6 +681,267 @@
               "h": 0.015,
               "region": "casing",
               "material": "abs-plastic"
+            },
+            {
+              "id": "core-disc",
+              "bone": "core",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.08,
+              "ry": 0.08,
+              "region": "core",
+              "material": "ceramic-honeycomb",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.037,
+                "z1": 0.063
+              }
+            },
+            {
+              "id": "strut-1",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.27,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.004,
+                  0.02
+                ],
+                [
+                  0.004,
+                  0.088
+                ],
+                [
+                  -0.004,
+                  0.088
+                ],
+                [
+                  -0.004,
+                  0.02
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.062,
+                "z1": -0.05
+              }
+            },
+            {
+              "id": "strut-2",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.27,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.019321,
+                  -0.006536
+                ],
+                [
+                  -0.07821,
+                  -0.040536
+                ],
+                [
+                  -0.07421,
+                  -0.047464
+                ],
+                [
+                  -0.015321,
+                  -0.013464
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.062,
+                "z1": -0.05
+              }
+            },
+            {
+              "id": "strut-3",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.27,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.015321,
+                  -0.013464
+                ],
+                [
+                  0.07421,
+                  -0.047464
+                ],
+                [
+                  0.07821,
+                  -0.040536
+                ],
+                [
+                  0.019321,
+                  -0.006536
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.062,
+                "z1": -0.05
+              }
+            },
+            {
+              "id": "blade-1",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.00554 0.0312 L 0.02757 0.08146 L 0.03469 0.07869 L 0.04211 0.07498 L 0.0583 0.06322 L 0.06412 0.05731 L 0.06896 0.05139 L 0.02796 0.01491 Z",
+              "region": "blades",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0995,
+                "z1": -0.0765
+              }
+            },
+            {
+              "id": "blade-2",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.02796 0.01491 L -0.06896 0.05139 L -0.06412 0.05731 L -0.0583 0.06322 L -0.04211 0.07498 L -0.03469 0.07869 L -0.02757 0.08146 L -0.00554 0.0312 Z",
+              "region": "blades",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0995,
+                "z1": -0.0765
+              }
+            },
+            {
+              "id": "blade-3",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.02282 -0.02198 L -0.07018 -0.0497 L -0.07432 -0.04328 L -0.07814 -0.03591 L -0.08433 -0.01688 L -0.08556 -0.00867 L -0.08599 -0.00105 L -0.03139 0.00437 Z",
+              "region": "blades",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0995,
+                "z1": -0.0765
+              }
+            },
+            {
+              "id": "blade-4",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.01386 -0.0285 L 0.02558 -0.08211 L 0.01819 -0.08405 L 0.01 -0.08542 L -0.01 -0.08542 L -0.01819 -0.08405 L -0.02558 -0.08211 L -0.01386 -0.0285 Z",
+              "region": "blades",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0995,
+                "z1": -0.0765
+              }
+            },
+            {
+              "id": "blade-5",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.03139 0.00437 L 0.08599 -0.00105 L 0.08556 -0.00867 L 0.08433 -0.01688 L 0.07814 -0.03591 L 0.07432 -0.04328 L 0.07018 -0.0497 L 0.02282 -0.02198 Z",
+              "region": "blades",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0995,
+                "z1": -0.0765
+              }
+            },
+            {
+              "id": "hub",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.028,
+              "ry": 0.028,
+              "region": "hub",
+              "material": "motor-housing",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.103,
+                "z1": -0.073
+              }
+            },
+            {
+              "id": "hub-cap",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.01,
+              "ry": 0.01,
+              "region": "hub",
+              "material": "motor-housing",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.107,
+                "z1": -0.099
+              }
             }
           ],
           "front": [
@@ -678,11 +953,25 @@
               "filled": true,
               "tone": 0.88,
               "kind": "rect",
+              "x": -0.1075,
+              "y": -0.13,
+              "w": 0.0075,
+              "h": 0.26,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "tray-rim",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
               "x": -0.12,
               "y": -0.13,
-              "w": 0.02,
+              "w": 0.0125,
               "h": 0.26,
-              "r": 0.004,
               "region": "casing",
               "material": "abs-plastic"
             },
@@ -715,13 +1004,274 @@
               "h": 0.208,
               "region": "casing",
               "material": "abs-plastic"
+            },
+            {
+              "id": "core-disc",
+              "bone": "core",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.08,
+              "ry": 0.08,
+              "region": "core",
+              "material": "ceramic-honeycomb",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.037,
+                "z1": 0.063
+              }
+            },
+            {
+              "id": "strut-1",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.27,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.004,
+                  0.02
+                ],
+                [
+                  0.004,
+                  0.088
+                ],
+                [
+                  -0.004,
+                  0.088
+                ],
+                [
+                  -0.004,
+                  0.02
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.062,
+                "z1": -0.05
+              }
+            },
+            {
+              "id": "strut-2",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.27,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.019321,
+                  -0.006536
+                ],
+                [
+                  -0.07821,
+                  -0.040536
+                ],
+                [
+                  -0.07421,
+                  -0.047464
+                ],
+                [
+                  -0.015321,
+                  -0.013464
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.062,
+                "z1": -0.05
+              }
+            },
+            {
+              "id": "strut-3",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.27,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.015321,
+                  -0.013464
+                ],
+                [
+                  0.07421,
+                  -0.047464
+                ],
+                [
+                  0.07821,
+                  -0.040536
+                ],
+                [
+                  0.019321,
+                  -0.006536
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.062,
+                "z1": -0.05
+              }
+            },
+            {
+              "id": "blade-1",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.00554 0.0312 L 0.02757 0.08146 L 0.03469 0.07869 L 0.04211 0.07498 L 0.0583 0.06322 L 0.06412 0.05731 L 0.06896 0.05139 L 0.02796 0.01491 Z",
+              "region": "blades",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0995,
+                "z1": -0.0765
+              }
+            },
+            {
+              "id": "blade-2",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.02796 0.01491 L -0.06896 0.05139 L -0.06412 0.05731 L -0.0583 0.06322 L -0.04211 0.07498 L -0.03469 0.07869 L -0.02757 0.08146 L -0.00554 0.0312 Z",
+              "region": "blades",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0995,
+                "z1": -0.0765
+              }
+            },
+            {
+              "id": "blade-3",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.02282 -0.02198 L -0.07018 -0.0497 L -0.07432 -0.04328 L -0.07814 -0.03591 L -0.08433 -0.01688 L -0.08556 -0.00867 L -0.08599 -0.00105 L -0.03139 0.00437 Z",
+              "region": "blades",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0995,
+                "z1": -0.0765
+              }
+            },
+            {
+              "id": "blade-4",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.01386 -0.0285 L 0.02558 -0.08211 L 0.01819 -0.08405 L 0.01 -0.08542 L -0.01 -0.08542 L -0.01819 -0.08405 L -0.02558 -0.08211 L -0.01386 -0.0285 Z",
+              "region": "blades",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0995,
+                "z1": -0.0765
+              }
+            },
+            {
+              "id": "blade-5",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.03139 0.00437 L 0.08599 -0.00105 L 0.08556 -0.00867 L 0.08433 -0.01688 L 0.07814 -0.03591 L 0.07432 -0.04328 L 0.07018 -0.0497 L 0.02282 -0.02198 Z",
+              "region": "blades",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0995,
+                "z1": -0.0765
+              }
+            },
+            {
+              "id": "hub",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.028,
+              "ry": 0.028,
+              "region": "hub",
+              "material": "motor-housing",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.103,
+                "z1": -0.073
+              }
+            },
+            {
+              "id": "hub-cap",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.01,
+              "ry": 0.01,
+              "region": "hub",
+              "material": "motor-housing",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.107,
+                "z1": -0.099
+              }
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A 0.26 m square base of the inner cover, 5.2 mm on paper, seen from the room with cover and filter taken off: the collar of the fan housing as a ring, the black funnel of the EPP jacket round the ceramic honeycomb, and in front of it five radial fan blades on the motor can, held by three struts. Front and plan, 4.8 mm by 5.2 mm on paper, show the unit side-on as a T: the 20 mm tray on the room face of the wall and the round sleeve that crosses 0.22 m of wall, with the 208 mm collar for the outer hood at its end. Fan, ceramic core and jacket are inside the sleeve and not visible from outside.",
-            "de": "Ein quadratischer Sockel der Innenblende von 0,26 m, auf Papier 5,2 mm, vom Raum aus gesehen bei abgenommener Blende und ohne Filter: der Kragen des Ventilatorgehäuses als Ring, der schwarze Trichter des EPP-Mantels um die Keramikwabe und davor fünf radiale Flügel am Motorbecher, den drei Streben halten. Vorderansicht und Grundriss, 4,8 mm auf 5,2 mm, zeigen das Gerät von der Seite als T: die 20 mm tiefe Wanne auf der Raumseite der Wand und die runde Hülse, die 0,22 m Wand durchquert, mit dem Kragen von 208 mm für die Außenhaube am Ende. Ventilator, Keramikkern und Mantel liegen in der Hülse und sind von außen nicht zu sehen."
+            "en": "A 0.26 m square base of the inner cover, 5.2 mm on paper, seen from the room with cover and filter taken off: the collar of the fan housing as a ring, the black funnel of the EPP jacket round the ceramic honeycomb, and in front of it five radial fan blades on the motor can, held by three struts. Front and plan, 4.8 mm by 5.2 mm on paper, show the unit side-on as a T: the tray as its 7.5 mm floor and 12.5 mm rim on the room face of the wall and the round sleeve that crosses 0.22 m of wall, with the 208 mm collar for the outer hood at its end. Inside the sleeve they show what the side elevation shows, each part over its own depth along the duct: the ceramic core of 100 mm, the three struts, the motor can with its cap and the five blades. One strut stands upright and one blade hangs down, so the front elevation and the plan are two different drawings.",
+            "de": "Ein quadratischer Sockel der Innenblende von 0,26 m, auf Papier 5,2 mm, vom Raum aus gesehen bei abgenommener Blende und ohne Filter: der Kragen des Ventilatorgehäuses als Ring, der schwarze Trichter des EPP-Mantels um die Keramikwabe und davor fünf radiale Flügel am Motorbecher, den drei Streben halten. Vorderansicht und Grundriss, 4,8 mm auf 5,2 mm, zeigen das Gerät von der Seite als T: die Wanne mit 7,5 mm Boden und 12,5 mm Rand auf der Raumseite der Wand und die runde Hülse, die 0,22 m Wand durchquert, mit dem Kragen von 208 mm für die Außenhaube am Ende. In der Hülse zeigen sie, was die Seitenansicht zeigt, jedes Teil über seine eigene Tiefe entlang des Kanals: den Keramikkern von 100 mm, die drei Streben, den Motorbecher mit Kappe und die fünf Flügel. Eine Strebe steht senkrecht und ein Flügel hängt nach unten, daher sind Vorderansicht und Grundriss zwei verschiedene Zeichnungen."
           },
           "retained": {
             "en": "Tray of 0.26 m with its rounded corners, four 14 mm screw bosses and the terminal box of 60 mm by 20 mm, housing collar of 196 mm, the jacket funnel from 176 mm to 160 mm, ceramic disc of 160 mm with 37 hexagonal channels, three 8 mm struts, five blades as the true plan-form of the model (25 to 49 mm wide) and the 56 mm hub with its cap.",
@@ -732,7 +1282,7 @@
             "de": "Die echten Zellen der Keramik von 3 mm sind zu 37 Kanälen von 22 mm verallgemeinert, eine Linie je Wand; der 2,5 mm starke Rand der Wanne fällt in ihre Kontur, der Statorzapfen liegt hinter der Nabe."
           },
           "omitted": {
-            "en": "The clip-on cover, the filter, the outer hood, the cable and the 8 mm screw heads. In front and plan everything inside tray and sleeve.",
+            "en": "The clip-on cover, the filter, the outer hood, the cable and the 8 mm screw heads. In front and plan the screw bosses and the terminal box inside the tray, the jacket, the stator, the shaft and the bearing.",
             "de": "Die aufgesteckte Blende, der Filter, die Außenhaube, das Kabel und die Schraubenköpfe von 8 mm. In Vorderansicht und Grundriss alles, was in Wanne und Hülse liegt."
           },
           "thinElements": {

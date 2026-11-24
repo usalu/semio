@@ -133,11 +133,15 @@
     },
     {
       "name": "take_fixture_result_turn",
-      "sha256": "9abf183e2a733cffddf740b4fc0d8de0ead3dd6d4eb8ca4b78fd0477d8d0fa34"
+      "sha256": "5f7065698e8c3d3f4d1e233fe39701ee4b77544a5179aeb8d309a6fe629bf232"
+    },
+    {
+      "name": "take_fixture_result_turn_observed",
+      "sha256": "681ad0dad5d6ca1bdd6ac7e1f0dc0a06e0f415b612206b9d76810582381f8bbd"
     },
     {
       "name": "take_fixture_result_page",
-      "sha256": "de5e8fa24e1f1acb69c89d96db4e78380f5ebc1e1e5e6e140857e0b22f78e894"
+      "sha256": "2ba6ed35e59feffc9a5dbf87fa4bfaa42e68f9b596b60b191aa6df88fb1e89ef"
     },
     {
       "name": "close_fixture_result_page",
@@ -149,7 +153,7 @@
     },
     {
       "name": "present_fixture_mounted_page",
-      "sha256": "6c42167acc1229772352f94ff413415fa5c5ec6bcf343f7caeabe2187cbeb4fd"
+      "sha256": "ff1c40137109b2535e03f6eaa61e51af30a9bae96a97c30501be13eb8818fcd7"
     },
     {
       "name": "retire_fixture_acknowledged_mounted_page",
@@ -164,6 +168,38 @@
       "sha256": "08b2a77e2c78fcf31179d0c1f3a1f4eb73e01736b464a378e81357a04476904c"
     },
     {
+      "name": "drop",
+      "sha256": "abfccaf1dd100fc3d53cea4a9d4320d8cd6f6d0d2801ec7bbf4e39d2e00dadb0"
+    },
+    {
+      "name": "arm_host_turn_grant",
+      "sha256": "5a439036ddea52c0c94ca7c57f8a6a4fa4d5f1f9ed948576064ae65a4990774f"
+    },
+    {
+      "name": "host_turn_grant_armed",
+      "sha256": "3820f5ef3d0a07ab2990a57f81a9a315523806594abc1309f68fde23742bdb54"
+    },
+    {
+      "name": "drop",
+      "sha256": "a08eb98e5197732e03a0e865ba31e5589472a3b7e5ecf66c743470656fe7a437"
+    },
+    {
+      "name": "peak_turn_work",
+      "sha256": "f528f1a58fef5bea7e86a380750e2eccb46d3e96d3d0bc033869f32029e56f1f"
+    },
+    {
+      "name": "turns",
+      "sha256": "40c7c1d1d4d2f46bb084a945ef32d6fa563a2b90c9b08e0e9b176cb93afc665e"
+    },
+    {
+      "name": "settle",
+      "sha256": "c316e139fa6f4298c6f2aab03f9d5bafdac92235730ae96a3d401f1ea5dda58b"
+    },
+    {
+      "name": "arm_host_turn_fuel",
+      "sha256": "dba8f1ffef2cdb42767b534931c956d645183c680b4c4b12899dcf5be5108a43"
+    },
+    {
       "name": "host_lifetime_refusal",
       "sha256": "4bc16c1b8271d70713067b0a360423865c1505441a936b49b4b0ebb478de1bf1"
     },
@@ -173,7 +209,7 @@
     },
     {
       "name": "fixture_renew_turn",
-      "sha256": "9081352a0de2971c22c9bb3ac050fa6211cbf33eff75386e40053e94f993490a"
+      "sha256": "70d77cf771c51d186932410c8b98ab5638ab09c5b698bd232228307e7e2eb3c7"
     },
     {
       "name": "ensure_fixture_cancellation_issuer",
@@ -181,11 +217,11 @@
     },
     {
       "name": "dispatch_fixture_action",
-      "sha256": "62fb8125ea276f500a6ad6cc8549756b348f85f688a8c68e8037d96354b81630"
+      "sha256": "dc0542b13627cc3c0670a22df44fe659fdb1d87924482b2702c22e9c75deb0de"
     },
     {
       "name": "dispatch_fixture_command",
-      "sha256": "6e0e43170e65765ea79b9953b099001e6266caf25e5487fde062104ad35eae8d"
+      "sha256": "c0542c3fa2d9ef4fe1fb8ac4ae4bd8836017c5b99e9e1397d6578abe0b36d391"
     },
     {
       "name": "export_fixture_media",
@@ -237,7 +273,11 @@
     },
     {
       "name": "fixture_step_context_for",
-      "sha256": "642125e4ae79e3a045f12fea638e7885a904245932ca25f61d04f6760052fd4a"
+      "sha256": "e8f1e9541fc73bb41e461816175e8aa5080996aa65341f040e70724328d53677"
+    },
+    {
+      "name": "fixture_step_context_funded",
+      "sha256": "f088fafae5173e8b1090aa13eda28680927337126be81eddce36a148deb0657f"
     },
     {
       "name": "fixture_pending_effects",
@@ -302,6 +342,10 @@
     {
       "name": "load_document",
       "sha256": "5981b7e6416f1a1e6e9a7199b6cf53014d1954abe6907dc03dd3e0b15345d61f"
+    },
+    {
+      "name": "join_document",
+      "sha256": "0ffe77cc36da779f861dd6cbd9e5068c7956d4cf3bd03eb4c7dbc2bb62582d76"
     },
     {
       "name": "settle_document_archive_load",
@@ -428,50 +472,6 @@
       "sha256": "3f31b931243a932e38bde02693945a39bd035fef67a7200c35630cf62d137cdf"
     },
     {
-      "name": "project_fixture_node",
-      "sha256": "2b43eda182de75344e7519448c9d11d825c6a982fb7fde4bacdcec8868e0802d"
-    },
-    {
-      "name": "project_and_retire_fixture_tree",
-      "sha256": "efe17497cf846db69e480a312c2287935a5d736279a5b8664471edb9085eafbf"
-    },
-    {
-      "name": "document_input_commit_findings",
-      "sha256": "1d3d12223bc484c8d0f6f1acfee110b5e6aea7a70358bf6b39ded883190d03e0"
-    },
-    {
-      "name": "document_input_commit_lint",
-      "sha256": "8a6cd3528a78f22d1cd2e2514f14f74179e4f7616e9d1a9938b8cb2261b1a847"
-    },
-    {
-      "name": "fixture_scene_node",
-      "sha256": "1f7f5363e33fe014521d53d386a24e0fceaba74ed783113fa42e36663c14ada5"
-    },
-    {
-      "name": "decode_fixture_scene",
-      "sha256": "77d0d05e56557598d89dd79531d2db341f185e01d500c1c606a589054e6d614d"
-    },
-    {
-      "name": "built_surface_scene",
-      "sha256": "e1ed57bd44673436797606a18bd2c80147a5df1663127f4689efe52058dec72f"
-    },
-    {
-      "name": "built_carrier_text",
-      "sha256": "bb3842ebf93fc5170012ef7a3e74e6a60ecfb4671eb25b6b82243960019381db"
-    },
-    {
-      "name": "fixture_carrier_text",
-      "sha256": "23cdf0642798935b7c41d4e627181df5ec6aaf290f70383439727f6a5b4ec916"
-    },
-    {
-      "name": "decode_fixture_scene_with_lanes",
-      "sha256": "ba40fa32238aaa583a1bb9960cd44ed1ea0df664c8ae3dd0e03d41c2d60d18dd"
-    },
-    {
-      "name": "observe_and_retire_fixture_tree",
-      "sha256": "8120d2d26cdb72b4aaee5aef7760b962e3574fa37ad9f10d38d89f94f0a14f75"
-    },
-    {
       "name": "register_framework_reserved_action_factories",
       "sha256": "6131745a36a16bc33354419b630bf9089afd5cda04c44d360b32b76204bcaa04"
     },
@@ -545,7 +545,11 @@
     },
     {
       "name": "settle_registered_typed_operation",
-      "sha256": "84cc67c9425e46ff6754a5722e54ed422c5407141c1979379216f9dd566f7342"
+      "sha256": "1520a0866a7a0bfd93a539e30e0c8b97d3bbbf64ff7a09063f3208105d82340d"
+    },
+    {
+      "name": "settle_registered_typed_operation_within",
+      "sha256": "d19ce413c82be94d2a6dc57f54da8ebcb74d7451de8841a56f8e7f34c802df61"
     },
     {
       "name": "typed_operation_settlement_refusal",
@@ -556,8 +560,12 @@
       "sha256": "22a96c3f2fa53ba3da9ae5dd329a910500ae6742295627d6718a759c02b1d571"
     },
     {
+      "name": "receipt_grant_matches",
+      "sha256": "d54ec00c0d7343ab3ac0b35be932ae58064536d66af565b1402afb02c703694b"
+    },
+    {
       "name": "retain_original_ownership_receipts",
-      "sha256": "4e0ed5c62e267612daec7cc106a73c455806214980d7595894391fa4d99b091a"
+      "sha256": "7fd523d742d39d026504e3c467ee345a5aa4a1d5a69926ee205f4d2d09156a5b"
     },
     {
       "name": "settle_extension_invocations",
@@ -569,79 +577,7 @@
     },
     {
       "name": "close_registered_fixture_app",
-      "sha256": "41e794020d8446b1fa33d63c3db49cfc9af47adea4400d5055ca2e584daf39eb"
-    },
-    {
-      "name": "paired_apps",
-      "sha256": "88fa15ca4eb203fb6653204671f2f6348bb2af9b98d58dc89ac8a2adbfb49617"
-    },
-    {
-      "name": "paired_registered_apps",
-      "sha256": "67d1051ee99c6e0537c868cfbd634fb6dc1d9fe00e9870466b4ceea9fca3b3e6"
-    },
-    {
-      "name": "paired_registered_apps_with_members",
-      "sha256": "c6f449e74cb76fcf053ffa62cf1c5cee6f767391e43fc6f1d4ccd787a6ff6bea"
-    },
-    {
-      "name": "paired_registered_apps_boxed_with_members",
-      "sha256": "955ad6d9e2b69f117f3672f627d7c4d0eef95f2eff4a4cc33dd9beba313cb117"
-    },
-    {
-      "name": "settle_history_verb",
-      "sha256": "fad8d23abc563e689dbf088762133bdc99f7681ee6e15bde6f61757fb1a93dae"
-    },
-    {
-      "name": "settle_history_verb_as",
-      "sha256": "5ae468a68669d9c6a271b0b476c5ff901f1d95f46f8323b964f113309d724c15"
-    },
-    {
-      "name": "assert_undo_redo_round_trip",
-      "sha256": "87b0bfc13a5e379e5aba8d301454d596a7cfed49c5476d51dbe9628f3e440007"
-    },
-    {
-      "name": "assert_declared_actions_bridge_to_commands",
-      "sha256": "6ec02ccf07c2ca88c051cc2ebb2d5f2e467164aedb80bd8784009fedaf41635e"
-    },
-    {
-      "name": "assert_two_instances_converge",
-      "sha256": "77baeae950e3005be448a90206e05228abda07c74692334217aefd59458b5c0d"
-    },
-    {
-      "name": "assert_two_registered_instances_converge",
-      "sha256": "5ad38743d8a0545b0b45b2d878882c8fdfa16b8b519212a74f9ad352252e105e"
-    },
-    {
-      "name": "assert_two_registered_instances_converge_with_members",
-      "sha256": "a82715728599fd74b3b6e74ca224f96d40dd8056e4700b2c7fcc728c2b829839"
-    },
-    {
-      "name": "exchange_and_assert_convergence",
-      "sha256": "ba5e5226969d1b62f4c6c4e647becfc5c75f22a5ccfd0aa44d8f39000d0a1780"
-    },
-    {
-      "name": "assert_ingest_idempotent",
-      "sha256": "98323ee587f1b09ee027a0aff96dccda8674d1910e8a23bd85bdefcfab1c2581"
-    },
-    {
-      "name": "assert_registered_ingest_idempotent",
-      "sha256": "56a975dc0db68159f48c3800409c0c0d9fbf774a220c91ddc0b250fc4da5b8d2"
-    },
-    {
-      "name": "assert_registered_ingest_idempotent_with_members",
-      "sha256": "f830b1d71ee645cf053b9a7892c1bc320587d4217245c1453884d0618a3f6224"
-    },
-    {
-      "name": "assert_proposes_transaction",
-      "sha256": "a4829034640b7e4166b0498ea0e6cbab46f2206633fa18af0b2021a44322474c"
-    },
-    {
-      "name": "assert_transaction_commits_as_one_edit",
-      "sha256": "01114a06a3f5523e8e55b9590e3885b58eb7acecf918edefb66c36be5cc2f9cb"
-    },
-    {
-      "name": "assert_transaction_rollback_leaves_state_untouched",
-      "sha256": "7bc1b66f8b20eb8896b84168f25853875da5572bbb39c2bb7551d2190bdea02c"
+      "sha256": "3b300af49967d149a68efe34c5faa5bae4fcaeb449355c6d165e72c74213f5da"
     },
     {
       "name": "publish_fixture_presence_roster",
@@ -650,94 +586,6 @@
     {
       "name": "assert_presence_round_trip",
       "sha256": "45275bf033e96c055b617dcb76fd3215cb42c8b75d71d4c13c812bd91162ba28"
-    },
-    {
-      "name": "assert_body_in_catalog",
-      "sha256": "3768687ea093d316480c2ea96604db431b7042318b7d8622d5ddf7536da19a72"
-    },
-    {
-      "name": "assert_pane_smoke_by_example",
-      "sha256": "992494edb9503e50bf1e88a6f84c3a0fd0c8de1a659f4574c251a486b3990f7f"
-    },
-    {
-      "name": "declared_verb_lane_name",
-      "sha256": "cce4162b44ae9da99c0ec0b2244e63d4672453c3b39d1404b0182b2bebe7ee6e"
-    },
-    {
-      "name": "declared_verb_fingerprint",
-      "sha256": "80b427e6ce669db378d352e08c0b415d80afcd83c4bcb846741eeccb58b4f99a"
-    },
-    {
-      "name": "declared_verb_refusal",
-      "sha256": "a0c3ca045c409ca9937b6be0516d267dcb30e2f41bf6f19369152ff09cef2c55"
-    },
-    {
-      "name": "declared_verb_boot_args",
-      "sha256": "decf0fc115a65d3b6c3e5dfa29ef7a1ccefb0b5d8a3d3e3c4103b66686fcb7a0"
-    },
-    {
-      "name": "declared_verb_fixture_app",
-      "sha256": "5f8197252e5070774909f4061053142a529b981d9d8c32dc79263873972d98b5"
-    },
-    {
-      "name": "declared_verb_state",
-      "sha256": "5d6c714f993483cfecab479a2e80189374f877cc23d13fbb5d43f89d8a88cfbe"
-    },
-    {
-      "name": "declared_verb_unheld_children",
-      "sha256": "f187a60fe0023bb6e85866e19208600f33d6250ce307c38130ea5f40405a98d1"
-    },
-    {
-      "name": "declared_verb_dispatch",
-      "sha256": "34222f6768aaadcaf15ab5bff309a137a87bd1d1254777ec20c61844920c58ab"
-    },
-    {
-      "name": "render_registered_fixture_app",
-      "sha256": "0f48d6c85efe2bbe34bfa7465b8524ec5c61dfa062e350d1bc616ffa36ee7f6d"
-    },
-    {
-      "name": "release_fixture_render",
-      "sha256": "4cfbe26bf444d27ca9f26a2c8a250b9fa04f54ef3b4eda1007c2eb7c945f0f88"
-    },
-    {
-      "name": "render_registered_fixture_app_over",
-      "sha256": "4c3420d4d724f20d0339fcbeb28bfd2c621ca78706605f859c97d9effb6e0140"
-    },
-    {
-      "name": "observe_registered_fixture_app",
-      "sha256": "4072fa02e3688b05ae7f3ed762205cf4bc269a10552ac92f9b2fecad31a0f8fa"
-    },
-    {
-      "name": "dispatch_addressed_fixture_on_original",
-      "sha256": "e5dbd4331b620dd611483469dc9e99ec96b5221d5f623f6fe543f9a282825d25"
-    },
-    {
-      "name": "preview_fixture_on_original",
-      "sha256": "c71ecfa75e853a6f89e9a0ea4dc99ebdeed3e5b8de29eac26d8ddfec9cc4bbbe"
-    },
-    {
-      "name": "agent_preview",
-      "sha256": "5f35df0068dedd4b709f95346d78a091dc6ba259fd4de7c833c4a32aba36d5e6"
-    },
-    {
-      "name": "declared_verb_agent_dispatch",
-      "sha256": "36ef3fad2e88e069fa22582bff7527a87665b727a76e034103cb2feb92659bc9"
-    },
-    {
-      "name": "probe_declared_verbs",
-      "sha256": "6316dd435a876ed28ae5333c983bd3cf157c74f2bb9ea83bbce357e57e7796a7"
-    },
-    {
-      "name": "probe_agent_lane",
-      "sha256": "215d9dac9ce0dd5e046e50af0dfa3ff19b71dc395f72e009967e0292603230fe"
-    },
-    {
-      "name": "probe_declared_verbs_where",
-      "sha256": "8f0887014d27038f0c44085920558f8bc34fdaae3f72fa1a430e96429ad23e6f"
-    },
-    {
-      "name": "assert_declared_verbs_honour_their_declarations",
-      "sha256": "dc668f06ef04ca6428bc58eb356d0752c5e343428fe9970bc07fd3748af20f67"
     },
     {
       "name": "default",

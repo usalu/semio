@@ -48,6 +48,16 @@ test("the peaks that size a final for the fleet are the largest recorded peak of
   expect(componentFinalCratePeaksV1(new Map()).size).toBe(0);
 });
 
+test("the forecast history keeps only the rows recorded for a source of comparable size, as an independent size-ratio oracle sees it", () => {
+  const tolerance = schema.definitions.Policy.const.forecastSizeToleranceBasisPoints / 10000;
+  for (const row of fixture.forecasts) {
+    const kept = admission.forecastHistoryV1(row.history as never, row.lines);
+    expect(kept.map((entry) => row.history.indexOf(entry as never)), row.name).toEqual(row.kept);
+    const oracle = row.history.filter((entry) => "lines" in entry && (row.lines === 0 ? entry.lines === 0 : Math.abs(Math.log((entry.lines as number) / row.lines)) <= Math.log(1 + tolerance) + 1e-12));
+    expect(kept, row.name).toEqual(oracle as never);
+  }
+});
+
 test("waiters are ordered by remaining path, then predicted peak, then arrival", () => {
   for (const row of fixture.order) expect(admissionOrderV1(row.waiters).map((waiter) => waiter.id)).toEqual(row.expected);
 });

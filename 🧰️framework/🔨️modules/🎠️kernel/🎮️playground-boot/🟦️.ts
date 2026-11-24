@@ -3,7 +3,7 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import { dependsOnToPluginDependencies, expandPluginRegistry, type PluginRegistryEntry } from "../🗂️plugin-registry/🟦️.ts";
+import { dependsOnToPluginDependencies, expandPluginRegistry, isActivatedOnDemand, onDemandPluginEntries, type PluginRegistryEntry } from "../🗂️plugin-registry/🟦️.ts";
 import { type PlaygroundCatalogTarget, type PluginCatalog, type PluginCatalogTarget, type PluginHostConfig } from "../📚️plugin-catalog/🟦️.ts";
 import { orderPluginRegistryEntries, type PluginGraphError } from "../🕸️plugin-graph/🟦️.ts";
 
@@ -22,6 +22,28 @@ export function resolvePluginRegistryId(catalog: PluginCatalog, playgroundPlugin
 /** 🏠️ Resolves a playground filter/alias to the app id that should be instantiated by default within its plugin's manifest. */
 export function resolvePlaygroundDefaultAppId(catalog: PluginCatalog, playgroundPluginId: string): string | undefined {
   return findPlaygroundVariant(catalog, playgroundPluginId)?.app;
+}
+
+/** 🗂️ The registry row of one catalog target: its module url (extension or plugin), tags, activation events and declared hard dependencies. The one projection the boot planner and the on-demand activator read, so a deferred row is the same row the boot would have loaded. */
+export function pluginRegistryEntryOf(catalog: PluginCatalog, target: PluginCatalogTarget): PluginRegistryEntry {
+  return {
+    pluginId: target.pluginId,
+    moduleUrl: target.role === "extension" ? catalog.extensionModuleUrl(target.pluginId) : catalog.moduleUrl(target.pluginId),
+    contributes: target.contributes,
+    consumes: target.consumes,
+    activationEvents: target.activationEvents,
+    dependencies: dependsOnToPluginDependencies(target.dependsOn),
+  };
+}
+
+/** 📚️ Every registry row of `catalog`, plugins then extensions, boot-planned or deferred: what a host hands its on-demand activator so a deferred row is installable even though the boot plan left it out. */
+export function catalogPluginRegistryEntries(catalog: PluginCatalog): readonly PluginRegistryEntry[] {
+  return [...catalog.plugins, ...catalog.extensions].map((target) => pluginRegistryEntryOf(catalog, target));
+}
+
+/** ⏳️ The rows a request may activate after `boot`: every catalog row the boot plan left out whose own activation events defer it and that a planned row consumes or names on demand. The shell's activator candidates; `installed` is {@link catalogPluginRegistryEntries}. */
+export function deferredPluginEntries(catalog: PluginCatalog, boot: readonly PluginRegistryEntry[]): readonly PluginRegistryEntry[] {
+  return onDemandPluginEntries(catalogPluginRegistryEntries(catalog), boot).filter(isActivatedOnDemand);
 }
 
 export type PlaygroundBootSession = {
@@ -99,15 +121,7 @@ export class PlaygroundBootPlanner {
     if (this.phase === "rows") {
       const end = Math.min(this.cursor + PLUGIN_GRAPH_CHUNK_ROWS, this.targets.length);
       for (; this.cursor < end; this.cursor++) {
-        const target = this.targets[this.cursor]!;
-        this.rows.push({
-          pluginId: target.pluginId,
-          moduleUrl: target.role === "extension" ? this.catalog.extensionModuleUrl(target.pluginId) : this.catalog.moduleUrl(target.pluginId),
-          contributes: target.contributes,
-          consumes: target.consumes,
-          activationEvents: target.activationEvents,
-          dependencies: dependsOnToPluginDependencies(target.dependsOn),
-        });
+        this.rows.push(pluginRegistryEntryOf(this.catalog, this.targets[this.cursor]!));
       }
       if (this.cursor >= this.targets.length) this.phase = "closure";
       return true;

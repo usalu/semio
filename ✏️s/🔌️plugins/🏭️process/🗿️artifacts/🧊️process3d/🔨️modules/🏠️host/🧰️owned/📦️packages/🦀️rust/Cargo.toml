@@ -29,6 +29,9 @@ semio-framework-job = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-plugin = { workspace = true }
+semio-plugin-ownership = { workspace = true }
+semio-os-store-operation-wire = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-process-process3d-model = { workspace = true }
 semio-s-artifact-process-process3d-mut-machines = { workspace = true }

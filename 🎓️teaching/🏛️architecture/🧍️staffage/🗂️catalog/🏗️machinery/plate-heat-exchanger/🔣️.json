@@ -190,17 +190,62 @@
     },
     "anchors": [
       {
-        "id": "base-contact",
+        "id": "base-contact-rear-outer",
         "bone": "frame",
-        "x": 0.25,
+        "x": 0.041,
         "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Base on the surface",
-          "de": "Fuß auf der Unterlage"
+          "en": "Outer leg of the rear base rail on the surface",
+          "de": "Äußerer Schenkel der hinteren Sockelschiene auf der Unterlage"
         },
         "support": "contact",
-        "footprintLengthM": 0.5,
+        "footprintLengthM": 0.002,
+        "footprintWidthM": 0.5,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "base-contact-rear-inner",
+        "bone": "frame",
+        "x": 0.079,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Inner leg of the rear base rail on the surface",
+          "de": "Innerer Schenkel der hinteren Sockelschiene auf der Unterlage"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.002,
+        "footprintWidthM": 0.5,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "base-contact-front-inner",
+        "bone": "frame",
+        "x": 0.421,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Inner leg of the front base rail on the surface",
+          "de": "Innerer Schenkel der vorderen Sockelschiene auf der Unterlage"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.002,
+        "footprintWidthM": 0.5,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "base-contact-front-outer",
+        "bone": "frame",
+        "x": 0.459,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Outer leg of the front base rail on the surface",
+          "de": "Äußerer Schenkel der vorderen Sockelschiene auf der Unterlage"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.002,
         "footprintWidthM": 0.5,
         "frictionCoefficient": 0.4
       },
@@ -2372,7 +2417,10 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "base-contact"
+          "base-contact-rear-outer",
+          "base-contact-rear-inner",
+          "base-contact-front-inner",
+          "base-contact-front-outer"
         ],
         "thermal": {
           "regions": {
@@ -2424,7 +2472,10 @@
         },
         "ground": "auto",
         "contacts": [
-          "base-contact"
+          "base-contact-rear-outer",
+          "base-contact-rear-inner",
+          "base-contact-front-inner",
+          "base-contact-front-outer"
         ],
         "thermal": {
           "regions": {
@@ -2472,7 +2523,10 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "base-contact"
+          "base-contact-rear-outer",
+          "base-contact-rear-inner",
+          "base-contact-front-inner",
+          "base-contact-front-outer"
         ],
         "thermal": {
           "regions": {
@@ -2547,7 +2601,22 @@
         ],
         "contacts": [
           {
-            "anchor": "base-contact",
+            "anchor": "base-contact-rear-outer",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "base-contact-rear-inner",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "base-contact-front-inner",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "base-contact-front-outer",
             "fromS": 0,
             "toS": 4
           }
@@ -2627,7 +2696,22 @@
         ],
         "contacts": [
           {
-            "anchor": "base-contact",
+            "anchor": "base-contact-rear-outer",
+            "fromS": 0,
+            "toS": 300
+          },
+          {
+            "anchor": "base-contact-rear-inner",
+            "fromS": 0,
+            "toS": 300
+          },
+          {
+            "anchor": "base-contact-front-inner",
+            "fromS": 0,
+            "toS": 300
+          },
+          {
+            "anchor": "base-contact-front-outer",
             "fromS": 0,
             "toS": 300
           }
@@ -2909,12 +2993,15 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "base-contact"
+        "base-contact-rear-outer",
+        "base-contact-rear-inner",
+        "base-contact-front-inner",
+        "base-contact-front-outer"
       ],
       "assumptions": [
         {
-          "en": "The 18 kg exchanger stands on its frame: a unilateral contact of 0.5 m by 0.5 m carries the weight.",
-          "de": "Der 18 kg schwere Übertrager steht auf seinem Rahmen: ein einseitiger Kontakt von 0,5 m mal 0,5 m trägt das Gewicht."
+          "en": "The 18 kg exchanger stands on the four 2 mm legs of its two base rails (inverted channels of 40 mm): four unilateral line contacts of 0.5 m carry the weight.",
+          "de": "Der 18 kg schwere Übertrager steht auf den vier 2 mm starken Schenkeln seiner zwei Sockelschienen (umgekehrte U-Profile von 40 mm): vier einseitige Linienkontakte von 0,5 m tragen das Gewicht."
         }
       ],
       "clinical": false
@@ -5705,7 +5792,7 @@
             "part": "mass"
           },
           {
-            "id": "base-contact-pad",
+            "id": "base-contact-rear-outer-pad",
             "kind": "box",
             "bone": "frame",
             "material": "galvanised-steel",
@@ -5723,17 +5810,78 @@
                 0
               ]
             },
-            "repeat": {
-              "count": 2,
+            "member": "frame",
+            "part": "support",
+            "anchor": "base-contact-rear-outer"
+          },
+          {
+            "id": "base-contact-rear-inner-pad",
+            "kind": "box",
+            "bone": "frame",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.0075,
+              0.5
+            ],
+            "transform": {
               "translation": [
-                0.38,
-                0,
+                0.06,
+                0.00375,
                 0
               ]
             },
             "member": "frame",
             "part": "support",
-            "anchor": "base-contact"
+            "anchor": "base-contact-rear-inner"
+          },
+          {
+            "id": "base-contact-front-inner-pad",
+            "kind": "box",
+            "bone": "frame",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.0075,
+              0.5
+            ],
+            "transform": {
+              "translation": [
+                0.44,
+                0.00375,
+                0
+              ]
+            },
+            "member": "frame",
+            "part": "support",
+            "anchor": "base-contact-front-inner"
+          },
+          {
+            "id": "base-contact-front-outer-pad",
+            "kind": "box",
+            "bone": "frame",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.0075,
+              0.5
+            ],
+            "transform": {
+              "translation": [
+                0.44,
+                0.00375,
+                0
+              ]
+            },
+            "member": "frame",
+            "part": "support",
+            "anchor": "base-contact-front-outer"
           },
           {
             "id": "st-plates",
@@ -7997,7 +8145,7 @@
             "part": "mass"
           },
           {
-            "id": "base-contact-pad",
+            "id": "base-contact-rear-outer-pad",
             "kind": "box",
             "bone": "frame",
             "material": "galvanised-steel",
@@ -8015,17 +8163,78 @@
                 0
               ]
             },
-            "repeat": {
-              "count": 2,
+            "member": "frame",
+            "part": "support",
+            "anchor": "base-contact-rear-outer"
+          },
+          {
+            "id": "base-contact-rear-inner-pad",
+            "kind": "box",
+            "bone": "frame",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.015,
+              0.5
+            ],
+            "transform": {
               "translation": [
-                0.38,
-                0,
+                0.06,
+                0.0075,
                 0
               ]
             },
             "member": "frame",
             "part": "support",
-            "anchor": "base-contact"
+            "anchor": "base-contact-rear-inner"
+          },
+          {
+            "id": "base-contact-front-inner-pad",
+            "kind": "box",
+            "bone": "frame",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.015,
+              0.5
+            ],
+            "transform": {
+              "translation": [
+                0.44,
+                0.0075,
+                0
+              ]
+            },
+            "member": "frame",
+            "part": "support",
+            "anchor": "base-contact-front-inner"
+          },
+          {
+            "id": "base-contact-front-outer-pad",
+            "kind": "box",
+            "bone": "frame",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.015,
+              0.5
+            ],
+            "transform": {
+              "translation": [
+                0.44,
+                0.0075,
+                0
+              ]
+            },
+            "member": "frame",
+            "part": "support",
+            "anchor": "base-contact-front-outer"
           },
           {
             "id": "st-plates",
@@ -9998,7 +10207,7 @@
             "part": "mass"
           },
           {
-            "id": "base-contact-pad",
+            "id": "base-contact-rear-outer-pad",
             "kind": "box",
             "bone": "frame",
             "material": "galvanised-steel",
@@ -10016,17 +10225,78 @@
                 0
               ]
             },
-            "repeat": {
-              "count": 2,
+            "member": "frame",
+            "part": "support",
+            "anchor": "base-contact-rear-outer"
+          },
+          {
+            "id": "base-contact-rear-inner-pad",
+            "kind": "box",
+            "bone": "frame",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.03,
+              0.5
+            ],
+            "transform": {
               "translation": [
-                0.38,
-                0,
+                0.06,
+                0.015,
                 0
               ]
             },
             "member": "frame",
             "part": "support",
-            "anchor": "base-contact"
+            "anchor": "base-contact-rear-inner"
+          },
+          {
+            "id": "base-contact-front-inner-pad",
+            "kind": "box",
+            "bone": "frame",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.03,
+              0.5
+            ],
+            "transform": {
+              "translation": [
+                0.44,
+                0.015,
+                0
+              ]
+            },
+            "member": "frame",
+            "part": "support",
+            "anchor": "base-contact-front-inner"
+          },
+          {
+            "id": "base-contact-front-outer-pad",
+            "kind": "box",
+            "bone": "frame",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.03,
+              0.5
+            ],
+            "transform": {
+              "translation": [
+                0.44,
+                0.015,
+                0
+              ]
+            },
+            "member": "frame",
+            "part": "support",
+            "anchor": "base-contact-front-outer"
           }
         ],
         "decisions": [
@@ -11258,7 +11528,7 @@
             "part": "mass"
           },
           {
-            "id": "base-contact-pad",
+            "id": "base-contact-rear-outer-pad",
             "kind": "box",
             "bone": "frame",
             "material": "galvanised-steel",
@@ -11276,17 +11546,78 @@
                 0
               ]
             },
-            "repeat": {
-              "count": 2,
+            "member": "frame",
+            "part": "support",
+            "anchor": "base-contact-rear-outer"
+          },
+          {
+            "id": "base-contact-rear-inner-pad",
+            "kind": "box",
+            "bone": "frame",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.03,
+              0.5
+            ],
+            "transform": {
               "translation": [
-                0.38,
-                0,
+                0.06,
+                0.015,
                 0
               ]
             },
             "member": "frame",
             "part": "support",
-            "anchor": "base-contact"
+            "anchor": "base-contact-rear-inner"
+          },
+          {
+            "id": "base-contact-front-inner-pad",
+            "kind": "box",
+            "bone": "frame",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.03,
+              0.5
+            ],
+            "transform": {
+              "translation": [
+                0.44,
+                0.015,
+                0
+              ]
+            },
+            "member": "frame",
+            "part": "support",
+            "anchor": "base-contact-front-inner"
+          },
+          {
+            "id": "base-contact-front-outer-pad",
+            "kind": "box",
+            "bone": "frame",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.03,
+              0.5
+            ],
+            "transform": {
+              "translation": [
+                0.44,
+                0.015,
+                0
+              ]
+            },
+            "member": "frame",
+            "part": "support",
+            "anchor": "base-contact-front-outer"
           }
         ],
         "decisions": [

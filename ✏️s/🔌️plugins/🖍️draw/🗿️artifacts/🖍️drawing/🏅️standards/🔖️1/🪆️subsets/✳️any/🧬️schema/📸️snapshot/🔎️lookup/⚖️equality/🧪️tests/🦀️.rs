@@ -1,7 +1,7 @@
 //! 🧪️ Original native field equality matches independent serde values with denial and every partial cut.
 use semio_framework_value::{paged::PagedUtf8, retained_clone::RetainedCloneGrant};
 use semio_s_artifact_draw_drawing_model::snapshot::lookup::equality::DrawingOriginalEquality;
-use semio_s_artifact_draw_drawing_model::snapshot::lookup::original::test_step;
+use crate::test_step;
 use semio_framework_value_clone_source_testing::FixtureSource;
 
 fn grant() -> RetainedCloneGrant {

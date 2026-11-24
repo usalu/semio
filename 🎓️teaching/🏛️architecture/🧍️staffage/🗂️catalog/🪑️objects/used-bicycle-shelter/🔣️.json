@@ -114,8 +114,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "vdi-heat-atlas-2010"
    },
@@ -130,8 +130,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "vdi-heat-atlas-2010"
    },
@@ -146,8 +146,8 @@
     "densityKgM3": 169,
     "conductivityWmK": 0.2,
     "specificHeatJKgK": 1200,
-    "elasticModulusPa": 2300000000.0,
-    "strengthPa": 60000000.0,
+    "elasticModulusPa": 2300000000,
+    "strengthPa": 60000000,
     "source": "authored-estimate",
     "reference": "din-en-16153"
    },
@@ -162,8 +162,8 @@
     "densityKgM3": 169,
     "conductivityWmK": 0.2,
     "specificHeatJKgK": 1200,
-    "elasticModulusPa": 2300000000.0,
-    "strengthPa": 60000000.0,
+    "elasticModulusPa": 2300000000,
+    "strengthPa": 60000000,
     "source": "authored-estimate",
     "reference": "din-en-16153"
    },
@@ -192,8 +192,8 @@
     "densityKgM3": 2700,
     "conductivityWmK": 160,
     "specificHeatJKgK": 900,
-    "elasticModulusPa": 70000000000.0,
-    "strengthPa": 160000000.0,
+    "elasticModulusPa": 70000000000,
+    "strengthPa": 160000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -208,8 +208,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "vdi-heat-atlas-2010"
    },
@@ -224,8 +224,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "vdi-heat-atlas-2010"
    },
@@ -240,8 +240,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 355000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 355000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -271,10 +271,10 @@
       "en": "Ground reference: the paving and the concrete point footings that stay behind",
       "de": "Bodenbezug: das Pflaster und die Punktfundamente aus Beton, die zurückbleiben"
      },
-     "x": 0.0,
-     "y": 0.0,
-     "angleDeg": 0.0,
-     "lengthM": 0.0,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
      "joint": {
       "type": "fixed"
      }
@@ -287,9 +287,9 @@
       "de": "Rückwärtige Stütze von Rahmen A von der Fußplatte bis in den Dachträger"
      },
      "x": -0.8,
-     "y": 0.0,
+     "y": 0,
      "z": -2.4,
-     "angleDeg": 90.0,
+     "angleDeg": 90,
      "lengthM": 2.3,
      "joint": {
       "type": "fixed"
@@ -297,14 +297,14 @@
      "mass": {
       "kg": 34.335,
       "comX": 0.903043,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "shelter-catalogue-typical"
      },
      "section": {
       "areaM2": 0.00149,
-      "secondMomentM4": 2.26e-06,
+      "secondMomentM4": 0.00000226,
       "extremeFibreM": 0.05,
       "material": "galv-weathered",
       "title": {
@@ -322,7 +322,7 @@
      },
      "x": 2.278128,
      "y": 0.25,
-     "angleDeg": -85.0,
+     "angleDeg": -85,
      "lengthM": 2.108022,
      "joint": {
       "type": "fixed"
@@ -330,14 +330,14 @@
      "mass": {
       "kg": 22.134,
       "comX": 1.054011,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "shelter-catalogue-typical"
      },
      "section": {
       "areaM2": 0.00134,
-      "secondMomentM4": 2.45e-06,
+      "secondMomentM4": 0.00000245,
       "extremeFibreM": 0.06,
       "material": "galv-weathered",
       "title": {
@@ -363,14 +363,14 @@
      "mass": {
       "kg": 5.134,
       "comX": 0.5692,
-      "comY": -0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "shelter-catalogue-typical"
      },
      "section": {
       "areaM2": 0.000574,
-      "secondMomentM4": 2.35e-07,
+      "secondMomentM4": 2.35e-7,
       "extremeFibreM": 0.03015,
       "material": "galv-weathered",
       "title": {
@@ -387,8 +387,8 @@
       "de": "Rückwärtige Stütze von Rahmen B von der Fußplatte bis in den Dachträger"
      },
      "x": -0.8,
-     "y": 0.0,
-     "angleDeg": 90.0,
+     "y": 0,
+     "angleDeg": 90,
      "lengthM": 2.3,
      "joint": {
       "type": "fixed"
@@ -396,14 +396,14 @@
      "mass": {
       "kg": 34.335,
       "comX": 0.903043,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "shelter-catalogue-typical"
      },
      "section": {
       "areaM2": 0.00149,
-      "secondMomentM4": 2.26e-06,
+      "secondMomentM4": 0.00000226,
       "extremeFibreM": 0.05,
       "material": "galv-weathered",
       "title": {
@@ -421,7 +421,7 @@
      },
      "x": 2.278128,
      "y": 0.25,
-     "angleDeg": -85.0,
+     "angleDeg": -85,
      "lengthM": 2.108022,
      "joint": {
       "type": "fixed"
@@ -436,7 +436,7 @@
      },
      "section": {
       "areaM2": 0.00134,
-      "secondMomentM4": 2.45e-06,
+      "secondMomentM4": 0.00000245,
       "extremeFibreM": 0.06,
       "material": "galv-weathered",
       "title": {
@@ -462,14 +462,14 @@
      "mass": {
       "kg": 5.134,
       "comX": 0.5692,
-      "comY": -0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "shelter-catalogue-typical"
      },
      "section": {
       "areaM2": 0.000574,
-      "secondMomentM4": 2.35e-07,
+      "secondMomentM4": 2.35e-7,
       "extremeFibreM": 0.03015,
       "material": "galv-weathered",
       "title": {
@@ -486,9 +486,9 @@
       "de": "Rückwärtige Stütze von Rahmen C von der Fußplatte bis in den Dachträger"
      },
      "x": -0.8,
-     "y": 0.0,
+     "y": 0,
      "z": 2.4,
-     "angleDeg": 90.0,
+     "angleDeg": 90,
      "lengthM": 2.3,
      "joint": {
       "type": "fixed"
@@ -496,14 +496,14 @@
      "mass": {
       "kg": 34.335,
       "comX": 0.903043,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "shelter-catalogue-typical"
      },
      "section": {
       "areaM2": 0.00149,
-      "secondMomentM4": 2.26e-06,
+      "secondMomentM4": 0.00000226,
       "extremeFibreM": 0.05,
       "material": "galv-weathered",
       "title": {
@@ -521,7 +521,7 @@
      },
      "x": 2.278128,
      "y": 0.25,
-     "angleDeg": -85.0,
+     "angleDeg": -85,
      "lengthM": 2.108022,
      "joint": {
       "type": "fixed"
@@ -529,14 +529,14 @@
      "mass": {
       "kg": 22.134,
       "comX": 1.054011,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "shelter-catalogue-typical"
      },
      "section": {
       "areaM2": 0.00134,
-      "secondMomentM4": 2.45e-06,
+      "secondMomentM4": 0.00000245,
       "extremeFibreM": 0.06,
       "material": "galv-weathered",
       "title": {
@@ -562,14 +562,14 @@
      "mass": {
       "kg": 5.134,
       "comX": 0.5692,
-      "comY": -0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "shelter-catalogue-typical"
      },
      "section": {
       "areaM2": 0.000574,
-      "secondMomentM4": 2.35e-07,
+      "secondMomentM4": 2.35e-7,
       "extremeFibreM": 0.03015,
       "material": "galv-weathered",
       "title": {
@@ -585,10 +585,10 @@
       "en": "Original roof sheet, bay 1",
       "de": "Ursprüngliche Dachplatte, Feld 1"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.12,
      "z": 0.525,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 2.108022,
      "joint": {
       "type": "fixed"
@@ -603,7 +603,7 @@
      },
      "section": {
       "areaM2": 0.00277,
-      "secondMomentM4": 1.14e-07,
+      "secondMomentM4": 1.14e-7,
       "extremeFibreM": 0.008,
       "material": "pc-yellowed",
       "title": {
@@ -619,10 +619,10 @@
       "en": "Original roof sheet, bay 2",
       "de": "Ursprüngliche Dachplatte, Feld 2"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.12,
      "z": -0.625,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 2.108022,
      "joint": {
       "type": "fixed"
@@ -637,7 +637,7 @@
      },
      "section": {
       "areaM2": 0.00277,
-      "secondMomentM4": 1.14e-07,
+      "secondMomentM4": 1.14e-7,
       "extremeFibreM": 0.008,
       "material": "pc-yellowed",
       "title": {
@@ -653,10 +653,10 @@
       "en": "Replacement roof sheet (bay 3), slides along the glazing bars",
       "de": "Ersatz-Dachplatte (Feld 3), gleitet längs der Sprossen"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.12,
      "z": 0.625,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 2.108022,
      "joint": {
       "type": "prismatic",
@@ -674,7 +674,7 @@
      },
      "section": {
       "areaM2": 0.00277,
-      "secondMomentM4": 1.14e-07,
+      "secondMomentM4": 1.14e-7,
       "extremeFibreM": 0.008,
       "material": "pc-yellowed",
       "title": {
@@ -690,10 +690,10 @@
       "en": "Original roof sheet, bay 4",
       "de": "Ursprüngliche Dachplatte, Feld 4"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.12,
      "z": -0.525,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 2.108022,
      "joint": {
       "type": "fixed"
@@ -708,7 +708,7 @@
      },
      "section": {
       "areaM2": 0.00277,
-      "secondMomentM4": 1.14e-07,
+      "secondMomentM4": 1.14e-7,
       "extremeFibreM": 0.008,
       "material": "pc-yellowed",
       "title": {
@@ -726,14 +726,14 @@
      },
      "x": -0.061228,
      "y": 0.057427,
-     "angleDeg": -5.0,
+     "angleDeg": -5,
      "lengthM": 0.1,
      "joint": {
       "type": "fixed"
      },
      "mass": {
       "kg": 10.08,
-      "comX": 0.0,
+      "comX": 0,
       "comY": -0.022367,
       "distribution": "point",
       "source": "authored-estimate",
@@ -747,9 +747,9 @@
       "en": "Downpipe behind post C into the gully",
       "de": "Fallrohr hinter Stütze C in den Ablauf"
      },
-     "x": -0.0,
+     "x": 0,
      "y": 0.316,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 2.27,
      "joint": {
       "type": "fixed"
@@ -764,7 +764,7 @@
      },
      "section": {
       "areaM2": 0.000143,
-      "secondMomentM4": 1.03e-07,
+      "secondMomentM4": 1.03e-7,
       "extremeFibreM": 0.038,
       "material": "galv-sheet",
       "title": {
@@ -781,9 +781,9 @@
       "de": "Anlehnbügel 1, vom Fuß seines hinteren Beins"
      },
      "x": -0.30085,
-     "y": 0.0,
+     "y": 0,
      "z": -1.8,
-     "angleDeg": 90.0,
+     "angleDeg": 90,
      "lengthM": 0.8,
      "joint": {
       "type": "fixed"
@@ -798,7 +798,7 @@
      },
      "section": {
       "areaM2": 0.000453,
-      "secondMomentM4": 1.16e-07,
+      "secondMomentM4": 1.16e-7,
       "extremeFibreM": 0.02415,
       "material": "galv-worn",
       "title": {
@@ -815,9 +815,9 @@
       "de": "Anlehnbügel 2, vom Fuß seines hinteren Beins"
      },
      "x": -0.30085,
-     "y": 0.0,
+     "y": 0,
      "z": -0.6,
-     "angleDeg": 90.0,
+     "angleDeg": 90,
      "lengthM": 0.8,
      "joint": {
       "type": "fixed"
@@ -832,7 +832,7 @@
      },
      "section": {
       "areaM2": 0.000453,
-      "secondMomentM4": 1.16e-07,
+      "secondMomentM4": 1.16e-7,
       "extremeFibreM": 0.02415,
       "material": "galv-worn",
       "title": {
@@ -849,9 +849,9 @@
       "de": "Anlehnbügel 3, vom Fuß seines hinteren Beins"
      },
      "x": -0.30085,
-     "y": 0.0,
+     "y": 0,
      "z": 0.6,
-     "angleDeg": 90.0,
+     "angleDeg": 90,
      "lengthM": 0.8,
      "joint": {
       "type": "fixed"
@@ -866,7 +866,7 @@
      },
      "section": {
       "areaM2": 0.000453,
-      "secondMomentM4": 1.16e-07,
+      "secondMomentM4": 1.16e-7,
       "extremeFibreM": 0.02415,
       "material": "galv-worn",
       "title": {
@@ -883,9 +883,9 @@
       "de": "Anlehnbügel 4, vom Fuß seines hinteren Beins"
      },
      "x": -0.30085,
-     "y": 0.0,
+     "y": 0,
      "z": 1.8,
-     "angleDeg": 90.0,
+     "angleDeg": 90,
      "lengthM": 0.8,
      "joint": {
       "type": "fixed"
@@ -900,7 +900,7 @@
      },
      "section": {
       "areaM2": 0.000453,
-      "secondMomentM4": 1.16e-07,
+      "secondMomentM4": 1.16e-7,
       "extremeFibreM": 0.02415,
       "material": "galv-worn",
       "title": {
@@ -919,7 +919,7 @@
      "x": -0.55,
      "y": 0.351,
      "z": -0.38,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 1.1,
      "joint": {
       "type": "fixed"
@@ -934,7 +934,7 @@
      },
      "section": {
       "areaM2": 0.0001578,
-      "secondMomentM4": 2.22e-08,
+      "secondMomentM4": 2.22e-8,
       "extremeFibreM": 0.0175,
       "material": "bike-steel",
       "title": {
@@ -998,7 +998,7 @@
     "id": "stand-1-rear",
     "bone": "stand-1",
     "x": 0,
-    "y": 0.0,
+    "y": 0,
     "kind": "contact",
     "title": {
      "en": "Stand 1, rear leg set into its concrete footing",
@@ -1030,7 +1030,7 @@
     "id": "stand-2-rear",
     "bone": "stand-2",
     "x": 0,
-    "y": 0.0,
+    "y": 0,
     "kind": "contact",
     "title": {
      "en": "Stand 2, rear leg set into its concrete footing",
@@ -1062,7 +1062,7 @@
     "id": "stand-3-rear",
     "bone": "stand-3",
     "x": 0,
-    "y": 0.0,
+    "y": 0,
     "kind": "contact",
     "title": {
      "en": "Stand 3, rear leg set into its concrete footing",
@@ -1094,7 +1094,7 @@
     "id": "stand-4-rear",
     "bone": "stand-4",
     "x": 0,
-    "y": 0.0,
+    "y": 0,
     "kind": "contact",
     "title": {
      "en": "Stand 4, rear leg set into its concrete footing",
@@ -1282,7 +1282,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.125,
        "w": 0.015,
        "h": 0.25,
@@ -1357,7 +1357,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 2.108022,
        "h": 0.12,
@@ -1402,7 +1402,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.125,
        "w": 0.015,
        "h": 0.25,
@@ -1477,7 +1477,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 2.108022,
        "h": 0.12,
@@ -1522,7 +1522,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.125,
        "w": 0.015,
        "h": 0.25,
@@ -1597,7 +1597,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 2.108022,
        "h": 0.12,
@@ -1673,7 +1673,7 @@
        "tone": 0.76,
        "kind": "rect",
        "x": -0.03,
-       "y": 0.0,
+       "y": 0,
        "w": 2.168022,
        "h": 0.016,
        "region": "roof-old",
@@ -1688,7 +1688,7 @@
        "tone": 0.76,
        "kind": "rect",
        "x": -0.03,
-       "y": 0.0,
+       "y": 0,
        "w": 2.168022,
        "h": 0.016,
        "region": "roof-old",
@@ -1703,7 +1703,7 @@
        "tone": 0.9,
        "kind": "rect",
        "x": -0.03,
-       "y": 0.0,
+       "y": 0,
        "w": 2.168022,
        "h": 0.016,
        "region": "roof-new",
@@ -1718,7 +1718,7 @@
        "tone": 0.76,
        "kind": "rect",
        "x": -0.03,
-       "y": 0.0,
+       "y": 0,
        "w": 2.168022,
        "h": 0.016,
        "region": "roof-old",
@@ -1732,7 +1732,7 @@
        "filled": true,
        "tone": 0.32,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.016,
        "w": 0.42,
        "h": 0.01,
@@ -1762,7 +1762,7 @@
        "filled": true,
        "tone": 0.32,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.016,
        "w": 0.36,
        "h": 0.01,
@@ -1777,7 +1777,7 @@
        "filled": true,
        "tone": 0.32,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.016,
        "w": 0.5,
        "h": 0.01,
@@ -1885,7 +1885,7 @@
        "points": [
         [
          -0.0635,
-         -0.0
+         0
         ],
         [
          -0.061336,
@@ -1908,7 +1908,7 @@
          -0.061336
         ],
         [
-         0.0,
+         0,
          -0.0635
         ],
         [
@@ -1933,7 +1933,7 @@
         ],
         [
          0.0635,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -1949,7 +1949,7 @@
        "tone": 0.3,
        "kind": "rect",
        "x": -0.0615,
-       "y": 0.0,
+       "y": 0,
        "w": 0.123,
        "h": 0.01,
        "region": "moss",
@@ -1963,7 +1963,7 @@
        "filled": true,
        "tone": 0.48,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.038,
        "w": 2.27,
        "h": 0.076,
@@ -2092,8 +2092,8 @@
        "filled": true,
        "tone": 0.4,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.035,
        "ry": 0.035,
        "region": "bike-frame",
@@ -2132,7 +2132,7 @@
        "tone": 0.4,
        "kind": "ellipse",
        "cx": 1.1,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.03,
        "ry": 0.03,
        "region": "bike-frame",
@@ -2216,8 +2216,8 @@
        "kind": "capsule",
        "x0": 0.43,
        "y0": -0.071,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.0095,
        "r1": 0.0095,
        "region": "bike-frame",
@@ -2233,8 +2233,8 @@
        "kind": "capsule",
        "x0": 0.24,
        "y0": 0.449,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.008,
        "r1": 0.008,
        "region": "bike-frame",
@@ -2251,7 +2251,7 @@
        "x0": 0.968,
        "y0": 0.349,
        "x1": 1.1,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0125,
        "r1": 0.0125,
        "region": "bike-frame",
@@ -2267,8 +2267,8 @@
        "kind": "capsule",
        "x0": 0.43,
        "y0": -0.071,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.0095,
        "r1": 0.0095,
        "region": "bike-frame",
@@ -2284,8 +2284,8 @@
        "kind": "capsule",
        "x0": 0.24,
        "y0": 0.449,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.008,
        "r1": 0.008,
        "region": "bike-frame",
@@ -2302,7 +2302,7 @@
        "x0": 0.968,
        "y0": 0.349,
        "x1": 1.1,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0125,
        "r1": 0.0125,
        "region": "bike-frame",
@@ -2467,8 +2467,8 @@
        "kind": "capsule",
        "x0": -0.25,
        "y0": 0.429,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.005,
        "r1": 0.005,
        "region": "bike-frame",
@@ -2501,8 +2501,8 @@
        "kind": "capsule",
        "x0": -0.25,
        "y0": 0.429,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.005,
        "r1": 0.005,
        "region": "bike-frame",
@@ -2704,7 +2704,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -2740,11 +2740,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.67755
         ],
         [
@@ -2780,7 +2780,7 @@
          -0.02415
         ],
         [
-         0.0,
+         0,
          -0.02415
         ]
        ],
@@ -2798,7 +2798,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -2834,11 +2834,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.67755
         ],
         [
@@ -2874,7 +2874,7 @@
          -0.02415
         ],
         [
-         0.0,
+         0,
          -0.02415
         ]
        ],
@@ -2892,7 +2892,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -2928,11 +2928,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.67755
         ],
         [
@@ -2968,7 +2968,7 @@
          -0.02415
         ],
         [
-         0.0,
+         0,
          -0.02415
         ]
        ],
@@ -2986,7 +2986,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -3026,11 +3026,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.67755
         ],
         [
@@ -3070,7 +3070,7 @@
          -0.02415
         ],
         [
-         0.0,
+         0,
          -0.02415
         ]
        ],
@@ -3088,11 +3088,11 @@
        "kind": "poly",
        "points": [
         [
-         -0.0,
+         0,
          0.8
         ],
         [
-         0.0,
+         0,
          -2.4
         ]
        ],
@@ -3102,7 +3102,7 @@
        "id": "moss-edge",
        "bone": "panel-1",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -3123,7 +3123,7 @@
        "id": "graffiti-a",
        "bone": "post-a",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.2,
        "kind": "poly",
@@ -3164,7 +3164,7 @@
        "id": "sticker-a",
        "bone": "post-a",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -3193,7 +3193,7 @@
        "id": "rust-creep-a",
        "bone": "post-a",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "path",
@@ -3204,7 +3204,7 @@
        "id": "wear-top-1",
        "bone": "stand-1",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.8,
        "kind": "poly",
@@ -3225,7 +3225,7 @@
        "id": "depot-tag",
        "bone": "bike",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -3254,7 +3254,7 @@
        "id": "flat-tyre",
        "bone": "bike",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.2,
        "kind": "poly",
@@ -3264,7 +3264,7 @@
          -0.338
         ],
         [
-         0.0,
+         0,
          -0.343
         ],
         [
@@ -3279,7 +3279,7 @@
        "id": "spokes-rear",
        "bone": "bike",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.5,
        "kind": "path",
@@ -3290,7 +3290,7 @@
        "id": "spokes-front",
        "bone": "bike",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.5,
        "kind": "path",
@@ -3301,7 +3301,7 @@
        "id": "litter-edge",
        "bone": "gutter",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -3361,11 +3361,11 @@
        "points": [
         [
          -2.525,
-         0.0
+         0
         ],
         [
          -2.275,
-         0.0
+         0
         ],
         [
          -2.275,
@@ -3689,11 +3689,11 @@
        "points": [
         [
          -0.125,
-         0.0
+         0
         ],
         [
          0.125,
-         0.0
+         0
         ],
         [
          0.125,
@@ -3892,7 +3892,7 @@
          1.650902
         ],
         [
-         0.0,
+         0,
          1.650045
         ],
         [
@@ -3944,7 +3944,7 @@
          2.376358
         ],
         [
-         0.0,
+         0,
          2.377215
         ],
         [
@@ -4017,11 +4017,11 @@
        "points": [
         [
          2.275,
-         0.0
+         0
         ],
         [
          2.525,
-         0.0
+         0
         ],
         [
          2.525,
@@ -4745,11 +4745,11 @@
        "points": [
         [
          2.362,
-         0.0
+         0
         ],
         [
          2.438,
-         0.0
+         0
         ],
         [
          2.438,
@@ -4835,11 +4835,11 @@
        "points": [
         [
          -0.4,
-         0.0
+         0
         ],
         [
          -0.36,
-         0.0
+         0
         ],
         [
          -0.36,
@@ -4925,11 +4925,11 @@
        "points": [
         [
          -0.4,
-         0.0
+         0
         ],
         [
          -0.36,
-         0.0
+         0
         ],
         [
          -0.36,
@@ -5250,7 +5250,7 @@
         ],
         [
          -0.38,
-         1.0
+         1
         ],
         [
          -0.410615,
@@ -5314,7 +5314,7 @@
        "x0": -0.28,
        "y0": 0.99,
        "x1": -0.09,
-       "y1": 1.0,
+       "y1": 1,
        "r0": 0.011,
        "r1": 0.011,
        "region": "bike-frame",
@@ -5348,7 +5348,7 @@
        "x0": -0.48,
        "y0": 0.99,
        "x1": -0.67,
-       "y1": 1.0,
+       "y1": 1,
        "r0": 0.011,
        "r1": 0.011,
        "region": "bike-frame",
@@ -5728,11 +5728,11 @@
        "points": [
         [
          -1.82415,
-         0.0
+         0
         ],
         [
          -1.77585,
-         0.0
+         0
         ],
         [
          -1.77585,
@@ -5770,11 +5770,11 @@
        "points": [
         [
          -0.62415,
-         0.0
+         0
         ],
         [
          -0.57585,
-         0.0
+         0
         ],
         [
          -0.57585,
@@ -5812,11 +5812,11 @@
        "points": [
         [
          0.57585,
-         0.0
+         0
         ],
         [
          0.62415,
-         0.0
+         0
         ],
         [
          0.62415,
@@ -5854,11 +5854,11 @@
        "points": [
         [
          1.77585,
-         0.0
+         0
         ],
         [
          1.82415,
-         0.0
+         0
         ],
         [
          1.82415,
@@ -5896,11 +5896,11 @@
        "points": [
         [
          -2.9,
-         0.0
+         0
         ],
         [
          2.9,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -5909,7 +5909,7 @@
        "id": "sticker-b",
        "bone": "post-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -5938,14 +5938,14 @@
        "id": "graffiti-b",
        "bone": "post-b",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.2,
        "kind": "poly",
        "points": [
         [
          -0.04,
-         1.0
+         1
         ],
         [
          0.035,
@@ -5975,7 +5975,7 @@
        "id": "rust-plate-a",
        "bone": "post-a",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "path",
@@ -5986,7 +5986,7 @@
        "id": "rust-plate-b",
        "bone": "post-b",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "path",
@@ -5997,7 +5997,7 @@
        "id": "rust-plate-c",
        "bone": "post-c",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "path",
@@ -6008,7 +6008,7 @@
        "id": "algae-1",
        "bone": "panel-1",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -6029,7 +6029,7 @@
        "id": "algae-2",
        "bone": "panel-1",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -6050,7 +6050,7 @@
        "id": "algae-3",
        "bone": "panel-2",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -6071,7 +6071,7 @@
        "id": "algae-4",
        "bone": "panel-2",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -6092,7 +6092,7 @@
        "id": "algae-6",
        "bone": "panel-4",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -6113,7 +6113,7 @@
        "id": "algae-7",
        "bone": "panel-4",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -6441,7 +6441,7 @@
        "points": [
         [
          -0.804165,
-         0.0
+         0
         ],
         [
          -0.803599,
@@ -6493,7 +6493,7 @@
         ],
         [
          0.254165,
-         0.0
+         0
         ],
         [
          0.253599,
@@ -7857,7 +7857,7 @@
        "id": "saddle",
        "bone": "bike",
        "role": "body",
-       "z": 6.0,
+       "z": 6,
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
@@ -8859,7 +8859,7 @@
        "id": "screw-11",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
@@ -8873,7 +8873,7 @@
        "id": "screw-12",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
@@ -8887,7 +8887,7 @@
        "id": "screw-13",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
@@ -8901,7 +8901,7 @@
        "id": "screw-21",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
@@ -8915,7 +8915,7 @@
        "id": "screw-22",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
@@ -8929,7 +8929,7 @@
        "id": "screw-23",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
@@ -8943,12 +8943,12 @@
        "id": "screw-31",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
        "cx": -0.943617,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.008,
        "ry": 0.008,
        "region": "glazing-bars"
@@ -8957,12 +8957,12 @@
        "id": "screw-32",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
        "cx": -0.013161,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.008,
        "ry": 0.008,
        "region": "glazing-bars"
@@ -8971,12 +8971,12 @@
        "id": "screw-33",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
        "cx": 0.917296,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.008,
        "ry": 0.008,
        "region": "glazing-bars"
@@ -8985,7 +8985,7 @@
        "id": "screw-41",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
@@ -8999,7 +8999,7 @@
        "id": "screw-42",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
@@ -9013,7 +9013,7 @@
        "id": "screw-43",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
@@ -9027,7 +9027,7 @@
        "id": "screw-51",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
@@ -9041,7 +9041,7 @@
        "id": "screw-52",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
@@ -9055,7 +9055,7 @@
        "id": "screw-53",
        "bone": "beam-b",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": true,
        "tone": 0.25,
        "kind": "ellipse",
@@ -9154,7 +9154,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.125,
        "w": 0.015,
        "h": 0.25,
@@ -9169,7 +9169,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 2.108022,
        "h": 0.12,
@@ -9214,7 +9214,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.125,
        "w": 0.015,
        "h": 0.25,
@@ -9229,7 +9229,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 2.108022,
        "h": 0.12,
@@ -9274,7 +9274,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.125,
        "w": 0.015,
        "h": 0.25,
@@ -9289,7 +9289,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 2.108022,
        "h": 0.12,
@@ -9365,7 +9365,7 @@
        "tone": 0.76,
        "kind": "rect",
        "x": -0.03,
-       "y": 0.0,
+       "y": 0,
        "w": 2.168022,
        "h": 0.016,
        "region": "roof-old",
@@ -9380,7 +9380,7 @@
        "tone": 0.76,
        "kind": "rect",
        "x": -0.03,
-       "y": 0.0,
+       "y": 0,
        "w": 2.168022,
        "h": 0.016,
        "region": "roof-old",
@@ -9395,7 +9395,7 @@
        "tone": 0.9,
        "kind": "rect",
        "x": -0.03,
-       "y": 0.0,
+       "y": 0,
        "w": 2.168022,
        "h": 0.016,
        "region": "roof-new",
@@ -9410,7 +9410,7 @@
        "tone": 0.76,
        "kind": "rect",
        "x": -0.03,
-       "y": 0.0,
+       "y": 0,
        "w": 2.168022,
        "h": 0.016,
        "region": "roof-old",
@@ -9424,7 +9424,7 @@
        "filled": true,
        "tone": 0.32,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.016,
        "w": 0.42,
        "h": 0.01,
@@ -9454,7 +9454,7 @@
        "filled": true,
        "tone": 0.32,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.016,
        "w": 0.36,
        "h": 0.01,
@@ -9469,7 +9469,7 @@
        "filled": true,
        "tone": 0.32,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.016,
        "w": 0.5,
        "h": 0.01,
@@ -9577,7 +9577,7 @@
        "points": [
         [
          -0.0635,
-         -0.0
+         0
         ],
         [
          -0.061336,
@@ -9600,7 +9600,7 @@
          -0.061336
         ],
         [
-         0.0,
+         0,
          -0.0635
         ],
         [
@@ -9625,7 +9625,7 @@
         ],
         [
          0.0635,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -9640,7 +9640,7 @@
        "filled": true,
        "tone": 0.48,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.038,
        "w": 2.27,
        "h": 0.076,
@@ -9769,8 +9769,8 @@
        "filled": true,
        "tone": 0.4,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.035,
        "ry": 0.035,
        "region": "bike-frame",
@@ -9809,7 +9809,7 @@
        "tone": 0.4,
        "kind": "ellipse",
        "cx": 1.1,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.03,
        "ry": 0.03,
        "region": "bike-frame",
@@ -9893,8 +9893,8 @@
        "kind": "capsule",
        "x0": 0.43,
        "y0": -0.071,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.0095,
        "r1": 0.0095,
        "region": "bike-frame",
@@ -9910,8 +9910,8 @@
        "kind": "capsule",
        "x0": 0.24,
        "y0": 0.449,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.008,
        "r1": 0.008,
        "region": "bike-frame",
@@ -9928,7 +9928,7 @@
        "x0": 0.968,
        "y0": 0.349,
        "x1": 1.1,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0125,
        "r1": 0.0125,
        "region": "bike-frame",
@@ -9944,8 +9944,8 @@
        "kind": "capsule",
        "x0": 0.43,
        "y0": -0.071,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.0095,
        "r1": 0.0095,
        "region": "bike-frame",
@@ -9961,8 +9961,8 @@
        "kind": "capsule",
        "x0": 0.24,
        "y0": 0.449,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.008,
        "r1": 0.008,
        "region": "bike-frame",
@@ -9979,7 +9979,7 @@
        "x0": 0.968,
        "y0": 0.349,
        "x1": 1.1,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0125,
        "r1": 0.0125,
        "region": "bike-frame",
@@ -10144,8 +10144,8 @@
        "kind": "capsule",
        "x0": -0.25,
        "y0": 0.429,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.0075,
        "r1": 0.0075,
        "region": "bike-frame",
@@ -10178,8 +10178,8 @@
        "kind": "capsule",
        "x0": -0.25,
        "y0": 0.429,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.0075,
        "r1": 0.0075,
        "region": "bike-frame",
@@ -10347,7 +10347,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -10375,11 +10375,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.67755
         ],
         [
@@ -10407,7 +10407,7 @@
          -0.02415
         ],
         [
-         0.0,
+         0,
          -0.02415
         ]
        ],
@@ -10425,7 +10425,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -10453,11 +10453,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.67755
         ],
         [
@@ -10485,7 +10485,7 @@
          -0.02415
         ],
         [
-         0.0,
+         0,
          -0.02415
         ]
        ],
@@ -10503,7 +10503,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -10531,11 +10531,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.67755
         ],
         [
@@ -10563,7 +10563,7 @@
          -0.02415
         ],
         [
-         0.0,
+         0,
          -0.02415
         ]
        ],
@@ -10581,7 +10581,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -10613,11 +10613,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.67755
         ],
         [
@@ -10649,7 +10649,7 @@
          -0.02415
         ],
         [
-         0.0,
+         0,
          -0.02415
         ]
        ],
@@ -10667,11 +10667,11 @@
        "kind": "poly",
        "points": [
         [
-         -0.0,
+         0,
          0.8
         ],
         [
-         0.0,
+         0,
          -2.4
         ]
        ],
@@ -10681,7 +10681,7 @@
        "id": "moss-edge",
        "bone": "panel-1",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -10702,7 +10702,7 @@
        "id": "graffiti-a",
        "bone": "post-a",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.2,
        "kind": "poly",
@@ -10731,7 +10731,7 @@
        "id": "flat-tyre",
        "bone": "bike",
        "role": "detail",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.2,
        "kind": "poly",
@@ -10752,7 +10752,7 @@
        "id": "spokes-rear",
        "bone": "bike",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.5,
        "kind": "path",
@@ -10763,7 +10763,7 @@
        "id": "spokes-front",
        "bone": "bike",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.5,
        "kind": "path",
@@ -10813,11 +10813,11 @@
        "points": [
         [
          -2.525,
-         0.0
+         0
         ],
         [
          -2.275,
-         0.0
+         0
         ],
         [
          -2.275,
@@ -11021,11 +11021,11 @@
        "points": [
         [
          -0.125,
-         0.0
+         0
         ],
         [
          0.125,
-         0.0
+         0
         ],
         [
          0.125,
@@ -11104,7 +11104,7 @@
          1.650902
         ],
         [
-         0.0,
+         0,
          1.650045
         ],
         [
@@ -11156,7 +11156,7 @@
          2.376358
         ],
         [
-         0.0,
+         0,
          2.377215
         ],
         [
@@ -11229,11 +11229,11 @@
        "points": [
         [
          2.275,
-         0.0
+         0
         ],
         [
          2.525,
-         0.0
+         0
         ],
         [
          2.525,
@@ -11837,11 +11837,11 @@
        "points": [
         [
          2.362,
-         0.0
+         0
         ],
         [
          2.438,
-         0.0
+         0
         ],
         [
          2.438,
@@ -11927,11 +11927,11 @@
        "points": [
         [
          -0.4,
-         0.0
+         0
         ],
         [
          -0.36,
-         0.0
+         0
         ],
         [
          -0.36,
@@ -12017,11 +12017,11 @@
        "points": [
         [
          -0.4,
-         0.0
+         0
         ],
         [
          -0.36,
-         0.0
+         0
         ],
         [
          -0.36,
@@ -12342,7 +12342,7 @@
         ],
         [
          -0.38,
-         1.0
+         1
         ],
         [
          -0.410615,
@@ -12406,7 +12406,7 @@
        "x0": -0.28,
        "y0": 0.99,
        "x1": -0.09,
-       "y1": 1.0,
+       "y1": 1,
        "r0": 0.011,
        "r1": 0.011,
        "region": "bike-frame",
@@ -12440,7 +12440,7 @@
        "x0": -0.48,
        "y0": 0.99,
        "x1": -0.67,
-       "y1": 1.0,
+       "y1": 1,
        "r0": 0.011,
        "r1": 0.011,
        "region": "bike-frame",
@@ -12786,11 +12786,11 @@
        "points": [
         [
          -1.82415,
-         0.0
+         0
         ],
         [
          -1.77585,
-         0.0
+         0
         ],
         [
          -1.77585,
@@ -12828,11 +12828,11 @@
        "points": [
         [
          -0.62415,
-         0.0
+         0
         ],
         [
          -0.57585,
-         0.0
+         0
         ],
         [
          -0.57585,
@@ -12870,11 +12870,11 @@
        "points": [
         [
          0.57585,
-         0.0
+         0
         ],
         [
          0.62415,
-         0.0
+         0
         ],
         [
          0.62415,
@@ -12912,11 +12912,11 @@
        "points": [
         [
          1.77585,
-         0.0
+         0
         ],
         [
          1.82415,
-         0.0
+         0
         ],
         [
          1.82415,
@@ -12954,11 +12954,11 @@
        "points": [
         [
          -2.9,
-         0.0
+         0
         ],
         [
          2.9,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -12967,14 +12967,14 @@
        "id": "graffiti-b",
        "bone": "post-b",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.2,
        "kind": "poly",
        "points": [
         [
          -0.04,
-         1.0
+         1
         ],
         [
          0.035,
@@ -13303,7 +13303,7 @@
        "points": [
         [
          -0.804165,
-         0.0
+         0
         ],
         [
          -0.803599,
@@ -13355,7 +13355,7 @@
         ],
         [
          0.254165,
-         0.0
+         0
         ],
         [
          0.253599,
@@ -14689,7 +14689,7 @@
        "id": "saddle",
        "bone": "bike",
        "role": "body",
-       "z": 6.0,
+       "z": 6,
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
@@ -15730,7 +15730,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.125,
        "w": 0.03,
        "h": 0.25,
@@ -15745,7 +15745,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 2.108022,
        "h": 0.12,
@@ -15790,7 +15790,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.125,
        "w": 0.03,
        "h": 0.25,
@@ -15805,7 +15805,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 2.108022,
        "h": 0.12,
@@ -15850,7 +15850,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.125,
        "w": 0.03,
        "h": 0.25,
@@ -15865,7 +15865,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 2.108022,
        "h": 0.12,
@@ -15941,7 +15941,7 @@
        "tone": 0.76,
        "kind": "rect",
        "x": -0.03,
-       "y": 0.0,
+       "y": 0,
        "w": 2.168022,
        "h": 0.016,
        "region": "roof-old",
@@ -15956,7 +15956,7 @@
        "tone": 0.76,
        "kind": "rect",
        "x": -0.03,
-       "y": 0.0,
+       "y": 0,
        "w": 2.168022,
        "h": 0.016,
        "region": "roof-old",
@@ -15971,7 +15971,7 @@
        "tone": 0.9,
        "kind": "rect",
        "x": -0.03,
-       "y": 0.0,
+       "y": 0,
        "w": 2.168022,
        "h": 0.016,
        "region": "roof-new",
@@ -15986,7 +15986,7 @@
        "tone": 0.76,
        "kind": "rect",
        "x": -0.03,
-       "y": 0.0,
+       "y": 0,
        "w": 2.168022,
        "h": 0.016,
        "region": "roof-old",
@@ -16078,7 +16078,7 @@
        "points": [
         [
          -0.0635,
-         -0.0
+         0
         ],
         [
          -0.054993,
@@ -16089,7 +16089,7 @@
          -0.054993
         ],
         [
-         0.0,
+         0,
          -0.0635
         ],
         [
@@ -16102,7 +16102,7 @@
         ],
         [
          0.0635,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -16117,7 +16117,7 @@
        "filled": true,
        "tone": 0.48,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.038,
        "w": 2.27,
        "h": 0.076,
@@ -16316,8 +16316,8 @@
        "kind": "capsule",
        "x0": 0.43,
        "y0": -0.071,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.015,
        "r1": 0.015,
        "region": "bike-frame",
@@ -16333,8 +16333,8 @@
        "kind": "capsule",
        "x0": 0.24,
        "y0": 0.449,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.015,
        "r1": 0.015,
        "region": "bike-frame",
@@ -16351,7 +16351,7 @@
        "x0": 0.968,
        "y0": 0.349,
        "x1": 1.1,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.015,
        "r1": 0.015,
        "region": "bike-frame",
@@ -16367,8 +16367,8 @@
        "kind": "capsule",
        "x0": 0.43,
        "y0": -0.071,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.015,
        "r1": 0.015,
        "region": "bike-frame",
@@ -16384,8 +16384,8 @@
        "kind": "capsule",
        "x0": 0.24,
        "y0": 0.449,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.015,
        "r1": 0.015,
        "region": "bike-frame",
@@ -16402,7 +16402,7 @@
        "x0": 0.968,
        "y0": 0.349,
        "x1": 1.1,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.015,
        "r1": 0.015,
        "region": "bike-frame",
@@ -16531,8 +16531,8 @@
        "kind": "capsule",
        "x0": -0.25,
        "y0": 0.429,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.015,
        "r1": 0.015,
        "region": "bike-frame",
@@ -16580,7 +16580,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -16608,11 +16608,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.67755
         ],
         [
@@ -16640,7 +16640,7 @@
          -0.02415
         ],
         [
-         0.0,
+         0,
          -0.02415
         ]
        ],
@@ -16658,7 +16658,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -16686,11 +16686,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.67755
         ],
         [
@@ -16718,7 +16718,7 @@
          -0.02415
         ],
         [
-         0.0,
+         0,
          -0.02415
         ]
        ],
@@ -16736,7 +16736,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -16764,11 +16764,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.67755
         ],
         [
@@ -16796,7 +16796,7 @@
          -0.02415
         ],
         [
-         0.0,
+         0,
          -0.02415
         ]
        ],
@@ -16814,7 +16814,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -16842,11 +16842,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.67755
         ],
         [
@@ -16874,7 +16874,7 @@
          -0.02415
         ],
         [
-         0.0,
+         0,
          -0.02415
         ]
        ],
@@ -16892,11 +16892,11 @@
        "kind": "poly",
        "points": [
         [
-         -0.0,
+         0,
          0.8
         ],
         [
-         0.0,
+         0,
          -2.4
         ]
        ],
@@ -16906,7 +16906,7 @@
        "id": "moss-edge",
        "bone": "panel-1",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -16927,7 +16927,7 @@
        "id": "spokes-rear",
        "bone": "bike",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.5,
        "kind": "path",
@@ -16938,7 +16938,7 @@
        "id": "spokes-front",
        "bone": "bike",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.5,
        "kind": "path",
@@ -16988,11 +16988,11 @@
        "points": [
         [
          -2.525,
-         0.0
+         0
         ],
         [
          -2.275,
-         0.0
+         0
         ],
         [
          -2.275,
@@ -17196,11 +17196,11 @@
        "points": [
         [
          -0.125,
-         0.0
+         0
         ],
         [
          0.125,
-         0.0
+         0
         ],
         [
          0.125,
@@ -17279,7 +17279,7 @@
          1.650902
         ],
         [
-         0.0,
+         0,
          1.650045
         ],
         [
@@ -17331,7 +17331,7 @@
          2.376358
         ],
         [
-         0.0,
+         0,
          2.377215
         ],
         [
@@ -17404,11 +17404,11 @@
        "points": [
         [
          2.275,
-         0.0
+         0
         ],
         [
          2.525,
-         0.0
+         0
         ],
         [
          2.525,
@@ -17972,11 +17972,11 @@
        "points": [
         [
          2.362,
-         0.0
+         0
         ],
         [
          2.438,
-         0.0
+         0
         ],
         [
          2.438,
@@ -18062,11 +18062,11 @@
        "points": [
         [
          -0.4,
-         0.0
+         0
         ],
         [
          -0.36,
-         0.0
+         0
         ],
         [
          -0.36,
@@ -18092,11 +18092,11 @@
        "points": [
         [
          -0.4,
-         0.0
+         0
         ],
         [
          -0.36,
-         0.0
+         0
         ],
         [
          -0.36,
@@ -18357,7 +18357,7 @@
         ],
         [
          -0.38,
-         1.0
+         1
         ],
         [
          -0.410615,
@@ -18421,7 +18421,7 @@
        "x0": -0.28,
        "y0": 0.99,
        "x1": -0.09,
-       "y1": 1.0,
+       "y1": 1,
        "r0": 0.015,
        "r1": 0.015,
        "region": "bike-frame",
@@ -18438,7 +18438,7 @@
        "x0": -0.48,
        "y0": 0.99,
        "x1": -0.67,
-       "y1": 1.0,
+       "y1": 1,
        "r0": 0.015,
        "r1": 0.015,
        "region": "bike-frame",
@@ -18549,11 +18549,11 @@
        "points": [
         [
          -1.82415,
-         0.0
+         0
         ],
         [
          -1.77585,
-         0.0
+         0
         ],
         [
          -1.77585,
@@ -18591,11 +18591,11 @@
        "points": [
         [
          -0.62415,
-         0.0
+         0
         ],
         [
          -0.57585,
-         0.0
+         0
         ],
         [
          -0.57585,
@@ -18633,11 +18633,11 @@
        "points": [
         [
          0.57585,
-         0.0
+         0
         ],
         [
          0.62415,
-         0.0
+         0
         ],
         [
          0.62415,
@@ -18675,11 +18675,11 @@
        "points": [
         [
          1.77585,
-         0.0
+         0
         ],
         [
          1.82415,
-         0.0
+         0
         ],
         [
          1.82415,
@@ -18717,11 +18717,11 @@
        "points": [
         [
          -2.9,
-         0.0
+         0
         ],
         [
          2.9,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -19037,7 +19037,7 @@
        "points": [
         [
          -0.804165,
-         0.0
+         0
         ],
         [
          -0.803599,
@@ -19089,7 +19089,7 @@
         ],
         [
          0.254165,
-         0.0
+         0
         ],
         [
          0.253599,
@@ -20163,7 +20163,7 @@
        "id": "saddle",
        "bone": "bike",
        "role": "body",
-       "z": 6.0,
+       "z": 6,
        "filled": true,
        "tone": 0.2,
        "kind": "poly",
@@ -20948,7 +20948,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.125,
        "w": 0.1,
        "h": 0.25,
@@ -20963,7 +20963,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 2.108022,
        "h": 0.18,
@@ -21008,7 +21008,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.125,
        "w": 0.1,
        "h": 0.25,
@@ -21023,7 +21023,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 2.108022,
        "h": 0.18,
@@ -21068,7 +21068,7 @@
        "filled": true,
        "tone": 0.4,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.125,
        "w": 0.1,
        "h": 0.25,
@@ -21083,7 +21083,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.06,
        "w": 2.108022,
        "h": 0.18,
@@ -21113,8 +21113,8 @@
        "filled": true,
        "tone": 0.76,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 2.138022,
        "h": 0.016,
        "region": "roof-old",
@@ -21128,8 +21128,8 @@
        "filled": true,
        "tone": 0.76,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 2.138022,
        "h": 0.016,
        "region": "roof-old",
@@ -21139,12 +21139,12 @@
        "id": "panel-3",
        "bone": "panel-3",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.9,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 2.138022,
        "h": 0.016,
        "region": "roof-new",
@@ -21158,8 +21158,8 @@
        "filled": true,
        "tone": 0.76,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 2.138022,
        "h": 0.016,
        "region": "roof-old",
@@ -21176,7 +21176,7 @@
        "points": [
         [
          -0.104,
-         0.0
+         0
         ],
         [
          -0.104,
@@ -21188,7 +21188,7 @@
         ],
         [
          0.066,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -21203,7 +21203,7 @@
        "filled": true,
        "tone": 0.48,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.038,
        "w": 2.27,
        "h": 0.076,
@@ -21319,8 +21319,8 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.2,
@@ -21352,7 +21352,7 @@
         ],
         [
          1.1,
-         0.0
+         0
         ],
         [
          0.43,
@@ -21394,6 +21394,23 @@
        "material": "bike-steel"
       },
       {
+       "id": "kickstand",
+       "bone": "bike",
+       "role": "body",
+       "z": 5.365,
+       "filled": true,
+       "tone": 0.35,
+       "region": "bike-frame",
+       "material": "bike-steel",
+       "kind": "capsule",
+       "x0": 0.47,
+       "y0": -0.05,
+       "x1": 0.29,
+       "y1": -0.3135,
+       "r0": 0.0375,
+       "r1": 0.0375
+      },
+      {
        "id": "stand-1-u",
        "bone": "stand-1",
        "role": "body",
@@ -21403,7 +21420,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -21423,11 +21440,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.65065
         ],
         [
@@ -21447,7 +21464,7 @@
          -0.05105
         ],
         [
-         0.0,
+         0,
          -0.05105
         ]
        ],
@@ -21465,7 +21482,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -21485,11 +21502,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.65065
         ],
         [
@@ -21509,7 +21526,7 @@
          -0.05105
         ],
         [
-         0.0,
+         0,
          -0.05105
         ]
        ],
@@ -21527,7 +21544,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -21547,11 +21564,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.65065
         ],
         [
@@ -21571,7 +21588,7 @@
          -0.05105
         ],
         [
-         0.0,
+         0,
          -0.05105
         ]
        ],
@@ -21589,7 +21606,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.02415
         ],
         [
@@ -21609,11 +21626,11 @@
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.72585
         ],
         [
-         0.0,
+         0,
          -0.65065
         ],
         [
@@ -21633,7 +21650,7 @@
          -0.05105
         ],
         [
-         0.0,
+         0,
          -0.05105
         ]
        ],
@@ -21651,11 +21668,11 @@
        "kind": "poly",
        "points": [
         [
-         -0.0,
+         0,
          0.8
         ],
         [
-         0.0,
+         0,
          -2.4
         ]
        ],
@@ -21665,7 +21682,7 @@
        "id": "moss-edge",
        "bone": "panel-1",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
@@ -21686,7 +21703,7 @@
        "id": "bar-line",
        "bone": "beam-b",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.6,
        "kind": "poly",
@@ -21707,7 +21724,7 @@
        "id": "spokes-rear",
        "bone": "bike",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.5,
        "kind": "path",
@@ -21718,7 +21735,7 @@
        "id": "spokes-front",
        "bone": "bike",
        "role": "texture",
-       "z": 9.0,
+       "z": 9,
        "filled": false,
        "tone": 0.5,
        "kind": "path",
@@ -21768,11 +21785,11 @@
        "points": [
         [
          -2.525,
-         0.0
+         0
         ],
         [
          -2.275,
-         0.0
+         0
         ],
         [
          -2.275,
@@ -21976,11 +21993,11 @@
        "points": [
         [
          -0.125,
-         0.0
+         0
         ],
         [
          0.125,
-         0.0
+         0
         ],
         [
          0.125,
@@ -22059,7 +22076,7 @@
          1.644977
         ],
         [
-         0.0,
+         0,
          1.643911
         ],
         [
@@ -22111,7 +22128,7 @@
          2.382282
         ],
         [
-         0.0,
+         0,
          2.383348
         ],
         [
@@ -22184,11 +22201,11 @@
        "points": [
         [
          2.275,
-         0.0
+         0
         ],
         [
          2.525,
-         0.0
+         0
         ],
         [
          2.525,
@@ -22395,11 +22412,11 @@
          2.397671
         ],
         [
-         0.0,
+         0,
          2.397671
         ],
         [
-         0.0,
+         0,
          2.599951
         ],
         [
@@ -22421,7 +22438,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          2.397671
         ],
         [
@@ -22433,7 +22450,7 @@
          2.599951
         ],
         [
-         0.0,
+         0,
          2.599951
         ]
        ],
@@ -22602,11 +22619,11 @@
        "points": [
         [
          2.362,
-         0.0
+         0
         ],
         [
          2.438,
-         0.0
+         0
         ],
         [
          2.438,
@@ -22662,11 +22679,11 @@
        "points": [
         [
          -0.4175,
-         0.0
+         0
         ],
         [
          -0.3425,
-         0.0
+         0
         ],
         [
          -0.3425,
@@ -22692,11 +22709,11 @@
        "points": [
         [
          -0.4175,
-         0.0
+         0
         ],
         [
          -0.3425,
-         0.0
+         0
         ],
         [
          -0.3425,
@@ -22837,6 +22854,23 @@
        "material": "bike-steel"
       },
       {
+       "id": "kickstand",
+       "bone": "bike",
+       "role": "body",
+       "z": 4.935,
+       "filled": true,
+       "tone": 0.35,
+       "region": "bike-frame",
+       "material": "bike-steel",
+       "kind": "capsule",
+       "x0": -0.35,
+       "y0": 0.301,
+       "x1": -0.2,
+       "y1": 0.0375,
+       "r0": 0.0375,
+       "r1": 0.0375
+      },
+      {
        "id": "stand-1",
        "bone": "stand-1",
        "role": "body",
@@ -22847,11 +22881,11 @@
        "points": [
         [
          -1.8376,
-         0.0
+         0
         ],
         [
          -1.7624,
-         0.0
+         0
         ],
         [
          -1.7624,
@@ -22889,11 +22923,11 @@
        "points": [
         [
          -0.6376,
-         0.0
+         0
         ],
         [
          -0.5624,
-         0.0
+         0
         ],
         [
          -0.5624,
@@ -22931,11 +22965,11 @@
        "points": [
         [
          0.5624,
-         0.0
+         0
         ],
         [
          0.6376,
-         0.0
+         0
         ],
         [
          0.6376,
@@ -22973,11 +23007,11 @@
        "points": [
         [
          1.7624,
-         0.0
+         0
         ],
         [
          1.8376,
-         0.0
+         0
         ],
         [
          1.8376,
@@ -23015,11 +23049,11 @@
        "points": [
         [
          -2.9,
-         0.0
+         0
         ],
         [
          2.9,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -23165,11 +23199,11 @@
         ],
         [
          1.069427,
-         0.0
+         0
         ],
         [
          -1.061853,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -23187,11 +23221,11 @@
        "points": [
         [
          -1.061853,
-         0.0
+         0
         ],
         [
          1.069427,
-         0.0
+         0
         ],
         [
          1.069427,
@@ -23590,6 +23624,23 @@
        "r1": 0.0375,
        "region": "bike-frame",
        "material": "bike-steel"
+      },
+      {
+       "id": "kickstand",
+       "bone": "bike",
+       "role": "body",
+       "z": 5.316,
+       "filled": true,
+       "tone": 0.35,
+       "region": "bike-frame",
+       "material": "bike-steel",
+       "kind": "capsule",
+       "x0": -0.08,
+       "y0": -0.35,
+       "x1": -0.26,
+       "y1": -0.2,
+       "r0": 0.0375,
+       "r1": 0.0375
       },
       {
        "id": "stand-1",
@@ -24067,8 +24118,8 @@
     },
     "decisions": {
      "silhouette": {
-      "en": "Generalised for 75 mm: posts, 100 mm base plates, a 180 mm beam band taking in the purlins, braces 75 mm, the four sheets with closed joints, the gutter block and the downpipe; stands as 75 mm tube bands; the gutter as a 170 x 120 mm block; the bike as two 75 mm wheel rings with a frame plate, saddle and bars of 75 mm.",
-      "de": "Generalisiert für 75 mm: Stützen, 100-mm-Fußplatten, ein 180-mm-Trägerband mit den Pfetten, Kopfbänder 75 mm, die vier Platten mit geschlossenen Fugen, der Rinnenblock und das Fallrohr; Bügel als 75-mm-Rohrbänder; die Rinne als Block 170 x 120 mm; das Rad als zwei 75-mm-Laufradringe mit Rahmenplatte, Sattel und Lenker von 75 mm."
+      "en": "Generalised for 75 mm: posts, 100 mm base plates, a 180 mm beam band taking in the purlins, braces 75 mm, the four sheets with closed joints, the gutter block and the downpipe; stands as 75 mm tube bands; the gutter as a 170 x 120 mm block; the bike as two 75 mm wheel rings with a frame plate, saddle and bars of 75 mm. The side stand of the bike is a 75 mm band: it carries the third contact of the bike.",
+      "de": "Generalisiert für 75 mm: Stützen, 100-mm-Fußplatten, ein 180-mm-Trägerband mit den Pfetten, Kopfbänder 75 mm, die vier Platten mit geschlossenen Fugen, der Rinnenblock und das Fallrohr; Bügel als 75-mm-Rohrbänder; die Rinne als Block 170 x 120 mm; das Rad als zwei 75-mm-Laufradringe mit Rahmenplatte, Sattel und Lenker von 75 mm. Der Seitenständer des Rads ist ein 75-mm-Band: er trägt den dritten Aufstandspunkt des Rads."
      },
      "retained": {
       "en": "Outer size 2.25 x 2.62 x 5.04 m, three posts, four stands, one bike.",
@@ -24167,11 +24218,11 @@
        "points": [
         [
          -0.85,
-         0.0
+         0
         ],
         [
          -0.75,
-         0.0
+         0
         ],
         [
          -0.75,
@@ -24195,11 +24246,11 @@
        "points": [
         [
          -0.325,
-         0.0
+         0
         ],
         [
          0.425,
-         0.0
+         0
         ],
         [
          0.425,
@@ -24253,11 +24304,11 @@
        "points": [
         [
          -2.45,
-         0.0
+         0
         ],
         [
          -2.35,
-         0.0
+         0
         ],
         [
          -2.35,
@@ -24281,11 +24332,11 @@
        "points": [
         [
          -0.05,
-         0.0
+         0
         ],
         [
          0.05,
-         0.0
+         0
         ],
         [
          0.05,
@@ -24309,11 +24360,11 @@
        "points": [
         [
          2.35,
-         0.0
+         0
         ],
         [
          2.45,
-         0.0
+         0
         ],
         [
          2.45,
@@ -24396,7 +24447,7 @@
     "thermal": {
      "regions": {
       "steel-frame": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.35
       },
       "base-fixings": {
@@ -24408,23 +24459,23 @@
        }
       },
       "roof-old": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 1.0
+       "exposedFraction": 1,
+       "sunlitFraction": 1
       },
       "roof-new": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 1.0
+       "exposedFraction": 1,
+       "sunlitFraction": 1
       },
       "moss": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.6
       },
       "glazing-bars": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 1.0
+       "exposedFraction": 1,
+       "sunlitFraction": 1
       },
       "rainwater-goods": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.5
       },
       "bike-stands": {
@@ -24436,7 +24487,7 @@
        }
       },
       "bike-frame": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       },
       "bike-rubber": {
@@ -24464,7 +24515,7 @@
     },
     "bones": {
      "panel-3": {
-      "dx": 1.0
+      "dx": 1
      }
     },
     "ground": "authored",
@@ -24487,7 +24538,7 @@
     "thermal": {
      "regions": {
       "steel-frame": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.35
       },
       "base-fixings": {
@@ -24499,23 +24550,23 @@
        }
       },
       "roof-old": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 1.0
+       "exposedFraction": 1,
+       "sunlitFraction": 1
       },
       "roof-new": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 1.0
+       "exposedFraction": 1,
+       "sunlitFraction": 1
       },
       "moss": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.6
       },
       "glazing-bars": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 1.0
+       "exposedFraction": 1,
+       "sunlitFraction": 1
       },
       "rainwater-goods": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.5
       },
       "bike-stands": {
@@ -24527,7 +24578,7 @@
        }
       },
       "bike-frame": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       },
       "bike-rubber": {
@@ -24599,7 +24650,7 @@
     "thermal": {
      "regions": {
       "steel-frame": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.35
       },
       "base-fixings": {
@@ -24611,23 +24662,23 @@
        }
       },
       "roof-old": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 1.0
+       "exposedFraction": 1,
+       "sunlitFraction": 1
       },
       "roof-new": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 1.0
+       "exposedFraction": 1,
+       "sunlitFraction": 1
       },
       "moss": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.6
       },
       "glazing-bars": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 1.0
+       "exposedFraction": 1,
+       "sunlitFraction": 1
       },
       "rainwater-goods": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.5
       },
       "bike-stands": {
@@ -24639,7 +24690,7 @@
        }
       },
       "bike-frame": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.15
       },
       "bike-rubber": {
@@ -24743,12 +24794,12 @@
     "thermal": {
      "regions": {
       "steel-frame": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "base-fixings": {
        "exposedFraction": 0.75,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.25,
         "tempC": 1
@@ -24756,7 +24807,7 @@
       },
       "roof-old": {
        "exposedFraction": 0.1,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.9,
         "tempC": 0
@@ -24764,7 +24815,7 @@
       },
       "roof-new": {
        "exposedFraction": 0.1,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.9,
         "tempC": 0
@@ -24772,7 +24823,7 @@
       },
       "moss": {
        "exposedFraction": 0.1,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.9,
         "tempC": 0
@@ -24780,31 +24831,31 @@
       },
       "glazing-bars": {
        "exposedFraction": 0.3,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.7,
         "tempC": 0
        }
       },
       "rainwater-goods": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "bike-stands": {
        "exposedFraction": 0.98,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.02,
         "tempC": 1
        }
       },
       "bike-frame": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "bike-rubber": {
        "exposedFraction": 0.97,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.03,
         "tempC": 1
@@ -25425,7 +25476,7 @@
      "areaM2": 16.326,
      "characteristicLengthM": 2.1,
      "geometry": "horizontal-plate-up",
-     "skyViewFactor": 1.0,
+     "skyViewFactor": 1,
      "layers": [],
      "heatCapacityJM2K": 1588,
      "source": "authored-estimate",
@@ -25443,7 +25494,7 @@
      "areaM2": 5.442,
      "characteristicLengthM": 2.1,
      "geometry": "horizontal-plate-up",
-     "skyViewFactor": 1.0,
+     "skyViewFactor": 1,
      "layers": [],
      "heatCapacityJM2K": 1588,
      "source": "authored-estimate",
@@ -25479,7 +25530,7 @@
      "areaM2": 1.985,
      "characteristicLengthM": 0.06,
      "geometry": "horizontal-plate-up",
-     "skyViewFactor": 1.0,
+     "skyViewFactor": 1,
      "layers": [],
      "heatCapacityJM2K": 4915,
      "source": "authored-estimate",
@@ -25614,8 +25665,8 @@
       "transform": {
        "translation": [
         1.1575,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -25634,8 +25685,8 @@
       "transform": {
        "translation": [
         0.0075,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -25670,7 +25721,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.09,
        0.09
       ]
@@ -25706,7 +25757,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.09,
        -0.09
       ]
@@ -25742,7 +25793,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.09,
        0.09
       ]
@@ -25778,7 +25829,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.09,
        -0.09
       ]
@@ -25798,8 +25849,8 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -25834,9 +25885,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -25854,8 +25905,8 @@
       "transform": {
        "translation": [
         1.1575,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -25874,8 +25925,8 @@
       "transform": {
        "translation": [
         0.0075,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -25910,7 +25961,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.09,
        0.09
       ]
@@ -25946,7 +25997,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.09,
        -0.09
       ]
@@ -25982,7 +26033,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.09,
        0.09
       ]
@@ -26018,7 +26069,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.09,
        -0.09
       ]
@@ -26038,8 +26089,8 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -26074,9 +26125,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -26094,8 +26145,8 @@
       "transform": {
        "translation": [
         1.1575,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -26114,8 +26165,8 @@
       "transform": {
        "translation": [
         0.0075,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -26150,7 +26201,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.09,
        0.09
       ]
@@ -26186,7 +26237,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.09,
        -0.09
       ]
@@ -26222,7 +26273,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.09,
        0.09
       ]
@@ -26258,7 +26309,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.09,
        -0.09
       ]
@@ -26278,8 +26329,8 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -26314,9 +26365,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -26329,13 +26380,13 @@
       "size": [
        0.04,
        0.06,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         0.12,
         0.09,
-        0.0
+        0
        ]
       }
      },
@@ -26349,13 +26400,13 @@
       "size": [
        0.04,
        0.06,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         1.054011,
         0.09,
-        0.0
+        0
        ]
       }
      },
@@ -26369,13 +26420,13 @@
       "size": [
        0.04,
        0.06,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         1.988022,
         0.09,
-        0.0
+        0
        ]
       }
      },
@@ -26395,7 +26446,7 @@
        "translation": [
         1.054011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -26416,7 +26467,7 @@
        "translation": [
         1.054011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -26437,7 +26488,7 @@
        "translation": [
         1.054011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -26458,7 +26509,7 @@
        "translation": [
         1.054011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -26521,7 +26572,7 @@
        "translation": [
         0.18,
         0.021,
-        0.0
+        0
        ]
       },
       "texture": true
@@ -26803,7 +26854,7 @@
       "profile": [
        [
         -0.0635,
-        -0.0
+        0
        ],
        [
         -0.061336,
@@ -26826,7 +26877,7 @@
         -0.061336
        ],
        [
-        0.0,
+        0,
         -0.0635
        ],
        [
@@ -26851,7 +26902,7 @@
        ],
        [
         0.0635,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -26868,13 +26919,13 @@
       "size": [
        0.123,
        0.01,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.005,
-        0.0
+        0
        ]
       },
       "texture": true
@@ -26888,11 +26939,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.038
        ],
        [
@@ -26910,9 +26961,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -26931,7 +26982,7 @@
        "translation": [
         0.7,
         -0.141,
-        0.0
+        0
        ]
       }
      },
@@ -26951,7 +27002,7 @@
        "translation": [
         1.8,
         -0.141,
-        0.0
+        0
        ]
       }
      },
@@ -26964,11 +27015,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -26986,9 +27037,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -27000,11 +27051,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -27022,9 +27073,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.7017,
-       0.0
+       0
       ]
      },
      {
@@ -27036,13 +27087,13 @@
       "kind": "capsule",
       "p0": [
        0.59585,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.68585,
        -0.024115,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27057,12 +27108,12 @@
       "p0": [
        0.68585,
        -0.024115,
-       0.0
+       0
       ],
       "p1": [
        0.751735,
        -0.09,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27077,12 +27128,12 @@
       "p0": [
        0.751735,
        -0.09,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27097,12 +27148,12 @@
       "p0": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27117,12 +27168,12 @@
       "p0": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.751735,
        -0.6117,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27137,12 +27188,12 @@
       "p0": [
        0.751735,
        -0.6117,
-       0.0
+       0
       ],
       "p1": [
        0.68585,
        -0.677585,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27157,12 +27208,12 @@
       "p0": [
        0.68585,
        -0.677585,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.7017,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27199,8 +27250,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -27212,11 +27263,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -27234,9 +27285,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -27248,11 +27299,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -27270,9 +27321,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.7017,
-       0.0
+       0
       ]
      },
      {
@@ -27284,13 +27335,13 @@
       "kind": "capsule",
       "p0": [
        0.59585,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.68585,
        -0.024115,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27305,12 +27356,12 @@
       "p0": [
        0.68585,
        -0.024115,
-       0.0
+       0
       ],
       "p1": [
        0.751735,
        -0.09,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27325,12 +27376,12 @@
       "p0": [
        0.751735,
        -0.09,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27345,12 +27396,12 @@
       "p0": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27365,12 +27416,12 @@
       "p0": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.751735,
        -0.6117,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27385,12 +27436,12 @@
       "p0": [
        0.751735,
        -0.6117,
-       0.0
+       0
       ],
       "p1": [
        0.68585,
        -0.677585,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27405,12 +27456,12 @@
       "p0": [
        0.68585,
        -0.677585,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.7017,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27447,8 +27498,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -27460,11 +27511,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -27482,9 +27533,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -27496,11 +27547,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -27518,9 +27569,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.7017,
-       0.0
+       0
       ]
      },
      {
@@ -27532,13 +27583,13 @@
       "kind": "capsule",
       "p0": [
        0.59585,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.68585,
        -0.024115,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27553,12 +27604,12 @@
       "p0": [
        0.68585,
        -0.024115,
-       0.0
+       0
       ],
       "p1": [
        0.751735,
        -0.09,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27573,12 +27624,12 @@
       "p0": [
        0.751735,
        -0.09,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27593,12 +27644,12 @@
       "p0": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27613,12 +27664,12 @@
       "p0": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.751735,
        -0.6117,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27633,12 +27684,12 @@
       "p0": [
        0.751735,
        -0.6117,
-       0.0
+       0
       ],
       "p1": [
        0.68585,
        -0.677585,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27653,12 +27704,12 @@
       "p0": [
        0.68585,
        -0.677585,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.7017,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27695,8 +27746,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -27708,11 +27759,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -27730,9 +27781,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -27744,11 +27795,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -27766,9 +27817,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.7017,
-       0.0
+       0
       ]
      },
      {
@@ -27780,13 +27831,13 @@
       "kind": "capsule",
       "p0": [
        0.59585,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.68585,
        -0.024115,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27801,12 +27852,12 @@
       "p0": [
        0.68585,
        -0.024115,
-       0.0
+       0
       ],
       "p1": [
        0.751735,
        -0.09,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27821,12 +27872,12 @@
       "p0": [
        0.751735,
        -0.09,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27841,12 +27892,12 @@
       "p0": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.75085,
        -0.38085,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27861,12 +27912,12 @@
       "p0": [
        0.75085,
        -0.38085,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27881,12 +27932,12 @@
       "p0": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.751735,
        -0.6117,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27901,12 +27952,12 @@
       "p0": [
        0.751735,
        -0.6117,
-       0.0
+       0
       ],
       "p1": [
        0.68585,
        -0.677585,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27921,12 +27972,12 @@
       "p0": [
        0.68585,
        -0.677585,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.7017,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -27963,8 +28014,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -27992,7 +28043,7 @@
         0.349478
        ],
        [
-        0.0,
+        0,
         0.351
        ],
        [
@@ -28024,7 +28075,7 @@
         0.312522
        ],
        [
-        -0.0,
+        0,
         0.311
        ],
        [
@@ -28050,9 +28101,9 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -28090,9 +28141,9 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -28103,12 +28154,12 @@
       "tone": 0.5,
       "kind": "capsule",
       "p0": [
-       0.0,
+       0,
        0.03,
        0.03
       ],
       "p1": [
-       0.0,
+       0,
        0.289,
        0.006
       ],
@@ -28124,7 +28175,7 @@
        ],
        "rotationRad": 0.392699,
        "origin": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -28138,12 +28189,12 @@
       "tone": 0.5,
       "kind": "capsule",
       "p0": [
-       0.0,
+       0,
        0.03,
        -0.03
       ],
       "p1": [
-       0.0,
+       0,
        0.289,
        -0.006
       ],
@@ -28159,7 +28210,7 @@
        ],
        "rotationRad": 0.392699,
        "origin": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -28196,9 +28247,9 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -28226,7 +28277,7 @@
         0.349478
        ],
        [
-        0.0,
+        0,
         0.351
        ],
        [
@@ -28258,7 +28309,7 @@
         0.312522
        ],
        [
-        -0.0,
+        0,
         0.311
        ],
        [
@@ -28285,8 +28336,8 @@
       ],
       "origin": [
        1.1,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -28325,8 +28376,8 @@
       ],
       "origin": [
        1.1,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -28431,8 +28482,8 @@
       ],
       "origin": [
        1.1,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -28445,12 +28496,12 @@
       "p0": [
        0.25,
        0.479,
-       0.0
+       0
       ],
       "p1": [
        0.91,
        0.509,
-       0.0
+       0
       ],
       "r0": 0.0143,
       "r1": 0.0143
@@ -28465,12 +28516,12 @@
       "p0": [
        0.43,
        -0.071,
-       0.0
+       0
       ],
       "p1": [
        0.968,
        0.349,
-       0.0
+       0
       ],
       "r0": 0.0175,
       "r1": 0.0175
@@ -28485,12 +28536,12 @@
       "p0": [
        0.43,
        -0.071,
-       0.0
+       0
       ],
       "p1": [
        0.25,
        0.479,
-       0.0
+       0
       ],
       "r0": 0.0143,
       "r1": 0.0143
@@ -28505,12 +28556,12 @@
       "p0": [
        0.974444,
        0.331222,
-       0.0
+       0
       ],
       "p1": [
        0.903556,
        0.526778,
-       0.0
+       0
       ],
       "r0": 0.018,
       "r1": 0.018
@@ -28528,8 +28579,8 @@
        0.025
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.062
       ],
       "r0": 0.0095,
@@ -28548,8 +28599,8 @@
        0.02
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.058
       ],
       "r0": 0.008,
@@ -28569,7 +28620,7 @@
       ],
       "p1": [
        1.1,
-       0.0,
+       0,
        0.048
       ],
       "r0": 0.0125,
@@ -28588,8 +28639,8 @@
        -0.025
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.062
       ],
       "r0": 0.0095,
@@ -28608,8 +28659,8 @@
        -0.02
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.058
       ],
       "r0": 0.008,
@@ -28629,7 +28680,7 @@
       ],
       "p1": [
        1.1,
-       0.0,
+       0,
        -0.048
       ],
       "r0": 0.0125,
@@ -28645,12 +28696,12 @@
       "p0": [
        0.25,
        0.479,
-       0.0
+       0
       ],
       "p1": [
        0.225,
        0.579,
-       0.0
+       0
       ],
       "r0": 0.0136,
       "r1": 0.0136
@@ -28671,7 +28722,7 @@
        "translation": [
         0.21,
         0.614,
-        0.0
+        0
        ]
       }
      },
@@ -28685,12 +28736,12 @@
       "p0": [
        0.91,
        0.509,
-       0.0
+       0
       ],
       "p1": [
        0.895,
        0.639,
-       0.0
+       0
       ],
       "r0": 0.0125,
       "r1": 0.0125
@@ -28828,8 +28879,8 @@
        0.07
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.07
       ],
       "r0": 0.005,
@@ -28868,8 +28919,8 @@
        -0.07
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.07
       ],
       "r0": 0.005,
@@ -28968,7 +29019,7 @@
       "origin": [
        0.43,
        -0.071,
-       0.0
+       0
       ]
      },
      {
@@ -29004,7 +29055,7 @@
       "origin": [
        0.43,
        -0.071,
-       0.0
+       0
       ]
      },
      {
@@ -29117,7 +29168,7 @@
       "p0": [
        0.378,
        0.089,
-       0.0
+       0
       ],
       "p1": [
        0.249,
@@ -29137,7 +29188,7 @@
       "p0": [
        0.388,
        0.059,
-       0.0
+       0
       ],
       "p1": [
        0.249,
@@ -30529,7 +30580,7 @@
       "transform": {
        "translation": [
         0.903043,
-        0.0,
+        0,
         0
        ]
       },
@@ -30551,7 +30602,7 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
+        0,
         0
        ]
       },
@@ -30573,7 +30624,7 @@
       "transform": {
        "translation": [
         0.5692,
-        -0.0,
+        0,
         0
        ]
       },
@@ -30595,7 +30646,7 @@
       "transform": {
        "translation": [
         0.903043,
-        0.0,
+        0,
         0
        ]
       },
@@ -30639,7 +30690,7 @@
       "transform": {
        "translation": [
         0.5692,
-        -0.0,
+        0,
         0
        ]
       },
@@ -30661,7 +30712,7 @@
       "transform": {
        "translation": [
         0.903043,
-        0.0,
+        0,
         0
        ]
       },
@@ -30683,7 +30734,7 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
+        0,
         0
        ]
       },
@@ -30705,7 +30756,7 @@
       "transform": {
        "translation": [
         0.5692,
-        -0.0,
+        0,
         0
        ]
       },
@@ -30814,7 +30865,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.022367,
         0
        ]
@@ -30985,8 +31036,8 @@
       "transform": {
        "translation": [
         1.1575,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -31005,8 +31056,8 @@
       "transform": {
        "translation": [
         0.0075,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -31025,8 +31076,8 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -31061,9 +31112,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -31081,8 +31132,8 @@
       "transform": {
        "translation": [
         1.1575,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -31101,8 +31152,8 @@
       "transform": {
        "translation": [
         0.0075,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -31121,8 +31172,8 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -31157,9 +31208,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -31177,8 +31228,8 @@
       "transform": {
        "translation": [
         1.1575,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -31197,8 +31248,8 @@
       "transform": {
        "translation": [
         0.0075,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -31217,8 +31268,8 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -31253,9 +31304,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -31268,13 +31319,13 @@
       "size": [
        0.04,
        0.06,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         0.12,
         0.09,
-        0.0
+        0
        ]
       }
      },
@@ -31288,13 +31339,13 @@
       "size": [
        0.04,
        0.06,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         1.054011,
         0.09,
-        0.0
+        0
        ]
       }
      },
@@ -31308,13 +31359,13 @@
       "size": [
        0.04,
        0.06,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         1.988022,
         0.09,
-        0.0
+        0
        ]
       }
      },
@@ -31334,7 +31385,7 @@
        "translation": [
         1.054011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -31355,7 +31406,7 @@
        "translation": [
         1.054011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -31376,7 +31427,7 @@
        "translation": [
         1.054011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -31397,7 +31448,7 @@
        "translation": [
         1.054011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -31460,7 +31511,7 @@
        "translation": [
         0.18,
         0.021,
-        0.0
+        0
        ]
       },
       "texture": true
@@ -31742,7 +31793,7 @@
       "profile": [
        [
         -0.0635,
-        -0.0
+        0
        ],
        [
         -0.061336,
@@ -31765,7 +31816,7 @@
         -0.061336
        ],
        [
-        0.0,
+        0,
         -0.0635
        ],
        [
@@ -31790,7 +31841,7 @@
        ],
        [
         0.0635,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -31807,13 +31858,13 @@
       "size": [
        0.123,
        0.01,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.005,
-        0.0
+        0
        ]
       },
       "texture": true
@@ -31827,11 +31878,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.038
        ],
        [
@@ -31849,9 +31900,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -31870,7 +31921,7 @@
        "translation": [
         0.7,
         -0.141,
-        0.0
+        0
        ]
       }
      },
@@ -31890,7 +31941,7 @@
        "translation": [
         1.8,
         -0.141,
-        0.0
+        0
        ]
       }
      },
@@ -31903,11 +31954,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -31925,9 +31976,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -31939,11 +31990,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -31961,9 +32012,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.7017,
-       0.0
+       0
       ]
      },
      {
@@ -31975,13 +32026,13 @@
       "kind": "capsule",
       "p0": [
        0.59585,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -31996,12 +32047,12 @@
       "p0": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32016,12 +32067,12 @@
       "p0": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32036,12 +32087,12 @@
       "p0": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32056,12 +32107,12 @@
       "p0": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.7017,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32098,8 +32149,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -32111,11 +32162,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -32133,9 +32184,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -32147,11 +32198,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -32169,9 +32220,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.7017,
-       0.0
+       0
       ]
      },
      {
@@ -32183,13 +32234,13 @@
       "kind": "capsule",
       "p0": [
        0.59585,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32204,12 +32255,12 @@
       "p0": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32224,12 +32275,12 @@
       "p0": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32244,12 +32295,12 @@
       "p0": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32264,12 +32315,12 @@
       "p0": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.7017,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32306,8 +32357,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -32319,11 +32370,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -32341,9 +32392,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -32355,11 +32406,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -32377,9 +32428,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.7017,
-       0.0
+       0
       ]
      },
      {
@@ -32391,13 +32442,13 @@
       "kind": "capsule",
       "p0": [
        0.59585,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32412,12 +32463,12 @@
       "p0": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32432,12 +32483,12 @@
       "p0": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32452,12 +32503,12 @@
       "p0": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32472,12 +32523,12 @@
       "p0": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.7017,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32514,8 +32565,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -32527,11 +32578,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -32549,9 +32600,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -32563,11 +32614,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -32585,9 +32636,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.7017,
-       0.0
+       0
       ]
      },
      {
@@ -32599,13 +32650,13 @@
       "kind": "capsule",
       "p0": [
        0.59585,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32620,12 +32671,12 @@
       "p0": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32640,12 +32691,12 @@
       "p0": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.75085,
        -0.38085,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32660,12 +32711,12 @@
       "p0": [
        0.75085,
        -0.38085,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32680,12 +32731,12 @@
       "p0": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32700,12 +32751,12 @@
       "p0": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.7017,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -32742,8 +32793,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -32781,9 +32832,9 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -32821,9 +32872,9 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -32834,14 +32885,14 @@
       "tone": 0.6,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.286179,
        0.058011,
-       0.0
+       0
       ],
       "r0": 0.002,
       "r1": 0.002,
@@ -32855,7 +32906,7 @@
        ],
        "rotationRad": 0.785398,
        "origin": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -32892,9 +32943,9 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -32933,8 +32984,8 @@
       ],
       "origin": [
        1.1,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -32973,8 +33024,8 @@
       ],
       "origin": [
        1.1,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -32986,13 +33037,13 @@
       "kind": "capsule",
       "p0": [
        1.1,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        1.386179,
        0.058011,
-       0.0
+       0
       ],
       "r0": 0.002,
       "r1": 0.002,
@@ -33044,8 +33095,8 @@
       ],
       "origin": [
        1.1,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -33058,12 +33109,12 @@
       "p0": [
        0.25,
        0.479,
-       0.0
+       0
       ],
       "p1": [
        0.91,
        0.509,
-       0.0
+       0
       ],
       "r0": 0.0143,
       "r1": 0.0143
@@ -33078,12 +33129,12 @@
       "p0": [
        0.43,
        -0.071,
-       0.0
+       0
       ],
       "p1": [
        0.968,
        0.349,
-       0.0
+       0
       ],
       "r0": 0.0175,
       "r1": 0.0175
@@ -33098,12 +33149,12 @@
       "p0": [
        0.43,
        -0.071,
-       0.0
+       0
       ],
       "p1": [
        0.25,
        0.479,
-       0.0
+       0
       ],
       "r0": 0.0143,
       "r1": 0.0143
@@ -33118,12 +33169,12 @@
       "p0": [
        0.974444,
        0.331222,
-       0.0
+       0
       ],
       "p1": [
        0.903556,
        0.526778,
-       0.0
+       0
       ],
       "r0": 0.018,
       "r1": 0.018
@@ -33141,8 +33192,8 @@
        0.025
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.062
       ],
       "r0": 0.0095,
@@ -33161,8 +33212,8 @@
        0.02
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.058
       ],
       "r0": 0.008,
@@ -33182,7 +33233,7 @@
       ],
       "p1": [
        1.1,
-       0.0,
+       0,
        0.048
       ],
       "r0": 0.0125,
@@ -33201,8 +33252,8 @@
        -0.025
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.062
       ],
       "r0": 0.0095,
@@ -33221,8 +33272,8 @@
        -0.02
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.058
       ],
       "r0": 0.008,
@@ -33242,7 +33293,7 @@
       ],
       "p1": [
        1.1,
-       0.0,
+       0,
        -0.048
       ],
       "r0": 0.0125,
@@ -33258,12 +33309,12 @@
       "p0": [
        0.25,
        0.479,
-       0.0
+       0
       ],
       "p1": [
        0.225,
        0.579,
-       0.0
+       0
       ],
       "r0": 0.0136,
       "r1": 0.0136
@@ -33284,7 +33335,7 @@
        "translation": [
         0.21,
         0.614,
-        0.0
+        0
        ]
       }
      },
@@ -33298,12 +33349,12 @@
       "p0": [
        0.91,
        0.509,
-       0.0
+       0
       ],
       "p1": [
        0.895,
        0.639,
-       0.0
+       0
       ],
       "r0": 0.0125,
       "r1": 0.0125
@@ -33441,8 +33492,8 @@
        0.07
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.07
       ],
       "r0": 0.0075,
@@ -33481,8 +33532,8 @@
        -0.07
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.07
       ],
       "r0": 0.0075,
@@ -33581,7 +33632,7 @@
       "origin": [
        0.43,
        -0.071,
-       0.0
+       0
       ]
      },
      {
@@ -33617,7 +33668,7 @@
       "origin": [
        0.43,
        -0.071,
-       0.0
+       0
       ]
      },
      {
@@ -34745,7 +34796,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -34811,7 +34862,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -34877,7 +34928,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -34922,7 +34973,7 @@
       "transform": {
        "translation": [
         0.903043,
-        0.0,
+        0,
         0
        ]
       },
@@ -34944,7 +34995,7 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
+        0,
         0
        ]
       },
@@ -34966,7 +35017,7 @@
       "transform": {
        "translation": [
         0.5692,
-        -0.0,
+        0,
         0
        ]
       },
@@ -34988,7 +35039,7 @@
       "transform": {
        "translation": [
         0.903043,
-        0.0,
+        0,
         0
        ]
       },
@@ -35032,7 +35083,7 @@
       "transform": {
        "translation": [
         0.5692,
-        -0.0,
+        0,
         0
        ]
       },
@@ -35054,7 +35105,7 @@
       "transform": {
        "translation": [
         0.903043,
-        0.0,
+        0,
         0
        ]
       },
@@ -35076,7 +35127,7 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
+        0,
         0
        ]
       },
@@ -35098,7 +35149,7 @@
       "transform": {
        "translation": [
         0.5692,
-        -0.0,
+        0,
         0
        ]
       },
@@ -35207,7 +35258,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.022367,
         0
        ]
@@ -35378,8 +35429,8 @@
       "transform": {
        "translation": [
         1.165,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -35398,8 +35449,8 @@
       "transform": {
        "translation": [
         0.015,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -35418,8 +35469,8 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -35454,9 +35505,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -35474,8 +35525,8 @@
       "transform": {
        "translation": [
         1.165,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -35494,8 +35545,8 @@
       "transform": {
        "translation": [
         0.015,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -35514,8 +35565,8 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -35550,9 +35601,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -35570,8 +35621,8 @@
       "transform": {
        "translation": [
         1.165,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -35590,8 +35641,8 @@
       "transform": {
        "translation": [
         0.015,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -35610,8 +35661,8 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -35646,9 +35697,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -35661,13 +35712,13 @@
       "size": [
        0.04,
        0.06,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         0.12,
         0.09,
-        0.0
+        0
        ]
       }
      },
@@ -35681,13 +35732,13 @@
       "size": [
        0.04,
        0.06,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         1.054011,
         0.09,
-        0.0
+        0
        ]
       }
      },
@@ -35701,13 +35752,13 @@
       "size": [
        0.04,
        0.06,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         1.988022,
         0.09,
-        0.0
+        0
        ]
       }
      },
@@ -35727,7 +35778,7 @@
        "translation": [
         1.054011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -35748,7 +35799,7 @@
        "translation": [
         1.054011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -35769,7 +35820,7 @@
        "translation": [
         1.054011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -35790,7 +35841,7 @@
        "translation": [
         1.054011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -35832,7 +35883,7 @@
        "translation": [
         0.18,
         0.021,
-        0.0
+        0
        ]
       },
       "texture": true
@@ -36013,7 +36064,7 @@
       "profile": [
        [
         -0.0635,
-        -0.0
+        0
        ],
        [
         -0.054993,
@@ -36024,7 +36075,7 @@
         -0.054993
        ],
        [
-        0.0,
+        0,
         -0.0635
        ],
        [
@@ -36037,7 +36088,7 @@
        ],
        [
         0.0635,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -36054,13 +36105,13 @@
       "size": [
        0.123,
        0.01,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.005,
-        0.0
+        0
        ]
       },
       "texture": true
@@ -36074,11 +36125,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.038
        ],
        [
@@ -36096,9 +36147,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -36117,7 +36168,7 @@
        "translation": [
         0.7,
         -0.141,
-        0.0
+        0
        ]
       }
      },
@@ -36137,7 +36188,7 @@
        "translation": [
         1.8,
         -0.141,
-        0.0
+        0
        ]
       }
      },
@@ -36150,11 +36201,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -36172,9 +36223,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -36186,11 +36237,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -36208,9 +36259,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.7017,
-       0.0
+       0
       ]
      },
      {
@@ -36222,13 +36273,13 @@
       "kind": "capsule",
       "p0": [
        0.59585,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36243,12 +36294,12 @@
       "p0": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36263,12 +36314,12 @@
       "p0": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36283,12 +36334,12 @@
       "p0": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36303,12 +36354,12 @@
       "p0": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.7017,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36345,8 +36396,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -36358,11 +36409,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -36380,9 +36431,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -36394,11 +36445,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -36416,9 +36467,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.7017,
-       0.0
+       0
       ]
      },
      {
@@ -36430,13 +36481,13 @@
       "kind": "capsule",
       "p0": [
        0.59585,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36451,12 +36502,12 @@
       "p0": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36471,12 +36522,12 @@
       "p0": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36491,12 +36542,12 @@
       "p0": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36511,12 +36562,12 @@
       "p0": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.7017,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36553,8 +36604,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -36566,11 +36617,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -36588,9 +36639,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -36602,11 +36653,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -36624,9 +36675,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.7017,
-       0.0
+       0
       ]
      },
      {
@@ -36638,13 +36689,13 @@
       "kind": "capsule",
       "p0": [
        0.59585,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36659,12 +36710,12 @@
       "p0": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36679,12 +36730,12 @@
       "p0": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36699,12 +36750,12 @@
       "p0": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36719,12 +36770,12 @@
       "p0": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.7017,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36761,8 +36812,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -36774,11 +36825,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -36796,9 +36847,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -36810,11 +36861,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.02415
        ],
        [
@@ -36832,9 +36883,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.7017,
-       0.0
+       0
       ]
      },
      {
@@ -36846,13 +36897,13 @@
       "kind": "capsule",
       "p0": [
        0.59585,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36867,12 +36918,12 @@
       "p0": [
        0.723129,
        -0.052721,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36887,12 +36938,12 @@
       "p0": [
        0.77585,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36907,12 +36958,12 @@
       "p0": [
        0.77585,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36927,12 +36978,12 @@
       "p0": [
        0.723129,
        -0.648979,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.7017,
-       0.0
+       0
       ],
       "r0": 0.02415,
       "r1": 0.02415
@@ -36969,8 +37020,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -37008,9 +37059,9 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -37021,14 +37072,14 @@
       "tone": 0.6,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.286179,
        0.058011,
-       0.0
+       0
       ],
       "r0": 0.002,
       "r1": 0.002,
@@ -37042,7 +37093,7 @@
        ],
        "rotationRad": 1.570796,
        "origin": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -37084,8 +37135,8 @@
       ],
       "origin": [
        1.1,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -37097,13 +37148,13 @@
       "kind": "capsule",
       "p0": [
        1.1,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        1.386179,
        0.058011,
-       0.0
+       0
       ],
       "r0": 0.002,
       "r1": 0.002,
@@ -37133,12 +37184,12 @@
       "p0": [
        0.25,
        0.479,
-       0.0
+       0
       ],
       "p1": [
        0.91,
        0.509,
-       0.0
+       0
       ],
       "r0": 0.015,
       "r1": 0.015
@@ -37153,12 +37204,12 @@
       "p0": [
        0.43,
        -0.071,
-       0.0
+       0
       ],
       "p1": [
        0.968,
        0.349,
-       0.0
+       0
       ],
       "r0": 0.0175,
       "r1": 0.0175
@@ -37173,12 +37224,12 @@
       "p0": [
        0.43,
        -0.071,
-       0.0
+       0
       ],
       "p1": [
        0.25,
        0.479,
-       0.0
+       0
       ],
       "r0": 0.015,
       "r1": 0.015
@@ -37193,12 +37244,12 @@
       "p0": [
        0.974444,
        0.331222,
-       0.0
+       0
       ],
       "p1": [
        0.903556,
        0.526778,
-       0.0
+       0
       ],
       "r0": 0.018,
       "r1": 0.018
@@ -37216,8 +37267,8 @@
        0.025
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.062
       ],
       "r0": 0.015,
@@ -37236,8 +37287,8 @@
        0.02
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.058
       ],
       "r0": 0.015,
@@ -37257,7 +37308,7 @@
       ],
       "p1": [
        1.1,
-       0.0,
+       0,
        0.048
       ],
       "r0": 0.015,
@@ -37276,8 +37327,8 @@
        -0.025
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.062
       ],
       "r0": 0.015,
@@ -37296,8 +37347,8 @@
        -0.02
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.058
       ],
       "r0": 0.015,
@@ -37317,7 +37368,7 @@
       ],
       "p1": [
        1.1,
-       0.0,
+       0,
        -0.048
       ],
       "r0": 0.015,
@@ -37333,12 +37384,12 @@
       "p0": [
        0.25,
        0.479,
-       0.0
+       0
       ],
       "p1": [
        0.225,
        0.579,
-       0.0
+       0
       ],
       "r0": 0.015,
       "r1": 0.015
@@ -37359,7 +37410,7 @@
        "translation": [
         0.21,
         0.614,
-        0.0
+        0
        ]
       }
      },
@@ -37373,12 +37424,12 @@
       "p0": [
        0.91,
        0.509,
-       0.0
+       0
       ],
       "p1": [
        0.895,
        0.639,
-       0.0
+       0
       ],
       "r0": 0.015,
       "r1": 0.015
@@ -37459,7 +37510,7 @@
        "translation": [
         -0.025,
         0.444,
-        0.0
+        0
        ]
       }
      },
@@ -37473,12 +37524,12 @@
       "p0": [
        -0.25,
        0.429,
-       0.0
+       0
       ],
       "p1": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "r0": 0.015,
       "r1": 0.015
@@ -37516,7 +37567,7 @@
       "origin": [
        0.43,
        -0.071,
-       0.0
+       0
       ]
      },
      {
@@ -38433,7 +38484,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -38499,7 +38550,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -38565,7 +38616,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -38610,7 +38661,7 @@
       "transform": {
        "translation": [
         0.903043,
-        0.0,
+        0,
         0
        ]
       },
@@ -38632,7 +38683,7 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
+        0,
         0
        ]
       },
@@ -38654,7 +38705,7 @@
       "transform": {
        "translation": [
         0.5692,
-        -0.0,
+        0,
         0
        ]
       },
@@ -38676,7 +38727,7 @@
       "transform": {
        "translation": [
         0.903043,
-        0.0,
+        0,
         0
        ]
       },
@@ -38720,7 +38771,7 @@
       "transform": {
        "translation": [
         0.5692,
-        -0.0,
+        0,
         0
        ]
       },
@@ -38742,7 +38793,7 @@
       "transform": {
        "translation": [
         0.903043,
-        0.0,
+        0,
         0
        ]
       },
@@ -38764,7 +38815,7 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
+        0,
         0
        ]
       },
@@ -38786,7 +38837,7 @@
       "transform": {
        "translation": [
         0.5692,
-        -0.0,
+        0,
         0
        ]
       },
@@ -38895,7 +38946,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.022367,
         0
        ]
@@ -39066,8 +39117,8 @@
       "transform": {
        "translation": [
         1.2,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -39086,8 +39137,8 @@
       "transform": {
        "translation": [
         0.05,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -39107,7 +39158,7 @@
        "translation": [
         1.054011,
         0.03,
-        0.0
+        0
        ]
       }
      },
@@ -39142,9 +39193,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -39162,8 +39213,8 @@
       "transform": {
        "translation": [
         1.2,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -39182,8 +39233,8 @@
       "transform": {
        "translation": [
         0.05,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -39203,7 +39254,7 @@
        "translation": [
         1.054011,
         0.03,
-        0.0
+        0
        ]
       }
      },
@@ -39238,9 +39289,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -39258,8 +39309,8 @@
       "transform": {
        "translation": [
         1.2,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -39278,8 +39329,8 @@
       "transform": {
        "translation": [
         0.05,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -39299,7 +39350,7 @@
        "translation": [
         1.054011,
         0.03,
-        0.0
+        0
        ]
       }
      },
@@ -39334,9 +39385,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -39349,13 +39400,13 @@
       "size": [
        0.1,
        0.075,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         0.12,
         0.0825,
-        0.0
+        0
        ]
       }
      },
@@ -39369,13 +39420,13 @@
       "size": [
        0.1,
        0.075,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         1.054011,
         0.0825,
-        0.0
+        0
        ]
       }
      },
@@ -39389,13 +39440,13 @@
       "size": [
        0.1,
        0.075,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         1.988022,
         0.0825,
-        0.0
+        0
        ]
       }
      },
@@ -39415,7 +39466,7 @@
        "translation": [
         1.069011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -39436,7 +39487,7 @@
        "translation": [
         1.069011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -39457,7 +39508,7 @@
        "translation": [
         1.069011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -39478,7 +39529,7 @@
        "translation": [
         1.069011,
         0.008,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -39520,7 +39571,7 @@
        "translation": [
         0.18,
         0.021,
-        0.0
+        0
        ]
       },
       "texture": true
@@ -39706,7 +39757,7 @@
       "profile": [
        [
         -0.104,
-        0.0
+        0
        ],
        [
         -0.104,
@@ -39718,7 +39769,7 @@
        ],
        [
         0.066,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -39735,13 +39786,13 @@
       "size": [
        0.166,
        0.01,
-       5.0
+       5
       ],
       "transform": {
        "translation": [
         -0.019,
         0.005,
-        0.0
+        0
        ]
       },
       "texture": true
@@ -39755,11 +39806,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.038
        ],
        [
@@ -39777,9 +39828,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true
      },
@@ -39799,7 +39850,7 @@
        "translation": [
         1.8,
         -0.141,
-        0.0
+        0
        ]
       }
      },
@@ -39812,11 +39863,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.0376
        ],
        [
@@ -39834,9 +39885,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.01345,
-       0.0
+       0
       ]
      },
      {
@@ -39848,11 +39899,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.0376
        ],
        [
@@ -39870,9 +39921,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.68825,
-       0.0
+       0
       ]
      },
      {
@@ -39885,12 +39936,12 @@
       "p0": [
        0.59585,
        -0.01345,
-       0.0
+       0
       ],
       "p1": [
        0.7624,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.0376,
       "r1": 0.0376
@@ -39905,12 +39956,12 @@
       "p0": [
        0.7624,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.7624,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.0376,
       "r1": 0.0376
@@ -39925,12 +39976,12 @@
       "p0": [
        0.7624,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.68825,
-       0.0
+       0
       ],
       "r0": 0.0376,
       "r1": 0.0376
@@ -39967,8 +40018,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -39980,11 +40031,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.0376
        ],
        [
@@ -40002,9 +40053,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.01345,
-       0.0
+       0
       ]
      },
      {
@@ -40016,11 +40067,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.0376
        ],
        [
@@ -40038,9 +40089,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.68825,
-       0.0
+       0
       ]
      },
      {
@@ -40053,12 +40104,12 @@
       "p0": [
        0.59585,
        -0.01345,
-       0.0
+       0
       ],
       "p1": [
        0.7624,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.0376,
       "r1": 0.0376
@@ -40073,12 +40124,12 @@
       "p0": [
        0.7624,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.7624,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.0376,
       "r1": 0.0376
@@ -40093,12 +40144,12 @@
       "p0": [
        0.7624,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.68825,
-       0.0
+       0
       ],
       "r0": 0.0376,
       "r1": 0.0376
@@ -40135,8 +40186,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -40148,11 +40199,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.0376
        ],
        [
@@ -40170,9 +40221,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.01345,
-       0.0
+       0
       ]
      },
      {
@@ -40184,11 +40235,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.0376
        ],
        [
@@ -40206,9 +40257,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.68825,
-       0.0
+       0
       ]
      },
      {
@@ -40221,12 +40272,12 @@
       "p0": [
        0.59585,
        -0.01345,
-       0.0
+       0
       ],
       "p1": [
        0.7624,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.0376,
       "r1": 0.0376
@@ -40241,12 +40292,12 @@
       "p0": [
        0.7624,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.7624,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.0376,
       "r1": 0.0376
@@ -40261,12 +40312,12 @@
       "p0": [
        0.7624,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.68825,
-       0.0
+       0
       ],
       "r0": 0.0376,
       "r1": 0.0376
@@ -40303,8 +40354,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -40316,11 +40367,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.0376
        ],
        [
@@ -40338,9 +40389,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.01345,
-       0.0
+       0
       ]
      },
      {
@@ -40352,11 +40403,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0
        ],
        [
-        0.0,
+        0,
         0.0376
        ],
        [
@@ -40374,9 +40425,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.68825,
-       0.0
+       0
       ]
      },
      {
@@ -40389,12 +40440,12 @@
       "p0": [
        0.59585,
        -0.01345,
-       0.0
+       0
       ],
       "p1": [
        0.7624,
        -0.18,
-       0.0
+       0
       ],
       "r0": 0.0376,
       "r1": 0.0376
@@ -40409,12 +40460,12 @@
       "p0": [
        0.7624,
        -0.18,
-       0.0
+       0
       ],
       "p1": [
        0.7624,
        -0.5217,
-       0.0
+       0
       ],
       "r0": 0.0376,
       "r1": 0.0376
@@ -40429,12 +40480,12 @@
       "p0": [
        0.7624,
        -0.5217,
-       0.0
+       0
       ],
       "p1": [
        0.59585,
        -0.68825,
-       0.0
+       0
       ],
       "r0": 0.0376,
       "r1": 0.0376
@@ -40471,8 +40522,8 @@
       ],
       "origin": [
        0.4,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -40510,9 +40561,9 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -40523,14 +40574,14 @@
       "tone": 0.6,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.272459,
        0.05523,
-       0.0
+       0
       ],
       "r0": 0.002,
       "r1": 0.002,
@@ -40544,7 +40595,7 @@
        ],
        "rotationRad": 1.570796,
        "origin": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -40586,8 +40637,8 @@
       ],
       "origin": [
        1.1,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -40599,13 +40650,13 @@
       "kind": "capsule",
       "p0": [
        1.1,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        1.372459,
        0.05523,
-       0.0
+       0
       ],
       "r0": 0.002,
       "r1": 0.002,
@@ -40634,8 +40685,8 @@
       "kind": "extrude",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.2,
@@ -40667,7 +40718,7 @@
        ],
        [
         1.1,
-        0.0
+        0
        ],
        [
         0.43,
@@ -40694,7 +40745,7 @@
        "translation": [
         0.21,
         0.63,
-        0.0
+        0
        ]
       }
      },
@@ -40714,6 +40765,26 @@
        0.93,
        0.66,
        0.29
+      ],
+      "r0": 0.0375,
+      "r1": 0.0375
+     },
+     {
+      "id": "kickstand",
+      "bone": "bike",
+      "material": "bike-steel",
+      "role": "body",
+      "tone": 0.35,
+      "kind": "capsule",
+      "p0": [
+       0.47,
+       -0.05,
+       0.03
+      ],
+      "p1": [
+       0.29,
+       -0.3135,
+       0.18
       ],
       "r0": 0.0375,
       "r1": 0.0375
@@ -41028,6 +41099,11 @@
      {
       "id": "th-bar",
       "of": "bar",
+      "region": "bike-frame"
+     },
+     {
+      "id": "th-kickstand",
+      "of": "kickstand",
       "region": "bike-frame"
      }
     ],
@@ -41368,7 +41444,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -41434,7 +41510,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -41500,7 +41576,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0,
         0
        ]
@@ -41545,7 +41621,7 @@
       "transform": {
        "translation": [
         0.903043,
-        0.0,
+        0,
         0
        ]
       },
@@ -41567,7 +41643,7 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
+        0,
         0
        ]
       },
@@ -41589,7 +41665,7 @@
       "transform": {
        "translation": [
         0.5692,
-        -0.0,
+        0,
         0
        ]
       },
@@ -41611,7 +41687,7 @@
       "transform": {
        "translation": [
         0.903043,
-        0.0,
+        0,
         0
        ]
       },
@@ -41655,7 +41731,7 @@
       "transform": {
        "translation": [
         0.5692,
-        -0.0,
+        0,
         0
        ]
       },
@@ -41677,7 +41753,7 @@
       "transform": {
        "translation": [
         0.903043,
-        0.0,
+        0,
         0
        ]
       },
@@ -41699,7 +41775,7 @@
       "transform": {
        "translation": [
         1.054011,
-        0.0,
+        0,
         0
        ]
       },
@@ -41721,7 +41797,7 @@
       "transform": {
        "translation": [
         0.5692,
-        -0.0,
+        0,
         0
        ]
       },
@@ -41830,7 +41906,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.022367,
         0
        ]
@@ -41969,12 +42045,18 @@
       },
       "member": "bike",
       "part": "mass"
+     },
+     {
+      "id": "m-kickstand",
+      "of": "kickstand",
+      "member": "bike",
+      "part": "member"
      }
     ],
     "decisions": [
      {
-      "en": "Body for 75 mm: base plates 100 mm thick, beams 120 mm wide and 180 mm deep (taking in the purlin depth), purlins 100 x 75 mm, braces and stand tubes 75 mm, the sheets without overhang and closed joints, the gutter a 170 x 120 mm block, glazing bars as texture caps, one 75 mm clamp ties the downpipe to post C, the downpipe kept as a declared slender tube down to the gully; the bike as two 75 mm wheel rings with four texture spokes each, one 75 mm frame plate from axle to axle, saddle and bars (side stand, rack and chainring left out).",
-      "de": "Körper für 75 mm: Fußplatten 100 mm dick, Träger 120 mm breit und 180 mm hoch (mit der Pfettenhöhe), Pfetten 100 x 75 mm, Kopfbänder und Bügelrohre 75 mm, die Platten ohne Überstand mit geschlossenen Fugen, die Rinne ein Block 170 x 120 mm, Sprossen als Texturleisten, eine 75-mm-Schelle bindet das Fallrohr an Stütze C, das Fallrohr bleibt als erklärtes schlankes Rohr bis zum Ablauf; das Rad als zwei 75-mm-Laufradringe mit je vier Textur-Speichen, eine 75-mm-Rahmenplatte von Achse zu Achse, Sattel und Lenker (Seitenständer, Gepäckträger und Kettenblatt entfallen)."
+      "en": "Body for 75 mm: base plates 100 mm thick, beams 120 mm wide and 180 mm deep (taking in the purlin depth), purlins 100 x 75 mm, braces and stand tubes 75 mm, the sheets without overhang and closed joints, the gutter a 170 x 120 mm block, glazing bars as texture caps, one 75 mm clamp ties the downpipe to post C, the downpipe kept as a declared slender tube down to the gully; the bike as two 75 mm wheel rings with four texture spokes each, one 75 mm frame plate from axle to axle, saddle, bars and the side stand as a 75 mm tube, because the bike rests on it (rack and chainring left out).",
+      "de": "Körper für 75 mm: Fußplatten 100 mm dick, Träger 120 mm breit und 180 mm hoch (mit der Pfettenhöhe), Pfetten 100 x 75 mm, Kopfbänder und Bügelrohre 75 mm, die Platten ohne Überstand mit geschlossenen Fugen, die Rinne ein Block 170 x 120 mm, Sprossen als Texturleisten, eine 75-mm-Schelle bindet das Fallrohr an Stütze C, das Fallrohr bleibt als erklärtes schlankes Rohr bis zum Ablauf; das Rad als zwei 75-mm-Laufradringe mit je vier Textur-Speichen, eine 75-mm-Rahmenplatte von Achse zu Achse, Sattel, Lenker und der Seitenständer als 75-mm-Rohr, weil das Rad darauf steht (Gepäckträger und Kettenblatt entfallen)."
      },
      {
       "en": "Thermal and structure follow the body; mass markers 75 mm.",

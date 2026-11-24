@@ -11,7 +11,7 @@ for entry in "$@"; do
   args=(); for p in $pkgs; do args+=(-p "$p"); done
   log="$T/🗑️generated/$prefix-${pkgs%% *}.log"
   for attempt in 1 2 3; do
-    (cd "$dir" && repo cargo --store=shared --configuration=prototype -- test "${args[@]}" --offline > "$log" 2>&1)
+    (cd "$dir" && repo cargo --store=shared --configuration=prototype -- test "${args[@]}" --offline --no-fail-fast > "$log" 2>&1)
     code=$?
     if [ $code -eq 0 ] || ! grep -q "^error\(\[E[0-9]*\]\)\?: \(could not compile\|cannot find\|unresolved\|expected\)" "$log"; then break; fi
     sleep 30

@@ -7,6 +7,7 @@ HOST=json.load(open(os.path.join(BUILD,"🔣️policy.json")))["hostCapacity"]
 ADMISSION=json.load(open(os.path.join(HERE,"..","..","🌡️load","🧬️schema","🔣️.json")))["definitions"]["Policy"]["const"]
 OFFLOAD=json.load(open(os.path.join(HERE,"..","..","🚀️offload","🧬️schema","🔣️.json")))["policy"]
 TARGET=os.path.join(HERE,"🔣️.json")
+CODEGEN=json.load(open(os.path.join(BUILD,"🔣️policy.json")))["remoteExecution"]["worker"]["codegen"]
 TOTAL=16384
 
 def gate(pressure,total,swap_out,megabytes):
@@ -20,11 +21,13 @@ def floor_of(total):
     return min(total,max(m["floorMinimumMegabytes"],min(m["floorMaximumMegabytes"],total*m["floorBasisPoints"]//10000)))
 
 def spare_and_verdict(total,available,held,megabytes,pressure,swap_out):
-    floor=floor_of(total);held_sum=sum(held);cap=max(0,total-floor)
-    unmanaged=max(0,total-available-held_sum)
+    """A running unit is charged once: what it holds now (used) is in the available memory, the part of its peak it has not grown into yet is kept free."""
+    floor=floor_of(total);cap=max(0,total-floor)
+    used=sum(row["usedMegabytes"] for row in held);growth=sum(max(0,row["megabytes"]-row["usedMegabytes"]) for row in held);committed=sum(max(row["megabytes"],row["usedMegabytes"]) for row in held)
+    unmanaged=max(0,total-available-used)
     share=max(0,cap-unmanaged)
-    budget=share*HOST["memory"]["budgetBasisPoints"]//10000-held_sum
-    observed=available-floor
+    budget=share*HOST["memory"]["budgetBasisPoints"]//10000-committed
+    observed=available-floor-growth
     spare=max(0,min(observed,budget))
     g=gate(pressure,total,swap_out,megabytes)
     need=min(megabytes,cap)
@@ -61,11 +64,20 @@ def killed(exit_code,placed,learned):
     if exit_code!=p["killedExit"]:return None
     return min(p["maximumMegabytes"],max(learned or 0,placed*p["killedFactor"]))
 
+def peak_at_threads(samples,threads,extra):
+    rows=[(int(count),megabytes) for count,megabytes in samples.items() if int(count)>0 and megabytes>0]
+    for count,megabytes in rows:
+        if count==threads:return megabytes
+    below=[row for row in rows if row[0]<threads];above=[row for row in rows if row[0]>threads]
+    grown=None if not below else max(below)[1]+(threads-max(below)[0])*extra
+    if grown is None:return min(above)[1] if above else None
+    return grown if not above else min(grown,min(above)[1])
+
 def build():
     gates=[{"pressure":pressure,"swapOutMegabytesPerSecond":swap,"megabytes":megabytes,"gate":gate(pressure,TOTAL,swap,megabytes)} for pressure in ("normal","warn","critical") for swap in (None,0,0.5,1.2,52) for megabytes in (256,1024,1025,2048,6144)]
     admissions=[]
     for available in (3000,4300,6000,8000,12000):
-        for held in ([],[2048],[6144],[512,512],[2048,2048,2048]):
+        for held in ([],[{"megabytes":2048,"usedMegabytes":0}],[{"megabytes":6144,"usedMegabytes":3000}],[{"megabytes":512,"usedMegabytes":512},{"megabytes":512,"usedMegabytes":100}],[{"megabytes":2048,"usedMegabytes":0},{"megabytes":2048,"usedMegabytes":2048},{"megabytes":2048,"usedMegabytes":4000}],[{"megabytes":5014,"usedMegabytes":1200}]):
             for megabytes in (256,512,1024,2048,6144):
                 for pressure,swap in (("normal",0),("warn",0),("warn",52),("critical",0)):
                     spare,verdict,_=spare_and_verdict(TOTAL,available,held,megabytes,pressure,swap)
@@ -83,7 +95,10 @@ def build():
             kills_in_family.append({"samples":samples,"placed":placed,"taught":taught,"familyBefore":family_peak(samples),"familyAfter":family_peak(after),"unseenAfter":unit_peak(None,True,family_peak(after))})
     base=family_peak(list(measured.values()));unseen=unit_peak(None,True,base);taught=killed(137,unseen,None);after=family_peak(list(measured.values())+[taught])
     observed={"crates":measured,"family":base,"unseen":unseen,"killed":{"placed":unseen,"taught":taught,"familyAfter":after,"unseenAfter":unit_peak(None,True,after)}}
-    return {"gates":gates,"admissions":admissions,"peaks":peaks,"learns":learns,"kills":kills,"families":families,"familyKills":kills_in_family,"observed":observed}
+    extra=CODEGEN["extraMegabytesPerThread"]
+    sample_sets=[{},{"1":4011},{"4":3787},{"1":4011,"4":4500},{"1":1000,"8":1200},{"2":2000,"6":2100},{"1":300,"2":5000}]
+    thread_rows=[{"samples":samples,"threads":threads,"extra":extra,"peak":peak_at_threads(samples,threads,extra)} for samples in sample_sets for threads in (1,2,3,4,6,8)]
+    return {"threads":thread_rows,"gates":gates,"admissions":admissions,"peaks":peaks,"learns":learns,"kills":kills,"families":families,"familyKills":kills_in_family,"observed":observed}
 
 if __name__=="__main__":
     text=json.dumps(build(),ensure_ascii=False,indent=1)+"\n"

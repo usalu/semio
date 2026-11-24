@@ -10,6 +10,7 @@ impl OriginalReturnOrigin for Origin{
  fn fuel(&self)->u64{self.fuel}
  fn spent(&self)->P{self.spent}
  fn work(&self)->u128{self.work}
+ fn succeeded(self,grant:RetainedCloneGrant,fuel:u64)->Self{Self{grant,fuel,spent:P::default(),work:0,..self}}
 }
 #[test]
 fn typed_budget_binding_keeps_original_destination_and_conserved_stock(){
@@ -22,6 +23,19 @@ fn typed_budget_binding_keeps_original_destination_and_conserved_stock(){
   assert_eq!(budget.bind(input).is_ok(),row["accepted"].as_bool().unwrap());
   if row["accepted"]==true{assert_eq!(budget.bind(input).unwrap(),false);let(g,fuel)=budget.remaining().unwrap();assert_eq!(g.maximum_items,row["remaining"].as_u64().unwrap()as usize);assert_eq!(fuel,row["remainingFuel"].as_u64().unwrap());}
  }
+}
+
+/// 🔁️ A successor refunds only the settled origin: a spent-out book pays again, live holds stay reserved, a failed or overheld book refuses, and an unbound book has nothing to renew.
+#[test]
+fn succession_replaces_the_spent_stock_and_keeps_every_live_hold(){
+ let grant=RetainedCloneGrant{maximum_items:10,maximum_copy_bytes:100,maximum_capacity_bytes:10,maximum_release_bytes:10,maximum_depth:4};
+ let mut budget=OriginalReturnBudget::<Origin>::empty(1);budget.succeed(grant,9).unwrap();assert!(budget.origin.is_none());
+ let input=Origin{recipient:&budget as*const _ as usize,grant,fuel:9,spent:P{copied_items:2,..Default::default()},work:1};budget.bind(input).unwrap();
+ budget.held_items=3;budget.held_copy_bytes=40;budget.held_fuel=2;budget.claims=1;budget.record_retained(P{copied_items:5,copied_bytes:60,..Default::default()}).unwrap();budget.record_work(6);assert_eq!(budget.remaining().unwrap().0.maximum_items,0);
+ for short in [RetainedCloneGrant{maximum_items:2,..grant},RetainedCloneGrant{maximum_copy_bytes:39,..grant}]{assert!(budget.succeed(short,9).is_err());assert_eq!((budget.origin.unwrap().grant,budget.spent.copied_items),(grant,7))}
+ let successor=RetainedCloneGrant{maximum_items:20,..grant};budget.succeed(successor,30).unwrap();let(remaining,fuel)=budget.remaining().unwrap();assert_eq!((remaining.maximum_items,remaining.maximum_copy_bytes,fuel,budget.claims),(17,60,28,1));
+ let serial=budget.serial;budget.failure=Some((ValueRefusalKind::InvariantViolated,"spent"));assert!(budget.succeed(successor,30).is_err());assert_eq!((budget.serial,budget.held_items),(serial,3));
+ budget.failure=None;budget.held_items=0;budget.held_copy_bytes=0;budget.held_fuel=0;budget.claims=0;budget.origin=None;
 }
 
 #[test]

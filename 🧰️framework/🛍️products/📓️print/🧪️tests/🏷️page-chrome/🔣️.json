@@ -109,10 +109,12 @@
       ],
       "heading": {
         "title": [
-          "right"
+          "right",
+          "bottom"
         ],
         "number": [
-          "left"
+          "left",
+          "bottom"
         ]
       }
     },

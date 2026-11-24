@@ -1,0 +1,54 @@
+[
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "neck",
+  "bone": "neck",
+  "view": "front"
+ },
+ {
+  "op": "sync",
+  "scale": "50",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "neck",
+  "bone": "neck",
+  "view": "front"
+ },
+ {
+  "op": "sync",
+  "scale": "100",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "sil-neck",
+  "bone": "neck",
+  "view": "front"
+ },
+ {
+  "op": "sync",
+  "scale": "500",
+  "id": "sil-neck",
+  "bone": "neck"
+ },
+ {
+  "op": "clip",
+  "scale": "500",
+  "view": "front",
+  "id": "sil-body",
+  "bone": "torso"
+ },
+ {
+  "op": "sync",
+  "scale": "500",
+  "id": "sil-body",
+  "bone": "torso"
+ }
+]

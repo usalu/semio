@@ -156,8 +156,55 @@ fn fire_start_temperature_is_forgotten(snap: &En1999Snapshot, idx: usize) -> boo
     at(fire.theta_a).to_bits() == at(perturbed).to_bits()
 }
 
-/// 🧯 Leaves that carry no information for the physical situation they sit in: hollow sections are immune to lateral-torsional and torsional buckling, tubes carry no web for a patch load (§6.7.5), the second S–N slope is inactive while γ·Δσ stays above the knee stress, the weld-metal leaves are inert while the HAZ boundary governs the weld, the T-junction factor is inert once the HAZ strip spans the element and the start temperature of a fire is inert once the member has forgotten it.
+/// 🧬️ Resolve a leaf path such as `sections[0].height` against the snapshot JSON Schema: the record node that owns the leaf, the leaf property node and the record's path in the instance.
+fn schema_leaf(schema: &serde_json::Value, path: &str) -> Option<(serde_json::Value, serde_json::Value, String)> {
+    let deref = |node: &serde_json::Value| -> serde_json::Value { node.get("$ref").and_then(|r| r.as_str()).and_then(|r| r.strip_prefix("#/$defs/")).and_then(|name| schema["$defs"].get(name)).cloned().unwrap_or_else(|| node.clone()) };
+    let mut record = schema.clone();
+    let mut record_path = String::new();
+    let mut property = serde_json::Value::Null;
+    for (n, segment) in path.split('.').enumerate() {
+        let (name, indexed) = segment.split_once('[').map_or((segment, false), |(name, _)| (name, true));
+        let node = record.get("properties")?.get(name)?.clone();
+        property = if indexed { deref(node.get("items")?) } else { deref(&node) };
+        if path.split('.').count() > n + 1 {
+            record_path = path.split('.').take(n + 1).collect::<Vec<_>>().join(".");
+            record = property.clone();
+        }
+    }
+    Some((record, property, record_path))
+}
+
+/// 🚫️ Whether the schema itself declares the leaf inactive: the record's `x-semio-active` rules list it, and none of the rules listing it holds for the record's current values (`in`: the field holds one of the values; `notIn`: it holds none, ignoring `ignoreSuffix`).
+fn schema_declares_inactive(path: &str, tree: &serde_json::Value) -> bool {
+    let schema: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(snapshot_schema_path()).expect("schema")).expect("schema json");
+    let Some((record, _, record_path)) = schema_leaf(&schema, path) else { return false };
+    let (Some(rules), Some(leaf)) = (record.get("x-semio-active").and_then(|r| r.as_array()), path.rsplit('.').next()) else { return false };
+    let listing: Vec<_> = rules.iter().filter(|r| r["leaves"].as_array().is_some_and(|l| l.iter().any(|x| x.as_str() == Some(leaf)))).collect();
+    let holds = |rule: &serde_json::Value| {
+        rule["when"].as_object().is_some_and(|when| {
+            when.iter().all(|(field, test)| {
+                let value = resolve_path(tree, &format!("{record_path}.{field}")).and_then(|v| v.as_str()).unwrap_or_default();
+                let value = test["ignoreSuffix"].as_str().map_or(value, |suffix| value.trim_end_matches(suffix));
+                let listed = |key: &str| test[key].as_array().is_some_and(|values| values.iter().any(|v| v.as_str() == Some(value)));
+                if test.get("in").is_some() { listed("in") } else { !listed("notIn") }
+            })
+        })
+    };
+    !listing.is_empty() && !listing.iter().any(|rule| holds(rule))
+}
+
+#[test]
+fn schema_tabulated_detail_categories_match_annex_j() {
+    let schema: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(snapshot_schema_path()).unwrap()).unwrap();
+    let ids: Vec<String> = schema["$defs"]["FatigueDetail"]["x-semio-active"][0]["when"]["detailCategory"]["notIn"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+    assert_eq!(ids, part_1_3::category_ids());
+}
+
+/// 🧯 Leaves that carry no information for the physical situation they sit in: leaves the schema declares inactive through `x-semio-active` (section geometry of another kind, Δσ_C of a tabulated detail category), hollow sections are immune to lateral-torsional and torsional buckling, tubes carry no web for a patch load (§6.7.5), the second S–N slope is inactive while γ·Δσ stays above the knee stress, the weld-metal leaves are inert while the HAZ boundary governs the weld, the T-junction factor is inert once the HAZ strip spans the element and the start temperature of a fire is inert once the member has forgotten it.
 fn physically_inactive(snap: &En1999Snapshot, path: &str) -> bool {
+    if schema_declares_inactive(path, &serde_json::to_value(snap).expect("json")) {
+        return true;
+    }
     if path.ends_with(".welds.betaW") || path.ends_with(".welds.fillerAlloy") {
         return index_in(path, "connections[").is_some_and(|idx| haz_boundary_governs_the_weld(snap, idx));
     }

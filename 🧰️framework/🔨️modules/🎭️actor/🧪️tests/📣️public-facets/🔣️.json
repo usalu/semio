@@ -90,7 +90,9 @@
         "KernelOriginalResourcePool",
         "KernelOriginalOperationIssuer",
         "OriginalOperationReceiptRefusal",
+        "OriginalStockExhausted",
         "OriginalOperationSource",
+        "OriginalStockSuccession",
         "originalTurnWit",
         "originalContextBudgetWit",
         "originalGrantWit",
@@ -124,7 +126,11 @@
         "OriginalWireReceipt",
         "OriginalOperationPhysicalSpent",
         "OriginalJobControl",
-        "OriginalJobOutputHold"
+        "OriginalJobOutputHold",
+        "OriginalKernelReturn",
+        "OriginalOperationSuccession",
+        "OriginalStockAxis",
+        "OriginalStockFault"
       ],
       "schema": "🎟️retained-turn/🧬️schema/🔣️.json",
       "schemaExport": "originalRetainedReceiptSchema"

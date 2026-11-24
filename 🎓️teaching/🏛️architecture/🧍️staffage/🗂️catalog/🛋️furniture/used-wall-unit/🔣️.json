@@ -107,8 +107,8 @@
     "densityKgM3": 650,
     "conductivityWmK": 0.14,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 1600000000.0,
-    "strengthPa": 11000000.0,
+    "elasticModulusPa": 1600000000,
+    "strengthPa": 11000000,
     "source": "literature",
     "reference": "en-312-2010"
    },
@@ -123,8 +123,8 @@
     "densityKgM3": 750,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 2500000000.0,
-    "strengthPa": 20000000.0,
+    "elasticModulusPa": 2500000000,
+    "strengthPa": 20000000,
     "source": "literature",
     "reference": "en-622-5-2009"
    },
@@ -139,8 +139,8 @@
     "densityKgM3": 900,
     "conductivityWmK": 0.18,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 3000000000.0,
-    "strengthPa": 30000000.0,
+    "elasticModulusPa": 3000000000,
+    "strengthPa": 30000000,
     "source": "literature",
     "reference": "en-622-2-2004"
    },
@@ -153,10 +153,10 @@
     "emissivity": 0.84,
     "solarAbsorptivity": 0.08,
     "densityKgM3": 2500,
-    "conductivityWmK": 1.0,
+    "conductivityWmK": 1,
     "specificHeatJKgK": 750,
-    "elasticModulusPa": 70000000000.0,
-    "strengthPa": 45000000.0,
+    "elasticModulusPa": 70000000000,
+    "strengthPa": 45000000,
     "source": "literature",
     "reference": "en-iso-10456-2007"
    },
@@ -169,7 +169,7 @@
     "emissivity": 0.84,
     "solarAbsorptivity": 0.15,
     "densityKgM3": 2500,
-    "conductivityWmK": 1.0,
+    "conductivityWmK": 1,
     "specificHeatJKgK": 750,
     "source": "literature",
     "reference": "en-iso-10456-2007"
@@ -199,8 +199,8 @@
     "densityKgM3": 7800,
     "conductivityWmK": 50,
     "specificHeatJKgK": 450,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "en-iso-10456-2007"
    },
@@ -215,8 +215,8 @@
     "densityKgM3": 7800,
     "conductivityWmK": 50,
     "specificHeatJKgK": 450,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "en-iso-10456-2007"
    },
@@ -243,7 +243,7 @@
     "emissivity": 0.9,
     "solarAbsorptivity": 0.1,
     "densityKgM3": 2500,
-    "conductivityWmK": 1.0,
+    "conductivityWmK": 1,
     "specificHeatJKgK": 750,
     "source": "literature",
     "reference": "iec-60061-1"
@@ -260,9 +260,9 @@
       "en": "Depot floor",
       "de": "Lagerboden"
      },
-     "x": 0.0,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0,
      "joint": {
       "type": "fixed"
@@ -276,8 +276,8 @@
       "de": "Drei gefaltete Möbeldecken"
      },
      "x": -0.03,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.56,
      "joint": {
       "type": "prismatic",
@@ -301,9 +301,9 @@
       "en": "Linen cabinet body (seen from the front on the right)",
       "de": "Wäscheschrankteil (von vorn rechts)"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.012,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.48,
      "joint": {
       "type": "prismatic",
@@ -328,9 +328,9 @@
       "en": "Centre body carried forward",
       "de": "Mittelteil nach vorn getragen"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.012,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0,
      "joint": {
       "type": "prismatic",
@@ -346,9 +346,9 @@
       "en": "Centre body lifted",
       "de": "Mittelteil angehoben"
      },
-     "x": 0.0,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0,
      "joint": {
       "type": "prismatic",
@@ -364,9 +364,9 @@
       "en": "Centre body: drawers, bar, display cabinet (tilts about its rear bottom edge)",
       "de": "Mittelteil: Schubkästen, Bar, Vitrine (kippt um die hintere Unterkante)"
      },
-     "x": 0.0,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.48,
      "joint": {
       "type": "revolute",
@@ -389,9 +389,9 @@
       "en": "TV body (seen from the front on the left)",
       "de": "TV-Teil (von vorn links)"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.012,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.48,
      "joint": {
       "type": "prismatic",
@@ -418,7 +418,7 @@
      },
      "x": 0.5,
      "y": 0.44,
-     "angleDeg": 90.0,
+     "angleDeg": 90,
      "lengthM": 0.417,
      "joint": {
       "type": "revolute",
@@ -435,7 +435,7 @@
      },
      "section": {
       "areaM2": 0.017043,
-      "secondMomentM4": 5.127e-07,
+      "secondMomentM4": 5.127e-7,
       "extremeFibreM": 0.0095,
       "material": "oak-decor-mdf",
       "title": {
@@ -464,13 +464,13 @@
      "mass": {
       "kg": 0.096,
       "comX": 0.215,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "en-312-2010"
      },
      "section": {
-      "areaM2": 2.827e-05,
+      "areaM2": 0.00002827,
       "secondMomentM4": 6.362e-11,
       "extremeFibreM": 0.003,
       "material": "zinc-plated-steel",
@@ -500,13 +500,13 @@
      "mass": {
       "kg": 0.096,
       "comX": 0.215,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "en-312-2010"
      },
      "section": {
-      "areaM2": 2.827e-05,
+      "areaM2": 0.00002827,
       "secondMomentM4": 6.362e-11,
       "extremeFibreM": 0.003,
       "material": "zinc-plated-steel",
@@ -525,7 +525,7 @@
      },
      "x": 0.06,
      "y": 0.1,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.44,
      "joint": {
       "type": "prismatic",
@@ -551,7 +551,7 @@
      },
      "x": 0.06,
      "y": 0.28,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.44,
      "joint": {
       "type": "prismatic",
@@ -577,7 +577,7 @@
      },
      "x": 0.481,
      "y": 0.082,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.019,
      "joint": {
       "type": "revolute",
@@ -603,7 +603,7 @@
      },
      "x": 0.481,
      "y": 0.082,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.019,
      "joint": {
       "type": "revolute",
@@ -629,7 +629,7 @@
      },
      "x": 0.481,
      "y": 0.86,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.019,
      "joint": {
       "type": "revolute",
@@ -655,7 +655,7 @@
      },
      "x": 0.481,
      "y": 0.86,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.019,
      "joint": {
       "type": "revolute",
@@ -681,7 +681,7 @@
      },
      "x": 0.481,
      "y": 0.082,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.019,
      "joint": {
       "type": "revolute",
@@ -707,7 +707,7 @@
      },
      "x": 0.481,
      "y": 0.082,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.019,
      "joint": {
       "type": "revolute",
@@ -733,7 +733,7 @@
      },
      "x": 0.481,
      "y": 1.361,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.019,
      "joint": {
       "type": "revolute",
@@ -759,7 +759,7 @@
      },
      "x": 0.481,
      "y": 1.361,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.019,
      "joint": {
       "type": "revolute",
@@ -783,7 +783,7 @@
     "id": "plinth-linen",
     "bone": "linen-body",
     "x": 0.24,
-    "y": 0.0,
+    "y": 0,
     "kind": "contact",
     "title": {
      "en": "Linen cabinet standing on its side panels and plinth",
@@ -799,7 +799,7 @@
     "id": "plinth-centre",
     "bone": "centre-body",
     "x": 0.24,
-    "y": 0.0,
+    "y": 0,
     "kind": "contact",
     "title": {
      "en": "Centre body standing on its side panels and plinth",
@@ -815,7 +815,7 @@
     "id": "plinth-tv",
     "bone": "tv-body",
     "x": 0.24,
-    "y": 0.0,
+    "y": 0,
     "kind": "contact",
     "title": {
      "en": "TV body standing on its side panels and plinth",
@@ -831,7 +831,7 @@
     "id": "grip-low",
     "bone": "centre-body",
     "x": 0.46,
-    "y": 0.0,
+    "y": 0,
     "kind": "support",
     "title": {
      "en": "Lower mover's grip under the front bottom edge",
@@ -917,8 +917,8 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.48,
        "h": 1.94,
        "region": "carcass",
@@ -968,11 +968,11 @@
         ],
         [
          0.53,
-         2.0
+         2
         ],
         [
          0.46,
-         2.0
+         2
         ]
        ],
        "closed": true,
@@ -1003,8 +1003,8 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.48,
        "h": 1.94,
        "region": "carcass",
@@ -1054,11 +1054,11 @@
         ],
         [
          0.53,
-         2.0
+         2
         ],
         [
          0.46,
-         2.0
+         2
         ]
        ],
        "closed": true,
@@ -1089,8 +1089,8 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.48,
        "h": 1.94,
        "region": "carcass",
@@ -1140,11 +1140,11 @@
         ],
         [
          0.53,
-         2.0
+         2
         ],
         [
          0.46,
-         2.0
+         2
         ]
        ],
        "closed": true,
@@ -1160,8 +1160,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 1.856,
        "region": "fronts",
@@ -1176,8 +1176,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 1.856,
        "region": "fronts",
@@ -1192,8 +1192,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 1.078,
        "region": "fronts",
@@ -1223,8 +1223,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 1.078,
        "region": "fronts",
@@ -1254,8 +1254,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 0.707,
        "region": "fronts",
@@ -1270,8 +1270,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 0.707,
        "region": "fronts",
@@ -1286,8 +1286,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 0.577,
        "region": "fronts",
@@ -1302,8 +1302,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 0.577,
        "region": "fronts",
@@ -1318,8 +1318,8 @@
        "filled": true,
        "tone": 0.65,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.421,
        "h": 0.124,
        "material": "oak-decor-chipboard"
@@ -1348,8 +1348,8 @@
        "filled": true,
        "tone": 0.65,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.421,
        "h": 0.124,
        "material": "oak-decor-chipboard"
@@ -1392,7 +1392,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.003,
        "w": 0.43,
        "h": 0.006,
@@ -1406,7 +1406,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.003,
        "w": 0.43,
        "h": 0.006,
@@ -1422,16 +1422,16 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.019
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.417,
-         0.0
+         0
         ],
         [
          0.417,
@@ -2064,7 +2064,7 @@
        "points": [
         [
          0.4,
-         0.0
+         0
         ],
         [
          0.399,
@@ -2108,7 +2108,7 @@
         ],
         [
          0.384,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -2125,11 +2125,11 @@
        "points": [
         [
          0.006,
-         0.0
+         0
         ],
         [
          0.554,
-         0.0
+         0
         ],
         [
          0.557,
@@ -2168,7 +2168,7 @@
          0.009
         ],
         [
-         0.0,
+         0,
          0.006
         ],
         [
@@ -2212,7 +2212,7 @@
        "filled": true,
        "tone": 0.66,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 1.22,
        "w": 0.48,
        "h": 0.72,
@@ -2229,7 +2229,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          1.22
         ],
         [
@@ -2263,11 +2263,11 @@
        "points": [
         [
          0.462,
-         0.0
+         0
         ],
         [
          0.48,
-         0.0
+         0
         ],
         [
          0.48,
@@ -3553,19 +3553,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.417,
-         0.0
+         0
         ],
         [
          0.417,
          0.019
         ],
         [
-         0.0,
+         0,
          0.019
         ]
        ],
@@ -3599,11 +3599,11 @@
         ],
         [
          0.407,
-         0.0
+         0
         ],
         [
          0.377,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3624,7 +3624,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": -1.35,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.012,
        "region": "blankets",
@@ -3639,7 +3639,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": -0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.012,
        "region": "blankets",
@@ -3654,7 +3654,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": 0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.012,
        "region": "blankets",
@@ -3821,7 +3821,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 1.331,
        "w": 0.48,
        "h": 0.019,
@@ -3837,7 +3837,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.45,
        "w": 0.48,
        "h": 0.019,
@@ -3852,13 +3852,34 @@
        "z": 1,
        "filled": true,
        "tone": 0.6,
-       "kind": "rect",
-       "x": 0.011,
-       "y": -0.431,
-       "w": 0.469,
-       "h": 0.862,
        "region": "carcass",
-       "material": "oak-decor-chipboard"
+       "material": "oak-decor-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0.011,
+         -0.431
+        ],
+        [
+         0.48,
+         -0.431
+        ],
+        [
+         0.48,
+         0.431
+        ],
+        [
+         0.011,
+         0.431
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.08,
+        "z1": 0.099
+       }
       },
       {
        "id": "centre-bar-bottom",
@@ -3867,13 +3888,34 @@
        "z": 1.5,
        "filled": true,
        "tone": 0.65,
-       "kind": "rect",
-       "x": 0.011,
-       "y": -0.431,
-       "w": 0.469,
-       "h": 0.862,
        "region": "carcass",
-       "material": "oak-decor-chipboard"
+       "material": "oak-decor-chipboard",
+       "kind": "poly",
+       "points": [
+        [
+         0.011,
+         -0.431
+        ],
+        [
+         0.48,
+         -0.431
+        ],
+        [
+         0.48,
+         0.431
+        ],
+        [
+         0.011,
+         0.431
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.44,
+        "z1": 0.459
+       }
       },
       {
        "id": "centre-mirror",
@@ -3882,12 +3924,33 @@
        "z": 5,
        "filled": true,
        "tone": 0.85,
-       "kind": "rect",
-       "x": 0.011,
-       "y": -0.431,
-       "w": 0.004,
-       "h": 0.862,
-       "material": "mirror-glass"
+       "material": "mirror-glass",
+       "kind": "poly",
+       "points": [
+        [
+         0.011,
+         -0.431
+        ],
+        [
+         0.015,
+         -0.431
+        ],
+        [
+         0.015,
+         0.431
+        ],
+        [
+         0.011,
+         0.431
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.459,
+        "z1": 0.86
+       }
       },
       {
        "id": "centre-back",
@@ -3896,14 +3959,35 @@
        "z": 4.9,
        "filled": true,
        "tone": 0.7,
-       "kind": "rect",
-       "x": 0.008,
-       "y": -0.437,
-       "w": 0.003,
-       "h": 0.874,
        "region": "back-panel",
        "material": "hardboard",
-       "penMm": 0.25
+       "penMm": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.008,
+         -0.437
+        ],
+        [
+         0.011,
+         -0.437
+        ],
+        [
+         0.011,
+         0.437
+        ],
+        [
+         0.008,
+         0.437
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.08,
+        "z1": 1.94
+       }
       },
       {
        "id": "centre-side-p",
@@ -3912,14 +3996,35 @@
        "z": 5,
        "filled": true,
        "tone": 0.3,
-       "kind": "rect",
-       "x": 0.0,
-       "y": 0.431,
-       "w": 0.48,
-       "h": 0.019,
        "region": "carcass",
        "material": "oak-decor-chipboard",
-       "penMm": 0.25
+       "penMm": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.431
+        ],
+        [
+         0.48,
+         0.431
+        ],
+        [
+         0.48,
+         0.45
+        ],
+        [
+         0,
+         0.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 1.94
+       }
       },
       {
        "id": "centre-side-m",
@@ -3928,14 +4033,35 @@
        "z": 5,
        "filled": true,
        "tone": 0.3,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.45,
-       "w": 0.48,
-       "h": 0.019,
        "region": "carcass",
        "material": "oak-decor-chipboard",
-       "penMm": 0.25
+       "penMm": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.45
+        ],
+        [
+         0.48,
+         -0.45
+        ],
+        [
+         0.48,
+         -0.431
+        ],
+        [
+         0,
+         -0.431
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 1.94
+       }
       },
       {
        "id": "tv-bottom",
@@ -3991,7 +4117,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.469,
        "w": 0.48,
        "h": 0.019,
@@ -4007,7 +4133,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -1.35,
        "w": 0.48,
        "h": 0.019,
@@ -4213,19 +4339,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.417,
-         0.0
+         0
         ],
         [
          0.417,
          0.019
         ],
         [
-         0.0,
+         0,
          0.019
         ]
        ],
@@ -4432,8 +4558,8 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.48,
        "h": 1.94,
        "region": "carcass",
@@ -4467,11 +4593,11 @@
         ],
         [
          0.53,
-         2.0
+         2
         ],
         [
          0.46,
-         2.0
+         2
         ]
        ],
        "closed": true,
@@ -4502,8 +4628,8 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.48,
        "h": 1.94,
        "region": "carcass",
@@ -4537,11 +4663,11 @@
         ],
         [
          0.53,
-         2.0
+         2
         ],
         [
          0.46,
-         2.0
+         2
         ]
        ],
        "closed": true,
@@ -4572,8 +4698,8 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.48,
        "h": 1.94,
        "region": "carcass",
@@ -4607,11 +4733,11 @@
         ],
         [
          0.53,
-         2.0
+         2
         ],
         [
          0.46,
-         2.0
+         2
         ]
        ],
        "closed": true,
@@ -4627,8 +4753,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 1.856,
        "region": "fronts",
@@ -4643,8 +4769,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 1.856,
        "region": "fronts",
@@ -4659,8 +4785,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 1.078,
        "region": "fronts",
@@ -4690,8 +4816,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 1.078,
        "region": "fronts",
@@ -4721,8 +4847,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 0.707,
        "region": "fronts",
@@ -4737,8 +4863,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 0.707,
        "region": "fronts",
@@ -4753,8 +4879,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 0.577,
        "region": "fronts",
@@ -4769,8 +4895,8 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.019,
        "h": 0.577,
        "region": "fronts",
@@ -4785,8 +4911,8 @@
        "filled": true,
        "tone": 0.65,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.421,
        "h": 0.124,
        "material": "oak-decor-chipboard"
@@ -4815,8 +4941,8 @@
        "filled": true,
        "tone": 0.65,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.421,
        "h": 0.124,
        "material": "oak-decor-chipboard"
@@ -4859,7 +4985,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.003,
        "w": 0.43,
        "h": 0.006,
@@ -4873,7 +4999,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.003,
        "w": 0.43,
        "h": 0.006,
@@ -4889,16 +5015,16 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.019
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.417,
-         0.0
+         0
         ],
         [
          0.417,
@@ -5061,7 +5187,7 @@
        "points": [
         [
          0.377,
-         0.0
+         0
         ],
         [
          0.377,
@@ -5073,7 +5199,7 @@
         ],
         [
          0.407,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -5087,8 +5213,8 @@
        "filled": true,
        "tone": 0.35,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.56,
        "h": 0.012,
        "region": "blankets",
@@ -5102,7 +5228,7 @@
        "filled": true,
        "tone": 0.66,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 1.22,
        "w": 0.48,
        "h": 0.72,
@@ -5923,19 +6049,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.417,
-         0.0
+         0
         ],
         [
          0.417,
          0.019
         ],
         [
-         0.0,
+         0,
          0.019
         ]
        ],
@@ -5969,11 +6095,11 @@
         ],
         [
          0.407,
-         0.0
+         0
         ],
         [
          0.377,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -5994,7 +6120,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": -1.35,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.012,
        "region": "blankets",
@@ -6009,7 +6135,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": -0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.012,
        "region": "blankets",
@@ -6024,7 +6150,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": 0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.012,
        "region": "blankets",
@@ -6085,7 +6211,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.45,
        "w": 0.46,
        "h": 0.9,
@@ -6116,14 +6242,35 @@
        "z": 2,
        "filled": true,
        "tone": 0.55,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.45,
-       "w": 0.46,
-       "h": 0.9,
        "region": "carcass",
        "material": "oak-decor-chipboard",
-       "penMm": 0.18
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.48,
+         0
+        ],
+        [
+         0.48,
+         1.94
+        ],
+        [
+         0,
+         1.94
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.45,
+        "z1": 0.45
+       }
       },
       {
        "id": "centre-cornice",
@@ -6132,14 +6279,43 @@
        "z": 3,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": 0.46,
-       "y": -0.45,
-       "w": 0.07,
-       "h": 0.9,
        "region": "cornice",
        "material": "oak-decor-mdf",
-       "penMm": 0.18
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0.46,
+         1.94
+        ],
+        [
+         0.5,
+         1.94
+        ],
+        [
+         0.515,
+         1.955
+        ],
+        [
+         0.53,
+         1.97
+        ],
+        [
+         0.53,
+         2
+        ],
+        [
+         0.46,
+         2
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.45,
+        "z1": 0.45
+       }
       },
       {
        "id": "tv-top",
@@ -6149,7 +6325,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -1.35,
        "w": 0.46,
        "h": 0.9,
@@ -6235,8 +6411,8 @@
        "filled": true,
        "tone": 0.8,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.003,
        "h": 1.94,
        "region": "back-panel",
@@ -6250,8 +6426,8 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.5,
        "h": 1.94,
        "region": "carcass",
@@ -6282,8 +6458,8 @@
        "filled": true,
        "tone": 0.8,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.003,
        "h": 1.94,
        "region": "back-panel",
@@ -6297,8 +6473,8 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.5,
        "h": 1.94,
        "region": "carcass",
@@ -6329,8 +6505,8 @@
        "filled": true,
        "tone": 0.8,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.003,
        "h": 1.94,
        "region": "back-panel",
@@ -6344,8 +6520,8 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.5,
        "h": 1.94,
        "region": "carcass",
@@ -6406,8 +6582,8 @@
        "filled": true,
        "tone": 0.65,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.41,
        "h": 0.124,
        "material": "oak-decor-chipboard"
@@ -6436,8 +6612,8 @@
        "filled": true,
        "tone": 0.65,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.41,
        "h": 0.124,
        "material": "oak-decor-chipboard"
@@ -6468,16 +6644,16 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.03
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.42,
@@ -6497,8 +6673,8 @@
        "filled": true,
        "tone": 0.35,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.56,
        "h": 0.012,
        "region": "blankets",
@@ -6512,7 +6688,7 @@
        "filled": true,
        "tone": 0.66,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 1.22,
        "w": 0.5,
        "h": 0.72,
@@ -6901,19 +7077,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.42,
          0.03
         ],
         [
-         0.0,
+         0,
          0.03
         ]
        ],
@@ -6937,7 +7113,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": -1.35,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.012,
        "region": "blankets",
@@ -6952,7 +7128,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": -0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.012,
        "region": "blankets",
@@ -6967,7 +7143,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": 0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.012,
        "region": "blankets",
@@ -7028,7 +7204,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.45,
        "w": 0.46,
        "h": 0.9,
@@ -7059,14 +7235,35 @@
        "z": 2,
        "filled": true,
        "tone": 0.55,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.45,
-       "w": 0.46,
-       "h": 0.9,
        "region": "carcass",
        "material": "oak-decor-chipboard",
-       "penMm": 0.13
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.5,
+         0
+        ],
+        [
+         0.5,
+         1.94
+        ],
+        [
+         0,
+         1.94
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.45,
+        "z1": 0.45
+       }
       },
       {
        "id": "centre-cornice",
@@ -7075,14 +7272,35 @@
        "z": 3,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": 0.46,
-       "y": -0.45,
-       "w": 0.07,
-       "h": 0.9,
        "region": "cornice",
        "material": "oak-decor-mdf",
-       "penMm": 0.13
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         0.46,
+         1.94
+        ],
+        [
+         0.53,
+         1.94
+        ],
+        [
+         0.53,
+         2
+        ],
+        [
+         0.46,
+         2
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.45,
+        "z1": 0.45
+       }
       },
       {
        "id": "tv-top",
@@ -7092,7 +7310,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -1.35,
        "w": 0.46,
        "h": 0.9,
@@ -7178,8 +7396,8 @@
        "filled": true,
        "tone": 0.8,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.003,
        "h": 1.925,
        "region": "back-panel",
@@ -7193,8 +7411,8 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.5,
        "h": 1.925,
        "region": "carcass",
@@ -7225,8 +7443,8 @@
        "filled": true,
        "tone": 0.8,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.003,
        "h": 1.925,
        "region": "back-panel",
@@ -7240,8 +7458,8 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.5,
        "h": 1.925,
        "region": "carcass",
@@ -7272,8 +7490,8 @@
        "filled": true,
        "tone": 0.8,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.003,
        "h": 1.925,
        "region": "back-panel",
@@ -7287,8 +7505,8 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.5,
        "h": 1.925,
        "region": "carcass",
@@ -7349,8 +7567,8 @@
        "filled": true,
        "tone": 0.65,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.365,
        "h": 0.124,
        "material": "oak-decor-chipboard"
@@ -7379,8 +7597,8 @@
        "filled": true,
        "tone": 0.65,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.365,
        "h": 0.124,
        "material": "oak-decor-chipboard"
@@ -7411,16 +7629,16 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.075
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.42,
@@ -7440,8 +7658,8 @@
        "filled": true,
        "tone": 0.35,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.56,
        "h": 0.022,
        "region": "blankets",
@@ -7829,19 +8047,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.42,
          0.075
         ],
         [
-         0.0,
+         0,
          0.075
         ]
        ],
@@ -7865,7 +8083,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": -1.35,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.022,
        "region": "blankets",
@@ -7880,7 +8098,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": -0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.022,
        "region": "blankets",
@@ -7895,7 +8113,7 @@
        "tone": 0.35,
        "kind": "rect",
        "x": 0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.022,
        "region": "blankets",
@@ -7956,7 +8174,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.45,
        "w": 0.455,
        "h": 0.9,
@@ -7987,14 +8205,35 @@
        "z": 2,
        "filled": true,
        "tone": 0.55,
-       "kind": "rect",
-       "x": 0.0,
-       "y": -0.45,
-       "w": 0.455,
-       "h": 0.9,
        "region": "carcass",
        "material": "oak-decor-chipboard",
-       "penMm": 0.18
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.5,
+         0
+        ],
+        [
+         0.5,
+         1.925
+        ],
+        [
+         0,
+         1.925
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.45,
+        "z1": 0.45
+       }
       },
       {
        "id": "centre-cornice",
@@ -8003,14 +8242,35 @@
        "z": 3,
        "filled": true,
        "tone": 0.45,
-       "kind": "rect",
-       "x": 0.455,
-       "y": -0.45,
-       "w": 0.075,
-       "h": 0.9,
        "region": "cornice",
        "material": "oak-decor-mdf",
-       "penMm": 0.18
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0.455,
+         1.925
+        ],
+        [
+         0.53,
+         1.925
+        ],
+        [
+         0.53,
+         2
+        ],
+        [
+         0.455,
+         2
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.45,
+        "z1": 0.45
+       }
       },
       {
        "id": "tv-top",
@@ -8020,7 +8280,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -1.35,
        "w": 0.455,
        "h": 0.9,
@@ -8125,11 +8385,11 @@
        "points": [
         [
          -0.03,
-         0.0
+         0
         ],
         [
          0.53,
-         0.0
+         0
         ],
         [
          0.53,
@@ -8144,11 +8404,11 @@
          1.952
         ],
         [
-         0.0,
+         0,
          1.952
         ],
         [
-         0.0,
+         0,
          0.012
         ],
         [
@@ -8169,7 +8429,7 @@
        "tone": 0.85,
        "kind": "rect",
        "x": -1.35,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 2.012
       },
@@ -8182,7 +8442,7 @@
        "tone": 0.85,
        "kind": "rect",
        "x": -0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 2.012
       },
@@ -8195,7 +8455,7 @@
        "tone": 0.85,
        "kind": "rect",
        "x": 0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 2.012
       }
@@ -8224,7 +8484,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.45
         ],
         [
@@ -8244,7 +8504,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.45
         ],
         [
@@ -8283,35 +8543,35 @@
      "regions": {
       "carcass": {
        "exposedFraction": 0.75,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "cornice": {
        "exposedFraction": 0.92,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "fronts": {
        "exposedFraction": 0.94,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "glazing": {
        "exposedFraction": 0.97,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "back-panel": {
        "exposedFraction": 0.98,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "blankets": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.47,
         "tempC": 16
        }
       },
       "bar-lamp": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -8353,35 +8613,35 @@
      "regions": {
       "carcass": {
        "exposedFraction": 0.75,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "cornice": {
        "exposedFraction": 0.92,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "fronts": {
        "exposedFraction": 0.94,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "glazing": {
        "exposedFraction": 0.97,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "back-panel": {
        "exposedFraction": 0.98,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "blankets": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.47,
         "tempC": 16
        }
       },
       "bar-lamp": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -8425,35 +8685,35 @@
      "regions": {
       "carcass": {
        "exposedFraction": 0.75,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "cornice": {
        "exposedFraction": 0.92,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "fronts": {
        "exposedFraction": 0.94,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "glazing": {
        "exposedFraction": 0.97,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "back-panel": {
        "exposedFraction": 0.3,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "blankets": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.5,
         "tempC": 16
        }
       },
       "bar-lamp": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -8469,7 +8729,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 0.479,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -117.6798,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8484,7 +8744,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 0.839,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -117.6798,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8499,7 +8759,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 1.199,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -117.6798,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8514,7 +8774,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 1.559,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -117.6798,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8529,7 +8789,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 0.099,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -98.0665,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8544,7 +8804,7 @@
       "bone": "drawer-1",
       "x": 0.21,
       "y": 0.004,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.8399,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8559,7 +8819,7 @@
       "bone": "drawer-2",
       "x": 0.21,
       "y": 0.004,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.8399,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8574,7 +8834,7 @@
       "bone": "centre-body",
       "x": 0.25,
       "y": 0.459,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -78.4532,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8589,7 +8849,7 @@
       "bone": "centre-body",
       "x": 0.25,
       "y": 0.879,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -39.2266,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8604,7 +8864,7 @@
       "bone": "centre-body",
       "x": 0.23,
       "y": 1.226,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -29.41995,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8619,7 +8879,7 @@
       "bone": "centre-body",
       "x": 0.23,
       "y": 1.576,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -29.41995,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8634,7 +8894,7 @@
       "bone": "tv-body",
       "x": 0.27,
       "y": 0.799,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -245.16625,
       "source": "authored-estimate",
       "reference": "wall-unit-catalogues-1980s"
@@ -8649,7 +8909,7 @@
       "bone": "tv-body",
       "x": 0.25,
       "y": 0.449,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -98.0665,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8664,7 +8924,7 @@
       "bone": "tv-body",
       "x": 0.25,
       "y": 1.659,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.8399,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8679,7 +8939,7 @@
       "bone": "tv-body",
       "x": 0.25,
       "y": 0.099,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -78.4532,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8710,7 +8970,7 @@
       "dx": 0.62
      },
      "flap": {
-      "angleDeg": -90.0
+      "angleDeg": -90
      },
      "stay-p": {
       "angleDeg": 59.957181
@@ -8732,35 +8992,35 @@
      "regions": {
       "carcass": {
        "exposedFraction": 0.75,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "cornice": {
        "exposedFraction": 0.92,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "fronts": {
        "exposedFraction": 0.94,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "glazing": {
        "exposedFraction": 0.97,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "back-panel": {
        "exposedFraction": 0.3,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "blankets": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.5,
         "tempC": 16
        }
       },
       "bar-lamp": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -8776,7 +9036,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 0.479,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -117.6798,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8791,7 +9051,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 0.839,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -117.6798,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8806,7 +9066,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 1.199,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -117.6798,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8821,7 +9081,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 1.559,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -117.6798,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8836,7 +9096,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 0.099,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -98.0665,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8851,7 +9111,7 @@
       "bone": "drawer-1",
       "x": 0.21,
       "y": 0.004,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.8399,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8866,7 +9126,7 @@
       "bone": "drawer-2",
       "x": 0.21,
       "y": 0.004,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.8399,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8881,7 +9141,7 @@
       "bone": "centre-body",
       "x": 0.25,
       "y": 0.459,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -78.4532,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8896,7 +9156,7 @@
       "bone": "centre-body",
       "x": 0.25,
       "y": 0.879,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -39.2266,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8911,7 +9171,7 @@
       "bone": "centre-body",
       "x": 0.23,
       "y": 1.226,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -29.41995,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8926,7 +9186,7 @@
       "bone": "centre-body",
       "x": 0.23,
       "y": 1.576,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -29.41995,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8941,7 +9201,7 @@
       "bone": "tv-body",
       "x": 0.27,
       "y": 0.799,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -245.16625,
       "source": "authored-estimate",
       "reference": "wall-unit-catalogues-1980s"
@@ -8956,7 +9216,7 @@
       "bone": "tv-body",
       "x": 0.25,
       "y": 0.449,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -98.0665,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8971,7 +9231,7 @@
       "bone": "tv-body",
       "x": 0.25,
       "y": 1.659,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.8399,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -8986,7 +9246,7 @@
       "bone": "tv-body",
       "x": 0.25,
       "y": 0.099,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -78.4532,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9001,7 +9261,7 @@
       "bone": "flap",
       "x": 0.21,
       "y": 0.019,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -49.03325,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9048,35 +9308,35 @@
      "regions": {
       "carcass": {
        "exposedFraction": 0.75,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "cornice": {
        "exposedFraction": 0.92,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "fronts": {
        "exposedFraction": 0.94,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "glazing": {
        "exposedFraction": 0.97,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "back-panel": {
        "exposedFraction": 0.3,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "blankets": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.5,
         "tempC": 16
        }
       },
       "bar-lamp": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -9092,7 +9352,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 0.479,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -117.6798,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9107,7 +9367,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 0.839,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -117.6798,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9122,7 +9382,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 1.199,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -117.6798,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9137,7 +9397,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 1.559,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -117.6798,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9152,7 +9412,7 @@
       "bone": "linen-body",
       "x": 0.25,
       "y": 0.099,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -98.0665,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9167,7 +9427,7 @@
       "bone": "drawer-1",
       "x": 0.21,
       "y": 0.004,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.8399,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9182,7 +9442,7 @@
       "bone": "drawer-2",
       "x": 0.21,
       "y": 0.004,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.8399,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9197,7 +9457,7 @@
       "bone": "centre-body",
       "x": 0.25,
       "y": 0.459,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -78.4532,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9212,7 +9472,7 @@
       "bone": "centre-body",
       "x": 0.25,
       "y": 0.879,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -39.2266,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9227,7 +9487,7 @@
       "bone": "centre-body",
       "x": 0.23,
       "y": 1.226,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -29.41995,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9242,7 +9502,7 @@
       "bone": "centre-body",
       "x": 0.23,
       "y": 1.576,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -29.41995,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9257,7 +9517,7 @@
       "bone": "tv-body",
       "x": 0.27,
       "y": 0.799,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -245.16625,
       "source": "authored-estimate",
       "reference": "wall-unit-catalogues-1980s"
@@ -9272,7 +9532,7 @@
       "bone": "tv-body",
       "x": 0.25,
       "y": 0.449,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -98.0665,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9287,7 +9547,7 @@
       "bone": "tv-body",
       "x": 0.25,
       "y": 1.659,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.8399,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9302,7 +9562,7 @@
       "bone": "tv-body",
       "x": 0.25,
       "y": 0.099,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -78.4532,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -9321,7 +9581,7 @@
      "en": "The movers tilt the centre body back on its rear bottom edge, lift it off its blanket and carry it 1.45 m out of the row; the blanket stays behind.",
      "de": "Die Träger kippen das Mittelteil auf seiner hinteren Unterkante nach hinten, heben es von seiner Decke und tragen es 1,45 m aus der Reihe; die Decke bleibt liegen."
     },
-    "durationS": 4.0,
+    "durationS": 4,
     "fps": 25,
     "loop": false,
     "rootMotion": "none",
@@ -9342,7 +9602,7 @@
       }
      },
      {
-      "t": 2.0,
+      "t": 2,
       "pose": "stored",
       "ease": "smooth",
       "bones": {
@@ -9355,7 +9615,7 @@
       }
      },
      {
-      "t": 4.0,
+      "t": 4,
       "pose": "carried",
       "ease": "smooth"
      }
@@ -9364,12 +9624,12 @@
      {
       "anchor": "plinth-linen",
       "fromS": 0,
-      "toS": 4.0
+      "toS": 4
      },
      {
       "anchor": "plinth-tv",
       "fromS": 0,
-      "toS": 4.0
+      "toS": 4
      },
      {
       "anchor": "plinth-centre",
@@ -9379,12 +9639,12 @@
      {
       "anchor": "grip-high",
       "fromS": 0.2,
-      "toS": 4.0
+      "toS": 4
      },
      {
       "anchor": "grip-low",
       "fromS": 0.6,
-      "toS": 4.0
+      "toS": 4
      }
     ],
     "phases": [
@@ -9400,7 +9660,7 @@
      {
       "id": "lift",
       "fromS": 1.2,
-      "toS": 2.0,
+      "toS": 2,
       "title": {
        "en": "Lifting off the blanket",
        "de": "Von der Decke heben"
@@ -9408,8 +9668,8 @@
      },
      {
       "id": "carry-out",
-      "fromS": 2.0,
-      "toS": 4.0,
+      "fromS": 2,
+      "toS": 4,
       "title": {
        "en": "Carrying out",
        "de": "Hinaustragen"
@@ -9436,7 +9696,7 @@
       "target": "plinth-centre"
      },
      {
-      "t": 2.0,
+      "t": 2,
       "kind": "motion",
       "title": {
        "en": "Walking out",
@@ -9456,7 +9716,7 @@
      "en": "The flap is pulled down to horizontal on its braked stays; the line lamp switches on as the flap leaves its contact switch, stays on while the flap is open and goes off as it closes.",
      "de": "Die Klappe wird an ihren gebremsten Haltern bis waagerecht heruntergezogen; die Linienlampe schaltet ein, sobald die Klappe den Kontaktschalter freigibt, bleibt bei offener Klappe an und geht beim Schließen aus."
     },
-    "durationS": 5.0,
+    "durationS": 5,
     "fps": 25,
     "loop": false,
     "rootMotion": "none",
@@ -9484,7 +9744,7 @@
         "dx": 0.62
        },
        "flap": {
-        "angleDeg": -15.0
+        "angleDeg": -15
        },
        "stay-p": {
         "angleDeg": 12.767328
@@ -9512,7 +9772,7 @@
         "dx": 0.62
        },
        "flap": {
-        "angleDeg": -30.0
+        "angleDeg": -30
        },
        "stay-p": {
         "angleDeg": 23.506862
@@ -9540,7 +9800,7 @@
         "dx": 0.62
        },
        "flap": {
-        "angleDeg": -45.0
+        "angleDeg": -45
        },
        "stay-p": {
         "angleDeg": 33.251583
@@ -9568,7 +9828,7 @@
         "dx": 0.62
        },
        "flap": {
-        "angleDeg": -60.0
+        "angleDeg": -60
        },
        "stay-p": {
         "angleDeg": 42.444005
@@ -9596,7 +9856,7 @@
         "dx": 0.62
        },
        "flap": {
-        "angleDeg": -75.0
+        "angleDeg": -75
        },
        "stay-p": {
         "angleDeg": 51.304749
@@ -9612,7 +9872,7 @@
       "ease": "smooth"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "pose": "bar-open",
       "ease": "smooth"
      },
@@ -9634,7 +9894,7 @@
         "dx": 0.62
        },
        "flap": {
-        "angleDeg": -75.0
+        "angleDeg": -75
        },
        "stay-p": {
         "angleDeg": 51.304749
@@ -9662,7 +9922,7 @@
         "dx": 0.62
        },
        "flap": {
-        "angleDeg": -60.0
+        "angleDeg": -60
        },
        "stay-p": {
         "angleDeg": 42.444005
@@ -9690,7 +9950,7 @@
         "dx": 0.62
        },
        "flap": {
-        "angleDeg": -45.0
+        "angleDeg": -45
        },
        "stay-p": {
         "angleDeg": 33.251583
@@ -9701,7 +9961,7 @@
       }
      },
      {
-      "t": 4.0,
+      "t": 4,
       "pose": "in-use",
       "ease": "smooth",
       "bones": {
@@ -9718,7 +9978,7 @@
         "dx": 0.62
        },
        "flap": {
-        "angleDeg": -30.0
+        "angleDeg": -30
        },
        "stay-p": {
         "angleDeg": 23.506862
@@ -9746,7 +10006,7 @@
         "dx": 0.62
        },
        "flap": {
-        "angleDeg": -15.0
+        "angleDeg": -15
        },
        "stay-p": {
         "angleDeg": 12.767328
@@ -9762,7 +10022,7 @@
       "ease": "smooth"
      },
      {
-      "t": 5.0,
+      "t": 5,
       "pose": "in-use",
       "ease": "smooth"
      }
@@ -9771,17 +10031,17 @@
      {
       "anchor": "plinth-linen",
       "fromS": 0,
-      "toS": 5.0
+      "toS": 5
      },
      {
       "anchor": "plinth-centre",
       "fromS": 0,
-      "toS": 5.0
+      "toS": 5
      },
      {
       "anchor": "plinth-tv",
       "fromS": 0,
-      "toS": 5.0
+      "toS": 5
      }
     ],
     "phases": [
@@ -9797,7 +10057,7 @@
      {
       "id": "open",
       "fromS": 1.8,
-      "toS": 3.0,
+      "toS": 3,
       "title": {
        "en": "Open",
        "de": "Offen"
@@ -9805,7 +10065,7 @@
      },
      {
       "id": "closing",
-      "fromS": 3.0,
+      "fromS": 3,
       "toS": 4.5,
       "title": {
        "en": "Closing",
@@ -9851,7 +10111,7 @@
         "v": 0
        },
        {
-        "t": 5.0,
+        "t": 5,
         "v": 0
        }
       ]
@@ -9868,7 +10128,7 @@
      "en": "The upper drawer is pulled out 0.30 m on its roller runners and pushed back.",
      "de": "Der obere Schubkasten wird 0,30 m auf seinen Rollenauszügen herausgezogen und zurückgeschoben."
     },
-    "durationS": 3.0,
+    "durationS": 3,
     "fps": 25,
     "loop": false,
     "rootMotion": "none",
@@ -9879,17 +10139,17 @@
       "ease": "smooth"
      },
      {
-      "t": 1.0,
+      "t": 1,
       "pose": "drawer-out",
       "ease": "smooth"
      },
      {
-      "t": 2.0,
+      "t": 2,
       "pose": "drawer-out",
       "ease": "smooth"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "pose": "in-use",
       "ease": "smooth"
      }
@@ -9898,24 +10158,24 @@
      {
       "anchor": "plinth-linen",
       "fromS": 0,
-      "toS": 3.0
+      "toS": 3
      },
      {
       "anchor": "plinth-centre",
       "fromS": 0,
-      "toS": 3.0
+      "toS": 3
      },
      {
       "anchor": "plinth-tv",
       "fromS": 0,
-      "toS": 3.0
+      "toS": 3
      }
     ],
     "phases": [
      {
       "id": "pull",
       "fromS": 0,
-      "toS": 1.0,
+      "toS": 1,
       "title": {
        "en": "Pulling",
        "de": "Aufziehen"
@@ -9923,8 +10183,8 @@
      },
      {
       "id": "push",
-      "fromS": 2.0,
-      "toS": 3.0,
+      "fromS": 2,
+      "toS": 3,
       "title": {
        "en": "Pushing back",
        "de": "Zuschieben"
@@ -9933,7 +10193,7 @@
     ],
     "events": [
      {
-      "t": 1.0,
+      "t": 1,
       "kind": "motion",
       "title": {
        "en": "Drawer at its stop",
@@ -10194,7 +10454,7 @@
      "areaM2": 0.0233,
      "characteristicLengthM": 0.026,
      "geometry": "cylinder",
-     "skyViewFactor": 0.0,
+     "skyViewFactor": 0,
      "layers": [
       {
        "id": "lamp-tube",
@@ -10334,7 +10594,7 @@
        "translation": [
         0.2455,
         0.0895,
-        0.0
+        0
        ]
       }
      },
@@ -10354,7 +10614,7 @@
        "translation": [
         0.2455,
         1.9305,
-        0.0
+        0
        ]
       }
      },
@@ -10374,7 +10634,7 @@
        "translation": [
         0.4395,
         0.04,
-        0.0
+        0
        ]
       }
      },
@@ -10395,7 +10655,7 @@
        "translation": [
         0.0095,
         1.01,
-        0.0
+        0
        ]
       }
      },
@@ -10442,11 +10702,11 @@
        ],
        [
         0.53,
-        2.0
+        2
        ],
        [
         0.46,
-        2.0
+        2
        ]
       ],
       "from": -0.45,
@@ -10476,7 +10736,7 @@
        "translation": [
         0.2505,
         0.4695,
-        0.0
+        0
        ]
       }
      },
@@ -10536,7 +10796,7 @@
        "translation": [
         0.2455,
         0.0895,
-        0.0
+        0
        ]
       }
      },
@@ -10556,7 +10816,7 @@
        "translation": [
         0.2455,
         1.9305,
-        0.0
+        0
        ]
       }
      },
@@ -10576,7 +10836,7 @@
        "translation": [
         0.4395,
         0.04,
-        0.0
+        0
        ]
       }
      },
@@ -10597,7 +10857,7 @@
        "translation": [
         0.0095,
         1.01,
-        0.0
+        0
        ]
       }
      },
@@ -10644,11 +10904,11 @@
        ],
        [
         0.53,
-        2.0
+        2
        ],
        [
         0.46,
-        2.0
+        2
        ]
       ],
       "from": -0.45,
@@ -10670,7 +10930,7 @@
        "translation": [
         0.2455,
         0.4495,
-        0.0
+        0
        ]
       }
      },
@@ -10690,7 +10950,7 @@
        "translation": [
         0.2455,
         0.8695,
-        0.0
+        0
        ]
       }
      },
@@ -10711,7 +10971,7 @@
        "translation": [
         0.013,
         0.6595,
-        0.0
+        0
        ]
       }
      },
@@ -10732,7 +10992,7 @@
        "translation": [
         0.23,
         0.658,
-        0.0
+        0
        ]
       }
      },
@@ -10761,7 +11021,7 @@
        "translation": [
         0.235,
         1.223,
-        0.0
+        0
        ]
       }
      },
@@ -10849,7 +11109,7 @@
        "translation": [
         0.2455,
         0.0895,
-        0.0
+        0
        ]
       }
      },
@@ -10869,7 +11129,7 @@
        "translation": [
         0.2455,
         1.9305,
-        0.0
+        0
        ]
       }
      },
@@ -10889,7 +11149,7 @@
        "translation": [
         0.4395,
         0.04,
-        0.0
+        0
        ]
       }
      },
@@ -10926,7 +11186,7 @@
        [
         [
          0.98,
-         0.0
+         0
         ],
         [
          0.978978,
@@ -10974,7 +11234,7 @@
         ],
         [
          0.92,
-         0.0
+         0
         ],
         [
          0.921022,
@@ -11066,11 +11326,11 @@
        ],
        [
         0.53,
-        2.0
+        2
        ],
        [
         0.46,
-        2.0
+        2
        ]
       ],
       "from": -0.45,
@@ -11092,7 +11352,7 @@
        "translation": [
         0.2455,
         0.7895,
-        0.0
+        0
        ]
       }
      },
@@ -11112,7 +11372,7 @@
        "translation": [
         0.2455,
         1.3595,
-        0.0
+        0
        ]
       }
      },
@@ -11132,7 +11392,7 @@
        "translation": [
         0.2505,
         0.4395,
-        0.0
+        0
        ]
       }
      },
@@ -11152,7 +11412,7 @@
        "translation": [
         0.2505,
         1.6495,
-        0.0
+        0
        ]
       }
      },
@@ -11166,23 +11426,23 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.447
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         1.856,
-        0.0
+        0
        ],
        [
         1.856,
         -0.447
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.011
      },
      {
@@ -11195,16 +11455,16 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.447
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         1.856,
-        0.0
+        0
        ],
        [
         1.856,
@@ -11243,11 +11503,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.008
        ],
        [
@@ -11272,12 +11532,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -11296,11 +11556,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.447
        ],
        [
@@ -11309,10 +11569,10 @@
        ],
        [
         1.856,
-        0.0
+        0
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.011
      },
      {
@@ -11325,11 +11585,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.447
        ],
        [
@@ -11338,7 +11598,7 @@
        ],
        [
         1.856,
-        0.0
+        0
        ]
       ],
       "from": 0.011,
@@ -11373,11 +11633,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.008
        ],
        [
@@ -11402,12 +11662,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -11426,23 +11686,23 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.447
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         1.078,
-        0.0
+        0
        ],
        [
         1.078,
         -0.447
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.019,
       "holes": [
        [
@@ -11495,11 +11755,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.006
        ],
        [
@@ -11524,12 +11784,12 @@
        ],
        [
         0.01875,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -11548,11 +11808,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.447
        ],
        [
@@ -11561,10 +11821,10 @@
        ],
        [
         1.078,
-        0.0
+        0
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.019,
       "holes": [
        [
@@ -11617,11 +11877,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.006
        ],
        [
@@ -11646,12 +11906,12 @@
        ],
        [
         0.01875,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -11670,23 +11930,23 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.447
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.707,
-        0.0
+        0
        ],
        [
         0.707,
         -0.447
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.011
      },
      {
@@ -11699,16 +11959,16 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.447
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.707,
-        0.0
+        0
        ],
        [
         0.707,
@@ -11747,11 +12007,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.008
        ],
        [
@@ -11776,12 +12036,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -11800,11 +12060,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.447
        ],
        [
@@ -11813,10 +12073,10 @@
        ],
        [
         0.707,
-        0.0
+        0
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.011
      },
      {
@@ -11829,11 +12089,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.447
        ],
        [
@@ -11842,7 +12102,7 @@
        ],
        [
         0.707,
-        0.0
+        0
        ]
       ],
       "from": 0.011,
@@ -11877,11 +12137,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.008
        ],
        [
@@ -11906,12 +12166,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -11930,23 +12190,23 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.447
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.577,
-        0.0
+        0
        ],
        [
         0.577,
         -0.447
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.011
      },
      {
@@ -11959,16 +12219,16 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.447
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.577,
-        0.0
+        0
        ],
        [
         0.577,
@@ -12007,11 +12267,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.008
        ],
        [
@@ -12036,12 +12296,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -12060,11 +12320,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.447
        ],
        [
@@ -12073,10 +12333,10 @@
        ],
        [
         0.577,
-        0.0
+        0
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.011
      },
      {
@@ -12089,11 +12349,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.447
        ],
        [
@@ -12102,7 +12362,7 @@
        ],
        [
         0.577,
-        0.0
+        0
        ]
       ],
       "from": 0.011,
@@ -12223,7 +12483,7 @@
        "translation": [
         0.2105,
         0.002,
-        0.0
+        0
        ]
       }
      },
@@ -12238,7 +12498,7 @@
       "profile": [
        [
         -0.418,
-        0.0
+        0
        ],
        [
         -0.418,
@@ -12250,7 +12510,7 @@
        ],
        [
         0.418,
-        0.0
+        0
        ]
       ],
       "from": 0.004,
@@ -12313,11 +12573,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.008
        ],
        [
@@ -12342,12 +12602,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -12365,11 +12625,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.008
        ],
        [
@@ -12394,12 +12654,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -12503,7 +12763,7 @@
        "translation": [
         0.2105,
         0.002,
-        0.0
+        0
        ]
       }
      },
@@ -12518,7 +12778,7 @@
       "profile": [
        [
         -0.418,
-        0.0
+        0
        ],
        [
         -0.418,
@@ -12530,7 +12790,7 @@
        ],
        [
         0.418,
-        0.0
+        0
        ]
       ],
       "from": 0.004,
@@ -12593,11 +12853,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.008
        ],
        [
@@ -12622,12 +12882,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -12692,11 +12952,11 @@
       "profile": [
        [
         -0.4485,
-        0.0
+        0
        ],
        [
         0.4485,
-        0.0
+        0
        ],
        [
         0.4485,
@@ -12721,11 +12981,11 @@
       "profile": [
        [
         -0.4485,
-        0.0
+        0
        ],
        [
         0.4485,
-        0.0
+        0
        ],
        [
         0.4485,
@@ -12736,7 +12996,7 @@
         0.417
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.008,
       "holes": [
        [
@@ -12768,11 +13028,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.008
        ],
        [
@@ -12797,18 +13057,18 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       -1.0,
+       0,
+       -1,
        0
       ],
       "origin": [
        0.392,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -12820,14 +13080,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.43,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.003,
       "r1": 0.003
@@ -12841,14 +13101,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.43,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.003,
       "r1": 0.003
@@ -12872,11 +13132,11 @@
       "profile": [
        [
         0.006,
-        0.0
+        0
        ],
        [
         0.554,
-        0.0
+        0
        ],
        [
         0.557,
@@ -12915,7 +13175,7 @@
         0.009
        ],
        [
-        0.0,
+        0,
         0.006
        ],
        [
@@ -13129,18 +13389,18 @@
        ],
        [
         -0.0015,
-        0.0
+        0
        ],
        [
         1.078,
-        0.0
+        0
        ],
        [
         1.078,
         -0.4485
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.019,
       "holes": [
        [
@@ -13175,7 +13435,7 @@
       "profile": [
        [
         -0.0015,
-        0.0
+        0
        ],
        [
         -0.0015,
@@ -13187,10 +13447,10 @@
        ],
        [
         1.078,
-        0.0
+        0
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.019,
       "holes": [
        [
@@ -13314,7 +13574,7 @@
        "translation": [
         0.4305,
         0.07075,
-        0.0
+        0
        ]
       },
       "region": "fronts"
@@ -13335,7 +13595,7 @@
        "translation": [
         0.4305,
         0.069,
-        0.0
+        0
        ]
       },
       "region": "fronts"
@@ -13355,11 +13615,11 @@
        ],
        [
         -0.0015,
-        -0.0
+        0
        ],
        [
         0.4185,
-        0.0
+        0
        ],
        [
         0.4185,
@@ -13578,11 +13838,11 @@
        ],
        [
         -0.006,
-        -0.0
+        0
        ],
        [
         0.006,
-        0.0
+        0
        ],
        [
         0.006,
@@ -13678,7 +13938,7 @@
        "translation": [
         0.24,
         0.00375,
-        0.0
+        0
        ]
       },
       "member": "linen-body",
@@ -13701,7 +13961,7 @@
        "translation": [
         0.24,
         0.00375,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -13724,7 +13984,7 @@
        "translation": [
         0.240654,
         1.020223,
-        0.0
+        0
        ]
       },
       "member": "linen-body",
@@ -13746,7 +14006,7 @@
        "translation": [
         0.225838,
         0.982001,
-        0.0
+        0
        ]
       },
       "member": "centre-body",
@@ -13768,7 +14028,7 @@
        "translation": [
         0.239958,
         1.036384,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -13846,7 +14106,7 @@
        "translation": [
         0.2455,
         0.0895,
-        0.0
+        0
        ]
       }
      },
@@ -13866,7 +14126,7 @@
        "translation": [
         0.2455,
         1.9305,
-        0.0
+        0
        ]
       }
      },
@@ -13886,7 +14146,7 @@
        "translation": [
         0.4395,
         0.04,
-        0.0
+        0
        ]
       }
      },
@@ -13907,7 +14167,7 @@
        "translation": [
         0.0095,
         1.01,
-        0.0
+        0
        ]
       }
      },
@@ -13938,11 +14198,11 @@
        ],
        [
         0.53,
-        2.0
+        2
        ],
        [
         0.46,
-        2.0
+        2
        ]
       ],
       "from": -0.45,
@@ -13972,7 +14232,7 @@
        "translation": [
         0.2505,
         0.4695,
-        0.0
+        0
        ]
       }
      },
@@ -14032,7 +14292,7 @@
        "translation": [
         0.2455,
         0.0895,
-        0.0
+        0
        ]
       }
      },
@@ -14052,7 +14312,7 @@
        "translation": [
         0.2455,
         1.9305,
-        0.0
+        0
        ]
       }
      },
@@ -14072,7 +14332,7 @@
        "translation": [
         0.4395,
         0.04,
-        0.0
+        0
        ]
       }
      },
@@ -14093,7 +14353,7 @@
        "translation": [
         0.0095,
         1.01,
-        0.0
+        0
        ]
       }
      },
@@ -14124,11 +14384,11 @@
        ],
        [
         0.53,
-        2.0
+        2
        ],
        [
         0.46,
-        2.0
+        2
        ]
       ],
       "from": -0.45,
@@ -14150,7 +14410,7 @@
        "translation": [
         0.2455,
         0.4495,
-        0.0
+        0
        ]
       }
      },
@@ -14170,7 +14430,7 @@
        "translation": [
         0.2455,
         0.8695,
-        0.0
+        0
        ]
       }
      },
@@ -14191,7 +14451,7 @@
        "translation": [
         0.013,
         0.6595,
-        0.0
+        0
        ]
       }
      },
@@ -14212,7 +14472,7 @@
        "translation": [
         0.23,
         0.658,
-        0.0
+        0
        ]
       }
      },
@@ -14241,7 +14501,7 @@
        "translation": [
         0.235,
         1.223,
-        0.0
+        0
        ]
       }
      },
@@ -14301,7 +14561,7 @@
        "translation": [
         0.2455,
         0.0895,
-        0.0
+        0
        ]
       }
      },
@@ -14321,7 +14581,7 @@
        "translation": [
         0.2455,
         1.9305,
-        0.0
+        0
        ]
       }
      },
@@ -14341,7 +14601,7 @@
        "translation": [
         0.4395,
         0.04,
-        0.0
+        0
        ]
       }
      },
@@ -14378,7 +14638,7 @@
        [
         [
          0.98,
-         0.0
+         0
         ],
         [
          0.977716,
@@ -14410,7 +14670,7 @@
         ],
         [
          0.92,
-         0.0
+         0
         ],
         [
          0.922284,
@@ -14470,11 +14730,11 @@
        ],
        [
         0.53,
-        2.0
+        2
        ],
        [
         0.46,
-        2.0
+        2
        ]
       ],
       "from": -0.45,
@@ -14496,7 +14756,7 @@
        "translation": [
         0.2455,
         0.7895,
-        0.0
+        0
        ]
       }
      },
@@ -14516,7 +14776,7 @@
        "translation": [
         0.2455,
         1.3595,
-        0.0
+        0
        ]
       }
      },
@@ -14536,7 +14796,7 @@
        "translation": [
         0.2505,
         0.4395,
-        0.0
+        0
        ]
       }
      },
@@ -14556,7 +14816,7 @@
        "translation": [
         0.2505,
         1.6495,
-        0.0
+        0
        ]
       }
      },
@@ -14589,11 +14849,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -14602,12 +14862,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -14645,11 +14905,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -14658,12 +14918,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -14682,23 +14942,23 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.447
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         1.078,
-        0.0
+        0
        ],
        [
         1.078,
         -0.447
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.019,
       "holes": [
        [
@@ -14751,11 +15011,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.01125
        ],
        [
@@ -14764,12 +15024,12 @@
        ],
        [
         0.01875,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -14788,11 +15048,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.447
        ],
        [
@@ -14801,10 +15061,10 @@
        ],
        [
         1.078,
-        0.0
+        0
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.019,
       "holes": [
        [
@@ -14857,11 +15117,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.01125
        ],
        [
@@ -14870,12 +15130,12 @@
        ],
        [
         0.01875,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -14913,11 +15173,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -14926,12 +15186,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -14969,11 +15229,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -14982,12 +15242,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -15025,11 +15285,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -15038,12 +15298,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -15088,7 +15348,7 @@
        "translation": [
         0.4305,
         0.07,
-        0.0
+        0
        ]
       }
      },
@@ -15108,7 +15368,7 @@
        "translation": [
         0.2105,
         0.062,
-        0.0
+        0
        ]
       }
      },
@@ -15121,11 +15381,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -15134,12 +15394,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -15157,11 +15417,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -15170,12 +15430,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -15200,7 +15460,7 @@
        "translation": [
         0.4305,
         0.069,
-        0.0
+        0
        ]
       }
      },
@@ -15220,7 +15480,7 @@
        "translation": [
         0.2105,
         0.062,
-        0.0
+        0
        ]
       }
      },
@@ -15233,11 +15493,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -15246,12 +15506,12 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
@@ -15290,16 +15550,16 @@
       "plane": "xy",
       "profile": [
        [
-        -0.0,
+        0,
         0.019
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.417,
-        0.0
+        0
        ],
        [
         0.417,
@@ -15318,11 +15578,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -15331,18 +15591,18 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       -1.0,
+       0,
+       -1,
        0
       ],
       "origin": [
        0.392,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -15354,14 +15614,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.43,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.003,
       "r1": 0.003
@@ -15375,14 +15635,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.43,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.003,
       "r1": 0.003
@@ -15406,19 +15666,19 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.56,
-        0.0
+        0
        ],
        [
         0.56,
         0.012
        ],
        [
-        0.0,
+        0,
         0.012
        ]
       ],
@@ -15818,11 +16078,11 @@
        ],
        [
         -0.0075,
-        -0.0
+        0
        ],
        [
         0.0075,
-        0.0
+        0
        ],
        [
         0.0075,
@@ -15912,7 +16172,7 @@
        "translation": [
         0.24,
         0.0075,
-        0.0
+        0
        ]
       },
       "member": "linen-body",
@@ -15935,7 +16195,7 @@
        "translation": [
         0.24,
         0.0075,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -15958,7 +16218,7 @@
        "translation": [
         0.240654,
         1.020223,
-        0.0
+        0
        ]
       },
       "member": "linen-body",
@@ -15980,7 +16240,7 @@
        "translation": [
         0.225838,
         0.982001,
-        0.0
+        0
        ]
       },
       "member": "centre-body",
@@ -16002,7 +16262,7 @@
        "translation": [
         0.239958,
         1.036384,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -16034,11 +16294,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ],
        [
@@ -16084,11 +16344,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ],
        [
@@ -16100,7 +16360,7 @@
         -0.45
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.003
      },
      {
@@ -16119,7 +16379,7 @@
        "translation": [
         0.495,
         1.97,
-        0.0
+        0
        ]
       }
      },
@@ -16133,11 +16393,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ],
        [
@@ -16219,11 +16479,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ],
        [
@@ -16235,7 +16495,7 @@
         -0.45
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.003
      },
      {
@@ -16254,7 +16514,7 @@
        "translation": [
         0.495,
         1.97,
-        0.0
+        0
        ]
       }
      },
@@ -16268,11 +16528,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ],
        [
@@ -16354,11 +16614,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ],
        [
@@ -16370,13 +16630,13 @@
         -0.45
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.003,
       "holes": [
        [
         [
          0.98,
-         0.0
+         0
         ],
         [
          0.975981,
@@ -16400,7 +16660,7 @@
         ],
         [
          0.92,
-         0.0
+         0
         ],
         [
          0.924019,
@@ -16441,7 +16701,7 @@
        "translation": [
         0.495,
         1.97,
-        0.0
+        0
        ]
       }
      },
@@ -16495,16 +16755,16 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.447
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         1.078,
-        0.0
+        0
        ],
        [
         1.078,
@@ -16565,11 +16825,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.447
        ],
        [
@@ -16578,7 +16838,7 @@
        ],
        [
         1.078,
-        0.0
+        0
        ]
       ],
       "from": -0.011,
@@ -16721,7 +16981,7 @@
        "translation": [
         0.425,
         0.0715,
-        0.0
+        0
        ]
       }
      },
@@ -16741,7 +17001,7 @@
        "translation": [
         0.205,
         0.062,
-        0.0
+        0
        ]
       }
      },
@@ -16761,7 +17021,7 @@
        "translation": [
         0.425,
         0.0705,
-        0.0
+        0
        ]
       }
      },
@@ -16781,7 +17041,7 @@
        "translation": [
         0.205,
         0.062,
-        0.0
+        0
        ]
       }
      },
@@ -16795,16 +17055,16 @@
       "plane": "xy",
       "profile": [
        [
-        -0.0,
+        0,
         0.03
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.42,
-        0.0
+        0
        ],
        [
         0.42,
@@ -16831,7 +17091,7 @@
        "translation": [
         0.005,
         0.6595,
-        0.0
+        0
        ]
       }
      },
@@ -16852,7 +17112,7 @@
        "translation": [
         0.23,
         0.658,
-        0.0
+        0
        ]
       }
      },
@@ -16881,7 +17141,7 @@
        "translation": [
         0.235,
         1.223,
-        0.0
+        0
        ]
       }
      },
@@ -16904,19 +17164,19 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.56,
-        0.0
+        0
        ],
        [
         0.56,
         0.012
        ],
        [
-        0.0,
+        0,
         0.012
        ]
       ],
@@ -17126,7 +17386,7 @@
        "translation": [
         0.2365,
         0.0895,
-        0.0
+        0
        ]
       },
       "member": "linen-body",
@@ -17149,7 +17409,7 @@
        "translation": [
         0.2365,
         1.9305,
-        0.0
+        0
        ]
       },
       "member": "linen-body",
@@ -17224,7 +17484,7 @@
        "translation": [
         0.2365,
         0.0895,
-        0.0
+        0
        ]
       },
       "member": "centre-body",
@@ -17247,7 +17507,7 @@
        "translation": [
         0.2365,
         1.9305,
-        0.0
+        0
        ]
       },
       "member": "centre-body",
@@ -17270,7 +17530,7 @@
        "translation": [
         0.2365,
         0.4495,
-        0.0
+        0
        ]
       },
       "member": "centre-body",
@@ -17293,7 +17553,7 @@
        "translation": [
         0.2365,
         0.8695,
-        0.0
+        0
        ]
       },
       "member": "centre-body",
@@ -17368,7 +17628,7 @@
        "translation": [
         0.2365,
         0.0895,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -17391,7 +17651,7 @@
        "translation": [
         0.2365,
         1.9305,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -17414,7 +17674,7 @@
        "translation": [
         0.2365,
         0.7895,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -17437,7 +17697,7 @@
        "translation": [
         0.2365,
         1.3595,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -17482,14 +17742,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.43,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.003,
       "r1": 0.003,
@@ -17505,14 +17765,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.43,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.003,
       "r1": 0.003,
@@ -17542,11 +17802,11 @@
        ],
        [
         -0.015,
-        -0.0
+        0
        ],
        [
         0.015,
-        0.0
+        0
        ],
        [
         0.015,
@@ -17574,7 +17834,7 @@
        "translation": [
         0.24,
         0.015,
-        0.0
+        0
        ]
       },
       "member": "linen-body",
@@ -17597,7 +17857,7 @@
        "translation": [
         0.24,
         0.015,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -17620,7 +17880,7 @@
        "translation": [
         0.240654,
         1.020223,
-        0.0
+        0
        ]
       },
       "member": "linen-body",
@@ -17642,7 +17902,7 @@
        "translation": [
         0.225838,
         0.982001,
-        0.0
+        0
        ]
       },
       "member": "centre-body",
@@ -17664,7 +17924,7 @@
        "translation": [
         0.239958,
         1.036384,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -17696,11 +17956,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ],
        [
@@ -17746,11 +18006,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ],
        [
@@ -17762,7 +18022,7 @@
         -0.45
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.003
      },
      {
@@ -17781,7 +18041,7 @@
        "translation": [
         0.4925,
         1.9625,
-        0.0
+        0
        ]
       }
      },
@@ -17795,11 +18055,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ],
        [
@@ -17881,11 +18141,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ],
        [
@@ -17897,7 +18157,7 @@
         -0.45
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.003
      },
      {
@@ -17916,7 +18176,7 @@
        "translation": [
         0.4925,
         1.9625,
-        0.0
+        0
        ]
       }
      },
@@ -17930,11 +18190,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ],
        [
@@ -18016,11 +18276,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ],
        [
@@ -18032,7 +18292,7 @@
         -0.45
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.003
      },
      {
@@ -18051,7 +18311,7 @@
        "translation": [
         0.4925,
         1.9625,
-        0.0
+        0
        ]
       }
      },
@@ -18105,16 +18365,16 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
+        0,
         -0.447
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         1.065,
-        0.0
+        0
        ],
        [
         1.065,
@@ -18175,11 +18435,11 @@
       "plane": "yz",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.447
        ],
        [
@@ -18188,7 +18448,7 @@
        ],
        [
         1.065,
-        0.0
+        0
        ]
       ],
       "from": -0.056,
@@ -18331,7 +18591,7 @@
        "translation": [
         0.4025,
         0.0715,
-        0.0
+        0
        ]
       }
      },
@@ -18351,7 +18611,7 @@
        "translation": [
         0.1825,
         0.062,
-        0.0
+        0
        ]
       }
      },
@@ -18371,7 +18631,7 @@
        "translation": [
         0.4025,
         0.0705,
-        0.0
+        0
        ]
       }
      },
@@ -18391,7 +18651,7 @@
        "translation": [
         0.1825,
         0.062,
-        0.0
+        0
        ]
       }
      },
@@ -18405,16 +18665,16 @@
       "plane": "xy",
       "profile": [
        [
-        -0.0,
+        0,
         0.075
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.42,
-        0.0
+        0
        ],
        [
         0.42,
@@ -18443,19 +18703,19 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.56,
-        0.0
+        0
        ],
        [
         0.56,
         0.012
        ],
        [
-        0.0,
+        0,
         0.012
        ]
       ],
@@ -18595,7 +18855,7 @@
        "translation": [
         0.3375,
         0.8225,
-        0.0
+        0
        ]
       },
       "region": "bar-lamp"
@@ -18665,7 +18925,7 @@
        "translation": [
         0.214,
         0.0895,
-        0.0
+        0
        ]
       },
       "member": "linen-body",
@@ -18688,7 +18948,7 @@
        "translation": [
         0.214,
         1.9155,
-        0.0
+        0
        ]
       },
       "member": "linen-body",
@@ -18763,7 +19023,7 @@
        "translation": [
         0.214,
         0.0895,
-        0.0
+        0
        ]
       },
       "member": "centre-body",
@@ -18786,7 +19046,7 @@
        "translation": [
         0.214,
         1.9155,
-        0.0
+        0
        ]
       },
       "member": "centre-body",
@@ -18809,7 +19069,7 @@
        "translation": [
         0.214,
         0.4495,
-        0.0
+        0
        ]
       },
       "member": "centre-body",
@@ -18832,7 +19092,7 @@
        "translation": [
         0.214,
         0.8695,
-        0.0
+        0
        ]
       },
       "member": "centre-body",
@@ -18907,7 +19167,7 @@
        "translation": [
         0.214,
         0.0895,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -18930,7 +19190,7 @@
        "translation": [
         0.214,
         1.9155,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -18953,7 +19213,7 @@
        "translation": [
         0.214,
         0.7895,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -18976,7 +19236,7 @@
        "translation": [
         0.214,
         1.3595,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -19021,14 +19281,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.43,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.003,
       "r1": 0.003,
@@ -19044,14 +19304,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.43,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.003,
       "r1": 0.003,
@@ -19074,7 +19334,7 @@
        "translation": [
         0.24,
         0.0375,
-        0.0
+        0
        ]
       },
       "member": "linen-body",
@@ -19097,7 +19357,7 @@
        "translation": [
         0.24,
         0.0375,
-        0.0
+        0
        ]
       },
       "member": "tv-body",
@@ -19120,7 +19380,7 @@
        "translation": [
         0.240654,
         1.020223,
-        0.0
+        0
        ]
       },
       "member": "linen-body",
@@ -19142,7 +19402,7 @@
        "translation": [
         0.225838,
         0.982001,
-        0.0
+        0
        ]
       },
       "member": "centre-body",
@@ -19164,7 +19424,7 @@
        "translation": [
         0.239958,
         1.036384,
-        0.0
+        0
        ]
       },
       "member": "tv-body",

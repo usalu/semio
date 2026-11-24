@@ -4,6 +4,7 @@ import { OperationDiagnosticObservers } from "@semio-tech/framework/actor/wire-t
 import { OperationDiagnosticInbox } from "@semio-tech/framework/actor/wire-turn/diagnostic";
 import { NativeDecodeControl } from "@semio-tech/framework/value/decode";
 import type { Diagnostic as OwnedOperationDiagnostic } from "@semio-tech/framework/diagnostic/controlled";
+import { SemioFaultError, type Fault, type FaultOrigin, type Severity } from "@semio-tech/framework";
 import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
 /** 📬️ Typed-operation result pages: terminal and pending output carriers, the per-instance owner ledger routing fault pages to the host call that owns them, and the effect consumer.
  *
@@ -44,6 +45,50 @@ export const TYPED_OPERATION_PARK_EVICTION_FAULT = "interactive-job.parked-resul
 /** 📏️ Foreign fault pages one instance's router parks for their owning host call before the oldest is
  * evicted through {@link TYPED_OPERATION_PARK_EVICTION_FAULT}. */
 export const TYPED_OPERATION_PARK_CAPACITY = 32;
+
+/** 🚨️ Real fault code of a typed-operation fault page whose payload is not a canonical Fault JSON object, so the shell still tells the person something went wrong and names the code. */
+export const TYPED_OPERATION_UNDECODABLE_FAULT = "interactive-job.undecodable-fault";
+
+const FAULT_SEVERITIES: ReadonlySet<string> = new Set<Severity>(["info", "warning", "error", "fatal"]);
+const FAULT_ORIGINS: ReadonlySet<string> = new Set<FaultOrigin>(["edge", "renderer", "os", "module", "plugin", "app", "extension", "framework"]);
+
+/** 🧯️ Decodes one typed-operation fault page into a {@link SemioFaultError}: the canonical Fault JSON a guest settles a refusal with keeps its `code`, `params`, `severity` and `causes`, so the shell's fault catalog resolves the localized notice exactly as for a refused command; a payload that is not such an object becomes {@link TYPED_OPERATION_UNDECODABLE_FAULT} carrying the text, never a plain `Error`. */
+export function typedOperationFaultError(text: string): SemioFaultError {
+  let raw: unknown;
+  try { raw = JSON.parse(text); } catch { raw = undefined; }
+  const object = raw !== null && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : undefined;
+  if (object === undefined || typeof object.code !== "string" || object.code === "") {
+    return new SemioFaultError({ origin: "plugin", code: TYPED_OPERATION_UNDECODABLE_FAULT, severity: "error", message: text, scope: {}, retryable: false });
+  }
+  const params = object.params !== null && typeof object.params === "object" && !Array.isArray(object.params)
+    ? Object.fromEntries(Object.entries(object.params as Record<string, unknown>).filter((entry): entry is [string, string] => typeof entry[1] === "string"))
+    : undefined;
+  const causes = Array.isArray(object.causes)
+    ? object.causes.flatMap((cause): { readonly message: string; readonly code?: string }[] => cause !== null && typeof cause === "object" && typeof (cause as { message?: unknown }).message === "string" ? [{ message: (cause as { message: string }).message, ...(typeof (cause as { code?: unknown }).code === "string" ? { code: (cause as { code: string }).code } : {}) }] : [])
+    : undefined;
+  const fault: Fault = {
+    origin: typeof object.origin === "string" && FAULT_ORIGINS.has(object.origin) ? object.origin as FaultOrigin : "plugin",
+    code: object.code,
+    severity: typeof object.severity === "string" && FAULT_SEVERITIES.has(object.severity) ? object.severity as Severity : "error",
+    message: typeof object.message === "string" ? object.message : object.code,
+    scope: object.scope !== null && typeof object.scope === "object" && !Array.isArray(object.scope) ? object.scope as Fault["scope"] : {},
+    retryable: object.retryable === true,
+    ...(params === undefined ? {} : { params }),
+    ...(causes === undefined || causes.length === 0 ? {} : { causes }),
+  };
+  return new SemioFaultError(fault);
+}
+
+/** 📣️ Per-instance fan-out of typed-operation faults no awaiting host call received (keyed by the instance id the page's token names, like {@link operationDiagnosticFanouts}) — the shell subscribes and tells the person in their language. */
+export const operationFaultFanouts = new Map<number, OperationDiagnosticObservers<SemioFaultError>>();
+
+/** 📣️ Hands a typed-operation fault to the instance's observers; without any it is logged, never dropped silently. Returns whether an observer received it. */
+export function publishOperationFault(receiver: number, error: SemioFaultError): boolean {
+  const listeners = operationFaultFanouts.get(receiver);
+  if (!listeners?.size) { console.error(`${error.fault.code}: ${error.fault.message}`); return false; }
+  listeners.publish(error);
+  return true;
+}
 
 /** 🚨️ Shell fault path for a typed-operation fault page no host call may be rejected with. */
 function reportTypedOperationFault(code: string, message: string): void {
@@ -98,8 +143,8 @@ export class TypedOperationRouter {
     return { syntax: { maximumBytes: 65536, maximumNodes: 4096, maximumDepth: 8, chunk: 256, cancelled: () => this.closed, progress: value => { if (original) original.diagnosticProgress = value; }, yield: yieldPluginUiContinuation }, ownership };
   });
   private readonly live = new Set<TypedOperationCall>();
-  private readonly parked: { readonly call: TypedOperationCall; readonly operation: bigint; readonly message: string }[] = [];
-  constructor(private readonly report: (code: string, message: string) => void = reportTypedOperationFault, private readonly publishDiagnostic: (token: TypedOperationToken, diagnostic: OwnedOperationDiagnostic) => void = publishOperationDiagnostic) {}
+  private readonly parked: { readonly call: TypedOperationCall; readonly receiver: number; readonly operation: bigint; readonly message: string }[] = [];
+  constructor(private readonly report: (code: string, message: string) => void = reportTypedOperationFault, private readonly publishDiagnostic: (token: TypedOperationToken, diagnostic: OwnedOperationDiagnostic) => void = publishOperationDiagnostic, private readonly publishFault: (receiver: number, error: SemioFaultError) => void = publishOperationFault) {}
   open(label: string): TypedOperationCall {
     const call = new TypedOperationCall(this, label);
     this.live.add(call);
@@ -118,13 +163,15 @@ export class TypedOperationRouter {
     const owner = this.owners.get(typedOperationOwnerKey(token));
     if (!owner || !this.live.has(owner)) {
       this.report(TYPED_OPERATION_UNATTRIBUTED_FAULT, `${message} (operation ${operation} sequence ${sequence} observed by ${call.label})`);
+      this.publishFault(token.receiver, typedOperationFaultError(message));
       return false;
     }
     if (this.parked.length >= TYPED_OPERATION_PARK_CAPACITY) {
       const evicted = this.parked.shift()!;
       this.report(TYPED_OPERATION_PARK_EVICTION_FAULT, `${evicted.message} (operation ${evicted.operation} parked for ${evicted.call.label} evicted at capacity ${TYPED_OPERATION_PARK_CAPACITY})`);
+      this.publishFault(evicted.receiver, typedOperationFaultError(evicted.message));
     }
-    this.parked.push({ call: owner, operation, message });
+    this.parked.push({ call: owner, receiver: token.receiver, operation, message });
     return false;
   }
   isLive(call: TypedOperationCall): boolean { return this.live.has(call); }
@@ -158,6 +205,7 @@ export class TypedOperationRouter {
       if (this.parked[index]!.call !== call) continue;
       const dropped = this.parked.splice(index, 1)[0]!;
       this.report(TYPED_OPERATION_UNATTRIBUTED_FAULT, `${dropped.message} (operation ${dropped.operation} outlived ${call.label})`);
+      this.publishFault(dropped.receiver, typedOperationFaultError(dropped.message));
     }
   }
 }
@@ -180,7 +228,7 @@ export async function withTypedOperationCall<T>(actorId: string, label: string, 
     const value = await body(call);
     if (!router.isLive(call)) throw Error(`typed-operation owner cancelled: ${call.label}`);
     const fault = call.takeFault();
-    if (fault !== null) throw new Error(`typed-operation failed: ${fault}`);
+    if (fault !== null) throw typedOperationFaultError(fault);
     return value;
   } finally {
     call.close();
@@ -214,7 +262,7 @@ export function consumeTypedOperationEffects(effects: readonly WireVariant[], ca
     }
     if (page.lane === TYPED_OPERATION_LANE_FAULT) {
       const message = new TextDecoder().decode(page.payload);
-      if (!call || call.fault(page.token, message)) throw new Error(`typed-operation failed: ${message}`);
+      if (!call || call.fault(page.token, message)) throw typedOperationFaultError(message);
       continue;
     }
     call?.observe(page.token);

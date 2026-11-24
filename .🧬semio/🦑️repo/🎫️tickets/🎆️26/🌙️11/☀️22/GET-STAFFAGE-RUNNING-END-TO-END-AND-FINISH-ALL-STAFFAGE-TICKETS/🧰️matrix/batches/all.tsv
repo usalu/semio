@@ -1,0 +1,249 @@
+animals	dairy-cow	2 / 315; flat+followTip; 42 other id; 11 extent	71; other bone 48, descendant 15, off 8			
+animals	domestic-cat	7 / 406; flat+followTip; 90 other id	2; descendant 2			
+animals	goat	8 / 384; flat+followTip+solid; 299 other id; 5 extent	19; off 9, other bone 8, descendant 2			
+animals	hedgehog	0 / 39; flat; 2 extent	6; other bone 4, off 2			
+animals	herring-gull	26 / 174; flat+solid; 4 extent				
+animals	horse	8 / 213; flat+followTip+solid; 86 other id	4; other bone 2, off 2			
+animals	labrador-dog	2 / 541; flat+followTip; 18 other id; 35 extent	30; descendant 21, other bone 6, off 3			
+animals	mallard-duck	0 / 57; flat; 15 extent	6; off 6			
+animals	pig	14 / 300; flat+followTip; 10 extent	18; other bone 12, off 6			
+animals	pigeon	3 / 152; flat+solid; 9 extent				
+animals	red-fox	30 / 662; solid; 12 extent	99; other bone 88, off 6, descendant 5			
+animals	roe-deer	8 / 928; flat+followTip+solid; 42 extent	38; other bone 34, descendant 4			
+animals	sheep	10 / 319; flat+followTip; 7 extent	8; off 8			
+appliances	ceiling-diffuser				100 front, 200 front, 50 front	
+appliances	decentralised-hrv-fan				50 plan	
+appliances	duct-fan			100 plan, 200 plan	50 plan	
+appliances	electric-fan-heater		18; off 18			
+appliances	gas-hob		3; other bone 3			
+appliances	hot-water-cylinder			200 plan, 500 plan		100, 200, 50, 500
+appliances	kitchen-extractor-hood			100 plan, 50 plan		
+appliances	pendant-lamp	0 / 4; flat			100 front, 200 front, 50 front	100, 200, 50
+appliances	used-crt-television	0 / 0; extent only; 16 extent		200 plan, 500 plan		
+appliances	used-dishwasher	0 / 6; flat; 1 other id; 3 extent				
+appliances	used-electric-bass-and-cabinet		48; descendant 48			
+appliances	used-electric-cooker	0 / 0; extent only; 3 extent	2; off 2			
+appliances	used-electric-guitar-and-combo		16; other bone 12, off 4			
+appliances	used-electronic-drum-kit		20; other bone 20			
+appliances	used-electronic-organ		24; off 21, other bone 3			
+appliances	used-fridge-freezer	0 / 9; flat; 6 other id; 3 extent	118; descendant 48, other bone 47, off 23			
+appliances	used-microwave-oven	0 / 2; flat	31; descendant 30, off 1			
+appliances	used-tumble-dryer	0 / 1; flat; 3 extent	15; other bone 6, off 6, descendant 3			
+appliances	used-washing-machine	0 / 2; flat; 12 extent	28; off 22, other bone 6			
+components	curtain-wall-bay			100 front, 100 plan, 200 front, 200 plan		
+components	etics-brick-wall-12			100 front, 200 front, 50 front, 500 front	100 plan, 200 plan, 500 plan	
+components	etics-brick-wall-30			100 front, 200 front, 50 front, 500 front	100 plan, 200 plan, 500 plan	
+components	external-venetian-blind			100 plan, 200 plan, 500 plan		
+components	glulam-beam			100 plan, 500 plan	500 plan	
+components	reclaimed-cast-iron-column	0 / 0; extent only; 4 extent				
+components	reclaimed-cobblestone-bag		6; descendant 6			
+components	reclaimed-precast-stair	0 / 4; flat; 8 extent	32; off 20, other bone 12			
+components	reclaimed-steel-column			100 plan, 50 plan		
+components	reclaimed-steel-stair					500
+components	reclaimed-trapezoidal-sheet-stack	0 / 8; flat; 8 other id; 8 extent				
+components	sectional-garage-door		11; off 6, other bone 5			
+components	sliding-door		15; other bone 15			
+components	solid-brick-wall-1960			100 front, 200 front, 200 plan, 50 front, 500 front, 500 plan	100 plan, 200 plan, 500 plan	
+components	spiral-stair	2 / 6; flat; 8 other id		100 front, 100 plan, 200 front, 200 plan		
+components	stair-flight			100 front, 100 plan, 200 front, 50 plan		
+components	steel-column			200 plan, 500 plan	100 front, 200 front, 500 front	
+components	tilt-window					200
+components	used-air-water-heat-pump-monobloc	0 / 0; extent only; 3 extent	10; off 8, other bone 2			
+components	used-brine-water-heat-pump					100, 200, 50
+components	used-forced-draught-oil-burner	0 / 1; flat				
+components	used-pellet-boiler	0 / 96; flat; 8 extent				
+components	used-towel-radiator	0 / 0; extent only; 9 extent	36; descendant 36			
+components	used-trench-convector			100 front, 200 front, 500 front		
+components	used-wall-hung-gas-boiler	0 / 0; extent only; 15 extent				
+furniture	bookshelf			100 plan, 200 plan, 50 plan, 500 plan		
+furniture	cafe-chair	0 / 1; flat; 1 extent				
+furniture	dining-table	2 / 8; flat; 10 other id		100 plan, 200 plan, 50 plan, 500 plan		
+furniture	office-swivel-chair	5 / 30; flat; 35 other id; 4 extent				
+furniture	park-bench		12; off 12	200 plan, 500 plan		
+furniture	single-bed		25; descendant 15, off 10	100 plan, 50 plan		
+furniture	three-seat-sofa		112; descendant 112			
+furniture	used-bedside-table	0 / 1; flat; 5 extent	12; off 12			
+furniture	used-coffee-table	0 / 11; flat; 4 extent	32; off 24, other bone 8	100 front, 200 front		
+furniture	used-extendable-dining-table			100 front, 200 plan, 50 front, 500 plan		
+furniture	used-folding-bookcase-ladder			200 front, 500 front		
+furniture	used-high-chair	0 / 14; flat; 3 extent				
+furniture	used-hinged-wardrobe	0 / 7; flat	58; descendant 52, off 3, other bone 3			
+furniture	used-kitchen-base-cabinet	0 / 0; extent only; 1 extent				
+furniture	used-park-armchair	0 / 8; flat; 4 extent	8; other bone 4, off 4			
+furniture	used-recliner-chair	0 / 2; flat+solid; 4 extent	12; off 8, descendant 4			
+furniture	used-shoe-cabinet		12; descendant 8, other bone 4	200 plan, 500 plan		
+furniture	used-sun-lounger-bench					100, 200, 50, 500
+furniture	used-tv-sideboard	0 / 0; extent only; 3 extent		200 plan, 500 plan		
+furniture	used-wall-unit	0 / 0; extent only; 4 extent	4; off 3, descendant 1	100 plan, 200 plan, 500 plan		
+furniture	used-wingback-armchair	0 / 0; extent only; 4 extent				
+humans	barista	4 / 7; flat+solid; 2 extent				
+humans	basketball-player	0 / 8; solid; 2 extent	2; descendant 2			
+humans	child-on-kick-scooter	17 / 739; flat+followTip+solid; 756 other id; 12 extent	47; descendant 47			
+humans	construction-worker-with-shovel	15 / 36; flat+solid				
+humans	courier-with-hand-truck	0 / 13; flat+followTip; 3 other id	24; off 16, descendant 8			
+humans	cyclist	3 / 22; flat+solid; 1 extent	112; descendant 64, other bone 48			
+humans	dancer	5 / 47; solid; 38 other id; 3 extent	9; descendant 5, other bone 4			
+humans	doctor-with-clipboard	2 / 20; flat				
+humans	e-scooter-rider	5 / 60; solid	128; descendant 128			
+humans	elderly-person-knitting	1 / 34; flat+solid				
+humans	elderly-with-cane	3 / 135; flat+solid	14; descendant 12, off 2			
+humans	hiker-with-trekking-poles	0 / 11; flat+followTip; 4 other id	1; descendant 1			
+humans	jogger	0 / 16; flat+solid; 8 other id				
+humans	kneeling-gardener	2 / 7; solid; 1 other id	24; descendant 24			
+humans	leaning-person	1 / 29; flat+solid; 6 other id; 6 extent	24; other bone 20, off 4			
+humans	mobility-scooter-user	1 / 1; flat	64; descendant 32, off 32			
+humans	nurse-walking	2 / 241; flat; 37 extent	11; descendant 9, other bone 1, off 1			
+humans	office-worker-carrying-laptop	2 / 182; flat; 14 extent	24; descendant 18, off 4, other bone 2			
+humans	painter-at-easel	2 / 4; solid				
+humans	parent-carrying-toddler	0 / 57; solid	20; off 20			
+humans	parent-with-child-on-shoulders	2 / 74; flat; 6 extent	20; descendant 12, off 8			
+humans	parent-with-stroller	6 / 83; flat+solid; 2 extent	224; descendant 220, off 4			
+humans	patient-with-iv-pole	2 / 162; flat; 6 extent	24; descendant 18, off 4, other bone 2			
+humans	person-carrying-ladder	8 / 108; flat+solid; 33 other id; 1 extent	28; descendant 28			
+humans	person-carrying-shopping-bags	1 / 134; flat+solid; 7 other id; 4 extent	18; descendant 18			
+humans	person-checking-watch	0 / 6; solid				
+humans	person-cooking	0 / 2; solid; 1 extent				
+humans	person-drinking-coffee	8 / 45; flat+solid; 10 other id; 3 extent				
+humans	person-eating-standing	1 / 10; flat+solid; 3 other id; 3 extent				
+humans	person-hanging-laundry	2 / 37; flat+solid				
+humans	person-in-rain-poncho	0 / 68; flat; 18 extent	24; descendant 18, off 4, other bone 2			
+humans	person-in-winter-coat	2 / 32; flat+solid; 4 extent	18; descendant 18			
+humans	person-on-crutches	0 / 12; flat; 3 extent	8; off 8			
+humans	person-pushing-bicycle	4 / 55; solid	284; descendant 208, other bone 76			
+humans	person-queuing	2 / 8; solid	1; descendant 1			
+humans	person-signing	5 / 72; flat+solid; 14 other id				
+humans	person-stretching	6 / 38; flat+solid; 11 other id; 7 extent	4; off 4			
+humans	person-sweeping	9 / 38; flat+solid; 1 extent				
+humans	person-taking-selfie	3 / 6; solid; 1 extent				
+humans	person-with-arm-sling	0 / 159; flat; 7 extent	18; descendant 18			
+humans	person-with-guide-dog	3 / 61; flat+followTip+solid	8; descendant 8			
+humans	person-with-rollator	0 / 31; flat+solid				
+humans	person-with-umbrella	0 / 2; flat; 1 extent				
+humans	person-with-white-cane	3 / 17; flat+solid; 2 extent				
+humans	photographer-with-camera	0 / 29; flat+solid; 1 extent				
+humans	picnicker-sitting-on-ground	12 / 22; flat+solid	22; other bone 18, descendant 4			
+humans	postal-carrier	5 / 196; flat+solid; 26 extent	24; descendant 18, off 4, other bone 2			
+humans	pregnant-person	0 / 14; flat+solid				
+humans	presenter-at-flipchart	2 / 12; solid				
+humans	runner-with-blade-prosthesis	2 / 161; solid; 2 extent				
+humans	schoolchild-with-backpack	0 / 3; solid				
+humans	seated-guitarist	0 / 5; flat+solid	46; off 40, other bone 6			
+humans	seated-office-worker	2 / 23; flat+solid				
+humans	seated-reader	4 / 46; flat+solid				
+humans	skateboarder	0 / 96; solid; 1 extent	140; other bone 128, descendant 10, off 2			
+humans	sleeping-person	1 / 30; flat+solid	27; other bone 27			
+humans	standing-adult	4 / 14; flat+solid				
+humans	standing-desk-worker	3 / 6; solid				
+humans	standing-phone-user	1 / 8; solid				
+humans	standing-violinist	4 / 12; solid				
+humans	surveyor-with-total-station	6 / 14; flat+solid; 6 other id; 1 extent	3; other bone 3			
+humans	teenager-with-headphones	4 / 0; flat+solid; 1 extent				
+humans	tennis-player	1 / 8; solid; 1 extent				
+humans	tour-guide	0 / 10; solid				
+humans	traveller-with-rolling-suitcase	5 / 208; flat+solid; 24 extent	32; descendant 21, other bone 7, off 4			
+humans	waiter-with-tray	4 / 11; flat+solid; 2 extent	6; descendant 5, off 1			
+humans	walking-commuter	2 / 14; solid				
+humans	walking-toddler	1 / 5; solid; 3 extent				
+humans	waving-person	4 / 16; flat+solid				
+humans	wheelchair-user	0 / 2; flat	80; descendant 46, off 34			
+humans	worker-carrying-box	0 / 214; flat+solid; 3 extent				
+humans	worker-with-jackhammer	9 / 23; flat				
+humans	worker-with-pallet-jack	1 / 4; flat+followTip+solid; 4 other id	33; descendant 25, off 6, other bone 2			
+machinery	concrete-mixer-truck		325; descendant 325			
+machinery	diesel-generator	0 / 0; extent only; 2 extent	80; descendant 80			
+machinery	evaporative-humidifier	1 / 2; flat; 3 other id	6; off 6			
+machinery	finned-heat-exchanger					100, 200, 50
+machinery	forklift	0 / 0; extent only; 6 extent	196; descendant 168, off 20, other bone 8			
+machinery	heat-pump-outdoor-unit			100 plan, 200 plan, 50 plan, 500 plan		
+machinery	plate-heat-exchanger		9; off 9	100 plan, 200 plan		
+machinery	scissor-lift		128; descendant 128			
+machinery	scroll-compressor		6; off 6			
+machinery	solar-thermal-collector		12; off 12	100 front, 100 plan, 50 front, 50 plan		
+machinery	sorption-wheel			100 plan, 200 plan, 50 plan		
+machinery	wheel-loader		170; descendant 170			
+objects	bicycle-stand			100 front, 100 plan, 200 front, 200 plan, 50 front, 50 plan		
+objects	charcoal-grill	0 / 0; extent only; 3 extent	3; off 3			
+objects	market-parasol					100, 200, 500
+objects	patio-heater			100 plan, 200 plan		
+objects	shopping-trolley	2 / 4; flat; 6 other id	60; descendant 60			200
+objects	stepladder	0 / 24; flat				
+objects	storage-crate-stack			100 front, 200 plan, 50 front, 500 plan		100, 200, 50, 500
+objects	tealight	2 / 4; flat; 6 other id		100 plan, 200 plan, 50 plan	100 front, 200 front, 50 front	100, 200, 50
+objects	used-basketball-hoop	0 / 9; flat; 2 extent				
+objects	used-bicycle-shelter		12; other bone 12			
+objects	used-bollard-light			200 plan, 500 plan	200 front, 500 front	100, 200, 50, 500
+objects	used-bubbler-stone-fountain	2 / 8; flat; 10 other id				
+objects	used-cello	0 / 0; extent only; 4 extent	12; descendant 12			
+objects	used-classical-guitar	0 / 14; flat; 24 extent	48; other bone 45, descendant 3			
+objects	used-climbing-net-pyramid			100 plan, 50 plan		
+objects	used-concert-harp	0 / 6; flat	96; descendant 80, other bone 16			
+objects	used-djembe-and-cajon	0 / 0; extent only; 3 extent				
+objects	used-double-bass		22; off 16, descendant 6			
+objects	used-double-swing	0 / 4; flat				
+objects	used-drum-kit	0 / 5; flat	85; descendant 81, other bone 4			
+objects	used-football-goal	0 / 3; flat; 1 other id	10; other bone 10			
+objects	used-park-lantern				500 front	
+objects	used-playground-roundabout				200 front, 500 front	
+objects	used-sandpit-digger			100 front, 50 front		
+objects	used-spring-rocker	0 / 0; extent only; 6 extent				
+objects	used-timpani-pair		36; descendant 36			
+objects	used-upright-piano		18; descendant 18			
+objects	used-viola		2; other bone 2			
+objects	used-water-play-table	0 / 0; extent only; 4 extent				
+objects	used-wc-pan-cistern	0 / 3; flat; 9 extent				
+objects	used-xylophone		100; descendant 100			
+objects	waste-bin				500 front	
+vegetation	apple-tree	23 / 69; flat+followTip; 92 other id	11; other bone 7, off 4			
+vegetation	bamboo-clump	0 / 0; extent only; 2 extent	103; other bone 81, off 22			
+vegetation	black-alder	7 / 51; flat; 35 other id	3; other bone 3			
+vegetation	black-locust	0 / 0; extent only; 4 extent	20; descendant 20			
+vegetation	boxwood-ball				500 front	
+vegetation	common-ash		236; other bone 170, descendant 54, off 12			
+vegetation	common-lilac	2 / 6; flat				
+vegetation	common-reed	0 / 41; flat; 5 extent	297; other bone 264, off 25, descendant 8			
+vegetation	crab-apple		10; off 9, other bone 1			
+vegetation	dawn-redwood		16; other bone 16			
+vegetation	english-oak	5 / 17; flat; 20 other id; 4 extent	84; other bone 84			
+vegetation	european-beech		209; other bone 191, descendant 18			
+vegetation	european-larch				500 front	
+vegetation	field-maple	0 / 1; flat; 3 extent	14; other bone 11, off 3			
+vegetation	fig-tree		8; other bone 8			
+vegetation	hawthorn	28 / 166; flat; 167 other id; 6 extent	13; other bone 13			
+vegetation	hornbeam-hedge	3 / 19; flat+solid; 12 other id; 6 extent				
+vegetation	horse-chestnut		188; other bone 104, descendant 84			
+vegetation	hosta-clump	0 / 0; extent only; 5 extent				
+vegetation	hydrangea	2 / 6; flat				
+vegetation	ivy-on-trellis	8 / 31; flat; 1 extent	19; other bone 19			
+vegetation	japanese-maple		10; other bone 10			
+vegetation	maize-row		211; other bone 108, off 103			
+vegetation	miscanthus-grass	0 / 11; flat; 4 extent	100; descendant 78, other bone 12, off 10			
+vegetation	multi-stem-birch	0 / 1; flat				
+vegetation	norway-maple	0 / 2; flat; 1 extent	15; other bone 15			
+vegetation	norway-spruce				200 front, 500 front	
+vegetation	olive-tree	22 / 66; flat+followTip; 88 other id	11; other bone 7, off 4			
+vegetation	pampas-grass	0 / 54; flat; 9 extent	43; descendant 37, other bone 5, off 1			
+vegetation	potted-monstera	0 / 4; flat				
+vegetation	red-oak		12; descendant 12			
+vegetation	rhododendron	2 / 6; flat				
+vegetation	rosemary-bush	0 / 2; flat; 2 extent				
+vegetation	rowan	0 / 12; flat; 4 extent	3; off 2, other bone 1		500 front	
+vegetation	saguaro-cactus			200 plan, 500 plan		
+vegetation	saucer-magnolia		2; other bone 2		500 front	
+vegetation	scots-pine	0 / 13; flat				
+vegetation	small-leaved-lime	19 / 95; flat; 18 other id	221; descendant 132, other bone 89			
+vegetation	stone-pine	0 / 22; flat				
+vegetation	sunflower	0 / 0; extent only; 4 extent				
+vegetation	sycamore-maple	0 / 6; flat	21; other bone 21			
+vegetation	tulip-tree		24; descendant 24			
+vegetation	weeping-willow	0 / 0; extent only; 8 extent	10; other bone 10			
+vegetation	windmill-palm				200 front	
+vegetation	wisteria-pergola	0 / 6; flat				
+vehicles	cargo-bike		120; descendant 96, other bone 24			
+vehicles	city-bicycle		158; descendant 120, other bone 38			
+vehicles	city-bus	3 / 18; flat; 21 other id	196; descendant 180, off 16			
+vehicles	city-car	0 / 0; extent only; 12 extent	36; descendant 36			
+vehicles	delivery-van		20; descendant 20			
+vehicles	electric-kick-scooter		84; descendant 84			
+vehicles	motor-scooter		187; descendant 154, other bone 33			
+vehicles	tram	3 / 24; flat; 27 other id				
+vehicles	vintage-car-1929	0 / 0; extent only; 12 extent	98; descendant 48, off 36, other bone 14			

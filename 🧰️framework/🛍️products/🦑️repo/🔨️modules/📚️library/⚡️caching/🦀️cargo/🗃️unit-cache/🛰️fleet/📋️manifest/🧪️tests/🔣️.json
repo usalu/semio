@@ -1,0 +1,8 @@
+{
+  "description": "Language-agnostic vectors of the input manifest of a unit slot: the address of a manifest (SHA-256 of the namespace, a NUL byte and the slot id) and the shape of what the fleet cache stores (a blob named twice by the action result, once as stage.json for the declaration and once as inputs.json for the class, and the same bytes inline as standard output).",
+  "namespace": "semio.cargo.unit-cache.input-manifest/v1",
+  "slots": ["0000000000000000000000000000000000000000000000000000000000000000", "ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12"],
+  "outputs": ["inputs.json", "stage.json"],
+  "declaration": {"kind": "input-manifest", "externs": []},
+  "manifest": {"files": ["@@semio-ws@@/💻️os/🗣️dsl/✨️derive/🔣️mutation-authority.json", "@@semio-ws@@/data.txt"], "env": ["SEMIO_COMPILER_FLAVOR"]}
+}

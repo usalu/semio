@@ -18,11 +18,15 @@ pub trait OriginalReturnOrigin:Copy{
  fn fuel(&self)->u64;
  fn spent(&self)->P;
  fn work(&self)->u128;
+ /// 🔁️ The same origin funded by a successor stock nothing was spent from yet.
+ fn succeeded(self,granted:RetainedCloneGrant,fuel:u64)->Self;
 }
 /// 🔒️ See `README.md`.
 pub struct OriginalReturnSource<I:OriginalReturnOrigin>{budget:RetainedOwnerGate<OriginalReturnBudget<I>>}
 impl<I:OriginalReturnOrigin> OriginalReturnSource<I>{
  pub const fn empty(birth:u64)->Self{Self{budget:RetainedOwnerGate::new(OriginalReturnBudget::<I>::empty(birth))}}
+ /// 🔁️ Carries the Source's return stock into its successor tenure.
+ pub fn succeed(&self,granted:RetainedCloneGrant,fuel:u64)->Result<(),ValueError>{self.try_borrow().ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original return source still lends its budget"))?.get_mut().succeed(granted,fuel)}
  pub fn try_borrow(&self)->Option<OriginalReturnBudgetReference<'_,I>>{self.budget.try_lock().ok().map(OriginalReturnBudgetReference::Owned)}
  /// 🪪️ Checks the exact held Source guard without acquiring another lock.
  pub fn owns_reference(&self,reference:&OriginalReturnBudgetReference<'_,I>)->bool{match reference{OriginalReturnBudgetReference::Owned(guard)=>self.budget.owns_guard(guard),OriginalReturnBudgetReference::Borrowed(_)=>false}}
@@ -256,6 +260,15 @@ impl<I:OriginalReturnOrigin> OriginalReturnBudget<I>{
  /// 🔁️ See `README.md`.
  /// 🔁️ Whether no claim, held currency or failure stands between this Source and a renewed turn.
  pub fn renewable(&self)->bool{self.claims==0&&self.held_items==0&&self.held_copy_bytes==0&&self.held_release_bytes==0&&self.held_capacity_bytes==0&&self.held_fuel==0&&self.failure.is_none()}
+ /// 🔁️ Replaces a settled origin's stock with its verified successor; every live claim keeps its hold, funded again by the successor, and a Source that has no origin yet binds its first one later.
+ pub fn succeed(&mut self,granted:RetainedCloneGrant,fuel:u64)->Result<(),ValueError>{
+  let Some(origin)=self.origin else{return Ok(())};
+  if let Some(error)=self.refusal(){return Err(error)}
+  if self.origin_pending.is_some()||self.origin_action.is_some()||self.origin_commit.is_some(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original return source still publishes its origin"))}
+  let next=origin.succeeded(granted,fuel);if !origin.same_origin(&next){return Err(refused("original return successor changed its origin"))}
+  let mut state=self.snapshot();state.granted=next.granted();state.fuel=next.fuel();state.spent=next.spent();state.work=next.work();state.remaining()?;
+  self.origin=Some(next);self.spent=next.spent();self.work=next.work();Ok(())
+ }
  pub fn renew_turn(&mut self)->Result<(),ValueError>{
   let origin=self.origin.ok_or_else(||refused(E::STOCK_ABSENT))?;
   if !self.renewable(){return Err(refused("original return source with live claims cannot renew its turn"))}

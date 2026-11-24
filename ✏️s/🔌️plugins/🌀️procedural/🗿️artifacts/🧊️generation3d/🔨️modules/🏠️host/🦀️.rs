@@ -657,7 +657,7 @@ pub fn generation3d_all_retained_mutation_fixtures_for_test(corpus: &str) -> Vec
         Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue {
             id: "retained-generation".into(),
             question_id: "deep-answer".into(),
-            new_value: semio_framework_value::DslValue::object([("object".to_string(), semio_framework_value::DslValue::object([("array".to_string(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(1.0), semio_framework_value::DslValue::Bool(false), semio_framework_value::DslValue::String("value".to_string())]))]))]),
+            new_value: semio_framework_value::DslValue::object([("object".to_string(), semio_framework_value::DslValue::object([("array".to_string(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::uint(1), semio_framework_value::DslValue::Bool(false), semio_framework_value::DslValue::String("value".to_string())]))]))]),
         }),
         Generation3dMutation::SelectGeneration(SelectGeneration { generation_id: Some("retained-generation".into()) }),
         Generation3dMutation::SelectGeneration(SelectGeneration { generation_id: None }),

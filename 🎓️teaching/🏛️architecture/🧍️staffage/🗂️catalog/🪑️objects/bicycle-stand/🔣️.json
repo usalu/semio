@@ -121,7 +121,7 @@
           },
           "section": {
             "areaM2": 0.00045339,
-            "secondMomentM4": 1.15856e-7,
+            "secondMomentM4": 1.15856e-07,
             "extremeFibreM": 0.02415,
             "material": "galv-steel",
             "title": {
@@ -154,7 +154,7 @@
           },
           "section": {
             "areaM2": 0.00045339,
-            "secondMomentM4": 1.15856e-7,
+            "secondMomentM4": 1.15856e-07,
             "extremeFibreM": 0.02415,
             "material": "galv-steel",
             "title": {
@@ -187,7 +187,7 @@
           },
           "section": {
             "areaM2": 0.00045339,
-            "secondMomentM4": 1.15856e-7,
+            "secondMomentM4": 1.15856e-07,
             "extremeFibreM": 0.02415,
             "material": "galv-steel",
             "title": {
@@ -220,7 +220,7 @@
           },
           "section": {
             "areaM2": 0.00045339,
-            "secondMomentM4": 1.15856e-7,
+            "secondMomentM4": 1.15856e-07,
             "extremeFibreM": 0.02415,
             "material": "galv-steel",
             "title": {
@@ -253,7 +253,7 @@
           },
           "section": {
             "areaM2": 0.00045339,
-            "secondMomentM4": 1.15856e-7,
+            "secondMomentM4": 1.15856e-07,
             "extremeFibreM": 0.02415,
             "material": "galv-steel",
             "title": {
@@ -286,7 +286,7 @@
           },
           "section": {
             "areaM2": 0.00045339,
-            "secondMomentM4": 1.15856e-7,
+            "secondMomentM4": 1.15856e-07,
             "extremeFibreM": 0.02415,
             "material": "galv-steel",
             "title": {
@@ -2085,7 +2085,7 @@
               "kind": "metal",
               "material": "galv-steel",
               "thicknessM": 0.0032,
-              "resistanceM2KW": 0.000064,
+              "resistanceM2KW": 6.4e-05,
               "heatCapacityJM2K": 11304,
               "source": "literature",
               "reference": "iso-10456-2007"
@@ -2118,7 +2118,7 @@
               "kind": "metal",
               "material": "galv-steel",
               "thicknessM": 0.0032,
-              "resistanceM2KW": 0.000064,
+              "resistanceM2KW": 6.4e-05,
               "heatCapacityJM2K": 11304,
               "source": "literature",
               "reference": "iso-10456-2007"

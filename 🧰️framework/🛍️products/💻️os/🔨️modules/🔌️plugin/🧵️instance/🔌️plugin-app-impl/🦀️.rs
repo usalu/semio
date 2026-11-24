@@ -380,6 +380,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
 
     fn close_diagnostic(&self) -> String {
         let ladder = self.ladder_ref();
+        eprintln!("{}", ladder.debug_unsettled());
         if matches!(ladder.close_rung(), semio_plugin_instance_ladders::ladders_close_ladder::CloseRung::OwnedStores) {
             let lane = semio_plugin_instance_ladders::ladders_lifecycle_stores::ORIGINAL_STORE_LANES
                 .get(usize::from(self.close.close_owned_stage)).copied().unwrap_or("complete");

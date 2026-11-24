@@ -1,0 +1,186 @@
+{
+ "profiles": [
+  {
+   "counts": {
+    "closure": {
+     "derived": 0,
+     "loaded": 16,
+     "stale": 3,
+     "checked": 21,
+     "stamped": 0,
+     "stampsKept": 17,
+     "fetched": 3,
+     "reasked": 0,
+     "reaskFailed": 0,
+     "reaskEqual": 0,
+     "reaskDifferent": 0
+    },
+    "lane": {
+     "fetched": 3,
+     "prefetched": 0,
+     "computed": 0,
+     "published": 0,
+     "refused": 0,
+     "missed": 0,
+     "imported": 3
+    },
+    "verdicts": {
+     "read": 7,
+     "written": 7627,
+     "waited": 0
+    },
+    "layers": {
+     "hits": 62565,
+     "joined": 0,
+     "checked": 87,
+     "indexed": 7519,
+     "milliseconds": 37668
+    }
+   },
+   "name": "@semio-tech/cad-extension-aec-building-rust"
+  }
+ ],
+ "phases": [
+  {
+   "label": "start",
+   "wallMs": 3,
+   "cpuMs": 2,
+   "rssMB": 29,
+   "peakMB": 29,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "bootstrap",
+   "wallMs": 2741,
+   "cpuMs": 943,
+   "rssMB": 145,
+   "peakMB": 147,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "import-modules",
+   "wallMs": 2,
+   "cpuMs": 2,
+   "rssMB": 145,
+   "peakMB": 147,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "open-session",
+   "wallMs": 10,
+   "cpuMs": 7,
+   "rssMB": 148,
+   "peakMB": 148,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "job:@semio-tech/cad-extension-aec-building-rust",
+   "wallMs": 1896,
+   "cpuMs": 592,
+   "rssMB": 169,
+   "peakMB": 172,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "run:@semio-tech/cad-extension-aec-building-rust",
+   "wallMs": 134259,
+   "cpuMs": 37007,
+   "rssMB": 539,
+   "peakMB": 1116,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0,
+   "kind": "language:cargo",
+   "names": 600,
+   "cpuReply": 37005,
+   "peakReply": 947,
+   "recordSummary": {
+    "keys": [
+     "digest",
+     "authority",
+     "observations",
+     "image"
+    ],
+    "rows": 1601,
+    "byKind": {
+     "stamp": 18,
+     "exists": 602,
+     "file": 2,
+     "global": 354,
+     "lstat": 15,
+     "field": 589,
+     "closure": 14,
+     "analysis": 6,
+     "readdirNames": 1
+    },
+    "closure": [
+     "{\"kind\":\"closure\",\"path\":\"[\\\"/Users/ueli/Documents/semio\\\",\\\"9e3fd0118d921580dd6d6e0f862e028c0983a9ac1356d24cd909f168f405d6a7\\\",[\\\"some\\\",[\\\"/🏃️process/🧪️testing/🦀️cargo/\\\"]]]\",\"fact\":\"true\"}",
+     "{\"kind\":\"closure\",\"path\":\"[\\\"/Users/ueli/Documents/semio\\\",\\\"9e3fd0118d921580dd6d6e0f862e028c0983a9ac1356d24cd909f168f405d6a7\\\",[\\\"workspaceKeys\\\",\\\"repo \\\\\\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\\\\\\\" native owne",
+     "{\"kind\":\"closure\",\"path\":\"[\\\"/Users/ueli/Documents/semio\\\",\\\"b2ef274b45238b32711d70cec3ed89adc9b68aa0053a726b6b3c1ce65afa7e6d\\\",[\\\"generated\\\"]]\",\"fact\":\"[]\"}",
+     "{\"kind\":\"closure\",\"path\":\"[\\\"/Users/ueli/Documents/semio\\\",\\\"da167b4ffb9580a35ec58e84282700cb93f9787a67d2fd394df65ac7cf89e038\\\",[\\\"some\\\",[\\\"/🏃️process/🧪️testing/🦀️cargo/\\\"]]]\",\"fact\":\"true\"}",
+     "{\"kind\":\"closure\",\"path\":\"[\\\"/Users/ueli/Documents/semio\\\",\\\"da167b4ffb9580a35ec58e84282700cb93f9787a67d2fd394df65ac7cf89e038\\\",[\\\"workspaceKeys\\\",\\\"repo \\\\\\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\\\\\\\" native owne",
+     "{\"kind\":\"closure\",\"path\":\"[\\\"/Users/ueli/Documents/semio\\\",\\\"253c94df32cb68d95e6a9eb62b6c2a7cf7d872d2d789d823b07a2636120c43eb\\\",[\\\"generated\\\"]]\",\"fact\":\"[]\"}"
+    ]
+   }
+  }
+ ],
+ "calls": {
+  "lstatSync": 2,
+  "openSync": 1,
+  "p.readFile": 34,
+  "p.writeFile": 77,
+  "statSync": 1,
+  "p.stat": 63832,
+  "p.readdir": 12
+ },
+ "bytes": {},
+ "distinctFilesRead": 25,
+ "spawns": [],
+ "topPaths": [
+  [
+   "p.stat /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-H/scratchpad/gr18",
+   63832
+  ],
+  [
+   "p.writeFile /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-H/scratchpad/gr18",
+   77
+  ],
+  [
+   "p.readFile /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-H/scratchpad/gr18",
+   34
+  ],
+  [
+   "p.readdir /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-H/scratchpad/gr18",
+   12
+  ],
+  [
+   "lstatSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+   2
+  ],
+  [
+   "openSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+   1
+  ],
+  [
+   "statSync /uSERS/UELI/dOCUMENTS/SEMIO/.CACHE/B/D",
+   1
+  ]
+ ],
+ "hashes": 0,
+ "hashBytes": 0,
+ "load": [
+  64.419921875,
+  60.89404296875,
+  54.5517578125
+ ]
+}

@@ -1,6 +1,6 @@
 {
  "policy": {
-  "factor": 4,
+  "factor": 2,
   "floorMilliseconds": 60000,
   "capMilliseconds": 900000,
   "unknownMilliseconds": 240000,
@@ -33,12 +33,12 @@
   {
    "predicted": 100000,
    "linked": false,
-   "expected": 400000
+   "expected": 200000
   },
   {
    "predicted": 400000,
    "linked": false,
-   "expected": 900000
+   "expected": 800000
   },
   {
    "predicted": 5000000,
@@ -68,17 +68,27 @@
   {
    "predicted": 100000,
    "linked": true,
-   "expected": 400000
+   "expected": 200000
   },
   {
    "predicted": 400000,
    "linked": true,
-   "expected": 1600000
+   "expected": 800000
   },
   {
    "predicted": 5000000,
    "linked": true,
    "expected": 3600000
+  },
+  {
+   "predicted": 496697,
+   "linked": false,
+   "expected": 900000
+  },
+  {
+   "predicted": 496697,
+   "linked": true,
+   "expected": 993394
   }
  ]
 }

@@ -109,8 +109,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             return Ok(());
         }
         if mounted.tool_stage!=semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Complete{
-            let complete=self.as_render().settle_tool_operation(mounted.operation.operation.0,&mounted.canonical_revision,&mounted.meta.actor,mounted.publication.as_mut().expect("mounted publication retains its accepted emit"),&mut mounted.tool_stage,&mut mounted.tool_press_result,&mut mounted.command_logged,cx)?;
-            if !complete{note_publication_wait(op,"the tool settlement is not complete (stage, retained items, fuel)",[mounted.tool_stage as u64,cx.retained_grant().maximum_items as u64,cx.fuel_remaining()]);return Ok(())}
+            use semio_plugin_retained_command::typed_operation::ToolSettlementUnit as Unit;
+            let settled=self.as_render().settle_tool_operation(mounted.operation.operation.0,&mounted.canonical_revision,&mounted.meta.actor,mounted.publication.as_mut().expect("mounted publication retains its accepted emit"),&mut mounted.tool_stage,&mut mounted.tool_press_result,&mut mounted.command_logged,cx)?;
+            match settled{
+                Unit::Complete=>{}
+                Unit::Advanced=>{note_publication_wait(op,"the tool settlement advanced but is not complete (stage, retained items, fuel)",[mounted.tool_stage as u64,cx.retained_grant().maximum_items as u64,cx.fuel_remaining()]);return Ok(())}
+                Unit::Waiting(wait)=>{semio_plugin_retained_command::typed_operation::note_publication_unit_wait(op,wait);return Ok(())}
+            }
             let bytes=std::mem::size_of::<semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage>()+std::mem::size_of::<bool>();let grant=cx.retained_grant();
             if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{note_publication_wait(op,"the tool settlement close is not funded or yielded (items, copy bytes, depth)",[grant.maximum_items as u64,grant.maximum_copy_bytes as u64,grant.maximum_depth as u64]);return Ok(())}
             if mounted.tool_stage==semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Scrub{if let Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))=mounted.publication.as_ref(){if emit.transaction.is_none(){mounted.command_logged=true}}}

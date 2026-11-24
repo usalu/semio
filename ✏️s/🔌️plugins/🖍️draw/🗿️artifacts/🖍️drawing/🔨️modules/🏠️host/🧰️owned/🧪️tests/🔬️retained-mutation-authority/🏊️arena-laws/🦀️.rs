@@ -101,6 +101,7 @@ fn retained_drawing_arena_bootstrap_deadline_between_guards_preserves_and_resume
     let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, law["deadlineUs"].as_u64().unwrap(), UNBOUNDED_STEP_GRANT), cancel.clone(), bootstrap_yield_clock, &mut preview_sequence, &mut context_retained);
     assert!(!context.should_yield(), "the outer admission guard still has time");
     let yielded = job.step_locked(&mut state, &mut context);
+    drop(context);
     let retained = match &state {
         DrawingMutationArenaProcessState::Building(owner) => Some((owner.allocation - allocation, owner.fault)),
         _ => None,
@@ -122,7 +123,7 @@ fn retained_drawing_arena_bootstrap_deadline_between_guards_preserves_and_resume
     assert_eq!(serde_json::to_value(actual).unwrap(), law["expectedStages"]);
 }
 
-fn close_arena_bootstrap_step(bootstrap: &mut DrawingMutationArenaPoolBootstrap) -> store::SnapshotRetirementStep {
+fn close_arena_bootstrap_step(bootstrap: &mut DrawingMutationArenaPoolBootstrap) -> RetainedCloneStep {
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
@@ -135,15 +136,14 @@ fn close_arena_bootstrap(bootstrap: &mut DrawingMutationArenaPoolBootstrap) -> u
     let mut released_roots = 0;
     for _ in 0..10_000 {
         match close_arena_bootstrap_step(bootstrap) {
-            store::SnapshotRetirementStep::Pending { released_items, .. } => {
-                assert!(released_items <= 1, "Drawing arena bootstrap releases at most one exact root per grant");
-                released_roots += released_items;
+            RetainedCloneStep::Progress(progress) => {
+                assert!(progress.copied_items <= 1, "Drawing arena bootstrap releases at most one exact root per grant");
+                released_roots += progress.copied_items;
             }
-            store::SnapshotRetirementStep::Complete => {
+            RetainedCloneStep::Complete(_) => {
                 assert!(bootstrap.terminal_is_empty());
                 return released_roots;
             }
-            store::SnapshotRetirementStep::Blocked => panic!("isolated Drawing arena bootstrap never blocks"),
         }
     }
     panic!("Drawing arena bootstrap retirement did not terminate")
@@ -277,12 +277,14 @@ fn retained_drawing_arena_bootstrap_job_cancel_budget_contention_and_saturation_
     let mut exhausted_retained = semio_framework_job::RetainedCloneProgress::default();
     let mut exhausted = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(0, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut exhausted_retained);
     assert_eq!(job.step(&mut exhausted), DrawingMutationArenaBootstrapStep::Blocked, "zero-budget bootstrap cannot allocate or retire");
+    drop(exhausted);
 
     let state = DRAWING_MUTATION_ARENA_POOL.get_or_init(|| std::sync::Mutex::new(DrawingMutationArenaProcessState::Inert));
     let guard = state.try_lock().expect("isolated Drawing bootstrap fixture owns process contention");
     let mut contended_retained = semio_framework_job::RetainedCloneProgress::default();
     let mut contended = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut contended_retained);
     assert_eq!(job.step(&mut contended), DrawingMutationArenaBootstrapStep::Blocked, "process contention leaves the exact bootstrap owner untouched");
+    drop(contended);
     drop(guard);
 
     let local_operation = semio_framework_job::OperationId(7_905);

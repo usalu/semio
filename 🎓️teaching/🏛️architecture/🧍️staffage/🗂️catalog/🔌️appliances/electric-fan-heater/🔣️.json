@@ -237,36 +237,72 @@
     },
     "anchors": [
       {
-        "id": "foot-back",
+        "id": "foot-back-right",
         "bone": "body",
         "x": -0.058,
         "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Rear foot",
-          "de": "Hinterer Fuß"
+          "en": "Rear right foot",
+          "de": "Hinterer rechter Fuß"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.025,
         "footprintWidthM": 0.025,
-        "frictionCoefficient": 0.6
+        "frictionCoefficient": 0.6,
+        "z": -0.075
       },
       {
-        "id": "foot-front",
+        "id": "foot-back-left",
+        "bone": "body",
+        "x": -0.058,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Rear left foot",
+          "de": "Hinterer linker Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.025,
+        "footprintWidthM": 0.025,
+        "frictionCoefficient": 0.6,
+        "z": 0.075
+      },
+      {
+        "id": "foot-front-right",
         "bone": "body",
         "x": 0.058,
         "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Front foot",
-          "de": "Vorderer Fuß"
+          "en": "Front right foot",
+          "de": "Vorderer rechter Fuß"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.025,
         "footprintWidthM": 0.025,
-        "frictionCoefficient": 0.6
+        "frictionCoefficient": 0.6,
+        "z": -0.075
+      },
+      {
+        "id": "foot-front-left",
+        "bone": "body",
+        "x": 0.058,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Front left foot",
+          "de": "Vorderer linker Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.025,
+        "footprintWidthM": 0.025,
+        "frictionCoefficient": 0.6,
+        "z": 0.075
       },
       {
         "id": "outlet",
@@ -2231,8 +2267,10 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-back",
-          "foot-front"
+          "foot-back-right",
+          "foot-back-left",
+          "foot-front-right",
+          "foot-front-left"
         ],
         "loads": [],
         "thermal": {
@@ -2292,8 +2330,10 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-back",
-          "foot-front"
+          "foot-back-right",
+          "foot-back-left",
+          "foot-front-right",
+          "foot-front-left"
         ],
         "loads": [],
         "thermal": {
@@ -2353,8 +2393,10 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-back",
-          "foot-front"
+          "foot-back-right",
+          "foot-back-left",
+          "foot-front-right",
+          "foot-front-left"
         ],
         "loads": [],
         "thermal": {
@@ -2429,12 +2471,22 @@
         ],
         "contacts": [
           {
-            "anchor": "foot-back",
+            "anchor": "foot-back-right",
             "fromS": 0,
             "toS": 900
           },
           {
-            "anchor": "foot-front",
+            "anchor": "foot-back-left",
+            "fromS": 0,
+            "toS": 900
+          },
+          {
+            "anchor": "foot-front-right",
+            "fromS": 0,
+            "toS": 900
+          },
+          {
+            "anchor": "foot-front-left",
             "fromS": 0,
             "toS": 900
           }
@@ -2567,12 +2619,22 @@
         ],
         "contacts": [
           {
-            "anchor": "foot-back",
+            "anchor": "foot-back-right",
             "fromS": 0,
             "toS": 1800
           },
           {
-            "anchor": "foot-front",
+            "anchor": "foot-back-left",
+            "fromS": 0,
+            "toS": 1800
+          },
+          {
+            "anchor": "foot-front-right",
+            "fromS": 0,
+            "toS": 1800
+          },
+          {
+            "anchor": "foot-front-left",
             "fromS": 0,
             "toS": 1800
           }
@@ -2753,12 +2815,22 @@
         ],
         "contacts": [
           {
-            "anchor": "foot-back",
+            "anchor": "foot-back-right",
             "fromS": 0,
             "toS": 6
           },
           {
-            "anchor": "foot-front",
+            "anchor": "foot-back-left",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "foot-front-right",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "foot-front-left",
             "fromS": 0,
             "toS": 6
           }
@@ -3038,7 +3110,7 @@
               "kind": "metal",
               "material": "steel-mesh",
               "thicknessM": 0.0015,
-              "resistanceM2KW": 3e-05,
+              "resistanceM2KW": 0.00003,
               "heatCapacityJM2K": 5299,
               "source": "authored-estimate",
               "reference": "iso-10456-2007"
@@ -3201,13 +3273,15 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "foot-back",
-        "foot-front"
+        "foot-back-right",
+        "foot-back-left",
+        "foot-front-right",
+        "foot-front-left"
       ],
       "assumptions": [
         {
-          "en": "A rigid body standing on two rubber feet.",
-          "de": "Ein starrer Körper auf zwei Gummifüßen."
+          "en": "A rigid body standing on four rubber feet.",
+          "de": "Ein starrer Körper auf vier Gummifüßen."
         }
       ],
       "clinical": false
@@ -3226,11 +3300,11 @@
             "tone": 0.15,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.0125
               ],
               [
@@ -3243,7 +3317,7 @@
               ],
               [
                 0.01,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -3253,7 +3327,7 @@
             ],
             "origin": [
               -0.058,
-              0.0,
+              0,
               -0.075
             ],
             "repeat": {
@@ -3274,11 +3348,11 @@
             "tone": 0.15,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.0125
               ],
               [
@@ -3291,7 +3365,7 @@
               ],
               [
                 0.01,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -3301,7 +3375,7 @@
             ],
             "origin": [
               0.058,
-              0.0,
+              0,
               -0.075
             ],
             "repeat": {
@@ -3323,7 +3397,7 @@
             "profile": [
               [
                 0.01,
-                0.0
+                0
               ],
               [
                 0.01,
@@ -3335,7 +3409,7 @@
               ],
               [
                 0.0185,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -3345,7 +3419,7 @@
             ],
             "origin": [
               -0.058,
-              0.0,
+              0,
               -0.075
             ],
             "repeat": {
@@ -3367,7 +3441,7 @@
             "profile": [
               [
                 0.01,
-                0.0
+                0
               ],
               [
                 0.01,
@@ -3379,7 +3453,7 @@
               ],
               [
                 0.0185,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -3389,7 +3463,7 @@
             ],
             "origin": [
               0.058,
-              0.0,
+              0,
               -0.075
             ],
             "repeat": {
@@ -4087,7 +4161,7 @@
             "sections": [
               {
                 "at": [
-                  0.0,
+                  0,
                   0.27,
                   -0.058
                 ],
@@ -4103,7 +4177,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.2745,
                   -0.058
                 ],
@@ -4119,7 +4193,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.279,
                   -0.058
                 ],
@@ -4135,7 +4209,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.292,
                   -0.058
                 ],
@@ -4151,7 +4225,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.29659,
                   -0.05709
                 ],
@@ -4167,7 +4241,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.30049,
                   -0.05449
                 ],
@@ -4183,7 +4257,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.30309,
                   -0.05059
                 ],
@@ -4199,7 +4273,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.304,
                   -0.046
                 ],
@@ -4215,23 +4289,23 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.304,
-                  0.0
+                  0
                 ],
                 "rx": 0.006,
                 "ry": 0.013,
                 "exponent": 2.6,
                 "rotation": [
-                  0.0,
-                  0.0,
+                  0,
+                  0,
                   -0.707107,
                   0.707107
                 ]
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.304,
                   0.046
                 ],
@@ -4247,7 +4321,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.30309,
                   0.05059
                 ],
@@ -4263,7 +4337,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.30049,
                   0.05449
                 ],
@@ -4279,7 +4353,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.29659,
                   0.05709
                 ],
@@ -4295,7 +4369,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.292,
                   0.058
                 ],
@@ -4311,7 +4385,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.279,
                   0.058
                 ],
@@ -4327,7 +4401,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.2745,
                   0.058
                 ],
@@ -4343,7 +4417,7 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.27,
                   0.058
                 ],
@@ -4506,11 +4580,11 @@
               "translation": [
                 0.0881,
                 0.075,
-                0.0
+                0
               ],
               "rotation": [
-                0.0,
-                0.0,
+                0,
+                0,
                 -0.378105,
                 0.925763
               ]
@@ -4983,11 +5057,11 @@
             "tone": 0.2,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.005
               ],
               [
@@ -5000,7 +5074,7 @@
               ],
               [
                 0.009,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -5024,7 +5098,7 @@
             "profile": [
               [
                 0.0045,
-                0.0
+                0
               ],
               [
                 0.0045,
@@ -5048,7 +5122,7 @@
               ],
               [
                 0.0145,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -5057,8 +5131,8 @@
               1
             ],
             "origin": [
-              0.0,
-              0.0,
+              0,
+              0,
               -0.126
             ]
           },
@@ -5076,8 +5150,8 @@
             ],
             "transform": {
               "translation": [
-                0.0,
-                0.0,
+                0,
+                0,
                 -0.12225
               ]
             },
@@ -5097,7 +5171,7 @@
             ],
             "transform": {
               "translation": [
-                0.0,
+                0,
                 0.112,
                 -0.11325
               ]
@@ -5120,7 +5194,7 @@
               "translation": [
                 -0.076,
                 0.145,
-                0.0
+                0
               ]
             }
           },
@@ -5140,7 +5214,7 @@
               "translation": [
                 -0.062,
                 0.145,
-                0.0
+                0
               ]
             },
             "cornerRadius": 0.002
@@ -5161,7 +5235,7 @@
               "translation": [
                 -0.062,
                 0.11,
-                0.0
+                0
               ]
             },
             "cornerRadius": 0.004
@@ -5262,7 +5336,7 @@
               [
                 [
                   0.213,
-                  0.0
+                  0
                 ],
                 [
                   0.21197,
@@ -5334,7 +5408,7 @@
                 ],
                 [
                   0.077,
-                  0.0
+                  0
                 ],
                 [
                   0.07803,
@@ -5615,11 +5689,11 @@
             "tone": 0.35,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.016
               ],
               [
@@ -5632,7 +5706,7 @@
               ],
               [
                 0.024,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -5716,9 +5790,9 @@
             "to": 0.00075,
             "transform": {
               "rotation": [
-                0.0,
+                0,
                 0.241922,
-                0.0,
+                0,
                 0.970296
               ]
             },
@@ -5847,11 +5921,11 @@
               ],
               [
                 0.016,
-                0.0
+                0
               ],
               [
                 0.0185,
-                0.0
+                0
               ],
               [
                 0.0185,
@@ -5938,11 +6012,11 @@
               ],
               [
                 0.016,
-                0.0
+                0
               ],
               [
                 0.0185,
-                0.0
+                0
               ],
               [
                 0.0185,
@@ -6060,11 +6134,11 @@
               ],
               [
                 0.272,
-                0.0
+                0
               ],
               [
                 0.2695,
-                0.0
+                0
               ],
               [
                 0.2695,
@@ -6151,11 +6225,11 @@
               ],
               [
                 0.272,
-                0.0
+                0
               ],
               [
                 0.2695,
-                0.0
+                0
               ],
               [
                 0.2695,
@@ -6227,11 +6301,11 @@
             "tone": 0.6,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.05
               ],
               [
@@ -6240,7 +6314,7 @@
               ],
               [
                 0.0015,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -6251,7 +6325,7 @@
             "origin": [
               0.0925,
               0.145,
-              0.0
+              0
             ],
             "tags": [
               "warm-air-1",
@@ -6540,11 +6614,11 @@
             "tone": 0.25,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.004
               ],
               [
@@ -6553,7 +6627,7 @@
               ],
               [
                 0.03,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -6562,8 +6636,8 @@
               1
             ],
             "origin": [
-              0.0,
-              0.0,
+              0,
+              0,
               -0.1175
             ],
             "member": "knob",
@@ -6578,11 +6652,11 @@
             "tone": 0.25,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.0075
               ],
               [
@@ -6591,7 +6665,7 @@
               ],
               [
                 0.0075,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -6600,8 +6674,8 @@
               1
             ],
             "origin": [
-              0.0,
-              0.0,
+              0,
+              0,
               -0.1165
             ],
             "member": "knob",
@@ -6616,11 +6690,11 @@
             "tone": 0.25,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.014
               ],
               [
@@ -6629,7 +6703,7 @@
               ],
               [
                 0.008,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -6638,7 +6712,7 @@
               0
             ],
             "origin": [
-              0.0,
+              0,
               0.268,
               -0.058
             ],
@@ -6662,11 +6736,11 @@
             "tone": 0.25,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.005
               ],
               [
@@ -6675,7 +6749,7 @@
               ],
               [
                 0.008,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -6708,11 +6782,11 @@
             "tone": 0.25,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.005
               ],
               [
@@ -6721,7 +6795,7 @@
               ],
               [
                 0.008,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -6761,7 +6835,7 @@
               "translation": [
                 -0.062,
                 0.145,
-                0.0
+                0
               ]
             },
             "cornerRadius": 0.002,
@@ -6784,7 +6858,7 @@
               "translation": [
                 0.031,
                 0.145,
-                0.0
+                0
               ]
             },
             "cornerRadius": 0.002,
@@ -6792,18 +6866,176 @@
             "part": "mass"
           },
           {
-            "id": "support-foot-back",
-            "of": "pad-back",
+            "id": "support-foot-back-right",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.0125
+              ],
+              [
+                0.0025,
+                0.0145
+              ],
+              [
+                0.01,
+                0.015
+              ],
+              [
+                0.01,
+                0
+              ]
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "origin": [
+              -0.058,
+              0,
+              -0.075
+            ],
             "member": "body",
             "part": "support",
-            "anchor": "foot-back"
+            "anchor": "foot-back-right"
           },
           {
-            "id": "support-foot-front",
-            "of": "pad-front",
+            "id": "support-foot-back-left",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.0125
+              ],
+              [
+                0.0025,
+                0.0145
+              ],
+              [
+                0.01,
+                0.015
+              ],
+              [
+                0.01,
+                0
+              ]
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "origin": [
+              -0.058,
+              0,
+              0.075
+            ],
             "member": "body",
             "part": "support",
-            "anchor": "foot-front"
+            "anchor": "foot-back-left"
+          },
+          {
+            "id": "support-foot-front-right",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.0125
+              ],
+              [
+                0.0025,
+                0.0145
+              ],
+              [
+                0.01,
+                0.015
+              ],
+              [
+                0.01,
+                0
+              ]
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "origin": [
+              0.058,
+              0,
+              -0.075
+            ],
+            "member": "body",
+            "part": "support",
+            "anchor": "foot-front-right"
+          },
+          {
+            "id": "support-foot-front-left",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.0125
+              ],
+              [
+                0.0025,
+                0.0145
+              ],
+              [
+                0.01,
+                0.015
+              ],
+              [
+                0.01,
+                0
+              ]
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "origin": [
+              0.058,
+              0,
+              0.075
+            ],
+            "member": "body",
+            "part": "support",
+            "anchor": "foot-front-left"
           },
           {
             "id": "member-fan-shaft",
@@ -7506,11 +7738,11 @@
               "translation": [
                 0.086,
                 0.085,
-                0.0
+                0
               ],
               "rotation": [
-                0.0,
-                0.0,
+                0,
+                0,
                 -0.19509,
                 0.980785
               ]
@@ -7813,11 +8045,11 @@
             "tone": 0.35,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.016
               ],
               [
@@ -7830,7 +8062,7 @@
               ],
               [
                 0.024,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -7914,9 +8146,9 @@
             "to": 0.0075,
             "transform": {
               "rotation": [
-                0.0,
+                0,
                 0.241922,
-                0.0,
+                0,
                 0.970296
               ]
             },
@@ -7951,7 +8183,7 @@
               "translation": [
                 -0.0755,
                 0.145,
-                0.0
+                0
               ]
             }
           },
@@ -7971,7 +8203,7 @@
               "translation": [
                 -0.062,
                 0.145,
-                0.0
+                0
               ]
             },
             "cornerRadius": 0.002
@@ -8072,7 +8304,7 @@
               [
                 [
                   0.213,
-                  0.0
+                  0
                 ],
                 [
                   0.21197,
@@ -8144,7 +8376,7 @@
                 ],
                 [
                   0.077,
-                  0.0
+                  0
                 ],
                 [
                   0.07803,
@@ -8408,13 +8640,13 @@
             "sections": [
               {
                 "at": [
-                  0.0,
+                  0,
                   0.264,
                   -0.058
                 ],
                 "rx": 0.0085,
                 "ry": 0.013,
-                "exponent": 3.0,
+                "exponent": 3,
                 "rotation": [
                   -0.5,
                   -0.5,
@@ -8424,13 +8656,13 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.292,
                   -0.058
                 ],
                 "rx": 0.0085,
                 "ry": 0.013,
-                "exponent": 3.0,
+                "exponent": 3,
                 "rotation": [
                   -0.475424,
                   -0.475424,
@@ -8440,13 +8672,13 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.30049,
                   -0.05449
                 ],
                 "rx": 0.008,
                 "ry": 0.013,
-                "exponent": 3.0,
+                "exponent": 3,
                 "rotation": [
                   -0.270598,
                   -0.270598,
@@ -8456,13 +8688,13 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.304,
                   -0.046
                 ],
                 "rx": 0.0075,
                 "ry": 0.013,
-                "exponent": 3.0,
+                "exponent": 3,
                 "rotation": [
                   -0.022771,
                   -0.022771,
@@ -8472,29 +8704,29 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.304,
-                  0.0
+                  0
                 ],
                 "rx": 0.0075,
                 "ry": 0.013,
-                "exponent": 3.0,
+                "exponent": 3,
                 "rotation": [
-                  0.0,
-                  0.0,
+                  0,
+                  0,
                   -0.707107,
                   0.707107
                 ]
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.304,
                   0.046
                 ],
                 "rx": 0.0075,
                 "ry": 0.013,
-                "exponent": 3.0,
+                "exponent": 3,
                 "rotation": [
                   0.022771,
                   0.022771,
@@ -8504,13 +8736,13 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.30049,
                   0.05449
                 ],
                 "rx": 0.008,
                 "ry": 0.013,
-                "exponent": 3.0,
+                "exponent": 3,
                 "rotation": [
                   0.270598,
                   0.270598,
@@ -8520,13 +8752,13 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.292,
                   0.058
                 ],
                 "rx": 0.0085,
                 "ry": 0.013,
-                "exponent": 3.0,
+                "exponent": 3,
                 "rotation": [
                   0.475424,
                   0.475424,
@@ -8536,13 +8768,13 @@
               },
               {
                 "at": [
-                  0.0,
+                  0,
                   0.264,
                   0.058
                 ],
                 "rx": 0.0085,
                 "ry": 0.013,
-                "exponent": 3.0,
+                "exponent": 3,
                 "rotation": [
                   0.5,
                   0.5,
@@ -8563,11 +8795,11 @@
             "tone": 0.15,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.014
               ],
               [
@@ -8580,7 +8812,7 @@
               ],
               [
                 0.0185,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -8590,7 +8822,7 @@
             ],
             "origin": [
               -0.058,
-              0.0,
+              0,
               -0.075
             ],
             "repeat": {
@@ -8611,11 +8843,11 @@
             "tone": 0.15,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.014
               ],
               [
@@ -8628,7 +8860,7 @@
               ],
               [
                 0.0185,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -8638,7 +8870,7 @@
             ],
             "origin": [
               0.058,
-              0.0,
+              0,
               -0.075
             ],
             "repeat": {
@@ -8672,7 +8904,7 @@
               ],
               [
                 -0.022,
-                0.0
+                0
               ],
               [
                 -0.02067,
@@ -8708,7 +8940,7 @@
               ],
               [
                 0.022,
-                -0.0
+                0
               ],
               [
                 0.02067,
@@ -8741,7 +8973,7 @@
             ],
             "transform": {
               "translation": [
-                0.0,
+                0,
                 0.112,
                 -0.1145
               ]
@@ -8818,11 +9050,11 @@
               ],
               [
                 0.016,
-                0.0
+                0
               ],
               [
                 0.0185,
-                0.0
+                0
               ],
               [
                 0.0185,
@@ -8909,11 +9141,11 @@
               ],
               [
                 0.016,
-                0.0
+                0
               ],
               [
                 0.0185,
-                0.0
+                0
               ],
               [
                 0.0185,
@@ -9105,11 +9337,11 @@
               "translation": [
                 0.088,
                 0.085,
-                0.0
+                0
               ],
               "rotation": [
-                0.0,
-                0.0,
+                0,
+                0,
                 -0.19509,
                 0.980785
               ]
@@ -9159,7 +9391,7 @@
             "origin": [
               0.0925,
               0.145,
-              0.0
+              0
             ],
             "tags": [
               "warm-air-1",
@@ -9463,11 +9695,11 @@
             "tone": 0.15,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.0125
               ],
               [
@@ -9480,7 +9712,7 @@
               ],
               [
                 0.01,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -9490,7 +9722,7 @@
             ],
             "origin": [
               -0.058,
-              0.0,
+              0,
               -0.075
             ],
             "repeat": {
@@ -9513,11 +9745,11 @@
             "tone": 0.15,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.0125
               ],
               [
@@ -9530,7 +9762,7 @@
               ],
               [
                 0.01,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -9540,7 +9772,7 @@
             ],
             "origin": [
               0.058,
-              0.0,
+              0,
               -0.075
             ],
             "repeat": {
@@ -9850,11 +10082,11 @@
             "tone": 0.25,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.015
               ],
               [
@@ -9863,7 +10095,7 @@
               ],
               [
                 0.015,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -9872,7 +10104,7 @@
               0
             ],
             "origin": [
-              0.0,
+              0,
               0.262,
               -0.058
             ],
@@ -9908,11 +10140,11 @@
             "tone": 0.25,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.0075
               ],
               [
@@ -9921,7 +10153,7 @@
               ],
               [
                 0.03,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -9930,8 +10162,8 @@
               1
             ],
             "origin": [
-              0.0,
-              0.0,
+              0,
+              0,
               -0.114
             ],
             "member": "knob",
@@ -9946,11 +10178,11 @@
             "tone": 0.25,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.012
               ],
               [
@@ -9959,7 +10191,7 @@
               ],
               [
                 0.015,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -9968,8 +10200,8 @@
               1
             ],
             "origin": [
-              0.0,
-              0.0,
+              0,
+              0,
               -0.116
             ],
             "member": "knob",
@@ -10067,7 +10299,7 @@
               "translation": [
                 -0.062,
                 0.145,
-                0.0
+                0
               ]
             },
             "member": "body",
@@ -10089,25 +10321,183 @@
               "translation": [
                 0.031,
                 0.145,
-                0.0
+                0
               ]
             },
             "member": "body",
             "part": "mass"
           },
           {
-            "id": "support-foot-back",
-            "of": "foot-back",
+            "id": "support-foot-back-right",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.014
+              ],
+              [
+                0.004,
+                0.016
+              ],
+              [
+                0.0185,
+                0.016
+              ],
+              [
+                0.0185,
+                0
+              ]
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "origin": [
+              -0.058,
+              0,
+              -0.075
+            ],
             "member": "body",
             "part": "support",
-            "anchor": "foot-back"
+            "anchor": "foot-back-right"
           },
           {
-            "id": "support-foot-front",
-            "of": "foot-front",
+            "id": "support-foot-back-left",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.014
+              ],
+              [
+                0.004,
+                0.016
+              ],
+              [
+                0.0185,
+                0.016
+              ],
+              [
+                0.0185,
+                0
+              ]
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "origin": [
+              -0.058,
+              0,
+              0.075
+            ],
             "member": "body",
             "part": "support",
-            "anchor": "foot-front"
+            "anchor": "foot-back-left"
+          },
+          {
+            "id": "support-foot-front-right",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.014
+              ],
+              [
+                0.004,
+                0.016
+              ],
+              [
+                0.0185,
+                0.016
+              ],
+              [
+                0.0185,
+                0
+              ]
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "origin": [
+              0.058,
+              0,
+              -0.075
+            ],
+            "member": "body",
+            "part": "support",
+            "anchor": "foot-front-right"
+          },
+          {
+            "id": "support-foot-front-left",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.014
+              ],
+              [
+                0.004,
+                0.016
+              ],
+              [
+                0.0185,
+                0.016
+              ],
+              [
+                0.0185,
+                0
+              ]
+            ],
+            "axis": [
+              0,
+              1,
+              0
+            ],
+            "origin": [
+              0.058,
+              0,
+              0.075
+            ],
+            "member": "body",
+            "part": "support",
+            "anchor": "foot-front-left"
           }
         ],
         "decisions": [
@@ -10226,7 +10616,7 @@
               "translation": [
                 0.079,
                 0.145,
-                0.0
+                0
               ]
             },
             "cornerRadius": 0.004
@@ -10247,7 +10637,7 @@
               "translation": [
                 -0.083,
                 0.145,
-                0.0
+                0
               ]
             },
             "cornerRadius": 0.004
@@ -10305,7 +10695,7 @@
               "translation": [
                 -0.058,
                 0.015,
-                0.0
+                0
               ]
             }
           },
@@ -10325,7 +10715,7 @@
               "translation": [
                 0.058,
                 0.015,
-                0.0
+                0
               ]
             }
           },
@@ -10538,7 +10928,7 @@
               "translation": [
                 0.092,
                 0.145,
-                0.0
+                0
               ]
             },
             "sectionFaces": [
@@ -10563,7 +10953,7 @@
               "translation": [
                 -0.095,
                 0.145,
-                0.0
+                0
               ]
             },
             "sectionFaces": [
@@ -10605,7 +10995,7 @@
             "origin": [
               0.0945,
               0.145,
-              0.0
+              0
             ],
             "tags": [
               "warm-air-1",
@@ -10661,11 +11051,11 @@
             "tone": 0.15,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.0125
               ],
               [
@@ -10678,7 +11068,7 @@
               ],
               [
                 0.01,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -10688,7 +11078,7 @@
             ],
             "origin": [
               -0.058,
-              0.0,
+              0,
               -0.075
             ],
             "repeat": {
@@ -10711,11 +11101,11 @@
             "tone": 0.15,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.0125
               ],
               [
@@ -10728,7 +11118,7 @@
               ],
               [
                 0.01,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -10738,7 +11128,7 @@
             ],
             "origin": [
               0.058,
-              0.0,
+              0,
               -0.075
             ],
             "repeat": {
@@ -10794,25 +11184,103 @@
               "translation": [
                 -0.062,
                 0.145,
-                0.0
+                0
               ]
             },
             "member": "body",
             "part": "mass"
           },
           {
-            "id": "support-foot-back",
-            "of": "foot-back",
+            "id": "support-foot-back-right",
+            "kind": "box",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "size": [
+              0.03,
+              0.03,
+              0.03
+            ],
+            "transform": {
+              "translation": [
+                -0.058,
+                0.015,
+                -0.075
+              ]
+            },
             "member": "body",
             "part": "support",
-            "anchor": "foot-back"
+            "anchor": "foot-back-right"
           },
           {
-            "id": "support-foot-front",
-            "of": "foot-front",
+            "id": "support-foot-back-left",
+            "kind": "box",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "size": [
+              0.03,
+              0.03,
+              0.03
+            ],
+            "transform": {
+              "translation": [
+                -0.058,
+                0.015,
+                0.075
+              ]
+            },
             "member": "body",
             "part": "support",
-            "anchor": "foot-front"
+            "anchor": "foot-back-left"
+          },
+          {
+            "id": "support-foot-front-right",
+            "kind": "box",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "size": [
+              0.03,
+              0.03,
+              0.03
+            ],
+            "transform": {
+              "translation": [
+                0.058,
+                0.015,
+                -0.075
+              ]
+            },
+            "member": "body",
+            "part": "support",
+            "anchor": "foot-front-right"
+          },
+          {
+            "id": "support-foot-front-left",
+            "kind": "box",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "size": [
+              0.03,
+              0.03,
+              0.03
+            ],
+            "transform": {
+              "translation": [
+                0.058,
+                0.015,
+                0.075
+              ]
+            },
+            "member": "body",
+            "part": "support",
+            "anchor": "foot-front-left"
           }
         ],
         "decisions": [
@@ -10843,7 +11311,7 @@
             "tone": 0.78,
             "profile": [
               [
-                0.0,
+                0,
                 -0.114
               ],
               [
@@ -10863,7 +11331,7 @@
                 0.114
               ],
               [
-                0.0,
+                0,
                 0.114
               ]
             ],
@@ -10887,7 +11355,7 @@
               "translation": [
                 0.0565,
                 0.145,
-                0.0
+                0
               ]
             }
           },
@@ -10907,7 +11375,7 @@
               "translation": [
                 -0.0605,
                 0.145,
-                0.0
+                0
               ]
             }
           },
@@ -11045,7 +11513,7 @@
               "translation": [
                 0.092,
                 0.145,
-                0.0
+                0
               ]
             },
             "sectionFaces": [
@@ -11070,7 +11538,7 @@
               "translation": [
                 -0.095,
                 0.145,
-                0.0
+                0
               ]
             },
             "sectionFaces": [
@@ -11112,7 +11580,7 @@
             "origin": [
               0.0945,
               0.145,
-              0.0
+              0
             ],
             "tags": [
               "warm-air-1",
@@ -11168,11 +11636,11 @@
             "tone": 0.15,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.0125
               ],
               [
@@ -11185,7 +11653,7 @@
               ],
               [
                 0.01,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -11195,7 +11663,7 @@
             ],
             "origin": [
               -0.058,
-              0.0,
+              0,
               -0.075
             ],
             "repeat": {
@@ -11218,11 +11686,11 @@
             "tone": 0.15,
             "profile": [
               [
-                0.0,
-                0.0
+                0,
+                0
               ],
               [
-                0.0,
+                0,
                 0.0125
               ],
               [
@@ -11235,7 +11703,7 @@
               ],
               [
                 0.01,
-                0.0
+                0
               ]
             ],
             "axis": [
@@ -11245,7 +11713,7 @@
             ],
             "origin": [
               0.058,
-              0.0,
+              0,
               -0.075
             ],
             "repeat": {
@@ -11365,14 +11833,14 @@
               "translation": [
                 -0.062,
                 0.145,
-                0.0
+                0
               ]
             },
             "member": "body",
             "part": "mass"
           },
           {
-            "id": "support-foot-back",
+            "id": "support-foot-back-right",
             "kind": "box",
             "bone": "body",
             "material": "rubber-foot",
@@ -11381,21 +11849,21 @@
             "size": [
               0.03,
               0.016,
-              0.18
+              0.03
             ],
             "transform": {
               "translation": [
                 -0.058,
                 0.008,
-                0.0
+                -0.075
               ]
             },
             "member": "body",
             "part": "support",
-            "anchor": "foot-back"
+            "anchor": "foot-back-right"
           },
           {
-            "id": "support-foot-front",
+            "id": "support-foot-back-left",
             "kind": "box",
             "bone": "body",
             "material": "rubber-foot",
@@ -11404,18 +11872,64 @@
             "size": [
               0.03,
               0.016,
-              0.18
+              0.03
+            ],
+            "transform": {
+              "translation": [
+                -0.058,
+                0.008,
+                0.075
+              ]
+            },
+            "member": "body",
+            "part": "support",
+            "anchor": "foot-back-left"
+          },
+          {
+            "id": "support-foot-front-right",
+            "kind": "box",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "size": [
+              0.03,
+              0.016,
+              0.03
             ],
             "transform": {
               "translation": [
                 0.058,
                 0.008,
-                0.0
+                -0.075
               ]
             },
             "member": "body",
             "part": "support",
-            "anchor": "foot-front"
+            "anchor": "foot-front-right"
+          },
+          {
+            "id": "support-foot-front-left",
+            "kind": "box",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "size": [
+              0.03,
+              0.016,
+              0.03
+            ],
+            "transform": {
+              "translation": [
+                0.058,
+                0.008,
+                0.075
+              ]
+            },
+            "member": "body",
+            "part": "support",
+            "anchor": "foot-front-left"
           }
         ],
         "decisions": [

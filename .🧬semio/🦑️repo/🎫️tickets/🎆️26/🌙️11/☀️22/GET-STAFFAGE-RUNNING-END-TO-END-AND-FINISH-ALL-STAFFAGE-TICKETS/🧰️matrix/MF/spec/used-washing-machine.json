@@ -1,0 +1,9 @@
+{
+  "ops": [
+    { "op": "shape-set", "scale": "500", "view": "elevation", "id": "cabinet-block", "set": { "w": 0.58 } }
+  ],
+  "solidify": [
+    { "scales": ["500"], "views": ["plan"], "bones": ["cabinet"], "only": ["cabinet-block"], "mode": "w" },
+    { "under": "cabinet" }
+  ]
+}

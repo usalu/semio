@@ -324,6 +324,18 @@
   ],
   "inbound": [
     {
+      "kind": "original-succession-request",
+      "ok": null,
+      "fields": [
+        "kind",
+        "request",
+        "actorId",
+        "activationGeneration",
+        "operation",
+        "generation"
+      ]
+    },
+    {
       "kind": "original-turn-receipt",
       "ok": null,
       "fields": [
@@ -377,6 +389,7 @@
         "requestId",
         "ok",
         "error",
+        "fault",
         "stack",
         "type",
         "framesBytes",
@@ -432,6 +445,7 @@
   "workerRequestKinds": [
     "attachHeartbeatSab",
     "original-root-refusal",
+    "original-succession-result",
     "dispose",
     "frame",
     "activate",
@@ -451,6 +465,7 @@
     "result",
     "result",
     "result",
+    "original-succession-request",
     "original-turn-receipt",
     "original-producer-held",
     "original-source-close",

@@ -117,10 +117,10 @@ impl Generation3dViewInstanceOperationOwner {
 
     /// 🧵️ Owes every attached preview window an evaluation and carries on `emit` the run start that debt
     /// needs when no unsettled run can be woken ([`preview_eval::owe_attached_previews_carrying`]).
-    pub(super) fn owe_attached_previews_carrying(&mut self, windows: &[(&str, &'static str)], servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dViewConfigMutation, NoDraftMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
+    pub(super) fn owe_attached_previews_carrying(&mut self, windows: &[(&str, &'static str)], unserved: &[String], emit: &mut Emit<Generation3dMutation, Generation3dViewConfigMutation, NoDraftMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
         use preview_eval::PreviewEvalRunOwner as _;
         let (session, link) = self.preview_eval_parts().ok_or_else(|| Fault::from("generation3d-view-eval-session-closing"))?;
-        preview_eval::owe_attached_previews_carrying(session, link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
+        preview_eval::owe_attached_previews_carrying(session, link, windows, unserved, emit, grant).map_err(|error| Fault::from(error.to_string()))
     }
 }
 

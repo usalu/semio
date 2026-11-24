@@ -1,4 +1,5 @@
 import type { PluginOperationDiagnostic } from "../📬️typed-result/🟦️.ts";
+import type { SemioFaultError } from "@semio-tech/framework";
 import type {OwnedUiSurfaceLease} from '../🧺️handle-ui-intake/lease.ts';
 import type {PluginUiRefreshSectionResponse} from '@semio-tech/framework';
 export type {OwnedUiSurfaceLease,OwnedUiSurfaceReadSource} from '../🧺️handle-ui-intake/lease.ts';
@@ -249,6 +250,8 @@ export type PluginWasmHandle = {
    * so its final UI scope, history delta and host effects reach the shell HERE and nowhere else.
    * Returns the unsubscribe. */
   readonly subscribeOperationDiagnostics: (instanceId: number, listener: (receipt: PluginOperationDiagnostic) => void) => () => void;
+  /** 📣️ Subscribes to the typed-operation fault pages of this instance that no awaiting host call received — a refusal settled after the call that started the operation returned (an out-of-range page, an unknown field, a declined save). Each arrives as the {@link SemioFaultError} the page decodes to, carrying its code, params and severity for the fault catalog. Returns the unsubscribe. */
+  readonly subscribeOperationFaults: (instanceId: number, listener: (error: SemioFaultError) => void) => () => void;
   readonly subscribeOperationCompletions: (instanceId: number, listener: (completion: PluginOperationCompletion) => void) => () => void;
   /** 🎞️ Subscribes to what a running operation hands the shell mid-operation: the `UiDirtyScope` to refresh (a tool run's
    * live process) and the `HistoryPatch` a running history replay publishes (its stage and `done/total`), each absent

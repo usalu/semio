@@ -1,5 +1,5 @@
-"""🐍️ Independent Python oracle (standard library only) of the host warden: the decision law of one tick (guard, danger and resume lines, overdue suspensions, cancels, suspends, calm hysteresis) and the classification of a process table into subjects (roots, protected paths, never patterns, kinds, megabytes, owner label, ids). It reads the policy and the pattern tables as data from the schema and the cases from the fixtures; it shares no code with the TypeScript implementation.
-`python3 🐍️.py --decide` prints the decisions of every case as JSON, `--classify` the subjects of every classification case, `--write` stores both as `expect` in the fixtures, `--check` fails when the stored expectations are stale."""
+"""🐍️ Independent Python oracle (standard library only) of the host warden: the decision law of one tick (guard, danger and resume lines, the headroom of available memory plus swap that can still grow, overdue suspensions, cancels, suspends, calm hysteresis), the classification of a process table into subjects (roots, identities, protected paths, never patterns, kinds, megabytes, owner label, ids), the discovery of workspace roots and the reading of swap facts from platform command text. It reads the policy and the pattern tables as data from the schema and the cases from the fixtures; it shares no code with the TypeScript implementation.
+`python3 🐍️.py --decide` prints the decisions of every case as JSON, `--classify` the subjects of every classification case, `--discover` the workspaces of every discovery case, `--swap` the swap facts of every swap case, `--write` stores all as `expect` in the fixtures, `--check` fails when the stored expectations are stale."""
 import hashlib
 import json
 import os
@@ -12,6 +12,8 @@ FIXTURES = os.path.join(HERE, "🧫️fixtures", "🔣️.json")
 POLICY = SCHEMA["Policy"]["const"]
 KINDS = SCHEMA["Kinds"]["const"]
 ROOTS = SCHEMA["Roots"]["const"]
+IDENTITIES = SCHEMA["Identities"]["const"]
+ANCHORS = SCHEMA["Anchors"]["const"]
 NEVER = SCHEMA["Never"]["const"]
 
 
@@ -27,12 +29,23 @@ def decide(policy, host, subjects, previous):
     resume = max(guard, total * policy["resumeBasisPoints"] // 10000)
     swap = host["swapOutMegabytesPerSecond"]
     swap_worked = swap is not None and swap >= policy["swapActiveMegabytesPerSecond"]
-    if avail < danger or host["pressure"] == "critical":
+    head_guard = min(policy["headroomGuardMaximumMegabytes"], max(policy["headroomGuardMinimumMegabytes"], total * policy["headroomGuardBasisPoints"] // 10000))
+    head_danger = min(policy["headroomDangerMaximumMegabytes"], max(policy["headroomDangerMinimumMegabytes"], total * policy["headroomDangerBasisPoints"] // 10000))
+    swap_free = host.get("swapFreeMegabytes")
+    if swap_free is None:
+        room = None
+        headroom = None
+    else:
+        growable = max(0, (host.get("swapVolumeFreeMegabytes") or 0) - policy["swapDiskReserveMegabytes"])
+        room = min(swap_free + growable, total * policy["swapRoomMaximumBasisPoints"] // 10000)
+        headroom = avail + room
+    if avail < danger or host["pressure"] == "critical" or (headroom is not None and headroom < head_danger):
         level = "danger"
-    elif avail < guard or ((swap_worked or host["pressure"] == "warn") and avail < resume):
+    elif avail < guard or (headroom is not None and headroom < head_guard) or ((swap_worked or host["pressure"] == "warn") and avail < resume):
         level = "guard"
     else:
         level = "calm"
+    deficit_all = max(guard - avail, 0 if headroom is None else head_guard - headroom, 1)
 
     actions = []
     acted = set()
@@ -54,7 +67,7 @@ def decide(policy, host, subjects, previous):
             acted.add(s["id"])
 
     if level == "danger":
-        deficit = max(guard - avail, 1)
+        deficit = deficit_all
         freed = sum(s["megabytes"] for s in cancelled)
         candidates = [s for s in subjects if s["canCancel"] and s["id"] not in acted]
         candidates.sort(key=lambda s: (0 if s["suspended"] else 1,) + order_key(s))
@@ -66,7 +79,7 @@ def decide(policy, host, subjects, previous):
             freed += s["megabytes"]
 
     if level in ("guard", "danger"):
-        deficit = max(guard - avail, 1)
+        deficit = deficit_all
         every_running = sorted([s for s in subjects if not s["suspended"]], key=order_key)
         keep = policy["keepRunning"]
         kept = set(s["id"] for s in every_running[len(every_running) - keep:]) if keep > 0 else set()
@@ -89,7 +102,7 @@ def decide(policy, host, subjects, previous):
         if waiting:
             actions.append({"action": "resume", "id": waiting[-1]["id"], "reason": "calm"})
 
-    return {"level": level, "calmTicks": calm_ticks, "hold": level != "calm", "guardMegabytes": guard, "dangerMegabytes": danger, "resumeMegabytes": resume, "actions": actions}
+    return {"level": level, "calmTicks": calm_ticks, "hold": level != "calm", "guardMegabytes": guard, "dangerMegabytes": danger, "resumeMegabytes": resume, "swapRoomMegabytes": room, "headroomMegabytes": headroom, "headroomGuardMegabytes": head_guard, "headroomDangerMegabytes": head_danger, "actions": actions}
 
 
 def owner_label(command, prefixes):
@@ -102,10 +115,62 @@ def owner_label(command, prefixes):
     return text[:96]
 
 
+def escape(text):
+    return "".join("\\" + c if c in "\\^$.*+?()[]{}|" else c for c in text)
+
+
+def expand(source, workspaces):
+    anchors = {"workspace": workspaces, "browsers": [t.replace("<workspace>", w) for t in ANCHORS["browsers"] for w in workspaces]}
+    empty = []
+
+    def swap(match):
+        names = anchors[match.group(1)]
+        if not names:
+            empty.append(1)
+            return ""
+        return "(?:" + "|".join(escape(n) for n in names) + ")"
+
+    text = re.sub("<(" + "|".join(ANCHORS["names"]) + ")>", swap, source)
+    return None if empty else text
+
+
+def discover(rows, seed):
+    found = set(seed)
+    for row in rows:
+        match = re.search(ANCHORS["workspace"], row["command"])
+        if match:
+            found.add(match.group(1))
+    return sorted(found)
+
+
+def parse_swap(platform, texts):
+    if platform == "darwin":
+        usage = re.search(r"free = ([\d.]+)([KMGT])", texts.get("usage") or "")
+        scale = {"K": 1 / 1024, "M": 1, "G": 1024, "T": 1048576}
+        free = int(float(usage.group(1)) * scale[usage.group(2)]) if usage else None
+        lines = (texts.get("disk") or "").strip().split("\n")
+        volume = None
+        if len(lines) > 1:
+            columns = lines[-1].split()
+            if len(columns) > 3 and columns[3].isdigit():
+                volume = int(columns[3]) // 1024
+        return {"swapFreeMegabytes": free, "swapVolumeFreeMegabytes": volume}
+    if platform == "linux":
+        def kib(name):
+            match = re.search(r"^" + name + r":\s+(\d+) kB", texts.get("meminfo") or "", re.M)
+            return int(match.group(1)) if match else None
+        total = kib("SwapTotal")
+        free = kib("SwapFree")
+        return {"swapFreeMegabytes": None if total is None or free is None or total == 0 else free // 1024, "swapVolumeFreeMegabytes": None}
+    return {"swapFreeMegabytes": None, "swapVolumeFreeMegabytes": None}
+
+
 def classify(rows, tables, options):
     roots = tables["roots"]
     never = tables["never"]
-    kinds = tables["kinds"]
+    workspaces = options.get("workspaces", [])
+    identities = [t for t in (expand(p, workspaces) for p in tables.get("identities", [])) if t is not None]
+    kinds = [dict(k, pattern=t) for k, t in ((k, expand(k["pattern"], workspaces)) for k in tables["kinds"]) if t is not None]
     protect = options.get("protect", [])
     within = options.get("within")
     prefixes = options.get("prefixes", [])
@@ -134,7 +199,7 @@ def classify(rows, tables, options):
 
     subjects = {}
     for row in rows:
-        if root_of(row) is None:
+        if root_of(row) is None and not matches(identities, row["command"]):
             continue
         if any(fragment in link["command"] for link in chain(row) for fragment in protect):
             continue
@@ -160,7 +225,7 @@ def classify(rows, tables, options):
         suspended_seconds = 0
         if row["stopped"] and ident in since and now is not None:
             suspended_seconds = max(0, (now - since[ident]) // 1000)
-        top = root_of(row)
+        top = root_of(row) or row
         result.append({
             "id": ident, "pid": pid, "parent": row["parent"], "kind": kind["name"], "rank": kind["rank"],
             "elapsedSeconds": row["elapsedSeconds"], "megabytes": kilobytes.get(pid, 0) // 1024,
@@ -172,7 +237,7 @@ def classify(rows, tables, options):
 
 
 def default_tables():
-    return {"roots": ROOTS, "never": NEVER, "kinds": KINDS}
+    return {"roots": ROOTS, "identities": IDENTITIES, "never": NEVER, "kinds": KINDS}
 
 
 def decisions(fixture):
@@ -192,6 +257,14 @@ def classifications(fixture):
     return out
 
 
+def discoveries(fixture):
+    return [discover(case["rows"], case.get("seed", [])) for case in fixture["discoveries"]]
+
+
+def swaps(fixture):
+    return [parse_swap(case["platform"], case["texts"]) for case in fixture["swaps"]]
+
+
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else "--check"
     fixture = json.load(open(FIXTURES, encoding="utf-8"))
@@ -199,7 +272,17 @@ def main():
         print(json.dumps(decisions(fixture), ensure_ascii=False))
     elif mode == "--classify":
         print(json.dumps(classifications(fixture), ensure_ascii=False))
+    elif mode == "--discover":
+        print(json.dumps(discoveries(fixture), ensure_ascii=False))
+    elif mode == "--swap":
+        print(json.dumps(swaps(fixture), ensure_ascii=False))
     elif mode in ("--write", "--check"):
+        for key, produce in (("discoveries", discoveries), ("swaps", swaps)):
+            for case, expect in zip(fixture[key], produce(fixture)):
+                if mode == "--write":
+                    case["expect"] = expect
+                elif case.get("expect") != expect:
+                    sys.exit("stale %s expectation: %s" % (key, case["name"]))
         for case, expect in zip(fixture["decisions"], decisions(fixture)):
             if mode == "--write":
                 case["expect"] = expect
@@ -215,7 +298,7 @@ def main():
                 json.dump(fixture, handle, ensure_ascii=False, indent=1)
                 handle.write("\n")
     else:
-        sys.exit("usage: 🐍️.py --decide|--classify|--write|--check")
+        sys.exit("usage: 🐍️.py --decide|--classify|--discover|--swap|--write|--check")
 
 
 if __name__ == "__main__":

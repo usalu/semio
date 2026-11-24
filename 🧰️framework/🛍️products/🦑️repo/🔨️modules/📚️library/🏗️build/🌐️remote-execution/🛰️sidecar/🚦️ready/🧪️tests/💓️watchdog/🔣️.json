@@ -5,6 +5,10 @@
       "mode": "quiet"
     },
     {
+      "id": "only watched quiet time when no supervisor watched for longer than the stall window",
+      "mode": "gap"
+    },
+    {
       "id": "a malformed checkpoint on the same live process",
       "mode": "malformed"
     },

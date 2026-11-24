@@ -12,6 +12,7 @@ import{captureSourceInputInventoryV1,captureCargoLockInventoryV1}from"../../📥
 import{createPresenceCoalescerV1}from"./🧺️coalesce/🟨️.mjs";
 import{createInferenceInventoryTimingsV1}from"./⏱️timing/🟨️.mjs";
 import{observationRoundV1}from"../🟨️.mjs";
+import{nativeStorageMappingQueueV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔒️mapping/🟦️.ts";
 const epochURLs=[new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),new URL("../../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))],epochCaptures=epochURLs.map((url,index)=>index===0?captureBoundedSourceRevisionV1(fileURLToPath(url),8388608):captureBoundedSourceRevisionV1(fileURLToPath(url),65536,true)),loadedEpoch=epochCaptures.map(row=>row.sha256),revision=(url,index)=>captureBoundedSourceRevisionV1(fileURLToPath(url),index===0?8388608:65536).sha256,policy=Object.freeze({...JSON.parse(epochCaptures[1].text??"").definitions.Policy.const}),readPolicy=Object.freeze({...JSON.parse(epochCaptures[2].text??"").definitions.Policy.const});
 const reference=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$/u,prefix=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_/u;
 
@@ -72,7 +73,7 @@ function requireInventoryLeafAbsentV1(path,parents,control){recheckInventoryPare
 
 /** 📥️ The inventory names of `names` that are not stored, under one storage consumer: genuine image custody is retained while the physical identities are revalidated before each immutable-record memo hit. */
 async function missingInventoryNamesV1(root,names,control,withdraw,held){
- const timings=presenceStateV1(root,control).timings,phase=timings.batch();phase("reader");
+ const timings=presenceStateV1(root,control).timings,phase=held===undefined?timings.batch():()=>{};phase("reader");
  try{
   const body=(store,actual)=>inventoryNamesSettledV1(async names=>{
    if(withdraw?.aborted)return undefined;
@@ -149,12 +150,12 @@ const presenceStateV1=(root,control)=>{let byRoot=presenceStatesV1.get(control);
  * @see ./🧺️coalesce/🟨️.mjs */
 function presenceSessionV1(root,control,state,work){
  const phase=state.timings.batch();phase("reader");
- return withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{state.held=Object.freeze({store,actual});try{return await work();}finally{state.held=undefined;}},undefined,phase,state.timings.native).finally(()=>phase());
+ return withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{const mine=Object.freeze({store,actual});state.held=mine;try{return await work();}finally{if(state.held===mine)state.held=undefined;}},undefined,phase,state.timings.native).finally(()=>phase());
 }
 const presenceCoalescerV1=(root,control)=>presenceStateV1(root,control).coalescer;
 
 /** 📊️ How the inventory presence checks of `control` and `root` went: asked, answered from the memory of the round, batches that took a lease, names they checked, batches asked again caller by caller. */
-export function inferenceInventoryPresenceStatsV1(root,control){const state=presenceStatesV1.get(control)?.get(root),nativeVerification=state?.timings.verification(),bodyOperations=state?.timings.bodyOperations();return {...(state?.coalescer.stats()??{asked:0,remembered:0,batches:0,retried:0,names:0}),timings:(state?.timings??emptyPresenceTimingsV1).stats(),...bodyOperations?{bodyOperations}:{},...nativeVerification?{nativeVerification}:{}};}
+export function inferenceInventoryPresenceStatsV1(root,control){const state=presenceStatesV1.get(control)?.get(root),nativeVerification=state?.timings.verification(),bodyOperations=state?.timings.bodyOperations();return {...(state?.coalescer.stats()??{asked:0,remembered:0,batches:0,retried:0,names:0}),timings:(state?.timings??emptyPresenceTimingsV1).stats(),...bodyOperations?{bodyOperations}:{},...nativeVerification?{nativeVerification}:{},mappingQueue:nativeStorageMappingQueueV1()};}
 const emptyPresenceTimingsV1=createInferenceInventoryTimingsV1();
 
 /** 📥️ Whether every inventory record `value` names is stored: the names are captured once, answered from the memory of the running validation round when they were found before, else checked with the other looks that ask at the same time under one storage consumer. */

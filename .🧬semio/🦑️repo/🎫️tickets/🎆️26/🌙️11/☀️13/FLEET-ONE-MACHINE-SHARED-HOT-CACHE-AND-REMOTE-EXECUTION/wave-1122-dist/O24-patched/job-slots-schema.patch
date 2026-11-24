@@ -1,0 +1,174 @@
+--- /Users/ueli/.sinc/play/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧵️job-slots/🧬️schema/🔣️.json	2026-11-23 23:48:30
++++ /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/o24/root/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧵️job-slots/🧬️schema/🔣️.json	2026-11-24 14:10:16
+@@ -16,7 +16,10 @@
+         "localJobsMaximum": 3,
+         "localJobsPollMilliseconds": 5000,
+         "localJobsProgressMilliseconds": 60000,
+-        "unmeasuredQuantile": 0.9
++        "unmeasuredQuantile": 0.9,
++        "fleetPollMilliseconds": 5000,
++        "fleetPassFootprintMegabytes": 512,
++        "fleetFloorMegabytes": 512
+       }
+     },
+     "Pressure": {
+@@ -336,7 +339,7 @@
+     "Messages": {
+       "const": {
+         "en": {
+-          "jobs": "[component-jobs] {operation}: {jobs} component jobs at once = {local} local + {remote} on the fleet ({slots} worker slots fit one {peak} MB final; {reason})",
++          "jobs": "[component-jobs] {operation}: {jobs} component jobs at once = {local} local slot(s) + {remote} fleet slot(s) ({slots} worker slots fit one {peak} MB final at the start and are read again while the build runs; {reason})",
+           "reasons": {
+             "jobs-local-only": "no worker can take a wasm final right now, so only the local grant runs jobs",
+             "jobs-all": "every worker slot that fits a wasm final takes one job",
+@@ -361,10 +364,25 @@
+           },
+           "errors": {
+             "definitionRequired": "Closed compile units value required: {detail}"
++          },
++          "fleet": {
++            "plan": "[component-jobs] {operation}: {local} local slot(s) and up to {fleet} fleet slot(s); a fleet job reserves {footprint} MB here, the free worker slots are read again every {seconds} s ({slots} fit a final now)",
++            "started": "[component-jobs] {pass} starts on a fleet slot beside {running} running job(s): it reserves {footprint} MB here and its final is placed on a worker ({reason})",
++            "waitingFleet": "[component-jobs] {pass} waits for a fleet slot ({running} fleet job(s) run here, {slots} worker slot(s) fit a final right now; {reason})",
++            "waitingLocal": "[component-jobs] {pass} waits for a local slot: it needs {peak} MB here, {free} MB are free above the {floor} MB floor ({lreason}); no fleet slot ({reason})",
++            "waitingEither": "[component-jobs] {pass} waits for a fleet slot or a local slot: no worker slot is free ({reason}) and a local job needs {peak} MB, {free} MB are free above the {floor} MB floor ({lreason})",
++            "reasons": {
++              "fleet-fits": "a worker slot is free and the small local footprint fits",
++              "fleet-none": "the fleet does not answer",
++              "fleet-busy": "every worker slot that fits a final is taken",
++              "fleet-cap": "the authored cap of fleet jobs is reached",
++              "fleet-pressure": "memory pressure is critical, so not even a fleet job starts",
++              "fleet-memory": "the free memory above the floor does not carry another fleet job"
++            }
+           }
+         },
+         "de": {
+-          "jobs": "[component-jobs] {operation}: {jobs} Komponenten-Jobs gleichzeitig = {local} lokal + {remote} auf der Flotte ({slots} Worker-Plätze tragen ein {peak}-MB-Endstück; {reason})",
++          "jobs": "[component-jobs] {operation}: {jobs} Komponenten-Jobs gleichzeitig = {local} lokale Plätze + {remote} Flotten-Plätze ({slots} Worker-Plätze tragen beim Start ein {peak}-MB-Endstück und werden während des Builds neu gelesen; {reason})",
+           "reasons": {
+             "jobs-local-only": "kein Worker kann gerade ein Wasm-Endstück übernehmen, daher laufen Jobs nur nach lokaler Zuteilung",
+             "jobs-all": "jeder Worker-Platz, der ein Wasm-Endstück trägt, übernimmt einen Job",
+@@ -389,9 +407,123 @@
+           },
+           "errors": {
+             "definitionRequired": "Geschlossener Compile-Einheiten-Wert erforderlich: {detail}"
++          },
++          "fleet": {
++            "plan": "[component-jobs] {operation}: {local} lokale Plätze und bis zu {fleet} Flotten-Plätze; ein Flotten-Job belegt hier {footprint} MB, freie Worker-Plätze werden alle {seconds} s neu gelesen ({slots} tragen jetzt ein Endstück)",
++            "started": "[component-jobs] {pass} startet auf einem Flotten-Platz neben {running} laufenden Job(s): es reserviert hier {footprint} MB, sein Endstück wird auf einem Worker platziert ({reason})",
++            "waitingFleet": "[component-jobs] {pass} wartet auf einen Flotten-Platz ({running} Flotten-Job(s) laufen hier, {slots} Worker-Platz/Plätze tragen gerade ein Endstück; {reason})",
++            "waitingLocal": "[component-jobs] {pass} wartet auf einen lokalen Platz: es braucht hier {peak} MB, über der Untergrenze von {floor} MB sind {free} MB frei ({lreason}); kein Flotten-Platz ({reason})",
++            "waitingEither": "[component-jobs] {pass} wartet auf einen Flotten-Platz oder einen lokalen Platz: kein Worker-Platz ist frei ({reason}), und ein lokaler Job braucht {peak} MB, über der Untergrenze von {floor} MB sind {free} MB frei ({lreason})",
++            "reasons": {
++              "fleet-fits": "ein Worker-Platz ist frei und der kleine lokale Anteil passt",
++              "fleet-none": "die Flotte antwortet nicht",
++              "fleet-busy": "jeder Worker-Platz, der ein Endstück trägt, ist belegt",
++              "fleet-cap": "die festgelegte Obergrenze für Flotten-Jobs ist erreicht",
++              "fleet-pressure": "der Speicherdruck ist kritisch, daher startet nicht einmal ein Flotten-Job",
++              "fleet-memory": "der freie Speicher über der Untergrenze trägt keinen weiteren Flotten-Job"
++            }
+           }
++        }
++      }
++    },
++    "FleetJobReason": {
++      "enum": [
++        "fleet-fits",
++        "fleet-none",
++        "fleet-busy",
++        "fleet-cap",
++        "fleet-pressure",
++        "fleet-memory"
++      ]
++    },
++    "FleetJobAdmitHost": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "running",
++        "maximum",
++        "slots",
++        "availableMegabytes",
++        "reservedMegabytes",
++        "floorMegabytes",
++        "pressure",
++        "footprintMegabytes"
++      ],
++      "properties": {
++        "running": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 1024
++        },
++        "maximum": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 1024
++        },
++        "slots": {
++          "type": [
++            "integer",
++            "null"
++          ],
++          "minimum": 0,
++          "maximum": 1048576
++        },
++        "availableMegabytes": {
++          "type": [
++            "integer",
++            "null"
++          ],
++          "minimum": 0,
++          "maximum": 1048576
++        },
++        "reservedMegabytes": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 4194304
++        },
++        "floorMegabytes": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 1048576
++        },
++        "pressure": {
++          "anyOf": [
++            {
++              "$ref": "#/definitions/Pressure"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "footprintMegabytes": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 1048576
+         }
+       }
++    },
++    "FleetJobAdmitDecision": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "admit",
++        "reason",
++        "freeMegabytes"
++      ],
++      "properties": {
++        "admit": {
++          "type": "boolean"
++        },
++        "reason": {
++          "$ref": "#/definitions/FleetJobReason"
++        },
++        "freeMegabytes": {
++          "type": "integer",
++          "minimum": -4194304,
++          "maximum": 1048576
++        }
++      }
+     }
+   }
+ }

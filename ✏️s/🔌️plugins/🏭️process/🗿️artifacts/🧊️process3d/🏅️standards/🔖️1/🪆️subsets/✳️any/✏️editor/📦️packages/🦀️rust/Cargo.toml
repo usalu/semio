@@ -59,6 +59,8 @@ semio-os-kernel = { workspace = true }
 semio-framework-pack = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-plugin = { workspace = true }
+semio-plugin-ownership = { workspace = true }
+semio-os-store-operation-wire = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }

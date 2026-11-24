@@ -365,4 +365,61 @@ Both are being fixed, see `norm-scene-crates-2026-11-24.md`.
 
 **`norm-plugin:test`:** cargo preparation failed before running any test. The new en1993 `✏️editor/🏷️field-meta` crate from the in-flight split inherits `workspace.package.edition` from a workspace root that does not exist. The splitting agent has been told. `norm-js:test` is running.
 
+### Schema labels in all families, 2026-11-24 08:50
+
+The label audit now reports 0 findings in all 15 families; it found 98 before. `history_edit_inputs_resolve` passes in en1990, en1991, en1995, en1996, en1998 and din16798.
+
+Two families are still blocked. Their crates fail to compile under `test-support` (`semio-s-artifact-norm-en1992-diff` and `semio-s-artifact-norm-din18599-model`), so en1992 and din18599 are not tested yet. That fix moved to `en1998-editor-grips-2026-11-24.md`.
+
+The en1990, en1991, en1992, en1995 and en1996 editor crates were over their 32-file source boundary. Each now has the same separate `integration` test target the other families use. Report: `schema-labels-all-families-2026-11-23.md`.
+
+`chain-9.sh`'s `norm-js:test` was SIGTERMed while it waited for the 6.5 GB graph-plan memory admission. `run-norm-js-native.sh` reruns it through `native-exec`. After that, `chain-10.sh` re-probes en1990 and reruns `norm-plugin:test` until it reports results.
+
+### EN 1999 package and scene, 2026-11-24 09:00
+
+Results:
+- Package `semio-s-artifact-norm-en1999`: 122 passed, 0 failed.
+- Scene: 86 passed, 0 failed.
+- SQLite TS twin: 9 passed.
+- The six Python oracle tests now get `SEMIO_PYTHON` from `repo cargo` alone. They exposed real oracle gaps, which are now fixed.
+
+**Compliant purlin.** The compliant purlin has no failing check and its worst utilisation is ≤ 1, but its checks are `UnverifiedBasis`. Every `ndp.en1999.*` registry row is still unverified, and verifying one needs a human double-key against the printed standard. The tests now assert the same contract as en1995: `complies()` holds exactly when no check is unverified, and every unverified check cites an unverified NDP.
+
+**Fixes:**
+- the SQLite codec: IEEE scalars, typed enums, and the float tables for sheet profiles and fire insulation
+- four real scene defects: buckling markers placed off their curve, the shell gauge rack, weld-run geometry, and the showcase fixture
+- stale tests: HAZ strip, free-outline shear, section classification, and fire-hot gate parity (iterative remedies, with the remedy law intact)
+
+**One tolerance loosened:** the channel shear-centre tolerance is now 5e-3. That matches the documented accuracy of the 4-cell sectionproperties mesh.
+
+**Follow-ups:**
+- The test-only serde derive omits zero fields that the schemas list as `required`. This is being fixed in `test-serde-schema-required-2026-11-24.md`.
+- `chain-11.sh` rebuilds `norm-eurocode-materials` after chain 10, then probes en1995, en1996 and en1999.
+
+### Official plugin test green, 2026-11-24 09:30
+
+**`@semio-tech/norm-plugin:test`** ran with quick level and a 2 h budget. Result: 15 tests run, 15 passed, exit 0. This is the first green run of the official Rust test. Log: `🗑️generated/normtest-rs-test-h10.log`.
+
+**`@semio-tech/norm-js:test`** ran through `native-exec`. Result: 12006 passed, 44 failed. The failures:
+- 42 `norm wire twins > ⚖️en1990` mutation fixtures.
+- Schema sync: en1990 `FactorOverride.factor` is a JSON enum but a Rust string, plus 2 more type mismatches.
+- `schema twins check --strict`: drift=2.
+
+The cause is the schema-labels change, which added an `enum` to `FactorOverride.factor` without regenerating the twins.
+
+**en1990 viewport probe:** timed out after 180 s at stage `alternate example`, although the shell loads.
+
+Both en1990 items are being fixed in `en1990-twins-viewport-2026-11-24.md`.
+
+## Chain 11: materials rebuild (2026-11-24)
+
+`norm-eurocode-materials` rebuilt on attempt 1 and was published. The strict probe failed en1995, en1996 and en1999, but only on `[DEBUG] ladder zero …` and `[DEBUG] live cleanup zero progress …` prints. Those come from another agent's temporary framework instrumentation that is compiled into the guest. `route-debug-only.py` returns 0 for all three, so each route works end to end. They will be probed again once those prints are removed.
+
+## EN 1990 twins and viewport (2026-11-24)
+
+- **Schema twins:** the `FactorOverride.factor` enum is now typed in Rust as `FactorKind`. `schema twins check --strict` reports drift=0. 43 fixture files had their placeholder factor tokens replaced with enum members.
+- **Native JS:** 12006/44 became 12049 pass / 1 fail. The remaining failure is en1993 field-meta choices.
+- **Viewport probe:** it treated "No example" as blank, but the Eurocode blank is the worked example. The probe now requires a new revision, instances above 0 and a drawn canvas. en1990 passes in 42 s with no faults.
+- **Open:** the en1990 editor (9 integration + 6 lib failures), the scene wall-clock gate, and the `norm-eurocode` rebuild after the en1990 and en1998 sources settle. Report: `en1990-twins-viewport-2026-11-24.md`.
+
 RESULTS_PENDING

@@ -45,7 +45,7 @@ buildings [id:TEXT name:TEXT plan-width-m:QTY plan-length-m:QTY systems:TABLE st
     t1-q b 171675N
   }
   } ] [ {id=beam-t1 material=timber role=beam detailing-compatible-with-q=true min-dimension-m=0m rho=0 rho-prime=0 omega-wd=0 steel-section-class=0 fastener-diameter-mm=12 timber-thickness-mm=90 wall-thickness-m=0 wall-effective-height-m=0 wall-length-m=0 wall-direction-rad=0 wall-storey-id="" wall-start-x-m=0 wall-start-y-m=0 wall-poisson-ratio=0.25 effective-stiffness-basis=declared effective-stiffness-ratio=1} ] true true rayleigh 0 0.05 ductile 0.5 false false 0 0.05 0 0 0 0 0 0 2 0 0 0 0 0 0 declared 1
-  bldg-pending "Annex building (structure not yet modelled)" 10m 8m [ ] [ {id=p1 height-m=3.5m permanent-gk-n=466956N correlated-occupancy=true stiffness-x=0 stiffness-y=0 centre-of-mass-x-m=12m centre-of-mass-y-m=8m centre-of-stiffness-x-m=12m centre-of-stiffness-y-m=8m drift-x-m=0m drift-y-m=0m shear-resistance-n=0N
+  bldg-pending "Annex B" 10m 8m [ ] [ {id=p1 height-m=3.5m permanent-gk-n=466956N correlated-occupancy=true stiffness-x=0 stiffness-y=0 centre-of-mass-x-m=12m centre-of-mass-y-m=8m centre-of-stiffness-x-m=12m centre-of-stiffness-y-m=8m drift-x-m=0m drift-y-m=0m shear-resistance-n=0N
   variables [id:TEXT category:ENUM qk-n:QTY] {
     p1-q b 343350N
   }

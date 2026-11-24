@@ -99,11 +99,11 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.5,
-    "densityKgM3": 680.0,
+    "densityKgM3": 680,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 8000000000.0,
-    "strengthPa": 40000000.0,
+    "elasticModulusPa": 8000000000,
+    "strengthPa": 40000000,
     "source": "literature",
     "reference": "wood-handbook-2010"
    },
@@ -115,11 +115,11 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.55,
-    "densityKgM3": 680.0,
+    "densityKgM3": 680,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 8000000000.0,
-    "strengthPa": 40000000.0,
+    "elasticModulusPa": 8000000000,
+    "strengthPa": 40000000,
     "source": "authored-estimate",
     "reference": "wood-handbook-2010"
    },
@@ -131,11 +131,11 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.5,
-    "densityKgM3": 720.0,
+    "densityKgM3": 720,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 14000000000.0,
-    "strengthPa": 100000000.0,
+    "elasticModulusPa": 14000000000,
+    "strengthPa": 100000000,
     "source": "literature",
     "reference": "wood-handbook-2010"
    },
@@ -147,11 +147,11 @@
     },
     "emissivity": 0.3,
     "solarAbsorptivity": 0.5,
-    "densityKgM3": 7850.0,
+    "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 450,
-    "elasticModulusPa": 200000000000.0,
-    "strengthPa": 2000000000.0,
+    "elasticModulusPa": 200000000000,
+    "strengthPa": 2000000000,
     "source": "literature",
     "reference": "incropera-2018"
    },
@@ -163,11 +163,11 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.65,
-    "densityKgM3": 800.0,
+    "densityKgM3": 800,
     "conductivityWmK": 0.2,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 13000000000.0,
-    "strengthPa": 100000000.0,
+    "elasticModulusPa": 13000000000,
+    "strengthPa": 100000000,
     "source": "literature",
     "reference": "cirad-tropix-doussie"
    },
@@ -179,11 +179,11 @@
     },
     "emissivity": 0.95,
     "solarAbsorptivity": 0.6,
-    "densityKgM3": 1100.0,
+    "densityKgM3": 1100,
     "conductivityWmK": 0.2,
     "specificHeatJKgK": 1500,
-    "elasticModulusPa": 400000000.0,
-    "strengthPa": 25000000.0,
+    "elasticModulusPa": 400000000,
+    "strengthPa": 25000000,
     "source": "authored-estimate",
     "reference": "fletcher-rossing-1998"
    },
@@ -195,11 +195,11 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.6,
-    "densityKgM3": 870.0,
+    "densityKgM3": 870,
     "conductivityWmK": 0.15,
     "specificHeatJKgK": 1100,
-    "elasticModulusPa": 3000000000.0,
-    "strengthPa": 300000000.0,
+    "elasticModulusPa": 3000000000,
+    "strengthPa": 300000000,
     "source": "authored-estimate",
     "reference": "iso-10456-2007"
    },
@@ -211,11 +211,11 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.6,
-    "densityKgM3": 2615.0,
+    "densityKgM3": 2615,
     "conductivityWmK": 0.3,
     "specificHeatJKgK": 700,
-    "elasticModulusPa": 200000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 200000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "percussion-catalogues"
    }
@@ -334,7 +334,7 @@
      },
      "section": {
       "areaM2": 0.008454,
-      "secondMomentM4": 1.5025e-05,
+      "secondMomentM4": 0.000015025,
       "extremeFibreM": 0.07,
       "material": "lenke",
       "title": {
@@ -521,17 +521,17 @@
        "id": "carcass",
        "bone": "cajon",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.6,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.147
         ],
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -579,11 +579,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
-         0.0,
+         0,
          -0.147
         ],
         [
@@ -671,17 +671,17 @@
        "id": "shell",
        "bone": "djembe",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.38,
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.113
         ],
         [
@@ -762,7 +762,7 @@
         ],
         [
          0.598,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -881,11 +881,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.141
         ],
         [
@@ -894,7 +894,7 @@
         ],
         [
          0.0012,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -1153,17 +1153,17 @@
        "id": "carcass",
        "bone": "cajon",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.6,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.147
         ],
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -1211,11 +1211,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
-         0.0,
+         0,
          -0.147
         ],
         [
@@ -1350,17 +1350,17 @@
        "id": "shell",
        "bone": "djembe",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.38,
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.113
         ],
         [
@@ -1441,7 +1441,7 @@
         ],
         [
          0.598,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -1560,11 +1560,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.141
         ],
         [
@@ -1573,7 +1573,7 @@
         ],
         [
          0.0012,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -1796,20 +1796,130 @@
      ],
      "plan": [
       {
+       "id": "shell",
+       "bone": "djembe",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0.113
+        ],
+        [
+         0.008,
+         0.1145
+        ],
+        [
+         0.03,
+         0.1125
+        ],
+        [
+         0.07,
+         0.1045
+        ],
+        [
+         0.12,
+         0.0935
+        ],
+        [
+         0.18,
+         0.0835
+        ],
+        [
+         0.24,
+         0.0755
+        ],
+        [
+         0.29,
+         0.0705
+        ],
+        [
+         0.322,
+         0.07
+        ],
+        [
+         0.35,
+         0.076
+        ],
+        [
+         0.375,
+         0.09
+        ],
+        [
+         0.405,
+         0.11
+        ],
+        [
+         0.445,
+         0.131
+        ],
+        [
+         0.485,
+         0.146
+        ],
+        [
+         0.525,
+         0.155
+        ],
+        [
+         0.56,
+         0.1585
+        ],
+        [
+         0.582,
+         0.158
+        ],
+        [
+         0.592,
+         0.1545
+        ],
+        [
+         0.597,
+         0.1505
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-shell",
+       "material": "lenke",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
        "id": "carcass",
        "bone": "cajon",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.6,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.147
         ],
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -1857,11 +1967,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
-         0.0,
+         0,
          -0.147
         ],
         [
@@ -2027,11 +2137,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.141
         ],
         [
@@ -2040,7 +2150,7 @@
         ],
         [
          0.0012,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -2250,17 +2360,17 @@
        "id": "carcass",
        "bone": "cajon",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.6,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.147
         ],
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -2300,11 +2410,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
-         0.0,
+         0,
          -0.147
         ],
         [
@@ -2342,17 +2452,17 @@
        "id": "shell",
        "bone": "djembe",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.38,
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.113
         ],
         [
@@ -2397,7 +2507,7 @@
         ],
         [
          0.598,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -2500,11 +2610,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.141
         ],
         [
@@ -2513,7 +2623,7 @@
         ],
         [
          0.0012,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -2681,17 +2791,17 @@
        "id": "carcass",
        "bone": "cajon",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.6,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.147
         ],
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -2731,11 +2841,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
-         0.0,
+         0,
          -0.147
         ],
         [
@@ -2791,17 +2901,17 @@
        "id": "shell",
        "bone": "djembe",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.38,
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.113
         ],
         [
@@ -2846,7 +2956,7 @@
         ],
         [
          0.598,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -2949,11 +3059,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.141
         ],
         [
@@ -2962,7 +3072,7 @@
         ],
         [
          0.0012,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3127,20 +3237,94 @@
      ],
      "plan": [
       {
+       "id": "shell",
+       "bone": "djembe",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0.113
+        ],
+        [
+         0.03,
+         0.1125
+        ],
+        [
+         0.12,
+         0.0935
+        ],
+        [
+         0.24,
+         0.0755
+        ],
+        [
+         0.322,
+         0.07
+        ],
+        [
+         0.375,
+         0.09
+        ],
+        [
+         0.445,
+         0.131
+        ],
+        [
+         0.525,
+         0.155
+        ],
+        [
+         0.57,
+         0.1586
+        ],
+        [
+         0.592,
+         0.1545
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-shell",
+       "material": "lenke",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
        "id": "carcass",
        "bone": "cajon",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.6,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.147
         ],
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -3180,11 +3364,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
-         0.0,
+         0,
          -0.147
         ],
         [
@@ -3306,11 +3490,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.141
         ],
         [
@@ -3319,7 +3503,7 @@
         ],
         [
          0.0012,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3455,17 +3639,17 @@
        "id": "carcass",
        "bone": "cajon",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.6,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.147
         ],
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -3497,11 +3681,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
-         0.0,
+         0,
          -0.147
         ],
         [
@@ -3528,17 +3712,17 @@
        "id": "shell",
        "bone": "djembe",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.38,
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.113
         ],
         [
@@ -3571,7 +3755,7 @@
         ],
         [
          0.598,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3666,11 +3850,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.141
         ],
         [
@@ -3679,7 +3863,7 @@
         ],
         [
          0.0012,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3809,17 +3993,17 @@
        "id": "carcass",
        "bone": "cajon",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.6,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.147
         ],
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -3851,11 +4035,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
-         0.0,
+         0,
          -0.147
         ],
         [
@@ -3882,17 +4066,17 @@
        "id": "shell",
        "bone": "djembe",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.38,
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.113
         ],
         [
@@ -3925,7 +4109,7 @@
         ],
         [
          0.598,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4020,11 +4204,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.141
         ],
         [
@@ -4033,7 +4217,7 @@
         ],
         [
          0.0012,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4160,20 +4344,82 @@
      ],
      "plan": [
       {
+       "id": "shell",
+       "bone": "djembe",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0,
+         0.113
+        ],
+        [
+         0.06,
+         0.1065
+        ],
+        [
+         0.2,
+         0.081
+        ],
+        [
+         0.322,
+         0.07
+        ],
+        [
+         0.4,
+         0.1065
+        ],
+        [
+         0.48,
+         0.1445
+        ],
+        [
+         0.565,
+         0.1586
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-shell",
+       "material": "lenke",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
        "id": "carcass",
        "bone": "cajon",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.6,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.147
         ],
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -4205,11 +4451,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.15
         ],
         [
-         0.0,
+         0,
          -0.147
         ],
         [
@@ -4312,11 +4558,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         0.0,
+         0,
          0.141
         ],
         [
@@ -4325,7 +4571,7 @@
         ],
         [
          0.0012,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4580,7 +4826,7 @@
     },
     "bones": {
      "djembe-tilt": {
-      "angleDeg": 12.0
+      "angleDeg": 12
      }
     },
     "ground": "authored",
@@ -4672,7 +4918,7 @@
      "en": "The helpers take hold of the sound port and the crown ring, lift both drums clear of the floor in 1.4 s and hold them at carrying height.",
      "de": "Die Helfer greifen Schallöffnung und Kronenring, heben beide Trommeln in 1,4 s vom Boden und halten sie auf Tragehöhe."
     },
-    "durationS": 3.0,
+    "durationS": 3,
     "fps": 30,
     "loop": false,
     "rootMotion": "none",
@@ -4693,7 +4939,7 @@
       "ease": "smooth"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "pose": "carried",
       "ease": "smooth"
      }
@@ -4712,12 +4958,12 @@
      {
       "anchor": "cajon-grip",
       "fromS": 0.6,
-      "toS": 3.0
+      "toS": 3
      },
      {
       "anchor": "djembe-grip",
       "fromS": 0.6,
-      "toS": 3.0
+      "toS": 3
      }
     ],
     "phases": [
@@ -4742,7 +4988,7 @@
      {
       "id": "hold",
       "fromS": 2.2,
-      "toS": 3.0,
+      "toS": 3,
       "title": {
        "en": "Carrying",
        "de": "Tragen"
@@ -4781,21 +5027,21 @@
      "en": "Four strokes in 2 s on the djembe held between the knees: the head dips up to 2.5 mm under each stroke and rebounds, the drum rocks between 11 and 13 degrees on the edge of its foot, the player sits on the cajon.",
      "de": "Vier Schläge in 2 s auf der zwischen den Knien gehaltenen Djembe: das Fell gibt unter jedem Schlag bis zu 2,5 mm nach und federt zurück, die Trommel wiegt zwischen 11 und 13 Grad auf der Kante ihres Fußes, der Spieler sitzt auf dem Cajón."
     },
-    "durationS": 2.0,
+    "durationS": 2,
     "fps": 30,
     "loop": true,
     "rootMotion": "none",
     "keys": [
      {
-      "t": 0.0,
+      "t": 0,
       "pose": "played",
       "ease": "smooth",
       "bones": {
        "djembe-tilt": {
-        "angleDeg": 12.0
+        "angleDeg": 12
        },
        "djembe-head": {
-        "dx": 0.0
+        "dx": 0
        }
       }
      },
@@ -4852,7 +5098,7 @@
       }
      },
      {
-      "t": 1.0,
+      "t": 1,
       "pose": "played",
       "ease": "smooth",
       "bones": {
@@ -4904,15 +5150,15 @@
       }
      },
      {
-      "t": 2.0,
+      "t": 2,
       "pose": "played",
       "ease": "smooth",
       "bones": {
        "djembe-tilt": {
-        "angleDeg": 12.0
+        "angleDeg": 12
        },
        "djembe-head": {
-        "dx": 0.0
+        "dx": 0
        }
       }
      }
@@ -4921,22 +5167,22 @@
      {
       "anchor": "cajon-base",
       "fromS": 0,
-      "toS": 2.0
+      "toS": 2
      },
      {
       "anchor": "djembe-edge",
       "fromS": 0,
-      "toS": 2.0
+      "toS": 2
      },
      {
       "anchor": "knee-left",
       "fromS": 0,
-      "toS": 2.0
+      "toS": 2
      },
      {
       "anchor": "knee-right",
       "fromS": 0,
-      "toS": 2.0
+      "toS": 2
      }
     ],
     "phases": [
@@ -4952,7 +5198,7 @@
      {
       "id": "tone",
       "fromS": 0.5,
-      "toS": 1.0,
+      "toS": 1,
       "title": {
        "en": "Tone",
        "de": "Ton"
@@ -4960,7 +5206,7 @@
      },
      {
       "id": "slap",
-      "fromS": 1.0,
+      "fromS": 1,
       "toS": 1.5,
       "title": {
        "en": "Slap",
@@ -4970,7 +5216,7 @@
      {
       "id": "tone-2",
       "fromS": 1.5,
-      "toS": 2.0,
+      "toS": 2,
       "title": {
        "en": "Tone",
        "de": "Ton"
@@ -4997,7 +5243,7 @@
       "target": "strike"
      },
      {
-      "t": 1.0,
+      "t": 1,
       "kind": "load-on",
       "title": {
        "en": "Slap",
@@ -5021,16 +5267,16 @@
       "ease": "linear",
       "keys": [
        {
-        "t": 0.0,
-        "v": 0.0
+        "t": 0,
+        "v": 0
        },
        {
         "t": 0.12,
-        "v": 1.0
+        "v": 1
        },
        {
         "t": 0.2,
-        "v": 0.0
+        "v": 0
        },
        {
         "t": 0.5,
@@ -5038,15 +5284,15 @@
        },
        {
         "t": 0.58,
-        "v": 0.0
+        "v": 0
        },
        {
-        "t": 1.0,
-        "v": 1.0
+        "t": 1,
+        "v": 1
        },
        {
         "t": 1.08,
-        "v": 0.0
+        "v": 0
        },
        {
         "t": 1.5,
@@ -5054,11 +5300,11 @@
        },
        {
         "t": 1.58,
-        "v": 0.0
+        "v": 0
        },
        {
-        "t": 2.0,
-        "v": 0.0
+        "t": 2,
+        "v": 0
        }
       ]
      }
@@ -5276,11 +5522,11 @@
       "tone": 0.6,
       "profile": [
        [
-        0.0,
+        0,
         -0.147
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -5321,11 +5567,11 @@
       "tone": 0.6,
       "profile": [
        [
-        0.0,
+        0,
         -0.147
        ],
        [
-        0.0,
+        0,
         0.15
        ],
        [
@@ -5418,7 +5664,7 @@
        "translation": [
         0.006,
         0.0015,
-        0.0
+        0
        ]
       }
      },
@@ -5473,7 +5719,7 @@
          0.266874
         ],
         [
-         -0.0,
+         0,
          0.265
         ],
         [
@@ -5521,7 +5767,7 @@
          0.373126
         ],
         [
-         0.0,
+         0,
          0.375
         ],
         [
@@ -5567,7 +5813,7 @@
        "translation": [
         0.24,
         -0.1485,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -5588,7 +5834,7 @@
        "translation": [
         0.439,
         -0.136,
-        0.0
+        0
        ]
       }
      },
@@ -5608,7 +5854,7 @@
        "translation": [
         0.021,
         -0.136,
-        0.0
+        0
        ]
       }
      },
@@ -5635,8 +5881,8 @@
       "repeat": {
        "count": 4,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.04
        ]
       }
@@ -5657,7 +5903,7 @@
        "translation": [
         0.396,
         -0.1502,
-        0.0
+        0
        ]
       },
       "texture": true
@@ -5720,7 +5966,7 @@
        "translation": [
         0.4802,
         0.035,
-        0.0
+        0
        ]
       },
       "texture": true
@@ -5755,7 +6001,7 @@
       "tone": 0.38,
       "profile": [
        [
-        0.0,
+        0,
         0.113
        ],
        [
@@ -5899,23 +6145,23 @@
         0.09
        ],
        [
-        0.0,
+        0,
         0.094
        ],
        [
-        0.0,
+        0,
         0.113
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -6004,14 +6250,14 @@
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -6023,11 +6269,11 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.141
        ],
        [
@@ -6036,18 +6282,18 @@
        ],
        [
         0.0012,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "sheet": true
      },
@@ -6129,14 +6375,14 @@
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true
      },
@@ -6218,14 +6464,14 @@
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true
      },
@@ -6424,15 +6670,15 @@
       "repeat": {
        "count": 24,
        "rotationAxis": [
-        1.0,
-        0.0,
-        0.0
+        1,
+        0,
+        0
        ],
        "rotationRad": 0.261799,
        "origin": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       }
      },
@@ -6452,7 +6698,7 @@
        "translation": [
         0.0014,
         0.09,
-        0.0
+        0
        ]
       },
       "texture": true
@@ -6503,14 +6749,14 @@
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "texture": true
      },
@@ -6560,14 +6806,14 @@
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "texture": true
      }
@@ -6723,7 +6969,7 @@
        "translation": [
         0.0048,
         0.109,
-        0.0
+        0
        ]
       },
       "member": "djembe",
@@ -6743,9 +6989,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "djembe-head",
@@ -6767,7 +7013,7 @@
        "translation": [
         0.239759,
         0.009995,
-        0.0
+        0
        ]
       },
       "member": "cajon",
@@ -6788,8 +7034,8 @@
       "transform": {
        "translation": [
         0.333427,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "djembe",
@@ -6825,11 +7071,11 @@
       "profile": [
        [
         -0.15,
-        0.0
+        0
        ],
        [
         0.15,
-        0.0
+        0
        ],
        [
         0.15,
@@ -6907,7 +7153,7 @@
          0.269187
         ],
         [
-         -0.0,
+         0,
          0.265
         ],
         [
@@ -6939,7 +7185,7 @@
          0.370813
         ],
         [
-         0.0,
+         0,
          0.375
         ],
         [
@@ -6977,7 +7223,7 @@
        "translation": [
         0.24,
         -0.1485,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -6991,7 +7237,7 @@
       "tone": 0.38,
       "profile": [
        [
-        0.0,
+        0,
         0.113
        ],
        [
@@ -7067,23 +7313,23 @@
         0.081
        ],
        [
-        0.0,
+        0,
         0.094
        ],
        [
-        0.0,
+        0,
         0.113
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -7156,14 +7402,14 @@
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -7175,11 +7421,11 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.141
        ],
        [
@@ -7188,18 +7434,18 @@
        ],
        [
         0.0012,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "sheet": true
      },
@@ -7257,14 +7503,14 @@
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true
      },
@@ -7322,14 +7568,14 @@
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true
      },
@@ -7423,15 +7669,15 @@
       "repeat": {
        "count": 24,
        "rotationAxis": [
-        1.0,
-        0.0,
-        0.0
+        1,
+        0,
+        0
        ],
        "rotationRad": 0.261799,
        "origin": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       }
      }
@@ -7554,7 +7800,7 @@
        "translation": [
         0.009,
         0.1055,
-        0.0
+        0
        ]
       },
       "member": "djembe",
@@ -7574,9 +7820,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "djembe-head",
@@ -7598,7 +7844,7 @@
        "translation": [
         0.239759,
         0.009995,
-        0.0
+        0
        ]
       },
       "member": "cajon",
@@ -7619,8 +7865,8 @@
       "transform": {
        "translation": [
         0.333427,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "djembe",
@@ -7652,11 +7898,11 @@
       "profile": [
        [
         -0.15,
-        0.0
+        0
        ],
        [
         0.15,
-        0.0
+        0
        ],
        [
         0.15,
@@ -7701,11 +7947,11 @@
       "profile": [
        [
         -0.15,
-        0.0
+        0
        ],
        [
         0.15,
-        0.0
+        0
        ],
        [
         0.15,
@@ -7726,7 +7972,7 @@
          0.281109
         ],
         [
-         -0.0,
+         0,
          0.265
         ],
         [
@@ -7742,7 +7988,7 @@
          0.358891
         ],
         [
-         0.0,
+         0,
          0.375
         ],
         [
@@ -7772,7 +8018,7 @@
        "translation": [
         0.24,
         -0.1485,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -7786,7 +8032,7 @@
       "tone": 0.38,
       "profile": [
        [
-        0.0,
+        0,
         0.113
        ],
        [
@@ -7838,23 +8084,23 @@
         0.065
        ],
        [
-        0.0,
+        0,
         0.094
        ],
        [
-        0.0,
+        0,
         0.113
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -7919,14 +8165,14 @@
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -7938,11 +8184,11 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.141
        ],
        [
@@ -7951,18 +8197,18 @@
        ],
        [
         0.0012,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "sheet": true
      },
@@ -8012,14 +8258,14 @@
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true
      },
@@ -8069,14 +8315,14 @@
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
-       0.0
+       1,
+       0,
+       0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "slender": true
      },
@@ -8140,15 +8386,15 @@
       "repeat": {
        "count": 12,
        "rotationAxis": [
-        1.0,
-        0.0,
-        0.0
+        1,
+        0,
+        0
        ],
        "rotationRad": 0.523599,
        "origin": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       }
      }
@@ -8271,7 +8517,7 @@
        "translation": [
         0.018,
         0.098,
-        0.0
+        0
        ]
       },
       "member": "djembe",
@@ -8291,9 +8537,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "djembe-head",
@@ -8315,7 +8561,7 @@
        "translation": [
         0.239759,
         0.009995,
-        0.0
+        0
        ]
       },
       "member": "cajon",
@@ -8336,8 +8582,8 @@
       "transform": {
        "translation": [
         0.333427,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "djembe",

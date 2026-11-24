@@ -13,3 +13,18 @@ Server: launch configuration `staffage-site-native` (vite prototype mode, port 6
 | `#/compare?p=barista~dark-line&p=barista~thermal` | two panes on one clock, playing |
 
 Not looked at: playground, German language, light theme, mobile width, every other asset.
+
+## Second Look after the Silhouette Repairs (2026-11-24 12:20)
+
+Same server. The console held 119 `ERR_CONNECTION_REFUSED` lines from the stale tab before the server started; the count did not grow over two reloads and four page changes.
+
+| Page | Seen |
+| --- | --- |
+| `#/` overview | loads, compare strip with walking commuter in line and thermal view |
+| `#/machinery/tower-crane` | side elevation 1:500, lattice mast, jib, pendants and hook block drawn |
+| `#/vegetation/bamboo-clump` | side elevation 1:100, 4.45 m, six culms with foliage; the per-asset check runs in the page |
+| `#/vegetation/weeping-willow` (9.5 MB file) | side elevation 1:200 drawn within the 10 s wait |
+| `#/humans/runner-with-blade-prosthesis?vp=model&view=thermal` | 3D stage draws the thermal volume model with flow streaks |
+| `#/playground` | loads, asset list filling (96 of 375 when looked at), nothing placed |
+
+Not looked at: German language, light theme, mobile width, placing figures in the playground.

@@ -5,13 +5,14 @@ use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_plugin::plugin_app_close_prelude::*;
 use semio_plugin::{ExecutionMode, Plugin, PluginApp};
 use semio_plugin::PluginBuilder;
+use semio_plugin_instance_construction::OriginalVcsApp;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the process editor and viewer surfaces.
     pub enum ProcessApps: PluginApp {
-        Process3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_process_process3d_editor::Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
-        Process3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_process_process3d_viewer::Process3dViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Process3dEditor(OriginalVcsApp<EditorApp<semio_s_artifact_process_process3d_editor::Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Process3dViewer(OriginalVcsApp<ViewerApp<semio_s_artifact_process_process3d_viewer::Process3dViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps
@@ -29,9 +30,9 @@ pub fn plugin() -> Result<Plugin<ProcessApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:process")
         .artifact(semio_s_artifact_process_process3d::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<semio_s_artifact_process_process3d_editor::Process3dPlayApp>(semio_s_artifact_process_process3d_editor::create_process3d_app())
+        .native_editor::<semio_s_artifact_process_process3d_editor::Process3dPlayApp, semio_s_artifact_process_process3d_editor::Process3dNativeRegistration>(semio_s_artifact_process_process3d_editor::create_process3d_app())?
         .editor_mutation_roster::<semio_s_artifact_process_process3d_editor::Process3dPlayApp>()
-        .viewer::<semio_s_artifact_process_process3d_viewer::Process3dViewer>(semio_s_artifact_process_process3d_viewer::create_process3d_viewer())
+        .native_viewer::<semio_s_artifact_process_process3d_viewer::Process3dViewer, semio_s_artifact_process_process3d_viewer::Process3dViewerNativeRegistration>(semio_s_artifact_process_process3d_viewer::create_process3d_viewer())?
         .viewer_mutation_roster::<semio_s_artifact_process_process3d_viewer::Process3dViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_process_process3d_model::snapshot::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
@@ -47,3 +48,7 @@ pub mod manifest;
 #[path = "🔧️setup/🦀️.rs"]
 pub mod setup;
 //#endregion 🪢️TaxonomyMounts
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️registration/🦀️.rs"]
+mod registration_tests;

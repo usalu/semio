@@ -76,7 +76,9 @@
           "variationKnown": null,
           "conversionFactor": null,
           "required": null,
-          "pairs": null
+          "pairs": null,
+          "theoryVariation": 1.5,
+          "theoryMean": null
         }
       }
     ]

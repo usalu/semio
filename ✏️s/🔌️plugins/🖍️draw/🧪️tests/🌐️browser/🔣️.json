@@ -11,6 +11,12 @@
     "label": "Demo"
   },
   "exampleLayer": "emblem-orange",
+  "emptyExample": {
+    "labels": {
+      "en": "No example",
+      "de": "Kein Beispiel"
+    }
+  },
   "blankExample": {
     "id": "blank",
     "labels": {
@@ -22,12 +28,12 @@
   "utilityPressStates": [true, false, true],
   "gesture": {
     "from": [
-      0.35,
-      0.35
+      0.275,
+      0.1
     ],
     "to": [
-      0.6,
-      0.6
+      0.325,
+      0.2
     ],
     "steps": 8
   },
@@ -43,6 +49,7 @@
     "pages": 1,
     "change": "renderedPixels"
   },
+  "documentLoads": 2,
   "steps": [
     "boot",
     "blank",

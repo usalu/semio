@@ -6,10 +6,12 @@
 import { describe } from "vitest";
 import { registerAdmitsInferenceOpeningOnlyTests } from "./🔶️admits-inference-opening-only/🟦️.ts";
 import { registerSettlesOnlyExactLiveTests } from "./🔸️settles-only-exact-live/🟦️.ts";
+import { registerAcknowledgedStatusTests } from "./🔹️acknowledged-status/🟦️.ts";
 import { registerPreservesCompleteBrowserUiTests } from "./🟠️preserves-complete-browser-ui/🟦️.ts";
 
 describe("document backbone worker wire", () => {
   registerAdmitsInferenceOpeningOnlyTests();
   registerSettlesOnlyExactLiveTests();
   registerPreservesCompleteBrowserUiTests();
+  registerAcknowledgedStatusTests();
 });

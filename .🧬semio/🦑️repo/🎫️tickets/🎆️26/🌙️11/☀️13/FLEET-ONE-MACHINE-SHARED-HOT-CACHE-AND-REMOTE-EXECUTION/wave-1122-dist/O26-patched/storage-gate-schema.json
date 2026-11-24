@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/component-storage-gate/v1",
+  "title": "Component storage gate: a pass is charged what it has still to write",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "pollMilliseconds": 5000,
+        "progressMilliseconds": 60000,
+        "ledgerFile": "storage-growth.jsonl",
+        "ledgerMinimumRows": 2,
+        "ledgerMaximumRows": 16,
+        "ledgerQuantile": 0.9,
+        "growHostReserveBytes": 77309411328,
+        "growAlignBytes": 1048576,
+        "growInitialBytes": 67108864,
+        "presentDepth": 2
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "waiting": "{pass} waits for storage: it needs {needed} MiB ({predicted} MiB still to write{unmeasured} + {reserve} MiB reserve), {free} MiB are free after {charged} MiB are charged to {running} running pass(es), each charged what it predicted less what it already wrote ({written} MiB so far); it starts when {short} MiB more are free: every byte a running pass writes lowers its charge and a settling pass releases the rest; {growth}",
+          "unmeasured": ", unmeasured units estimated by kind",
+          "reclaiming": "{pass}: {short} MiB short of its predicted footprint; asking the cache collector to free the incremental sessions no running compiler holds",
+          "grown": "{pass}: the image grew by {added} MiB to {target} MiB; the host keeps {hostFree} MiB free above its {hostReserve} MiB reserve",
+          "growthRefused": "{pass}: the image does not grow ({reason})",
+          "refused": "Native build storage refused: {pass} needs {needed} MiB ({predicted} MiB predicted{unmeasured} + {reserve} MiB reserve), {free} MiB remain after {charged} MiB charged to {running} running pass(es) settled, every unit no remaining pass needs was reclaimed and the image growth was considered ({growth})",
+          "growth": {
+            "none": "no image grow is available here",
+            "busy": "the image can only grow while no pass runs on it, an attached image cannot be resized",
+            "host-reserve": "growing by {added} MiB would leave the host {hostFree} MiB free, below its {hostReserve} MiB reserve",
+            "host-unknown": "the free room of the host is unknown",
+            "grow": "the image grows by {added} MiB",
+            "failed": "the grow failed: {error}"
+          },
+          "credit": "{pass}: {credit} MiB of its predicted {predicted} MiB are already on disk in the shared build directory from earlier work, {remaining} MiB are still to write"
+        },
+        "de": {
+          "waiting": "{pass} wartet auf Speicher: es braucht {needed} MiB ({predicted} MiB noch zu schreiben{unmeasured} + {reserve} MiB Reserve), {free} MiB sind frei, nachdem {charged} MiB {running} laufenden Durchgängen zugerechnet sind, jeder mit dem, was er vorhergesagt hat, abzüglich des bereits Geschriebenen ({written} MiB bisher); es startet, sobald {short} MiB mehr frei sind: jedes geschriebene Byte eines laufenden Durchgangs senkt dessen Anteil und ein endender Durchgang gibt den Rest frei; {growth}",
+          "unmeasured": ", ungemessene Einheiten nach Art geschätzt",
+          "reclaiming": "{pass}: {short} MiB fehlen zum vorhergesagten Platzbedarf; der Cache-Sammler gibt die inkrementellen Sitzungen frei, die kein laufender Compiler hält",
+          "grown": "{pass}: das Image wuchs um {added} MiB auf {target} MiB; der Host behält {hostFree} MiB frei über seiner Reserve von {hostReserve} MiB",
+          "growthRefused": "{pass}: das Image wächst nicht ({reason})",
+          "refused": "Speicher des Native-Builds abgelehnt: {pass} braucht {needed} MiB ({predicted} MiB vorhergesagt{unmeasured} + {reserve} MiB Reserve), {free} MiB bleiben, nachdem {charged} MiB für {running} laufende Durchgänge abgeschlossen waren, jede Einheit ohne Bedarf eines weiteren Durchgangs freigegeben und das Wachsen des Images erwogen wurde ({growth})",
+          "growth": {
+            "none": "hier ist kein Wachsen des Images verfügbar",
+            "busy": "das Image wächst nur, solange kein Durchgang darauf läuft, ein eingehängtes Image lässt sich nicht vergrößern",
+            "host-reserve": "ein Wachsen um {added} MiB ließe dem Host {hostFree} MiB frei, unter seiner Reserve von {hostReserve} MiB",
+            "host-unknown": "der freie Platz des Hosts ist unbekannt",
+            "grow": "das Image wächst um {added} MiB",
+            "failed": "das Wachsen schlug fehl: {error}"
+          },
+          "credit": "{pass}: {credit} MiB der vorhergesagten {predicted} MiB liegen schon im gemeinsamen Build-Verzeichnis aus früherer Arbeit auf der Platte, {remaining} MiB sind noch zu schreiben"
+        }
+      }
+    }
+  }
+}

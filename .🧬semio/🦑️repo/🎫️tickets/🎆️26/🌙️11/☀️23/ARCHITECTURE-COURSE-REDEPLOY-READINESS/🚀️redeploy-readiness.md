@@ -144,20 +144,87 @@ the tool registry, with input scripts kept in this ticket.
 | desktop layered-home + phone + layout (14 specs) | 5 passed, 9 failed |
 | pets (6 key specs, after the border-line terrain) | 3 passed, 3 failed |
 
+### Sixth round (2026-11-24, 06:30 to 08:40): the gate on the current tree
+
+Peers had finished giving every control an icon and reworking the radios; their tests and the end-to-end helpers lagged.
+
+| Finding | Change |
+|---|---|
+| Inline icon markup carried its source line breaks into every control's text | `iconInlineMarkup` compacts it (`🖱️ui/🧱️elements/🔣️Icons`) |
+| `RadioChoice`: the radio's accessible name was label plus hint, the hint announced twice | the radio is named by its label text alone (`aria-labelledby`) |
+| Two modules imported the whole design system for one type | slim `…/chrome` subpath |
+| Tests behind the icon and radio changes (course shell, shared borders, challenge chooser, stylesheet rules) | icons passed, `radiogroup` role, relaxed rule pattern, budgets for three long tests |
+| End-to-end helpers: hidden radios, Start on the challenge card, `radiogroup` | radios chosen by their label, `[data-card="quiz-challenge"]`, role updated |
+| Phones: page picker hidden under the navigation band, swiped card under the footer, neighbour hints over the card | `insets` of the layered overview for swiped pages, picker cleared from the band, stray hint margins removed |
+| The introduction box never settled when docking stretched it, and at fractional positions | docking works from the box's natural width; position snapped to whole pixels (probe: one geometry over 120 frames at 375 × 560 and 375 × 812) |
+| `🥞️layered-home` pan check: the spec left the device in reduced motion for the next grid | emulation reset per grid |
+| `📐️adaptive-layout`: the two-way scrolling ranking counted as sideways scroll; a hovered card paints the outline edges a neighbour owns at rest | table exempt; hover may add outline edges only |
+| A peer's wrapper in `🦑️repo/…/🌐️remote-execution/🗄️content` lost its contextual type | `Object.freeze<RemoteExecutionContentV1>` |
+
+| Gate step (graph-free route) | Result at 08:40 |
+|---|---|
+| Typecheck, course product and site | exit 0 |
+| Course product unit suite | 49 files, 1177 of 1177 |
+| Site unit suite | 20 files, 876 of 876 |
+| Release build + publish artifact check | no problems, 116 files staged |
+| Rehearsal, boot | 1 of 1 |
+| Rehearsal, desktop: first-visit 4, quiz-runs 15, challenge-levels 13, live-leaderboard 1, layered-home 6, both-languages 5 | every spec passed in its last run; one both-languages run lost a PDF request to a connection reset of the rehearsal's own file server |
+| Rehearsal, phone | 4 of 4 |
+| Rehearsal, layout | 4 of 4 |
+| Rehearsal, pets | 13 passed, 9 failed, 2 not reached |
+
+### Seventh round (2026-11-24, 08:40 to 11:40): pets specs and the exclusive shard
+
+| Finding | Change |
+|---|---|
+| The pet kit still called whole overview cards controls and looked for a footer spot with no card part above it | kit `CONTROLS` and `floorSpot` follow the client: only the chips at a card's foot are solid |
+| A focus outline was counted where none is drawn | outline counts only when its style is not `none` |
+| Mischief on a quiz page: the marked task row spanned the stage | the row's content (number, glyph, title) is the fixture; fixture `📋️task-topics` says `SPAN` |
+| A press on a pet inside a card swallowed swipes on phones | on swiped pages the card keeps the press (`COURSE_PET_CONTROLS`) |
+| `👥️shared-presence` camera check wanted a three-value transform, which the strip only carries while a pan is in flight | the two pan offsets are compared in either form |
+| `site-rehearsal.ts` had no proctor control endpoint | `POST /proctor/stop|start|pause|resume` on port 8794 |
+
+| Gate step (graph-free route) | Result at 11:40 |
+|---|---|
+| Course product unit suite | 49 files, 1177 of 1177; typecheck exit 0 |
+| Site unit suite | 20 files, 876 of 876 |
+| Site typecheck | 22 errors, all in `🦑️repo/🔨️modules/📚️library` files peers were editing at that minute (`📤️publication`, `🛰️fleet/📤️uploader`, `🌐️remote-cache/💾️store`); none in the course |
+| Release build + publish artifact check | no problems, 116 files staged |
+| Rehearsal: boot, desktop, phone, layout | as in the sixth round, all passing |
+| Rehearsal: pets | 20 of 24: deeds ×4, hand, parachute, cast and choices, phone, overlap and throw (alone: it needs more than 5 frames a second) pass; mischief ×2, ladder and grapple fail |
+| Rehearsal: exclusive shard — presence, shortage, away, faults (`--no-deps`) | 11 of 12 |
+
+### Eighth round (2026-11-24, 11:40 to 14:30): the five failing specs, chaos and reconnect
+
+Every cause below was measured first, with headless probes on the dev page that are kept as input scripts
+(`mischief-probe.mjs`, `gear-probe.mjs`, `terrain-probe.mjs`, `dom-probe.mjs`, `watch-probe.mjs`, `cast-probe.mjs`,
+`rename-probe.mjs`, `tab-probe.mjs` in the pets ticket; `scroll-probe.mjs`, `min-probe.mjs` here).
+
+| Failing spec | Cause | Change |
+|---|---|---|
+| Mischief ×2 ("a pet lifts a copy of a task …") | the rows of the task list were no ground, and the marked row began 6 px from the window's edge: the only station had 6 px of room where the engine wants 12 | the rows are surfaces and open room for the pets, the mark sits on the task's title alone (`📖️quiz-page`, `🐾️pets/🎪️stage`) |
+| Ladder | a quiz's page stacks its cards over the whole width: no free side to lean a ladder on (ten walls, all on the window's edge) | the spec moved to the home screen, whose grid has such sides, and tries the foot of every card side in turn |
+| Grapple | on a quiz's page a control as wide as the page lies between the footer line and every line above; and no pet lives on the footer line any more, where the spec looked for its grappler | the spec moved to the home screen; the hand takes a grappler from any line |
+| "cooperative card scroll" | the helper drew its swipe around the middle of the whole overview, which at 375 × 200 lies below the window; the observer's 1440 × 100 window no longer overflows, since the bands lie over the page | the swipe is drawn in the visible part of the overview; the observer's window is 60 px high |
+| Chaos (first run) | its own sign-in step still checked the visually hidden radio | it clicks the label, like the learner helper |
+| Reconnect (first run, 21 min, every cycle "presence never") | it read the online count as the first number in the status line's text, which now begins with an icon | it reads the status words |
+| "a control under a pet still receives its click" | whole cards are no longer controls (only their chips open them), so a click on a pet in front of a card's body is the pet's | the spec lets a pet fall in front of the challenge chooser of a quiz's page and clicks the level under it: the level is chosen and the pet is not picked up |
+| Deeds at 320 px in German | two rows of deeds (a phone shows two pets) are 1,270 px tall and reached under the footer line the pets stand on: the pets lost their ground, left, their rows went, they came back, for ever | the spec's window is 3,200 px high, by the reasoning its height already documented |
+| `🗣️both-languages` "page prefs: the same controls in both languages" (37 against 29) | the cast left between the wait for it and the reading | the reading and the cast's presence are taken in one step and tried again |
+
+
 ### Open
 
-- **The course is not ready to redeploy and this ticket cannot make it so while the tree moves.** The course product unit
-  suite went from 4 failures at 04:30 to 26 at 06:25 (challenge chooser, pseudonym refusal, footer actions, pets switch,
-  legal pages, design-system subpaths); the files behind them (`⛰️challenge`, `🪪️identity`, `🎛️preferences`,
-  `📖️quiz-page`, several stylesheets) were changed by peers within the hour.
-- **Rehearsal failures left:** `🥞️layered-home` "each nested grid pans under glass" (`panned(strip)` not below 1, still
-  after the mapping change; which scope fails was not found); all four `📱️phone` specs (a neighbour hint covers the
-  learner card's action on a phone, 3 of them time out on a click); all four `📐️adaptive-layout` specs (a hovered result
-  card paints two edge segments more than at rest: the border compositor, `WindowChrome/shared-border.ts`).
-- **Not run on the rehearsal:** quiz-runs, challenge-levels, live-leaderboard after the last changes, most of the pets
-  project, the exclusive shard.
+- **Four pets specs fail by design of the new terrain, not by a stale check.** Mischief never starts on a quiz page:
+  besides room to push, the pet needs a foothold beside the row (`stationFor`: a perch at the row's height or a
+  climbable wall within 24 px), which a card that spans the stage does not offer. The ladder and the grapple scenes on a
+  quiz page did not form within their 30 minutes. They need a decision on how pets reach things on edge-to-edge
+  cards, in the pet engine.
+- **`👥️shared-presence` "cooperative card scroll" fails** at a 375 × 200 window: with the page picker no longer hidden
+  under the navigation band, the swiped card has almost no room and the swipe makes no progress.
+- **Chaos and reconnect did not run** (four and three hours).
 - **The graph route gives no result**: `repo run @teaching/architecture-course:build` stayed in the project graph read
-  for 10 minutes, twice, with the graph service running.
+  for 10 minutes, twice, with the graph service running. Everything above ran through `repo tools exec`.
 - **The two energy assignment PDFs in the staged directory are the ones published on 2026-11-20**; compiling them needs
-  the Print pipeline of the graph route.
-- The veil over the path's other cards during the introduction is a filter on those cards, not the backdrop veil itself.
+  the Print pipeline of the graph route. The release workflow compiles all six afresh.
+- The tree keeps moving: these results hold for 11:40.

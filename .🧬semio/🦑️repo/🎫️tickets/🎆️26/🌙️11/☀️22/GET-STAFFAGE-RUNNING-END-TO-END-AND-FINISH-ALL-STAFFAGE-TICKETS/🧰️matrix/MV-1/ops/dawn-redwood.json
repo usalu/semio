@@ -1,0 +1,4 @@
+[
+  {"op":"anchor","id":"tp-shade-1","set":{"bone":"branch-1-1","x":2.607,"y":0.1609,"z":0.504}},
+  {"op":"anchor","id":"tp-shade-2","set":{"bone":"branch-1-3","x":2.3236,"y":-0.0798,"z":-0.04}}
+]

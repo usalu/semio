@@ -24,7 +24,7 @@ test("actual named input discovery preserves exact owners without scanning the r
   const expected=query.all(fixture.owners,JSON.stringify(row.projects),row.input) as {name:string;valid:number}[];
   expect(expected.every(ref=>ref.valid===1),row.name).toBe(row.accepted);
   const execute=(await loadProductFunctionsV1(new URL("../../🟨️.mjs",import.meta.url),["discoverBuildOwnerAdmissionFactsV1"],{
-   libraryBootstrap:Promise.resolve(),join,readPhysicalSource:()=>Buffer.from(JSON.stringify({name:owner.name})),createScriptInputCache:()=>({}),cargoTargets:async()=>({}),componentBuildTargets:()=>({}),existsSync:()=>false,yieldInferenceV1:async()=>{},buildInputSourceRoleV1,buildNativeSourceObservationV1,ownerAdmissionSchema,askOwnerRegistryV1:()=>null,observedOwnerRegistryViewV1:(_root:string,registry:BuildOwnerRegistryV1)=>registryOwnerIndexesV1(registry),parserTypescriptV1:()=>({sys:{}}),observedTypeScriptHost:()=>({}),
+   libraryBootstrap:Promise.resolve(),join,readPhysicalSource:()=>Buffer.from(JSON.stringify({name:owner.name})),createScriptInputCache:()=>({}),cargoTargets:async()=>({}),componentBuildTargets:()=>({}),printDocumentTargets:async()=>({}),existsSync:()=>false,yieldInferenceV1:async()=>{},buildInputSourceRoleV1,buildNativeSourceObservationV1,ownerAdmissionSchema,askOwnerRegistryV1:()=>null,observedOwnerRegistryViewV1:(_root:string,registry:BuildOwnerRegistryV1)=>registryOwnerIndexesV1(registry),parserTypescriptV1:()=>({sys:{}}),observedTypeScriptHost:()=>({}),
    projectWithDefaults:async()=>({namedInputs:{selected:[{input:row.input,projects:row.projects.map(ownerName)}]}}),WORKSPACE_POLICY:{},readBuildSourceInputMatchesV1:async()=>({matched:[],compileByTarget:new Map()}),
   })).discoverBuildOwnerAdmissionFactsV1;
   visited=0;

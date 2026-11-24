@@ -1148,6 +1148,78 @@
               "h": 1.1
             },
             {
+              "id": "hinge-knuckle-r",
+              "bone": "unit",
+              "role": "detail",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "casing",
+              "material": "powder-coat",
+              "kind": "rect",
+              "x": -0.244,
+              "y": -0.34,
+              "w": 0.018,
+              "h": 0.06
+            },
+            {
+              "id": "hinge-knuckle-l",
+              "bone": "unit",
+              "role": "detail",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "casing",
+              "material": "powder-coat",
+              "kind": "rect",
+              "x": -0.244,
+              "y": 0.28,
+              "w": 0.018,
+              "h": 0.06
+            },
+            {
+              "id": "lid-knuckle-r",
+              "bone": "lid",
+              "role": "detail",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "top-lid",
+              "material": "powder-coat",
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.009,
+              "ry": 0.009,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.4,
+                "z1": -0.34
+              }
+            },
+            {
+              "id": "lid-knuckle-l",
+              "bone": "lid",
+              "role": "detail",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "top-lid",
+              "material": "powder-coat",
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.009,
+              "ry": 0.009,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.34,
+                "z1": 0.4
+              }
+            },
+            {
               "id": "lid",
               "bone": "lid",
               "role": "body",
@@ -1199,8 +1271,8 @@
             "de": "Die wahren Ansichten des 1:50-Modells: Gehäuse 0,43 m tief unter der 0,47 m tiefen Haube, die Gitterwölbung 20 mm vor der Front, Wasseranschlüsse und Scharnierlaschen hinten."
           },
           "retained": {
-            "en": "Side: rubber foot, base pan, casing, rear corner post, the louvred coil guard with one hatch line per louvre (50 mm), the grille dome, the cover with its side skirt, connections and hinge bracket. Front: both feet with their chamfers, base pan, fan section and compressor column panels, the grille with five rings, eight spokes, cap and hub over three sickle blades, the cover. Plan: casing under the cover.",
-            "de": "Seite: Gummifuß, Bodenwanne, Gehäuse, hinterer Eckpfosten, der Lamellenschutz des Tauschers mit einer Schraffurlinie je Lamelle (50 mm), die Gitterwölbung, die Haube mit Seitenschürze, Anschlüsse und Scharnierlasche. Front: beide Füße mit Fasen, Bodenwanne, Blech der Lüfterkammer und der Verdichtersäule, das Gitter mit fünf Ringen, acht Speichen, Kappe und Nabe über drei Sichelflügeln, die Haube. Draufsicht: Gehäuse unter der Haube."
+            "en": "Side: rubber foot, base pan, casing, rear corner post, the louvred coil guard with one hatch line per louvre (50 mm), the grille dome, the cover with its side skirt, connections and hinge bracket. Front: both feet with their chamfers, base pan, fan section and compressor column panels, the grille with five rings, eight spokes, cap and hub over three sickle blades, the cover. Plan: casing under the cover. Plan: the four hinge knuckles behind the cover.",
+            "de": "Seite: Gummifuß, Bodenwanne, Gehäuse, hinterer Eckpfosten, der Lamellenschutz des Tauschers mit einer Schraffurlinie je Lamelle (50 mm), die Gitterwölbung, die Haube mit Seitenschürze, Anschlüsse und Scharnierlasche. Front: beide Füße mit Fasen, Bodenwanne, Blech der Lüfterkammer und der Verdichtersäule, das Gitter mit fünf Ringen, acht Speichen, Kappe und Nabe über drei Sichelflügeln, die Haube. Draufsicht: Gehäuse unter der Haube. Draufsicht: die vier Scharnierrollen hinter dem Deckel."
           },
           "merged": {
             "en": "The two water connections are one shape in the side view; the side skirt and the cover plate are one profile.",
@@ -1899,6 +1971,48 @@
               "h": 1.1
             },
             {
+              "id": "lid-knuckle-r",
+              "bone": "lid",
+              "role": "detail",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "top-lid",
+              "material": "powder-coat",
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.009,
+              "ry": 0.009,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.4,
+                "z1": -0.34
+              }
+            },
+            {
+              "id": "lid-knuckle-l",
+              "bone": "lid",
+              "role": "detail",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "top-lid",
+              "material": "powder-coat",
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.009,
+              "ry": 0.009,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.34,
+                "z1": 0.4
+              }
+            },
+            {
               "id": "lid",
               "bone": "lid",
               "role": "body",
@@ -1950,8 +2064,8 @@
             "de": "Die wahren Ansichten des 1:100-Modells."
           },
           "retained": {
-            "en": "The front elevation shows the swept three-blade impeller and its central boss within the circular guard.",
-            "de": "Die Vorderansicht zeigt das geschwungene Dreiblatt-Laufrad und die zentrale Nabe im runden Schutzgitter."
+            "en": "The front elevation shows the swept three-blade impeller and its central boss within the circular guard. Plan: the two hinge knuckles of the cover.",
+            "de": "Die Vorderansicht zeigt das geschwungene Dreiblatt-Laufrad und die zentrale Nabe im runden Schutzgitter. Draufsicht: die zwei Scharnierrollen des Deckels."
           },
           "merged": {
             "en": "Five grille rings become two, eight spokes four, cap and hub one disc; 25 louvres become 12.",

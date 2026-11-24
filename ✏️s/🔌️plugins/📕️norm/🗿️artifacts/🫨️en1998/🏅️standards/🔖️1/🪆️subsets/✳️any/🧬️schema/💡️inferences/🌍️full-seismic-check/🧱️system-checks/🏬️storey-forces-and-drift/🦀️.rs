@@ -41,12 +41,19 @@ pub fn check_storey_forces(
             &format!("e_ai={e_ai:.3} m, e0(max over storeys)={e0:.3} m, x={x:.3} m, L_e={l_e:.1} m, δ={delta:.3} (simplified-procedure bound {limit:.2}), simplified procedure allowed only for planRegular={}", building.plan_regular),
             &format!("e_ai={e_ai:.3} m, e0 (Maximum über Geschosse)={e0:.3} m, x={x:.3} m, L_e={l_e:.1} m, δ={delta:.3} (Grenze vereinfachtes Verfahren {limit:.2}), vereinfachtes Verfahren nur bei planRegular={}", building.plan_regular),
         ));
-        if delta > limit + 1e-12 || !building.plan_regular {
+        if delta > limit + 1e-12 {
             tor = tor.status(semio_s_plugin_norm_compliance::CheckStatus::Fail).remedy(Remedy::at_most(
                 SubjectRef::new(bid, format!("{bpath}.accidentalEccentricityRatio"), lc("Accidental eccentricity ratio", "Zufällige Exzentrizität")),
                 q_dim(building.accidental_eccentricity_ratio),
                 q_dim(0.0),
                 lc("Align centre of mass and stiffness (reduce e₀) and restore plan regularity, or use a spatial model with torsional moments.", "Massen- und Steifigkeitsmittelpunkt angleichen (e₀ → 0) und Grundrissregelmässigkeit herstellen oder räumliches Modell mit Torsionsmomenten verwenden."),
+            ));
+        } else if !building.plan_regular {
+            tor = tor.status(semio_s_plugin_norm_compliance::CheckStatus::Fail).remedy(Remedy::exactly(
+                SubjectRef::new(bid, format!("{bpath}.planRegular"), lc("Plan regularity", "Regelmässigkeit im Grundriss")),
+                q_dim(0.0),
+                q_dim(1.0),
+                lc("The simplified torsion procedure needs a regular plan: restore plan regularity or use a spatial model with torsional moments.", "Das vereinfachte Torsionsverfahren braucht einen regelmässigen Grundriss: Regelmässigkeit herstellen oder räumliches Modell mit Torsionsmomenten verwenden."),
             ));
         }
         report.push(tor.build());

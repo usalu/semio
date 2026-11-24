@@ -118,7 +118,7 @@ pub fn check_full_seismic_scoped(document: &En1998Snapshot, scope: Scope<'_>, st
         );
     }
 
-    for (index, building) in document.buildings.iter().enumerate().filter(|(index, _)| scope.admits("buildings", *index)) {
+    for (index, building) in document.buildings.iter().enumerate().filter(|(index, _)| scope.admits("buildings", *index)).inspect(|_| isolate()) {
         if !step(0.0) {
             report.push(cancelled_check(annex));
             return report;
@@ -163,6 +163,7 @@ pub fn check_full_seismic_scoped(document: &En1998Snapshot, scope: Scope<'_>, st
         if !scope.admits("cases", index) {
             continue;
         }
+        isolate();
         if !step(0.0) {
             return report;
         }

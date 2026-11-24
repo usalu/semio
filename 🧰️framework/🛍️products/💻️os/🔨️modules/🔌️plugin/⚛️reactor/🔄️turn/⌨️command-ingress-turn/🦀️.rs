@@ -95,12 +95,17 @@ thread_local!{
 /// 🔢️ The idle limit this thread's reactor enforces; laws lower it through [`set_command_idle_turn_limit`].
 pub fn command_idle_turn_limit()->u32{COMMAND_IDLE_LIMIT.with(|limit|limit.get())}
 
+/// 🛑️ Whether a streak of consecutive quiet turns exhausts this thread's idle limit, so the reactor faults the command as stalled.
+#[doc(hidden)]
+pub fn command_stalled(streak:u32)->bool{streak>=command_idle_turn_limit()}
+
 /// 🧪️ Lowers or restores the idle limit of this thread's reactor so a law can reach it without spinning for minutes.
 #[doc(hidden)]
 pub fn set_command_idle_turn_limit(limit:u32){COMMAND_IDLE_LIMIT.with(|slot|slot.set(limit))}
 
 /// 📏️ Counts one turn of the command `seq` of `instance`: a quiet turn extends the streak, any other turn (or another command) restarts it; returns the streak.
-fn note_command_turn(instance:u32,seq:u64,quiet:bool)->u32{COMMAND_IDLE_STREAK.with(|slot|{let (i,s,n)=slot.get();let n=if (i,s)==(instance,seq){n}else{0};let n=if quiet{n.saturating_add(1)}else{0};slot.set((instance,seq,n));n})}
+#[doc(hidden)]
+pub fn note_command_turn(instance:u32,seq:u64,quiet:bool)->u32{COMMAND_IDLE_STREAK.with(|slot|{let (i,s,n)=slot.get();let n=if (i,s)==(instance,seq){n}else{0};let n=if quiet{n.saturating_add(1)}else{0};slot.set((instance,seq,n));n})}
 
 /// 🪜️ Repeats one paid retirement step within the turn's own slice while each step makes physical progress, so a retained owner with many frames retires in a few turns instead of one step per turn; stops on completion, on the slice ending or on a step that spent nothing.
 fn step_until_slice(cx:&mut semio_framework_job::StepContext<'_>,mut step:impl FnMut(&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
@@ -191,7 +196,7 @@ impl CommandIngressTurn {
                 let quiet=(cx.fuel_remaining(),cx.retained_progress())==before&&produced.frames.is_empty()&&produced.effects.is_empty()&&produced.events.is_empty();
                 let streak=note_command_turn(cursor.instance,cursor.seq,quiet);
                 let routed=route_exchange_output(cursor.instance,produced,effects,cx);
-                if streak>=command_idle_turn_limit()&&matches!(command.as_ref(),Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(_)))){
+                if command_stalled(streak)&&matches!(command.as_ref(),Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(_)))){
                     let fault=semio_framework::Fault::new(semio_framework::FaultOrigin::Framework,semio_framework::FaultCode::new(COMMAND_STALLED_FAULT_CODE),format!("{COMMAND_STALLED_FAULT_CODE}: command {} of instance {} stayed pending for {streak} turns without consuming work or moving retained stock",cursor.seq,cursor.instance));
                     note_command_turn(cursor.instance,cursor.seq,false);
                     semio_plugin_runtime_exchange::exch_plugin_exchange::retain_decoded_exchange_failure(command,Some(fault.into()),(cx.operation(),cx.generation()),None);

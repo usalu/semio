@@ -106,7 +106,7 @@
   },
   "dimensions": {
    "heightM": 1.0282,
-   "widthM": 1.0,
+   "widthM": 1,
    "depthM": 0.9,
    "massKg": 41.33
   },
@@ -136,8 +136,8 @@
     "densityKgM3": 35,
     "conductivityWmK": 0.04,
     "specificHeatJKgK": 1400,
-    "elasticModulusPa": 25000.0,
-    "strengthPa": 4000.0,
+    "elasticModulusPa": 25000,
+    "strengthPa": 4000,
     "source": "authored-estimate",
     "reference": "iso-3386-1"
    },
@@ -166,8 +166,8 @@
     "densityKgM3": 650,
     "conductivityWmK": 0.14,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 1800000000.0,
-    "strengthPa": 11500000.0,
+    "elasticModulusPa": 1800000000,
+    "strengthPa": 11500000,
     "source": "literature",
     "reference": "en-312-2010"
    },
@@ -182,8 +182,8 @@
     "densityKgM3": 420,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 11000000000.0,
-    "strengthPa": 24000000.0,
+    "elasticModulusPa": 11000000000,
+    "strengthPa": 24000000,
     "source": "literature",
     "reference": "en-338-2016"
    },
@@ -198,8 +198,8 @@
     "densityKgM3": 680,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 9000000000.0,
-    "strengthPa": 40000000.0,
+    "elasticModulusPa": 9000000000,
+    "strengthPa": 40000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -212,10 +212,10 @@
     "emissivity": 0.88,
     "solarAbsorptivity": 0.9,
     "densityKgM3": 7850,
-    "conductivityWmK": 50.0,
+    "conductivityWmK": 50,
     "specificHeatJKgK": 450,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "en-1993-1-1"
    },
@@ -230,8 +230,8 @@
     "densityKgM3": 905,
     "conductivityWmK": 0.22,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 1300000000.0,
-    "strengthPa": 30000000.0,
+    "elasticModulusPa": 1300000000,
+    "strengthPa": 30000000,
     "source": "literature",
     "reference": "ashby-2011"
    },
@@ -246,8 +246,8 @@
     "densityKgM3": 90,
     "conductivityWmK": 0.045,
     "specificHeatJKgK": 1300,
-    "elasticModulusPa": 50000.0,
-    "strengthPa": 20000.0,
+    "elasticModulusPa": 50000,
+    "strengthPa": 20000,
     "source": "authored-estimate",
     "reference": "iso-10456-2007"
    },
@@ -277,10 +277,10 @@
       "en": "Depot floor reference",
       "de": "Bezug Lagerboden"
      },
-     "x": 0.0,
-     "y": 0.0,
-     "angleDeg": 0.0,
-     "lengthM": 0.0,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
      "joint": {
       "type": "fixed"
      }
@@ -293,14 +293,14 @@
       "de": "Gefaltete Möbeldecke (bleibt am Boden)"
      },
      "x": -0.04,
-     "y": 0.0,
-     "angleDeg": 0.0,
-     "lengthM": 1.0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1,
      "joint": {
       "type": "prismatic",
       "axisDeg": 0,
       "minM": -1.3,
-      "maxM": 0.0
+      "maxM": 0
      },
      "mass": {
       "kg": 1.8,
@@ -318,10 +318,10 @@
       "en": "Lift of the chair by its carriers",
       "de": "Anheben des Sessels durch die Träger"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.02,
-     "angleDeg": 0.0,
-     "lengthM": 0.0,
+     "angleDeg": 0,
+     "lengthM": 0,
      "joint": {
       "type": "prismatic",
       "axisDeg": 90,
@@ -336,10 +336,10 @@
       "en": "Tilt about the rear glides",
       "de": "Kippen um die hinteren Gleiter"
      },
-     "x": 0.0,
-     "y": 0.0,
-     "angleDeg": 0.0,
-     "lengthM": 0.0,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
      "joint": {
       "type": "revolute",
       "minDeg": -10,
@@ -353,9 +353,9 @@
       "en": "Chair frame: arm boxes, seat box, rails and pivot tube",
       "de": "Sesselgestell: Armkästen, Sitzkasten, Zargen und Drehrohr"
      },
-     "x": 0.0,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.92,
      "joint": {
       "type": "fixed"
@@ -386,10 +386,10 @@
       "en": "Four polypropylene glides",
       "de": "Vier Polypropylen-Gleiter"
      },
-     "x": 0.0,
-     "y": 0.0,
-     "angleDeg": 0.0,
-     "lengthM": 0.0,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
      "joint": {
       "type": "fixed"
      }
@@ -403,13 +403,13 @@
      },
      "x": 0.33,
      "y": 0.36,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.575,
      "joint": {
       "type": "prismatic",
       "axisDeg": 90,
       "minM": -0.06,
-      "maxM": 0.0
+      "maxM": 0
      },
      "mass": {
       "kg": 1.7,
@@ -429,7 +429,7 @@
      },
      "x": 0.15,
      "y": 0.4,
-     "angleDeg": 100.0,
+     "angleDeg": 100,
      "lengthM": 0.6,
      "joint": {
       "type": "revolute",
@@ -446,7 +446,7 @@
      },
      "section": {
       "areaM2": 0.0032,
-      "secondMomentM4": 4.27e-07,
+      "secondMomentM4": 4.27e-7,
       "extremeFibreM": 0.02,
       "material": "spruce-c24",
       "title": {
@@ -474,14 +474,14 @@
      "mass": {
       "kg": 1.14,
       "comX": 0.10796,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "en-1728-2012"
      },
      "section": {
       "areaM2": 0.000576,
-      "secondMomentM4": 6.22e-08,
+      "secondMomentM4": 6.22e-8,
       "extremeFibreM": 0.018,
       "material": "steel-black",
       "title": {
@@ -498,7 +498,7 @@
       "de": "Gepolstertes Fußstützenbrett"
      },
      "x": 0.21593,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": -174.6855,
      "lengthM": 0.28,
      "joint": {
@@ -516,7 +516,7 @@
      },
      "section": {
       "areaM2": 0.00882,
-      "secondMomentM4": 2.38e-07,
+      "secondMomentM4": 2.38e-7,
       "extremeFibreM": 0.009,
       "material": "birch-plywood",
       "title": {
@@ -534,7 +534,7 @@
      },
      "x": 0.6,
      "y": 0.36,
-     "angleDeg": 80.0,
+     "angleDeg": 80,
      "lengthM": 0.17,
      "joint": {
       "type": "revolute",
@@ -544,14 +544,14 @@
      "mass": {
       "kg": 0.13,
       "comX": 0.06,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "en-1728-2012"
      },
      "section": {
       "areaM2": 0.00036,
-      "secondMomentM4": 1.73e-08,
+      "secondMomentM4": 1.73e-8,
       "extremeFibreM": 0.012,
       "material": "polypropylene",
       "title": {
@@ -567,7 +567,7 @@
     "id": "blanket-rear-left",
     "bone": "blanket",
     "x": 0.1,
-    "y": 0.0,
+    "y": 0,
     "z": 0.345,
     "kind": "contact",
     "title": {
@@ -584,7 +584,7 @@
     "id": "blanket-rear-right",
     "bone": "blanket",
     "x": 0.1,
-    "y": 0.0,
+    "y": 0,
     "z": -0.345,
     "kind": "contact",
     "title": {
@@ -601,7 +601,7 @@
     "id": "blanket-front-left",
     "bone": "blanket",
     "x": 0.9,
-    "y": 0.0,
+    "y": 0,
     "z": 0.345,
     "kind": "contact",
     "title": {
@@ -618,7 +618,7 @@
     "id": "blanket-front-right",
     "bone": "blanket",
     "x": 0.9,
-    "y": 0.0,
+    "y": 0,
     "z": -0.345,
     "kind": "contact",
     "title": {
@@ -635,7 +635,7 @@
     "id": "glide-rear-left",
     "bone": "glides",
     "x": 0.06,
-    "y": 0.0,
+    "y": 0,
     "z": 0.345,
     "kind": "contact",
     "title": {
@@ -652,7 +652,7 @@
     "id": "glide-rear-right",
     "bone": "glides",
     "x": 0.06,
-    "y": 0.0,
+    "y": 0,
     "z": -0.345,
     "kind": "contact",
     "title": {
@@ -669,7 +669,7 @@
     "id": "glide-front-left",
     "bone": "glides",
     "x": 0.86,
-    "y": 0.0,
+    "y": 0,
     "z": 0.345,
     "kind": "contact",
     "title": {
@@ -686,7 +686,7 @@
     "id": "glide-front-right",
     "bone": "glides",
     "x": 0.86,
-    "y": 0.0,
+    "y": 0,
     "z": -0.345,
     "kind": "contact",
     "title": {
@@ -772,7 +772,7 @@
     "bone": "seat",
     "x": 0.25,
     "y": 0.088,
-    "z": 0.0,
+    "z": 0,
     "kind": "load",
     "title": {
      "en": "Sitting point on the sagging seat",
@@ -784,7 +784,7 @@
     "bone": "back",
     "x": 0.27,
     "y": -0.205,
-    "z": 0.0,
+    "z": 0,
     "kind": "load",
     "title": {
      "en": "Shoulder and lumbar contact on the back cushion",
@@ -796,7 +796,7 @@
     "bone": "footrest",
     "x": 0.17,
     "y": 0.09,
-    "z": 0.0,
+    "z": 0,
     "kind": "load",
     "title": {
      "en": "Calves on the footrest",
@@ -828,7 +828,7 @@
       },
       "pattern": "cross",
       "angleDeg": 45,
-      "spacingMm": 2.0,
+      "spacingMm": 2,
       "penMm": 0.13
      }
     ],
@@ -845,18 +845,18 @@
        "points": [
         [
          0.008,
-         0.0
+         0
         ],
         [
          0.992,
-         0.0
+         0
         ],
         [
          0.99707,
          0.00293
         ],
         [
-         1.0,
+         1,
          0.01
         ],
         [
@@ -876,7 +876,7 @@
          0.01707
         ],
         [
-         0.0,
+         0,
          0.01
         ],
         [
@@ -899,11 +899,11 @@
        "points": [
         [
          0.035,
-         0.0
+         0
         ],
         [
          0.085,
-         0.0
+         0
         ],
         [
          0.081,
@@ -929,11 +929,11 @@
        "points": [
         [
          0.835,
-         0.0
+         0
         ],
         [
          0.885,
-         0.0
+         0
         ],
         [
          0.881,
@@ -1088,7 +1088,7 @@
          -0.12
         ],
         [
-         0.0,
+         0,
          -0.16
         ],
         [
@@ -1149,7 +1149,7 @@
         ],
         [
          0.6,
-         0.0
+         0
         ],
         [
          0.59,
@@ -1217,7 +1217,7 @@
        "points": [
         [
          0.55,
-         0.0
+         0
         ],
         [
          0.567,
@@ -1280,12 +1280,12 @@
          0.08
         ],
         [
-         0.0,
+         0,
          0.06
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -1315,7 +1315,7 @@
         ],
         [
          0.23393,
-         0.0
+         0
         ],
         [
          0.23152,
@@ -1330,7 +1330,7 @@
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ],
         [
@@ -1343,7 +1343,7 @@
         ],
         [
          -0.018,
-         0.0
+         0
         ],
         [
          -0.01559,
@@ -1354,7 +1354,7 @@
          -0.01559
         ],
         [
-         -0.0,
+         0,
          -0.018
         ]
        ],
@@ -1372,19 +1372,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.28,
-         0.0
+         0
         ],
         [
          0.28,
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ]
        ],
@@ -1438,7 +1438,7 @@
          0.065
         ],
         [
-         0.0,
+         0,
          0.03
         ]
        ],
@@ -1755,7 +1755,7 @@
        "points": [
         [
          0.02,
-         0.0
+         0
         ],
         [
          0.01848,
@@ -1770,7 +1770,7 @@
          0.01848
         ],
         [
-         0.0,
+         0,
          0.02
         ],
         [
@@ -1787,7 +1787,7 @@
         ],
         [
          -0.02,
-         0.0
+         0
         ],
         [
          -0.01848,
@@ -1802,7 +1802,7 @@
          -0.01848
         ],
         [
-         -0.0,
+         0,
          -0.02
         ],
         [
@@ -1825,6 +1825,78 @@
      ],
      "front": [
       {
+       "id": "glide-rear-right",
+       "bone": "glides",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         0
+        ],
+        [
+         0.085,
+         0
+        ],
+        [
+         0.081,
+         0.03
+        ],
+        [
+         0.039,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": -0.32
+       }
+      },
+      {
+       "id": "glide-rear-left",
+       "bone": "glides",
+       "role": "body",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         0
+        ],
+        [
+         0.085,
+         0
+        ],
+        [
+         0.081,
+         0.03
+        ],
+        [
+         0.039,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.32,
+        "z1": 0.37
+       }
+      },
+      {
        "id": "blanket",
        "bone": "blanket",
        "role": "body",
@@ -1835,11 +1907,11 @@
        "points": [
         [
          -0.45,
-         0.0
+         0
         ],
         [
          0.45,
-         0.0
+         0
         ],
         [
          0.45,
@@ -1861,28 +1933,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
        "kind": "poly",
        "points": [
         [
-         0.32,
-         0.02
+         0,
+         0.32
         ],
         [
-         0.37,
-         0.02
+         0,
+         0.37
         ],
         [
-         0.366,
-         0.05
+         0.03,
+         0.366
         ],
         [
-         0.324,
-         0.05
+         0.03,
+         0.324
         ]
        ],
        "closed": true,
-       "region": "plastic-trim",
-       "material": "polypropylene"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.835,
+        "z1": 0.885
+       }
       },
       {
        "id": "glide-right",
@@ -1891,28 +1969,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
        "kind": "poly",
        "points": [
         [
-         -0.37,
-         0.02
+         0,
+         -0.37
         ],
         [
-         -0.32,
-         0.02
+         0,
+         -0.32
         ],
         [
-         -0.324,
-         0.05
+         0.03,
+         -0.324
         ],
         [
-         -0.366,
-         0.05
+         0.03,
+         -0.366
         ]
        ],
        "closed": true,
-       "region": "plastic-trim",
-       "material": "polypropylene"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.835,
+        "z1": 0.885
+       }
       },
       {
        "id": "seat-frame",
@@ -1921,28 +2005,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.2,
+       "region": "base-frame",
+       "material": "chipboard-p2",
        "kind": "poly",
        "points": [
         [
-         -0.26,
-         0.24
+         0.2,
+         0.22
         ],
         [
-         0.26,
-         0.24
+         0.74,
+         0.22
         ],
         [
-         0.26,
-         0.38
+         0.74,
+         0.36
         ],
         [
-         -0.26,
-         0.38
+         0.2,
+         0.36
         ]
        ],
        "closed": true,
-       "region": "base-frame",
-       "material": "chipboard-p2"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": 0.26
+       }
       },
       {
        "id": "rear-rail",
@@ -1951,28 +2041,34 @@
        "z": 2.3,
        "filled": true,
        "tone": 0.22,
+       "region": "base-frame",
+       "material": "spruce-c24",
        "kind": "poly",
        "points": [
         [
-         -0.26,
-         0.08
+         0.02,
+         0.06
         ],
         [
-         0.26,
-         0.08
+         0.05,
+         0.06
         ],
         [
-         0.26,
-         0.22
+         0.05,
+         0.2
         ],
         [
-         -0.26,
-         0.22
+         0.02,
+         0.2
         ]
        ],
        "closed": true,
-       "region": "base-frame",
-       "material": "spruce-c24"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": 0.26
+       }
       },
       {
        "id": "pivot-tube",
@@ -1981,28 +2077,66 @@
        "z": 2.6,
        "filled": true,
        "tone": 0.25,
+       "region": "mechanism",
+       "material": "steel-black",
        "kind": "poly",
        "points": [
         [
-         -0.26,
-         0.1275
+         0.7925,
+         0.12
         ],
         [
-         0.26,
-         0.1275
+         0.79083,
+         0.12625
         ],
         [
-         0.26,
-         0.1525
+         0.78625,
+         0.13083
         ],
         [
-         -0.26,
-         0.1525
+         0.78,
+         0.1325
+        ],
+        [
+         0.77375,
+         0.13083
+        ],
+        [
+         0.76917,
+         0.12625
+        ],
+        [
+         0.7675,
+         0.12
+        ],
+        [
+         0.76917,
+         0.11375
+        ],
+        [
+         0.77375,
+         0.10917
+        ],
+        [
+         0.78,
+         0.1075
+        ],
+        [
+         0.78625,
+         0.10917
+        ],
+        [
+         0.79083,
+         0.11375
         ]
        ],
        "closed": true,
-       "region": "mechanism",
-       "material": "steel-black"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": 0.26
+       }
       },
       {
        "id": "back-cushion",
@@ -2012,6 +2146,9 @@
        "filled": true,
        "tone": 0.44,
        "kind": "poly",
+       "closed": true,
+       "region": "back-cushion",
+       "material": "pvc-faux-leather",
        "points": [
         [
          -0.02,
@@ -2022,24 +2159,24 @@
          -0.25
         ],
         [
-         0.56147,
-         -0.24915
+         0.5615,
+         -0.2492
         ],
         [
          0.5675,
-         -0.24665
+         -0.2467
         ],
         [
-         0.57268,
-         -0.24268
+         0.5727,
+         -0.2427
         ],
         [
-         0.57665,
+         0.5766,
          -0.2375
         ],
         [
-         0.57915,
-         -0.23147
+         0.5792,
+         -0.2315
         ],
         [
          0.58,
@@ -2050,24 +2187,24 @@
          0.225
         ],
         [
-         0.57915,
-         0.23147
+         0.5792,
+         0.2315
         ],
         [
-         0.57665,
+         0.5766,
          0.2375
         ],
         [
-         0.57268,
-         0.24268
+         0.5727,
+         0.2427
         ],
         [
          0.5675,
-         0.24665
+         0.2467
         ],
         [
-         0.56147,
-         0.24915
+         0.5615,
+         0.2492
         ],
         [
          0.555,
@@ -2078,14 +2215,15 @@
          0.25
         ]
        ],
-       "closed": true,
-       "region": "back-cushion",
-       "material": "pvc-faux-leather",
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": -0.206,
-        "z1": 0.04
+        "z0": -0.1685,
+        "z1": 0.04,
+        "zTip": [
+         -0.1835,
+         0.0383
+        ]
        }
       },
       {
@@ -2137,92 +2275,98 @@
        "z": 4,
        "filled": true,
        "tone": 0.42,
+       "region": "seat-cushion",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         0.23,
-         0.38
+         0,
+         0.23
         ],
         [
-         0.24148,
-         0.38228
+         0.00228,
+         0.24148
         ],
         [
-         0.25121,
-         0.38879
+         0.00879,
+         0.25121
         ],
         [
-         0.25772,
-         0.39852
+         0.01852,
+         0.25772
         ],
         [
-         0.26,
-         0.41
+         0.03,
+         0.26
         ],
         [
-         0.26,
-         0.466
+         0.086,
+         0.26
         ],
         [
-         0.25772,
-         0.47748
+         0.09748,
+         0.25772
         ],
         [
-         0.25121,
-         0.48721
+         0.10721,
+         0.25121
         ],
         [
-         0.24148,
-         0.49372
+         0.11372,
+         0.24148
         ],
         [
-         0.23,
-         0.496
+         0.116,
+         0.23
         ],
         [
-         -0.23,
-         0.496
+         0.116,
+         -0.23
         ],
         [
-         -0.24148,
-         0.49372
+         0.11372,
+         -0.24148
         ],
         [
-         -0.25121,
-         0.48721
+         0.10721,
+         -0.25121
         ],
         [
-         -0.25772,
-         0.47748
+         0.09748,
+         -0.25772
         ],
         [
-         -0.26,
-         0.466
+         0.086,
+         -0.26
         ],
         [
-         -0.26,
-         0.41
+         0.03,
+         -0.26
         ],
         [
-         -0.25772,
-         0.39852
+         0.01852,
+         -0.25772
         ],
         [
-         -0.25121,
-         0.38879
+         0.00879,
+         -0.25121
         ],
         [
-         -0.24148,
-         0.38228
+         0.00228,
+         -0.24148
         ],
         [
-         -0.23,
-         0.38
+         0,
+         -0.23
         ]
        ],
        "closed": true,
-       "region": "seat-cushion",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.575
+       }
       },
       {
        "id": "seat-piping",
@@ -2255,7 +2399,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.245
         ],
         [
@@ -2267,7 +2411,7 @@
          0.245
         ],
         [
-         0.0,
+         0,
          0.245
         ]
        ],
@@ -2277,7 +2421,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.018
        }
       },
@@ -2404,7 +2548,7 @@
         ],
         [
          0.23393,
-         0.0
+         0
         ],
         [
          0.23152,
@@ -2419,7 +2563,7 @@
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ],
         [
@@ -2432,7 +2576,7 @@
         ],
         [
          -0.018,
-         0.0
+         0
         ],
         [
          -0.01559,
@@ -2443,7 +2587,7 @@
          -0.01559
         ],
         [
-         -0.0,
+         0,
          -0.018
         ]
        ],
@@ -2480,7 +2624,7 @@
         ],
         [
          0.23393,
-         0.0
+         0
         ],
         [
          0.23152,
@@ -2495,7 +2639,7 @@
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ],
         [
@@ -2508,7 +2652,7 @@
         ],
         [
          -0.018,
-         0.0
+         0
         ],
         [
          -0.01559,
@@ -2519,7 +2663,7 @@
          -0.01559
         ],
         [
-         -0.0,
+         0,
          -0.018
         ]
        ],
@@ -2540,64 +2684,70 @@
        "z": 6,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         -0.43,
-         0.05
+         0.03,
+         -0.43
         ],
         [
-         -0.26,
-         0.05
+         0.03,
+         -0.26
         ],
         [
-         -0.26,
-         0.555
+         0.535,
+         -0.26
         ],
         [
-         -0.26416,
-         0.58127
+         0.56127,
+         -0.26416
         ],
         [
-         -0.27623,
-         0.60496
+         0.58496,
+         -0.27623
         ],
         [
-         -0.29504,
-         0.62377
+         0.60377,
+         -0.29504
         ],
         [
-         -0.31873,
-         0.63584
+         0.61584,
+         -0.31873
         ],
         [
-         -0.345,
-         0.64
+         0.62,
+         -0.345
         ],
         [
-         -0.37127,
-         0.63584
+         0.61584,
+         -0.37127
         ],
         [
-         -0.39496,
-         0.62377
+         0.60377,
+         -0.39496
         ],
         [
-         -0.41377,
-         0.60496
+         0.58496,
+         -0.41377
         ],
         [
-         -0.42584,
-         0.58127
+         0.56127,
+         -0.42584
         ],
         [
-         -0.43,
-         0.555
+         0.535,
+         -0.43
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.02,
+        "z1": 0.918
+       }
       },
       {
        "id": "arm-piping-right",
@@ -2627,64 +2777,70 @@
        "z": 6,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         0.26,
-         0.05
+         0.03,
+         0.26
         ],
         [
-         0.43,
-         0.05
+         0.03,
+         0.43
         ],
         [
-         0.43,
-         0.555
+         0.535,
+         0.43
         ],
         [
-         0.42584,
-         0.58127
+         0.56127,
+         0.42584
         ],
         [
-         0.41377,
-         0.60496
+         0.58496,
+         0.41377
         ],
         [
-         0.39496,
-         0.62377
+         0.60377,
+         0.39496
         ],
         [
-         0.37127,
-         0.63584
+         0.61584,
+         0.37127
         ],
         [
-         0.345,
-         0.64
+         0.62,
+         0.345
         ],
         [
-         0.31873,
-         0.63584
+         0.61584,
+         0.31873
         ],
         [
-         0.29504,
-         0.62377
+         0.60377,
+         0.29504
         ],
         [
-         0.27623,
-         0.60496
+         0.58496,
+         0.27623
         ],
         [
-         0.26416,
-         0.58127
+         0.56127,
+         0.26416
         ],
         [
-         0.26,
-         0.555
+         0.535,
+         0.26
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.02,
+        "z1": 0.918
+       }
       },
       {
        "id": "arm-piping-left",
@@ -2778,7 +2934,7 @@
        "points": [
         [
          0.02,
-         0.0
+         0
         ],
         [
          0.01848,
@@ -2793,7 +2949,7 @@
          0.01848
         ],
         [
-         0.0,
+         0,
          0.02
         ],
         [
@@ -2810,7 +2966,7 @@
         ],
         [
          -0.02,
-         0.0
+         0
         ],
         [
          -0.01848,
@@ -2825,7 +2981,7 @@
          -0.01848
         ],
         [
-         -0.0,
+         0,
          -0.02
         ],
         [
@@ -2894,19 +3050,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.28,
-         0.0
+         0
         ],
         [
          0.28,
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ]
        ],
@@ -2966,7 +3122,7 @@
          0.065
         ],
         [
-         0.0,
+         0,
          0.03
         ]
        ],
@@ -3003,7 +3159,7 @@
         ],
         [
          0.23393,
-         0.0
+         0
         ],
         [
          0.23152,
@@ -3018,7 +3174,7 @@
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ],
         [
@@ -3031,7 +3187,7 @@
         ],
         [
          -0.018,
-         0.0
+         0
         ],
         [
          -0.01559,
@@ -3042,7 +3198,7 @@
          -0.01559
         ],
         [
-         -0.0,
+         0,
          -0.018
         ]
        ],
@@ -3079,7 +3235,7 @@
         ],
         [
          0.23393,
-         0.0
+         0
         ],
         [
          0.23152,
@@ -3094,7 +3250,7 @@
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ],
         [
@@ -3107,7 +3263,7 @@
         ],
         [
          -0.018,
-         0.0
+         0
         ],
         [
          -0.01559,
@@ -3118,7 +3274,7 @@
          -0.01559
         ],
         [
-         -0.0,
+         0,
          -0.018
         ]
        ],
@@ -3139,60 +3295,66 @@
        "z": 3,
        "filled": true,
        "tone": 0.42,
+       "region": "seat-cushion",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         0.33,
+         0,
          -0.26
         ],
         [
-         0.875,
+         0.545,
          -0.26
         ],
         [
-         0.88648,
+         0.55648,
          -0.25772
         ],
         [
-         0.89621,
+         0.56621,
          -0.25121
         ],
         [
-         0.90272,
+         0.57272,
          -0.24148
         ],
         [
-         0.905,
+         0.575,
          -0.23
         ],
         [
-         0.905,
+         0.575,
          0.23
         ],
         [
-         0.90272,
+         0.57272,
          0.24148
         ],
         [
-         0.89621,
+         0.56621,
          0.25121
         ],
         [
-         0.88648,
+         0.55648,
          0.25772
         ],
         [
-         0.875,
+         0.545,
          0.26
         ],
         [
-         0.33,
+         0,
          0.26
         ]
        ],
        "closed": true,
-       "region": "seat-cushion",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.116
+       }
       },
       {
        "id": "seat-piping",
@@ -3233,7 +3395,7 @@
          -0.12
         ],
         [
-         0.0,
+         0,
          -0.16
         ],
         [
@@ -3294,7 +3456,7 @@
         ],
         [
          0.6,
-         0.0
+         0
         ],
         [
          0.59,
@@ -3322,28 +3484,106 @@
        "z": 5,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
          0.02,
-         -0.43
+         0.03
+        ],
+        [
+         0.9,
+         0.03
+        ],
+        [
+         0.912,
+         0.06
         ],
         [
          0.918,
-         -0.43
+         0.12
         ],
         [
          0.918,
-         -0.26
+         0.535
+        ],
+        [
+         0.91637,
+         0.55158
+        ],
+        [
+         0.91153,
+         0.56753
+        ],
+        [
+         0.90367,
+         0.58222
+        ],
+        [
+         0.8931,
+         0.5951
+        ],
+        [
+         0.88022,
+         0.60567
+        ],
+        [
+         0.86553,
+         0.61353
+        ],
+        [
+         0.84958,
+         0.61837
+        ],
+        [
+         0.833,
+         0.62
+        ],
+        [
+         0.105,
+         0.62
+        ],
+        [
+         0.08842,
+         0.61837
+        ],
+        [
+         0.07247,
+         0.61353
+        ],
+        [
+         0.05778,
+         0.60567
+        ],
+        [
+         0.0449,
+         0.5951
+        ],
+        [
+         0.03433,
+         0.58222
+        ],
+        [
+         0.02647,
+         0.56753
+        ],
+        [
+         0.02163,
+         0.55158
         ],
         [
          0.02,
-         -0.26
+         0.535
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.43,
+        "z1": -0.26
+       }
       },
       {
        "id": "arm-left",
@@ -3352,28 +3592,106 @@
        "z": 5,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
          0.02,
-         0.26
+         0.03
+        ],
+        [
+         0.9,
+         0.03
+        ],
+        [
+         0.912,
+         0.06
         ],
         [
          0.918,
-         0.26
+         0.12
         ],
         [
          0.918,
-         0.43
+         0.535
+        ],
+        [
+         0.91637,
+         0.55158
+        ],
+        [
+         0.91153,
+         0.56753
+        ],
+        [
+         0.90367,
+         0.58222
+        ],
+        [
+         0.8931,
+         0.5951
+        ],
+        [
+         0.88022,
+         0.60567
+        ],
+        [
+         0.86553,
+         0.61353
+        ],
+        [
+         0.84958,
+         0.61837
+        ],
+        [
+         0.833,
+         0.62
+        ],
+        [
+         0.105,
+         0.62
+        ],
+        [
+         0.08842,
+         0.61837
+        ],
+        [
+         0.07247,
+         0.61353
+        ],
+        [
+         0.05778,
+         0.60567
+        ],
+        [
+         0.0449,
+         0.5951
+        ],
+        [
+         0.03433,
+         0.58222
+        ],
+        [
+         0.02647,
+         0.56753
+        ],
+        [
+         0.02163,
+         0.55158
         ],
         [
          0.02,
-         0.43
+         0.535
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.26,
+        "z1": 0.43
+       }
       },
       {
        "id": "arm-crack-1",
@@ -3452,28 +3770,34 @@
        "z": 6.5,
        "filled": true,
        "tone": 0.62,
+       "region": "arm-covers",
+       "material": "parcel-tape",
        "kind": "poly",
        "points": [
         [
          0.7,
-         -0.37653
+         0.61394
         ],
         [
          0.8,
-         -0.37653
+         0.61394
         ],
         [
          0.8,
-         -0.31347
+         0.6205
         ],
         [
          0.7,
-         -0.31347
+         0.6205
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "parcel-tape"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37653,
+        "z1": -0.31347
+       }
       },
       {
        "id": "lever-handle",
@@ -3595,7 +3919,7 @@
       },
       "pattern": "cross",
       "angleDeg": 45,
-      "spacingMm": 1.0,
+      "spacingMm": 1,
       "penMm": 0.13
      }
     ],
@@ -3612,18 +3936,18 @@
        "points": [
         [
          0.008,
-         0.0
+         0
         ],
         [
          0.992,
-         0.0
+         0
         ],
         [
          0.99707,
          0.00293
         ],
         [
-         1.0,
+         1,
          0.01
         ],
         [
@@ -3643,7 +3967,7 @@
          0.01707
         ],
         [
-         0.0,
+         0,
          0.01
         ],
         [
@@ -3666,11 +3990,11 @@
        "points": [
         [
          0.035,
-         0.0
+         0
         ],
         [
          0.085,
-         0.0
+         0
         ],
         [
          0.081,
@@ -3696,11 +4020,11 @@
        "points": [
         [
          0.835,
-         0.0
+         0
         ],
         [
          0.885,
-         0.0
+         0
         ],
         [
          0.881,
@@ -3855,7 +4179,7 @@
          -0.12
         ],
         [
-         0.0,
+         0,
          -0.16
         ],
         [
@@ -3916,7 +4240,7 @@
         ],
         [
          0.6,
-         0.0
+         0
         ],
         [
          0.59,
@@ -3984,7 +4308,7 @@
        "points": [
         [
          0.55,
-         0.0
+         0
         ],
         [
          0.567,
@@ -4047,12 +4371,12 @@
          0.08
         ],
         [
-         0.0,
+         0,
          0.06
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -4082,7 +4406,7 @@
         ],
         [
          0.23393,
-         0.0
+         0
         ],
         [
          0.23152,
@@ -4097,7 +4421,7 @@
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ],
         [
@@ -4110,7 +4434,7 @@
         ],
         [
          -0.018,
-         0.0
+         0
         ],
         [
          -0.01559,
@@ -4121,7 +4445,7 @@
          -0.01559
         ],
         [
-         -0.0,
+         0,
          -0.018
         ]
        ],
@@ -4139,19 +4463,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.28,
-         0.0
+         0
         ],
         [
          0.28,
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ]
        ],
@@ -4205,7 +4529,7 @@
          0.065
         ],
         [
-         0.0,
+         0,
          0.03
         ]
        ],
@@ -4409,7 +4733,7 @@
         ],
         [
          0.18,
-         0.0
+         0
         ],
         [
          0.175,
@@ -4431,6 +4755,78 @@
      ],
      "front": [
       {
+       "id": "glide-rear-right",
+       "bone": "glides",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         0
+        ],
+        [
+         0.085,
+         0
+        ],
+        [
+         0.081,
+         0.03
+        ],
+        [
+         0.039,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": -0.32
+       }
+      },
+      {
+       "id": "glide-rear-left",
+       "bone": "glides",
+       "role": "body",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         0
+        ],
+        [
+         0.085,
+         0
+        ],
+        [
+         0.081,
+         0.03
+        ],
+        [
+         0.039,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.32,
+        "z1": 0.37
+       }
+      },
+      {
        "id": "blanket",
        "bone": "blanket",
        "role": "body",
@@ -4441,11 +4837,11 @@
        "points": [
         [
          -0.45,
-         0.0
+         0
         ],
         [
          0.45,
-         0.0
+         0
         ],
         [
          0.45,
@@ -4467,28 +4863,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
        "kind": "poly",
        "points": [
         [
-         0.32,
-         0.02
+         0,
+         0.32
         ],
         [
-         0.37,
-         0.02
+         0,
+         0.37
         ],
         [
-         0.366,
-         0.05
+         0.03,
+         0.366
         ],
         [
-         0.324,
-         0.05
+         0.03,
+         0.324
         ]
        ],
        "closed": true,
-       "region": "plastic-trim",
-       "material": "polypropylene"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.835,
+        "z1": 0.885
+       }
       },
       {
        "id": "glide-right",
@@ -4497,28 +4899,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
        "kind": "poly",
        "points": [
         [
-         -0.37,
-         0.02
+         0,
+         -0.37
         ],
         [
-         -0.32,
-         0.02
+         0,
+         -0.32
         ],
         [
-         -0.324,
-         0.05
+         0.03,
+         -0.324
         ],
         [
-         -0.366,
-         0.05
+         0.03,
+         -0.366
         ]
        ],
        "closed": true,
-       "region": "plastic-trim",
-       "material": "polypropylene"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.835,
+        "z1": 0.885
+       }
       },
       {
        "id": "seat-frame",
@@ -4527,28 +4935,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.2,
+       "region": "base-frame",
+       "material": "chipboard-p2",
        "kind": "poly",
        "points": [
         [
-         -0.26,
-         0.24
+         0.2,
+         0.22
         ],
         [
-         0.26,
-         0.24
+         0.74,
+         0.22
         ],
         [
-         0.26,
-         0.38
+         0.74,
+         0.36
         ],
         [
-         -0.26,
-         0.38
+         0.2,
+         0.36
         ]
        ],
        "closed": true,
-       "region": "base-frame",
-       "material": "chipboard-p2"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": 0.26
+       }
       },
       {
        "id": "rear-rail",
@@ -4557,28 +4971,34 @@
        "z": 2.3,
        "filled": true,
        "tone": 0.22,
+       "region": "base-frame",
+       "material": "spruce-c24",
        "kind": "poly",
        "points": [
         [
-         -0.26,
-         0.08
+         0.02,
+         0.06
         ],
         [
-         0.26,
-         0.08
+         0.05,
+         0.06
         ],
         [
-         0.26,
-         0.22
+         0.05,
+         0.2
         ],
         [
-         -0.26,
-         0.22
+         0.02,
+         0.2
         ]
        ],
        "closed": true,
-       "region": "base-frame",
-       "material": "spruce-c24"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": 0.26
+       }
       },
       {
        "id": "pivot-tube",
@@ -4587,28 +5007,66 @@
        "z": 2.6,
        "filled": true,
        "tone": 0.25,
+       "region": "mechanism",
+       "material": "steel-black",
        "kind": "poly",
        "points": [
         [
-         -0.26,
-         0.1275
+         0.7925,
+         0.12
         ],
         [
-         0.26,
-         0.1275
+         0.79083,
+         0.12625
         ],
         [
-         0.26,
-         0.1525
+         0.78625,
+         0.13083
         ],
         [
-         -0.26,
-         0.1525
+         0.78,
+         0.1325
+        ],
+        [
+         0.77375,
+         0.13083
+        ],
+        [
+         0.76917,
+         0.12625
+        ],
+        [
+         0.7675,
+         0.12
+        ],
+        [
+         0.76917,
+         0.11375
+        ],
+        [
+         0.77375,
+         0.10917
+        ],
+        [
+         0.78,
+         0.1075
+        ],
+        [
+         0.78625,
+         0.10917
+        ],
+        [
+         0.79083,
+         0.11375
         ]
        ],
        "closed": true,
-       "region": "mechanism",
-       "material": "steel-black"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": 0.26
+       }
       },
       {
        "id": "back-cushion",
@@ -4618,6 +5076,9 @@
        "filled": true,
        "tone": 0.44,
        "kind": "poly",
+       "closed": true,
+       "region": "back-cushion",
+       "material": "pvc-faux-leather",
        "points": [
         [
          -0.02,
@@ -4628,7 +5089,7 @@
          -0.245
         ],
         [
-         0.54294,
+         0.5429,
          -0.2433
         ],
         [
@@ -4636,8 +5097,8 @@
          -0.2383
         ],
         [
-         0.56536,
-         -0.23036
+         0.5654,
+         -0.2304
         ],
         [
          0.5733,
@@ -4645,7 +5106,7 @@
         ],
         [
          0.5783,
-         -0.20794
+         -0.2079
         ],
         [
          0.58,
@@ -4657,22 +5118,22 @@
         ],
         [
          0.5783,
-         0.20794
+         0.2079
         ],
         [
          0.5733,
          0.22
         ],
         [
-         0.56536,
-         0.23036
+         0.5654,
+         0.2304
         ],
         [
          0.555,
          0.2383
         ],
         [
-         0.54294,
+         0.5429,
          0.2433
         ],
         [
@@ -4684,14 +5145,15 @@
          0.245
         ]
        ],
-       "closed": true,
-       "region": "back-cushion",
-       "material": "pvc-faux-leather",
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": -0.206,
-        "z1": 0.04
+        "z0": -0.1685,
+        "z1": 0.04,
+        "zTip": [
+         -0.1835,
+         0.0383
+        ]
        }
       },
       {
@@ -4743,92 +5205,98 @@
        "z": 4,
        "filled": true,
        "tone": 0.42,
+       "region": "seat-cushion",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         0.23,
-         0.38
+         0,
+         0.23
         ],
         [
-         0.24148,
-         0.38228
+         0.00228,
+         0.24148
         ],
         [
-         0.25121,
-         0.38879
+         0.00879,
+         0.25121
         ],
         [
-         0.25772,
-         0.39852
+         0.01852,
+         0.25772
         ],
         [
-         0.26,
-         0.41
+         0.03,
+         0.26
         ],
         [
-         0.26,
-         0.466
+         0.086,
+         0.26
         ],
         [
-         0.25772,
-         0.47748
+         0.09748,
+         0.25772
         ],
         [
-         0.25121,
-         0.48721
+         0.10721,
+         0.25121
         ],
         [
-         0.24148,
-         0.49372
+         0.11372,
+         0.24148
         ],
         [
-         0.23,
-         0.496
+         0.116,
+         0.23
         ],
         [
-         -0.23,
-         0.496
+         0.116,
+         -0.23
         ],
         [
-         -0.24148,
-         0.49372
+         0.11372,
+         -0.24148
         ],
         [
-         -0.25121,
-         0.48721
+         0.10721,
+         -0.25121
         ],
         [
-         -0.25772,
-         0.47748
+         0.09748,
+         -0.25772
         ],
         [
-         -0.26,
-         0.466
+         0.086,
+         -0.26
         ],
         [
-         -0.26,
-         0.41
+         0.03,
+         -0.26
         ],
         [
-         -0.25772,
-         0.39852
+         0.01852,
+         -0.25772
         ],
         [
-         -0.25121,
-         0.38879
+         0.00879,
+         -0.25121
         ],
         [
-         -0.24148,
-         0.38228
+         0.00228,
+         -0.24148
         ],
         [
-         -0.23,
-         0.38
+         0,
+         -0.23
         ]
        ],
        "closed": true,
-       "region": "seat-cushion",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0,
+        "z1": 0.575
+       }
       },
       {
        "id": "seat-piping",
@@ -4861,7 +5329,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.245
         ],
         [
@@ -4873,7 +5341,7 @@
          0.245
         ],
         [
-         0.0,
+         0,
          0.245
         ]
        ],
@@ -4883,7 +5351,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.018
        }
       },
@@ -5010,7 +5478,7 @@
         ],
         [
          0.23393,
-         0.0
+         0
         ],
         [
          0.23152,
@@ -5025,7 +5493,7 @@
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ],
         [
@@ -5038,7 +5506,7 @@
         ],
         [
          -0.018,
-         0.0
+         0
         ],
         [
          -0.01559,
@@ -5049,7 +5517,7 @@
          -0.01559
         ],
         [
-         -0.0,
+         0,
          -0.018
         ]
        ],
@@ -5086,7 +5554,7 @@
         ],
         [
          0.23393,
-         0.0
+         0
         ],
         [
          0.23152,
@@ -5101,7 +5569,7 @@
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ],
         [
@@ -5114,7 +5582,7 @@
         ],
         [
          -0.018,
-         0.0
+         0
         ],
         [
          -0.01559,
@@ -5125,7 +5593,7 @@
          -0.01559
         ],
         [
-         -0.0,
+         0,
          -0.018
         ]
        ],
@@ -5146,64 +5614,70 @@
        "z": 6,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         -0.43,
-         0.05
+         0.03,
+         -0.43
         ],
         [
-         -0.26,
-         0.05
+         0.03,
+         -0.26
         ],
         [
-         -0.26,
-         0.555
+         0.535,
+         -0.26
         ],
         [
-         -0.26416,
-         0.58127
+         0.56127,
+         -0.26416
         ],
         [
-         -0.27623,
-         0.60496
+         0.58496,
+         -0.27623
         ],
         [
-         -0.29504,
-         0.62377
+         0.60377,
+         -0.29504
         ],
         [
-         -0.31873,
-         0.63584
+         0.61584,
+         -0.31873
         ],
         [
-         -0.345,
-         0.64
+         0.62,
+         -0.345
         ],
         [
-         -0.37127,
-         0.63584
+         0.61584,
+         -0.37127
         ],
         [
-         -0.39496,
-         0.62377
+         0.60377,
+         -0.39496
         ],
         [
-         -0.41377,
-         0.60496
+         0.58496,
+         -0.41377
         ],
         [
-         -0.42584,
-         0.58127
+         0.56127,
+         -0.42584
         ],
         [
-         -0.43,
-         0.555
+         0.535,
+         -0.43
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.02,
+        "z1": 0.918
+       }
       },
       {
        "id": "arm-piping-right",
@@ -5233,64 +5707,70 @@
        "z": 6,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         0.26,
-         0.05
+         0.03,
+         0.26
         ],
         [
-         0.43,
-         0.05
+         0.03,
+         0.43
         ],
         [
-         0.43,
-         0.555
+         0.535,
+         0.43
         ],
         [
-         0.42584,
-         0.58127
+         0.56127,
+         0.42584
         ],
         [
-         0.41377,
-         0.60496
+         0.58496,
+         0.41377
         ],
         [
-         0.39496,
-         0.62377
+         0.60377,
+         0.39496
         ],
         [
-         0.37127,
-         0.63584
+         0.61584,
+         0.37127
         ],
         [
-         0.345,
-         0.64
+         0.62,
+         0.345
         ],
         [
-         0.31873,
-         0.63584
+         0.61584,
+         0.31873
         ],
         [
-         0.29504,
-         0.62377
+         0.60377,
+         0.29504
         ],
         [
-         0.27623,
-         0.60496
+         0.58496,
+         0.27623
         ],
         [
-         0.26416,
-         0.58127
+         0.56127,
+         0.26416
         ],
         [
-         0.26,
-         0.555
+         0.535,
+         0.26
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.02,
+        "z1": 0.918
+       }
       },
       {
        "id": "arm-piping-left",
@@ -5336,7 +5816,7 @@
         ],
         [
          0.18,
-         0.0
+         0
         ],
         [
          0.175,
@@ -5404,19 +5884,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.28,
-         0.0
+         0
         ],
         [
          0.28,
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ]
        ],
@@ -5476,7 +5956,7 @@
          0.065
         ],
         [
-         0.0,
+         0,
          0.03
         ]
        ],
@@ -5513,7 +5993,7 @@
         ],
         [
          0.23393,
-         0.0
+         0
         ],
         [
          0.23152,
@@ -5528,7 +6008,7 @@
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ],
         [
@@ -5541,7 +6021,7 @@
         ],
         [
          -0.018,
-         0.0
+         0
         ],
         [
          -0.01559,
@@ -5552,7 +6032,7 @@
          -0.01559
         ],
         [
-         -0.0,
+         0,
          -0.018
         ]
        ],
@@ -5589,7 +6069,7 @@
         ],
         [
          0.23393,
-         0.0
+         0
         ],
         [
          0.23152,
@@ -5604,7 +6084,7 @@
          0.018
         ],
         [
-         0.0,
+         0,
          0.018
         ],
         [
@@ -5617,7 +6097,7 @@
         ],
         [
          -0.018,
-         0.0
+         0
         ],
         [
          -0.01559,
@@ -5628,7 +6108,7 @@
          -0.01559
         ],
         [
-         -0.0,
+         0,
          -0.018
         ]
        ],
@@ -5649,60 +6129,66 @@
        "z": 3,
        "filled": true,
        "tone": 0.42,
+       "region": "seat-cushion",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         0.33,
+         0,
          -0.26
         ],
         [
-         0.875,
+         0.545,
          -0.26
         ],
         [
-         0.88648,
+         0.55648,
          -0.25772
         ],
         [
-         0.89621,
+         0.56621,
          -0.25121
         ],
         [
-         0.90272,
+         0.57272,
          -0.24148
         ],
         [
-         0.905,
+         0.575,
          -0.23
         ],
         [
-         0.905,
+         0.575,
          0.23
         ],
         [
-         0.90272,
+         0.57272,
          0.24148
         ],
         [
-         0.89621,
+         0.56621,
          0.25121
         ],
         [
-         0.88648,
+         0.55648,
          0.25772
         ],
         [
-         0.875,
+         0.545,
          0.26
         ],
         [
-         0.33,
+         0,
          0.26
         ]
        ],
        "closed": true,
-       "region": "seat-cushion",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.116
+       }
       },
       {
        "id": "seat-piping",
@@ -5743,7 +6229,7 @@
          -0.12
         ],
         [
-         0.0,
+         0,
          -0.16
         ],
         [
@@ -5804,7 +6290,7 @@
         ],
         [
          0.6,
-         0.0
+         0
         ],
         [
          0.59,
@@ -5832,28 +6318,106 @@
        "z": 5,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
          0.02,
-         -0.43
+         0.03
+        ],
+        [
+         0.9,
+         0.03
+        ],
+        [
+         0.912,
+         0.06
         ],
         [
          0.918,
-         -0.43
+         0.12
         ],
         [
          0.918,
-         -0.26
+         0.535
+        ],
+        [
+         0.91637,
+         0.55158
+        ],
+        [
+         0.91153,
+         0.56753
+        ],
+        [
+         0.90367,
+         0.58222
+        ],
+        [
+         0.8931,
+         0.5951
+        ],
+        [
+         0.88022,
+         0.60567
+        ],
+        [
+         0.86553,
+         0.61353
+        ],
+        [
+         0.84958,
+         0.61837
+        ],
+        [
+         0.833,
+         0.62
+        ],
+        [
+         0.105,
+         0.62
+        ],
+        [
+         0.08842,
+         0.61837
+        ],
+        [
+         0.07247,
+         0.61353
+        ],
+        [
+         0.05778,
+         0.60567
+        ],
+        [
+         0.0449,
+         0.5951
+        ],
+        [
+         0.03433,
+         0.58222
+        ],
+        [
+         0.02647,
+         0.56753
+        ],
+        [
+         0.02163,
+         0.55158
         ],
         [
          0.02,
-         -0.26
+         0.535
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.43,
+        "z1": -0.26
+       }
       },
       {
        "id": "arm-left",
@@ -5862,28 +6426,106 @@
        "z": 5,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
          0.02,
-         0.26
+         0.03
+        ],
+        [
+         0.9,
+         0.03
+        ],
+        [
+         0.912,
+         0.06
         ],
         [
          0.918,
-         0.26
+         0.12
         ],
         [
          0.918,
-         0.43
+         0.535
+        ],
+        [
+         0.91637,
+         0.55158
+        ],
+        [
+         0.91153,
+         0.56753
+        ],
+        [
+         0.90367,
+         0.58222
+        ],
+        [
+         0.8931,
+         0.5951
+        ],
+        [
+         0.88022,
+         0.60567
+        ],
+        [
+         0.86553,
+         0.61353
+        ],
+        [
+         0.84958,
+         0.61837
+        ],
+        [
+         0.833,
+         0.62
+        ],
+        [
+         0.105,
+         0.62
+        ],
+        [
+         0.08842,
+         0.61837
+        ],
+        [
+         0.07247,
+         0.61353
+        ],
+        [
+         0.05778,
+         0.60567
+        ],
+        [
+         0.0449,
+         0.5951
+        ],
+        [
+         0.03433,
+         0.58222
+        ],
+        [
+         0.02647,
+         0.56753
+        ],
+        [
+         0.02163,
+         0.55158
         ],
         [
          0.02,
-         0.43
+         0.535
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.26,
+        "z1": 0.43
+       }
       },
       {
        "id": "arm-crack-1",
@@ -5917,6 +6559,8 @@
        "z": 6.5,
        "filled": true,
        "tone": 0.62,
+       "region": "arm-covers",
+       "material": "parcel-tape",
        "kind": "poly",
        "points": [
         [
@@ -5937,8 +6581,12 @@
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "parcel-tape"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.618,
+        "z1": 0.62
+       }
       },
       {
        "id": "lever-handle",
@@ -5963,7 +6611,7 @@
         ],
         [
          0.18,
-         0.0
+         0
         ],
         [
          0.175,
@@ -6052,19 +6700,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         1.0,
-         0.0
+         1,
+         0
         ],
         [
-         1.0,
+         1,
          0.02
         ],
         [
-         0.0,
+         0,
          0.02
         ]
        ],
@@ -6083,11 +6731,11 @@
        "points": [
         [
          0.035,
-         0.0
+         0
         ],
         [
          0.085,
-         0.0
+         0
         ],
         [
          0.081,
@@ -6113,11 +6761,11 @@
        "points": [
         [
          0.835,
-         0.0
+         0
         ],
         [
          0.885,
-         0.0
+         0
         ],
         [
          0.881,
@@ -6331,7 +6979,7 @@
        "points": [
         [
          0.55,
-         0.0
+         0
         ],
         [
          0.575,
@@ -6362,8 +7010,8 @@
          0.092
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -6380,12 +7028,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.28,
-         0.0
+         0
         ],
         [
          0.28,
@@ -6400,7 +7048,7 @@
          0.09
         ],
         [
-         0.0,
+         0,
          0.07
         ]
        ],
@@ -6419,11 +7067,11 @@
        "points": [
         [
          0.02,
-         0.0
+         0
         ],
         [
          0.9,
-         0.0
+         0
         ],
         [
          0.912,
@@ -6531,6 +7179,78 @@
      ],
      "front": [
       {
+       "id": "glide-rear-right",
+       "bone": "glides",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         0
+        ],
+        [
+         0.085,
+         0
+        ],
+        [
+         0.081,
+         0.03
+        ],
+        [
+         0.039,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": -0.32
+       }
+      },
+      {
+       "id": "glide-rear-left",
+       "bone": "glides",
+       "role": "body",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         0
+        ],
+        [
+         0.085,
+         0
+        ],
+        [
+         0.081,
+         0.03
+        ],
+        [
+         0.039,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.32,
+        "z1": 0.37
+       }
+      },
+      {
        "id": "blanket",
        "bone": "blanket",
        "role": "body",
@@ -6541,11 +7261,11 @@
        "points": [
         [
          -0.45,
-         0.0
+         0
         ],
         [
          0.45,
-         0.0
+         0
         ],
         [
          0.45,
@@ -6567,28 +7287,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
        "kind": "poly",
        "points": [
         [
-         0.32,
-         0.02
+         0,
+         0.32
         ],
         [
-         0.37,
-         0.02
+         0,
+         0.37
         ],
         [
-         0.366,
-         0.05
+         0.03,
+         0.366
         ],
         [
-         0.324,
-         0.05
+         0.03,
+         0.324
         ]
        ],
        "closed": true,
-       "region": "plastic-trim",
-       "material": "polypropylene"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.835,
+        "z1": 0.885
+       }
       },
       {
        "id": "glide-right",
@@ -6597,28 +7323,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
        "kind": "poly",
        "points": [
         [
-         -0.37,
-         0.02
+         0,
+         -0.37
         ],
         [
-         -0.32,
-         0.02
+         0,
+         -0.32
         ],
         [
-         -0.324,
-         0.05
+         0.03,
+         -0.324
         ],
         [
-         -0.366,
-         0.05
+         0.03,
+         -0.366
         ]
        ],
        "closed": true,
-       "region": "plastic-trim",
-       "material": "polypropylene"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.835,
+        "z1": 0.885
+       }
       },
       {
        "id": "seat-frame",
@@ -6627,28 +7359,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.2,
+       "region": "base-frame",
+       "material": "chipboard-p2",
        "kind": "poly",
        "points": [
         [
-         -0.26,
-         0.24
+         0.2,
+         0.22
         ],
         [
-         0.26,
-         0.24
+         0.74,
+         0.22
         ],
         [
-         0.26,
-         0.38
+         0.74,
+         0.36
         ],
         [
-         -0.26,
-         0.38
+         0.2,
+         0.36
         ]
        ],
        "closed": true,
-       "region": "base-frame",
-       "material": "chipboard-p2"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": 0.26
+       }
       },
       {
        "id": "back-cushion",
@@ -6658,6 +7396,9 @@
        "filled": true,
        "tone": 0.44,
        "kind": "poly",
+       "closed": true,
+       "region": "back-cushion",
+       "material": "pvc-faux-leather",
        "points": [
         [
          -0.02,
@@ -6669,10 +7410,10 @@
         ],
         [
          0.535,
-         -0.24544
+         -0.2454
         ],
         [
-         0.56794,
+         0.5679,
          -0.2125
         ],
         [
@@ -6684,12 +7425,12 @@
          0.1675
         ],
         [
-         0.56794,
+         0.5679,
          0.2125
         ],
         [
          0.535,
-         0.24544
+         0.2454
         ],
         [
          0.49,
@@ -6700,14 +7441,15 @@
          0.2575
         ]
        ],
-       "closed": true,
-       "region": "back-cushion",
-       "material": "pvc-faux-leather",
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": -0.206,
-        "z1": 0.04
+        "z0": -0.1614,
+        "z1": 0.04,
+        "zTip": [
+         -0.1825,
+         0.043
+        ]
        }
       },
       {
@@ -6759,28 +7501,54 @@
        "z": 4,
        "filled": true,
        "tone": 0.42,
+       "region": "seat-cushion",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         -0.26,
-         0.38
+         0.55,
+         0
         ],
         [
-         0.26,
-         0.38
+         0.575,
+         0.025
         ],
         [
-         0.26,
-         0.496
+         0.575,
+         0.09
         ],
         [
-         -0.26,
-         0.496
+         0.545,
+         0.116
+        ],
+        [
+         0.39,
+         0.106
+        ],
+        [
+         0.23,
+         0.087
+        ],
+        [
+         0.07,
+         0.095
+        ],
+        [
+         0.01,
+         0.092
+        ],
+        [
+         0,
+         0
         ]
        ],
        "closed": true,
-       "region": "seat-cushion",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": 0.26
+       }
       },
       {
        "id": "seat-piping",
@@ -6813,7 +7581,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.26
         ],
         [
@@ -6825,7 +7593,7 @@
          0.26
         ],
         [
-         0.0,
+         0,
          0.26
         ]
        ],
@@ -6835,7 +7603,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.09
        }
       },
@@ -6846,44 +7614,50 @@
        "z": 6,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         -0.43,
-         0.02
+         0,
+         -0.43
         ],
         [
-         -0.26,
-         0.02
+         0,
+         -0.26
         ],
         [
-         -0.26,
-         0.555
+         0.535,
+         -0.26
         ],
         [
-         -0.27623,
-         0.60496
+         0.58496,
+         -0.27623
         ],
         [
-         -0.31873,
-         0.63584
+         0.61584,
+         -0.31873
         ],
         [
-         -0.37127,
-         0.63584
+         0.61584,
+         -0.37127
         ],
         [
-         -0.41377,
-         0.60496
+         0.58496,
+         -0.41377
         ],
         [
-         -0.43,
-         0.555
+         0.535,
+         -0.43
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.02,
+        "z1": 0.918
+       }
       },
       {
        "id": "arm-piping-right",
@@ -6913,44 +7687,50 @@
        "z": 6,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         0.26,
-         0.02
+         0,
+         0.26
         ],
         [
-         0.43,
-         0.02
+         0,
+         0.43
         ],
         [
-         0.43,
-         0.555
+         0.535,
+         0.43
         ],
         [
-         0.41377,
-         0.60496
+         0.58496,
+         0.41377
         ],
         [
-         0.37127,
-         0.63584
+         0.61584,
+         0.37127
         ],
         [
-         0.31873,
-         0.63584
+         0.61584,
+         0.31873
         ],
         [
-         0.27623,
-         0.60496
+         0.58496,
+         0.27623
         ],
         [
-         0.26,
-         0.555
+         0.535,
+         0.26
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.02,
+        "z1": 0.918
+       }
       },
       {
        "id": "arm-piping-left",
@@ -7015,12 +7795,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.28,
-         0.0
+         0
         ],
         [
          0.28,
@@ -7035,7 +7815,7 @@
          0.09
         ],
         [
-         0.0,
+         0,
          0.07
         ]
        ],
@@ -7056,28 +7836,54 @@
        "z": 3,
        "filled": true,
        "tone": 0.42,
+       "region": "seat-cushion",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         0.33,
-         -0.26
+         0.55,
+         0
         ],
         [
-         0.905,
-         -0.26
+         0.575,
+         0.025
         ],
         [
-         0.905,
-         0.26
+         0.575,
+         0.09
         ],
         [
-         0.33,
-         0.26
+         0.545,
+         0.116
+        ],
+        [
+         0.39,
+         0.106
+        ],
+        [
+         0.23,
+         0.087
+        ],
+        [
+         0.07,
+         0.095
+        ],
+        [
+         0.01,
+         0.092
+        ],
+        [
+         0,
+         0
         ]
        ],
        "closed": true,
-       "region": "seat-cushion",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": 0.26
+       }
       },
       {
        "id": "seat-piping",
@@ -7167,28 +7973,82 @@
        "z": 5,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
          0.02,
-         -0.43
+         0
+        ],
+        [
+         0.9,
+         0
+        ],
+        [
+         0.912,
+         0.03
         ],
         [
          0.918,
-         -0.43
+         0.09
         ],
         [
          0.918,
-         -0.26
+         0.535
+        ],
+        [
+         0.91384,
+         0.56127
+        ],
+        [
+         0.90177,
+         0.58496
+        ],
+        [
+         0.88296,
+         0.60377
+        ],
+        [
+         0.85927,
+         0.61584
+        ],
+        [
+         0.833,
+         0.62
+        ],
+        [
+         0.105,
+         0.62
+        ],
+        [
+         0.07873,
+         0.61584
+        ],
+        [
+         0.05504,
+         0.60377
+        ],
+        [
+         0.03623,
+         0.58496
+        ],
+        [
+         0.02416,
+         0.56127
         ],
         [
          0.02,
-         -0.26
+         0.535
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.43,
+        "z1": -0.26
+       }
       },
       {
        "id": "arm-left",
@@ -7197,28 +8057,82 @@
        "z": 5,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
          0.02,
-         0.26
+         0
+        ],
+        [
+         0.9,
+         0
+        ],
+        [
+         0.912,
+         0.03
         ],
         [
          0.918,
-         0.26
+         0.09
         ],
         [
          0.918,
-         0.43
+         0.535
+        ],
+        [
+         0.91384,
+         0.56127
+        ],
+        [
+         0.90177,
+         0.58496
+        ],
+        [
+         0.88296,
+         0.60377
+        ],
+        [
+         0.85927,
+         0.61584
+        ],
+        [
+         0.833,
+         0.62
+        ],
+        [
+         0.105,
+         0.62
+        ],
+        [
+         0.07873,
+         0.61584
+        ],
+        [
+         0.05504,
+         0.60377
+        ],
+        [
+         0.03623,
+         0.58496
+        ],
+        [
+         0.02416,
+         0.56127
         ],
         [
          0.02,
-         0.43
+         0.535
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.26,
+        "z1": 0.43
+       }
       }
      ]
     },
@@ -7284,19 +8198,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
-         1.0,
-         0.0
+         1,
+         0
         ],
         [
-         1.0,
+         1,
          0.02
         ],
         [
-         0.0,
+         0,
          0.02
         ]
        ],
@@ -7315,11 +8229,11 @@
        "points": [
         [
          0.035,
-         0.0
+         0
         ],
         [
          0.085,
-         0.0
+         0
         ],
         [
          0.081,
@@ -7345,11 +8259,11 @@
        "points": [
         [
          0.835,
-         0.0
+         0
         ],
         [
          0.885,
-         0.0
+         0
         ],
         [
          0.881,
@@ -7505,7 +8419,7 @@
        "points": [
         [
          0.575,
-         0.0
+         0
         ],
         [
          0.575,
@@ -7516,12 +8430,12 @@
          0.087
         ],
         [
-         0.0,
+         0,
          0.096
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -7538,12 +8452,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.28,
-         0.0
+         0
         ],
         [
          0.28,
@@ -7558,7 +8472,7 @@
          0.09
         ],
         [
-         0.0,
+         0,
          0.07
         ]
        ],
@@ -7577,11 +8491,11 @@
        "points": [
         [
          0.02,
-         0.0
+         0
         ],
         [
          0.9,
-         0.0
+         0
         ],
         [
          0.912,
@@ -7647,6 +8561,78 @@
      ],
      "front": [
       {
+       "id": "glide-rear-right",
+       "bone": "glides",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         0
+        ],
+        [
+         0.085,
+         0
+        ],
+        [
+         0.081,
+         0.03
+        ],
+        [
+         0.039,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": -0.32
+       }
+      },
+      {
+       "id": "glide-rear-left",
+       "bone": "glides",
+       "role": "body",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         0
+        ],
+        [
+         0.085,
+         0
+        ],
+        [
+         0.081,
+         0.03
+        ],
+        [
+         0.039,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.32,
+        "z1": 0.37
+       }
+      },
+      {
        "id": "blanket",
        "bone": "blanket",
        "role": "body",
@@ -7657,11 +8643,11 @@
        "points": [
         [
          -0.45,
-         0.0
+         0
         ],
         [
          0.45,
-         0.0
+         0
         ],
         [
          0.45,
@@ -7683,28 +8669,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
        "kind": "poly",
        "points": [
         [
-         0.32,
-         0.02
+         0,
+         0.32
         ],
         [
-         0.37,
-         0.02
+         0,
+         0.37
         ],
         [
-         0.366,
-         0.05
+         0.03,
+         0.366
         ],
         [
-         0.324,
-         0.05
+         0.03,
+         0.324
         ]
        ],
        "closed": true,
-       "region": "plastic-trim",
-       "material": "polypropylene"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.835,
+        "z1": 0.885
+       }
       },
       {
        "id": "glide-right",
@@ -7713,28 +8705,34 @@
        "z": 2,
        "filled": true,
        "tone": 0.15,
+       "region": "plastic-trim",
+       "material": "polypropylene",
        "kind": "poly",
        "points": [
         [
-         -0.37,
-         0.02
+         0,
+         -0.37
         ],
         [
-         -0.32,
-         0.02
+         0,
+         -0.32
         ],
         [
-         -0.324,
-         0.05
+         0.03,
+         -0.324
         ],
         [
-         -0.366,
-         0.05
+         0.03,
+         -0.366
         ]
        ],
        "closed": true,
-       "region": "plastic-trim",
-       "material": "polypropylene"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.835,
+        "z1": 0.885
+       }
       },
       {
        "id": "seat-frame",
@@ -7743,28 +8741,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.2,
+       "region": "base-frame",
+       "material": "chipboard-p2",
        "kind": "poly",
        "points": [
         [
-         -0.26,
-         0.24
+         0.2,
+         0.22
         ],
         [
-         0.26,
-         0.24
+         0.74,
+         0.22
         ],
         [
-         0.26,
-         0.38
+         0.74,
+         0.36
         ],
         [
-         -0.26,
-         0.38
+         0.2,
+         0.36
         ]
        ],
        "closed": true,
-       "region": "base-frame",
-       "material": "chipboard-p2"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": 0.26
+       }
       },
       {
        "id": "back-cushion",
@@ -7773,33 +8777,41 @@
        "z": 3,
        "filled": true,
        "tone": 0.44,
+       "region": "back-cushion",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
          -0.02,
-         -0.2575
-        ],
-        [
-         0.58,
-         -0.2575
-        ],
-        [
-         0.58,
-         0.2575
+         0.04
         ],
         [
          -0.02,
-         0.2575
+         -0.14
+        ],
+        [
+         0.1,
+         -0.2
+        ],
+        [
+         0.5,
+         -0.205
+        ],
+        [
+         0.603,
+         -0.1
+        ],
+        [
+         0.6,
+         0.04
         ]
        ],
        "closed": true,
-       "region": "back-cushion",
-       "material": "pvc-faux-leather",
        "solid": {
         "kind": "extruded",
-        "sweep": "v",
-        "z0": -0.206,
-        "z1": 0.04
+        "sweep": "w",
+        "z0": -0.2575,
+        "z1": 0.2575
        }
       },
       {
@@ -7809,28 +8821,38 @@
        "z": 4,
        "filled": true,
        "tone": 0.42,
+       "region": "seat-cushion",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         -0.26,
-         0.38
+         0.575,
+         0
         ],
         [
-         0.26,
-         0.38
+         0.575,
+         0.116
         ],
         [
-         0.26,
-         0.496
+         0.23,
+         0.087
         ],
         [
-         -0.26,
-         0.496
+         0,
+         0.096
+        ],
+        [
+         0,
+         0
         ]
        ],
        "closed": true,
-       "region": "seat-cushion",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": 0.26
+       }
       },
       {
        "id": "footrest-pad",
@@ -7842,7 +8864,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.26
         ],
         [
@@ -7854,7 +8876,7 @@
          0.26
         ],
         [
-         0.0,
+         0,
          0.26
         ]
        ],
@@ -7864,7 +8886,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.09
        }
       },
@@ -7875,28 +8897,82 @@
        "z": 6,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         -0.43,
-         0.02
+         0.02,
+         0
         ],
         [
-         -0.26,
-         0.02
+         0.9,
+         0
         ],
         [
-         -0.26,
-         0.64
+         0.912,
+         0.03
         ],
         [
-         -0.43,
-         0.64
+         0.918,
+         0.09
+        ],
+        [
+         0.918,
+         0.535
+        ],
+        [
+         0.91384,
+         0.56127
+        ],
+        [
+         0.90177,
+         0.58496
+        ],
+        [
+         0.88296,
+         0.60377
+        ],
+        [
+         0.85927,
+         0.61584
+        ],
+        [
+         0.833,
+         0.62
+        ],
+        [
+         0.105,
+         0.62
+        ],
+        [
+         0.07873,
+         0.61584
+        ],
+        [
+         0.05504,
+         0.60377
+        ],
+        [
+         0.03623,
+         0.58496
+        ],
+        [
+         0.02416,
+         0.56127
+        ],
+        [
+         0.02,
+         0.535
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.43,
+        "z1": -0.26
+       }
       },
       {
        "id": "arm-left",
@@ -7905,28 +8981,82 @@
        "z": 6,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         0.26,
-         0.02
+         0.02,
+         0
         ],
         [
-         0.43,
-         0.02
+         0.9,
+         0
         ],
         [
-         0.43,
-         0.64
+         0.912,
+         0.03
         ],
         [
-         0.26,
-         0.64
+         0.918,
+         0.09
+        ],
+        [
+         0.918,
+         0.535
+        ],
+        [
+         0.91384,
+         0.56127
+        ],
+        [
+         0.90177,
+         0.58496
+        ],
+        [
+         0.88296,
+         0.60377
+        ],
+        [
+         0.85927,
+         0.61584
+        ],
+        [
+         0.833,
+         0.62
+        ],
+        [
+         0.105,
+         0.62
+        ],
+        [
+         0.07873,
+         0.61584
+        ],
+        [
+         0.05504,
+         0.60377
+        ],
+        [
+         0.03623,
+         0.58496
+        ],
+        [
+         0.02416,
+         0.56127
+        ],
+        [
+         0.02,
+         0.535
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.26,
+        "z1": 0.43
+       }
       }
      ],
      "plan": [
@@ -7970,12 +9100,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.28,
-         0.0
+         0
         ],
         [
          0.28,
@@ -7990,7 +9120,7 @@
          0.09
         ],
         [
-         0.0,
+         0,
          0.07
         ]
        ],
@@ -8011,28 +9141,38 @@
        "z": 3,
        "filled": true,
        "tone": 0.42,
+       "region": "seat-cushion",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
-         0.33,
-         -0.26
+         0.575,
+         0
         ],
         [
-         0.905,
-         -0.26
+         0.575,
+         0.116
         ],
         [
-         0.905,
-         0.26
+         0.23,
+         0.087
         ],
         [
-         0.33,
-         0.26
+         0,
+         0.096
+        ],
+        [
+         0,
+         0
         ]
        ],
        "closed": true,
-       "region": "seat-cushion",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": 0.26
+       }
       },
       {
        "id": "back-cushion",
@@ -8085,28 +9225,82 @@
        "z": 5,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
          0.02,
-         -0.43
+         0
+        ],
+        [
+         0.9,
+         0
+        ],
+        [
+         0.912,
+         0.03
         ],
         [
          0.918,
-         -0.43
+         0.09
         ],
         [
          0.918,
-         -0.26
+         0.535
+        ],
+        [
+         0.91384,
+         0.56127
+        ],
+        [
+         0.90177,
+         0.58496
+        ],
+        [
+         0.88296,
+         0.60377
+        ],
+        [
+         0.85927,
+         0.61584
+        ],
+        [
+         0.833,
+         0.62
+        ],
+        [
+         0.105,
+         0.62
+        ],
+        [
+         0.07873,
+         0.61584
+        ],
+        [
+         0.05504,
+         0.60377
+        ],
+        [
+         0.03623,
+         0.58496
+        ],
+        [
+         0.02416,
+         0.56127
         ],
         [
          0.02,
-         -0.26
+         0.535
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.43,
+        "z1": -0.26
+       }
       },
       {
        "id": "arm-left",
@@ -8115,28 +9309,82 @@
        "z": 5,
        "filled": true,
        "tone": 0.38,
+       "region": "arm-covers",
+       "material": "pvc-faux-leather",
        "kind": "poly",
        "points": [
         [
          0.02,
-         0.26
+         0
+        ],
+        [
+         0.9,
+         0
+        ],
+        [
+         0.912,
+         0.03
         ],
         [
          0.918,
-         0.26
+         0.09
         ],
         [
          0.918,
-         0.43
+         0.535
+        ],
+        [
+         0.91384,
+         0.56127
+        ],
+        [
+         0.90177,
+         0.58496
+        ],
+        [
+         0.88296,
+         0.60377
+        ],
+        [
+         0.85927,
+         0.61584
+        ],
+        [
+         0.833,
+         0.62
+        ],
+        [
+         0.105,
+         0.62
+        ],
+        [
+         0.07873,
+         0.61584
+        ],
+        [
+         0.05504,
+         0.60377
+        ],
+        [
+         0.03623,
+         0.58496
+        ],
+        [
+         0.02416,
+         0.56127
         ],
         [
          0.02,
-         0.43
+         0.535
         ]
        ],
        "closed": true,
-       "region": "arm-covers",
-       "material": "pvc-faux-leather"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.26,
+        "z1": 0.43
+       }
       }
      ]
     },
@@ -8199,36 +9447,36 @@
     "thermal": {
      "regions": {
       "arm-covers": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "seat-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "back-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "footrest": {
        "exposedFraction": 0.85,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "base-frame": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "mechanism": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "plastic-trim": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "blanket": {
        "exposedFraction": 0.55,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -8261,36 +9509,36 @@
     "thermal": {
      "regions": {
       "arm-covers": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "seat-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "back-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "footrest": {
        "exposedFraction": 0.85,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "base-frame": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "mechanism": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "plastic-trim": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "blanket": {
        "exposedFraction": 0.55,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -8312,7 +9560,7 @@
       "dy": 0.22
      },
      "tilt": {
-      "angleDeg": 6.0
+      "angleDeg": 6
      }
     },
     "ground": "authored",
@@ -8325,36 +9573,36 @@
     "thermal": {
      "regions": {
       "arm-covers": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "seat-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "back-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "footrest": {
        "exposedFraction": 0.85,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "base-frame": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "mechanism": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "plastic-trim": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "blanket": {
        "exposedFraction": 0.55,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -8392,48 +9640,48 @@
     "thermal": {
      "regions": {
       "arm-covers": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.05,
-        "tempC": 31.0
+        "tempC": 31
        }
       },
       "seat-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.35,
-        "tempC": 32.0
+        "tempC": 32
        }
       },
       "back-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.25,
-        "tempC": 32.0
+        "tempC": 32
        }
       },
       "footrest": {
        "exposedFraction": 0.85,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "base-frame": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "mechanism": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "plastic-trim": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "blanket": {
        "exposedFraction": 0.55,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -8447,7 +9695,7 @@
        "de": "Sitzende erwachsene Person auf dem Sitz (75 kg)"
       },
       "anchor": "seat-load",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -551.6,
       "source": "authored-estimate",
       "reference": "en-12520-2015"
@@ -8473,8 +9721,8 @@
        "de": "Waden auf der Fußstütze"
       },
       "anchor": "legs-load",
-      "fxN": 0.0,
-      "fyN": -0.0,
+      "fxN": 0,
+      "fyN": 0,
       "source": "authored-estimate",
       "reference": "en-12520-2015"
      }
@@ -8502,7 +9750,7 @@
       "dy": -0.03
      },
      "lever": {
-      "angleDeg": 25.0
+      "angleDeg": 25
      }
     },
     "ground": "authored",
@@ -8515,48 +9763,48 @@
     "thermal": {
      "regions": {
       "arm-covers": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.05,
-        "tempC": 31.0
+        "tempC": 31
        }
       },
       "seat-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.35,
-        "tempC": 32.0
+        "tempC": 32
        }
       },
       "back-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.25,
-        "tempC": 32.0
+        "tempC": 32
        }
       },
       "footrest": {
        "exposedFraction": 0.85,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "base-frame": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "mechanism": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "plastic-trim": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "blanket": {
        "exposedFraction": 0.55,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -8570,7 +9818,7 @@
        "de": "Sitzende erwachsene Person auf dem Sitz (75 kg)"
       },
       "anchor": "seat-load",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -551.6,
       "source": "authored-estimate",
       "reference": "en-12520-2015"
@@ -8596,8 +9844,8 @@
        "de": "Waden auf der Fußstütze"
       },
       "anchor": "legs-load",
-      "fxN": 0.0,
-      "fyN": -0.0,
+      "fxN": 0,
+      "fyN": 0,
       "source": "authored-estimate",
       "reference": "en-12520-2015"
      }
@@ -8624,10 +9872,10 @@
       "dy": -0.03
      },
      "link": {
-      "angleDeg": -35.0
+      "angleDeg": -35
      },
      "footrest": {
-      "angleDeg": 130.0
+      "angleDeg": 130
      }
     },
     "ground": "authored",
@@ -8640,52 +9888,52 @@
     "thermal": {
      "regions": {
       "arm-covers": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.05,
-        "tempC": 31.0
+        "tempC": 31
        }
       },
       "seat-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.32,
-        "tempC": 32.0
+        "tempC": 32
        }
       },
       "back-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.3,
-        "tempC": 32.0
+        "tempC": 32
        }
       },
       "footrest": {
        "exposedFraction": 0.85,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.3,
-        "tempC": 31.0
+        "tempC": 31
        }
       },
       "base-frame": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "mechanism": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "plastic-trim": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "blanket": {
        "exposedFraction": 0.55,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -8699,8 +9947,8 @@
        "de": "Sitzende erwachsene Person auf dem Sitz (75 kg)"
       },
       "anchor": "seat-load",
-      "fxN": 0.0,
-      "fyN": -456.0,
+      "fxN": 0,
+      "fyN": -456,
       "source": "authored-estimate",
       "reference": "en-12520-2015"
      },
@@ -8725,8 +9973,8 @@
        "de": "Waden auf der Fußstütze"
       },
       "anchor": "legs-load",
-      "fxN": 0.0,
-      "fyN": -103.0,
+      "fxN": 0,
+      "fyN": -103,
       "source": "authored-estimate",
       "reference": "en-12520-2015"
      }
@@ -8753,13 +10001,13 @@
       "dy": -0.03
      },
      "back": {
-      "angleDeg": 35.0
+      "angleDeg": 35
      },
      "link": {
-      "angleDeg": -35.0
+      "angleDeg": -35
      },
      "footrest": {
-      "angleDeg": 130.0
+      "angleDeg": 130
      }
     },
     "ground": "authored",
@@ -8772,52 +10020,52 @@
     "thermal": {
      "regions": {
       "arm-covers": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.05,
-        "tempC": 31.0
+        "tempC": 31
        }
       },
       "seat-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.32,
-        "tempC": 32.0
+        "tempC": 32
        }
       },
       "back-cushion": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0,
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.3,
-        "tempC": 32.0
+        "tempC": 32
        }
       },
       "footrest": {
        "exposedFraction": 0.85,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.3,
-        "tempC": 31.0
+        "tempC": 31
        }
       },
       "base-frame": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "mechanism": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "plastic-trim": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "blanket": {
        "exposedFraction": 0.55,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -8831,7 +10079,7 @@
        "de": "Sitzende erwachsene Person auf dem Sitz (75 kg)"
       },
       "anchor": "seat-load",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -404.5,
       "source": "authored-estimate",
       "reference": "en-12520-2015"
@@ -8857,7 +10105,7 @@
        "de": "Waden auf der Fußstütze"
       },
       "anchor": "legs-load",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -110.3,
       "source": "authored-estimate",
       "reference": "en-12520-2015"
@@ -8876,18 +10124,18 @@
      "en": "Two carriers grip the arm boxes from below, lift the chair off its moving blanket, tip it back by 6 degrees and hold it 0.22 m above the floor; the blanket stays behind.",
      "de": "Zwei Träger fassen die Armkästen von unten, heben den Sessel von seiner Möbeldecke, kippen ihn um 6 Grad nach hinten und halten ihn 0,22 m über dem Boden; die Decke bleibt liegen."
     },
-    "durationS": 4.0,
+    "durationS": 4,
     "fps": 30,
     "loop": false,
     "rootMotion": "none",
     "keys": [
      {
-      "t": 0.0,
+      "t": 0,
       "pose": "stored",
       "ease": "smooth"
      },
      {
-      "t": 1.0,
+      "t": 1,
       "pose": "lift-off-key",
       "ease": "smooth"
      },
@@ -8897,7 +10145,7 @@
       "ease": "smooth"
      },
      {
-      "t": 4.0,
+      "t": 4,
       "pose": "carried",
       "ease": "smooth"
      }
@@ -8905,50 +10153,50 @@
     "contacts": [
      {
       "anchor": "blanket-rear-left",
-      "fromS": 0.0,
-      "toS": 1.0
+      "fromS": 0,
+      "toS": 1
      },
      {
       "anchor": "blanket-rear-right",
-      "fromS": 0.0,
-      "toS": 1.0
+      "fromS": 0,
+      "toS": 1
      },
      {
       "anchor": "blanket-front-left",
-      "fromS": 0.0,
-      "toS": 1.0
+      "fromS": 0,
+      "toS": 1
      },
      {
       "anchor": "blanket-front-right",
-      "fromS": 0.0,
-      "toS": 1.0
+      "fromS": 0,
+      "toS": 1
      },
      {
       "anchor": "grip-rear-left",
-      "fromS": 0.0,
-      "toS": 4.0
+      "fromS": 0,
+      "toS": 4
      },
      {
       "anchor": "grip-rear-right",
-      "fromS": 0.0,
-      "toS": 4.0
+      "fromS": 0,
+      "toS": 4
      },
      {
       "anchor": "grip-front-left",
-      "fromS": 0.0,
-      "toS": 4.0
+      "fromS": 0,
+      "toS": 4
      },
      {
       "anchor": "grip-front-right",
-      "fromS": 0.0,
-      "toS": 4.0
+      "fromS": 0,
+      "toS": 4
      }
     ],
     "phases": [
      {
       "id": "grip",
-      "fromS": 0.0,
-      "toS": 1.0,
+      "fromS": 0,
+      "toS": 1,
       "title": {
        "en": "Gripping under the arm boxes",
        "de": "Unter die Armkästen greifen"
@@ -8956,7 +10204,7 @@
      },
      {
       "id": "lift",
-      "fromS": 1.0,
+      "fromS": 1,
       "toS": 2.5,
       "title": {
        "en": "Lifting and tipping back",
@@ -8966,7 +10214,7 @@
      {
       "id": "carry",
       "fromS": 2.5,
-      "toS": 4.0,
+      "toS": 4,
       "title": {
        "en": "Carrying",
        "de": "Tragen"
@@ -8975,7 +10223,7 @@
     ],
     "events": [
      {
-      "t": 1.0,
+      "t": 1,
       "kind": "contact-off",
       "title": {
        "en": "The glides leave the blanket",
@@ -9003,13 +10251,13 @@
      "en": "The sitter pulls the release lever, the linkage throws the footrest out and up, and the back reclines by 35 degrees as the sitter leans back.",
      "de": "Die sitzende Person zieht den Auslösehebel, das Gestänge klappt die Fußstütze nach vorn und oben, und die Lehne neigt sich um 35 Grad, während die Person sich zurücklehnt."
     },
-    "durationS": 4.0,
+    "durationS": 4,
     "fps": 30,
     "loop": false,
     "rootMotion": "none",
     "keys": [
      {
-      "t": 0.0,
+      "t": 0,
       "pose": "in-use",
       "ease": "smooth"
      },
@@ -9024,7 +10272,7 @@
       "ease": "smooth",
       "bones": {
        "lever": {
-        "angleDeg": 25.0
+        "angleDeg": 25
        }
       }
      },
@@ -9034,7 +10282,7 @@
       "ease": "smooth"
      },
      {
-      "t": 4.0,
+      "t": 4,
       "pose": "reclined",
       "ease": "smooth"
      }
@@ -9042,29 +10290,29 @@
     "contacts": [
      {
       "anchor": "glide-rear-left",
-      "fromS": 0.0,
-      "toS": 4.0
+      "fromS": 0,
+      "toS": 4
      },
      {
       "anchor": "glide-rear-right",
-      "fromS": 0.0,
-      "toS": 4.0
+      "fromS": 0,
+      "toS": 4
      },
      {
       "anchor": "glide-front-left",
-      "fromS": 0.0,
-      "toS": 4.0
+      "fromS": 0,
+      "toS": 4
      },
      {
       "anchor": "glide-front-right",
-      "fromS": 0.0,
-      "toS": 4.0
+      "fromS": 0,
+      "toS": 4
      }
     ],
     "phases": [
      {
       "id": "release",
-      "fromS": 0.0,
+      "fromS": 0,
       "toS": 0.6,
       "title": {
        "en": "Pulling the lever",
@@ -9083,7 +10331,7 @@
      {
       "id": "recline",
       "fromS": 2.2,
-      "toS": 4.0,
+      "toS": 4,
       "title": {
        "en": "Leaning back",
        "de": "Zurücklehnen"
@@ -9108,7 +10356,7 @@
       }
      },
      {
-      "t": 4.0,
+      "t": 4,
       "kind": "motion",
       "title": {
        "en": "Back fully reclined",
@@ -9122,20 +10370,20 @@
       "ease": "smooth",
       "keys": [
        {
-        "t": 0.0,
-        "v": 0.0
+        "t": 0,
+        "v": 0
        },
        {
         "t": 0.6,
-        "v": 0.0
+        "v": 0
        },
        {
         "t": 1.6,
-        "v": 1.0
+        "v": 1
        },
        {
-        "t": 4.0,
-        "v": 1.0
+        "t": 4,
+        "v": 1
        }
       ]
      }
@@ -9342,7 +10590,7 @@
        },
        "kind": "metal",
        "material": "steel-black",
-       "resistanceM2KW": 8e-05,
+       "resistanceM2KW": 0.00008,
        "heatCapacityJM2K": 14130,
        "source": "literature",
        "reference": "en-1993-1-1",
@@ -9479,18 +10727,18 @@
       "profile": [
        [
         0.008,
-        0.0
+        0
        ],
        [
         0.992,
-        0.0
+        0
        ],
        [
         0.99707,
         0.00293
        ],
        [
-        1.0,
+        1,
         0.01
        ],
        [
@@ -9510,7 +10758,7 @@
         0.01707
        ],
        [
-        0.0,
+        0,
         0.01
        ],
        [
@@ -9531,11 +10779,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -9548,17 +10796,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.06,
-       0.0,
+       0,
        0.345
       ]
      },
@@ -9571,11 +10819,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -9588,17 +10836,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.06,
-       0.0,
+       0,
        -0.345
       ]
      },
@@ -9611,11 +10859,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -9628,17 +10876,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.86,
-       0.0,
+       0,
        0.345
       ]
      },
@@ -9651,11 +10899,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -9668,17 +10916,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.86,
-       0.0,
+       0,
        -0.345
       ]
      },
@@ -9812,7 +11060,7 @@
        "translation": [
         0.47,
         0.29,
-        0.0
+        0
        ]
       }
      },
@@ -9832,7 +11080,7 @@
        "translation": [
         0.035,
         0.13,
-        0.0
+        0
        ]
       }
      },
@@ -9906,7 +11154,7 @@
       "profile": [
        [
         0.55,
-        0.0
+        0
        ],
        [
         0.567,
@@ -9969,12 +11217,12 @@
         0.08
        ],
        [
-        0.0,
+        0,
         0.06
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ]
       ],
       "plane": "xy",
@@ -9998,7 +11246,7 @@
         -0.12
        ],
        [
-        0.0,
+        0,
         -0.16
        ],
        [
@@ -10059,7 +11307,7 @@
        ],
        [
         0.6,
-        0.0
+        0
        ],
        [
         0.59,
@@ -10083,19 +11331,19 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.28,
-        0.0
+        0
        ],
        [
         0.28,
         0.018
        ],
        [
-        0.0,
+        0,
         0.018
        ]
       ],
@@ -10148,7 +11396,7 @@
         0.065
        ],
        [
-        0.0,
+        0,
         0.03
        ]
       ],
@@ -10178,7 +11426,7 @@
        ],
        [
         0.23393,
-        0.0
+        0
        ],
        [
         0.23152,
@@ -10193,7 +11441,7 @@
         0.018
        ],
        [
-        0.0,
+        0,
         0.018
        ],
        [
@@ -10206,7 +11454,7 @@
        ],
        [
         -0.018,
-        0.0
+        0
        ],
        [
         -0.01559,
@@ -10217,7 +11465,7 @@
         -0.01559
        ],
        [
-        -0.0,
+        0,
         -0.018
        ]
       ],
@@ -10227,8 +11475,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.5
        ]
       }
@@ -10296,7 +11544,7 @@
       "profile": [
        [
         0.02,
-        0.0
+        0
        ],
        [
         0.01848,
@@ -10311,7 +11559,7 @@
         0.01848
        ],
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -10328,7 +11576,7 @@
        ],
        [
         -0.02,
-        0.0
+        0
        ],
        [
         -0.01848,
@@ -10343,7 +11591,7 @@
         -0.01848
        ],
        [
-        -0.0,
+        0,
         -0.02
        ],
        [
@@ -10804,7 +12052,7 @@
        "translation": [
         0.54,
         0.02,
-        0.0
+        0
        ]
       },
       "member": "back",
@@ -10824,9 +12072,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.02,
-        0.0
+        0
        ]
       },
       "member": "back",
@@ -10854,7 +12102,7 @@
        ],
        [
         0.23393,
-        0.0
+        0
        ],
        [
         0.23152,
@@ -10869,7 +12117,7 @@
         0.018
        ],
        [
-        0.0,
+        0,
         0.018
        ],
        [
@@ -10882,7 +12130,7 @@
        ],
        [
         -0.018,
-        0.0
+        0
        ],
        [
         -0.01559,
@@ -10893,7 +12141,7 @@
         -0.01559
        ],
        [
-        -0.0,
+        0,
         -0.018
        ]
       ],
@@ -10903,8 +12151,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.5
        ]
       },
@@ -10931,13 +12179,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.2595
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.2595
       ],
       "r0": 0.008,
@@ -10953,13 +12201,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.255
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.255
       ],
       "r0": 0.008,
@@ -10975,13 +12223,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.255
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.255
       ],
       "r0": 0.008,
@@ -10997,13 +12245,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.445
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.27
       ],
       "r0": 0.008,
@@ -11027,7 +12275,7 @@
        "translation": [
         0.25,
         -0.005,
-        0.0
+        0
        ]
       },
       "member": "seat",
@@ -11049,7 +12297,7 @@
        "translation": [
         0.5,
         0.01,
-        0.0
+        0
        ]
       },
       "member": "blanket",
@@ -11071,7 +12319,7 @@
        "translation": [
         0.46,
         0.29,
-        0.0
+        0
        ]
       },
       "member": "frame",
@@ -11093,7 +12341,7 @@
        "translation": [
         0.29,
         0.05,
-        0.0
+        0
        ]
       },
       "member": "seat",
@@ -11115,7 +12363,7 @@
        "translation": [
         0.29,
         -0.07,
-        0.0
+        0
        ]
       },
       "member": "back",
@@ -11136,8 +12384,8 @@
       "transform": {
        "translation": [
         0.10796,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "link",
@@ -11159,7 +12407,7 @@
        "translation": [
         0.14,
         0.04,
-        0.0
+        0
        ]
       },
       "member": "footrest",
@@ -11180,8 +12428,8 @@
       "transform": {
        "translation": [
         0.06,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "lever",
@@ -11213,18 +12461,18 @@
       "profile": [
        [
         0.008,
-        0.0
+        0
        ],
        [
         0.992,
-        0.0
+        0
        ],
        [
         0.99707,
         0.00293
        ],
        [
-        1.0,
+        1,
         0.01
        ],
        [
@@ -11244,7 +12492,7 @@
         0.01707
        ],
        [
-        0.0,
+        0,
         0.01
        ],
        [
@@ -11265,11 +12513,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -11278,17 +12526,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.06,
-       0.0,
+       0,
        0.345
       ]
      },
@@ -11301,11 +12549,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -11314,17 +12562,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.06,
-       0.0,
+       0,
        -0.345
       ]
      },
@@ -11337,11 +12585,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -11350,17 +12598,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.86,
-       0.0,
+       0,
        0.345
       ]
      },
@@ -11373,11 +12621,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -11386,17 +12634,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.86,
-       0.0,
+       0,
        -0.345
       ]
      },
@@ -11530,7 +12778,7 @@
        "translation": [
         0.47,
         0.29,
-        0.0
+        0
        ]
       }
      },
@@ -11550,7 +12798,7 @@
        "translation": [
         0.035,
         0.13,
-        0.0
+        0
        ]
       }
      },
@@ -11624,7 +12872,7 @@
       "profile": [
        [
         0.55,
-        0.0
+        0
        ],
        [
         0.567,
@@ -11687,12 +12935,12 @@
         0.08
        ],
        [
-        0.0,
+        0,
         0.06
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ]
       ],
       "plane": "xy",
@@ -11716,7 +12964,7 @@
         -0.12
        ],
        [
-        0.0,
+        0,
         -0.16
        ],
        [
@@ -11777,7 +13025,7 @@
        ],
        [
         0.6,
-        0.0
+        0
        ],
        [
         0.59,
@@ -11801,19 +13049,19 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.28,
-        0.0
+        0
        ],
        [
         0.28,
         0.018
        ],
        [
-        0.0,
+        0,
         0.018
        ]
       ],
@@ -11866,7 +13114,7 @@
         0.065
        ],
        [
-        0.0,
+        0,
         0.03
        ]
       ],
@@ -11896,7 +13144,7 @@
        ],
        [
         0.23393,
-        0.0
+        0
        ],
        [
         0.23152,
@@ -11911,7 +13159,7 @@
         0.018
        ],
        [
-        0.0,
+        0,
         0.018
        ],
        [
@@ -11924,7 +13172,7 @@
        ],
        [
         -0.018,
-        0.0
+        0
        ],
        [
         -0.01559,
@@ -11935,7 +13183,7 @@
         -0.01559
        ],
        [
-        -0.0,
+        0,
         -0.018
        ]
       ],
@@ -11945,8 +13193,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.505
        ]
       }
@@ -11973,7 +13221,7 @@
        ],
        [
         0.18,
-        0.0
+        0
        ],
        [
         0.175,
@@ -12430,7 +13678,7 @@
        "translation": [
         0.54,
         0.02,
-        0.0
+        0
        ]
       },
       "member": "back",
@@ -12450,9 +13698,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.02,
-        0.0
+        0
        ]
       },
       "member": "back",
@@ -12480,7 +13728,7 @@
        ],
        [
         0.23393,
-        0.0
+        0
        ],
        [
         0.23152,
@@ -12495,7 +13743,7 @@
         0.018
        ],
        [
-        0.0,
+        0,
         0.018
        ],
        [
@@ -12508,7 +13756,7 @@
        ],
        [
         -0.018,
-        0.0
+        0
        ],
        [
         -0.01559,
@@ -12519,7 +13767,7 @@
         -0.01559
        ],
        [
-        -0.0,
+        0,
         -0.018
        ]
       ],
@@ -12529,8 +13777,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.5
        ]
       },
@@ -12558,13 +13806,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.2595
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.2595
       ],
       "r0": 0.008,
@@ -12580,13 +13828,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.255
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.255
       ],
       "r0": 0.008,
@@ -12602,13 +13850,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.255
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.255
       ],
       "r0": 0.008,
@@ -12624,13 +13872,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.445
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.27
       ],
       "r0": 0.008,
@@ -12654,7 +13902,7 @@
        "translation": [
         0.25,
         -0.0075,
-        0.0
+        0
        ]
       },
       "member": "seat",
@@ -12676,7 +13924,7 @@
        "translation": [
         0.5,
         0.01,
-        0.0
+        0
        ]
       },
       "member": "blanket",
@@ -12698,7 +13946,7 @@
        "translation": [
         0.46,
         0.29,
-        0.0
+        0
        ]
       },
       "member": "frame",
@@ -12720,7 +13968,7 @@
        "translation": [
         0.29,
         0.05,
-        0.0
+        0
        ]
       },
       "member": "seat",
@@ -12742,7 +13990,7 @@
        "translation": [
         0.29,
         -0.07,
-        0.0
+        0
        ]
       },
       "member": "back",
@@ -12763,8 +14011,8 @@
       "transform": {
        "translation": [
         0.10796,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "link",
@@ -12786,7 +14034,7 @@
        "translation": [
         0.14,
         0.04,
-        0.0
+        0
        ]
       },
       "member": "footrest",
@@ -12807,8 +14055,8 @@
       "transform": {
        "translation": [
         0.06,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "lever",
@@ -12839,19 +14087,19 @@
       "tone": 0.78,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        1.0,
-        0.0
+        1,
+        0
        ],
        [
-        1.0,
+        1,
         0.02
        ],
        [
-        0.0,
+        0,
         0.02
        ]
       ],
@@ -12869,11 +14117,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -12882,17 +14130,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.06,
-       0.0,
+       0,
        0.345
       ]
      },
@@ -12905,11 +14153,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -12918,17 +14166,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.06,
-       0.0,
+       0,
        -0.345
       ]
      },
@@ -12941,11 +14189,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -12954,17 +14202,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.86,
-       0.0,
+       0,
        0.345
       ]
      },
@@ -12977,11 +14225,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -12990,17 +14238,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.86,
-       0.0,
+       0,
        -0.345
       ]
      },
@@ -13014,11 +14262,11 @@
       "profile": [
        [
         0.02,
-        0.0
+        0
        ],
        [
         0.9,
-        0.0
+        0
        ],
        [
         0.912,
@@ -13071,11 +14319,11 @@
       "profile": [
        [
         0.02,
-        0.0
+        0
        ],
        [
         0.9,
-        0.0
+        0
        ],
        [
         0.912,
@@ -13134,7 +14382,7 @@
        "translation": [
         0.47,
         0.29,
-        0.0
+        0
        ]
       }
      },
@@ -13169,7 +14417,7 @@
       "profile": [
        [
         0.55,
-        0.0
+        0
        ],
        [
         0.575,
@@ -13200,8 +14448,8 @@
         0.092
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ]
       ],
       "plane": "xy",
@@ -13270,12 +14518,12 @@
       "tone": 0.42,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.28,
-        0.0
+        0
        ],
        [
         0.28,
@@ -13290,7 +14538,7 @@
         0.09
        ],
        [
-        0.0,
+        0,
         0.07
        ]
       ],
@@ -13524,7 +14772,7 @@
        "translation": [
         0.54,
         0.02,
-        0.0
+        0
        ]
       },
       "member": "back",
@@ -13544,9 +14792,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.02,
-        0.0
+        0
        ]
       },
       "member": "back",
@@ -13574,7 +14822,7 @@
        ],
        [
         0.23393,
-        0.0
+        0
        ],
        [
         0.23152,
@@ -13589,7 +14837,7 @@
         0.018
        ],
        [
-        0.0,
+        0,
         0.018
        ],
        [
@@ -13602,7 +14850,7 @@
        ],
        [
         -0.018,
-        0.0
+        0
        ],
        [
         -0.01559,
@@ -13613,7 +14861,7 @@
         -0.01559
        ],
        [
-        -0.0,
+        0,
         -0.018
        ]
       ],
@@ -13623,8 +14871,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.5
        ]
       },
@@ -13660,7 +14908,7 @@
        ],
        [
         0.18,
-        0.0
+        0
        ],
        [
         0.175,
@@ -13690,13 +14938,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.2595
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.2595
       ],
       "r0": 0.015,
@@ -13712,13 +14960,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.255
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.255
       ],
       "r0": 0.015,
@@ -13734,13 +14982,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.255
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.255
       ],
       "r0": 0.015,
@@ -13756,13 +15004,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.43
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.27
       ],
       "r0": 0.015,
@@ -13786,7 +15034,7 @@
        "translation": [
         0.25,
         -0.015,
-        0.0
+        0
        ]
       },
       "member": "seat",
@@ -13808,7 +15056,7 @@
        "translation": [
         0.5,
         0.01,
-        0.0
+        0
        ]
       },
       "member": "blanket",
@@ -13830,7 +15078,7 @@
        "translation": [
         0.46,
         0.29,
-        0.0
+        0
        ]
       },
       "member": "frame",
@@ -13852,7 +15100,7 @@
        "translation": [
         0.29,
         0.05,
-        0.0
+        0
        ]
       },
       "member": "seat",
@@ -13874,7 +15122,7 @@
        "translation": [
         0.29,
         -0.07,
-        0.0
+        0
        ]
       },
       "member": "back",
@@ -13895,8 +15143,8 @@
       "transform": {
        "translation": [
         0.10796,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "link",
@@ -13918,7 +15166,7 @@
        "translation": [
         0.14,
         0.04,
-        0.0
+        0
        ]
       },
       "member": "footrest",
@@ -13939,8 +15187,8 @@
       "transform": {
        "translation": [
         0.06,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "lever",
@@ -13971,19 +15219,19 @@
       "tone": 0.78,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        1.0,
-        0.0
+        1,
+        0
        ],
        [
-        1.0,
+        1,
         0.02
        ],
        [
-        0.0,
+        0,
         0.02
        ]
       ],
@@ -14001,11 +15249,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -14014,17 +15262,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.06,
-       0.0,
+       0,
        0.345
       ]
      },
@@ -14037,11 +15285,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -14050,17 +15298,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.06,
-       0.0,
+       0,
        -0.345
       ]
      },
@@ -14073,11 +15321,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -14086,17 +15334,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.86,
-       0.0,
+       0,
        0.345
       ]
      },
@@ -14109,11 +15357,11 @@
       "tone": 0.15,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.025
        ],
        [
@@ -14122,17 +15370,17 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
-       0.0
+       0,
+       1,
+       0
       ],
       "origin": [
        0.86,
-       0.0,
+       0,
        -0.345
       ]
      },
@@ -14146,11 +15394,11 @@
       "profile": [
        [
         0.02,
-        0.0
+        0
        ],
        [
         0.9,
-        0.0
+        0
        ],
        [
         0.912,
@@ -14223,11 +15471,11 @@
       "profile": [
        [
         0.02,
-        0.0
+        0
        ],
        [
         0.9,
-        0.0
+        0
        ],
        [
         0.912,
@@ -14306,7 +15554,7 @@
        "translation": [
         0.47,
         0.29,
-        0.0
+        0
        ]
       }
      },
@@ -14341,7 +15589,7 @@
       "profile": [
        [
         0.575,
-        0.0
+        0
        ],
        [
         0.575,
@@ -14352,12 +15600,12 @@
         0.087
        ],
        [
-        0.0,
+        0,
         0.096
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ]
       ],
       "plane": "xy",
@@ -14410,12 +15658,12 @@
       "tone": 0.42,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.28,
-        0.0
+        0
        ],
        [
         0.28,
@@ -14430,7 +15678,7 @@
         0.09
        ],
        [
-        0.0,
+        0,
         0.07
        ]
       ],
@@ -14662,7 +15910,7 @@
        ],
        [
         0.23393,
-        0.0
+        0
        ],
        [
         0.23152,
@@ -14677,7 +15925,7 @@
         0.018
        ],
        [
-        0.0,
+        0,
         0.018
        ],
        [
@@ -14690,7 +15938,7 @@
        ],
        [
         -0.018,
-        0.0
+        0
        ],
        [
         -0.01559,
@@ -14701,7 +15949,7 @@
         -0.01559
        ],
        [
-        -0.0,
+        0,
         -0.018
        ]
       ],
@@ -14711,8 +15959,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.5
        ]
       },
@@ -14748,7 +15996,7 @@
        ],
        [
         0.18,
-        0.0
+        0
        ],
        [
         0.175,
@@ -14778,13 +16026,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.2595
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.2595
       ],
       "r0": 0.0375,
@@ -14800,13 +16048,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.255
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.255
       ],
       "r0": 0.0375,
@@ -14822,13 +16070,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.255
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.255
       ],
       "r0": 0.0375,
@@ -14844,13 +16092,13 @@
       "role": "detail",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.43
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.27
       ],
       "r0": 0.0375,
@@ -14874,7 +16122,7 @@
        "translation": [
         0.25,
         -0.0375,
-        0.0
+        0
        ]
       },
       "member": "seat",
@@ -14896,7 +16144,7 @@
        "translation": [
         0.5,
         0.01,
-        0.0
+        0
        ]
       },
       "member": "blanket",
@@ -14918,7 +16166,7 @@
        "translation": [
         0.46,
         0.29,
-        0.0
+        0
        ]
       },
       "member": "frame",
@@ -14940,7 +16188,7 @@
        "translation": [
         0.29,
         0.05,
-        0.0
+        0
        ]
       },
       "member": "seat",
@@ -14962,7 +16210,7 @@
        "translation": [
         0.29,
         -0.07,
-        0.0
+        0
        ]
       },
       "member": "back",
@@ -14983,8 +16231,8 @@
       "transform": {
        "translation": [
         0.10796,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "link",
@@ -15006,7 +16254,7 @@
        "translation": [
         0.14,
         0.04,
-        0.0
+        0
        ]
       },
       "member": "footrest",
@@ -15027,8 +16275,8 @@
       "transform": {
        "translation": [
         0.06,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "lever",

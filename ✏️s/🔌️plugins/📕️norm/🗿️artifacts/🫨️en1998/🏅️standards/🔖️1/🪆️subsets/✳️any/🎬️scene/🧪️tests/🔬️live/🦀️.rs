@@ -187,7 +187,7 @@ fn live_drags_of_storey_masses_stiffness_site_bridge_bearings_and_tank_filling_k
     document.buildings[0].t1_method = model::T1Method::Rayleigh;
     let (mut projector, mut held) = (SceneProjector::new(Kit::<En1998Kit>::default()), norm_index::Held::default());
     let spectra_of = |document: &En1998Snapshot, report: &CheckReport| diagrams(document, report, None).into_iter().find(|d| d.id == "spectra:document").expect("spectra");
-    let t1_of = |spectra: &Diagram2d| spectra.markers.iter().find(|m| m.id == "t1").map(|m| m.at.x).expect("t1 marker");
+    let t1_of = |spectra: &scene::Diagram2d| spectra.markers.iter().find(|m| m.id == "t1").map(|m| m.at.x).expect("t1 marker");
     let edits: [(&str, fn(&mut En1998Snapshot)); 6] = [
         ("storey mass", |d| d.buildings[0].storeys[0].permanent_gk_n *= 1.5),
         ("storey stiffness", |d| d.buildings[0].storeys.iter_mut().for_each(|s| s.stiffness_x *= 2.0)),

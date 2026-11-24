@@ -37,6 +37,11 @@ export function shellDialogSessionIsCurrentV1(owner: ShellDialogSessionV1 | null
     && owner.app.id === current.app.id && owner.app.controllerId === current.app.controllerId;
 }
 
+/** 🔑️ The string that is equal exactly while {@link shellDialogSessionIsCurrentV1} holds, so an effect keyed on it re-runs only when the session changes identity and not when its view state is republished; `null` has the empty key. */
+export function shellDialogSessionKeyV1(session: ShellDialogSessionV1 | null): string {
+  return session === null ? "" : [session.pluginId, session.instanceId, session.app.id, session.app.controllerId].join("\u0000");
+}
+
 /** 📍️ Copies one unambiguous mount, or a documentless session without document authority. */
 export function shellDialogOriginV1(session: ShellDialogSessionV1 | null, mounts: readonly ShellDialogMountV1[]): ShellDialogOriginV1 | null {
   if (session === null) return null;

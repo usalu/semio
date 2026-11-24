@@ -1,0 +1,13 @@
+{
+  "ops": [
+    { "op": "contact-split", "anchor": "foot-back", "padSize": [null, null, 0.03], "parts": [
+      { "id": "foot-back-right", "z": -0.075, "title": { "en": "Rear right foot", "de": "Hinterer rechter Fuß" } },
+      { "id": "foot-back-left", "z": 0.075, "title": { "en": "Rear left foot", "de": "Hinterer linker Fuß" } }
+    ] },
+    { "op": "contact-split", "anchor": "foot-front", "padSize": [null, null, 0.03], "parts": [
+      { "id": "foot-front-right", "z": -0.075, "title": { "en": "Front right foot", "de": "Vorderer rechter Fuß" } },
+      { "id": "foot-front-left", "z": 0.075, "title": { "en": "Front left foot", "de": "Vorderer linker Fuß" } }
+    ] },
+    { "op": "set", "path": ["structure", "assumptions", 0], "value": { "en": "A rigid body standing on four rubber feet.", "de": "Ein starrer Körper auf vier Gummifüßen." } }
+  ]
+}

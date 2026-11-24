@@ -94,3 +94,31 @@ pub fn verify_cases_above(manifest_dir: &str) -> usize {
         assert!(dir.pop(), "no 🧪️tests/🧫️fixtures/🔮️oracle-cases above {manifest_dir}");
     }
 }
+
+/// 📐️ Validate `instance` (JSON text) against the JSON Schema file `schema` with the third-party `jsonschema` library; `label` names the scratch file and the failure.
+pub fn validate_json_schema(schema: &Path, label: &str, instance: &str) -> Result<(), String> {
+    let scratch = std::env::temp_dir().join(format!("semio-schema-instance-{}-{label}.json", std::process::id()));
+    std::fs::write(&scratch, instance).map_err(|error| format!("{label}: {error}"))?;
+    let output = command()
+        .arg("-c")
+        .arg("import json,sys,jsonschema; jsonschema.validate(instance=json.load(open(sys.argv[2])), schema=json.load(open(sys.argv[1])))")
+        .arg(schema)
+        .arg(&scratch)
+        .output()
+        .expect("python jsonschema");
+    let _ = std::fs::remove_file(&scratch);
+    if output.status.success() { Ok(()) } else { Err(format!("{label}: {}", String::from_utf8_lossy(&output.stderr).lines().last().unwrap_or_default())) }
+}
+
+/// 🔁️ The serde-schema law of a snapshot: the test-only serde derive writes every `required` field (the output validates against the family's JSON Schema) and reads it back (the workspace `serde_json` has `float_roundtrip`) to a snapshot that serialises to the identical JSON.
+#[cfg(feature = "compliance-testing")]
+pub fn assert_serde_snapshot_law<S>(schema: &Path, label: &str, snapshot: &S)
+where
+    S: serde::Serialize + serde::de::DeserializeOwned,
+{
+    let json = serde_json::to_string(snapshot).expect("serialise snapshot");
+    validate_json_schema(schema, label, &json).unwrap_or_else(|error| panic!("serde output violates the schema: {error}"));
+    let back: S = serde_json::from_str(&json).expect("deserialise snapshot");
+    let (before, after) = (serde_json::to_value(snapshot).expect("value"), serde_json::to_value(&back).expect("value"));
+    assert_eq!(before, after, "{label}: serde round trip changed the snapshot");
+}

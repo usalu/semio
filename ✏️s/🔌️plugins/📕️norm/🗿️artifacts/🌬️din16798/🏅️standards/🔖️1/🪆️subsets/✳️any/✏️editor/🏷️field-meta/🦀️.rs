@@ -122,6 +122,18 @@ fn leaf_meta(leaf: &str) -> Option<FieldSpec> {
         "ductTestPressurePa" => Some(FieldSpec::quantity("Duct test pressure", "Kanal-Prüfdruck", UnitId::Pascal)),
         "ductLeakageM3SM2" => Some(FieldSpec::quantity("Duct leakage factor", "Kanalleckagefaktor", UnitId::CubicMetrePerSecondSquareMetre)),
         "designAirflowM3H" => Some(FieldSpec::quantity("Design outdoor-air capacity", "Auslegungs-Außenluftkapazität", UnitId::CubicMetrePerHour)),
+        "unoccupiedVentilation" => Some(FieldSpec::new("Unoccupied ventilation", "Lüftung bei Nichtbelegung")),
+        "operation" => Some(FieldSpec::choice("Operation outside occupancy", "Betrieb außerhalb der Nutzungszeit", &[
+                NormFieldChoice { value: "nonResidentialPurge", label_en: "Non-residential: purge before occupancy", label_de: "Nichtwohngebäude: Spülung vor Nutzungsbeginn" },
+                NormFieldChoice { value: "nonResidentialReduced", label_en: "Non-residential: reduced ventilation", label_de: "Nichtwohngebäude: reduzierte Lüftung" },
+                NormFieldChoice { value: "residentialReduced", label_en: "Residential: reduced ventilation", label_de: "Wohngebäude: reduzierte Lüftung" },
+                NormFieldChoice { value: "residentialShutdown", label_en: "Residential: ventilation switched off", label_de: "Wohngebäude: Lüftung abgeschaltet" },
+            ])),
+        "assessedAreaM2" => Some(FieldSpec::quantity("Assessed floor area", "Bewertete Grundfläche", UnitId::SquareMetre)),
+        "zoneVolumeM3" => Some(FieldSpec::quantity("Zone volume", "Zonenvolumen", UnitId::CubicMetre)),
+        "minutesBeforeOccupancy" => Some(FieldSpec::quantity("Purge duration before occupancy", "Spüldauer vor Nutzungsbeginn", UnitId::Minute)),
+        "residentialDesignRateLPerSM2" => Some(FieldSpec::quantity("Residential design air flow rate per floor area", "Auslegungs-Luftvolumenstrom je Grundfläche (Wohngebäude)", UnitId::LitrePerSecondSquareMetre)),
+        "outdoorAirM3H" => Some(FieldSpec::quantity("Outdoor air flow", "Außenluftvolumenstrom", UnitId::CubicMetrePerHour)),
         _ => None,
     }
 }

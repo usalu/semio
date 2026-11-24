@@ -113,8 +113,12 @@ impl UiTree {
         owner.sections.iter().find(|section| &section.id == key)
     }
 
+    /// 🌲️ The authored item a row `Stack` mounts; an inline control keyed like its row (control id == item id) is not the row.
     pub fn authored_tree_item(&self, id: NodeId) -> Option<&UiTreeItemNode> {
         let node = self.node(id)?;
+        if !matches!(node.spec.0, UiNode::Stack(_)) {
+            return None;
+        }
         let NodeKey::Explicit(key) = &node.key else { return None };
         let mut ancestor = node.parent;
         let mut depth = 0usize;

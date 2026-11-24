@@ -31,7 +31,8 @@ export function mergeWalkMembersV1(table: { get(key: string): string[] | undefin
 export function closureCollectionsV1(): { name: string; entries: number; bytes: number }[];
 export function closureEntryCountsV1(): { derived: number; loaded: number; stale: number; checked: number; fetched: number; reasked: number; reaskFailed: number; reaskEqual: number; reaskDifferent: number };
 export function closureStoreDirectoryV1(workspaceRoot: string): string | undefined;
-export function bindClosureStoreV1(workspaceRoot: string, directory: string, writable?: boolean): void;
+export function flushClosureOffersV1(): Promise<void>;
+export function bindClosureStoreV1(workspaceRoot: string, directory: string, writable?: boolean, limits?: Readonly<Record<string, number>>): void;
 export function closureApiV1(scripts: ScriptInputsValueV1, workspaceRoot: string): ScriptInputsValueV1;
 export function derivedWalkAnswerV1(value: unknown): string;
 export function expandedCommandInputsV1<T>(value: T, workspaceRoot: string, scripts?: ScriptInputsValueV1): Promise<T>;

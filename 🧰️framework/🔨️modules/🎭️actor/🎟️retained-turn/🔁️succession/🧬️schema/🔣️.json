@@ -1,0 +1,368 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/actor/original-succession/v1",
+  "title": "OriginalActorSuccession",
+  "description": "A kernel-issued successor operation conveys fresh finite funds into one actor Source whose operation, generation, clock binding and absolute deadline stay unchanged. The named predecessor turn pays for it and closes the predecessor's funds; its unspent remainder is forfeited. Capacity is accounted cumulatively.",
+  "$defs": {
+    "amount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "identity": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "$ref": "#/$defs/amount"
+        },
+        "maximumCopyBytes": {
+          "$ref": "#/$defs/amount"
+        },
+        "maximumCapacityBytes": {
+          "$ref": "#/$defs/amount"
+        },
+        "maximumReleaseBytes": {
+          "$ref": "#/$defs/amount"
+        },
+        "maximumDepth": {
+          "$ref": "#/$defs/amount"
+        }
+      }
+    },
+    "succession": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "generation",
+        "epoch",
+        "successor",
+        "grant",
+        "fuel"
+      ],
+      "properties": {
+        "operation": {
+          "$ref": "#/$defs/identity"
+        },
+        "generation": {
+          "$ref": "#/$defs/identity"
+        },
+        "epoch": {
+          "$ref": "#/$defs/identity"
+        },
+        "successor": {
+          "$ref": "#/$defs/identity"
+        },
+        "grant": {
+          "$ref": "#/$defs/grant"
+        },
+        "fuel": {
+          "$ref": "#/$defs/amount"
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "lowWaterDivisor",
+        "floorDivisor",
+        "maximumDeferral"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "lowWaterDivisor": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "floorDivisor": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumDeferral": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "threshold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "granted",
+        "remaining",
+        "lowWater",
+        "exhausted"
+      ],
+      "properties": {
+        "granted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "remaining": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "lowWater": {
+          "type": "boolean"
+        },
+        "exhausted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "change",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "change": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "operation": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "generation": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "epoch": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "successor": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "fuel": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "refusal": {
+          "enum": [
+            "invariant-violated"
+          ]
+        }
+      }
+    },
+    "quiescence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "jobSlot",
+        "heldOutput",
+        "admittedInput",
+        "outstanding",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "jobSlot": {
+          "type": "boolean"
+        },
+        "heldOutput": {
+          "type": "boolean"
+        },
+        "admittedInput": {
+          "type": "boolean"
+        },
+        "outstanding": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stocks",
+        "command",
+        "jobEvery"
+      ],
+      "properties": {
+        "stocks": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 64
+        },
+        "command": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "copiedItems",
+            "copiedBytes",
+            "retainedCapacityBytes",
+            "releasedBytes",
+            "work"
+          ],
+          "properties": {
+            "copiedItems": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "copiedBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "retainedCapacityBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "releasedBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "work": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "jobEvery": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "stock",
+    "thresholds",
+    "admissions",
+    "quiescence",
+    "run"
+  ],
+  "properties": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "generation",
+        "clockBinding",
+        "deadlineUs"
+      ],
+      "properties": {
+        "operation": {
+          "$ref": "#/$defs/identity"
+        },
+        "generation": {
+          "$ref": "#/$defs/identity"
+        },
+        "clockBinding": {
+          "$ref": "#/$defs/identity"
+        },
+        "deadlineUs": {
+          "$ref": "#/$defs/identity"
+        }
+      }
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grant",
+        "fuel"
+      ],
+      "properties": {
+        "grant": {
+          "$ref": "#/$defs/grant"
+        },
+        "fuel": {
+          "$ref": "#/$defs/amount"
+        }
+      }
+    },
+    "thresholds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/threshold"
+      }
+    },
+    "admissions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/admission"
+      }
+    },
+    "quiescence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/quiescence"
+      }
+    },
+    "run": {
+      "$ref": "#/$defs/run"
+    }
+  }
+}

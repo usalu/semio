@@ -22,19 +22,12 @@ fn definition_declares_the_page_canvas() {
     assert!(def.actions.iter().any(|action| action.id == "insert-image"));
 }
 
-fn first_surface(node: &semio_ui_contract::BuiltNode) -> Option<&semio_ui_contract::BuiltNode> {
-    matches!(node.component, semio_ui_contract::Component::Surface(_)).then_some(node).or_else(|| node.children.iter().find_map(first_surface))
-}
-
 #[test]
 fn render_paints_the_page_text_on_the_canvas() {
     let document = demo_pdf17_snapshot();
     let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let node = render(&document, semio_ui_locale::Locale::En).expect("page canvas");
-    semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |tree| {
-        let surface = first_surface(tree).expect("canvas surface");
-        let semio_ui_contract::Component::Surface(props) = &surface.component else { unreachable!() };
-        let scene: semio_plugin::Canvas2dScene = semio_ui_scene::decode(props).expect("canvas scene");
-        assert!(scene.layers_json.contains("Semio"), "{}", scene.layers_json);
-    });
+    let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
+    let scene: semio_plugin::Canvas2dScene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).unwrap();
+    assert!(scene.layers_json.contains("\"id\":\"p0:t0\"") && scene.layers_json.contains("\"kind\":\"cubic\""), "{}", scene.layers_json);
 }

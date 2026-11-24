@@ -1,0 +1,12 @@
+humans	person-stretching	6 / 38; flat+solid; 11 other id; 7 extent	4; off 4			
+humans	person-sweeping	9 / 38; flat+solid; 1 extent				
+humans	person-taking-selfie	3 / 6; solid; 1 extent				
+humans	person-with-arm-sling	0 / 159; flat; 7 extent	18; descendant 18			
+humans	person-with-guide-dog	3 / 61; flat+followTip+solid	8; descendant 8			
+humans	person-with-rollator	0 / 31; flat+solid				
+humans	person-with-umbrella	0 / 2; flat; 1 extent				
+humans	person-with-white-cane	3 / 17; flat+solid; 2 extent				
+humans	photographer-with-camera	0 / 29; flat+solid; 1 extent				
+humans	picnicker-sitting-on-ground	12 / 22; flat+solid	22; other bone 18, descendant 4			
+humans	postal-carrier	5 / 196; flat+solid; 26 extent	24; descendant 18, off 4, other bone 2			
+humans	pregnant-person	0 / 14; flat+solid				

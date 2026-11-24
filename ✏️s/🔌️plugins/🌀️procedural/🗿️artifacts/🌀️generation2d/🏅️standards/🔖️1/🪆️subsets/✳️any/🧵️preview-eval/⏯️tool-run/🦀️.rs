@@ -276,6 +276,8 @@ pub struct PreviewEvalRunLink {
     pub(crate) job_run: Option<u64>,
     /// 🔢️ The digest of the text each target's last hop evaluated ([`preview_eval_digest`]).
     pub(crate) evaluated: EvaluatedTargets,
+    /// 🧭️ The unserved node kinds the host was last asked to activate extensions for, with the flow registry generation that answered them: a poll that finds the same kinds under the same generation asks nothing, a moved generation or a changed kind set asks again, and a servable graph clears it.
+    pub(crate) activation_asked: Option<(u64, Vec<String>)>,
 }
 
 /// ⏯️ A run action a surface has asked the host for, and the reading of the run view that answers it.
@@ -347,6 +349,21 @@ pub fn owe_moved_targets(sessions: &mut PreviewEvalSessions<'_>, link: &PreviewE
         }
     }
     Ok(())
+}
+
+/// 🧭️ The typed requests that park a document on its unserved kinds: one [`Effect::PublishEvent`] on [`semio_os_flow::ON_DEMAND_REQUEST_TOPIC`] per namespace, carrying the UTF-8 JSON `{"kind":"node-kind","nodeKind":…}` the host's on-demand activator admits (`$defs.onDemandRequest`); the generation3d surface owns the same projection beside its own run link.
+pub fn on_demand_effects(unserved: &[String]) -> Vec<Effect> {
+    semio_os_flow::on_demand_node_kind_requests(unserved).into_iter().map(|request| Effect::PublishEvent { topic: semio_os_flow::ON_DEMAND_REQUEST_TOPIC.into(), payload: request.into_bytes() }).collect()
+}
+
+/// 🧭️ What a surface's `pending_effects` owes the host while an attached preview parks on `unserved` node kinds (empty when no window is attached or the graph is servable): the activation requests of [`on_demand_effects`], once per registry generation and kind set ([`PreviewEvalRunLink::activation_asked`]). The window stays parked, never faulted; the activated extension's contributions push moves the generation and owes every attached preview an evaluation.
+pub fn on_demand_run_effects(link: &mut PreviewEvalRunLink, unserved: Vec<String>) -> Vec<Effect> {
+    let asked = (!unserved.is_empty()).then(|| (semio_os_flow::flow_extension_registry_generation(), unserved));
+    if link.activation_asked == asked {
+        return Vec::new();
+    }
+    link.activation_asked = asked.clone();
+    asked.map(|(_, unserved)| on_demand_effects(&unserved)).unwrap_or_default()
 }
 
 /// 🚦️ What the surface's `pending_effects` owes the run for the attached `windows`: owe every window

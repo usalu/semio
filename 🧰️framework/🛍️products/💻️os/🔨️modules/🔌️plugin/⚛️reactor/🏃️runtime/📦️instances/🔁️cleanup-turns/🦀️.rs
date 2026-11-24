@@ -30,7 +30,6 @@ pub fn runtime_live_cleanup_nonterminal_status(contended: bool, progress: Option
         return RuntimeMaintenanceStatus::Ready;
     }
     let stalled = stalled_steps.fetch_add(1, Ordering::SeqCst).saturating_add(1);
-    eprintln!("[DEBUG] live cleanup zero progress {stalled} {progress:?}");
     if stalled >= RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
         RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress)
     } else {

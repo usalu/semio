@@ -341,6 +341,7 @@ impl<'ctx> ActionsCtx<'ctx> {
                     "resolveConflict" => return self.framework_resolve_conflict(&action).await,
                     "installPlugin" | "reloadPlugin" => return self.framework_install_or_reload_plugin(&action).await,
                     "uninstallPlugin" => return self.framework_uninstall_plugin(&action).await,
+                    "activateOnDemand" => return self.framework_activate_on_demand(&action).await,
                     "quarantinePlugin" => return self.framework_quarantine_plugin(&action).await,
                     "installExtensionUrl" => return self.framework_install_extension_url(&action).await,
                     "installExtensionFile" => return self.framework_install_extension_file(&action).await,
@@ -419,13 +420,6 @@ impl<'ctx> ActionsCtx<'ctx> {
                     }
                     semio_framework::kernel::Effect::ReplayShellCommand { action_id, args } => {
                         self.handle_replay_shell_command(&action_id, args.as_ref()).await;
-                    }
-                    #[cfg(target_arch = "wasm32")]
-                    semio_framework::kernel::Effect::PublishEvent { topic, payload } if topic == "os.on-demand.request" => {
-                        let requested = String::from_utf8(payload).map_err(|error| error.to_string()).and_then(|request| semio_renderer_wgpu_program_bridge::request_on_demand_activation(&request));
-                        if let Err(error) = requested {
-                            debug_log(&format!("[TRACE] wgpu shell on-demand activation request failed: {error}"));
-                        }
                     }
                     other => queued.push(other),
                 }

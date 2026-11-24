@@ -1,5 +1,5 @@
 import {hostname,networkInterfaces} from "node:os";
-import {join} from "node:path";
+import {dirname,join} from "node:path";
 import {fleetGroupViewV1,fleetNetworkV1,setFleetExecutionV1} from "../../../🌐️remote-cache/🛰️fleet/📣️publication/🟦️.ts";
 import {readLocalFleetCacheFactsV1,remoteCacheFetchV1,resolveRemoteCacheV1,fleetStoreRootV1} from "../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {createFleetRegistryV1,createFleetVerifierV1,fleetIdentityDirectoryV1,fleetInterfaceAddressV1,readFleetMachineV1,syncFleetIdentityV1} from "../../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
@@ -7,6 +7,7 @@ import {createFleetGateV1} from "../../../🌐️remote-cache/🛰️fleet/🪪�
 import {httpRemoteExecutionContentV1} from "../../🗄️content/🟦️.ts";
 import {startRemoteExecutionServerV1,type RemoteExecutionServerV1} from "../../🖥️server/🟦️.ts";
 import {readRemoteExecutionPolicyV1} from "../../🟦️.ts";
+import {readSchedulerJournalV1,writeSchedulerJournalV1} from "../../🗓️scheduler/📓️journal/🟦️.ts";
 import {type RemoteExecutionSidecarContextV1,sleep,remoteExecutionPortsV1} from "../🧰️shared/🟦️.ts";
 
 /** 🗓️ The scheduler of the group (run on the group server only): serves the Remote Execution API and the worker and load API on the ports of the topology row of the group with signature-checked requests (no shared secret): the origins of its own group may submit and work, the origins of the peer groups of the fleet may submit only, and the network is an access condition only when the topology says `access.enforceNetwork`, bound to the fleet interface only, publishes its endpoint in the fleet facts, republishes it while it runs and leaves when the fleet credential rotates (the supervisor restarts it with the new one). */
@@ -27,14 +28,20 @@ export async function runScheduler(context:RemoteExecutionSidecarContextV1):Prom
  await registry.refresh(true);
  const gate=createFleetGateV1({verifier,...(view?.enforceNetwork===true?{networks:[network]}:{}),home:machine.group,tokens:{worker:workerToken}});
  const shown=(()=>{try{return new URL(cacheUrl).hostname;}catch{return hostname();}})();
- const service:RemoteExecutionServerV1=await startRemoteExecutionServerV1({
+ const record=context.environment.SEMIO_FLEET_SIDECAR_RECORD,journalPath=join(record===undefined||record===""?join(context.root,".cache","f","sidecars"):dirname(record),"build-scheduler.operations.json");
+ let flushing:ReturnType<typeof setTimeout>|undefined,service:RemoteExecutionServerV1|undefined,closed=false;
+ const flush=():void=>{if(flushing!==undefined)clearTimeout(flushing);flushing=undefined;if(service!==undefined&&!closed)writeSchedulerJournalV1(journalPath,service.scheduler.journal());};
+ const changed=():void=>{if(flushing===undefined){flushing=setTimeout(flush,250);flushing.unref();}};
+ const restore=readSchedulerJournalV1(journalPath,Date.now(),server.resumeGraceSeconds*10_000);
+ const running:RemoteExecutionServerV1=await startRemoteExecutionServerV1({
   host:address,grpcPort:ports.grpc,workerPort:ports.worker,content:httpRemoteExecutionContentV1({endpoint:cacheUrl,fetch:remoteCacheFetchV1(environment,{root:context.root})}),cacheUrl,tokens:{},gate,maximumWorkers:server.maximumWorkers,maximumRequestBytes:server.maximumRequestBytes,advertise:shown,
   maximumMessageBytes:server.maximumMessageBytes,maximumBatchBytes:server.maximumBatchBytes,
-  scheduler:{unmatchedSeconds:server.unmatchedSeconds,lingerSeconds:server.lingerSeconds,leaseSeconds:server.leaseSeconds,maximumAttempts:server.maximumAttempts,defaultActionSeconds:server.defaultActionSeconds,maximumActionSeconds:server.maximumActionSeconds,maximumQueued:server.maximumQueued,heartbeatSeconds:policy.worker.heartbeatSeconds,pollSeconds:policy.worker.pollSeconds,loadExpireSeconds:server.loadExpireSeconds,refusalCooldownSeconds:server.refusalCooldownSeconds,language:"none"},
+  scheduler:{unmatchedSeconds:server.unmatchedSeconds,lingerSeconds:server.lingerSeconds,leaseSeconds:server.leaseSeconds,maximumAttempts:server.maximumAttempts,defaultActionSeconds:server.defaultActionSeconds,maximumActionSeconds:server.maximumActionSeconds,maximumQueued:server.maximumQueued,heartbeatSeconds:policy.worker.heartbeatSeconds,pollSeconds:policy.worker.pollSeconds,loadExpireSeconds:server.loadExpireSeconds,refusalCooldownSeconds:server.refusalCooldownSeconds,resumeGraceSeconds:server.resumeGraceSeconds,restore,onChange:changed,language:"none"},
   onEvent:event=>{if(event.stage!=="submitted"&&event.stage!=="completed"&&event.stage!=="assigned")say(`scheduler ${event.stage}: ${event.detail}`);},
  });
- const endpoint=`http://${shown}:${new URL(service.grpcUrl.replace(/^grpc/u,"http")).port}`;
- say(`serving ${endpoint}, worker api ${service.workerUrl}`);
+ service=running;changed();
+ const endpoint=`http://${shown}:${new URL(running.grpcUrl.replace(/^grpc/u,"http")).port}`;
+ say(`serving ${endpoint}, worker api ${running.workerUrl}`);
  const publish=async():Promise<void>=>{if(storeRoot!==undefined)await setFleetExecutionV1(storeRoot,{endpoint,protocolVersion:1}).catch(error=>{say(`publishing the endpoint failed: ${(error as Error).message}`);});};
  await publish();
  let lastSummary="";
@@ -45,11 +52,12 @@ export async function runScheduler(context:RemoteExecutionSidecarContextV1):Prom
    const again=resolveRemoteCacheV1(environment,{root:context.root});
    if(again!==undefined&&again.contract.endpoint!==cacheUrl){say("the cache moved, restarting");break;}
    await publish();
-   const counters=service.scheduler.status().counters,summary=`cancelled ${counters.cancelled} (before start ${counters.cancelledQueued}, running ${counters.cancelledExecuting}), workers re-registered ${counters.workersReused}, sweep stalls ${counters.sweepStalls}, queue wait p50/p90/max ${counters.queueWaitP50Milliseconds}/${counters.queueWaitP90Milliseconds}/${counters.queueWaitMaxMilliseconds} ms over ${counters.queueWaitSamples} assignments`;
+   const counters=running.scheduler.status().counters,summary=`restored ${counters.restored}, resumed ${counters.resumed}, cancelled ${counters.cancelled} (before start ${counters.cancelledQueued}, running ${counters.cancelledExecuting}), workers re-registered ${counters.workersReused}, sweep stalls ${counters.sweepStalls}, queue wait p50/p90/max ${counters.queueWaitP50Milliseconds}/${counters.queueWaitP90Milliseconds}/${counters.queueWaitMaxMilliseconds} ms over ${counters.queueWaitSamples} assignments`;
    if(summary!==lastSummary){lastSummary=summary;say(`scheduler summary: ${summary}`);}
   }
  }finally{
-  await service.stop().catch(()=>{});
+  flush();closed=true;
+  await running.stop().catch(()=>{});
   if(context.signal.aborted&&storeRoot!==undefined)await setFleetExecutionV1(storeRoot,null).catch(()=>{});
  }
 }

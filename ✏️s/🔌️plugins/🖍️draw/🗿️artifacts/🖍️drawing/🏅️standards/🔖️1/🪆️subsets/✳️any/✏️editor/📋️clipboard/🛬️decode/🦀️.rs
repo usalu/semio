@@ -37,7 +37,7 @@ impl ClipboardHydration{
     fn layer(&mut self,path:&[usize],mut source:DslValue,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
         if path.len()>MAX_DEPTH||self.nodes==MAX_NODES{self.rejected=Some(source);return Err(invalid());}self.nodes+=1;
         let capacity=self.tasks.len()+16;if capacity>MAX_TASKS{self.rejected=Some(source);return Err(invalid());}
-        while self.tasks.capacity()<capacity{let bytes=match self.tasks.next_capacity_allocation_bytes(capacity){Ok(Some(bytes))=>bytes,Ok(None)=>break,Err(error)=>{self.rejected=Some(source);return Err(error.into());}};if let Err(error)=control.charge(bytes){self.rejected=Some(source);return Err(error);}if let Err(error)=self.tasks.reserve_exact_capacity_one_cold(capacity,bytes){self.rejected=Some(source);return Err(error.refusal().into());}}
+        while self.tasks.capacity()<capacity{let bytes=match self.tasks.next_capacity_allocation_bytes(MAX_TASKS){Ok(Some(bytes))=>bytes,Ok(None)=>break,Err(error)=>{self.rejected=Some(source);return Err(error.into());}};if let Err(error)=control.charge(bytes){self.rejected=Some(source);return Err(error);}if let Err(error)=self.tasks.reserve_exact_capacity_one_cold(MAX_TASKS,bytes){self.rejected=Some(source);return Err(error.refusal().into());}}
         let DslValue::Object(entries)=&mut source else{self.queue(path,Kind::Layer,source,control)?;return Err(invalid());};
         if entries.len()>20||entries.iter().any(|(key,_)|key.len()>64){self.queue(path,Kind::Layer,source,control)?;return Err(invalid());}
         let kind=entries.iter().find(|(key,_)|key=="kind").and_then(|(_,value)|value.as_str());

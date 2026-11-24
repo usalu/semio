@@ -2,14 +2,14 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {planPoolAcquireV1} from "../../🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};
-import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,utimesSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,utimesSync,writeFileSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {tmpdir} from "node:os";
 import {acquireProductLaneV1} from "../🟦️.ts";
 import {acquirePooledLaneV1,trimPoolV1} from "../../🟦️.ts";
 import {activeScriptProcessWaitsV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {laneMessageV1} from "../../../../🚪️launch/🟦️.ts";
-import {recordLaneSizeV1} from "../../../🟦️.ts";
+import {readLaneV1,recordLaneSizeV1} from "../../../🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../../../🔏️key/🟦️.ts";
 import {compilerProductKeyV1,type CompilerProductIntentV1} from "../../../../../../💾️storage/🔒️enforcement/🏗️compiler/🎯️product/🟦️.ts";
 import {createIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
@@ -71,7 +71,7 @@ test("ordinary acquisition cannot repurpose product paths; idle product bytes ar
  try{
   const product=await acquireProductLaneV1(root,request(key),{signal});product.release();
   const ordinary=await acquirePooledLaneV1(root,{crates:["same"],quotaBytes:Number.MAX_SAFE_INTEGER});expect(ordinary.paths.id).not.toBe(product.paths.id);
-  recordLaneSizeV1(root,product.paths.id,4096,0,Date.now());const bounds={maximumLanes:16,maximumLiveLanes:32,quotaBytes:0},kept=trimPoolV1(root,bounds,Date.now());expect(kept.removed).toBe(0);expect(existsSync(product.paths.base)).toBe(true);const aged=new Date(Date.now()-UNIT_CACHE_POLICY_V1.pool.product.retainMilliseconds-1000);utimesSync(product.paths.metadata,aged,aged);const result=trimPoolV1(root,bounds,Date.now());expect(result.removed).toBe(1);expect(existsSync(product.paths.base)).toBe(false);expect(existsSync(ordinary.paths.base)).toBe(true);ordinary.release();
+  recordLaneSizeV1(root,product.paths.id,4096,0,Date.now());const bounds={maximumLanes:16,maximumLiveLanes:32,quotaBytes:0},kept=trimPoolV1(root,bounds,Date.now());expect(kept.removed).toBe(0);expect(existsSync(product.paths.base)).toBe(true);const aged=new Date(Date.now()-UNIT_CACHE_POLICY_V1.pool.product.retainMilliseconds-1000);writeFileSync(product.paths.metadata,JSON.stringify({...readLaneV1(root,product.paths.id),usedMs:aged.getTime()}));utimesSync(product.paths.metadata,aged,aged);const result=trimPoolV1(root,bounds,Date.now());expect(result.removed).toBe(1);expect(existsSync(product.paths.base)).toBe(false);expect(existsSync(ordinary.paths.base)).toBe(true);ordinary.release();
   const recreated=await acquireProductLaneV1(root,request(key),{signal});expect(recreated.paths).toEqual(product.paths);recreated.release();
  }finally{rmSync(root,{recursive:true,force:true});}
 });

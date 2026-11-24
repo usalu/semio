@@ -13,7 +13,7 @@ fn default_true() -> bool {
 }
 
 /// 🧭️ Position + axis-angle rotation applied via the brep kernel's `rotate_sync`/`translate_sync`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Pose {
@@ -38,7 +38,7 @@ impl Default for Pose {
 /// Purely informational — kernel replay only ever reads `ProcessMeasure`, never resolves this back to a
 /// workshop entry, so editing or removing the machine/capability can never retroactively change
 /// already-authored geometry.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct StepOrigin {
@@ -64,7 +64,7 @@ pub struct StepOrigin {
 /// builds fresh input for) before it can call the kernel — see `brep_snapshot_for_working_solid`
 /// (WRITE, real) below for the analytic converter that turns a `WorkingSolid` into real,
 /// content-addressable `SemioBrepSnapshot` topology.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum WorkingSolid {
@@ -124,7 +124,7 @@ impl Default for WorkingSolid {
 
 /// 🪵️ The raw workpiece the process starts from — ephemeral working-scene counterpart of the
 /// persisted `stock_id`/`stock_label`/`stock_pose`/`stock_solid` fields on `Process3dSnapshot`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Stock {
@@ -144,7 +144,7 @@ impl Default for Stock {
 /// Ephemeral working-scene counterpart of a `flow` node's `kind`/`params` — see
 /// `flow_node_from_process_step`/`process_step_from_flow_node` below for the real bidirectional
 /// converter.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "measure", rename_all = "camelCase")]
 pub enum ProcessMeasure {
@@ -180,7 +180,7 @@ impl ProcessMeasure {
 
 /// 🎞️ One ordered step of the process timeline — ephemeral working-scene counterpart of one
 /// `SemioFlowSnapshot` `FlowNode` (see `flow_node_from_process_step`/`process_step_from_flow_node`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct ProcessStep {

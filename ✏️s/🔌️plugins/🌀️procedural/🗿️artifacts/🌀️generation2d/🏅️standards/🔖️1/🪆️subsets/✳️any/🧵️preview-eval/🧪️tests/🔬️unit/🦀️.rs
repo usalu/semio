@@ -388,16 +388,18 @@ fn every_gesture_rearm_row_owes_one_hop_per_preview_and_at_most_one_start() {
             link.requested = None;
         }
 
+        let unserved: Vec<String> = if servable { Vec::new() } else { vec!["fixture.unserved".into()] };
         let mut emit = semio_plugin::Emit::<u8>::default();
         emit.artifact_mutations = vec![0_u8; mutations];
-        let owes = owe_attached_previews_for_mutations(sessions.parts(), &mut link, &windows, servable, &mut emit);
+        let owes = owe_attached_previews_for_mutations(sessions.parts(), &mut link, &windows, &unserved, &mut emit);
         assert_eq!(owes, expected["owes"].as_bool().unwrap(), "{id}: a gesture owes the previews exactly when it moved the document");
         let carried: Vec<&str> = emit
             .effects
             .iter()
-            .map(|effect| match effect {
-                Effect::DispatchAction { action, .. } => action.as_str(),
-                other => panic!("{id}: a gesture carries only dispatches, found {other:?}"),
+            .filter_map(|effect| match effect {
+                Effect::DispatchAction { action, .. } => Some(action.as_str()),
+                Effect::PublishEvent { topic, .. } if topic == semio_os_flow::ON_DEMAND_REQUEST_TOPIC && !servable => None,
+                other => panic!("{id}: a gesture carries only dispatches and, while parked, one activation request, found {other:?}"),
             })
             .collect();
         assert_eq!(carried, expected["gestureEffects"].as_array().unwrap().iter().map(text).collect::<Vec<_>>(), "{id}: what the gesture's own emit carries");
@@ -421,8 +423,8 @@ fn every_gesture_rearm_row_owes_one_hop_per_preview_and_at_most_one_start() {
         stage(&mut spinning, &mut spinning_link);
         let mut spinning_emit = semio_plugin::Emit::<u8>::default();
         spinning_emit.artifact_mutations = vec![0_u8; mutations];
-        owe_attached_previews_for_mutations(spinning.parts(), &mut spinning_link, &windows, servable, &mut spinning_emit);
-        let starts = spinning_emit.effects.len() + replay_pending_effects(&mut spinning, &mut spinning_link, &windows, polls, lag, servable, poll_start_view);
+        owe_attached_previews_for_mutations(spinning.parts(), &mut spinning_link, &windows, &unserved, &mut spinning_emit);
+        let starts = spinning_emit.effects.iter().filter(|effect| matches!(effect, Effect::DispatchAction { .. })).count() + replay_pending_effects(&mut spinning, &mut spinning_link, &windows, polls, lag, servable, poll_start_view);
         println!("[STATS] gestureRearm {id}: owes={owes} owed={owed:?} hops={hops:?} carried={carried:?} starts={starts}");
         assert_eq!(starts as u64, expected["starts"].as_u64().unwrap(), "{id}: one gesture owes at most one run start, however slowly the run view catches up");
         sessions.retire();

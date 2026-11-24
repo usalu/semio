@@ -198,3 +198,10 @@ field new-humidification-required-kg-h
 record change-vent-humidification-provided tag=49
 field vent-id
 field new-humidification-provided-kg-h
+
+record change-zone-unoccupied-ventilation tag=50
+field zone-id
+field new-unoccupied-ventilation
+
+record clear-zone-unoccupied-ventilation tag=51
+field zone-id

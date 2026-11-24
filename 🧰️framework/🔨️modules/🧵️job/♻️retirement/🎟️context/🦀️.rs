@@ -49,10 +49,14 @@ pub fn close_original_retained_turn(cx:&mut StepContext<'_>,demand:RetirementDem
  let turn=advance(grant);fold_original_close(cx,RetainedWorkOutcome{result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}),work:turn.work})
 }
 /// 🪙️ An effect-shaped close runs inside the context's own performed-work effect with every item the turn admits and settles the converted poll once.
-pub fn close_original_effect_step<E:Into<crate::OriginalTurnPrimary>>(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->semio_framework_value_control_contract::RetainedWorkPoll<RetainedCloneStep,E>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+pub fn close_original_effect_step<E:Into<crate::OriginalTurnPrimary>>(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->semio_framework_value_control_contract::RetainedWorkPoll<RetainedCloneStep,E>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{close_original_effect_step_at(cx,demand,false,advance)}
+/// 🪙️ Like [`close_original_effect_step`], but the effect carries the turn's own original Source, so a resident read born under an earlier Source dispatch returns under the live one.
+pub fn close_original_source_effect_step<E:Into<crate::OriginalTurnPrimary>>(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->semio_framework_value_control_contract::RetainedWorkPoll<RetainedCloneStep,E>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{close_original_effect_step_at(cx,demand,true,advance)}
+fn close_original_effect_step_at<E:Into<crate::OriginalTurnPrimary>>(cx:&mut StepContext<'_>,demand:RetirementDemand,sourced:bool,advance:impl FnOnce(&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->semio_framework_value_control_contract::RetainedWorkPoll<RetainedCloneStep,E>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
  use semio_framework_value_control_contract::RetainedWorkPoll;
  let Some(grant)=close_original_admission(cx,demand)?else{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})};
- let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|advance(effect))?else{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})};
+ let run=|_:&mut StepContext<'_>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>|advance(effect);
+ let Some((poll,performed))=(if sourced{cx.with_original_source_effect(grant,run)?}else{cx.with_original_effect(grant,run)?})else{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})};
  let turn=match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};
  let overrun=performed>turn.work;
  let result=fold_original_close(cx,RetainedWorkOutcome{result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}).map_err(|error|-> crate::OriginalTurnPrimary {error.into()}),work:turn.work});

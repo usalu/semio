@@ -31,3 +31,21 @@ Fix:
 The `[actor] [DEBUG] turn phase / reconcile loop / more-work inputs` strings do not exist in any current source (grep over `🧰️framework` and `✏️s`, all extensions, finds only `[TRACE]` variants of the same lines in `⚛️reactor/🔄️turn/🔦️more-work-sources-and-tracing`, gated by runtime diagnostics): the staged module was built from a tree that still had them, so they vanish on the next rebuild. Not touched.
 
 generation2d has the same pattern (`generation2d/.../🧵️preview-eval/⏯️tool-run/🦀️.rs` ~706); not changed here.
+
+## Follow-up 2 (runtime-confirmed): tick during an unfinished drain was a hard error
+
+After `drain_cancellation` the served build failed with `interactive-job.worker-continuation: WorkLimit: original preview cancellation must finish before another tick` (raised by `begin_window_tick_key`) because a window tick was dispatched while the drain was still stepping, and a `WorkLimit` surfaces as a non-retryable worker fault.
+
+Fix: `MountedPreviewTick::step` (`generation3d/.../🧵️preview-eval/⏱️tick-and-resolve/🦀️.rs`) now, before it starts a tick (no host yet), advances the session's cancellation drain one step on the tick's own effect and answers `(None, progress)` (pending) while `preview_cancellation_terminal_is_empty()` is false. The tick path therefore both drives the drain every turn it is dispatched and never reaches `begin_window_tick`'s refusal. The run job's `drain_cancellation` (close and live step) remains the driver when no tick is in flight; `resume_preview_evaluation` lifts the finished cancellation.
+
+Unchecked: the composition workspace crate does not resolve under `repo cargo check` here (cargo resolver panic `did not find features for ... preview-eval`); procedural rebuild is the check. The non-mounted `evaluate_tick_with_seeds` and generation2d keep the old refusal (no mounted caller reaches them while cancelled).
+
+## Follow-up 3: drained cancellation wipes the new run's owed latches
+
+After the 01:42 rebuild the pane still reads `Cancelled` / tool run `Running · Evaluating nodes (1/2)`, meshes=0. The `[DEBUG] ladder zero ... Stage(24)/Stage(14)` lines come from a store-publication probe that is not in source any more; they are not part of the preview-eval path.
+
+Reading `preview_cancellation_step`: phase 2 resets EVERY window tick latch to `FlowEvalWindowTickLatch::default()` (unfinished=false). A run that starts after a restart owes its windows in `PreviewEvalRunJob::new` (`note_window_tick_outcome(.., true)`), but the cancellation drain that follows (stepped by `drain_cancellation`) wipes exactly those latches, so once the cancellation is lifted `window_tick_owed` is false, the hop law answers `Settled` and the run completes with no hop and no mesh.
+
+Fix (`generation3d/.../🧵️preview-eval/⏯️tool-run/🦀️.rs`, run step): when `resume_preview_evaluation()` lifts a cancellation (it was cancelled and the drain is finished), the run owes every attached window one evaluation again before it consults `next_preview_eval_hop`; while the drain is unfinished the hop is `Wait`.
+
+Unchecked: the composition workspace crate cannot be `cargo check`ed here (resolver panic); procedural rebuild is the check. If the pane still reads `Cancelled` after this, the drain itself is not completing (suspects: `SessionRetirement::admit` returning no progress, or the geometry port `cancel_step` in phase 4); the next probe belongs in `preview_cancellation_step`.

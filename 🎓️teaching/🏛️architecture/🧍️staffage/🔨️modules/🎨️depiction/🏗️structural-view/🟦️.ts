@@ -6,7 +6,8 @@
  *
  * Arrows show the force acting ON the body at its point of application with the head at that point (loads press onto the body, reactions push
  * up into it). Axial N > 0 tension (cool, dotted), N < 0 compression (warm, hatched); M > 0 sagging, drawn on the tension side.
- * Colour is never the only code: arrow and moment kinds differ by outline dash, supports by shape.
+ * Colour is never the only code: arrow and moment kinds differ by outline dash, supports by shape, and the area of a strong member diagram
+ * (axial, shear, bending moment) and the ring of its line-of-sight symbol are hatched by sign as the member fills are.
  *
  * @see ../../🏗️structure/🟦️.ts — `solveStructure`, `structuralLegend`, `freeBody`
  * @see ../../🏗️structure/📽️projection/🟦️.ts — the projection of forces and moments onto the three planes
@@ -23,7 +24,10 @@ import type { AnalyticView, Prepared, Style } from "../🧩️shapes/🟦️.ts"
 import { type Vec, add, arcCommands, arrowOutline, circleCommands, commandsOf, headOutline, lerp, perp, ringsCommands, scale as scaleVec, sectorCommands, sub, unit } from "../📐️geometry/🟦️.ts";
 import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
-const PATTERN_FRACTION = 0.15;
+/** 🪡️ The share of the range (member fills: of their side of the range, diagrams: of the ordinate maximum) above which a value counts as strong and is hatched by its sign when patterns are on. */
+export const PATTERN_FRACTION = 0.15;
+/** 🧵️ The hatch pattern of a signed structural value: diagonal hatch for negative values (compression, hogging), dots for positive ones (tension, sagging). */
+export const signPattern = (value: number): NonNullable<Fill["pattern"]> => (value < 0 ? "compression" : "tension");
 const DIAGRAM_MM = 6;
 const ARROW_MAX_MM = 14;
 const ARROW_MIN_MM = 1.5;
@@ -106,8 +110,8 @@ export function memberView(ctx: Ctx, shapes: readonly Prepared[], result: Struct
   const regionKind = (id: Slug): string | undefined => ctx.state.asset.thermal.regions.find((r) => r.id === id)?.kind;
   const fmt = (v: number, l: "en" | "de"): string => formatNumber(v, Math.max(0, 2 - Math.floor(portable.log10(Math.max(Math.abs(v), 1e-9)))), l);
   const interpretation = tx(
-    `${base.title.en} from ${fmt(scale.min, "en")} to ${fmt(scale.max, "en")} ${base.unit}; zero is grey; bones without a section and shorter than 5 % of the object height, foliage, glazing and texture are drawn neutral (ghosted). With patterns on, strong values (above 15 % of their side of the range) are also hatched: diagonal hatch = negative (warm), dots = positive (cool).`,
-    `${base.title.de} von ${fmt(scale.min, "de")} bis ${fmt(scale.max, "de")} ${base.unit}; null ist grau; Stäbe ohne Querschnitt und kürzer als 5 % der Objekthöhe sowie Laub, Verglasung und Textur sind neutral (blass) gezeichnet. Mit Mustern sind starke Werte (über 15 % ihrer Seite des Bereichs) zusätzlich schraffiert: Schrägschraffur = negativ (warm), Punkte = positiv (kühl).`,
+    `${base.title.en} from ${fmt(scale.min, "en")} to ${fmt(scale.max, "en")} ${base.unit}; zero is grey; bones without a section and shorter than 5 % of the object height, foliage, glazing and texture are drawn neutral (ghosted). With patterns on, strong values (above 15 % of their side of the range) are also hatched: diagonal hatch = negative (warm), dots = positive (cool); weaker values are drawn unhatched.`,
+    `${base.title.de} von ${fmt(scale.min, "de")} bis ${fmt(scale.max, "de")} ${base.unit}; null ist grau; Stäbe ohne Querschnitt und kürzer als 5 % der Objekthöhe sowie Laub, Verglasung und Textur sind neutral (blass) gezeichnet. Mit Mustern sind starke Werte (über 15 % ihrer Seite des Bereichs) zusätzlich schraffiert: Schrägschraffur = negativ (warm), Punkte = positiv (kühl); schwächere Werte bleiben unschraffiert.`,
   );
   const legend: Legend = legendOf({ title: base.title, quantity, unit: base.unit, convention: base.convention, interpretation, scale, colourAt: colourOf });
   const styleOf = (p: Prepared): Style => {
@@ -121,7 +125,7 @@ export function memberView(ctx: Ctx, shapes: readonly Prepared[], result: Struct
     if (ghost || !eligible(p.shape.bone)) return { fill: neutral, value, outlineMm };
     const span = v < 0 ? -scale.min : scale.max;
     const strong = span > 0 && Math.abs(v) / span > PATTERN_FRACTION;
-    const pattern: Fill["pattern"] | undefined = patterns && strong && quantity !== "contact-pressure" ? (v < 0 ? "compression" : "tension") : undefined;
+    const pattern: Fill["pattern"] | undefined = patterns && strong && quantity !== "contact-pressure" ? signPattern(v) : undefined;
     return { fill: { color: colourOf(v), ...(glaze ? { opacity: 0.6 } : {}), ...(pattern ? { pattern } : {}) }, value, outlineMm };
   };
   return { styleOf, legend };
@@ -252,8 +256,8 @@ export const MOMENT_MIN_SHOWN = MOMENT_MIN_FRACTION;
 
 type ArrowSpec = { readonly id: string; readonly kind: ArrowKind; readonly head: Vec; readonly force: Vec3; readonly title: Text; readonly longest: number; readonly max: number; readonly drawn: boolean; readonly label: boolean; readonly required: boolean };
 
-function crossSymbol(canvas: Canvas, id: string, centre: Vec, radius: number, symbol: "dot" | "cross", color: string, dash: readonly number[] | undefined, value: { readonly quantity: string; readonly value: number; readonly unit: string; readonly label: Text }): void {
-  canvas.path("forces", id, circleCommands(centre, radius), { stroke: { color, widthMm: 0.3, ...(dash ? { dashMm: dash } : {}) }, fill: { color, opacity: 0.12 }, value });
+function crossSymbol(canvas: Canvas, id: string, centre: Vec, radius: number, symbol: "dot" | "cross", color: string, dash: readonly number[] | undefined, value: { readonly quantity: string; readonly value: number; readonly unit: string; readonly label: Text }, pattern?: Fill["pattern"]): void {
+  canvas.path("forces", id, circleCommands(centre, radius), { stroke: { color, widthMm: 0.3, ...(dash ? { dashMm: dash } : {}) }, fill: { color, opacity: 0.12, ...(pattern ? { pattern } : {}) }, value });
   if (symbol === "dot") canvas.path("forces", `${id}:dot`, circleCommands(centre, Math.max(0.3, radius * 0.35)), { fill: { color } });
   else for (const s of [1, -1]) canvas.path("forces", `${id}:cross-${s > 0 ? "a" : "b"}`, commandsOf([add(centre, { x: -radius * 0.7, y: -radius * 0.7 * s }), add(centre, { x: radius * 0.7, y: radius * 0.7 * s })], false), { stroke: { color, widthMm: 0.3, cap: "round" } });
 }
@@ -426,21 +430,23 @@ function drawDiagram(canvas: Canvas, ctx: Ctx, result: StructuralResult, kind: D
     const color = divergingColour(r.peak, sc, false, ctx.theme);
     const label = titleOf(r.bone);
     const id = `diagram:${kind}:${r.bone}:${r.index}`;
+    const strong = ctx.options.patterns && r.magnitude / peak > PATTERN_FRACTION;
     canvas.path("diagrams", id, commandsOf(r.points, true), {
-      fill: { color, opacity: 0.4 },
+      fill: { color, opacity: 0.4, ...(strong ? { pattern: signPattern(r.peak) } : {}) },
       stroke: { color, widthMm: 0.2, join: "round" },
       value: { quantity: kind === "moment" ? "bending-moment" : kind === "axial" ? "axial-force" : "shear-force", value: kind === "axial" ? r.peak : r.magnitude, unit: meta.unit, label },
       bone: r.bone,
     });
+    if (!ctx.options.annotations.labels) continue;
     const whole = kind === "axial" || Math.abs(Math.abs(r.peak) - r.magnitude) <= OUT_OF_PLANE_MIN * r.magnitude;
     const reading = whole ? formatQuantity(r.peak, meta.unit, ctx.language) : `${formatQuantity(r.magnitude, meta.unit, ctx.language)} (${IN_PLANE} ${formatQuantity(r.peak, meta.unit, ctx.language)})`;
-    if (ctx.options.annotations.labels) ctx.labels.add(`${id}:label`, r.peakAt, `${label[ctx.language]} ${reading}`, { required: false, magnitude: Math.abs(r.peak) });
+    ctx.labels.add(`${id}:label`, r.peakAt, `${label[ctx.language]} ${reading}`, { required: false, magnitude: Math.abs(r.peak) });
   }
   for (const o of diagramOutOfPlane(ctx.state, result, kind, viewpoint, peak, include)) {
     const color = divergingColour(o.outOfPlane, sc, false, ctx.theme);
     const label = titleOf(o.bone);
     const centre = placeOf(ctx, o.at);
-    crossSymbol(canvas, `diagram:${kind}:${o.bone}:out`, centre, 0.9 + 1.6 * Math.sqrt(Math.abs(o.outOfPlane) / peak), o.symbol, color, undefined, { quantity: kind === "moment" ? "bending-moment" : "shear-force", value: o.total, unit: meta.unit, label });
+    crossSymbol(canvas, `diagram:${kind}:${o.bone}:out`, centre, 0.9 + 1.6 * Math.sqrt(Math.abs(o.outOfPlane) / peak), o.symbol, color, undefined, { quantity: kind === "moment" ? "bending-moment" : "shear-force", value: o.total, unit: meta.unit, label }, ctx.options.patterns && o.total / peak > PATTERN_FRACTION ? signPattern(o.outOfPlane) : undefined);
     if (ctx.options.annotations.labels) ctx.labels.add(`diagram:${kind}:${o.bone}:out:label`, centre, `${label[ctx.language]} ${formatQuantity(o.total, meta.unit, ctx.language)} (${outLabel(o.symbol)} ${formatQuantity(Math.abs(o.outOfPlane), meta.unit, ctx.language)})`, { required: false, magnitude: o.total });
   }
 }
@@ -458,7 +464,7 @@ function diagramLegend(ctx: Ctx, kind: DiagramKind, peak: number): Legend {
     convention: side
       ? tx("M > 0 sagging (cool), M < 0 hogging (warm); the ordinate is drawn on the tension side of the member, projected into the view (M > 0 about the lateral axis on the bone's local −y face); at the peak a ringed dot (towards the viewer) or cross (away) marks the component along the line of sight of the tension-side direction of the bending moment (the direction in which the ordinate is drawn).", "M > 0 Feldmoment (kühl), M < 0 Stützmoment (warm); die Ordinate liegt auf der Zugseite des Stabes, in die Ansicht projiziert (M > 0 um die Querachse auf der lokalen −y-Seite des Stabes); am Maximum markiert ein Punkt im Kreis (zum Betrachter) oder Kreuz im Kreis (vom Betrachter weg) die Komponente in Blickrichtung der Zugseitenrichtung des Biegemoments (die Richtung, in der die Ordinate gezeichnet wird).")
       : tx("Positive values (tension for N) are drawn on the bone's local +y side (left of the bone direction), negative values on the other side; the vector is projected into the view, at its peak a ringed dot (towards the viewer) or cross (away) marks the component along the line of sight of the shear force vector V = −Σ distal transverse force (for N there is none).", "Positive Werte (Zug bei N) liegen auf der lokalen +y-Seite des Stabes (links der Stabrichtung), negative Werte auf der anderen Seite; der Vektor wird in die Ansicht projiziert, an ihrem Maximum markiert ein Punkt im Kreis (zum Betrachter) oder Kreuz im Kreis (vom Betrachter weg) die Komponente in Blickrichtung des Querkraftvektors V = −Σ distale Querkraft (bei N gibt es keine)."),
-    interpretation: tx(`Ordinate scale: ${DIAGRAM_MM} mm ≙ ${formatNumber(peak, 2, "en")} ${meta.unit} (the invariant maximum of the three-dimensional vector), the same for all members and all views; every member reads its own invariant maximum in every view, a label adds the part in the plane of the view (⟷) or along the line of sight (⊙, ⊗) where the view does not see the whole.`, `Ordinatenmaßstab: ${DIAGRAM_MM} mm ≙ ${formatNumber(peak, 2, "de")} ${meta.unit} (das unveränderliche Maximum des räumlichen Vektors), für alle Stäbe und alle Ansichten gleich; jeder Stab liest in jeder Ansicht sein eigenes unveränderliches Maximum, ein Label nennt zusätzlich den Anteil in der Ansichtsebene (⟷) oder in Blickrichtung (⊙, ⊗), wo die Ansicht nicht das Ganze sieht.`),
+    interpretation: tx(`Ordinate scale: ${DIAGRAM_MM} mm ≙ ${formatNumber(peak, 2, "en")} ${meta.unit} (the invariant maximum of the three-dimensional vector), the same for all members and all views; every member reads its own invariant maximum in every view, a label adds the part in the plane of the view (⟷) or along the line of sight (⊙, ⊗) where the view does not see the whole. With patterns on, the diagram area of a member whose maximum is above ${PATTERN_FRACTION * 100} % of the ordinate maximum and the ring of its line-of-sight symbol are also hatched: diagonal hatch = negative, dots = positive; weaker ones are drawn unhatched.`, `Ordinatenmaßstab: ${DIAGRAM_MM} mm ≙ ${formatNumber(peak, 2, "de")} ${meta.unit} (das unveränderliche Maximum des räumlichen Vektors), für alle Stäbe und alle Ansichten gleich; jeder Stab liest in jeder Ansicht sein eigenes unveränderliches Maximum, ein Label nennt zusätzlich den Anteil in der Ansichtsebene (⟷) oder in Blickrichtung (⊙, ⊗), wo die Ansicht nicht das Ganze sieht. Mit Mustern ist die Fläche der Linie eines Stabes, dessen Maximum über ${PATTERN_FRACTION * 100} % des Ordinatenmaximums liegt, und der Ring seines Blickrichtungssymbols zusätzlich schraffiert: Schrägschraffur = negativ, Punkte = positiv; schwächere bleiben unschraffiert.`),
   });
 }
 

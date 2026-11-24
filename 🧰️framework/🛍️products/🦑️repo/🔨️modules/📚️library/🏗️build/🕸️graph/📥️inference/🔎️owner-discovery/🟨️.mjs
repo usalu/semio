@@ -21,12 +21,13 @@ import * as nodeFs from "node:fs";
 import { buildInputSourceRoleV1, buildSourceDemandV1, buildNativeSourceObservationV1 } from "../../🚪️admission/🟦️.ts";
 import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
 import {INFERENCE_LIMITS_V1} from "../🧬️schema/🟨️.mjs";
+import {observationRoundV1} from "../../../👁️observation/🟨️.mjs";
 import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 const { existsSync, lstatSync, readFileSync, readdirSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "owner-discovery";
-let buildPath, POLICY, WORKSPACE_POLICY, exampleCollectionPath, yieldInferenceV1, readPhysicalSource, requirePhysicalSourceV1, importRevision, PROJECT_BASENAME, nativeDependencyRoots, libraryBootstrap, readToml, createScriptInputCache, cargoTargets, componentBuildTargets, readTaxonomyProjectionV1, owned, playgroundSessionTargets, playgroundPreparationTargets, collectPlaygroundCatalog, playgroundSiteTargetsForAdmissionV1, targetWithDefaults, SCRIPT_BASENAME, loaded, targetScriptSources, projectWithDefaults, withNativePreparation, LIBRARY_ROOT, EXAMPLE_COLLECTIONS, WORKSPACE_OWNERSHIP, relativeScriptInputs, prepareSourceAnalysesV1, buildImportResourceV1, workspacePackageModuleV1;
+let buildPath, POLICY, WORKSPACE_POLICY, exampleCollectionPath, yieldInferenceV1, readPhysicalSource, requirePhysicalSourceV1, importRevision, PROJECT_BASENAME, nativeDependencyRoots, libraryBootstrap, readToml, createScriptInputCache, cargoTargets, componentBuildTargets, printDocumentTargets, readTaxonomyProjectionV1, owned, playgroundSessionTargets, playgroundPreparationTargets, collectPlaygroundCatalog, playgroundSiteTargetsForAdmissionV1, targetWithDefaults, SCRIPT_BASENAME, loaded, targetScriptSources, projectWithDefaults, withNativePreparation, LIBRARY_ROOT, EXAMPLE_COLLECTIONS, WORKSPACE_OWNERSHIP, relativeScriptInputs, prepareSourceAnalysesV1, buildImportResourceV1, workspacePackageModuleV1;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
@@ -34,7 +35,7 @@ export function wire(registry) {
   ({ yieldInferenceV1, createScriptInputCache, targetScriptSources, relativeScriptInputs, buildImportResourceV1, workspacePackageModuleV1 } = registry.scriptInputs);
   ({ importRevision, libraryBootstrap, loaded } = registry.bootstrap);
   ({ nativeDependencyRoots, readToml, withNativePreparation } = registry.nativeManifests);
-  ({ cargoTargets, componentBuildTargets } = registry.componentTargets);
+  ({ cargoTargets, componentBuildTargets, printDocumentTargets } = registry.componentTargets);
   ({ readTaxonomyProjectionV1, prepareSourceAnalysesV1 } = registry.sourceAnalyses);
   ({ playgroundSessionTargets, playgroundPreparationTargets, collectPlaygroundCatalog, playgroundSiteTargetsForAdmissionV1 } = registry.playgroundTargets);
   ({ targetWithDefaults } = registry.targetPolicy);
@@ -347,7 +348,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
  const declaration=owner.manifest.endsWith("Cargo.toml")?readToml(path):JSON.parse(source.toString("utf8"));dbg("manifest");
  const authoredTargets=owner.manifest.endsWith("Cargo.toml")?{}:declaration.targets??{},scripts=createScriptInputCache(context),nativeDeclarations=await cargoTargets(owner.root,workspaceRoot,undefined,scripts),dbgCargo=dbg("cargo-targets"),json=owner.manifest.endsWith("Cargo.toml")?{name:declaration.package?.name,root:owner.root,targets:nativeDeclarations}:{...declaration,root:owner.root};
  if(json.name!==owner.name)throw Error("Admitted canonical build owner differs: "+owner.manifest);
- json.targets={...nativeDeclarations,...json.targets,...componentBuildTargets(owner.root,workspaceRoot)};dbg("component-targets");
+ json.targets={...nativeDeclarations,...json.targets,...componentBuildTargets(owner.root,workspaceRoot),...await printDocumentTargets(json,owner.root,workspaceRoot,scripts)};dbg("component-targets");
  askOwnerRegistryV1(workspaceRoot,registry,["providers",owner.root,targets.length>0,[...inputNames]]);
  const contracts=ownerGeneratorContractsV1(workspaceRoot),providers=registry.catalogProviders.filter(provider=>targets.length&&provider.consumerRoots.some(root=>owned(owner.root,root))||inputNames.includes("{workspaceRoot}/"+provider.sourcePath)),dbgP=dbg("providers"),shared=providers.length?await sharedCatalogV1(workspaceRoot,registry,providers,context):{contributions:[],files:[]},dbgS=dbg("shared-catalog"),catalogContributions=shared.contributions;
  scripts.generatedOutput=(path,context)=>readBuildProducedCompileOutputV1(path,workspaceRoot,contracts,registry,context);
@@ -403,7 +404,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
  const compiler=parserTypescriptV1(),host=observedTypeScriptHost(compiler.sys),pending=[],demands=new Map(),visited=new Map(),enqueue=(target,file,role)=>{const rows=demands.get(target)??new Map(),next=buildSourceDemandV1(rows.get(file),role);if(next!==rows.get(file)){rows.set(file,next);demands.set(target,rows);pending.push({target,file});}};let index=0;
  for(const [target,files] of compileModules)for(const file of files)enqueue(target,file,roles.compileInput);for(const [target,files] of declaredCompileEntries)for(const file of files)enqueue(target,file,roles.declaredEntry);for(const [target,files] of commandModules)for(const file of files)enqueue(target,file,roles.command);
  await stage("compile-closure");
-  while(pending.length){await yieldInferenceV1(context,"build:selected-compile-imports",++index);const {target,file:absolute}=pending.pop(),phase=demands.get(target).get(absolute),seen=visited.get(target)??new Map();if(seen.get(absolute)===phase)continue;seen.set(absolute,phase);visited.set(target,seen);const path=buildPath(relative(workspaceRoot,absolute));requirePhysicalSourceV1(absolute);const {module,references}=prepareSourceAnalysesV1(),[facts,{runtime}]=observedSourceAnalysisPairV1(module,references,absolute,{recordSource:true}),imports=phase===roles.compileInput?facts.imports:facts.runtimeImports;
+  while(pending.length){await yieldInferenceV1(context,"build:selected-compile-imports",++index);const {target,file:absolute}=pending.pop(),phase=demands.get(target).get(absolute),seen=visited.get(target)??new Map();if(seen.get(absolute)===phase)continue;seen.set(absolute,phase);visited.set(target,seen);const path=buildPath(relative(workspaceRoot,absolute));requirePhysicalSourceV1(absolute);const {module,references}=prepareSourceAnalysesV1(),[facts,{runtime}]=observedSourceAnalysisPairV1(module,references,absolute),imports=phase===roles.compileInput?facts.imports:facts.runtimeImports;
   for(const specifier of imports){
    await yieldInferenceV1(context,"build:selected-compile-imports",++index);
    const relativeImport=specifier.startsWith(".");if(!relativeImport){const name=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0],dependency=byPackage.get(name);if(!dependency)continue;if(dependency!==json.name)dependencies.add(dependency);}
@@ -411,7 +412,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
    for(const mode of modes.length?modes:[compiler.ModuleKind.ESNext]){let resolved=workspacePackageModuleV1(absolute,resource.specifier,workspaceRoot,compiler,host,mode,phase===roles.compileInput&&modes.length===0,(request)=>scripts.generatedOutput?.(request,{target,phase}));try{resolved??=observedRequireResolve(absolute,resource.specifier);}catch(error){if(error.code!=="MODULE_NOT_FOUND")throw error;resolved=compiler.resolveModuleName(resource.specifier,absolute,{moduleResolution:compiler.ModuleResolutionKind.Bundler,allowJs:true,resolveJsonModule:true},host,undefined,undefined,mode).resolvedModule?.resolvedFileName;if(!resolved||phase===roles.command&&resource.source&&/\.d\.[cm]?ts$/u.test(resolved))throw Error("Selected compile source import missing: "+path+" -> "+specifier,{cause:error});}
     if(phase===roles.command&&resource.source&&/\.d\.[cm]?ts$/u.test(resolved))throw Error("Runtime source cannot be a declaration: "+path+" -> "+specifier);
     const typed=phase===roles.compileInput&&resource.source?(workspacePackageModuleV1(absolute,resource.specifier,workspaceRoot,compiler,host,mode,true,(request)=>scripts.generatedOutput?.(request,{target,phase}))??compiler.resolveModuleName(resource.specifier,absolute,{moduleResolution:compiler.ModuleResolutionKind.Bundler,allowJs:true,resolveJsonModule:true},host,undefined,undefined,mode).resolvedModule?.resolvedFileName):undefined;
-    for(const file of new Set([resolved,...typed?[typed]:[]])){await yieldInferenceV1(context,"build:selected-compile-imports",++index);const local=buildPath(relative(workspaceRoot,file));if(local===".."||local.startsWith("../")||isAbsolute(local))throw Error("Selected compile source escapes workspace: "+local);const produced=scripts.generatedOutput(file,{importer:path,specifier});if(produced){generated(produced,absolute,phase,target);continue;}readPhysicalSource(file);addFile(local);if(resource.source&&/\.[cm]?[jt]sx?$/u.test(local)){addDependency(local);enqueue(target,file,phase);}}
+    for(const file of new Set([resolved,...typed?[typed]:[]])){await yieldInferenceV1(context,"build:selected-compile-imports",++index);const local=buildPath(relative(workspaceRoot,file));if(local===".."||local.startsWith("../")||isAbsolute(local))throw Error("Selected compile source escapes workspace: "+local);const produced=scripts.generatedOutput(file,{importer:path,specifier});if(produced){generated(produced,absolute,phase,target);continue;}requirePhysicalSourceV1(file);addFile(local);if(resource.source&&/\.[cm]?[jt]sx?$/u.test(local)){addDependency(local);enqueue(target,file,phase);}}
    }
   }
  }
@@ -437,8 +438,25 @@ registerFieldExtractorV1("wasm-package-contract",wasmPackageContractV1);
 /** 🪞️ The digest of a Wasm compile output index: every key with its producer, and the namespaces. */
 const wasmIndexDigests=new WeakMap();
 const wasmIndexDigestV1=index=>{let known=wasmIndexDigests.get(index);if(known===undefined){known=createHash("sha256").update(JSON.stringify([[...index.outputs].map(([key,row])=>[key,row.project,row.target,row.manifest,row.output,row.declarations??null,row.sources]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0),[...index.namespaces].sort()])).digest("hex");wasmIndexDigests.set(index,known);}return known;};
-const wasmFileTextV1=file=>{if(!nodeFs.existsSync(file))return undefined;if(file.endsWith("📋️project.json")){try{return JSON.stringify(wasmProducerDeclarationV1(nodeFs.readFileSync(file,"utf8")));}catch{return undefined;}}if(file.endsWith("/package.json")){try{return JSON.stringify(wasmPackageContractV1(nodeFs.readFileSync(file,"utf8")));}catch{return undefined;}}return file.endsWith("/Cargo.toml")?"":nodeFs.readFileSync(file,"utf8");};
-registerOwnerRegistryQuestionV1("wasm-index",(registry,_arguments,workspaceRoot)=>wasmIndexDigestV1(wasmCompileOutputIndexV1(workspaceRoot,registry.owners,wasmFileTextV1)));
+const wasmFileTextUncachedV1=file=>{if(file.endsWith("📋️project.json")){try{return JSON.stringify(wasmProducerDeclarationV1(nodeFs.readFileSync(file,"utf8")));}catch{return undefined;}}if(file.endsWith("/package.json")){try{return JSON.stringify(wasmPackageContractV1(nodeFs.readFileSync(file,"utf8")));}catch{return undefined;}}return file.endsWith("/Cargo.toml")?"":nodeFs.readFileSync(file,"utf8");};
+/** 🧠️ The text a Wasm compile index reads of one file, kept while the stamp of the file (size, both times, inode) is unchanged and none of its times lies within the racy window, so a verification reads and parses an untouched declaration once per process instead of once per question. */
+const wasmTextsV1=new Map();
+const wasmFileTextV1=file=>{
+ let status;try{status=nodeFs.statSync(file);}catch{return undefined;}
+ const taken=Date.now(),stamp=status.size+":"+status.mtimeMs+":"+status.ctimeMs+":"+status.ino,known=wasmTextsV1.get(file);
+ if(known!==undefined&&known.stamp===stamp)return known.text;
+ const text=wasmFileTextUncachedV1(file);
+ if(status.mtimeMs<taken-INFERENCE_LIMITS_V1.wasmTextRacyMilliseconds&&status.ctimeMs<taken-INFERENCE_LIMITS_V1.wasmTextRacyMilliseconds){if(wasmTextsV1.size>=INFERENCE_LIMITS_V1.wasmTextMemoEntries)wasmTextsV1.clear();wasmTextsV1.set(file,{stamp,text});}
+ return text;
+};
+/** 🪞️ The digest of the Wasm compile index of one registry, asked once per validation round: the index is a pure function of the registry and of declarations that do not move inside a round, and a stored record asks it once per `global` row (hundreds per owner, each a pass over every owner of the registry). */
+const wasmIndexRoundsV1=new WeakMap();
+registerOwnerRegistryQuestionV1("wasm-index",(registry,_arguments,workspaceRoot)=>{
+ const round=observationRoundV1();let digests;
+ if(round!==undefined&&round!==null&&typeof round==="object"){digests=wasmIndexRoundsV1.get(round);if(digests===undefined){digests=new Map();wasmIndexRoundsV1.set(round,digests);}const known=digests.get(workspaceRoot);if(known!==undefined&&known.registry===registry)return known.digest;}
+ const digest=wasmIndexDigestV1(wasmCompileOutputIndexV1(workspaceRoot,registry.owners,wasmFileTextV1));
+ digests?.set(workspaceRoot,{registry,digest});return digest;
+});
 const wasmDeclarationV1=(file,format)=>{requirePhysicalSourceV1(file);try{return JSON.stringify(observedFieldV1(file,format,""));}catch{return undefined;}};
 export function readBuildProducedCompileOutputV1(path,workspaceRoot,contracts,registry,context){if(registry){let cache=wasmCompileIndicesV1.get(registry);if(!cache){cache=new Map();wasmCompileIndicesV1.set(registry,cache);}const index=memoizedObservedComputationV1(cache,workspaceRoot,()=>wasmCompileOutputIndexV1(workspaceRoot,registry.owners,file=>!existsSync(file)?undefined:file.endsWith("📋️project.json")?wasmDeclarationV1(file,"wasm-producer-declaration"):file.endsWith("/package.json")?wasmDeclarationV1(file,"wasm-package-contract"):file.endsWith("/Cargo.toml")?(requirePhysicalSourceV1(file),""):readPhysicalSource(file).toString("utf8")));observeOwnerRegistryAnswerV1(workspaceRoot,["wasm-index"],wasmIndexDigestV1(index));const wasm=wasmCompileOutputV1(index,path);if(wasm)return wasm;}
  if(!isAbsolute(path))return undefined;

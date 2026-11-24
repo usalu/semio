@@ -146,6 +146,8 @@ def analyze(policy, facts):
                 add("storage.image-detached-blocking", "error", p["id"]) if storage.get("loaderBlocked") else add("storage.image-detached", "error", p["id"])
             if p["publication"] != "none":
                 add("storage.publication-pending", "error" if (p["publicationAgeSeconds"] or 0) >= s["publicationErrorSeconds"] else "info", p["id"])
+            if p["state"] == "mounted" and p["image"] == "ok" and p["imageBytes"] is not None and p.get("needBytes") and p["imageBytes"] - s["imageTrailerBytes"] + s["imageUnitBytes"] < p["needBytes"]:
+                add("storage.image-below-need", "error", p["id"])
             if p["state"] == "mounted" and p["freeBytes"] is not None and p["capacityBytes"]:
                 floor = s["floorBytes"].get(p["id"])
                 percent = (100 * p["freeBytes"]) // p["capacityBytes"]

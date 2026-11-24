@@ -183,7 +183,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// publication answered `Blocked` on every unit (ticket 26/09/18 S8).
     pub fn fault_stalled_typed_operation_publication(&mut self, operation_id: u64, streak: u64) -> Result<(), Fault> {
         let Some(mounted) = self.tool_operations.get(operation_id) else { return Ok(()) };
-        let waited = semio_plugin_retained_command::typed_operation::last_publication_wait(operation_id).map_or_else(String::new, |wait| format!(": waiting on {} {:?}", wait.cause, wait.have));
+        let waited = semio_plugin_retained_command::typed_operation::last_publication_wait(operation_id).map_or_else(String::new, |wait| format!(": waiting on {wait}"));
         let message = format!("typed operation '{}' advanced {streak} publication units without moving its ladder{waited}", mounted.verb);
         self.fault_typed_operation_publication(operation_id, message)
     }

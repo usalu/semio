@@ -112,6 +112,18 @@ pub fn render_thumbnail_strip_marked(snapshot: &PdfSnapshot, controller_id: &str
         }
         tree = tree.try_child(row.try_build().map_err(|_| error("pdf.thumbnails.entry"))?).map_err(|_| error("pdf.thumbnails.child"))?;
     }
+    if count == 0 {
+        let empty = semio_ui_contract::tree_item(ui::Label(UiText::clipped(empty_label(locale)))).try_id("pdf-thumbnails-empty").map_err(|_| error("pdf.thumbnails.empty-id"))?.try_build().map_err(|_| error("pdf.thumbnails.empty"))?;
+        tree = tree.try_child(empty).map_err(|_| error("pdf.thumbnails.empty"))?;
+    }
     tree.try_build().map_err(|_| error("pdf.thumbnails.root"))
+}
+
+/// 🫙 The row a document without pages shows, so the strip is never an empty tree the shell cannot tell from an unpublished surface.
+pub fn empty_label(locale: Locale) -> &'static str {
+    match locale {
+        Locale::De => "Keine Seiten",
+        Locale::En => "No pages",
+    }
 }
 //#endregion 🖼️Thumbnails

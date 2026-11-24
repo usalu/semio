@@ -1,4 +1,5 @@
 //! 🎟️ The single admitted-input slot of the actor world: admission order, charge and consumption, free of the WIT bindings so native laws pin it against the neutral actor-input fixtures.
+use semio_framework_actor::OriginalActorSuccession;
 use semio_plugin_abi::actor_input_wire::{ActorInputWire, TurnShape};
 use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
 use std::cell::{Cell, RefCell};
@@ -91,6 +92,23 @@ pub fn take_poll(slot: &RefCell<Option<Vec<u8>>>, shape: &Cell<Option<TurnShape>
         }
         Some(_) => Err(wrong_operation()),
         None => shape.get().map(|held| (Vec::new(), held)).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "the first actor poll must admit its turn shape")),
+    }
+}
+
+/// 🔁️ Consumes an admitted succession for the context admission; an empty slot is an ordinary admission and any other wire stays in its slot for its own export.
+pub fn take_succession(slot: &RefCell<Option<Vec<u8>>>) -> Result<Option<OriginalActorSuccession>, ValueError> {
+    let mut held = slot.try_borrow_mut().map_err(|_| busy())?;
+    let Some(bytes) = held.as_deref() else { return Ok(None) };
+    match ActorInputWire::decode(bytes) {
+        Ok(ActorInputWire::Succeed { succession }) => {
+            *held = None;
+            Ok(Some(succession))
+        }
+        Ok(_) => Ok(None),
+        Err(_) => {
+            *held = None;
+            Err(outside_schema())
+        }
     }
 }
 
@@ -193,6 +211,25 @@ mod laws {
         let again = RefCell::new(None);
         admit(&again, Some(wire.encode()), roomy(), false, false);
         assert_eq!(take(&again).unwrap().encode(), pinned(restore));
+    }
+
+    #[test]
+    fn a_context_admission_consumes_only_its_own_succession_and_leaves_every_other_wire() {
+        let corpus = corpus();
+        let empty = RefCell::new(None);
+        assert_eq!(take_succession(&empty).unwrap(), None);
+        for case in corpus["valid"].as_array().unwrap() {
+            let slot = RefCell::new(Some(pinned(case)));
+            let succession = take_succession(&slot).unwrap();
+            assert_eq!(succession.is_some(), case["operation"] == "succeed", "{}", case["operation"]);
+            assert_eq!(slot.borrow().is_none(), succession.is_some());
+            if let Some(succession) = succession {
+                assert_eq!(serde_json::to_value(succession).unwrap(), case["wire"]["succession"]);
+            }
+        }
+        let outside = RefCell::new(Some(vec![0xff]));
+        assert_eq!(take_succession(&outside).unwrap_err().kind, ValueRefusalKind::InvalidValue);
+        assert!(outside.borrow().is_none());
     }
 
     #[test]

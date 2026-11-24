@@ -1,13 +1,14 @@
 import {expect,test} from "bun:test";
+import {stretchedBudgetMillisecondsV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {createHash} from "node:crypto";
-import {existsSync,mkdtempSync,readFileSync,realpathSync,rmSync} from "node:fs";
+import {existsSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {startClusterV1} from "../../../🧪️tests/🧰️cluster/🟦️.ts";
 import {emitOffloadStageV1,offloadRustcUnitV1} from "../../🟦️.ts";
 import {createTestCheckoutV1,testRustEnvironmentV1} from "../🧰️workspace/🟦️.ts";
 import {httpRemoteExecutionContentV1} from "../../../🗄️content/🟦️.ts";
-import {executeOffloadRidingThroughV1,executeOffloadV1,offloadExecuteBudgetMillisecondsV1,runBoundedOffloadPhaseV1} from "../../🔌️client/🟦️.ts";
+import {executeOffloadV1,offloadExecuteBudgetMillisecondsV1,runBoundedOffloadPhaseV1} from "../../🔌️client/🟦️.ts";
 import {OFFLOAD_POLICY_V1,offloadDeadlineMillisecondsV1} from "../../📐️policy/🟦️.ts";
 import {GRPC_CODES_V1,GrpcErrorV1,startGrpcServerV1,type GrpcHandlersV1} from "../../../📡️wire/🚪️grpc/🟦️.ts";
 import {remoteExecutionOperationV1} from "../../../🖥️server/🟦️.ts";
@@ -50,8 +51,8 @@ test("an upload that the timeout aborts is aborted in the transport: the request
 
 test("riding through a lost scheduler never waits past the budget of the action, however long the ride-through budget is",async()=>{
  const action={hash:"0".repeat(64),size_bytes:1},started=Date.now();
- const outcome=await executeOffloadRidingThroughV1({endpoint:"http://127.0.0.1:1",token:undefined,instance:"main",action,executeMilliseconds:700,connectMilliseconds:300},60000,async()=>{});
- expect(outcome.kind).toBe("declined");expect(Date.now()-started).toBeLessThan(4000);
+ const outcome=await executeOffloadV1({endpoint:"http://127.0.0.1:1",token:undefined,instance:"main",action,executeMilliseconds:700,connectMilliseconds:300,rideThroughMilliseconds:60000,pause:async(milliseconds,signal)=>{await new Promise<void>(done=>{const timer=setTimeout(done,Math.min(milliseconds,20));signal.addEventListener("abort",()=>{clearTimeout(timer);done();},{once:true});});}});
+ expect(outcome.kind).toBe("declined");expect(Date.now()-started,"the action budget, not the 60 s ride-through, ends the wait").toBeLessThan(stretchedBudgetMillisecondsV1(4000));
 });
 
 const chain=(label:string)=>{
@@ -157,3 +158,53 @@ test("a worker that is lost with the action fails the waiting client back within
   expect(outcome.kind).toBe("declined");expect(Date.now()-started).toBeLessThan(14000);
  }finally{await cluster.stop();}
 });
+
+const removeBlobV1=(directory:string,hash:string):number=>{let removed=0;for(const name of readdirSync(directory,{recursive:true}) as string[])if(name.split("/").at(-1)===hash){rmSync(join(directory,name),{force:true});removed++;}return removed;};
+
+test("a blob the store collected between the existence check and the fetch is sent again and the same action runs once more: the unit is answered by the fleet, not compiled here",async()=>{
+ const {shipOffloadActionV1}=await import("../../📜️action/🟦️.ts"),cluster=await startClusterV1({workers:1}),work=mkdtempSync(join(tmpdir(),"repair-"));
+ try{
+  const file=join(work,"a.txt");writeFileSync(file,"hello");
+  const built=await shipOffloadActionV1({spec:{files:new Map([["a.txt",file]]),arguments:["/bin/sh","-c","cat a.txt > r.txt"],environment:[],outputPaths:["r.txt"],seconds:30},content:cluster.content,instance:"main",platform:[]});
+  if("declined" in built)throw Error(built.detail);
+  const hello=createHash("sha256").update("hello").digest("hex");
+  expect(removeBlobV1(join(cluster.directory,"cache"),hello),"the store collected the input after the existence check").toBeGreaterThan(0);
+  const rows:{round:number;named:number;blobs:number;bytes:number}[]=[];
+  const outcome=await executeOffloadV1({endpoint:cluster.server.grpcUrl,token:undefined,instance:"main",action:built.digest,repair:built.repair,onRepair:row=>rows.push(row),executeMilliseconds:60000});
+  expect(outcome.kind).toBe("done");
+  expect(rows).toEqual([{round:1,named:1,blobs:1,bytes:5}]);
+  if(outcome.kind==="done"){
+   const row=(outcome.actionResult.output_files as {path:string;digest:{hash:string;size_bytes:number}}[]).find(item=>item.path==="r.txt")!;
+   expect(Buffer.from((await cluster.content.read("main",{hash:row.digest.hash,size:row.digest.size_bytes}))!).toString("utf8")).toBe("hello");
+  }
+  await built.release();
+ }finally{await cluster.stop();rmSync(work,{recursive:true,force:true});}
+},120000);
+
+test("a store that keeps losing the blob is given three rounds of re-uploads, the bytes sent again are recorded, and then the unit is declined as an incomplete input",async()=>{
+ const {shipOffloadActionV1}=await import("../../📜️action/🟦️.ts"),cluster=await startClusterV1({workers:1}),work=mkdtempSync(join(tmpdir(),"repair-"));
+ try{
+  const file=join(work,"a.txt");writeFileSync(file,"hello");
+  const hello=createHash("sha256").update("hello").digest("hex"),lossy={...cluster.content,write:async(instance:string,digest:{hash:string;size:number},source:Uint8Array|AsyncIterable<Uint8Array>,signal?:AbortSignal,intent?:string)=>{if(digest.hash===hello)return;return cluster.content.write(instance,digest,source,signal,intent as never);}};
+  const built=await shipOffloadActionV1({spec:{files:new Map([["a.txt",file]]),arguments:["/bin/sh","-c","cat a.txt > r.txt"],environment:[],outputPaths:["r.txt"],seconds:30},content:lossy,instance:"main",platform:[]});
+  if("declined" in built)throw Error(built.detail);
+  const rows:{round:number;named:number;blobs:number;bytes:number}[]=[];
+  const outcome=await executeOffloadV1({endpoint:cluster.server.grpcUrl,token:undefined,instance:"main",action:built.digest,repair:built.repair,onRepair:row=>rows.push(row),executeMilliseconds:60000});
+  expect(outcome.kind).toBe("declined");
+  if(outcome.kind==="declined"){expect(outcome.reason).toBe("incomplete-inputs");expect(outcome.detail).toContain("after 3 re-uploads (15 bytes sent again)");}
+  expect(rows.map(row=>row.round)).toEqual([1,2,3]);expect(rows.reduce((sum,row)=>sum+row.bytes,0)).toBe(15);
+  await built.release();
+ }finally{await cluster.stop();rmSync(work,{recursive:true,force:true});}
+},120000);
+
+test("without a repair the same failure is a decline at once, so a caller that cannot send blobs again still compiles here",async()=>{
+ const {shipOffloadActionV1}=await import("../../📜️action/🟦️.ts"),cluster=await startClusterV1({workers:1}),work=mkdtempSync(join(tmpdir(),"repair-"));
+ try{
+  const file=join(work,"a.txt");writeFileSync(file,"hello");
+  const built=await shipOffloadActionV1({spec:{files:new Map([["a.txt",file]]),arguments:["/bin/sh","-c","cat a.txt > r.txt"],environment:[],outputPaths:["r.txt"],seconds:30},content:cluster.content,instance:"main",platform:[]});
+  if("declined" in built)throw Error(built.detail);
+  removeBlobV1(join(cluster.directory,"cache"),createHash("sha256").update("hello").digest("hex"));
+  const outcome=await executeOffloadV1({endpoint:cluster.server.grpcUrl,token:undefined,instance:"main",action:built.digest,executeMilliseconds:60000});
+  expect(outcome.kind).toBe("declined");if(outcome.kind==="declined")expect(outcome.reason).toBe("incomplete-inputs");
+ }finally{await cluster.stop();rmSync(work,{recursive:true,force:true});}
+},120000);

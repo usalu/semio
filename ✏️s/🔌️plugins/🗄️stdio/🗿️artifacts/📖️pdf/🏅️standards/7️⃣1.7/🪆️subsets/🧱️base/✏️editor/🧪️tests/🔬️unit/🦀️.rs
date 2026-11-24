@@ -99,50 +99,59 @@ async fn try_open_registered_pdf_with(input: Vec<u8>, page_count: usize, scope: 
         },
         data: input,
     };
-    let cx = scope.cx();
-    let grant = if intake == PdfIntake::NaturalSource { policy.preparation } else { cx.retained_grant() };
-    laws::ensure_fixture_cancellation_issuer(&mut app, cx).expect("mounted PDF instance is born");
-    if warm { app.render_ctx().refresh_cache().await.expect("mounted PDF head is projected"); }
-    let mut artifact = Some(artifact);
-    let mut natural = natural_bytes.map(|bytes| semio_plugin::NaturalFilePagedSource::retain(semio_framework_value::paged::PagedBytes::try_from_slice(&bytes).expect("paged natural source")));
-    let mut started_operation = None;
-    let mut consumed = false;
-    let mut idle = 0;
-    let mut intake_turns = 0;
-    for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
-        laws::fixture_renew_turn(cx, fuel, grant).expect("mounted PDF import turn is funded");
-        intake_turns += 1;
-        let before = (cx.original_work_units_spent(), cx.retained_progress());
-        let accepted = match intake {
-            PdfIntake::Media => PluginApp::consume_media(&mut app, semio_plugin::NATURAL_FILE_PORT, &mut artifact, cx)
-                .await.expect("mounted PDF consumes original bytes").is_some(),
-            PdfIntake::NaturalSource => {
-                app.dispatch_ctx().advance_original_reserved_natural_source(&mut natural, &meta, &mut started_operation, cx).await.expect("mounted PDF routes its paged natural source");
-                started_operation.is_some()
+    let outcome: Result<OpenCost, String> = async {
+        let cx = scope.cx();
+        let grant = if intake == PdfIntake::NaturalSource { policy.preparation } else { cx.retained_grant() };
+        laws::ensure_fixture_cancellation_issuer(&mut app, cx).expect("mounted PDF instance is born");
+        if warm { app.render_ctx().refresh_cache().await.expect("mounted PDF head is projected"); }
+        let mut artifact = Some(artifact);
+        let mut natural = natural_bytes.map(|bytes| semio_plugin::NaturalFilePagedSource::retain(semio_framework_value::paged::PagedBytes::try_from_slice(&bytes).expect("paged natural source")));
+        let mut started_operation = None;
+        let mut consumed = false;
+        let mut idle = 0;
+        let mut intake_turns = 0;
+        for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
+            laws::fixture_renew_turn(cx, fuel, grant).expect("mounted PDF import turn is funded");
+            intake_turns += 1;
+            let before = (cx.original_work_units_spent(), cx.retained_progress());
+            let accepted = match intake {
+                PdfIntake::Media => PluginApp::consume_media(&mut app, semio_plugin::NATURAL_FILE_PORT, &mut artifact, cx)
+                    .await.expect("mounted PDF consumes original bytes").is_some(),
+                PdfIntake::NaturalSource => {
+                    app.dispatch_ctx().advance_original_reserved_natural_source(&mut natural, &meta, &mut started_operation, cx).await.expect("mounted PDF routes its paged natural source");
+                    started_operation.is_some()
+                }
+            };
+            if accepted {
+                consumed = true;
+                break;
             }
-        };
-        if accepted {
-            consumed = true;
-            break;
+            app.maintenance_step(cx, policy.close).expect("mounted PDF upkeep is funded");
+            let after = (cx.original_work_units_spent(), cx.retained_progress());
+            idle = if before == after { idle + 1 } else { 0 };
+            if idle >= laws::OriginalFixtureCaller::maximum_idle_turns() { break }
         }
-        app.maintenance_step(cx, policy.close).expect("mounted PDF upkeep is funded");
-        let after = (cx.original_work_units_spent(), cx.retained_progress());
-        idle = if before == after { idle + 1 } else { 0 };
-        if idle >= laws::OriginalFixtureCaller::maximum_idle_turns() { break }
+        if !consumed { return Err(format!("mounted PDF media intake stalled after {idle} idle turns: {:?}, {}", cx.retained_grant(), app.typed_operation_diagnostic())); }
+        let settled = semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation_within(
+            &mut app, meta.instance_id, policy, &mut identity, scope.cx(), turn_limit
+        ).await);
+        let (receipt, settle_turns) = settled.map_err(|failure| format!("the mounted PDF import did not settle within {turn_limit} host turns after {intake_turns} intake turns: {failure:?}"))?;
+        if receipt.completions != 1 { return Err(format!("the mounted PDF import settled {} times", receipt.completions)); }
+        if !receipt.ui_scopes.iter().any(|scope| matches!(scope, semio_plugin::kernel::UiDirtyScope::Full)) {
+            return Err(format!("the mounted PDF import dirties the whole UI before any later partial refresh, got {:?} with effects {:?}", receipt.ui_scopes, receipt.effects));
+        }
+        if receipt.effects.iter().any(|effect| matches!(effect, semio_plugin::Effect::LoadDocument { .. })) { return Err("the mounted PDF import loads a document by reference".into()); }
+        let pages = app.snapshot().expect("the mounted PDF is ready").pages.len();
+        if pages != page_count { return Err(format!("the mounted PDF opened {pages} pages, not {page_count}")); }
+        Ok(OpenCost { intake_turns, settle_turns, wall: started.elapsed() })
+    }.await;
+    match outcome {
+        Ok(cost) => Ok((app, cost)),
+        Err(reason) => {
+            let _ = laws::close_registered_fixture_app(&mut app, policy, scope.cx());
+            Err(reason)
+        }
     }
-    if !consumed { return Err(format!("mounted PDF media intake stalled after {idle} idle turns: {:?}, {}", cx.retained_grant(), app.typed_operation_diagnostic())); }
-    let settled = semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation_within(
-        &mut app, meta.instance_id, policy, &mut identity, scope.cx(), turn_limit
-    ).await);
-    let (receipt, settle_turns) = settled.map_err(|failure| format!("the mounted PDF import did not settle within {turn_limit} host turns after {intake_turns} intake turns: {failure:?}"))?;
-    if receipt.completions != 1 { return Err(format!("the mounted PDF import settled {} times", receipt.completions)); }
-    if !receipt.ui_scopes.iter().any(|scope| matches!(scope, semio_plugin::kernel::UiDirtyScope::Full)) {
-        return Err(format!("the mounted PDF import dirties the whole UI before any later partial refresh, got {:?} with effects {:?}", receipt.ui_scopes, receipt.effects));
-    }
-    if receipt.effects.iter().any(|effect| matches!(effect, semio_plugin::Effect::LoadDocument { .. })) { return Err("the mounted PDF import loads a document by reference".into()); }
-    let pages = app.snapshot().expect("the mounted PDF is ready").pages.len();
-    if pages != page_count { return Err(format!("the mounted PDF opened {pages} pages, not {page_count}")); }
-    Ok((app, OpenCost { intake_turns, settle_turns, wall: started.elapsed() }))
 }
 
 /// 📚️ A flat generated document of `pages` vector pages, two objects per page, as the large-document laws open it.
@@ -189,8 +198,10 @@ const SHARD_TURN_WORK_BOUND: u128 = 1 << 20;
 const SHARD_TURN_LIMIT: usize = 512;
 /// 🔢️ Turns a lifecycle or drain loop of the shard-driven law may spend before the law calls it stuck.
 const SHARD_STALL_TURNS: usize = 4_096;
-/// 🔢️ Host turns `AppCommand::MediaIn` of a small PDF may need to reach its mount under the shard budget.
+/// 🔢️ Host turns `AppCommand::MediaIn` of a small PDF may need until its descriptor, payload and metadata are received and the import operation is live (the mount); measured 2 under the shard grant, and one 64-item interactive grant takes tens of turns.
 const SHARD_MOUNT_TURN_LIMIT: usize = 64;
+/// 🔢️ Host turns the whole `AppCommand::MediaIn` of a small PDF may need until its command completes.
+const SHARD_MEDIA_IN_TURN_LIMIT: usize = 512;
 /// 🌐️ Opens `two-pages.pdf` into a freshly created app under the browser shard's real turn fuel, inside an armed host lifetime: the open settles in a bounded number of turns and no turn spends more than [`SHARD_TURN_WORK_BOUND`] work units (a probe must not open, nor spend, the whole 50,000,000 units of a turn). `warm` refreshes the head projection first, as the native fixtures always did; the browser never does.
 async fn shard_fuel_open(intake: PdfIntake, warm: bool) {
     use semio_plugin::artifact_app_laws as laws;
@@ -265,11 +276,8 @@ async fn shard_close_instance(runtime: &semio_plugin::plugin_runtime::PluginRunt
     let mut ack = Some(Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: accepted }));
     shard_turn(runtime, scope, &mut ack, &mut None).await.expect("the close acknowledgement turn is funded");
     let mut retired = None;
-    let mut retire_turns = 0usize;
     for _ in 0..16_384 {
         let (turn, _) = shard_turn(runtime, scope, &mut None, &mut None).await.expect("the retirement turn is funded");
-        if retire_turns % 256 == 0 { eprintln!("[DEBUG] shard close turn {retire_turns}"); }
-        retire_turns += 1;
         if let Some(receipt @ Receipt::Retired { .. }) = turn.lifecycle_receipt { retired = Some(receipt); break }
     }
     let retired = retired.expect("the instance retires");
@@ -281,16 +289,24 @@ async fn shard_close_instance(runtime: &semio_plugin::plugin_runtime::PluginRunt
 }
 
 /// 📂️ What one shard-driven `MediaIn` open reported.
-struct ShardOpen { mounted_at: Option<usize>, completed: bool, fault: Option<String>, log: Vec<ShardTurn>, report: String }
+struct ShardOpen { mounted_at: Option<usize>, completed: bool, fault: Option<String>, log: Vec<ShardTurn>, report: String, peak_work: u128, shell_pages: usize, document_pages: Option<usize> }
 
-/// 📂️ Sends `AppCommand::MediaIn` for `bytes` to a freshly created instance exactly as `openNaturalFile` does (fresh instance through the lifecycle, pages one per turn, then continuation turns without input) and returns the turn log. The guest owns the command up to its mount, where it spawns the reserved natural-import job for the host to step (`Effect::SpawnJob`); `keep_polling` goes on without a job driver after that, the way a spinning command would.
-async fn shard_media_in_open(bytes: &[u8], turn_limit: usize, interactive_grant: bool, keep_polling: bool) -> ShardOpen {
-    use semio_plugin::{app::{MediaArtifactDescriptor, MediaWireFormat}, kernel::{CommandBatch, CommandBatchDriver, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus, Effect}};
+/// 🐚️ The acknowledgement the browser shell posts back for one typed-operation result page it received as `Effect::SendMessage`: the ack magic followed by the page's own token (receiver, operation, generation, sequence, attempt), `None` for any other message.
+fn shell_ack_of(payload: &[u8]) -> Option<Vec<u8>> {
+    const PAGE: &[u8] = b"semio.typed-operation-page.v1\0";
+    const ACK: &[u8] = b"semio.typed-operation-ack.v1\0";
+    let token = payload.strip_prefix(PAGE)?.get(..25)?;
+    Some([ACK, token].concat())
+}
+
+/// 📂️ Sends `AppCommand::MediaIn` for `bytes` to a freshly created instance exactly as `openNaturalFile` does (fresh instance through the lifecycle, command pages one per turn, then continuation turns without input) and returns the turn log; `mounted_at` is the first turn the import operation is live. The open must complete or fault within `turn_limit` turns.
+async fn shard_media_in_open(bytes: &[u8], turn_limit: usize, interactive_grant: bool) -> ShardOpen {
+    use semio_plugin::{app::{MediaArtifactDescriptor, MediaWireFormat}, kernel::{CommandBatch, CommandBatchDriver, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus}};
     use semio_plugin::{artifact_app_laws as laws, PluginApp as _};
     let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
     let _arena = laws::FixtureUiArena::admit();
     let mut scope = laws::OriginalFixtureScope::admit();
-    let _fuel = laws::arm_host_turn_fuel(SHARD_TURN_FUEL);
+    let fuel = laws::arm_host_turn_fuel(SHARD_TURN_FUEL);
     let _grant = interactive_grant.then(|| laws::arm_host_turn_grant(policy.preparation));
     let definition = create_pdf17_editor();
     let app_id = definition.id.clone();
@@ -311,16 +327,21 @@ async fn shard_media_in_open(bytes: &[u8], turn_limit: usize, interactive_grant:
     let batch = CommandBatch::try_new(seq, envelopes).unwrap_or_else(|(fault, _)| panic!("admit MediaIn batch: {fault:?}"));
     let mut driver = CommandBatchDriver::new(seq, batch);
     let mut carried = driver.next_page().expect("the host owner produces its first page");
-    let mut open = ShardOpen { mounted_at: None, completed: false, fault: None, log: Vec::new(), report: String::new() };
+    let mut open = ShardOpen { mounted_at: None, completed: false, fault: None, log: Vec::new(), report: String::new(), peak_work: 0, shell_pages: 0, document_pages: None };
+    let mut acks = std::collections::VecDeque::<Vec<u8>>::new();
     let started = std::time::Instant::now();
-    while open.log.len() < turn_limit && started.elapsed() < std::time::Duration::from_secs(45) {
-        let Some((result, turn)) = shard_turn(&runtime, &mut scope, &mut None, &mut carried).await else { break };
-        eprintln!("[DEBUG] shard turn {} at {:?}: {} / {} spent={} retained={:?}", open.log.len() + 1, started.elapsed(), turn.ingress, turn.status, turn.spent, turn.retained);
-        open.log.push(turn);
-        if open.mounted_at.is_none() && result.effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { .. })) {
-            open.mounted_at = Some(open.log.len());
-            if !keep_polling { break }
+    while open.log.len() < turn_limit && started.elapsed() < std::time::Duration::from_secs(120) {
+        let mut shell_event = acks.pop_front().map(|payload| semio_plugin::kernel::Event::Message { source: semio_plugin::kernel::MessageEndpoint::Shell { instance: semio_plugin::kernel::PluginInstanceId(instance.to_string()) }, payload });
+        let Some((result, turn)) = shard_turn(&runtime, &mut scope, &mut shell_event, &mut carried).await else { break };
+        if let Some(semio_plugin::kernel::Event::Message { payload, .. }) = shell_event { acks.push_front(payload) }
+        for effect in &result.effects {
+            if let semio_plugin::kernel::Effect::SendMessage { target: semio_plugin::kernel::MessageEndpoint::Shell { .. }, payload } = effect {
+                if let Some(ack) = shell_ack_of(payload) { open.shell_pages += 1; acks.push_back(ack) }
+            }
         }
+        open.log.push(turn);
+        let live = runtime.instances.borrow().get(instance).and_then(|cell| cell.host_instance().map(|guard| guard.app.has_pending_typed_operations())).unwrap_or(false);
+        if open.mounted_at.is_none() && live { open.mounted_at = Some(open.log.len()) }
         match result.command_ingress {
             CommandIngressStatus::CommandComplete(_) => { open.completed = true; break },
             CommandIngressStatus::Fault { fault, .. } => { open.fault = Some(String::from_utf8_lossy(&fault).into_owned()); break },
@@ -331,11 +352,13 @@ async fn shard_media_in_open(bytes: &[u8], turn_limit: usize, interactive_grant:
             _ => {}
         }
     }
-    eprintln!("[DEBUG] shard command loop ended after {} turns, closing", open.log.len());
+    assert!(open.completed || open.fault.is_some(), "MediaIn neither completed nor faulted within {turn_limit} turns: {}", shard_census(&open));
+    fuel.settle(scope.cx());
+    open.peak_work = fuel.peak_turn_work();
     drop(command_lifetime);
+    open.document_pages = runtime.instances.borrow().get(instance).and_then(|cell| cell.host_instance().map(|mut guard| guard.app.snapshot().expect("the opened PDF is ready").pages.len()));
     open.report = runtime.instances.borrow().get(instance).and_then(|cell| cell.host_instance().map(|guard| guard.app.typed_operation_diagnostic())).unwrap_or_default();
     shard_close_instance(&runtime, &mut scope, lifetime).await;
-    eprintln!("[DEBUG] shard instance closed");
     open
 }
 
@@ -344,16 +367,20 @@ fn shard_census(open: &ShardOpen) -> String {
     let mut census = std::collections::BTreeMap::<String, usize>::new();
     for turn in &open.log { *census.entry(format!("{} / {}", turn.ingress, turn.status)).or_default() += 1; }
     let idle = open.log.iter().filter(|turn| turn.spent == 0 && turn.fuel_used == 0 && turn.retained == semio_framework_value::RetainedCloneProgress::default()).count();
-    format!("{} turns ({idle} idle), census {census:?}, last {:?}, app: {}", open.log.len(), open.log.iter().rev().take(3).collect::<Vec<_>>(), open.report)
+    format!("{} turns ({idle} idle), mounted at {:?}, census {census:?}, last {:?}, app: {}", open.log.len(), open.mounted_at, open.log.iter().rev().take(3).collect::<Vec<_>>(), open.report)
 }
 
-/// 📂️ LAW: `AppCommand::MediaIn` of a small PDF to a freshly created instance, driven turn by turn through the real `PluginRuntime` under the shard budget, reaches its mount (the reserved import job is spawned for the host) within [`SHARD_MOUNT_TURN_LIMIT`] turns. Every descriptor, typed-receiving, payload and metadata move is a quote-exact native action; run one per turn, the custody needed thousands of host turns and the shell's backoff (25 to 250 ms per quiet turn) made the open look hung.
+/// 📂️ LAW: `AppCommand::MediaIn` of a small PDF to a freshly created instance, driven turn by turn through the real `PluginRuntime` under the shard budget (wide grant) or the interactive per-turn grant, receives its descriptor, payload and metadata, mounts its import within [`SHARD_MOUNT_TURN_LIMIT`] turns and completes within [`SHARD_MEDIA_IN_TURN_LIMIT`]. A typed receive advances as many actions per turn as the grant and fuel admit, so the receive no longer costs one host turn per action (the shell's 25 to 250 ms backoff per quiet turn made the old custody look hung).
 async fn shard_media_in_law(interactive_grant: bool) {
     let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
-    let open = shard_media_in_open(input, SHARD_MOUNT_TURN_LIMIT * 4, interactive_grant, false).await;
+    let open = shard_media_in_open(input, SHARD_MEDIA_IN_TURN_LIMIT, interactive_grant).await;
     assert!(open.fault.is_none(), "MediaIn faulted: {:?}", open.fault);
     let mounted = open.mounted_at.unwrap_or_else(|| panic!("MediaIn did not reach its mount: {}", shard_census(&open)));
     assert!(mounted <= SHARD_MOUNT_TURN_LIMIT, "MediaIn needed {mounted} turns to reach its mount (limit {SHARD_MOUNT_TURN_LIMIT}): {}", shard_census(&open));
+    assert!(open.completed && open.log.len() <= SHARD_MEDIA_IN_TURN_LIMIT, "MediaIn did not complete within {SHARD_MEDIA_IN_TURN_LIMIT} turns: {}", shard_census(&open));
+    assert!(open.peak_work <= SHARD_TURN_WORK_BOUND, "one MediaIn turn spent {} work units: {}", open.peak_work, shard_census(&open));
+    assert!(open.shell_pages > 0, "the shell received no typed-operation result page: {}", shard_census(&open));
+    assert_eq!(open.document_pages, Some(2), "the opened document is not visible in the app: {}", shard_census(&open));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -362,17 +389,29 @@ async fn media_in_of_a_small_pdf_reaches_its_mount_through_the_real_runtime_unde
 #[semio_framework_async_macros::async_test]
 async fn media_in_of_a_small_pdf_reaches_its_mount_through_the_real_runtime_under_the_interactive_grant() { shard_media_in_law(true).await }
 
-/// 🛑️ LAW: a retained command that keeps answering turns without consuming work or moving retained stock is faulted by the reactor with the named `plugin.command-stalled` fault once the idle limit is spent, instead of spinning until the shell's 300 s wall. Without a host stepping the spawned import job the mounted `MediaIn` has nothing to do, so its turns are quiet.
+/// 🛑️ LAW: the reactor counts the consecutive quiet turns of one retained command (no work, no retained stock, no output) and calls it stalled exactly when they exhaust the idle limit; any progressing turn, and any other command, restarts the count. Past the limit the reactor faults the command with the named `plugin.command-stalled` fault instead of spinning until the shell's 300 s wall.
+#[test]
+fn a_quiet_retained_command_is_faulted_as_stalled_by_the_reactor() {
+    use semio_plugin::reactor_turn_laws::{command_stalled, note_command_turn, set_command_idle_turn_limit, COMMAND_IDLE_TURN_LIMIT};
+    set_command_idle_turn_limit(48);
+    let streaks: Vec<bool> = (0..48).map(|_| command_stalled(note_command_turn(7, 90, true))).collect();
+    assert!(streaks[..47].iter().all(|stalled| !stalled) && streaks[47], "the 48th consecutive quiet turn exhausts the limit of 48");
+    assert!(!command_stalled(note_command_turn(7, 90, false)), "a progressing turn restarts the count");
+    assert!(!(0..47).any(|_| command_stalled(note_command_turn(7, 90, true))), "47 quiet turns after a progressing one stay below the limit");
+    assert!(!command_stalled(note_command_turn(7, 91, true)), "another command of the same instance starts its own count");
+    assert!(!command_stalled(note_command_turn(8, 91, true)), "another instance starts its own count");
+    assert_eq!(semio_plugin::reactor_turn_laws::COMMAND_STALLED_FAULT_CODE, "plugin.command-stalled");
+    set_command_idle_turn_limit(COMMAND_IDLE_TURN_LIMIT);
+}
+
+/// 🛑️ LAW: a `MediaIn` that keeps making progress is never faulted as stalled, even under an idle limit of eight turns: its descriptor, payload, metadata and import custody never leaves the reactor eight consecutive turns without work or retained stock moving.
 #[semio_framework_async_macros::async_test]
-async fn a_quiet_retained_command_is_faulted_as_stalled_by_the_reactor() {
+async fn a_progressing_media_in_is_never_faulted_as_stalled() {
     let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
-    semio_plugin::reactor_turn_laws::set_command_idle_turn_limit(48);
-    let open = shard_media_in_open(input, SHARD_MOUNT_TURN_LIMIT + 256, false, true).await;
+    semio_plugin::reactor_turn_laws::set_command_idle_turn_limit(8);
+    let open = shard_media_in_open(input, SHARD_MEDIA_IN_TURN_LIMIT, false).await;
     semio_plugin::reactor_turn_laws::set_command_idle_turn_limit(semio_plugin::reactor_turn_laws::COMMAND_IDLE_TURN_LIMIT);
-    let mounted = open.mounted_at.unwrap_or_else(|| panic!("MediaIn did not reach its mount: {}", shard_census(&open)));
-    let fault = open.fault.clone().unwrap_or_else(|| panic!("a quiet command was never faulted ({} turns after the mount): {}", open.log.len() - mounted, shard_census(&open)));
-    assert!(fault.contains(semio_plugin::reactor_turn_laws::COMMAND_STALLED_FAULT_CODE), "the stalled fault is named: {fault}");
-    assert!(open.log.len() - mounted <= 48 + 8, "the fault came {} turns after the mount", open.log.len() - mounted);
+    assert!(open.fault.is_none() && open.completed, "a progressing MediaIn was stopped: {:?} {}", open.fault, shard_census(&open));
 }
 
 /// 🪶️ A freshly born PDF editor app owns its stores, registries and queues as page tables only, so its whole live heap stays inside the bounded footprint the language-neutral law names before any document opens.
@@ -1309,6 +1348,74 @@ async fn registered_pdf_font_change_preserves_encoded_text_and_the_next_line() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn registered_pdf_with_several_fonts_images_and_inherited_resources_opens_like_both_reference_readers() {
+    use crate::standards::v1_7::subsets::base::{io::import::decode_pdf, schema::snapshot::PdfOp};
+    use semio_plugin::artifact_app_laws as laws;
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::{project_pdf_1_7, reference_page_resources};
+
+    let spec: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧩️multi-resource/spec.json")).unwrap();
+    let inputs = [("generated", fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/🧩️multi-resource/generated.pdf")), ("report", fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/🧩️multi-resource/report.pdf"))];
+    for (name, input) in inputs {
+        let case = &spec[name];
+        let pages = case["pages"].as_array().unwrap();
+        let strings = |value: &serde_json::Value| value.as_array().unwrap().iter().map(|item| item.as_str().unwrap().to_owned()).collect::<Vec<_>>();
+        let sorted = |mut values: Vec<String>| { values.sort(); values.dedup(); values };
+        let cold = decode_pdf(input).unwrap_or_else(|error| panic!("{name}: the cold reader refuses the fixture: {error:?}"));
+        let independent = reference_page_resources(input).unwrap();
+        let projected: serde_json::Value = serde_json::from_str(&project_pdf_1_7(input).unwrap().to_string()).unwrap();
+        assert_eq!(independent.len(), pages.len(), "{name}");
+        assert_eq!(projected["pageCount"].as_u64().unwrap() as usize, pages.len(), "{name}");
+
+        let mut scope = laws::OriginalFixtureScope::admit();
+        let mut app = open_registered_pdf(input.to_vec(), pages.len(), &mut scope).await;
+        let mounted = app.snapshot().unwrap().clone();
+        assert_eq!(mounted.pages, cold.pages, "{name}: pages");
+        assert_eq!(mounted.fonts, cold.fonts, "{name}: fonts");
+        assert_eq!(mounted.images, cold.images, "{name}: images");
+        assert_eq!(mounted.admitted_stream_roles, cold.admitted_stream_roles, "{name}: roles");
+        assert_eq!(mounted.objects, cold.objects, "{name}: objects");
+        assert_eq!(mounted.trailer, cold.trailer, "{name}: trailer");
+        assert_eq!(mounted.fonts.len() as u64, case["fontCount"].as_u64().unwrap(), "{name}");
+        assert_eq!(mounted.images.len() as u64, case["imageCount"].as_u64().unwrap(), "{name}");
+        assert_eq!(mounted.ext_g_states, cold.ext_g_states, "{name}: graphics states");
+        assert_eq!(mounted.properties, cold.properties, "{name}: property lists");
+        assert_eq!(mounted.ext_g_states.len() as u64, case["extGStateCount"].as_u64().unwrap(), "{name}");
+        assert_eq!(mounted.properties.len() as u64, case["propertiesCount"].as_u64().unwrap(), "{name}");
+
+        for (index, expected) in pages.iter().enumerate() {
+            let (declared_fonts, declared_images) = &independent[index];
+            assert_eq!(declared_fonts, &sorted(strings(&expected["fonts"])), "{name} page {}: lopdf font resources", index + 1);
+            assert_eq!(declared_images, &sorted(strings(&expected["images"])), "{name} page {}: lopdf image resources", index + 1);
+            let content = &mounted.pages[index].content;
+            let used = sorted(content.iter().filter_map(|operator| if let PdfOp::SetFont { name, .. } = operator { Some(name.clone()) } else { None }).collect());
+            assert_eq!(used, sorted(strings(&expected["usedFonts"])), "{name} page {}: fonts selected by the content", index + 1);
+            for font in &used {
+                assert!(declared_fonts.contains(font), "{name} page {}: {font} is declared by the page resources", index + 1);
+                assert!(mounted.font(font).is_some(), "{name} page {}: {font} is a typed font", index + 1);
+            }
+            let painted = sorted(content.iter().filter_map(|operator| if let PdfOp::PaintXObject { name } = operator { Some(name.clone()) } else { None }).collect());
+            assert_eq!(painted, sorted(strings(&expected["paintedImages"])), "{name} page {}: images painted by the content", index + 1);
+            for image in &painted {
+                assert!(declared_images.contains(image), "{name} page {}: {image} is declared by the page resources", index + 1);
+                assert!(mounted.image(image).is_some(), "{name} page {}: {image} is a typed image", index + 1);
+            }
+            let shown: Vec<String> = content.iter().filter_map(|operator| match operator {
+                PdfOp::ShowText { text: crate::standards::v1_7::subsets::base::schema::snapshot::PdfTextString::Text { text } } => Some(text.clone()),
+                _ => None,
+            }).collect();
+            assert_eq!(shown, strings(&expected["text"]), "{name} page {}: decoded text", index + 1);
+            if expected["independentText"].as_bool().unwrap() {
+                let reference: Vec<String> = projected["pages"][index]["text"].as_array().unwrap().iter().map(|item| item.as_str().unwrap().to_owned()).collect();
+                assert_eq!(shown, reference, "{name} page {}: lopdf text", index + 1);
+                let operators = projected["pages"][index]["contentOperators"].as_array().unwrap();
+                assert_eq!(operators.iter().filter(|operator| operator.as_str() == Some("Do")).count(), painted.len(), "{name} page {}: lopdf image paints", index + 1);
+            }
+        }
+        laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("multi-resource editor closes");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
 async fn registered_pdf_png_picker_publishes_an_atomic_revision_guarded_image_edit() {
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfFormXObject, PdfImage, PdfOp, PdfPage};
     use semio_framework_value::DslValue;
@@ -1844,5 +1951,36 @@ async fn blank_document_first_edits_settle_through_the_registered_typed_operatio
     let snapshot = app.snapshot().expect("the blank PDF is ready");
     assert_eq!(snapshot.info.title.as_deref(), Some("Quarterly report"));
     assert!(crate::editor::page::objects(&snapshot).iter().any(|object| object.text == "Hello"));
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("blank editor closes");
+}
+
+/// 🚫️ A text edit naming a page the document lacks is refused with the localized range fault through the registered typed operation: the refusal is a fault the shell can tell, and the document stays as it was.
+#[semio_framework_async_macros::async_test]
+async fn an_out_of_range_page_edit_is_refused_with_the_range_fault_through_the_registered_typed_operation() {
+    use semio_plugin::{artifact_app_laws as laws, EditorApp};
+    let meta = laws::meta("local");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(
+        async { semio_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } },
+        semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), policy, &mut identity
+    ).await);
+    let before = app.snapshot().expect("the blank PDF is ready").clone();
+    let number = |value: f64| semio_framework_value::DslValue::float(value);
+    let args = semio_framework_value::DslValue::object([("page".into(), number(99.0)), ("x".into(), number(72.0)), ("y".into(), number(700.0)), ("height".into(), number(12.0)), ("text".into(), semio_framework_value::DslValue::String("Nowhere".into()))]);
+    let dispatched = semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
+        &mut app, "insert-text", Some(args), &meta, &mut identity, scope.cx(), policy.close
+    ).await);
+    let refusal = match dispatched {
+        Err(fault) => format!("dispatch refused: {fault:?}"),
+        Ok(_) => {
+            let settled = semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
+                &mut app, meta.instance_id, policy, &mut identity, scope.cx()
+            ).await);
+            settled.map(|_| "the refused edit settled without a fault".to_string()).unwrap_or_else(|fault| format!("settlement refused: {fault:?}"))
+        }
+    };
+    assert!(refusal.contains("stdio.pdf.page-number-out-of-range"), "the range fault is told, got {refusal}");
+    assert_eq!(app.snapshot().expect("the blank PDF stays ready"), before);
     laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("blank editor closes");
 }

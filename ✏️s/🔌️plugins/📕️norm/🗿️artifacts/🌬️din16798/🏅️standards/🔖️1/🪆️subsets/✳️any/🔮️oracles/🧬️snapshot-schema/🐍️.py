@@ -18,8 +18,6 @@ def main() -> int:
         return 2
     schema = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
     instance = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
-    if isinstance(instance.get("annex"), str):
-        instance["annex"] = instance["annex"].lower()
     jsonschema.validate(instance=instance, schema=schema)
     print("snapshot schema OK")
     return 0

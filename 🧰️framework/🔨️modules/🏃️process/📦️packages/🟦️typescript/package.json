@@ -189,6 +189,7 @@
     "./artifacts/native-build/storage/image/information": "./📦️artifacts/🏗️native-build/💾️storage/🍎️image/📥️information/🟦️.ts",
     "./artifacts/native-build/storage/platform/boot": "./📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🟦️.ts",
     "./artifacts/native-build/storage/image/attach": "./📦️artifacts/🏗️native-build/💾️storage/🍎️image/🔗️attach/🟦️.ts",
+    "./artifacts/native-build/storage/image/grow": "./📦️artifacts/🏗️native-build/💾️storage/🍎️image/📈️grow/🟦️.ts",
     "./artifacts/native-build/storage/image/stranded": "./📦️artifacts/🏗️native-build/💾️storage/🍎️image/🏚️stranded/🟦️.ts",
     "./artifacts/native-build/storage/image/owners": "./📦️artifacts/🏗️native-build/💾️storage/🍎️image/👤️owners/🟦️.ts",
     "./artifacts/native-build/storage/image/roster": "./📦️artifacts/🏗️native-build/💾️storage/🍎️image/📡️roster/🟦️.ts",

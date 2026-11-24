@@ -343,3 +343,98 @@ test("an operator ends one operation by a prefix of its id or action digest, or 
  expect(scheduler.report(worker.id,task.id,{version:1,outcome:"cancelled",status:{code:1,message:"Cancelled"},actionResult:null})).toBe(false);
  expect(scheduler.abort("all-stuck")).toEqual([]);
 });
+
+test("a restarted scheduler restores its operation table from the journal: the executing action is known by its name, nothing is placed while its worker is missing, the worker that returns with the task is bound to it and the action never runs twice",async()=>{
+ const first=harness({lingerSeconds:30}),running=first.memory.action([],"running"),waiting=first.memory.action([],"waiting"),run=submit(first.scheduler,running),worker=first.scheduler.register(profile("w"));await Bun.sleep(20);
+ const task=(await polled(first.scheduler,worker.id)).task!;
+ const queued=submit(first.scheduler,waiting);await Bun.sleep(20);
+ const rows=first.scheduler.journal();
+ expect(rows.map(row=>[row.id===task.id.split(".")[0],row.stage,row.worker?.name??null])).toEqual([[true,"EXECUTING","w"],[false,"QUEUED",null]]);
+ expect(JSON.parse(JSON.stringify(rows))).toEqual(rows);
+ run.abort.abort();queued.abort.abort();
+ const second=harness({lingerSeconds:30,restore:rows,resumeGraceSeconds:60}),name=`operations/${task.id.split(".")[0]}`;
+ expect(second.events.some(event=>/^restored 2 operations/u.test(event))).toBe(true);
+ const attach=new AbortController(),seen:RemoteExecutionSnapshotV1[]=[],stream=second.scheduler.wait(name,attach.signal);
+ expect(stream).toBeDefined();
+ const reading=(async()=>{for await(const row of stream!)seen.push(row);})();
+ await Bun.sleep(20);expect(seen.at(-1)!.stage).toBe("EXECUTING");
+ const fresh=second.memory.action([],"fresh"),other=submit(second.scheduler,fresh),bystander=second.scheduler.register(profile("bystander"));
+ await Bun.sleep(20);
+ expect((await polled(second.scheduler,bystander.id,50)).task,"nothing is placed while a restored action waits for its worker").toBeNull();
+ const returned=second.scheduler.register({...profile("w"),resumed:[{task:task.id,instance:"main",action:{hash:running.hash,size:running.size}}]} as RemoteExecutionWorkerRegistrationV1);
+ expect(second.scheduler.status().counters).toMatchObject({restored:2,resumed:1});
+ expect(second.scheduler.report(returned.id,task.id,resultOf())).toBe(true);
+ await reading;expect(seen.at(-1)!.stage).toBe("COMPLETED");expect(seen.at(-1)!.outcome!.status.code).toBe(0);
+ const placed=(await polled(second.scheduler,bystander.id,200)).task;
+ expect(placed?.action.hash,"the next placement is the new action, never the restored one").toBe(fresh.hash);
+ attach.abort();other.abort.abort();
+});
+
+test("a restored executing action whose worker never returns is queued after the grace and placed again for the requester that re-attached; a journal older than its limit restores nothing",async()=>{
+ const first=harness({lingerSeconds:30}),action=first.memory.action([],"lost-worker"),run=submit(first.scheduler,action),worker=first.scheduler.register(profile("gone"));await Bun.sleep(20);
+ const task=(await polled(first.scheduler,worker.id)).task!,rows=first.scheduler.journal();run.abort.abort();
+ const second=harness({lingerSeconds:30,restore:rows,resumeGraceSeconds:60}),attach=new AbortController(),seen:RemoteExecutionSnapshotV1[]=[];
+ const reading=(async()=>{for await(const row of second.scheduler.wait(`operations/${task.id.split(".")[0]}`,attach.signal)!)seen.push(row);})();
+ const spare=second.scheduler.register(profile("spare"));await Bun.sleep(20);
+ second.advance(30);expect((await polled(second.scheduler,spare.id,30)).task).toBeNull();
+ second.advance(40);
+ const back=second.scheduler.register(profile("spare")),again=(await polled(second.scheduler,back.id,200)).task!;
+ expect([again.id.split(".")[0],again.attempt]).toEqual([task.id.split(".")[0],2]);
+ expect(second.scheduler.report(back.id,again.id,resultOf())).toBe(true);await reading;
+ expect(seen.at(-1)!.stage).toBe("COMPLETED");attach.abort();
+ const {readSchedulerJournalV1,writeSchedulerJournalV1}=await import("../📓️journal/🟦️.ts"),{mkdtempSync,rmSync}=await import("node:fs"),{tmpdir}=await import("node:os"),{join}=await import("node:path"),directory=mkdtempSync(join(tmpdir(),"journal-")),path=join(directory,"j.json");
+ writeSchedulerJournalV1(path,rows,1000);
+ expect(readSchedulerJournalV1(path,2000,5000)).toEqual(rows);expect(readSchedulerJournalV1(path,10_000,5000)).toEqual([]);expect(readSchedulerJournalV1(join(directory,"absent.json"),2000,5000)).toEqual([]);
+ rmSync(directory,{recursive:true,force:true});
+});
+
+class Leasing extends Memory{
+ leased:{lease:string|undefined;hashes:string[]}[]=[];released:{lease:string;hashes:string[]}[]=[];
+ override async missing(_:string,digests:readonly RemoteExecutionDigestV1[],_signal?:AbortSignal,intent?:string){this.leased.push({lease:intent,hashes:digests.map(digest=>digest.hash)});return digests.filter(digest=>!this.blobs.has(digest.hash));}
+ async release(_:string,hashes:readonly string[],intent:string){this.released.push({lease:intent,hashes:[...hashes]});}
+ inputAction(files:Record<string,string>):{action:RemoteExecutionDigestV1;blobs:Set<string>}{
+  const before=new Set(this.blobs.keys()),wire=(digest:RemoteExecutionDigestV1)=>({hash:digest.hash,size_bytes:digest.size});
+  const tree=(entries:Record<string,string>):RemoteExecutionDigestV1=>{
+   const direct:Record<string,string>={},nested:Record<string,Record<string,string>>={};
+   for(const [path,text] of Object.entries(entries)){const at=path.indexOf("/");if(at<0)direct[path]=text;else(nested[path.slice(0,at)]??={})[path.slice(at+1)]=text;}
+   return this.put(encodeProtobufV1(REAPI_V1.directory,{files:Object.entries(direct).sort().map(([name,text])=>({name,digest:wire(this.put(new TextEncoder().encode(text))),is_executable:false})),directories:Object.entries(nested).sort().map(([name,child])=>({name,digest:wire(tree(child))})),symlinks:[]}));
+  };
+  const root=tree(files),command=this.put(encodeProtobufV1(REAPI_V1.command,{arguments:["/bin/true"],platform:{properties:[]}}));
+  const action=this.put(encodeProtobufV1(REAPI_V1.action,{command_digest:wire(command),input_root_digest:wire(root)}));
+  return{action,blobs:new Set([...this.blobs.keys()].filter(hash=>!before.has(hash)))};
+ }
+}
+const textDigest=(text:string):RemoteExecutionDigestV1=>({hash:sha(new TextEncoder().encode(text)),size:text.length});
+
+test("an operation leases its whole input root when it is accepted, renews the lease for as long as it queues (longer than the store's lease) and ends it when it completes",async()=>{
+ const leasing=new Leasing(),{scheduler,advance}=harness({content:leasing,inputLeaseRenewSeconds:600,unmatchedSeconds:1_000_000}),built=leasing.inputAction({"a.txt":"a","d/b.txt":"b","d/e/c.txt":"c"});
+ const run=submit(scheduler,built.action);await Bun.sleep(30);
+ expect(run.rows.at(-1)!.stage).toBe("QUEUED");
+ const first=leasing.leased[0]!;expect(first.lease).toBe(`input:op-${built.action.hash.slice(0,32)}`);expect(new Set(first.hashes),"action, command, three directories and three files").toEqual(built.blobs);expect(built.blobs.size).toBe(8);
+ for(let round=0;round<4;round++){advance(601);await Bun.sleep(20);}
+ expect(leasing.leased.length,"one lease at acceptance and one renewal per period while queued (2404 s)").toBe(5);
+ expect(leasing.leased.every(row=>row.lease===first.lease&&new Set(row.hashes).size===8)).toBe(true);
+ expect(leasing.released).toEqual([]);
+ const worker=scheduler.register(profile("w")),task=(await polled(scheduler,worker.id)).task!;
+ scheduler.report(worker.id,task.id,resultOf());await run.done;
+ expect(leasing.released).toHaveLength(1);expect(leasing.released[0]!.lease).toBe(first.lease);expect(new Set(leasing.released[0]!.hashes)).toEqual(built.blobs);
+});
+
+test("an operation whose input blobs are missing is answered at submission with every missing blob, never queued, and holds no lease",async()=>{
+ const leasing=new Leasing(),{scheduler}=harness({content:leasing}),built=leasing.inputAction({"a.txt":"a","d/b.txt":"b","d/e/c.txt":"c"});
+ leasing.blobs.delete(textDigest("a").hash);leasing.blobs.delete(textDigest("c").hash);
+ const run=submit(scheduler,built.action);await run.done;
+ const status=run.rows.at(-1)!.outcome!.status;
+ expect(status.code).toBe(9);expect(new Set(status.missing!.map(digest=>digest.hash))).toEqual(new Set([textDigest("a").hash,textDigest("c").hash]));
+ expect(status.message).toBe(`Missing blob ${status.missing![0]!.hash}/1 and 1 more`);
+ expect(scheduler.status().queued).toBe(0);expect(leasing.released).toHaveLength(1);
+ leasing.blobs.set(textDigest("a").hash,new TextEncoder().encode("a"));leasing.blobs.set(textDigest("c").hash,new TextEncoder().encode("c"));
+ const again=submit(scheduler,built.action);await Bun.sleep(30);expect(again.rows.at(-1)!.stage,"the same action queues once the blobs are back").toBe("QUEUED");again.abort.abort();
+});
+
+test("a queued operation whose input blob the store loses despite the lease is answered at the next renewal with the lost blobs",async()=>{
+ const leasing=new Leasing(),{scheduler,advance}=harness({content:leasing,inputLeaseRenewSeconds:600,unmatchedSeconds:1_000_000}),built=leasing.inputAction({"a.txt":"a","d/b.txt":"b"});
+ const run=submit(scheduler,built.action);await Bun.sleep(30);expect(run.rows.at(-1)!.stage).toBe("QUEUED");
+ leasing.blobs.delete(textDigest("b").hash);advance(601);await run.done;
+ const status=run.rows.at(-1)!.outcome!.status;expect(status.code).toBe(9);expect(status.missing).toEqual([textDigest("b")]);
+});

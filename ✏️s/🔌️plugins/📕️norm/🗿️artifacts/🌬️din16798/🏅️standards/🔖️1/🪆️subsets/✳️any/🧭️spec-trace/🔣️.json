@@ -55,12 +55,13 @@
     "checks": [
      "din16798-1.co2.",
      "din16798-1.vent.",
-     "din16798-1.rh."
+     "din16798-1.rh.",
+     "din16798-1.occupancy."
     ]
    },
    "description": {
-    "en": "The checks cover modeled outdoor air, carbon dioxide and humidity cases.",
-    "de": "Die Prüfungen erfassen modellierte Fälle zu Außenluft, Kohlendioxid und Feuchte."
+    "en": "The checks cover modeled outdoor air, carbon dioxide, humidity and the typical occupancy of the usage category.",
+    "de": "Die Prüfungen erfassen modellierte Fälle zu Außenluft, Kohlendioxid, Feuchte und der typischen Belegung der Nutzungsart."
    }
   },
   {

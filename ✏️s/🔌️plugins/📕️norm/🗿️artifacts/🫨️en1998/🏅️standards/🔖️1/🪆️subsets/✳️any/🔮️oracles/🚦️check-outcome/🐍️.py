@@ -435,7 +435,11 @@ def evaluate(doc):
         lx, ly = b["planWidthM"], b["planLengthM"]
         if b.get("t1Method", "ct").lower() == "given":
             out(f"en1998.1.{bid}.t1Given", b["t1GivenS"] / max(1.5 * ct_period, 1e-9))
-        if b.get("t1Method", "ct").lower() == "rayleigh" and not any(all(st[k] > 0 for st in storeys) for k in ("stiffnessX", "stiffnessY")):
+        if b.get("t1Method", "ct").lower() != "rayleigh":
+            rows.append({"id": f"en1998.1.{bid}.t1Rayleigh", "utilization": 0.0, "status": "notApplicable"})
+        elif any(all(st[k] > 0 for st in storeys) for k in ("stiffnessX", "stiffnessY")):
+            rows.append({"id": f"en1998.1.{bid}.t1Rayleigh", "utilization": 0.0, "status": "pass"})
+        else:
             rows.append({"id": f"en1998.1.{bid}.t1Rayleigh", "utilization": 1.0, "status": "fail"})
         smaller = min(lx, ly)
         out(f"en1998.1.{bid}.planDims", min(0.01 / smaller, 1e6) if smaller > 0 else 1e6)

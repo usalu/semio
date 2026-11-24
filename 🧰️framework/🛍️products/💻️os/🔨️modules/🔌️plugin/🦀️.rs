@@ -249,7 +249,7 @@ pub mod artifact_app_laws {
 #[doc(hidden)]
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub mod reactor_turn_laws {
-    pub use semio_plugin_reactor_turn::{command_idle_turn_limit, poll_kernel, retained_command_ingress_occupancy, set_command_idle_turn_limit, COMMAND_IDLE_TURN_LIMIT, COMMAND_STALLED_FAULT_CODE};
+    pub use semio_plugin_reactor_turn::{command_idle_turn_limit, command_stalled, note_command_turn, poll_kernel, retained_command_ingress_occupancy, set_command_idle_turn_limit, COMMAND_IDLE_TURN_LIMIT, COMMAND_STALLED_FAULT_CODE};
 }
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub use app::authoring_law;

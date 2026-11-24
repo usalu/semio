@@ -25,7 +25,7 @@
       }
     },
     "Roles": {
-      "const": {"cache": "interactive", "scheduler": "interactive", "graph": "interactive", "agent": "standard", "pool": "background", "ready": "background"}
+      "const": {"cache": "interactive", "scheduler": "interactive", "graph": "interactive", "agent": "standard", "pool": "background", "ready": "background", "spool": "standard"}
     },
     "Services": {
       "const": {"replica": "interactive", "cache": "interactive", "relay": "standard", "compact": "background"}

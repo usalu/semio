@@ -8,6 +8,7 @@ import {fileURLToPath} from "node:url";
 import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../../../🏗️build/🌐️remote-cache/🖥️server/🟦️.ts";
 import {parseRemoteCacheActionResultV1} from "../../../../../🏗️build/🌐️remote-cache/🔬️action-result/🟦️.ts";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import {stretchedBudgetMillisecondsV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {cargoScratchBaseV1} from "../../🧪️tests/🏖️scratch/🟦️.ts";
 import {drainUploadsV1,spoolLengthV1} from "../📤️uploader/🟦️.ts";
 import {createFleetClientV1,readFleetSettingsV1} from "../📡️client/🟦️.ts";
@@ -16,6 +17,7 @@ import {FLEET_POLICY_V1} from "../🪪️identity/🟦️.ts";
 import {decodeActionResultV1,encodeActionResultV1,parseRemoteUnitV1,readUnitSlotV1,wireDigestOfV1} from "../📦️wire/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import unitSchema from "../../🧬️schema/🔣️.json" with {type:"json"};
+process.env.SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS="1500";
 
 /** 🛰️ The fleet tier is proven end to end on one machine: two scratch checkouts at different absolute paths act as two machines against one real cache server over real sockets. Machine 1 builds cold and uploads, machine 2 builds cold and compiles nothing, two machines racing compile every unit exactly once in total, and a server that is down, denies, stalls or serves a corrupt blob never fails or hangs a build. Real compiles are counted by a shim in front of rustc. */
 const here=fileURLToPath(new URL(".",import.meta.url)),script=resolve(here,"../../📜️script.ts"),counter=resolve(here,"🔢️count/🟦️.ts"),fleet=FLEET_POLICY_V1,base=cargoScratchBaseV1(),cargo=process.env.SEMIO_TEST_CARGO??"cargo";
@@ -59,10 +61,11 @@ const compiles=(m:Machine):Compile[]=>readFileSync(m.log,"utf8").split("\n").fil
 type Event={kind:string;crate:string;key:string|null;reason?:string;waitedMs:number};
 const events=(m:Machine,lane?:string):Event[]=>{const dir=join(m.cache,"x");return existsSync(dir)?readdirSync(dir).filter(name=>name.endsWith(".jsonl")&&(!lane||name===lane+".jsonl")).flatMap(name=>readFileSync(join(dir,name),"utf8").split("\n").filter(Boolean).map(line=>JSON.parse(line) as Event)):[];};
 const count=(rows:readonly {kind:string}[],kind:string)=>rows.filter(row=>row.kind===kind).length;
+const stored=(rows:readonly {kind:string;reason?:string}[])=>rows.filter(row=>row.kind==="manifest-publish"&&(row.reason??"").startsWith("stored")).length;
 const workspaceCompiles=(m:Machine)=>compiles(m).filter(row=>["core","mac","leaf1","leaf2","app"].includes(row.crate)||row.crate.startsWith("build_script_"));
 
 async function settled(m:Machine,environment:Record<string,string|undefined>):Promise<void>{
- const deadline=Date.now()+60000;
+ const deadline=Date.now()+stretchedBudgetMillisecondsV1(60000);
  while(Date.now()<deadline){
   const result=await drainUploadsV1(m.cache,{...process.env,...environment,SEMIO_CAS_ROOT:m.cas},{idleMilliseconds:0});
   if(result!=="busy"&&spoolLengthV1(m.cache)===0)return;
@@ -70,7 +73,7 @@ async function settled(m:Machine,environment:Record<string,string|undefined>):Pr
  }
  throw Error("uploads did not settle");
 }
-const waitForUploader=async(m:Machine)=>{const deadline=Date.now()+60000;while(Date.now()<deadline){if(spoolLengthV1(m.cache)===0&&!existsSync(join(m.cache,fleet.layout.state,"uploader.lock")))return;await new Promise(done=>setTimeout(done,200));}throw Error("the upload worker did not finish");};
+const waitForUploader=async(m:Machine)=>{const deadline=Date.now()+stretchedBudgetMillisecondsV1(60000);while(Date.now()<deadline){if(spoolLengthV1(m.cache)===0&&!existsSync(join(m.cache,fleet.layout.state,"uploader.lock")))return;await new Promise(done=>setTimeout(done,200));}throw Error("the upload worker did not finish");};
 
 test("the schema is closed and the manifest, platform, spool job and counters validate against it",()=>{
  const ajv=new Ajv({strict:false});ajv.addSchema(schema);
@@ -122,7 +125,7 @@ test("two machines at different paths: the first builds cold and uploads, the se
  const localKeys=(rows:Event[],kind:string)=>new Set(rows.filter(row=>row.kind===kind).map(row=>row.key));
  expect([...localKeys(warm,"remote-hit")].filter(key=>localKeys(cold,"miss").has(key)).length,"a unit without a real path has one local key in every checkout").toBeGreaterThan(0);
  const status=await (await fetch(server.url+"/status",{headers:{authorization:"Bearer w-token"}})).json() as {counters:{ac:{puts:number;hits:number}};claims:{active:number}};
- expect(status.counters.ac.puts).toBe(count(cold,"miss"));expect(status.counters.ac.hits).toBeGreaterThanOrEqual(count(cold,"miss"));expect(status.claims.active).toBe(0);
+ expect(status.counters.ac.puts,"every unit and the input manifest of its slot").toBe(count(cold,"miss")+stored(cold));expect(status.counters.ac.hits).toBeGreaterThanOrEqual(count(cold,"miss"));expect(status.claims.active).toBe(0);
  const entries=readdirSync(join(m2.cache,"e")).flatMap(shard=>readdirSync(join(m2.cache,"e",shard)).flatMap(key=>readdirSync(join(m2.cache,"e",shard,key)).map(file=>JSON.parse(readFileSync(join(m2.cache,"e",shard,key,file),"utf8")) as {slot?:string})));
  expect(entries.length).toBe(count(cold,"miss"));for(const entry of entries)expect(entry.slot).toMatch(/^[a-f0-9]{64}$/u);
  const edited=join(m2.checkout,"leaf2","src","lib.rs");writeFileSync(edited,readFileSync(edited,"utf8")+"pub fn extra() -> u32 { 2 }\n");
@@ -236,7 +239,7 @@ test("a machine that built before seeds the fleet cache from its local hits, onc
  expect(spoolLengthV1(m1.cache)).toBe(0);
  expect((await build(m1,environment,["-p","app"],{lane:"l2"})).code).toBe(0);
  await waitForUploader(m1);
- const status=await (await fetch(server.url+"/status",{headers:{authorization:"Bearer w-token"}})).json() as {counters:{ac:{puts:number}}};expect(status.counters.ac.puts).toBe(7);
+ const status=await (await fetch(server.url+"/status",{headers:{authorization:"Bearer w-token"}})).json() as {counters:{ac:{puts:number}}};expect(status.counters.ac.puts,"seven units and seven manifests").toBe(7+stored(events(m1)));
  expect((await build(m1,environment,["-p","app"],{lane:"l3"})).code).toBe(0);expect(spoolLengthV1(m1.cache)).toBe(0);
  expect((await build(m2,environment,["-p","app"])).code).toBe(0);expect(workspaceCompiles(m2)).toEqual([]);
 },300000);
@@ -251,7 +254,7 @@ test("a requester whose compiler build differs from the fleet's gets no hit and 
  const same=await build(m3,environment,["-p","app"]);expect(same.code,same.output).toBe(0);
  const warm=events(m3);expect(count(warm,"miss")).toBe(0);expect(count(warm,"remote-hit")).toBe(built);expect(workspaceCompiles(m3)).toEqual([]);
  const status=await (await fetch(server.url+"/status",{headers:{authorization:"Bearer w-token"}})).json() as {counters:{ac:{puts:number}};claims:{active:number}};
- expect(status.counters.ac.puts,"two builds, two key spaces").toBe(2*built);expect(status.claims.active).toBe(0);
+ expect(status.counters.ac.puts,"two builds, two key spaces, and the manifests of the slots (one per slot, shared by both)").toBe(2*built+stored(events(m1))+stored(foreign));expect(status.claims.active).toBe(0);
 },600000);
 
 test("with signed access the client takes its fetch from the remote cache module and a request without a usable signer still reaches an open server",async()=>{

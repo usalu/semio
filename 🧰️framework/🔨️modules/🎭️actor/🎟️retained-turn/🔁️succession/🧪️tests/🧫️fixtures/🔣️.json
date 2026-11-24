@@ -1,0 +1,216 @@
+{
+  "source": {
+    "operation": 31,
+    "generation": 1,
+    "clockBinding": 31,
+    "deadlineUs": 1000000
+  },
+  "stock": {
+    "grant": {
+      "maximumItems": 100000,
+      "maximumCopyBytes": 16777216,
+      "maximumCapacityBytes": 16777216,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 128
+    },
+    "fuel": 1000000
+  },
+  "thresholds": [
+    {
+      "granted": 0,
+      "remaining": 0,
+      "lowWater": false,
+      "exhausted": false
+    },
+    {
+      "granted": 1,
+      "remaining": 1,
+      "lowWater": false,
+      "exhausted": false
+    },
+    {
+      "granted": 1,
+      "remaining": 0,
+      "lowWater": true,
+      "exhausted": true
+    },
+    {
+      "granted": 20,
+      "remaining": 6,
+      "lowWater": false,
+      "exhausted": false
+    },
+    {
+      "granted": 20,
+      "remaining": 5,
+      "lowWater": false,
+      "exhausted": false
+    },
+    {
+      "granted": 20,
+      "remaining": 4,
+      "lowWater": true,
+      "exhausted": false
+    },
+    {
+      "granted": 20,
+      "remaining": 1,
+      "lowWater": true,
+      "exhausted": true
+    },
+    {
+      "granted": 20,
+      "remaining": 2,
+      "lowWater": true,
+      "exhausted": false
+    },
+    {
+      "granted": 2147483648,
+      "remaining": 536870912,
+      "lowWater": false,
+      "exhausted": false
+    },
+    {
+      "granted": 2147483648,
+      "remaining": 536870911,
+      "lowWater": true,
+      "exhausted": false
+    },
+    {
+      "granted": 2147483648,
+      "remaining": 134217728,
+      "lowWater": true,
+      "exhausted": false
+    },
+    {
+      "granted": 2147483648,
+      "remaining": 134217727,
+      "lowWater": true,
+      "exhausted": true
+    }
+  ],
+  "admissions": [
+    {
+      "name": "exact predecessor turn and fresh kernel identity",
+      "change": {},
+      "accepted": true
+    },
+    {
+      "name": "foreign source operation",
+      "change": {
+        "operation": 32
+      },
+      "accepted": false,
+      "refusal": "invariant-violated"
+    },
+    {
+      "name": "foreign source generation",
+      "change": {
+        "generation": 2
+      },
+      "accepted": false,
+      "refusal": "invariant-violated"
+    },
+    {
+      "name": "replayed predecessor epoch",
+      "change": {
+        "epoch": 1
+      },
+      "accepted": false,
+      "refusal": "invariant-violated"
+    },
+    {
+      "name": "successor repeats the source operation",
+      "change": {
+        "successor": 31
+      },
+      "accepted": false,
+      "refusal": "invariant-violated"
+    },
+    {
+      "name": "successor precedes the source operation",
+      "change": {
+        "successor": 30
+      },
+      "accepted": false,
+      "refusal": "invariant-violated"
+    },
+    {
+      "name": "successor without fuel",
+      "change": {
+        "fuel": 0
+      },
+      "accepted": false,
+      "refusal": "invariant-violated"
+    },
+    {
+      "name": "successor without items",
+      "change": {
+        "maximumItems": 0
+      },
+      "accepted": false,
+      "refusal": "invariant-violated"
+    },
+    {
+      "name": "successor without depth",
+      "change": {
+        "maximumDepth": 0
+      },
+      "accepted": false,
+      "refusal": "invariant-violated"
+    }
+  ],
+  "quiescence": [
+    {
+      "name": "idle actor",
+      "jobSlot": false,
+      "heldOutput": false,
+      "admittedInput": false,
+      "outstanding": false,
+      "accepted": true
+    },
+    {
+      "name": "registered job slot",
+      "jobSlot": true,
+      "heldOutput": false,
+      "admittedInput": false,
+      "outstanding": false,
+      "accepted": false
+    },
+    {
+      "name": "held output",
+      "jobSlot": false,
+      "heldOutput": true,
+      "admittedInput": false,
+      "outstanding": false,
+      "accepted": false
+    },
+    {
+      "name": "admitted input",
+      "jobSlot": false,
+      "heldOutput": false,
+      "admittedInput": true,
+      "outstanding": false,
+      "accepted": false
+    },
+    {
+      "name": "outstanding turn",
+      "jobSlot": false,
+      "heldOutput": false,
+      "admittedInput": false,
+      "outstanding": true,
+      "accepted": false
+    }
+  ],
+  "run": {
+    "stocks": 6,
+    "command": {
+      "copiedItems": 40,
+      "copiedBytes": 8192,
+      "retainedCapacityBytes": 4096,
+      "releasedBytes": 2048,
+      "work": 120
+    },
+    "jobEvery": 25
+  }
+}

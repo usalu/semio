@@ -26,6 +26,7 @@ fn definition_declares_a_document_window() {
 }
 #[test]
 fn render_lists_each_own_page_with_exact_dimensions_and_text() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let document = fixture();
     assert_eq!(document.pages.len(), 2);
     assert_eq!(page_summary(0, &document.pages[0], semio_ui_locale::Locale::En), "1 | 200 × 300\nSemio page one");

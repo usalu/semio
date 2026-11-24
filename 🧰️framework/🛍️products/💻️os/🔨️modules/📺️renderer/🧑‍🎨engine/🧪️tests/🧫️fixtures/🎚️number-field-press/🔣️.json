@@ -1,0 +1,45 @@
+{
+  "field": { "kind": "number", "value": "0", "min": null, "max": null, "step": 1, "precision": null },
+  "cases": [
+    {
+      "case": "input then enter releases the same press",
+      "steps": [{ "do": "input", "value": "25" }, { "do": "enter" }],
+      "expected": [
+        { "press": "A", "value": 25, "commit": false },
+        { "press": "A", "value": 25, "commit": true }
+      ]
+    },
+    {
+      "case": "input, enter, input, blur are two distinct presses",
+      "steps": [{ "do": "input", "value": "25" }, { "do": "enter" }, { "do": "input", "value": "7" }, { "do": "blur" }],
+      "expected": [
+        { "press": "A", "value": 25, "commit": false },
+        { "press": "A", "value": 25, "commit": true },
+        { "press": "B", "value": 7, "commit": false },
+        { "press": "B", "value": 7, "commit": true }
+      ]
+    },
+    {
+      "case": "escape cancels the open press, the later blur releases nothing",
+      "steps": [{ "do": "input", "value": "25" }, { "do": "escape" }, { "do": "blur" }],
+      "expected": [
+        { "press": "A", "value": 25, "commit": false },
+        { "press": "A", "abort": "blur" }
+      ]
+    },
+    {
+      "case": "enter and escape without an open press send nothing",
+      "steps": [{ "do": "enter" }, { "do": "escape" }, { "do": "blur" }],
+      "expected": []
+    },
+    {
+      "case": "a value typed back to the shown one still ticks and the release carries it",
+      "steps": [{ "do": "input", "value": "25" }, { "do": "input", "value": "0" }, { "do": "blur" }],
+      "expected": [
+        { "press": "A", "value": 25, "commit": false },
+        { "press": "A", "value": 0, "commit": false },
+        { "press": "A", "value": 0, "commit": true }
+      ]
+    }
+  ]
+}

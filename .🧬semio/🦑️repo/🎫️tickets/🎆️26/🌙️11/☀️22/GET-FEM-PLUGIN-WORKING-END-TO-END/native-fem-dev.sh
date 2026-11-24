@@ -7,7 +7,7 @@
 T="/c/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-FEM-PLUGIN-WORKING-END-TO-END"
 G="$T/🗑️generated"
 R=/c/semio
-VITE=$R/.cache/b/d/m/j/420f71600f321d023284/node_modules/vite/bin/vite.js
+VITE=$(ls -dt "$R"/.cache/b/d/m/j/*/node_modules/vite/bin/vite.js | head -1)
 mkdir -p "$G" /c/t/wd /c/t/wdb /c/t/wdtmp
 
 case "$1" in
@@ -15,7 +15,7 @@ wasm)
   cd "$R/🌎️hub" || exit 2
   export TMP='C:\t\wdtmp' TEMP='C:\t\wdtmp' TMPDIR='C:\t\wdtmp' CARGO_INCREMENTAL=0
   export CARGO_TARGET_DIR='C:\t\wd' CARGO_BUILD_BUILD_DIR='C:\t\wdb'
-  export CARGO_BUILD_RUSTC=rustc CARGO_BUILD_RUSTC_WRAPPER= RUSTC_WRAPPER= SEMIO_BUILD_MODE=prototype
+  export CARGO_BUILD_RUSTC=rustc CARGO_BUILD_RUSTC_WRAPPER= RUSTC_WRAPPER= SEMIO_BUILD_MODE=prototype RUST_MIN_STACK=134217728
   export CARGO_UNSTABLE_FEATURE_UNIFICATION=true CARGO_RESOLVER_FEATURE_UNIFICATION=selected
   cargo build --offline -j 3 --manifest-path "$R/🌎️hub/Cargo.toml" --profile prototype --target wasm32-wasip2 \
     -p semio-hub-fem-component --lib --config "$(cygpath -m "$T/native-fem-profile.toml")" \

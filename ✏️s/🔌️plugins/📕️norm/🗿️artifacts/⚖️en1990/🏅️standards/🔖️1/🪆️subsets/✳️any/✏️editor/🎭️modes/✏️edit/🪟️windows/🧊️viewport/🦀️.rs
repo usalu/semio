@@ -52,9 +52,9 @@ fn peer_handles_of(document: &En1990Snapshot, scene: &StructuralScene, frame: &L
     handles_of(document, &all).into_iter().filter(|handle| frame.transient.peers.iter().any(|peer| peer.drag.handle == handle.id)).collect()
 }
 
-/// ➕ The insert palette: one tool per entity kind of this standard.
+/// ➕ The insert palette: one tool per entity kind of this standard that has rows of its own; the combination selector is a derived group without a collection in the document, an action effect has no id of its own to select, and a design case is added through the case editor.
 pub fn insert_specs() -> Vec<InsertSpec> {
-    semio_s_artifact_norm_en1990_scene_kit::ENTITY_KINDS.iter().filter(|kind| kind.id != "case").map(|kind| InsertSpec { id: kind.id.to_string(), collection: kind.collection.to_string(), kind: kind.scene_kind, label_en: kind.label_en.to_string(), label_de: kind.label_de.to_string() }).collect()
+    semio_s_artifact_norm_en1990_scene_kit::ENTITY_KINDS.iter().filter(|kind| !matches!(kind.id, "case" | "combination" | "effect")).map(|kind| InsertSpec { id: kind.id.to_string(), collection: kind.collection.to_string(), kind: kind.scene_kind, label_en: kind.label_en.to_string(), label_de: kind.label_de.to_string() }).collect()
 }
 
 /// 🧊️ Projects the document and lowers it to the `world-3d` surface; `selection` is the resolved selection whose scene entities are highlighted and `combination` the id of the active combination column whose design values scale the load glyphs, `frame` the live lanes: grips of the selection, the dimension-line entry of the open drag, the insert ghost and the selection of the other users.

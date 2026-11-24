@@ -80,7 +80,7 @@
    "heightM": 0.45,
    "widthM": 0.428,
    "depthM": 1.8,
-   "massKg": 34.0
+   "massKg": 34
   },
   "materials": [
    {
@@ -94,8 +94,8 @@
     "densityKgM3": 650,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 1600000000.0,
-    "strengthPa": 11000000.0,
+    "elasticModulusPa": 1600000000,
+    "strengthPa": 11000000,
     "source": "literature",
     "reference": "en-312-2010"
    },
@@ -110,8 +110,8 @@
     "densityKgM3": 650,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 1600000000.0,
-    "strengthPa": 11000000.0,
+    "elasticModulusPa": 1600000000,
+    "strengthPa": 11000000,
     "source": "authored-estimate",
     "reference": "en-312-2010"
    },
@@ -126,8 +126,8 @@
     "densityKgM3": 850,
     "conductivityWmK": 0.14,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 3000000000.0,
-    "strengthPa": 30000000.0,
+    "elasticModulusPa": 3000000000,
+    "strengthPa": 30000000,
     "source": "authored-estimate",
     "reference": "en-622-5-2009"
    },
@@ -142,8 +142,8 @@
     "densityKgM3": 905,
     "conductivityWmK": 0.22,
     "specificHeatJKgK": 1900,
-    "elasticModulusPa": 1300000000.0,
-    "strengthPa": 30000000.0,
+    "elasticModulusPa": 1300000000,
+    "strengthPa": 30000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -158,8 +158,8 @@
     "densityKgM3": 2700,
     "conductivityWmK": 160,
     "specificHeatJKgK": 900,
-    "elasticModulusPa": 70000000000.0,
-    "strengthPa": 150000000.0,
+    "elasticModulusPa": 70000000000,
+    "strengthPa": 150000000,
     "source": "literature",
     "reference": "incropera-2018"
    },
@@ -174,8 +174,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -190,8 +190,8 @@
     "densityKgM3": 720,
     "conductivityWmK": 0.16,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 14000000000.0,
-    "strengthPa": 50000000.0,
+    "elasticModulusPa": 14000000000,
+    "strengthPa": 50000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -293,7 +293,7 @@
      },
      "section": {
       "areaM2": 0.009568,
-      "secondMomentM4": 2.0412e-07,
+      "secondMomentM4": 2.0412e-7,
       "extremeFibreM": 0.008,
       "material": "chipboard-white-foil",
       "title": {
@@ -329,7 +329,7 @@
      },
      "section": {
       "areaM2": 0.009568,
-      "secondMomentM4": 2.0412e-07,
+      "secondMomentM4": 2.0412e-7,
       "extremeFibreM": 0.008,
       "material": "chipboard-white-foil",
       "title": {
@@ -371,7 +371,7 @@
     "id": "foot-front-left",
     "bone": "carcass",
     "x": 0.344,
-    "y": 0.0,
+    "y": 0,
     "z": 0.875,
     "kind": "contact",
     "title": {
@@ -388,8 +388,8 @@
     "id": "foot-front-middle",
     "bone": "carcass",
     "x": 0.344,
-    "y": 0.0,
-    "z": 0.0,
+    "y": 0,
+    "z": 0,
     "kind": "contact",
     "title": {
      "en": "Front middle glide foot",
@@ -405,7 +405,7 @@
     "id": "foot-front-right",
     "bone": "carcass",
     "x": 0.344,
-    "y": 0.0,
+    "y": 0,
     "z": -0.875,
     "kind": "contact",
     "title": {
@@ -422,7 +422,7 @@
     "id": "foot-back-left",
     "bone": "carcass",
     "x": 0.04,
-    "y": 0.0,
+    "y": 0,
     "z": 0.875,
     "kind": "contact",
     "title": {
@@ -439,8 +439,8 @@
     "id": "foot-back-middle",
     "bone": "carcass",
     "x": 0.04,
-    "y": 0.0,
-    "z": 0.0,
+    "y": 0,
+    "z": 0,
     "kind": "contact",
     "title": {
      "en": "Back middle glide foot",
@@ -456,7 +456,7 @@
     "id": "foot-back-right",
     "bone": "carcass",
     "x": 0.04,
-    "y": 0.0,
+    "y": 0,
     "z": -0.875,
     "kind": "contact",
     "title": {
@@ -546,7 +546,7 @@
        "filled": true,
        "tone": 0.72,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.025,
        "w": 0.003,
        "h": 0.409,
@@ -562,7 +562,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.434,
        "w": 0.4,
        "h": 0.016,
@@ -577,7 +577,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.025,
        "w": 0.003,
        "h": 0.2625,
@@ -593,7 +593,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.3475,
        "w": 0.003,
        "h": 0.0865,
@@ -642,11 +642,11 @@
        "points": [
         [
          0.328,
-         0.0
+         0
         ],
         [
          0.36,
-         0.0
+         0
         ],
         [
          0.364,
@@ -689,11 +689,11 @@
        "points": [
         [
          0.024,
-         0.0
+         0
         ],
         [
          0.056,
-         0.0
+         0
         ],
         [
          0.06,
@@ -733,7 +733,7 @@
        "filled": true,
        "tone": 0.8,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.0135,
        "w": 0.354,
        "h": 0.11,
@@ -749,7 +749,7 @@
        "tone": 0.3,
        "kind": "rect",
        "x": 0.354,
-       "y": 0.0,
+       "y": 0,
        "w": 0.016,
        "h": 0.142,
        "region": "fronts",
@@ -763,7 +763,7 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.0135,
        "w": 0.012,
        "h": 0.11,
@@ -859,7 +859,7 @@
        "filled": true,
        "tone": 0.85,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.016,
        "w": 0.3915,
        "h": 0.016,
@@ -1220,11 +1220,11 @@
        "points": [
         [
          0.859,
-         0.0
+         0
         ],
         [
          0.891,
-         0.0
+         0
         ],
         [
          0.895,
@@ -1267,11 +1267,11 @@
        "points": [
         [
          -0.016,
-         0.0
+         0
         ],
         [
          0.016,
-         0.0
+         0
         ],
         [
          0.02,
@@ -1314,11 +1314,11 @@
        "points": [
         [
          -0.891,
-         0.0
+         0
         ],
         [
          -0.859,
-         0.0
+         0
         ],
         [
          -0.855,
@@ -1358,7 +1358,7 @@
        "filled": true,
        "tone": 0.93,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.016,
        "w": 0.3915,
        "h": 0.016,
@@ -1654,7 +1654,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.1125,
        "rx": 0.015,
        "ry": 0.015,
@@ -1751,7 +1751,7 @@
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.9,
        "w": 0.4,
        "h": 1.8,
@@ -1901,7 +1901,7 @@
        "filled": true,
        "tone": 0.93,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.016,
        "w": 0.3915,
        "h": 0.016,
@@ -2191,7 +2191,7 @@
        "points": [
         [
          0.4,
-         0.0
+         0
         ],
         [
          0.4,
@@ -2215,7 +2215,7 @@
         ],
         [
          0.425,
-         0.0
+         0
         ],
         [
          0.425,
@@ -2239,7 +2239,7 @@
         ],
         [
          0.4,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -2250,7 +2250,7 @@
     },
     "sections": {
      "elevation": {
-      "plane": 0.0,
+      "plane": 0,
       "label": {
        "en": "A-A",
        "de": "A-A"
@@ -2333,7 +2333,7 @@
        "filled": true,
        "tone": 0.72,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.025,
        "w": 0.003,
        "h": 0.409,
@@ -2349,7 +2349,7 @@
        "filled": true,
        "tone": 0.86,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.434,
        "w": 0.4,
        "h": 0.016,
@@ -2365,7 +2365,26 @@
        "filled": true,
        "tone": 0.85,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
+       "y": -0.016,
+       "w": 0.3915,
+       "h": 0.016,
+       "regions": [
+        "fronts",
+        "handles"
+       ],
+       "material": "chipboard-white-foil",
+       "penMm": 0.25
+      },
+      {
+       "id": "door-l",
+       "bone": "flap-l",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": 0,
        "y": -0.016,
        "w": 0.3915,
        "h": 0.016,
@@ -2429,11 +2448,11 @@
        "points": [
         [
          0.324,
-         0.0
+         0
         ],
         [
          0.364,
-         0.0
+         0
         ],
         [
          0.364,
@@ -2460,11 +2479,11 @@
        "points": [
         [
          0.02,
-         0.0
+         0
         ],
         [
          0.06,
-         0.0
+         0
         ],
         [
          0.06,
@@ -2618,11 +2637,11 @@
        "points": [
         [
          0.855,
-         0.0
+         0
         ],
         [
          0.895,
-         0.0
+         0
         ],
         [
          0.895,
@@ -2649,11 +2668,11 @@
        "points": [
         [
          -0.02,
-         0.0
+         0
         ],
         [
          0.02,
-         0.0
+         0
         ],
         [
          0.02,
@@ -2680,11 +2699,11 @@
        "points": [
         [
          -0.895,
-         0.0
+         0
         ],
         [
          -0.855,
-         0.0
+         0
         ],
         [
          -0.855,
@@ -2750,7 +2769,7 @@
        "filled": true,
        "tone": 0.93,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.016,
        "w": 0.3915,
        "h": 0.016,
@@ -2810,7 +2829,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.1125,
        "rx": 0.015,
        "ry": 0.015,
@@ -2875,7 +2894,7 @@
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.9,
        "w": 0.4,
        "h": 1.8,
@@ -2946,7 +2965,7 @@
        "filled": true,
        "tone": 0.93,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.016,
        "w": 0.3915,
        "h": 0.016,
@@ -3024,7 +3043,7 @@
        "points": [
         [
          0.4,
-         0.0
+         0
         ],
         [
          0.4,
@@ -3036,7 +3055,7 @@
         ],
         [
          0.425,
-         0.0
+         0
         ],
         [
          0.425,
@@ -3048,7 +3067,7 @@
         ],
         [
          0.4,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3118,7 +3137,7 @@
        "tone": 0.88,
        "kind": "rect",
        "x": 0.003,
-       "y": 0.0,
+       "y": 0,
        "w": 0.381,
        "h": 0.434,
        "region": "carcass-foil",
@@ -3132,7 +3151,7 @@
        "filled": true,
        "tone": 0.72,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.025,
        "w": 0.003,
        "h": 0.409,
@@ -3147,7 +3166,7 @@
        "filled": true,
        "tone": 0.86,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.434,
        "w": 0.4,
        "h": 0.016,
@@ -3162,7 +3181,25 @@
        "filled": true,
        "tone": 0.85,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
+       "y": -0.016,
+       "w": 0.3915,
+       "h": 0.016,
+       "regions": [
+        "fronts",
+        "handles"
+       ],
+       "material": "chipboard-white-foil"
+      },
+      {
+       "id": "door-l",
+       "bone": "flap-l",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": 0,
        "y": -0.016,
        "w": 0.3915,
        "h": 0.016,
@@ -3223,7 +3260,7 @@
        "tone": 0.45,
        "kind": "rect",
        "x": 0.003,
-       "y": 0.0,
+       "y": 0,
        "w": 0.381,
        "h": 0.025,
        "region": "feet",
@@ -3252,7 +3289,7 @@
        "tone": 0.88,
        "kind": "rect",
        "x": 0.884,
-       "y": 0.0,
+       "y": 0,
        "w": 0.016,
        "h": 0.434,
        "region": "carcass-foil",
@@ -3267,7 +3304,7 @@
        "tone": 0.88,
        "kind": "rect",
        "x": -0.9,
-       "y": 0.0,
+       "y": 0,
        "w": 0.016,
        "h": 0.434,
        "region": "carcass-foil",
@@ -3342,7 +3379,7 @@
        "tone": 0.45,
        "kind": "rect",
        "x": -0.884,
-       "y": 0.0,
+       "y": 0,
        "w": 1.768,
        "h": 0.041,
        "regions": [
@@ -3359,7 +3396,7 @@
        "filled": true,
        "tone": 0.93,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.016,
        "w": 0.3915,
        "h": 0.016,
@@ -3416,7 +3453,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.1125,
        "rx": 0.015,
        "ry": 0.015,
@@ -3433,7 +3470,7 @@
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.9,
        "w": 0.4,
        "h": 1.8,
@@ -3448,7 +3485,7 @@
        "filled": true,
        "tone": 0.93,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.016,
        "w": 0.3915,
        "h": 0.016,
@@ -3522,7 +3559,7 @@
        "points": [
         [
          0.4,
-         0.0
+         0
         ],
         [
          0.4,
@@ -3534,7 +3571,7 @@
         ],
         [
          0.425,
-         0.0
+         0
         ],
         [
          0.425,
@@ -3546,7 +3583,7 @@
         ],
         [
          0.4,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3617,12 +3654,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.384,
-         0.0
+         0
         ],
         [
          0.384,
@@ -3637,7 +3674,7 @@
          0.45
         ],
         [
-         0.0,
+         0,
          0.45
         ]
        ],
@@ -3657,7 +3694,7 @@
        "filled": true,
        "tone": 0.86,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.434,
        "w": 0.4,
        "h": 0.016,
@@ -3672,7 +3709,25 @@
        "filled": true,
        "tone": 0.85,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
+       "y": -0.016,
+       "w": 0.3915,
+       "h": 0.016,
+       "regions": [
+        "fronts",
+        "handles"
+       ],
+       "material": "chipboard-white-foil"
+      },
+      {
+       "id": "door-l",
+       "bone": "flap-l",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": 0,
        "y": -0.016,
        "w": 0.3915,
        "h": 0.016,
@@ -3735,7 +3790,7 @@
        "tone": 0.88,
        "kind": "rect",
        "x": -0.9,
-       "y": 0.0,
+       "y": 0,
        "w": 1.8,
        "h": 0.434,
        "regions": [
@@ -3782,7 +3837,7 @@
        "filled": true,
        "tone": 0.93,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.016,
        "w": 0.3915,
        "h": 0.016,
@@ -3839,7 +3894,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.1125,
        "rx": 0.015,
        "ry": 0.015,
@@ -3856,7 +3911,7 @@
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.9,
        "w": 0.4,
        "h": 1.8,
@@ -3871,7 +3926,7 @@
        "filled": true,
        "tone": 0.93,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.016,
        "w": 0.3915,
        "h": 0.016,
@@ -3945,7 +4000,7 @@
        "points": [
         [
          0.4,
-         0.0
+         0
         ],
         [
          0.4,
@@ -3957,7 +4012,7 @@
         ],
         [
          0.425,
-         0.0
+         0
         ],
         [
          0.425,
@@ -3969,7 +4024,7 @@
         ],
         [
          0.4,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4039,36 +4094,36 @@
     "thermal": {
      "regions": {
       "top-foil": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "carcass-foil": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "fronts": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "back-panel": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "feet": {
        "exposedFraction": 0.75,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.25,
         "tempC": 16
        }
       },
       "handles": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "knob": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -4097,32 +4152,32 @@
     "thermal": {
      "regions": {
       "top-foil": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "carcass-foil": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "fronts": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "back-panel": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "feet": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "handles": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "knob": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       }
      },
      "emitters": {}
@@ -4160,31 +4215,31 @@
        }
       },
       "carcass-foil": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.05
       },
       "fronts": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       },
       "back-panel": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "feet": {
        "exposedFraction": 0.75,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.25,
         "tempC": 21
        }
       },
       "handles": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       },
       "knob": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       }
      },
@@ -4201,8 +4256,8 @@
       "bone": "carcass",
       "x": 0.2,
       "y": 0.45,
-      "z": 0.0,
-      "fxN": 0.0,
+      "z": 0,
+      "fxN": 0,
       "fyN": -176.52,
       "source": "authored-estimate",
       "reference": "tv-catalogue"
@@ -4217,8 +4272,8 @@
       "bone": "carcass",
       "x": 0.19,
       "y": 0.201,
-      "z": 0.0,
-      "fxN": 0.0,
+      "z": 0,
+      "fxN": 0,
       "fyN": -39.23,
       "source": "authored-estimate",
       "reference": "tv-catalogue"
@@ -4234,7 +4289,7 @@
       "x": 0.19,
       "y": 0.041,
       "z": 0.59,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.84,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -4250,7 +4305,7 @@
       "x": 0.19,
       "y": 0.041,
       "z": -0.59,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.84,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -4265,8 +4320,8 @@
       "bone": "drawer",
       "x": 0.18,
       "y": 0.02,
-      "z": 0.0,
-      "fxN": 0.0,
+      "z": 0,
+      "fxN": 0,
       "fyN": -19.61,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -4308,31 +4363,31 @@
        }
       },
       "carcass-foil": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.05
       },
       "fronts": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       },
       "back-panel": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "feet": {
        "exposedFraction": 0.75,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.25,
         "tempC": 21
        }
       },
       "handles": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       },
       "knob": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       }
      },
@@ -4349,8 +4404,8 @@
       "bone": "carcass",
       "x": 0.2,
       "y": 0.45,
-      "z": 0.0,
-      "fxN": 0.0,
+      "z": 0,
+      "fxN": 0,
       "fyN": -176.52,
       "source": "authored-estimate",
       "reference": "tv-catalogue"
@@ -4365,8 +4420,8 @@
       "bone": "carcass",
       "x": 0.19,
       "y": 0.201,
-      "z": 0.0,
-      "fxN": 0.0,
+      "z": 0,
+      "fxN": 0,
       "fyN": -39.23,
       "source": "authored-estimate",
       "reference": "tv-catalogue"
@@ -4382,7 +4437,7 @@
       "x": 0.19,
       "y": 0.041,
       "z": 0.59,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.84,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -4398,7 +4453,7 @@
       "x": 0.19,
       "y": 0.041,
       "z": -0.59,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.84,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -4413,8 +4468,8 @@
       "bone": "drawer",
       "x": 0.18,
       "y": 0.02,
-      "z": 0.0,
-      "fxN": 0.0,
+      "z": 0,
+      "fxN": 0,
       "fyN": -19.61,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -4456,31 +4511,31 @@
        }
       },
       "carcass-foil": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.05
       },
       "fronts": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       },
       "back-panel": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "feet": {
        "exposedFraction": 0.75,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.25,
         "tempC": 21
        }
       },
       "handles": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       },
       "knob": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       }
      },
@@ -4497,8 +4552,8 @@
       "bone": "carcass",
       "x": 0.2,
       "y": 0.45,
-      "z": 0.0,
-      "fxN": 0.0,
+      "z": 0,
+      "fxN": 0,
       "fyN": -176.52,
       "source": "authored-estimate",
       "reference": "tv-catalogue"
@@ -4513,8 +4568,8 @@
       "bone": "carcass",
       "x": 0.19,
       "y": 0.201,
-      "z": 0.0,
-      "fxN": 0.0,
+      "z": 0,
+      "fxN": 0,
       "fyN": -39.23,
       "source": "authored-estimate",
       "reference": "tv-catalogue"
@@ -4530,7 +4585,7 @@
       "x": 0.19,
       "y": 0.041,
       "z": 0.59,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.84,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -4546,7 +4601,7 @@
       "x": 0.19,
       "y": 0.041,
       "z": -0.59,
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -58.84,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -4561,8 +4616,8 @@
       "bone": "drawer",
       "x": 0.18,
       "y": 0.02,
-      "z": 0.0,
-      "fxN": 0.0,
+      "z": 0,
+      "fxN": 0,
       "fyN": -19.61,
       "source": "authored-estimate",
       "reference": "en-16122-2012"
@@ -4581,7 +4636,7 @@
      "en": "Two people take hold under the ends and lift the taped lowboard from the depot floor to carrying height.",
      "de": "Zwei Personen greifen unter die Enden und heben das zugeklebte Lowboard vom Lagerboden auf Traghöhe."
     },
-    "durationS": 3.0,
+    "durationS": 3,
     "fps": 30,
     "loop": false,
     "rootMotion": "none",
@@ -4597,7 +4652,7 @@
       "ease": "smooth"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "pose": "carried",
       "ease": "smooth"
      }
@@ -4636,12 +4691,12 @@
      {
       "anchor": "grip-left",
       "fromS": 0.4,
-      "toS": 3.0
+      "toS": 3
      },
      {
       "anchor": "grip-right",
       "fromS": 0.4,
-      "toS": 3.0
+      "toS": 3
      }
     ],
     "phases": [
@@ -4657,7 +4712,7 @@
      {
       "id": "lift",
       "fromS": 0.6,
-      "toS": 3.0,
+      "toS": 3,
       "title": {
        "en": "Lift to carrying height",
        "de": "Auf Traghöhe heben"
@@ -4696,7 +4751,7 @@
      "en": "A day at the TV: the left flap is dropped to take out a game and lifted again, then the drawer is pulled for the remote and pushed back.",
      "de": "Ein Tag am Fernseher: die linke Klappe wird für ein Spiel heruntergeklappt und wieder hochgeklappt, dann wird die Schublade für die Fernbedienung aufgezogen und zurückgeschoben."
     },
-    "durationS": 8.0,
+    "durationS": 8,
     "fps": 30,
     "loop": true,
     "rootMotion": "none",
@@ -4712,7 +4767,7 @@
       "ease": "smooth"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "pose": "flap-open",
       "ease": "smooth"
      },
@@ -4727,12 +4782,12 @@
       "ease": "smooth"
      },
      {
-      "t": 7.0,
+      "t": 7,
       "pose": "drawer-out",
       "ease": "smooth"
      },
      {
-      "t": 8.0,
+      "t": 8,
       "pose": "in-use",
       "ease": "smooth"
      }
@@ -4741,32 +4796,32 @@
      {
       "anchor": "foot-front-left",
       "fromS": 0,
-      "toS": 8.0
+      "toS": 8
      },
      {
       "anchor": "foot-front-middle",
       "fromS": 0,
-      "toS": 8.0
+      "toS": 8
      },
      {
       "anchor": "foot-front-right",
       "fromS": 0,
-      "toS": 8.0
+      "toS": 8
      },
      {
       "anchor": "foot-back-left",
       "fromS": 0,
-      "toS": 8.0
+      "toS": 8
      },
      {
       "anchor": "foot-back-middle",
       "fromS": 0,
-      "toS": 8.0
+      "toS": 8
      },
      {
       "anchor": "foot-back-right",
       "fromS": 0,
-      "toS": 8.0
+      "toS": 8
      }
     ],
     "phases": [
@@ -4782,7 +4837,7 @@
      {
       "id": "flap-held",
       "fromS": 1.5,
-      "toS": 3.0,
+      "toS": 3,
       "title": {
        "en": "Flap open",
        "de": "Klappe offen"
@@ -4790,7 +4845,7 @@
      },
      {
       "id": "flap-up",
-      "fromS": 3.0,
+      "fromS": 3,
       "toS": 4.5,
       "title": {
        "en": "Flap lifted shut",
@@ -4809,7 +4864,7 @@
      {
       "id": "drawer-held",
       "fromS": 5.5,
-      "toS": 7.0,
+      "toS": 7,
       "title": {
        "en": "Drawer out",
        "de": "Schublade offen"
@@ -4817,8 +4872,8 @@
      },
      {
       "id": "drawer-push",
-      "fromS": 7.0,
-      "toS": 8.0,
+      "fromS": 7,
+      "toS": 8,
       "title": {
        "en": "Drawer pushed in",
        "de": "Schublade wird zugeschoben"
@@ -5051,7 +5106,7 @@
        "kind": "metal",
        "material": "aluminium-handle",
        "thicknessM": 0.003,
-       "resistanceM2KW": 1.9e-05,
+       "resistanceM2KW": 0.000019,
        "heatCapacityJM2K": 7290,
        "source": "literature",
        "reference": "iso-10456-2007"
@@ -5157,7 +5212,7 @@
        "translation": [
         0.2,
         0.442,
-        0.0
+        0
        ]
       }
      },
@@ -5217,7 +5272,7 @@
        "translation": [
         0.1935,
         0.033,
-        0.0
+        0
        ]
       }
      },
@@ -5277,7 +5332,7 @@
        "translation": [
         0.1935,
         0.193,
-        0.0
+        0
        ]
       }
      },
@@ -5307,14 +5362,14 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": 0,
       "to": 0.003,
       "sheet": true,
       "holes": [
        [
         [
          0.3475,
-         0.0
+         0
         ],
         [
          0.346478,
@@ -5362,7 +5417,7 @@
         ],
         [
          0.2875,
-         0.0
+         0
         ],
         [
          0.288522,
@@ -5420,11 +5475,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.016
        ],
        [
@@ -5441,7 +5496,7 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5451,7 +5506,7 @@
       ],
       "origin": [
        0.344,
-       0.0,
+       0,
        0.875
       ],
       "repeat": {
@@ -5472,11 +5527,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.016
        ],
        [
@@ -5493,7 +5548,7 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -5503,7 +5558,7 @@
       ],
       "origin": [
        0.04,
-       0.0,
+       0,
        0.875
       ],
       "repeat": {
@@ -5706,7 +5761,7 @@
        "translation": [
         0.19575,
         -0.008,
-        0.0
+        0
        ]
       }
      },
@@ -5788,23 +5843,23 @@
       "kind": "polyhedron",
       "vertices": [
        [
-        0.0,
+        0,
         -0.016,
         -0.299
        ],
        [
-        0.0,
+        0,
         -0.016,
         0.299
        ],
        [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.299
        ],
        [
-        0.0,
-        0.0,
+        0,
+        0,
         0.299
        ],
        [
@@ -5814,12 +5869,12 @@
        ],
        [
         0.3915,
-        0.0,
+        0,
         -0.299
        ],
        [
         0.3915,
-        0.0,
+        0,
         0.299
        ],
        [
@@ -6006,7 +6061,7 @@
        "translation": [
         0.362,
         0.071,
-        0.0
+        0
        ]
       }
      },
@@ -6066,7 +6121,7 @@
        "translation": [
         0.006,
         0.0685,
-        0.0
+        0
        ]
       }
      },
@@ -6086,7 +6141,7 @@
        "translation": [
         0.183,
         0.015,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -6100,11 +6155,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.009
        ],
        [
@@ -6125,7 +6180,7 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -6136,7 +6191,7 @@
       "origin": [
        0.37,
        0.071,
-       0.0
+       0
       ]
      },
      {
@@ -6381,13 +6436,13 @@
       "tone": 0.3,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.28
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.28
       ],
       "r0": 0.005,
@@ -6403,13 +6458,13 @@
       "tone": 0.3,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.28
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.28
       ],
       "r0": 0.005,
@@ -6445,7 +6500,7 @@
        "translation": [
         0.1826,
         0.2256,
-        0.0
+        0
        ]
       },
       "member": "carcass",
@@ -6467,7 +6522,7 @@
        "translation": [
         0.1996,
         -0.0087,
-        0.0
+        0
        ]
       },
       "member": "flap-l",
@@ -6489,7 +6544,7 @@
        "translation": [
         0.1996,
         -0.0087,
-        0.0
+        0
        ]
       },
       "member": "flap-r",
@@ -6511,7 +6566,7 @@
        "translation": [
         0.2141,
         0.0592,
-        0.0
+        0
        ]
       },
       "member": "drawer",
@@ -6549,7 +6604,7 @@
        "translation": [
         0.2,
         0.442,
-        0.0
+        0
        ]
       }
      },
@@ -6609,7 +6664,7 @@
        "translation": [
         0.1935,
         0.033,
-        0.0
+        0
        ]
       }
      },
@@ -6669,7 +6724,7 @@
        "translation": [
         0.1935,
         0.193,
-        0.0
+        0
        ]
       }
      },
@@ -6699,14 +6754,14 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": 0,
       "to": 0.003,
       "sheet": true,
       "holes": [
        [
         [
          0.3475,
-         0.0
+         0
         ],
         [
          0.346478,
@@ -6754,7 +6809,7 @@
         ],
         [
          0.2875,
-         0.0
+         0
         ],
         [
          0.288522,
@@ -6812,11 +6867,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -6825,7 +6880,7 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -6835,7 +6890,7 @@
       ],
       "origin": [
        0.344,
-       0.0,
+       0,
        0.875
       ],
       "repeat": {
@@ -6856,11 +6911,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -6869,7 +6924,7 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -6879,7 +6934,7 @@
       ],
       "origin": [
        0.04,
-       0.0,
+       0,
        0.875
       ],
       "repeat": {
@@ -7042,7 +7097,7 @@
        "translation": [
         0.19575,
         -0.008,
-        0.0
+        0
        ]
       }
      },
@@ -7083,7 +7138,7 @@
        "translation": [
         0.19575,
         -0.008,
-        0.0
+        0
        ]
       }
      },
@@ -7124,7 +7179,7 @@
        "translation": [
         0.362,
         0.071,
-        0.0
+        0
        ]
       }
      },
@@ -7144,7 +7199,7 @@
        "translation": [
         0.177,
         0.0685,
-        0.0
+        0
        ]
       }
      },
@@ -7157,11 +7212,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -7170,7 +7225,7 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -7181,7 +7236,7 @@
       "origin": [
        0.37,
        0.071,
-       0.0
+       0
       ]
      },
      {
@@ -7310,7 +7365,7 @@
        "translation": [
         0.354,
         -0.0365,
-        0.0
+        0
        ]
       },
       "region": "handles"
@@ -7331,7 +7386,7 @@
        "translation": [
         0.354,
         -0.0365,
-        0.0
+        0
        ]
       },
       "region": "handles"
@@ -7430,13 +7485,13 @@
       "tone": 0.3,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.28
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.28
       ],
       "r0": 0.0075,
@@ -7452,13 +7507,13 @@
       "tone": 0.3,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.28
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.28
       ],
       "r0": 0.0075,
@@ -7526,7 +7581,7 @@
        "translation": [
         0.1826,
         0.2256,
-        0.0
+        0
        ]
       },
       "member": "carcass",
@@ -7548,7 +7603,7 @@
        "translation": [
         0.1996,
         -0.0087,
-        0.0
+        0
        ]
       },
       "member": "flap-l",
@@ -7570,7 +7625,7 @@
        "translation": [
         0.1996,
         -0.0087,
-        0.0
+        0
        ]
       },
       "member": "flap-r",
@@ -7592,7 +7647,7 @@
        "translation": [
         0.2141,
         0.0592,
-        0.0
+        0
        ]
       },
       "member": "drawer",
@@ -7630,7 +7685,7 @@
        "translation": [
         0.2,
         0.442,
-        0.0
+        0
        ]
       }
      },
@@ -7690,7 +7745,7 @@
        "translation": [
         0.1935,
         0.0205,
-        0.0
+        0
        ]
       }
      },
@@ -7750,7 +7805,7 @@
        "translation": [
         0.1935,
         0.193,
-        0.0
+        0
        ]
       }
      },
@@ -7780,14 +7835,14 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": 0,
       "to": 0.003,
       "sheet": true,
       "holes": [
        [
         [
          0.3475,
-         0.0
+         0
         ],
         [
          0.346478,
@@ -7835,7 +7890,7 @@
         ],
         [
          0.2875,
-         0.0
+         0
         ],
         [
          0.288522,
@@ -7900,7 +7955,7 @@
        "translation": [
         0.19575,
         -0.008,
-        0.0
+        0
        ]
       }
      },
@@ -7920,7 +7975,7 @@
        "translation": [
         0.19575,
         -0.008,
-        0.0
+        0
        ]
       }
      },
@@ -7940,7 +7995,7 @@
        "translation": [
         0.362,
         0.071,
-        0.0
+        0
        ]
       }
      },
@@ -7960,7 +8015,7 @@
        "translation": [
         0.177,
         0.0685,
-        0.0
+        0
        ]
       }
      },
@@ -7973,11 +8028,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -7986,7 +8041,7 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -7997,7 +8052,7 @@
       "origin": [
        0.37,
        0.071,
-       0.0
+       0
       ]
      }
     ],
@@ -8094,7 +8149,7 @@
        "translation": [
         0.344,
         0.0125,
-        0.0
+        0
        ]
       },
       "region": "feet"
@@ -8157,7 +8212,7 @@
        "translation": [
         0.04,
         0.0125,
-        0.0
+        0
        ]
       },
       "region": "feet"
@@ -8199,7 +8254,7 @@
        "translation": [
         0.354,
         -0.036,
-        0.0
+        0
        ]
       },
       "region": "handles"
@@ -8220,7 +8275,7 @@
        "translation": [
         0.354,
         -0.036,
-        0.0
+        0
        ]
       },
       "region": "handles"
@@ -8241,7 +8296,7 @@
        "translation": [
         0.1935,
         0.033,
-        0.0
+        0
        ]
       },
       "region": "carcass-foil"
@@ -8328,13 +8383,13 @@
       "tone": 0.3,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.28
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.28
       ],
       "r0": 0.008,
@@ -8350,13 +8405,13 @@
       "tone": 0.3,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.28
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.28
       ],
       "r0": 0.008,
@@ -8424,7 +8479,7 @@
        "translation": [
         0.1826,
         0.2256,
-        0.0
+        0
        ]
       },
       "member": "carcass",
@@ -8446,7 +8501,7 @@
        "translation": [
         0.1996,
         -0.0087,
-        0.0
+        0
        ]
       },
       "member": "flap-l",
@@ -8468,7 +8523,7 @@
        "translation": [
         0.1996,
         -0.0087,
-        0.0
+        0
        ]
       },
       "member": "flap-r",
@@ -8490,7 +8545,7 @@
        "translation": [
         0.2141,
         0.0592,
-        0.0
+        0
        ]
       },
       "member": "drawer",
@@ -8521,12 +8576,12 @@
       "kind": "extrude",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.384,
-        0.0
+        0
        ],
        [
         0.384,
@@ -8541,7 +8596,7 @@
         0.45
        ],
        [
-        0.0,
+        0,
         0.45
        ]
       ],
@@ -8565,7 +8620,7 @@
        "translation": [
         0.19575,
         -0.008,
-        0.0
+        0
        ]
       }
      },
@@ -8585,7 +8640,7 @@
        "translation": [
         0.19575,
         -0.008,
-        0.0
+        0
        ]
       }
      },
@@ -8605,7 +8660,7 @@
        "translation": [
         0.362,
         0.071,
-        0.0
+        0
        ]
       }
      },
@@ -8625,7 +8680,7 @@
        "translation": [
         0.177,
         0.0685,
-        0.0
+        0
        ]
       }
      },
@@ -8638,11 +8693,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -8651,7 +8706,7 @@
        ],
        [
         0.025,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -8662,7 +8717,7 @@
       "origin": [
        0.37,
        0.071,
-       0.0
+       0
       ]
      }
     ],
@@ -8724,7 +8779,7 @@
        "translation": [
         0.344,
         0.0125,
-        0.0
+        0
        ]
       },
       "region": "feet"
@@ -8787,7 +8842,7 @@
        "translation": [
         0.04,
         0.0125,
-        0.0
+        0
        ]
       },
       "region": "feet"
@@ -8829,7 +8884,7 @@
        "translation": [
         0.354,
         -0.036,
-        0.0
+        0
        ]
       },
       "region": "handles"
@@ -8850,7 +8905,7 @@
        "translation": [
         0.354,
         -0.036,
-        0.0
+        0
        ]
       },
       "region": "handles"
@@ -8871,7 +8926,7 @@
        "translation": [
         0.2,
         0.442,
-        0.0
+        0
        ]
       },
       "region": "top-foil"
@@ -9010,14 +9065,14 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": 0,
       "to": 0.003,
       "sheet": true,
       "holes": [
        [
         [
          0.3475,
-         0.0
+         0
         ],
         [
          0.346478,
@@ -9065,7 +9120,7 @@
         ],
         [
          0.2875,
-         0.0
+         0
         ],
         [
          0.288522,
@@ -9155,13 +9210,13 @@
       "tone": 0.3,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.28
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.28
       ],
       "r0": 0.01,
@@ -9177,13 +9232,13 @@
       "tone": 0.3,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.28
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.28
       ],
       "r0": 0.01,
@@ -9251,7 +9306,7 @@
        "translation": [
         0.1826,
         0.2256,
-        0.0
+        0
        ]
       },
       "member": "carcass",
@@ -9273,7 +9328,7 @@
        "translation": [
         0.1996,
         -0.0087,
-        0.0
+        0
        ]
       },
       "member": "flap-l",
@@ -9295,7 +9350,7 @@
        "translation": [
         0.1996,
         -0.0087,
-        0.0
+        0
        ]
       },
       "member": "flap-r",
@@ -9317,7 +9372,7 @@
        "translation": [
         0.2141,
         0.0592,
-        0.0
+        0
        ]
       },
       "member": "drawer",

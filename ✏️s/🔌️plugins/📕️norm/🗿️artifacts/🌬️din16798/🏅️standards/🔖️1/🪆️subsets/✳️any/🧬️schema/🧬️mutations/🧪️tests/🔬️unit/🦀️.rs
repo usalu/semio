@@ -21,6 +21,17 @@ fn assert_mutates_and_restores(label: &str, base: &Din16798Snapshot, mutation: D
     assert_eq!(&restored, base, "{label} inverse must restore the base snapshot");
 }
 
+fn unoccupied_purge() -> semio_s_artifact_norm_din16798_model::UnoccupiedVentilation {
+    semio_s_artifact_norm_din16798_model::UnoccupiedVentilation {
+        operation: semio_s_artifact_norm_din16798_model::UnoccupiedVentilationOperation::NonResidentialPurge,
+        assessed_area_m2: 200.0,
+        zone_volume_m3: 600.0,
+        minutes_before_occupancy: 60.0,
+        residential_design_rate_l_per_s_m2: 0.0,
+        outdoor_air_m3_h: 700.0,
+    }
+}
+
 fn all_sample_mutations(base: &Din16798Snapshot) -> Vec<(&'static str, Din16798Mutation)> {
     vec![
         ("change-annex", Din16798Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: if base.annex == semio_s_plugin_norm_compliance::AnnexChoice::De { semio_s_plugin_norm_compliance::AnnexChoice::En } else { semio_s_plugin_norm_compliance::AnnexChoice::De } })),
@@ -73,6 +84,8 @@ fn all_sample_mutations(base: &Din16798Snapshot) -> Vec<(&'static str, Din16798M
         ("change-vent-duct-test-pressure", Din16798Mutation::ChangeVentDuctTestPressure(change_vent_duct_test_pressure::ChangeVentDuctTestPressure { vent_id: base.vent_systems[0].id.clone(), new_duct_test_pressure_pa: base.vent_systems[0].duct_test_pressure_pa + 1.0 })),
         ("change-vent-humidification-required", Din16798Mutation::ChangeVentHumidificationRequired(change_vent_humidification_required::ChangeVentHumidificationRequired { vent_id: base.vent_systems[0].id.clone(), new_humidification_required_kg_h: base.vent_systems[0].humidification_required_kg_h + 1.0 })),
         ("change-vent-humidification-provided", Din16798Mutation::ChangeVentHumidificationProvided(change_vent_humidification_provided::ChangeVentHumidificationProvided { vent_id: base.vent_systems[0].id.clone(), new_humidification_provided_kg_h: base.vent_systems[0].humidification_provided_kg_h + 1.0 })),
+        ("change-zone-unoccupied-ventilation", Din16798Mutation::ChangeZoneUnoccupiedVentilation(change_zone_unoccupied_ventilation::ChangeZoneUnoccupiedVentilation { zone_id: base.zones[0].id.clone(), new_unoccupied_ventilation: unoccupied_purge() })),
+        ("clear-zone-unoccupied-ventilation", Din16798Mutation::ClearZoneUnoccupiedVentilation(clear_zone_unoccupied_ventilation::ClearZoneUnoccupiedVentilation { zone_id: base.zones[0].id.clone() })),
     ]
 }
 
@@ -83,9 +96,10 @@ async fn kinds_nonempty() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_mutation_kind_changes_intended_leaf_and_inverse_restores() {
-    let base = Din16798Snapshot::default();
+    let mut base = Din16798Snapshot::default();
+    base.zones[0].unoccupied_ventilation = Some(semio_s_artifact_norm_din16798_model::UnoccupiedVentilation { outdoor_air_m3_h: 500.0, ..unoccupied_purge() });
     let cases = all_sample_mutations(&base);
-    assert_eq!(cases.len(), 50, "expected one sample per mutation kind");
+    assert_eq!(cases.len(), 52, "expected one sample per mutation kind");
     for (label, mutation) in cases {
         assert_mutates_and_restores(label, &base, mutation);
     }
@@ -111,4 +125,17 @@ async fn an_identifier_that_is_taken_is_refused() {
     assert!(<Din16798Mutation as protocol::ColdMutation<Din16798Snapshot>>::diff(&refused, &base).worst_level().is_some(), "a taken identifier is refused");
     let vent = Din16798Mutation::ChangeVentId(change_vent_id::ChangeVentId { vent_id: "vent-central".into(), new_id: "vent-central".into() });
     assert_eq!(apply(&vent, &base), base, "renaming to the same id changes nothing");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn documenting_and_withdrawing_the_unoccupied_airflow_round_trips_through_the_explicit_clear_flag() {
+    let base = Din16798Snapshot::default();
+    assert!(base.zones[0].unoccupied_ventilation.is_none());
+    let document = Din16798Mutation::ChangeZoneUnoccupiedVentilation(change_zone_unoccupied_ventilation::ChangeZoneUnoccupiedVentilation { zone_id: base.zones[0].id.clone(), new_unoccupied_ventilation: unoccupied_purge() });
+    let documented = apply(&document, &base);
+    assert_eq!(documented.zones[0].unoccupied_ventilation, Some(unoccupied_purge()));
+    assert_mutates_and_restores("change-zone-unoccupied-ventilation from none", &base, document);
+    let withdraw = Din16798Mutation::ClearZoneUnoccupiedVentilation(clear_zone_unoccupied_ventilation::ClearZoneUnoccupiedVentilation { zone_id: base.zones[0].id.clone() });
+    assert_eq!(apply(&withdraw, &base), base, "withdrawing an undocumented zone changes nothing");
+    assert_mutates_and_restores("clear-zone-unoccupied-ventilation", &documented, withdraw);
 }

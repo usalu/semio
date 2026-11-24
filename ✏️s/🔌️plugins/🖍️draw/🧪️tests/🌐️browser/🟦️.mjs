@@ -39,6 +39,9 @@ process.once("SIGINT", interrupt);
 process.once("SIGTERM", terminate);
 const context = await browser.newContext({ locale: report.locale, viewport: { width: 1600, height: 1000 }, acceptDownloads: true });
 const page = await context.newPage();
+await page.routeWebSocket(address => address.host === url.host && address.searchParams.has("token"), () => undefined);
+report.documentLoads = 0;
+page.on("domcontentloaded", () => report.documentLoads++);
 const errors = report.errors;
 const workerObservers = [];
 page.on("worker", worker => {
@@ -65,13 +68,14 @@ const state = () => page.evaluate(selector => {
   return { ready: document.documentElement.dataset.semioOsReady, error: document.documentElement.dataset.semioOsError, layers: status ? Number(status[1]) : null, locale: status ? (status[0].includes("ausgewählt") ? "de" : "en") : null };
 }, statusSelector);
 const waitLayers = async (expected, minimum = false) => {
-  await setEngagement(true);
-  await page.waitForFunction(({ selector, expected, minimum }) => {
-    const status = document.querySelector(selector)?.textContent?.match(/(\d+) (?:layers?|Ebenen?) · (\d+) (?:selected|ausgewählt)/);
-    if (!status) return false;
-    const layers = Number(status[1]);
-    return minimum ? layers >= expected : layers === expected;
-  }, { selector: statusSelector, expected, minimum }, { timeout: 30000 });
+  const deadline = Date.now() + 30000;
+  for (let layers = null; ;) {
+    if (minimum ? layers >= expected && layers !== null : layers === expected) return;
+    if (Date.now() >= deadline) throw Error(`Expected ${minimum ? "at least " : ""}${expected} layers, last read ${layers}`);
+    await setEngagement(true);
+    await delay(100, undefined, { signal: cancellation.signal });
+    layers = (await state()).layers;
+  }
 };
 const initialEventLogBytes = async path => {
   const deadline = Date.now() + 30000;
@@ -115,8 +119,9 @@ const note = async step => {
 };
 const exportPdf = async name => {
   await setEngagement(true);
-  await click("action.exportDocument");
-  await page.locator('[id$=".action.exportDocument.arg.format.input"][role="combobox"]').first().click({ timeout: 15000 });
+  const format = page.locator('[id$=".action.exportDocument.arg.format.input"][role="combobox"]').first();
+  if (!(await format.isVisible())) await click("action.exportDocument");
+  await format.click({ timeout: 15000 });
   await page.getByRole("option", { name: "PDF", exact: true }).click({ timeout: 15000 });
   console.log("[draw-browser] waiting for PDF export");
   const [download] = await Promise.all([
@@ -178,7 +183,7 @@ try {
   await note("boot");
   await picker.click({ timeout: 15000 });
   await page.getByRole("option", { name: fixture.example.label, exact: true }).waitFor({ state: "visible", timeout: 15000 });
-  assert.equal(await page.getByRole("option").count(), 2, "Draw advertises Demo and Blank Drawing");
+  assert.deepEqual((await page.getByRole("option").allInnerTexts()).map(text => text.trim()), [fixture.emptyExample.labels[report.locale], fixture.example.label, fixture.blankExample.labels[report.locale]], "Draw advertises the empty document, Demo and Blank Drawing");
   await page.getByRole("option", { name: fixture.blankExample.labels[report.locale], exact: true }).click({ timeout: 15000 });
   await waitLayers(0);
   await note("blank");
@@ -241,6 +246,7 @@ try {
   await click(fixture.persistence.reconnect);
   await waitLayers(before + fixture.layerDelta);
   await note("reload");
+  assert.equal(report.documentLoads, fixture.documentLoads, "Only the journey may load the page");
   assert.deepEqual(report.steps.map(row => row.step), fixture.steps);
 } catch (error) {
   report.failure ??= String(error);

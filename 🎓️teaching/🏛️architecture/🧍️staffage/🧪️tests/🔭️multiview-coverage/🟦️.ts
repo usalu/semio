@@ -1,21 +1,25 @@
 /** 🔭️ Multiview coverage: the matrix asset × scale × viewpoint × mode × pose, clip instant and transition, and the cross-cutting reference cases of the top, front and side requirement.
  *
- * THE REFERENCES are third-party: svgelements recomputes the bounding box of exported SVG paths, scipy the Hausdorff distance of the derived-view detection, shapely the gap of the printability vector.
+ * THE REFERENCES are third-party: svgelements recomputes the bounding box of exported SVG paths and of hatched areas, scipy the Hausdorff distance of the derived-view detection, shapely the gap of the printability vector, the distance of an anchor to drawn shapes and the extents of bone shapes.
  *
  * @see ./🥒️.feature — the scenarios
  * @see ./🧰️.ts — the matrix engine
+ * @see ./⚓️landmarks.ts — per-bone synchrony and anchor landmarks
+ * @see ./🗃️cells.ts — the per-asset records of a matrix run
+ * @see ./🔎️scan.ts — the authors' gate
  * @see ./🪞️derived.ts — derived-view detection
  * @see ../../🧫️fixtures/🔭️multiview-coverage/🔣️.json — the vectors
  */
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { Asset, AuthoredRepresentation, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
-import { VIEWS, type DrawingScene, type EvaluatedShape, type EvaluationQuery, type View } from "../../🔨️modules/🔗️contracts/🟦️.ts";
+import { VIEWS, type DrawingScene, type EvaluatedShape, type EvaluatedState, type EvaluationQuery, type View } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { modelScene } from "../../🔨️modules/🎨️depiction/🟦️.ts";
+import { PATTERN_FRACTION, diagramPolygons, memberFilter, peakOf, signPattern, type DiagramKind } from "../../🔨️modules/🎨️depiction/🏗️structural-view/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { resolveViews, type DrawOptions, type MultiView } from "../../🔨️modules/🔭️multiview/🟦️.ts";
 import { writeDxf } from "../../🔨️modules/📤️export/📐️dxf/🟦️.ts";
@@ -29,7 +33,10 @@ import { solveTransport } from "../../🔨️modules/💨️transport/🟦️.ts
 import { UNCHECKED_PROFILE, rolesAsset, rolesAssetWith, sampleAsset } from "../../🧫️fixtures/🧱️synthetic-figure/🟦️.ts";
 import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
 import { python } from "../🧰️support/🐍️.ts";
-import { MODE_LIST, PRESET_KEYS, UNIFORM_INSTANTS, VIEWPOINT_LIST, assemble, buildMatrix, cellKey, clipInstants, drawOptions, extentOf, hash, loadCatalog, scaleEntries, sceneBox, seeded, subjects, toleranceM, transitionPairs, universe, LONG_CLIP_S, LONG_UNIFORM_INSTANTS } from "./🧰️.ts";
+import { MODE_LIST, PRESET_KEYS, UNHATCHED_PERCENT, allowlists, authoredOf, derivedFindings, UNIFORM_INSTANTS, VIEWPOINT_LIST, assemble, buildMatrix, cellKey, clipInstants, cueFinding, drawOptions, extentOf, failedAsset, geometryFindings, hasCue, hash, loadCatalog, paperBox, paperFindings, paperIds, scaleEntries, sceneBox, seeded, subjects, toleranceM, transitionPairs, universe, LONG_CLIP_S, LONG_UNIFORM_INSTANTS, type Cell } from "./🧰️.ts";
+import { anchorLandmarks, boneSync } from "./⚓️landmarks.ts";
+import { FAILURE_CODES, RECORD_VERSION, failedRecord, mergeRecords, pendingAssets, readRecord, recordPath, runGuarded, writeRecord } from "./🗃️cells.ts";
+import { FAMILIES, compact, listing, scanAsset } from "./🔎️scan.ts";
 import { TRANSFORMS, bestTransform, derivedFlags, pointSet } from "./🪞️derived.ts";
 
 type Vectors = {
@@ -37,7 +44,13 @@ type Vectors = {
   modes: View[];
   presetDenominators: number[];
   sampling: { uniformInstants: number; longClipSeconds: number; longUniformInstants: number; transitionFractions: number[]; transitionRandomPairs: number };
-  paper: { toleranceMm: number; catalogAssets: string[]; scales: { denominator: number; mmPerMetre: number; expectedMm: { width: number; height: number } }[] };
+  paper: { toleranceMm: number; catalogAssets: string[]; scales: { denominator: number; mmPerMetre: number; expectedMm: { width: number; height: number } }[]; outlined: { denominator: number; filled: RectVector; unfilled: RectVector; expectedMm: { fills: { width: number; height: number }; fillsAndOutlines: { width: number; height: number } }; catalog: { asset: string; denominator: number; views: PlanarViewpoint[] } } };
+  landmarks: { toleranceM: number; bones: { id: string; parent: string | null }[]; elevation: ShapeVector[]; anchors: { id: string; bone: string; kind: string; at: [number, number]; expected: "finding" | null; deltaMm?: number }[]; catalog: { asset: string; denominator: number }[] };
+  boneSync: { toleranceM: number; cases: { name: string; bone: string; front: ShapeVector[]; plan: ShapeVector[]; expected: string | null; deltaMm?: number }[]; catalog: { asset: string; denominator: number; bone: string } };
+  analysisCue: { unhatchedPercent: Record<string, number>; patternFraction: number; signPattern: { negative: string; positive: string }; hatchedDiagram: { asset: string; denominator: number }; unhatched: { asset: string; denominator: number } };
+  generator: { recordVersion: string; failureCodes: string[]; crashMessage: string; timeoutMessage: string };
+  allowlists: { representation: string; group: string[]; bandCopy: { view: PlanarViewpoint; bands: [string, string]; reason: { en: string; de: string } }; inBand: { view: PlanarViewpoint; reason: { en: string; de: string } } };
+  scan: { families: string[]; mutant: { planShiftM: number; anchor: { id: string; x: number; y: number }; expected: { code: string; family: string; tier: string; views: PlanarViewpoint[]; bone?: string; anchor?: string; anchorKind?: string; place?: string; deltaMm: number; count: number }[] }; clean: { asset: string } };
   handedness: { heldObjects: { asset: string; pose: string; anchor: string; shapePattern?: string; zSign: number }[] };
   motion: { rootMotion: { asset: string; clip: string; durationS: number; advanceM: number; toleranceM: number }; loop: { asset: string; clip: string; cycles: number[] } };
   thermal: { movingEmitter: { asset: string; clip: string; times: number[]; followToleranceM: number } };
@@ -46,6 +59,9 @@ type Vectors = {
   scrubbing: { asset: string; clip: string; samples: number; seed: number; switches: PlanarViewpoint[] };
   derived: { cases: { name: string; elevation: number[][]; other: number[][]; flagged: boolean }[] };
 };
+
+type RectVector = { id: string; x: number; y: number; w: number; h: number };
+type ShapeVector = { id: string; bone?: string; ring: number[][] };
 
 const vectors = fixture<Vectors>("🔭️multiview-coverage");
 const oracle = join(dirname(fileURLToPath(import.meta.url)), "🐍️.py");
@@ -495,6 +511,340 @@ describe("🔭️ reference cases", () => {
   });
 });
 
+const evaluatedShape = (shape: ShapeVector, bone: string): EvaluatedShape => ({ shape: { id: shape.id, bone, role: "body" } as never, rings: [shape.ring.map(([x, y]) => ({ x: x!, y: y! }))], closed: true });
+const itemBox = (scene: DrawingScene, id: string) => sceneBox(scene, new Set([id]))!;
+const pathsOf = (scene: DrawingScene) => scene.layers.flatMap((layer) => layer.items.flatMap((item) => (item.kind === "path" ? [item] : [])));
+
+describe("📃️ paper box", () => {
+  it("measures the paper box from the fills and the outline runs of the shapes, as an independent SVG parser does", { timeout: 300_000 }, () => {
+    const { denominator, filled, unfilled, expectedMm } = vectors.paper.outlined;
+    const shape = (spec: RectVector, isFilled: boolean, z: number) => ({ id: spec.id, bone: "ground", role: "body", z, filled: isFilled, tone: 0.5, kind: "rect", x: spec.x, y: spec.y, w: spec.w, h: spec.h }) as never;
+    const figure = rolesAssetWith(() => [shape(filled, true, 0), shape(unfilled, false, 1)]);
+    const multi = draw(figure, { kind: "pose", pose: "stand" }, denominator, "light-line", uncheckedProfile);
+    const svgs: { key: string; svg: string; ids: string }[] = [];
+    for (const view of VIEWPOINT_LIST) {
+      const { scene } = drawingOf(multi, view);
+      const shapes = multi.state!.shapes[view];
+      const fills = sceneBox(scene, idsOf(shapes))!;
+      const both = paperBox(scene, shapes)!;
+      expect([...paperIds(scene, shapes)].some((id) => id.startsWith(`outline:${unfilled.id}:`)), `${view} outline run`).toBe(true);
+      expect(Math.abs(fills.maxX - fills.minX - expectedMm.fills.width), `${view} fills width`).toBeLessThanOrEqual(vectors.paper.toleranceMm);
+      expect(Math.abs(both.maxX - both.minX - expectedMm.fillsAndOutlines.width), `${view} width`).toBeLessThanOrEqual(vectors.paper.toleranceMm);
+      expect(Math.abs(both.maxY - both.minY - expectedMm.fillsAndOutlines.height), `${view} height`).toBeLessThanOrEqual(vectors.paper.toleranceMm);
+      svgs.push({ key: view, svg: writeSvg(scene), ids: "^(shape|outline)-" });
+    }
+    if (!oracleUp) return;
+    const out = runOracle({ svgs });
+    for (const view of VIEWPOINT_LIST) {
+      const box = paperBox(drawingOf(multi, view).scene, multi.state!.shapes[view])!;
+      const [minX, minY, maxX, maxY] = out.svgs[view]!;
+      for (const [got, want] of [[minX, box.minX], [minY, box.minY], [maxX, box.maxX], [maxY, box.maxY]] as const) expect(Math.abs(got! - want), `${view} svgelements`).toBeLessThanOrEqual(0.01);
+    }
+  });
+
+  it("finds the catalog asset whose outermost part is unfilled at its dimensions on the paper", () => {
+    const { asset: id, denominator, views } = vectors.paper.outlined.catalog;
+    const target = asset(id);
+    const multi = resolveViews(target, { kind: "pose", pose: target.presentation.defaultPose }, { kind: "scale", denominator }, "light-line", drawOptions("light-line", denominator));
+    for (const view of views) {
+      const drawn = drawingOf(multi, view);
+      expect(paperFindings(target, view, drawn.scene, drawn.state.shapes[view]), `${id} ${view}`).toEqual([]);
+    }
+  });
+});
+
+describe("⚓️ anchor landmarks and per-bone synchrony", () => {
+  const stateOf = (bones: Vectors["landmarks"]["bones"], shapes: Partial<Record<PlanarViewpoint, EvaluatedShape[]>>, anchors: Vectors["landmarks"]["anchors"] = []): EvaluatedState =>
+    ({ asset: { rig: { bones } }, shapes: { elevation: [], front: [], plan: [], ...shapes }, anchors: Object.fromEntries(anchors.map((anchor) => [anchor.id, { anchor: { id: anchor.id, bone: anchor.bone, kind: anchor.kind }, at: { x: anchor.at[0], y: anchor.at[1] }, z: 0 }])) }) as never;
+
+  it("accepts an anchor on the shapes of its bone or of a descendant bone and reports one on an ancestor, on another branch or in the air, at shapely's distance", () => {
+    const { toleranceM: tolerance, bones, elevation, anchors } = vectors.landmarks;
+    const state = stateOf(bones, { elevation: elevation.map((shape) => evaluatedShape(shape, shape.bone!)) }, anchors);
+    const findings = anchorLandmarks(state, tolerance);
+    expect(findings.map((finding) => finding.anchor).sort()).toEqual(anchors.filter((anchor) => anchor.expected === "finding").map((anchor) => anchor.id).sort());
+    for (const finding of findings) {
+      expect(finding.view).toBe("elevation");
+      expect(Math.abs(finding.deltaMm - anchors.find((anchor) => anchor.id === finding.anchor)!.deltaMm!), finding.anchor).toBeLessThanOrEqual(0.01);
+    }
+    if (!oracleUp) return;
+    const parents = new Map(bones.map((bone) => [bone.id, bone.parent]));
+    const within = (bone: string, root: string): boolean => bone === root || (parents.get(bone) != null && within(parents.get(bone)!, root));
+    const measured = anchors.filter((anchor) => ["contact", "attachment", "emitter"].includes(anchor.kind) && elevation.some((shape) => shape.bone === anchor.bone));
+    const out = runOracle({ pointDistances: measured.map((anchor) => ({ key: anchor.id, point: anchor.at, polygons: elevation.filter((shape) => within(shape.bone!, anchor.bone)).map((shape) => shape.ring) })) });
+    for (const anchor of measured) {
+      const finding = findings.find((candidate) => candidate.anchor === anchor.id);
+      if (finding === undefined) expect(out.pointDistances[anchor.id]!, anchor.id).toBeLessThanOrEqual(tolerance);
+      else expect(Math.abs(out.pointDistances[anchor.id]! * 1000 - finding.deltaMm), anchor.id).toBeLessThanOrEqual(1e-6);
+    }
+  });
+
+  it("holds the hard per-bone tier for a shape and its twin of the same id and reports different parts and groups as group-drift, at shapely's extents", () => {
+    const { toleranceM: tolerance, cases } = vectors.boneSync;
+    const results = cases.map((c) => boneSync(stateOf([{ id: c.bone, parent: null }], { front: c.front.map((shape) => evaluatedShape(shape, c.bone)), plan: c.plan.map((shape) => evaluatedShape(shape, c.bone)) }), tolerance));
+    cases.forEach((c, i) => {
+      const findings = results[i]!;
+      if (c.expected === null) return expect(findings, c.name).toEqual([]);
+      expect(findings.length, c.name).toBe(1);
+      expect(findings[0]!.check, c.name).toBe(c.expected);
+      expect(findings[0]!.tier, c.name).toBe(c.expected.startsWith("sync-bone-") ? "bone" : "group");
+      expect(findings[0]!.pair, c.name).toBe("front/plan");
+      expect(Math.abs(findings[0]!.deltaMm - c.deltaMm!), c.name).toBeLessThanOrEqual(0.01);
+    });
+    if (!oracleUp) return;
+    const out = runOracle({ bounds: cases.flatMap((c, i) => [{ key: `${i}|front`, points: c.front.flatMap((shape) => shape.ring) }, { key: `${i}|plan`, points: c.plan.flatMap((shape) => shape.ring) }]) });
+    cases.forEach((c, i) => {
+      const [frontMinX, , frontMaxX] = out.bounds[`${i}|front`]!;
+      const [, planMinY, , planMaxY] = out.bounds[`${i}|plan`]!;
+      const delta = Math.max(Math.abs(frontMinX! - planMinY!), Math.abs(frontMaxX! - planMaxY!));
+      if (c.expected === null) expect(delta, c.name).toBeLessThanOrEqual(tolerance);
+      else expect(Math.abs(delta * 1000 - results[i]![0]!.deltaMm), c.name).toBeLessThanOrEqual(1e-6);
+    });
+  });
+
+  it("clears the catalog assets whose contacts are bound to the frame above a wheel or whose bone draws two different parts", { timeout: 600_000 }, () => {
+    for (const { asset: id, denominator } of vectors.landmarks.catalog) {
+      const target = asset(id);
+      for (const pose of target.poses) {
+        const state = evaluate(target, { kind: "pose", pose: pose.id }, { kind: "scale", scale: { denominator } });
+        expect(geometryFindings(target, state, false).filter((finding) => finding.check === "anchor-landmark").map((finding) => finding.message), `${id} ${pose.id}`).toEqual([]);
+      }
+    }
+    const { asset: id, denominator, bone } = vectors.boneSync.catalog;
+    const target = asset(id);
+    for (const pose of target.poses) {
+      const state = evaluate(target, { kind: "pose", pose: pose.id }, { kind: "scale", scale: { denominator } });
+      const findings = geometryFindings(target, state, false);
+      expect(findings.filter((finding) => finding.tier === "hard" && finding.bone === bone).map((finding) => finding.message), `${id} ${pose.id}`).toEqual([]);
+      for (const finding of findings.filter((candidate) => candidate.check.startsWith("sync-bone-"))) {
+        const [a, b] = finding.views as [PlanarViewpoint, PlanarViewpoint];
+        const idOf = (view: PlanarViewpoint): string[] => state.shapes[view].filter((shape) => shape.shape.bone === finding.bone && shape.shape.role !== "ground").map((shape) => shape.shape.id);
+        expect(idOf(a), `${id} ${pose.id} ${finding.bone}`).toEqual(idOf(b));
+        expect(idOf(a).length).toBe(1);
+      }
+    }
+  });
+});
+
+describe("🦓️ analysis cue", () => {
+  const scenes = (target: Asset, denominator: number, mode: View, extra: Partial<DrawOptions> = {}) => {
+    const multi = draw(target, { kind: "pose", pose: target.presentation.defaultPose }, denominator, mode, { ...uncheckedProfile, ...extra });
+    return { multi, views: VIEWPOINT_LIST.map((view) => ({ view, scene: drawingOf(multi, view).scene })) };
+  };
+
+  it("hatches the area and the line-of-sight ring of every strong member diagram by its sign, in the bending-moment, shear and axial diagrams, as svgelements finds them", { timeout: 300_000 }, () => {
+    expect(PATTERN_FRACTION).toBe(vectors.analysisCue.patternFraction);
+    expect(signPattern(-1)).toBe(vectors.analysisCue.signPattern.negative);
+    expect(signPattern(1)).toBe(vectors.analysisCue.signPattern.positive);
+    const all = { axial: true, shear: true, moment: true, freeBody: false };
+    const patterns: { key: string; svg: string }[] = [];
+    const hatched: Record<string, { pattern: string; box: ReturnType<typeof itemBox>; polygonal: boolean }[]> = {};
+    const strongKinds = new Set<DiagramKind>();
+    for (const [mode, kinds] of [["moments", ["moment"]], ["forces", ["axial", "shear"]]] as const) {
+      const { multi, views } = scenes(sample, 50, mode, { diagrams: all } as Partial<DrawOptions>);
+      const state = multi.state!;
+      const result = multi.analysis.structure!;
+      for (const { view, scene } of views) {
+        const paths = pathsOf(scene);
+        for (const kind of kinds) {
+          const peak = peakOf(result, kind, memberFilter(state));
+          expect(peak, `${kind} peak`).toBeGreaterThan(1e-9);
+          const polygons = diagramPolygons(state, result, kind, view, peak, (p) => ({ x: p.x, y: p.y }), 6, true, memberFilter(state));
+          expect(polygons.length, `${mode} ${view} ${kind} polygons`).toBe(paths.filter((item) => new RegExp(`^diagram:${kind}:[^:]+:\\d+$`, "u").test(item.id)).length);
+          for (const polygon of polygons) {
+            const item = paths.find((candidate) => candidate.id === `diagram:${kind}:${polygon.bone}:${polygon.index}`)!;
+            const strong = polygon.magnitude / peak > PATTERN_FRACTION;
+            expect(item.fill?.pattern, `${mode} ${view} ${item.id}`).toBe(strong ? signPattern(polygon.peak) : undefined);
+            if (strong) strongKinds.add(kind);
+          }
+          for (const ring of paths.filter((item) => item.id.startsWith(`diagram:${kind}:`) && item.id.endsWith(":out"))) expect(ring.fill?.pattern !== undefined, `${mode} ${view} ${ring.id}`).toBe(ring.value!.value / peak > PATTERN_FRACTION);
+        }
+        const key = `${mode}|${view}`;
+        patterns.push({ key, svg: writeSvg(scene) });
+        hatched[key] = paths.filter((item) => item.fill?.pattern !== undefined).map((item) => ({ pattern: item.fill!.pattern!, box: itemBox(scene, item.id), polygonal: item.commands.every((c) => c.op !== "C") }));
+      }
+      const plain = scenes(sample, 50, mode, { diagrams: all, patterns: false } as Partial<DrawOptions>);
+      for (const { view, scene } of plain.views) expect(pathsOf(scene).some((item) => item.fill?.pattern !== undefined), `${mode} ${view} patterns off`).toBe(false);
+    }
+    expect([...strongKinds].sort()).toEqual(["axial", "moment", "shear"]);
+    if (!oracleUp) return;
+    const out = runOracle({ patterns });
+    for (const [key, ours] of Object.entries(hatched)) {
+      const theirs = out.patterns[key]!;
+      for (const name of ["compression", "tension"]) expect(theirs.filter((entry) => entry.pattern === name).length, `${key} ${name}`).toBe(ours.filter((entry) => entry.pattern === name).length);
+      for (const entry of ours.filter((candidate) => candidate.polygonal))
+        expect(theirs.some((other) => other.pattern === entry.pattern && [entry.box.minX, entry.box.minY, entry.box.maxX, entry.box.maxY].every((value, i) => Math.abs(value - other.box[i]!) <= 0.01)), `${key} ${entry.pattern} ${JSON.stringify(entry.box)}`).toBe(true);
+    }
+  });
+
+  it("applies one unhatched-legend rule to the thermal, forces and moments modes", () => {
+    expect(UNHATCHED_PERCENT).toEqual(vectors.analysisCue.unhatchedPercent);
+    const scene = (text: { en: string; de: string }, pattern = false): DrawingScene => ({ layers: [{ id: "fill", items: [{ kind: "path", id: "shape:a", commands: [], fill: { color: "#000000", ...(pattern ? { pattern: "tension" } : {}) } }] }], legends: [{ convention: { en: "", de: "" }, interpretation: text }] }) as never;
+    for (const [mode, percent] of Object.entries(vectors.analysisCue.unhatchedPercent) as [View, number][]) {
+      const other = percent === 35 ? 15 : 35;
+      expect(cueFinding(mode, scene({ en: `values within ${percent} % are drawn unhatched`, de: `Werte innerhalb von ${percent} % bleiben unschraffiert` })), mode).toBeUndefined();
+      expect(cueFinding(mode, scene({ en: `values within ${other} % are drawn unhatched`, de: `Werte innerhalb von ${other} % bleiben unschraffiert` }))?.check, `${mode} other share`).toBe("analysis-cue-legend");
+      expect(cueFinding(mode, scene({ en: `values within ${percent} % are drawn unhatched`, de: "" }))?.check, `${mode} no German`).toBe("analysis-cue-legend");
+      expect(cueFinding(mode, scene({ en: "", de: `Werte innerhalb von ${percent} % bleiben unschraffiert` }))?.check, `${mode} no English`).toBe("analysis-cue-legend");
+      expect(cueFinding(mode, scene({ en: "", de: "" }, true)), `${mode} hatched`).toBeUndefined();
+    }
+    expect(cueFinding("light-line", scene({ en: "", de: "" }))).toBeUndefined();
+  });
+
+  it("pins one catalog asset of each kind in the moments mode: a strong diagram that is hatched, and a figure without a strong member whose legend states the unhatched share", () => {
+    const strong = vectors.analysisCue.hatchedDiagram;
+    for (const { view, scene } of scenes(asset(strong.asset), strong.denominator, "moments").views) {
+      expect(hasCue(scene), `${strong.asset} ${view}`).toBe(true);
+      expect(pathsOf(scene).some((item) => item.id.startsWith("diagram:moment:") && item.fill?.pattern !== undefined), `${strong.asset} ${view} hatched diagram`).toBe(true);
+      expect(cueFinding("moments", scene)).toBeUndefined();
+    }
+    const calm = vectors.analysisCue.unhatched;
+    for (const { view, scene } of scenes(asset(calm.asset), calm.denominator, "moments").views) {
+      expect(hasCue(scene), `${calm.asset} ${view}`).toBe(false);
+      expect(cueFinding("moments", scene), `${calm.asset} ${view}`).toBeUndefined();
+      const legend = JSON.stringify(scene.legends.map((l) => [l.convention, l.interpretation]));
+      expect(legend).toMatch(/15\s?%/u);
+      expect(legend).toMatch(/unhatched/u);
+      expect(legend).toMatch(/unschraffiert/u);
+    }
+  });
+});
+
+describe("🗃️ generator records", () => {
+  const named = (id: string): Asset => ({ ...rolesAsset(), id });
+  const okCells = (target: Asset): Cell[] => failedAsset(target, "x", "x").map((cell) => ({ ...cell, status: "ok" as const, checked: 1, failures: {} }));
+  const scratch = <T>(body: (a: string, b: string) => T): T => {
+    const folders = [mkdtempSync(join(tmpdir(), "staffage-matrix-")), mkdtempSync(join(tmpdir(), "staffage-matrix-"))] as const;
+    try {
+      return body(...folders);
+    } finally {
+      for (const folder of folders) rmSync(folder, { recursive: true, force: true });
+    }
+  };
+
+  it("names a crash and a timeout inside one asset as failures of every cell with the message, never as cell-missing", () => {
+    const { crashMessage, timeoutMessage, failureCodes, recordVersion } = vectors.generator;
+    expect([...FAILURE_CODES]).toEqual(failureCodes);
+    expect(RECORD_VERSION).toBe(recordVersion);
+    const target = named("crashing");
+    const record = runGuarded(target, () => {
+      throw new Error(`${crashMessage}\n    at somewhere`);
+    });
+    expect(record.outcome).toBe("failed");
+    expect(record.outcome === "failed" && record.failure).toEqual({ code: "asset-crashed", message: crashMessage });
+    scratch((out) => {
+      writeRecord(out, record);
+      writeRecord(out, failedRecord(named("slow"), "asset-timeout", timeoutMessage, 1));
+      const merged = mergeRecords([target, named("slow"), named("absent")], [out]);
+      expect(merged.cells.length).toBe(3 * universe([target]).length);
+      const of = (id: string) => merged.cells.filter((cell) => cell.asset === id);
+      expect(of("crashing").every((cell) => cell.status === "fail" && cell.failures["asset-crashed"]?.first[0]?.message === crashMessage && cell.failures["cell-missing"] === undefined)).toBe(true);
+      expect(of("slow").every((cell) => cell.status === "fail" && cell.failures["asset-timeout"]?.first[0]?.message === timeoutMessage && cell.failures["cell-missing"] === undefined)).toBe(true);
+      expect(of("absent").every((cell) => cell.failures["cell-missing"]?.count === 1)).toBe(true);
+      expect(merged.failed).toEqual([{ asset: "crashing", code: "asset-crashed", message: crashMessage }, { asset: "slow", code: "asset-timeout", message: timeoutMessage }]);
+      expect(merged.missing).toEqual(["absent"]);
+      expect(merged.done).toEqual([]);
+    });
+  });
+
+  it("writes one record per asset, resumes past finished assets, reruns a changed asset and merges the shards of separate invocations, readable by an independent JSON parser", () => {
+    const [a, b, c] = [named("alpha"), named("beta"), named("gamma")];
+    scratch((first, second) => {
+      expect(pendingAssets(first, [a, b, c]).map((target) => target.id)).toEqual(["alpha", "beta", "gamma"]);
+      writeRecord(first, runGuarded(a, okCells));
+      expect(existsSync(recordPath(first, "alpha"))).toBe(true);
+      expect(existsSync(`${recordPath(first, "alpha")}.part`)).toBe(false);
+      expect(readRecord(first, a)?.outcome).toBe("done");
+      expect(pendingAssets(first, [a, b, c]).map((target) => target.id)).toEqual(["beta", "gamma"]);
+      writeRecord(first, runGuarded(b, () => {
+        throw new Error("boom");
+      }));
+      expect(pendingAssets(first, [a, b, c]).map((target) => target.id)).toEqual(["gamma"]);
+      expect(pendingAssets(first, [a, b, c], true).map((target) => target.id)).toEqual(["beta", "gamma"]);
+      const changed: Asset = { ...a, dimensions: { ...a.dimensions, heightM: a.dimensions.heightM + 0.01 } };
+      expect(readRecord(first, changed)).toBeUndefined();
+      expect(pendingAssets(first, [changed]).map((target) => target.id)).toEqual(["alpha"]);
+      writeFileSync(recordPath(first, "gamma"), "{ cut");
+      expect(pendingAssets(first, [c]).map((target) => target.id)).toEqual(["gamma"]);
+      writeRecord(second, runGuarded(b, okCells));
+      writeRecord(second, runGuarded(c, okCells));
+      const merged = mergeRecords([a, b, c], [first, second]);
+      expect(merged.done).toEqual(["alpha", "beta", "gamma"]);
+      expect(merged.failed).toEqual([]);
+      expect(merged.missing).toEqual([]);
+      expect(merged.cells.map((cell) => cellKey(cell.asset, cell.scale, cell.view, cell.mode))).toEqual(universe([a, b, c]));
+      expect(merged.cells.every((cell) => cell.status === "ok")).toBe(true);
+      if (!oracleUp) return;
+      const out = runOracle({ records: [{ key: "alpha", path: recordPath(first, "alpha") }, { key: "beta", path: recordPath(first, "beta") }] });
+      expect(out.records.alpha).toEqual({ asset: "alpha", outcome: "done", statuses: { ok: universe([a]).length }, checks: {} });
+      expect(out.records.beta).toEqual({ asset: "beta", outcome: "failed", statuses: {}, checks: {} });
+    });
+  });
+});
+
+describe("🔎️ authors' gate", () => {
+  it("reports every finding of one asset with its code, pose, scale, views, bone, anchor and delta, and counts them per family", () => {
+    expect([...FAMILIES]).toEqual(vectors.scan.families);
+    const { planShiftM, anchor, expected } = vectors.scan.mutant;
+    const rect = (x: number) => ({ id: "body", bone: "ground", role: "body", z: 0, filled: true, tone: 0.5, kind: "rect", x, y: 0, w: 0.25, h: 1.8 }) as never;
+    const figure = rolesAssetWith(() => [rect(0)], (rep) => ({ ...rep, geometry: { ...rep.geometry, plan: [rect(planShiftM)] } }));
+    const mutant = { ...figure, anchors: [{ id: anchor.id, bone: "ground", x: anchor.x, y: anchor.y, kind: "contact", title: { en: "Foot", de: "Fuss" } }] } as unknown as Asset;
+    const row = scanAsset(mutant);
+    expect(row.clean).toBe(false);
+    expect([...row.authored].sort()).toEqual(["100", "200", "50", "500"]);
+    for (const finding of row.findings) {
+      expect(vectors.scan.families).toContain(finding.family);
+      expect(row.authored).toContain(finding.scale);
+      expect(mutant.poses.map((pose) => pose.id)).toContain(finding.pose);
+      expect(finding.views.length).toBeGreaterThan(0);
+      expect(finding.rest).toBe(finding.pose === mutant.presentation.defaultPose);
+    }
+    for (const want of expected) {
+      const found = row.findings.filter((finding) => finding.code === want.code && finding.views.join("/") === want.views.join("/") && finding.anchor === want.anchor);
+      expect(found.length, `${want.code} ${want.views.join("/")}`).toBe(want.count);
+      expect(new Set(found.map((finding) => `${finding.scale}|${finding.pose}`)).size).toBe(want.count);
+      for (const finding of found) {
+        expect(finding.family).toBe(want.family);
+        expect(finding.tier).toBe(want.tier);
+        expect(finding.bone).toBe(want.bone);
+        expect(finding.anchorKind).toBe(want.anchorKind);
+        expect(finding.place).toBe(want.place);
+        expect(Math.abs(finding.deltaMm! - want.deltaMm)).toBeLessThanOrEqual(0.1);
+      }
+    }
+    const { summary } = row;
+    expect(summary.hard + summary.reported).toBe(row.findings.length);
+    expect(Object.values(summary.families).reduce((sum, n) => sum + n, 0)).toBe(row.findings.length);
+    expect(summary.syncRest + summary.syncPosed).toBe(summary.families.sync);
+    expect(summary.syncRest * mutant.poses.length).toBe(summary.families.sync);
+    expect(summary.anchorPlaces).toEqual({ "off-shapes": summary.families.anchor });
+    expect(summary.anchorKinds).toEqual({ contact: summary.families.anchor });
+    const report = compact(row);
+    expect("findings" in report).toBe(false);
+    expect(report.groups.reduce((sum, group) => sum + group.count, 0)).toBe(row.findings.length);
+    for (const want of expected) {
+      const group = report.groups.find((candidate) => candidate.code === want.code && candidate.views.join("/") === want.views.join("/") && candidate.anchor === want.anchor)!;
+      expect(group.count).toBe(want.count);
+      expect(group.poses).toEqual(mutant.poses.map((pose) => pose.id));
+      expect([...group.scales].sort()).toEqual(["100", "200", "50", "500"]);
+      expect(Math.abs(group.worst.deltaMm! - want.deltaMm)).toBeLessThanOrEqual(0.1);
+    }
+    const english = listing(row, "en");
+    const german = listing(row, "de");
+    for (const text of [english, german]) for (const want of expected) expect(text).toContain(`${want.code} ×`);
+    expect(english).toContain("elevation/plan · bone ground · poses stand, walk-a, walk-b · 1:50, 1:100, 1:200, 1:500 · worst 100 mm (pose stand, 1:50)");
+    expect(german).toContain("elevation/plan · Knochen ground · Posen stand, walk-a, walk-b · 1:50, 1:100, 1:200, 1:500 · grösste Abweichung 100 mm (Pose stand, 1:50)");
+    expect(english).toContain("anchor foot (contact, off every drawn shape)");
+    expect(german).toContain("Anker foot (contact, neben jeder gezeichneten Form)");
+    expect(listing(row, "en", true).split("\n").length).toBe(1);
+  });
+
+  it("finds the catalog asset with the unfilled outermost part clean", { timeout: 300_000 }, () => {
+    const row = scanAsset(asset(vectors.scan.clean.asset));
+    expect(row.findings.filter((finding) => finding.tier === "hard").map((finding) => `${finding.code} ${finding.scale} ${finding.pose} ${finding.message}`)).toEqual([]);
+    expect(row.clean).toBe(true);
+  });
+});
+
 describe("🪞️ derived-view detection", () => {
   const shapeOf = (ring: number[][]): EvaluatedShape[] => [{ shape: { id: "s", role: "body" } as never, rings: [ring.map(([x, y]) => ({ x: x!, y: y! }))], closed: true }];
 
@@ -502,6 +852,50 @@ describe("🪞️ derived-view detection", () => {
     for (const c of vectors.derived.cases) {
       const flags = derivedFlags({ elevation: shapeOf(c.elevation), front: shapeOf(c.other), plan: [] });
       expect(flags.some((flag) => flag.view === "front" && flag.against === "elevation"), c.name).toBe(c.flagged);
+    }
+  });
+
+  it("allows a band copy for one asset, view and named bands and an in-band view for one asset and view, each only with a reason in English and German", () => {
+    const { representation, bandCopy, inBand } = vectors.allowlists;
+    const figure = rolesAsset();
+    const run = (allow: Parameters<typeof derivedFindings>[4]) => derivedFindings(figure, representation, Number(representation), undefined, allow).map((finding) => `${finding.check} ${finding.view} ${finding.against}`);
+    const none = run({ derived: [], bandCopy: [] });
+    const other = bandCopy.bands.find((key) => key !== representation)!;
+    const copy = `derived-view-band-copy ${bandCopy.view} 1:${other} ${bandCopy.view}`;
+    const same = `derived-view-in-band ${inBand.view} elevation`;
+    expect(none).toContain(copy);
+    expect(none).toContain(same);
+    const entry = { asset: figure.id, ...bandCopy };
+    expect(run({ derived: [], bandCopy: [entry] })).toEqual(none.filter((line) => line !== copy));
+    expect(run({ derived: [], bandCopy: [{ ...entry, bands: [bandCopy.bands[1], bandCopy.bands[0]] }] })).toEqual(none.filter((line) => line !== copy));
+    expect(run({ derived: [], bandCopy: [{ ...entry, asset: "another" }] })).toEqual(none);
+    expect(run({ derived: [], bandCopy: [{ ...entry, view: bandCopy.view === "front" ? "plan" : "front" }] }).includes(copy)).toBe(true);
+    expect(run({ derived: [], bandCopy: [{ ...entry, reason: { en: bandCopy.reason.en, de: " " } }] })).toEqual(none);
+    expect(run({ derived: [], bandCopy: [{ ...entry, bands: [representation, representation] }] })).toEqual(none);
+    expect(run({ derived: [], bandCopy: [{ ...entry, bands: [representation] }] })).toEqual(none);
+    const { group } = vectors.allowlists;
+    const grouped = run({ derived: [], bandCopy: [{ ...entry, bands: group }] });
+    expect(grouped).toEqual(none.filter((line) => !group.some((key) => line === `derived-view-band-copy ${bandCopy.view} 1:${key} ${bandCopy.view}`)));
+    expect(none.length - grouped.length).toBe(group.length - 1);
+    expect(grouped.some((line) => line.startsWith(`derived-view-band-copy ${bandCopy.view} `))).toBe(true);
+    const symmetric = { asset: figure.id, ...inBand };
+    expect(run({ derived: [symmetric], bandCopy: [] })).toEqual(none.filter((line) => !line.startsWith(`derived-view-in-band ${inBand.view} `)));
+    expect(run({ derived: [{ ...symmetric, reason: { en: "", de: inBand.reason.de } }], bandCopy: [] })).toEqual(none);
+    expect(run({ derived: [symmetric], bandCopy: [entry] }).some((line) => line === copy || line === same)).toBe(false);
+  });
+
+  it("keeps the allowlists of the fixture well-formed: catalog assets, authored bands and a reason in both languages", () => {
+    const { derived, bandCopy } = allowlists();
+    for (const entry of [...derived, ...bandCopy]) {
+      expect(byId.has(entry.asset), entry.asset).toBe(true);
+      expect(["front", "plan"]).toContain(entry.view);
+      expect(entry.reason.en.trim().length, `${entry.asset} en`).toBeGreaterThan(0);
+      expect(entry.reason.de.trim().length, `${entry.asset} de`).toBeGreaterThan(0);
+    }
+    for (const entry of bandCopy) {
+      expect(entry.bands.length).toBeGreaterThanOrEqual(2);
+      expect(new Set(entry.bands).size).toBe(entry.bands.length);
+      for (const key of entry.bands) expect(authoredOf(asset(entry.asset), key), `${entry.asset} 1:${key}`).toBeDefined();
     }
   });
 
@@ -524,8 +918,8 @@ function loadProfiles(): { id: string; minStrokeMm: number; minGapMm: number; mi
   return document.profiles;
 }
 
-type OracleJob = { svgs?: { key: string; svg: string }[]; hausdorff?: { key: string; a: number[][]; b: number[][] }[]; distances?: { key: string; a: number[][]; b: number[][] }[] };
-type OracleOut = { svgs: Record<string, number[] | null>; hausdorff: Record<string, number>; distances: Record<string, number> };
+type OracleJob = { svgs?: { key: string; svg: string; ids?: string }[]; patterns?: { key: string; svg: string }[]; hausdorff?: { key: string; a: number[][]; b: number[][] }[]; distances?: { key: string; a: number[][]; b: number[][] }[]; pointDistances?: { key: string; point: number[]; polygons: number[][][] }[]; bounds?: { key: string; points: number[][] }[]; records?: { key: string; path: string }[] };
+type OracleOut = { svgs: Record<string, number[] | null>; patterns: Record<string, { pattern: string; box: number[] }[]>; hausdorff: Record<string, number>; distances: Record<string, number>; pointDistances: Record<string, number>; bounds: Record<string, number[]>; records: Record<string, { asset: string; outcome: string; statuses: Record<string, number>; checks: Record<string, number> }> };
 
 function runOracle(job: OracleJob): OracleOut {
   const directory = mkdtempSync(join(tmpdir(), "staffage-coverage-"));

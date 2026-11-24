@@ -1,0 +1,27 @@
+[
+ {
+  "op": "prism",
+  "scale": "500",
+  "id": "coat",
+  "view": "plan",
+  "why": "torso: flat/None/flat: prism that keeps the outline"
+ },
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "shaft",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "create": "only",
+  "why": "the shaft had no plan shape at 1:500 (hidden under the canopy while the umbrella is up); folded forward in close-umbrella it reaches 67 mm beyond everything the plan drew"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shaft",
+  "rebuild": true,
+  "why": "the new plan shaft as the rod it is: revolved about the umbrella axis from the elevation and front twins"
+ }
+]

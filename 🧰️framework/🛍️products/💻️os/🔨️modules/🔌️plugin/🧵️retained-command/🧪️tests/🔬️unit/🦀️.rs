@@ -45,3 +45,14 @@ fn a_publication_wait_names_its_cause_for_exactly_its_operation() {
     assert_eq!((wait.cause.starts_with("the store owner refused"), wait.have), (true, [1, 2, 3]));
     assert!(last_publication_wait(8).is_none());
 }
+
+/// 🧭️ LAW: a typed funding wait reads its phase, the short resource and `[stage, demand, grant]` in the stall message, and a plain wait keeps its bare cause.
+#[test]
+fn a_funding_wait_names_its_phase_resource_demand_and_grant() {
+    use crate::typed_operation::{last_publication_wait, note_publication_unit_wait, note_publication_wait, PublicationWait};
+    note_publication_unit_wait(9, PublicationWait::shortfall("the press scrub writer is not funded", "writer admission", "copy bytes", 700_000, 532_480).at_stage(2));
+    let text = last_publication_wait(9).expect("the typed wait is readable").to_string();
+    assert_eq!(text, "the press scrub writer is not funded [phase 'writer admission', short of copy bytes; stage, demand, grant] [2, 700000, 532480]");
+    note_publication_wait(10, "the worker completion is not ready", [1, 2, 3]);
+    assert_eq!(last_publication_wait(10).expect("the plain wait is readable").to_string(), "the worker completion is not ready [1, 2, 3]");
+}

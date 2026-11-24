@@ -236,16 +236,15 @@ try {
         const alternativeLabel = (await alternative.innerText({ timeout })).trim();
         assert.notEqual(alternativeLabel, original);
         await alternative.click({ timeout });
-        await page.waitForFunction(({ id, label, selector, revision, blank }) => {
+        await page.waitForFunction(({ id, label, selector, revision }) => {
           if (document.querySelector(`[data-layered-pane="${id}"] [id="playground.navbar.fixture"]`)?.textContent?.trim() !== label) return false;
           const viewport = document.querySelector(selector);
           const next = viewport?.getAttribute("data-world-geometry-revision");
           const data = viewport?.getAttribute("data-instances-json");
           const instances = data ? Object.keys(JSON.parse(data)).length : 0;
           const draw = viewport?.querySelector("canvas[data-world-geometry-drawn]");
-          if (blank) return instances === 0;
           return next && next !== revision && instances > 0 && draw?.dataset.worldGeometryRevision === next;
-        }, { id, label: alternativeLabel, selector: modelSelector, revision: result.initial.revision, blank: hasBlank }, { timeout: exampleTimeout });
+        }, { id, label: alternativeLabel, selector: modelSelector, revision: result.initial.revision }, { timeout: exampleTimeout });
         const alternativeRevision = await model.count() ? await model.getAttribute("data-world-geometry-revision") : null;
         result.alternative = { label: alternativeLabel, blank: hasBlank, revision: alternativeRevision, elapsedMs: Math.round(performance.now() - started) };
         stage = "restore example";

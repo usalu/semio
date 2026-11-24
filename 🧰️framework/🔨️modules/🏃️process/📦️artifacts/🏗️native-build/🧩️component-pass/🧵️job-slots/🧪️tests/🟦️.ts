@@ -23,7 +23,7 @@ test("a stub job that blocks shows concurrent offloadable jobs, and the local sl
  const passes=Array.from({length:6},(_,index)=>({id:"p"+index,target:"wasm32-wasip2"}));
  const gates:(()=>void)[]=[],held:PassJobSlotV1[]=[];let local=0,maximumLocal=0,running=0,maximum=0;
  const done=runPassesInJobSlotsV1(passes,{jobs:4,check:()=>undefined,run:(_pass,slot)=>new Promise<void>(resolve=>{held.push(slot);running++;maximum=Math.max(maximum,running);if(slot==="local"){local++;maximumLocal=Math.max(maximumLocal,local);}gates.push(()=>{running--;if(slot==="local")local--;resolve();});})});
- await flush();expect(running).toBe(4);expect(held).toEqual(["local","light","light","light"]);
+ await flush();expect(running).toBe(4);expect(held).toEqual(["local","fleet","fleet","fleet"]);
  gates.shift()!();await flush();expect(running).toBe(4);
  while(gates.length){gates.shift()!();await flush();}
  await done;expect(maximum).toBe(4);expect(maximumLocal).toBe(1);expect(held.length).toBe(6);

@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { freemem, totalmem } from "node:os";
 import { chromium, type Browser, type BrowserContext, type Page } from "@playwright/test";
 import { ProctorClient, proctorTransport } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/🛂️proctor/🟦️.ts";
-import { COURSE, PAR, QUIZZES, activeOverview, arrive, authorPreview, card, connection, count, expect, goHome, learnerId, way, openTask, answerTask, pane, playQuiz, primary, proctor, readIntroduction, scoredPoints, percent, screen, submitRun, test, PROCTOR_ORIGIN, type Challenge, type Device, type Locale, type SourceQuiz } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { COURSE, PAR, QUIZZES, activeOverview, arrive, openQuizGrid, authorPreview, card, connection, count, expect, goHome, learnerId, way, openTask, answerTask, pane, playQuiz, primary, proctor, readIntroduction, scoredPoints, percent, screen, submitRun, test, PROCTOR_ORIGIN, type Challenge, type Device, type Locale, type SourceQuiz } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 import { learnerTag, rosterScope } from "../../../../../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🟦️.ts";
 import { ghost, rosterAudit, type Vanish, ProtocolLearner } from "./🤖️protocol-learner/🟦️.ts";
 
@@ -219,7 +219,7 @@ class Chaotic implements Device {
     await readIntroduction(this);
     const form = screen(this.page, "identity");
     await expect(async () => {
-      await form.locator('input[type="radio"][value="pseudonym"]').check({ timeout: 10_000 });
+      await form.locator('input[type="radio"][value="pseudonym"]').locator("xpath=ancestor::label[1]").click({ timeout: 10_000 });
       await form.locator('input[type="text"]').fill(this.handle, { timeout: 10_000 });
     }).toPass({ timeout: 150_000, intervals: [500, 1_000, 2_000] }).catch(async (error: unknown) => {
       const state = await Promise.race([
@@ -425,6 +425,17 @@ async function playOne(learner: Chaotic, truth: ProctorClient, quiz: SourceQuiz,
     await learner.recover();
     await playQuiz(learner, quiz.id, challenge);
   };
+  const reopen = async (): Promise<boolean> => {
+    await learner.recover();
+    if (await screen(learner.page, "run").isVisible()) return true;
+    await openQuizGrid(learner, quiz.id);
+    const action = primary(card(learner.page, quiz.id));
+    await expect(action).toBeVisible();
+    if ((await action.locator('[data-icon="skip-forward"]').count()) === 0) return false;
+    await action.click();
+    await expect(screen(learner.page, "run")).toBeVisible();
+    return true;
+  };
   const opening = performance.now();
   const quietBefore = learner.quiet;
   await resilient(learner, `${quiz.id} start`, () => playQuiz(learner, quiz.id, challenge), resume);
@@ -446,7 +457,16 @@ async function playOne(learner: Chaotic, truth: ProctorClient, quiz: SourceQuiz,
   let results: { score: number; points: number } | undefined;
   for (let attempt = 1; results === undefined; attempt++) {
     try {
-      if (!(await screen(learner.page, "run").isVisible())) await resume();
+      if (!(await screen(learner.page, "run").isVisible())) {
+        await learner.settle(300_000).catch(() => undefined);
+        const arrived = await submittedByTruth().catch(() => undefined);
+        if (arrived !== undefined) {
+          inject("submit-recovered");
+          results = { score: Math.round((arrived.score ?? 0) * 100), points: arrived.points ?? 0 };
+          break;
+        }
+        if (!(await reopen())) throw new Error("the device offers no open run to go back into and the proctor holds no submitted one yet");
+      }
       if (Math.random() < 0.35 && !learner.disturbed) {
         learner.counts.offlineSubmits += 1;
         inject("offline-mid-submit");
@@ -469,14 +489,17 @@ async function playOne(learner: Chaotic, truth: ProctorClient, quiz: SourceQuiz,
         results = { score: Math.round((view.score ?? 0) * 100), points: view.points ?? 0 };
       } else if (!drained && performance.now() - started < 1_800_000) {
         attempt -= 1;
-      } else await resume().catch(() => undefined);
+      } else await reopen().catch(() => false);
     }
   }
   if (results.points !== PAR[challenge]) {
-    const shown = async (): Promise<number> => ((await screen(learner.page, "results").isVisible()) ? scoredPoints(learner, await screen(learner.page, "results").locator("p").nth(1).innerText()).points : (await submittedByTruth())?.points ?? -1);
+    const onScreen = async (): Promise<number> => ((await screen(learner.page, "results").isVisible()) ? scoredPoints(learner, await screen(learner.page, "results").locator("p").nth(1).innerText()).points : -1);
+    const delivered = async (): Promise<number> => Math.max(-1, ...(await truth.learner(learner.id)).runs.filter((run) => run.quiz === quiz.id && run.status === "submitted").map((run) => run.points ?? 0));
+    const shown = async (): Promise<number> => Math.max(await onScreen().catch(() => -1), await delivered().catch(() => -1));
     const first = results.points;
-    await expect.poll(() => shown().catch(() => -1), { timeout: 90_000, intervals: [1_000, 2_000, 5_000], message: `${learner.handle}: ${quiz.id} earns every point of ${challenge} (first shown ${first})` }).toBe(PAR[challenge]);
-    ledger.notes.push(`${learner.handle}: ${quiz.id} first showed ${first} points of ${PAR[challenge]} and caught up`);
+    await expect.poll(() => shown(), { timeout: 90_000, intervals: [1_000, 2_000, 5_000], message: `${learner.handle}: ${quiz.id} earns every point of ${challenge} (first shown ${first})` }).toBe(PAR[challenge]);
+    const again = (await onScreen().catch(() => -1)) !== PAR[challenge];
+    ledger.notes.push(again ? `${learner.handle}: ${quiz.id} was started again after a submission whose answer was lost on the way back, and that run shows ${first} points; the run answered perfectly arrived with all ${PAR[challenge]}` : `${learner.handle}: ${quiz.id} first showed ${first} points of ${PAR[challenge]} and caught up`);
     results.points = PAR[challenge];
   }
   expect(results.points, `${learner.handle}: ${quiz.id} earns every point of ${challenge}`).toBe(PAR[challenge]);

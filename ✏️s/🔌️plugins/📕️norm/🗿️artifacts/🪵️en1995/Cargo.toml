@@ -31,6 +31,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️joint-actions/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️bracing-forces/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️bracing-layout/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️bridges/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️deck-geometry-more/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️deck-geometry/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️footbridges-more/📦️packages/🦀️rust",
@@ -325,6 +326,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 
 [workspace.dependencies.semio-s-artifact-norm-en1995-scene-facts]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🧮️facts/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mutations-bridges]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️bridges/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1995-mutations-typescript]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️typescript-twin/📦️packages/🦀️rust"

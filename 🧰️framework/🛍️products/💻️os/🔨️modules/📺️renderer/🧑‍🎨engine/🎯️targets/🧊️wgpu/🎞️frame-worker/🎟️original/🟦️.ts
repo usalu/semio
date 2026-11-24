@@ -1,10 +1,13 @@
 import { OriginalOperationSource, originalReceiptFromWit, type OriginalOperationAdmission, type OriginalOperationTurn, type OriginalWireReceipt } from "../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts";
 import type { OriginalBootstrapOwner } from "../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts";
 /** 🎟️ The actual browser native owner consumes only the initiating scalar input and returns its inline raw tuple. */
-export interface OriginalBrowserFrameNative {
+export interface OriginalBrowserFrameAdmissionNative {
  admitOriginalFrame(operation:bigint,generation:bigint,epoch:bigint,items:number,copy:number,capacity:number,release:number,depth:number,fuel:bigint,deadline:bigint):boolean;
  originalFrameReceiptScalar(index:number):bigint;
  originalFrameReceiptRefusal():number;
+}
+/** 🎟️ The finished frame Worker adds every turn after admission to the bootstrap's admission-only surface. */
+export interface OriginalBrowserFrameNative extends OriginalBrowserFrameAdmissionNative {
  originalFrameOutputLength():number;
  originalFrameOutputByte(index:number):number;
  acknowledgeOriginalFrameOutput(operation:bigint,generation:bigint,epoch:bigint,items:number,copy:number,capacity:number,release:number,depth:number,fuel:bigint,deadline:bigint):boolean;
@@ -17,25 +20,29 @@ export interface OriginalBrowserFrameFailure {readonly kind:"failure";readonly f
 /** 🧵️ One same-worker source retains original business authority independently of input presentation counters. */
 export class OriginalBrowserFrameSource {
  readonly source:OriginalOperationSource;#returned:Promise<void>=Promise.resolve();#nativeFailure:unknown;#receiptFailure:unknown;#outputAcknowledgement=false;#closed=false;
- constructor(readonly native:OriginalBrowserFrameNative,readonly owner:OriginalBootstrapOwner,readonly admission:OriginalOperationAdmission,clock:()=>bigint){this.source=new OriginalOperationSource(admission,clock)}
+ #admission:OriginalBrowserFrameAdmissionNative;#frame:OriginalBrowserFrameNative|undefined;
+ constructor(native:OriginalBrowserFrameAdmissionNative|OriginalBrowserFrameNative,readonly owner:OriginalBootstrapOwner,readonly admission:OriginalOperationAdmission,clock:()=>bigint){this.#admission=native;this.#frame="tick" in native?native:undefined;this.source=new OriginalOperationSource(admission,clock)}
+ /** 🔗️ The bootstrap's entry moves into the finished Worker, which continues the same admitted Source. */
+ attach(native:OriginalBrowserFrameNative):void{this.#admission=native;this.#frame=native}
+ #native():OriginalBrowserFrameNative{if(this.#frame===undefined)throw Error("original-frame.native-unattached");return this.#frame}
  get nativeFailure():unknown{return this.#nativeFailure}
  get receiptFailure():unknown{return this.#receiptFailure}
  operationClockUs():bigint{return this.source.operationClockUs()}
  #input(turn:OriginalOperationTurn):[bigint,bigint,bigint,number,number,number,number,number,bigint,bigint]{const input=turn.input,g=input.grant;return[input.operation,input.generation,input.epoch,g.maximumItems,g.maximumCopyBytes,g.maximumCapacityBytes,g.maximumReleaseBytes,g.maximumDepth,BigInt(turn.fuel),turn.deadlineUs]}
  #receive(turn:OriginalOperationTurn):void{
-  const scalar=(index:number):bigint=>this.native.originalFrameReceiptScalar(index);
+  const scalar=(index:number):bigint=>this.#admission.originalFrameReceiptScalar(index);
   if(scalar(3)!==turn.input.operation||scalar(4)!==turn.deadlineUs||scalar(5)!==BigInt(turn.fuel)){const failure=Error("original-frame.native-work-mismatch");this.#receiptFailure=failure;throw failure;}
   const raw:OriginalWireReceipt={input:{operation:scalar(0),generation:scalar(1),epoch:scalar(2),grant:{maximumItems:scalar(6),maximumCopyBytes:scalar(7),maximumCapacityBytes:scalar(8),maximumReleaseBytes:scalar(9),maximumDepth:scalar(10)}},spent:{copiedItems:scalar(11),copiedBytes:scalar(12),retainedCapacityBytes:scalar(13),releasedBytes:scalar(14)}};
   const receipt=originalReceiptFromWit(raw,scalar(15));try{this.source.receive(receipt)}catch(original){this.#receiptFailure=original;throw original}this.#returned=this.#returned.then(()=>this.owner.receive(this.admission,receipt));
-  if(this.native.originalFrameReceiptRefusal()!==0){this.#receiptFailure=raw;throw Error("original-frame.native-authority-refused")}
+  if(this.#admission.originalFrameReceiptRefusal()!==0){this.#receiptFailure=raw;throw Error("original-frame.native-authority-refused")}
  }
  #call<T>(produce:(turn:OriginalOperationTurn)=>T):T{const turn=this.source.issue();try{return produce(turn)}catch(original){if(this.#nativeFailure===undefined)this.#nativeFailure=original;throw original}finally{this.#receive(turn)}}
- async admit():Promise<void>{for(;;){const ready=this.#call(turn=>this.native.admitOriginalFrame(...this.#input(turn)));await this.#returned;if(ready)return;await new Promise<void>(resolve=>setTimeout(resolve,0));}}
+ async admit():Promise<void>{for(;;){const ready=this.#call(turn=>this.#admission.admitOriginalFrame(...this.#input(turn)));await this.#returned;if(ready)return;await new Promise<void>(resolve=>setTimeout(resolve,0));}}
  tick(timestamp:number,sequence:bigint,presentation:bigint):string|OriginalBrowserFrameFailure|undefined{
   if(this.#closed||this.#nativeFailure!==undefined||this.#receiptFailure!==undefined)throw Error("original-frame.source-held");
-  if(this.#outputAcknowledgement){const complete=this.#call(turn=>this.native.acknowledgeOriginalFrameOutput(...this.#input(turn)));if(complete)this.#outputAcknowledgement=false;return undefined}
-  const status=this.#call(turn=>this.native.tick(timestamp,sequence,presentation,...this.#input(turn),turn.cancelled));if(status===0)return undefined;if(status!==1&&status!==2)throw Error("original-frame.output-state-refused");
-  const length=this.native.originalFrameOutputLength();if(!Number.isSafeInteger(length)||length<0)throw Error("original-frame.output-length-refused");const bytes=new Uint8Array(length);for(let index=0;index<length;index++){const byte=this.native.originalFrameOutputByte(index);if(!Number.isInteger(byte)||byte<0||byte>255)throw Error("original-frame.output-byte-refused");bytes[index]=byte;}
+  if(this.#outputAcknowledgement){const complete=this.#call(turn=>this.#native().acknowledgeOriginalFrameOutput(...this.#input(turn)));if(complete)this.#outputAcknowledgement=false;return undefined}
+  const status=this.#call(turn=>this.#native().tick(timestamp,sequence,presentation,...this.#input(turn),turn.cancelled));if(status===0)return undefined;if(status!==1&&status!==2)throw Error("original-frame.output-state-refused");
+  const length=this.#native().originalFrameOutputLength();if(!Number.isSafeInteger(length)||length<0)throw Error("original-frame.output-length-refused");const bytes=new Uint8Array(length);for(let index=0;index<length;index++){const byte=this.#native().originalFrameOutputByte(index);if(!Number.isInteger(byte)||byte<0||byte>255)throw Error("original-frame.output-byte-refused");bytes[index]=byte;}
   this.#outputAcknowledgement=true;if(status===2)return{kind:"failure",format:"pack",bytes};return new TextDecoder("utf-8",{fatal:true}).decode(bytes);
  }
 
@@ -43,12 +50,12 @@ export class OriginalBrowserFrameSource {
  assetDecode():{kind:"pending"|"idle"|"published"|"cancelled"|"fault";pending:boolean}|undefined{
   if(this.#closed||this.#nativeFailure!==undefined||this.#receiptFailure!==undefined)throw Error("original-frame.source-held");
   if(this.#outputAcknowledgement)return undefined;
-  const raw=this.#call(turn=>this.native.assetDecodeStep(...this.#input(turn)));
+  const raw=this.#call(turn=>this.#native().assetDecodeStep(...this.#input(turn)));
   if(!Number.isSafeInteger(raw)||raw<0||raw>12||(raw&7)>4)throw Error("original-frame.decoder-status-refused");
   const kinds=["pending","idle","published","cancelled","fault"] as const;
   return{kind:kinds[raw&7]!,pending:(raw&8)!==0};
  }
 
  /** ♻️ Original child aliases, failure publication and native authorities finish before this exact parent admission returns. */
- async close():Promise<void>{if(this.#closed)return;this.source.cancel();for(;;){const complete=this.#call(turn=>this.native.closeOriginalFrame(...this.#input(turn)));await this.#returned;if(complete)break;await new Promise<void>(resolve=>setTimeout(resolve,0));}for(;;){const complete=this.#call(turn=>this.native.closeOriginalFrameContext(...this.#input(turn)));await this.#returned;if(complete)break;await new Promise<void>(resolve=>setTimeout(resolve,0));}this.source.close();await this.owner.returnClosed(this.admission,true);this.#closed=true;}
+ async close():Promise<void>{if(this.#closed)return;this.source.cancel();for(;;){const complete=this.#call(turn=>this.#native().closeOriginalFrame(...this.#input(turn)));await this.#returned;if(complete)break;await new Promise<void>(resolve=>setTimeout(resolve,0));}for(;;){const complete=this.#call(turn=>this.#native().closeOriginalFrameContext(...this.#input(turn)));await this.#returned;if(complete)break;await new Promise<void>(resolve=>setTimeout(resolve,0));}this.source.close();await this.owner.returnClosed(this.admission,true);this.#closed=true;}
 }

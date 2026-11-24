@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Native image grow",
+  "description": "The closed protocol of growing an existing fixed image to a larger declared size: the image is detached while no command uses it, its backing is stretched without writing a byte (the volume follows at the next attach), it is attached again and the receipt is rewritten. Only a machine with images (macOS) grows; a host that cannot hold the larger envelope is named unfit instead of retried.",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "progressSteps": 4,
+        "platform": "darwin",
+        "resizeProgram": "/usr/bin/hdiutil",
+        "resizeVerb": "resize",
+        "resizeSizeFlag": "-size",
+        "resizeUnit": "m",
+        "receiptName": "image.json",
+        "receiptFields": ["size", "filesystemBytes", "maximumPhysicalBytes"],
+        "trailerBytes": 40960,
+        "initialBytes": 67108864,
+        "unitBytes": 1048576,
+        "messages": {
+          "grown": {
+            "en": "Image {image} grew from {from} MiB to {to} MiB.",
+            "de": "Image {image} ist von {from} MiB auf {to} MiB gewachsen."
+          },
+          "current": {
+            "en": "Image {image} already holds {from} MiB, its target is {to} MiB.",
+            "de": "Image {image} fasst bereits {from} MiB, sein Ziel sind {to} MiB."
+          },
+          "unfit": {
+            "en": "Image {image} cannot grow from {from} MiB to {to} MiB: the host volume has {free} MiB free and needs {needed} MiB. Free space on the host; the machine is unfit for this role until then.",
+            "de": "Image {image} kann nicht von {from} MiB auf {to} MiB wachsen: das Host-Volume hat {free} MiB frei und braucht {needed} MiB. Platz auf dem Host freigeben; bis dahin ist die Maschine für diese Rolle ungeeignet."
+          },
+          "held": {
+            "en": "Image {image} is in use; it grows at the next quiet moment.",
+            "de": "Image {image} wird benutzt; es wächst im nächsten ruhigen Moment."
+          }
+        }
+      }
+    }
+  }
+}

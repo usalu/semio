@@ -35,6 +35,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string, 
       const wasm = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]);
       writeFileSync(join(rootFor("compiler"), "semio-renderer-wgpu-component_bg.wasm"), wasm);
       put(reloadFile, "0");
+      put(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "export const storeWorkerProbe = 1;\n");
       copyFileSync(template, join(app, "🌐️.html"));
       put(config, 'import { createWgpuBrowserConfig } from ' + JSON.stringify(implementation) + ';\nexport default () => createWgpuBrowserConfig(' + JSON.stringify({ catalog: { version: 1, targets: [], hosts: [], playgrounds: [] }, workspace: root, root: app, profile, compilerRoot: roots.compiler, moduleRoot: roots.modules, extensionRoot: roots.extensions, bootRoot: roots.boot, libraryRoot: roots.library, workerRoot: roots.worker, fontRoot: roots.fonts, reloadFile, assets: [], assetServeMode: "fetch" }) + ');\n');
       const controller = new AbortController();
@@ -58,6 +59,13 @@ export async function testWgpuBrowserServing(workspace: string, output: string, 
         assert.equal(wasmResponse.headers.get("content-type"), "application/wasm");
         assert.ok((await WebAssembly.instantiate(await wasmResponse.arrayBuffer())).instance);
         assert.equal((await fetch(new URL(fixture.missing, url))).status, 404);
+        const storeWorker = await fetch(new URL("/%F0%9F%8F%AA%EF%B8%8Fstore/%F0%9F%91%B7%EF%B8%8Fworker/%F0%9F%9F%A6%EF%B8%8F.ts", url));
+        assert.equal(storeWorker.status, 200);
+        assert.match(storeWorker.headers.get("content-type") ?? "", /javascript/);
+        assert.ok((await storeWorker.text()).includes("storeWorkerProbe"));
+        const inventory = await fetch(new URL("/%F0%9F%A7%A9%EF%B8%8Fextension-modules/install", url));
+        assert.equal(inventory.status, 200);
+        assert.deepEqual(await inventory.json(), []);
         await assert.rejects(() => serveVite({control:vitePhase, invocation,root: app, config, configLoader: "native", host: "127.0.0.1", port: Number(new URL(url).port), signal: new AbortController().signal, ready: () => assert.fail("Foreign port reused") }), /in use|EADDRINUSE/i);
         socket = new WebSocket(url.replace("http:", "ws:"), "vite-hmr");
         await new Promise<void>((resolve, reject) => { socket.once("open", resolve); socket.once("error", reject); });

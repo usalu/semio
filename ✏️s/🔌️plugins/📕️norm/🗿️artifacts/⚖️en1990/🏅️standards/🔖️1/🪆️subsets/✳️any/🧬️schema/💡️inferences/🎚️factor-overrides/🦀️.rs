@@ -7,7 +7,6 @@ use super::*;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Verdict {
     Applied,
-    UnknownKind,
     NotAllowed,
     UnknownTarget,
     InvalidValue,
@@ -15,23 +14,20 @@ pub enum Verdict {
     Superseded,
 }
 
-pub(super) const KINDS: [&str; 6] = ["gamma", "psi0", "psi1", "psi2", "xi", "k_fi"];
-
-fn allowance_id(kind: &str) -> Option<&'static str> {
-    Some(match kind {
-        "gamma" => "ndp.en1990.a1.override.gamma.allowed",
-        "psi0" | "psi1" | "psi2" => "ndp.en1990.a1.override.psi.allowed",
-        "xi" => "ndp.en1990.a1.override.xi.allowed",
-        "k_fi" => "ndp.en1990.a1.override.k_fi.allowed",
-        _ => return None,
-    })
+fn allowance_id(kind: FactorKind) -> &'static str {
+    match kind {
+        FactorKind::Gamma => "ndp.en1990.a1.override.gamma.allowed",
+        FactorKind::Psi0 | FactorKind::Psi1 | FactorKind::Psi2 => "ndp.en1990.a1.override.psi.allowed",
+        FactorKind::Xi => "ndp.en1990.a1.override.xi.allowed",
+        FactorKind::KFi => "ndp.en1990.a1.override.k_fi.allowed",
+    }
 }
 
 /// 🎯️ The action ids a gamma or psi row reaches: an empty target means every action, otherwise an action id, exclusive group or psi category.
 pub fn targets(document: &En1990Snapshot, row: &FactorOverride) -> Vec<String> {
     let target = row.target.trim();
     let mut ids: Vec<String> = Vec::new();
-    for permanent in document.permanents.iter().filter(|p| row.factor == "gamma" && p.kind != semio_s_artifact_norm_en1990_model::PermanentKind::GInf && p.kind != semio_s_artifact_norm_en1990_model::PermanentKind::Prestress) {
+    for permanent in document.permanents.iter().filter(|p| row.factor == FactorKind::Gamma && p.kind != semio_s_artifact_norm_en1990_model::PermanentKind::GInf && p.kind != semio_s_artifact_norm_en1990_model::PermanentKind::Prestress) {
         if target.is_empty() || permanent.id == target {
             ids.push(permanent.id.clone());
         }
@@ -47,9 +43,9 @@ pub fn targets(document: &En1990Snapshot, row: &FactorOverride) -> Vec<String> {
 
 fn value_ok(row: &FactorOverride) -> bool {
     row.value.is_finite()
-        && match row.factor.as_str() {
-            "gamma" | "k_fi" => row.value > 0.0,
-            "xi" => row.value > 0.0 && row.value <= 1.0,
+        && match row.factor {
+            FactorKind::Gamma | FactorKind::KFi => row.value > 0.0,
+            FactorKind::Xi => row.value > 0.0 && row.value <= 1.0,
             _ => (0.0..=1.0).contains(&row.value),
         }
 }
@@ -58,14 +54,18 @@ fn value_ok(row: &FactorOverride) -> bool {
 pub fn verdicts(document: &En1990Snapshot) -> Vec<Verdict> {
     let mut out: Vec<Verdict> = Vec::with_capacity(document.factor_overrides.len());
     for (index, row) in document.factor_overrides.iter().enumerate() {
-        let verdict = match allowance_id(&row.factor) {
-            None => Verdict::UnknownKind,
-            Some(id) if ndp(document.annex, id) < 0.5 => Verdict::NotAllowed,
-            Some(_) if !value_ok(row) => Verdict::InvalidValue,
-            Some(_) if row.justification.trim().is_empty() => Verdict::MissingJustification,
-            Some(_) if matches!(row.factor.as_str(), "gamma" | "psi0" | "psi1" | "psi2") && !row.target.trim().is_empty() && targets(document, row).is_empty() => Verdict::UnknownTarget,
-            Some(_) if document.factor_overrides[index + 1..].iter().any(|later| later.factor == row.factor && later.target.trim() == row.target.trim()) => Verdict::Superseded,
-            Some(_) => Verdict::Applied,
+        let verdict = if ndp(document.annex, allowance_id(row.factor)) < 0.5 {
+            Verdict::NotAllowed
+        } else if !value_ok(row) {
+            Verdict::InvalidValue
+        } else if row.justification.trim().is_empty() {
+            Verdict::MissingJustification
+        } else if row.factor.per_action() && !row.target.trim().is_empty() && targets(document, row).is_empty() {
+            Verdict::UnknownTarget
+        } else if document.factor_overrides[index + 1..].iter().any(|later| later.factor == row.factor && later.target.trim() == row.target.trim()) {
+            Verdict::Superseded
+        } else {
+            Verdict::Applied
         };
         out.push(verdict);
     }
@@ -77,25 +77,25 @@ pub fn action_override(document: &En1990Snapshot, action_id: &str) -> ActionOver
     let verdicts = verdicts(document);
     let mut out = ActionOverride::default();
     for (row, verdict) in document.factor_overrides.iter().zip(&verdicts) {
-        if *verdict != Verdict::Applied || !matches!(row.factor.as_str(), "gamma" | "psi0" | "psi1" | "psi2") || !targets(document, row).iter().any(|id| id == action_id) {
+        if *verdict != Verdict::Applied || !row.factor.per_action() || !targets(document, row).iter().any(|id| id == action_id) {
             continue;
         }
-        match row.factor.as_str() {
-            "gamma" => out.gamma = Some(row.value),
-            "psi0" => out.psi[0] = Some(row.value),
-            "psi1" => out.psi[1] = Some(row.value),
+        match row.factor {
+            FactorKind::Gamma => out.gamma = Some(row.value),
+            FactorKind::Psi0 => out.psi[0] = Some(row.value),
+            FactorKind::Psi1 => out.psi[1] = Some(row.value),
             _ => out.psi[2] = Some(row.value),
         }
     }
-    out.gamma = out.gamma.filter(|v| !same_as_annex(*v, annex_for_action(document, "gamma", action_id)));
-    for (slot, factor) in ["psi0", "psi1", "psi2"].into_iter().enumerate() {
+    out.gamma = out.gamma.filter(|v| !same_as_annex(*v, annex_for_action(document, FactorKind::Gamma, action_id)));
+    for (slot, factor) in [FactorKind::Psi0, FactorKind::Psi1, FactorKind::Psi2].into_iter().enumerate() {
         out.psi[slot] = out.psi[slot].filter(|v| !same_as_annex(*v, annex_for_action(document, factor, action_id)));
     }
     out
 }
 
 /// 🎚️ The applied global override of `xi` or `k_fi` (`None` when absent or not applied).
-pub fn global_override(document: &En1990Snapshot, factor: &str) -> Option<f64> {
+pub fn global_override(document: &En1990Snapshot, factor: FactorKind) -> Option<f64> {
     let verdicts = verdicts(document);
     let annex = annex_global(document, factor);
     document.factor_overrides.iter().zip(verdicts).filter(|(row, verdict)| row.factor == factor && *verdict == Verdict::Applied).map(|(row, _)| row.value).last().filter(|v| !same_as_annex(*v, annex))
@@ -107,26 +107,26 @@ fn same_as_annex(value: f64, annex: Option<f64>) -> bool {
     annex.is_some_and(|a| (a - value).abs() < SAME)
 }
 
-fn annex_global(document: &En1990Snapshot, factor: &str) -> Option<f64> {
+fn annex_global(document: &En1990Snapshot, factor: FactorKind) -> Option<f64> {
     match factor {
-        "xi" => Some(xi(document.annex, document.structure_kind.domain())),
-        "k_fi" => k_fi_for_rc(document.reliability_class.number()),
+        FactorKind::Xi => Some(xi(document.annex, document.structure_kind.domain())),
+        FactorKind::KFi => k_fi_for_rc(document.reliability_class.number()),
         _ => None,
     }
 }
 
 /// 📖️ The annex value of `factor` (gamma, psi0, psi1, psi2) for one action id: gamma_G,sup of a permanent action, gamma_Q or the psi table row of the resolved category of a variable one (STR set B).
-pub fn annex_for_action(document: &En1990Snapshot, factor: &str, action_id: &str) -> Option<f64> {
+pub fn annex_for_action(document: &En1990Snapshot, factor: FactorKind, action_id: &str) -> Option<f64> {
     let domain = document.structure_kind.domain();
     let permanent = document.permanents.iter().any(|p| p.id == action_id);
     let variable = document.variables.iter().find(|v| v.id == action_id);
     let category = variable.map(|v| resolve_psi_category(document.annex, &v.category, document.altitude_m));
     match factor {
-        "gamma" if permanent => Some(gamma_g(document.annex, domain, FactorSet::StrB).0),
-        "gamma" => category.map(|c| gamma_q(document.annex, domain, FactorSet::StrB, &c)),
-        "psi0" => category.and_then(|c| psi_lookup(document.annex, &c)).map(|r| r.psi_0),
-        "psi1" => category.and_then(|c| psi_lookup(document.annex, &c)).map(|r| r.psi_1),
-        "psi2" => category.and_then(|c| psi_lookup(document.annex, &c)).map(|r| r.psi_2),
+        FactorKind::Gamma if permanent => Some(gamma_g(document.annex, domain, FactorSet::StrB).0),
+        FactorKind::Gamma => category.map(|c| gamma_q(document.annex, domain, FactorSet::StrB, &c)),
+        FactorKind::Psi0 => category.and_then(|c| psi_lookup(document.annex, &c)).map(|r| r.psi_0),
+        FactorKind::Psi1 => category.and_then(|c| psi_lookup(document.annex, &c)).map(|r| r.psi_1),
+        FactorKind::Psi2 => category.and_then(|c| psi_lookup(document.annex, &c)).map(|r| r.psi_2),
         _ => None,
     }
 }
@@ -138,8 +138,8 @@ pub fn deviations(document: &En1990Snapshot) -> Vec<bool> {
         .zip(&document.factor_overrides)
         .map(|(verdict, row)| {
             verdict == Verdict::Applied
-                && match row.factor.as_str() {
-                    "xi" | "k_fi" => !same_as_annex(row.value, annex_global(document, &row.factor)),
+                && match row.factor {
+                    FactorKind::Xi | FactorKind::KFi => !same_as_annex(row.value, annex_global(document, row.factor)),
                     factor => targets(document, row).iter().any(|id| !same_as_annex(row.value, annex_for_action(document, factor, id))),
                 }
         })
@@ -153,15 +153,15 @@ pub fn rows_for(document: &En1990Snapshot, action_id: &str) -> Vec<(usize, Verdi
         .enumerate()
         .filter(|(index, _)| {
             let row = &document.factor_overrides[*index];
-            matches!(row.factor.as_str(), "gamma" | "psi0" | "psi1" | "psi2") && targets(document, row).iter().any(|id| id == action_id)
+            row.factor.per_action() && targets(document, row).iter().any(|id| id == action_id)
         })
         .collect()
 }
 
 /// 📖️ The annex value the row replaces, for the deviation text (the first target of a broad row); `None` for a target the annex has no single value for.
 pub fn annex_value(document: &En1990Snapshot, row: &FactorOverride) -> Option<f64> {
-    match row.factor.as_str() {
-        "xi" | "k_fi" => annex_global(document, &row.factor),
+    match row.factor {
+        FactorKind::Xi | FactorKind::KFi => annex_global(document, row.factor),
         factor => targets(document, row).first().and_then(|id| annex_for_action(document, factor, id)),
     }
 }
@@ -202,10 +202,7 @@ pub(super) fn push_factor_overrides(report: &mut CheckReport, document: &En1990S
             }
         }
         Verdict::Superseded => {
-            builder = builder.informative(q(row.value)).status(CheckStatus::Warning).explanation(copy("A later row overrides the same factor on the same target; this row has no effect.", "Eine spätere Zeile überschreibt denselben Faktor am selben Ziel; diese Zeile ist wirkungslos.")).remedy(Remedy::one_of(row_subject(document, row, "factor"), KINDS.iter().map(|k| k.to_string()).collect(), copy("Remove this row or give it a different factor or target.", "Diese Zeile entfernen oder anderen Faktor bzw. anderes Ziel wählen.")));
-        }
-        Verdict::UnknownKind => {
-            builder = builder.informative(q(row.value)).status(CheckStatus::Fail).explanation(copy(format!("Unknown factor kind {:?}.", row.factor), format!("Unbekannte Faktorart {:?}.", row.factor))).remedy(Remedy::one_of(row_subject(document, row, "factor"), KINDS.iter().map(|k| k.to_string()).collect(), copy("Choose gamma, psi0, psi1, psi2, xi or k_fi.", "gamma, psi0, psi1, psi2, xi oder k_fi wählen.")));
+            builder = builder.informative(q(row.value)).status(CheckStatus::Warning).explanation(copy("A later row overrides the same factor on the same target; this row has no effect.", "Eine spätere Zeile überschreibt denselben Faktor am selben Ziel; diese Zeile ist wirkungslos.")).remedy(Remedy::one_of(row_subject(document, row, "factor"), FactorKind::ALL.iter().map(|k| k.to_string()).collect(), copy("Remove this row or give it a different factor or target.", "Diese Zeile entfernen oder anderen Faktor bzw. anderes Ziel wählen.")));
         }
         Verdict::NotAllowed => {
             let value = annex_value(document, row).unwrap_or(row.value);
@@ -215,9 +212,9 @@ pub(super) fn push_factor_overrides(report: &mut CheckReport, document: &En1990S
             )).remedy(Remedy::exactly(value_subject, q(row.value), q(value), copy(format!("Remove the row (annex value {value:.4})."), format!("Die Zeile entfernen (Anhangswert {value:.4})."))));
         }
         Verdict::InvalidValue => {
-            let (lo, hi) = match row.factor.as_str() {
-                "xi" => (f64::MIN_POSITIVE, 1.0),
-                "psi0" | "psi1" | "psi2" => (0.0, 1.0),
+            let (lo, hi) = match row.factor {
+                FactorKind::Xi => (f64::MIN_POSITIVE, 1.0),
+                FactorKind::Psi0 | FactorKind::Psi1 | FactorKind::Psi2 => (0.0, 1.0),
                 _ => (f64::MIN_POSITIVE, f64::MAX),
             };
             let required = if row.value.is_finite() { row.value.clamp(lo, hi) } else { lo.max(0.0) };
@@ -231,9 +228,7 @@ pub(super) fn push_factor_overrides(report: &mut CheckReport, document: &En1990S
             builder = builder.informative(q(row.value)).status(CheckStatus::Fail).explanation(copy(format!("Target {:?} matches no action, group or category.", row.target), format!("Ziel {:?} passt auf keine Einwirkung, Gruppe oder Kategorie.", row.target))).remedy(Remedy::one_of(row_subject(document, row, "target"), options, copy("Pick an action id, an exclusive group or a ψ category.", "Eine Einwirkungs-Id, Ausschlussgruppe oder ψ-Kategorie wählen.")));
         }
     }
-    if let Some(id) = allowance_id(&row.factor) {
-        builder = builder.ndp(id);
-    }
+    builder = builder.ndp(allowance_id(row.factor));
     report.push(builder.ndp_reads().build());
 }
 //#endregion 🔖️ComplianceReport

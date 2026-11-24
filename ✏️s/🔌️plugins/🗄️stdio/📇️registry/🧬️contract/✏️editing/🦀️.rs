@@ -76,6 +76,7 @@ macro_rules! bounded_native_editing_editor {
         $(, work: $work:path)?
         $(, preparation_route: $preparation_route:path)?
         $(, checkpoint_resume: $checkpoint_resume:expr)?
+        $(, contract: $contract:expr)?
         $(,)?) => {
         impl $crate::BoundedNativeEditingEditor for $editor {
             const NATIVE_TOOL_IDS: &'static [&'static str] = &[$($tool),+ $(,$($host_tool),+)? $(,$($transient_tool),+)?];
@@ -89,6 +90,7 @@ macro_rules! bounded_native_editing_editor {
             ];
             const NATIVE_PAYLOAD_SCHEMA: &'static str = $payload_schema;
             $(const NATIVE_CHECKPOINT_RESUME: bool = $checkpoint_resume;)?
+            $(fn native_edit_execution_contract() -> semio_plugin::ToolExecutionContract { $contract })?
 
             fn native_edit_mutations(
                 $command: &Self::Command,

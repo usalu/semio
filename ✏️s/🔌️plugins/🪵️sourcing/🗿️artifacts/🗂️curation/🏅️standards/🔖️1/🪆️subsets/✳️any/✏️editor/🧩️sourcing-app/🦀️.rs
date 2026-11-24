@@ -50,6 +50,14 @@ impl ArtifactEditor for SourcingCurationApp {
         Some(admit_sourcing_curation_store_owners(grant))
     }
 
+    fn config_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        sourcing_curation_config_store_owners_source_demands()
+    }
+
+    fn build_config_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Config, Self::ConfigMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Config, Self::ConfigMutation>>> {
+        Some(admit_sourcing_curation_config_store_owners(grant))
+    }
+
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(SourcingCurationConfigPreparationFactory))
     }

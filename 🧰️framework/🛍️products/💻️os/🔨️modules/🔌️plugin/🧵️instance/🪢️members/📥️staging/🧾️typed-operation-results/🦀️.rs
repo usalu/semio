@@ -17,7 +17,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             return Ok(false);
         }
         let Some(operation) = self.tools.tool_operations.get_mut(token.operation) else { return Ok(false) };
+        let presented = operation.terminal_publication();
         let accepted = operation.acknowledge_result_page(token)?;
+        if accepted {
+            if let Some((owner, slot @ None)) = self.media.reserved_terminal.as_mut() {
+                if *owner == token.operation { *slot = presented }
+            }
+        }
         if !accepted || !download_ack {
             return Ok(accepted);
         }
@@ -47,7 +53,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
     ///
     /// 🧾️ Lane-less rows (a View, a Mutation that emitted nothing) join this patch. Retirement
     /// still records them, but only after this function has already read `history_dirty_sequences`.
+    ///
+    /// 🧹️ A whole-document replacement (an import) leaves the displaced document's command rows to prune. The prune is paced one bounded step per call, never awaited here: the synchronous exchange drives this future with `resolve_ready`, and a prune that yielded to an executor trapped the guest on the first import completion. The witness stays queued while rows are pending, and the outbox being non-empty keeps the host driving the operation.
     pub async fn take_typed_operation_completion(&mut self) -> Result<Option<TypedOperationCompletion>, Fault> {
+        if self.tools.typed_completion_outbox.items.is_empty() { return Ok(None) }
+        if self.history.command_prune_requested() || self.history.pending_command_prune.is_some() {
+            self.history.advance_command_prune_step(&mut *self.stores, self.mounted_policy.maintenance, false)?;
+            return Ok(None);
+        }
         let Some(witness) = self.tools.typed_completion_outbox.pop() else { return Ok(None) };
         self.tools.record_settled_typed_operation_command(&mut self.history, &mut self.host_events, witness.operation);
         self.as_render().refresh_cache().await?;

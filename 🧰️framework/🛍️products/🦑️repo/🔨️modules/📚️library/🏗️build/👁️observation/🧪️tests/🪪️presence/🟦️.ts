@@ -82,6 +82,16 @@ for(const kind of["source","lock"]as const)for(const row of corpus.cases.filter(
  const phase=createIssuedResourceControlV1(original,"inference:refusals",180000),db=new Database(":memory:");try{const{result,value}=await childOutcome(original,phase,"refusal",kind,row.fault),expected=row.fault!=="permission"||value.permissionDenied;const diagnostic=result.stdout+result.stderr;expect(result.status,diagnostic).toBe(expected?1:0);expect(value.warm,diagnostic).toBe(true);expect(value.calls,diagnostic).toBe(1);expect(value.failed,diagnostic).toBe(expected);expect(value.predicateFailed,diagnostic).toBe(expected);if(expected)expect(value.samePredicate,diagnostic).toBe(true);if(row.fault==="cold-close")expect(value.samePhysicalPrimary).toBe(true);const oracle=value.oracle,sql=db.query<{outcome:string},[number,number,number,number,number]>("select case when ?1=0 or ?2=0 or ?3=0 or ?4=0 or ?5=0 then 'refuse' else 'reuse' end outcome").get(Number(oracle.readable),Number(oracle.content),Number(oracle.contract),Number(oracle.safe),Number(oracle.stable));expect(sql?.outcome).toBe(expected?"refuse":"reuse");if(["ancestor-absent","ancestor-replaced","leaf-disappears","absence-reappears","prior-leaf-disappears","cold-fifo","cold-close"].includes(row.fault))expect(value.mutated).toBe(true);}finally{db.close();}
 });
 
+for(const kind of["source","lock"]as const)for(const row of corpus.cases.filter(row=>row.outcome==="recompute"))registerBuildTestLawV1("inference reuse recomputes a "+row.fault+" "+kind+" inventory under managed custody","sdk-runtime",async original=>{
+ const phase=createIssuedResourceControlV1(original,"inference:recomputes",180000),db=new Database(":memory:");
+ try{
+  const{result,value}=await childOutcome(original,phase,"refusal",kind,row.fault),diagnostic=result.stdout+result.stderr,oracle=value.oracle;
+  expect(result.status,diagnostic).toBe(0);expect(value.warm,diagnostic).toBe(true);expect(value.calls,diagnostic).toBe(2);expect(value.failed,diagnostic).toBe(false);expect(value.predicateFailed,diagnostic).toBe(false);
+  expect(db.query<{outcome:string},[number,number,number,number]>("select case when ?1=0 or ?2=0 or ?3=0 or ?4=0 then 'unusable' else 'usable' end outcome").get(Number(oracle.readable),Number(oracle.content),Number(oracle.contract),Number(oracle.stable))?.outcome,diagnostic).toBe("unusable");
+  if(["ancestor-replaced","absence-reappears"].includes(row.fault)){expect(value.mutated,diagnostic).toBe(true);expect(diagnostic).toContain("looking again 1 of");}
+ }finally{db.close();}
+});
+
 registerBuildTestLawV1("inference reuse settles a replaced namespace under managed custody","sdk-runtime",async original=>{
  const phase=createIssuedResourceControlV1(original,"inference:settled-ancestry",180000);
  const {result,value}=await childOutcome(original,phase,"refusal","source",corpus.cases.find(row=>row.id==="settled-ancestry-replacement")!.fault);
@@ -132,7 +142,7 @@ registerBuildTestLawV1("inventory reader phase counters reach slice memory telem
    const presence=JSON.parse(readFileSync(join(workspace,directory,name),"utf8")).sources.owners.presence,timings:Record<string,{started:number;active:number;milliseconds:number}>=presence.timings;
    expect(result).toBe(false);expect(validate(timings)).toBe(true);
    expect(presence.names).toBe(1);
-   expect(Object.values(timings).every(row=>row.active===0&&row.started===1)).toBe(true);
+   expect(Object.values(timings).every(row=>row.active===0&&row.started===1),JSON.stringify(timings)).toBe(true);
    expect(Object.values(timings).reduce((sum,row)=>sum+row.milliseconds,0)).toBeLessThanOrEqual(elapsed);
    expect(Object.keys(presence.nativeVerification)).toEqual(["preVerify","postVerify"]);
    const backends=Object.keys(presence.nativeVerification.preVerify);expect(backends).toHaveLength(1);

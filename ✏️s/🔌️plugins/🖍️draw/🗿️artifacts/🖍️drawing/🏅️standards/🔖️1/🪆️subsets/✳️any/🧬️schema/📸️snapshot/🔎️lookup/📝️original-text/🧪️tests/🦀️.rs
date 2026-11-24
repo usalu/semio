@@ -1,7 +1,7 @@
 //! 🧪️ Original sparse diff text receives exact UTF8 bytes and keeps partial output through denial and cancellation.
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value_clone_source_testing::FixtureSource;
-use semio_s_artifact_draw_drawing_model::snapshot::lookup::original::test_step;
+use crate::test_step;
 use semio_s_artifact_draw_drawing_model::snapshot::lookup::original_text::{DrawingNativeText, DrawingOriginalText};
 
 fn grant() -> RetainedCloneGrant {

@@ -29,7 +29,7 @@ fn tiled_map_and_board_windows_attach_their_engines_on_the_same_production_seam(
     let board_host_id = board_frame.owner.host_id.clone();
     let board_draw = board_frame.draw;
     let board_expect = &fixture["board2d"]["expect"];
-    let (nodes, edges, board_selection) = with_board_host(&board_host_id, |host| (host.nodes.len(), host.edges.len(), host.selection.iter().cloned().collect::<Vec<String>>())).expect("the first painted frame constructs the board engine");
+    let (nodes, edges, board_selection) = with_board_host(&board_host_id, |host| (host.scene.nodes.len(), host.scene.edges.len(), host.focus.selection.iter().cloned().collect::<Vec<String>>())).expect("the first painted frame constructs the board engine");
     assert_eq!(nodes, board_expect["nodes"].as_u64().expect("nodes") as usize, "the fixture reaches the board host whole");
     assert_eq!(edges, board_expect["edges"].as_u64().expect("edges") as usize);
     assert_eq!(

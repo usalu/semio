@@ -2,6 +2,7 @@
 
 use semio_s_plugin_norm_app_surface::{IdRemoval, InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
+use semio_framework_value::{DslValue, ToValue};
 use crate::En1990Mutation;
 
 /// 📚 Every path an EN1990 editor edit resolves, one rule per kind that sets, inserts or removes through it.
@@ -154,7 +155,37 @@ pub const ID_REMOVALS: &[IdRemoval] = &[
         IdRemoval { path: "cases", kind: "remove-case", selectors: &[], id: "id" },
 ];
 
-/// 🎯️ Resolves an editor edit into concrete kind mutations: row-id removals by [`ID_REMOVALS`], every other path through [`EDIT_RULES`].
+/// 🌱️ The starter row of an empty collection: the first row the insert tool places has no sibling to copy, so it is the neutral row of the kind with the id `<collection>-<index + 1>` (and the member or action ids of the document where the row links to them).
+fn starter_row(document: &En1990Snapshot, collection: &str, index: usize) -> Option<DslValue> {
+    use semio_s_artifact_norm_en1990_model::*;
+    let id = format!("{collection}-{}", index + 1);
+    let member = document.members.first().map(|member| member.id.clone()).unwrap_or_default();
+    Some(match collection {
+        "accidentals" => AccidentalAction { id, ad: 0.0 }.to_value(),
+        "seismics" => SeismicAction { id, a_ek: 0.0, importance_class: ImportanceClass::II }.to_value(),
+        "bridgeSls" => BridgeSls { id, member_id: member, deck_acceleration: 0.0, deck_acceleration_limit: 0.0, deck_twist: 0.0, deck_twist_limit: 0.0, bridge_deflection: 0.0, bridge_deflection_limit: 0.0, track_gauge: 0.0, line_speed: 0.0, ballast_depth: 0.0, deck_mass: 0.0, natural_frequency: 0.0, end_rotation: 0.0, basic_wind_speed: 0.0, damping_ratio: 0.0 }.to_value(),
+        "placements" => Placement { id, x: 0.0, y: 0.0, z: 0.0, yaw: 0.0 }.to_value(),
+        "fatigueSpectra" => FatigueSpectrum { id, member_id: member, detail_category: 0.0, stress_range: 0.0, cycles: 0.0 }.to_value(),
+        "reliabilityAnalyses" => ReliabilityAnalysis { id, resistance_distribution: DistributionKind::Lognormal, resistance_mean: 0.0, resistance_sd: 0.0, action_distribution: DistributionKind::Gumbel, action_mean: 0.0, action_sd: 0.0, second_action_distribution: DistributionKind::Normal, second_action_mean: 0.0, second_action_sd: 0.0, member_id: String::new() }.to_value(),
+        "testSeries" => TestSeries { id, quantity: String::new(), distribution: TestDistribution::Lognormal, sample_size: 0, mean: 0.0, std_dev: 0.0, variation_known: 0.0, conversion_factor: 1.0, required: 0.0, pairs: String::new(), theory_variation: 0.0, theory_mean: 0.0 }.to_value(),
+        "factorOverrides" => FactorOverride { id, factor: FactorKind::Gamma, target: String::new(), value: 1.0, justification: String::new() }.to_value(),
+        "trafficGroups" => TrafficGroup { id, group: LoadGroup::GR1A, variable_id: document.variables.first().map(|variable| variable.id.clone()).unwrap_or_default() }.to_value(),
+        _ => return None,
+    })
+}
+
+/// 🎯️ Resolves an editor edit into concrete kind mutations: row-id removals by [`ID_REMOVALS`], every other path through [`EDIT_RULES`]; an insertion without a row places the [`starter_row`] of its collection.
 pub fn resolve_edit(document: &En1990Snapshot, edit: &NormEdit) -> Result<Vec<En1990Mutation>, String> {
+    let seeded;
+    let edit = match edit {
+        NormEdit::InsertItem { path, index, value: None } => match starter_row(document, path, *index) {
+            Some(row) => {
+                seeded = NormEdit::InsertItem { path: path.clone(), index: *index, value: Some(row) };
+                &seeded
+            }
+            None => edit,
+        },
+        _ => edit,
+    };
     EDIT_RULES.resolve_with_id_removals(ID_REMOVALS, document, edit)
 }

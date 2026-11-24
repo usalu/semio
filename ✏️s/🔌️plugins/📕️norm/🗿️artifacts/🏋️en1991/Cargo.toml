@@ -8,6 +8,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene-members/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene-members/🧩️projection/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🌈️fields/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📈️diagrams/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
@@ -280,6 +281,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 
 [workspace.dependencies.semio-s-artifact-norm-en1991-mutations]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1991-scene-diagrams]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📈️diagrams/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1991-scene]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📦️packages/🦀️rust"

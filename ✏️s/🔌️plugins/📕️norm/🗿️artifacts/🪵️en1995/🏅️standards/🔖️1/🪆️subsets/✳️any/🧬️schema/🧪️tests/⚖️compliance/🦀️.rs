@@ -378,18 +378,7 @@ fn python_oracle_matches_rust_utilizations_within_half_percent() {
 fn example_snapshots_validate_against_json_schema() {
     let schema_path = snapshot_schema_path();
     for (name, snap) in bundled_examples() {
-        let instance = serde_json::to_string(&snap).expect("instance");
-        let tmp = std::env::temp_dir().join(format!("en1995-instance-{name}.json"));
-        std::fs::write(&tmp, &instance).unwrap();
-        let status = semio_s_plugin_norm_compliance::python_oracle::command()
-            .arg("-c")
-            .arg("import json,sys,jsonschema; s=json.load(open(sys.argv[1])); i=json.load(open(sys.argv[2])); jsonschema.validate(instance=i, schema=s); print('ok')")
-            .arg(&schema_path)
-            .arg(&tmp)
-            .output()
-            .expect("python jsonschema");
-        let _ = std::fs::remove_file(&tmp);
-        assert!(status.status.success(), "{name} jsonschema: {}\n{}", String::from_utf8_lossy(&status.stdout), String::from_utf8_lossy(&status.stderr));
+        semio_s_plugin_norm_compliance::python_oracle::assert_serde_snapshot_law(&schema_path, &format!("en1995-{name}"), &snap);
     }
 }
 

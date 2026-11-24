@@ -1,0 +1,4 @@
+[
+  {"op":"anchor","id":"tp-sun-7","set":{"bone":"fol-top","x":-0.0311,"y":-0.9797,"z":0.4406}},
+  {"op":"anchor","id":"tp-shade-2","set":{"bone":"fol-core-low","x":0.2655,"y":0.6398,"z":-0.3881}}
+]

@@ -16,7 +16,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️ReplaceStockSolid
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]

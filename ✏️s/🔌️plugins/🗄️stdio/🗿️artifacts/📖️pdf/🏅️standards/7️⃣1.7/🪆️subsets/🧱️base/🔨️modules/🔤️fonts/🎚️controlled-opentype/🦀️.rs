@@ -5,7 +5,7 @@ use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{artifact_refe
 use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosReceipt, CosStatus};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{
     ObjRef, PdfBaseEncoding, PdfCMap, PdfCidFont, PdfCidToGid, PdfCidWidthRun, PdfDictEntry, PdfFont, PdfFontDescriptor, PdfFontKind, PdfFontProgram, PdfObject,
-    PdfSimpleEncoding, PdfSnapshot, PdfStreamFilter, PdfToUnicode, PdfToUnicodeMapping,
+    PdfEncodingDifference, PdfSimpleEncoding, PdfSnapshot, PdfStreamFilter, PdfToUnicode, PdfToUnicodeMapping,
 };
 use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfStreamRoleValue};
 use semio_framework_hash::Sha256;
@@ -422,12 +422,13 @@ fn receipt(status: Result<CosStatus, &'static str>, work: usize) -> CosReceipt {
 pub struct ControlledFontResources {
     pub owners: [ObjRef; Self::MAX_COUNT],
     pending: Option<Box<PdfEmbeddedFontCursor>>,
-    embedded: Option<(usize, FontDependencies)>,
+    embedded: [Option<FontDependencies>; Self::MAX_COUNT],
 }
 
 impl ControlledFontResources {
-    pub const MAX_COUNT: usize = 8;
-    pub const EXTRA_ROLES: usize = 2;
+    pub const MAX_COUNT: usize = 32;
+    pub const ROLES_PER_FONT: usize = 2;
+    pub const EXTRA_ROLES: usize = Self::ROLES_PER_FONT * Self::MAX_COUNT;
 
     /// 📏️ Reports the inline transfer reserve for the next font turn.
     pub fn inline_body_bytes(&self) -> usize {
@@ -436,7 +437,7 @@ impl ControlledFontResources {
 
     /// 🧬️ Returns the additional native dependencies for the admitted embedded font.
     pub fn dependencies(&self, index: usize) -> &[ObjRef] {
-        self.embedded.as_ref().filter(|(slot, _)| *slot == index).map_or(&[], |(_, dependencies)| dependencies.owners())
+        self.embedded[index].as_ref().map_or(&[], FontDependencies::owners)
     }
 
     /// 🧾️ Admits a new font or returns the established slot for a shared authored name.
@@ -447,14 +448,14 @@ impl ControlledFontResources {
             let turn = cursor.advance(inspect, grant);
             if cursor.reference_required() { return None; }
             if !matches!(turn.status, Ok(CosStatus::Complete { .. })) { return Some(turn); }
-            if snapshot.admitted_stream_roles.len() + Self::EXTRA_ROLES > snapshot.admitted_stream_roles.capacity() { return None; }
+            if snapshot.admitted_stream_roles.len() + Self::ROLES_PER_FONT > snapshot.admitted_stream_roles.capacity() { return None; }
             let allocated_bytes = cursor.publication_bytes(name) + font_slots(snapshot);
             let released_bytes = size_of::<PdfEmbeddedFontCursor>();
             if allocated_bytes > grant.allocation_bytes { return Some(receipt(Ok(CosStatus::NeedsAllocation { bytes: allocated_bytes }), 0)); }
             if released_bytes > grant.release_bytes { return Some(receipt(Ok(CosStatus::NeedsRelease { bytes: released_bytes }), 0)); }
             let AdmittedEmbeddedFont { font, roles, dependencies } = cursor.take(name).expect("published embedded font resource");
             self.pending = None;
-            self.embedded = Some((slot, dependencies));
+            self.embedded[slot] = Some(dependencies);
             reserve_font_table(snapshot);
             snapshot.fonts.push(font);
             snapshot.admitted_stream_roles.extend(roles);
@@ -469,18 +470,21 @@ impl ControlledFontResources {
         let mut embedded = None;
         inspect(owner, &mut |value| {
             standard = standard_type1(value);
-            if standard.is_none() && self.embedded.is_none() {
+            if standard.is_none() {
                 embedded = value.and_then(|value| PdfEmbeddedFontCursor::new(owner, value));
             }
         });
-        if let Some((base_font, base)) = standard {
-            let allocated_bytes = name.len() + base_font.len() + font_slots(snapshot);
+        if let Some(StandardType1 { base_font, base, differences, glyph_bytes }) = standard {
+            let allocated_bytes = name.len() + base_font.len() + font_slots(snapshot) + differences * size_of::<PdfEncodingDifference>() + glyph_bytes;
             if allocated_bytes > grant.allocation_bytes { return Some(receipt(Ok(CosStatus::NeedsAllocation { bytes: allocated_bytes }), 0)); }
+            let mut authored = Vec::new();
+            if differences != 0 { inspect(owner, &mut |value| { authored = value.map_or_else(Vec::new, |value| encoding_differences(value, differences)); }); }
+            if authored.len() != differences { return None; }
             reserve_font_table(snapshot);
             snapshot.fonts.push(PdfFont {
                 id: name.to_owned(),
                 kind: PdfFontKind::Type1 {
-                    base_font: base_font.to_owned(), encoding: PdfSimpleEncoding { base, differences: Vec::new() },
+                    base_font: base_font.to_owned(), encoding: PdfSimpleEncoding { base, differences: authored },
                     first_char: 0, widths: Vec::new(), descriptor: None, program: None,
                 },
                 to_unicode: None, extra: Vec::new(),
@@ -522,7 +526,61 @@ fn reserve_font_table(snapshot: &mut PdfSnapshot) {
     if snapshot.fonts.capacity() == 0 { snapshot.fonts = Vec::with_capacity(ControlledFontResources::MAX_COUNT); }
 }
 
-fn standard_type1(value: Option<&PdfObject>) -> Option<(&'static str, Option<PdfBaseEncoding>)> {
+/// 🔠️ The qualified standard Type1 font dictionary: its encoding and the exact size of its `/Differences`.
+struct StandardType1 { base_font: &'static str, base: Option<PdfBaseEncoding>, differences: usize, glyph_bytes: usize }
+
+const MAX_DIFFERENCE_ITEMS: usize = 192;
+const MAX_DIFFERENCES: usize = 128;
+const MAX_GLYPH_BYTES: usize = 64;
+
+fn simple_base(name: &str) -> Option<PdfBaseEncoding> {
+    match name {
+        "StandardEncoding" => Some(PdfBaseEncoding::Standard),
+        "WinAnsiEncoding" => Some(PdfBaseEncoding::WinAnsi),
+        "MacRomanEncoding" => Some(PdfBaseEncoding::MacRoman),
+        _ => None,
+    }
+}
+
+fn encoding_dictionary(entries: &[PdfDictEntry]) -> Option<(Option<PdfBaseEncoding>, usize, usize)> {
+    if entries.len() > 3 || entries.iter().enumerate().any(|(index, entry)| entries[..index].iter().any(|other| other.key == entry.key)) { return None; }
+    let (mut base, mut count, mut bytes) = (None, 0, 0);
+    for entry in entries {
+        match entry.key.as_str() {
+            "Type" if entry.value.as_name() == Some("Encoding") => {}
+            "BaseEncoding" => base = Some(simple_base(entry.value.as_name()?)?),
+            "Differences" => {
+                let items = entry.value.as_array().filter(|items| items.len() <= MAX_DIFFERENCE_ITEMS)?;
+                for item in items {
+                    match item {
+                        PdfObject::Int(code) if (0..=0xFFFF).contains(code) => {}
+                        PdfObject::Name(glyph) if glyph.len() <= MAX_GLYPH_BYTES => { count += 1; bytes += glyph.len(); }
+                        _ => return None,
+                    }
+                }
+                if count > MAX_DIFFERENCES { return None; }
+            }
+            _ => return None,
+        }
+    }
+    Some((base, count, bytes))
+}
+
+fn encoding_differences(value: &PdfObject, count: usize) -> Vec<PdfEncodingDifference> {
+    let mut differences = Vec::with_capacity(count);
+    let Some(items) = value.dict_get("Encoding").and_then(|encoding| encoding.dict_get("Differences")).and_then(PdfObject::as_array) else { return differences; };
+    let mut code = 0u32;
+    for item in items {
+        match item {
+            PdfObject::Int(value) => code = u32::try_from(*value).unwrap_or(0),
+            PdfObject::Name(glyph) => { differences.push(PdfEncodingDifference { code, glyph: glyph.clone() }); code += 1; }
+            _ => {}
+        }
+    }
+    differences
+}
+
+fn standard_type1(value: Option<&PdfObject>) -> Option<StandardType1> {
     let PdfObject::Dict(dict) = value? else { return None; };
     if dict.len() > 4 || dict.iter().enumerate().any(|(index, entry)| {
         !matches!(entry.key.as_str(), "Type" | "Subtype" | "BaseFont" | "Encoding")
@@ -532,14 +590,10 @@ fn standard_type1(value: Option<&PdfObject>) -> Option<(&'static str, Option<Pdf
     let base_font = name(dict, "BaseFont")?;
     let font = super::standard_font(base_font)?;
     if font.name != base_font { return None; }
-    let encoding = match get(dict, "Encoding") {
-        None => None,
-        Some(value) => Some(match value.as_name()? {
-            "StandardEncoding" => PdfBaseEncoding::Standard,
-            "WinAnsiEncoding" => PdfBaseEncoding::WinAnsi,
-            _ => return None,
-        }),
+    let (base, differences, glyph_bytes) = match get(dict, "Encoding") {
+        None => (None, 0, 0),
+        Some(PdfObject::Dict(entries)) => encoding_dictionary(entries)?,
+        Some(value) => (Some(simple_base(value.as_name()?)?), 0, 0),
     };
-    Some((font.name, encoding))
+    Some(StandardType1 { base_font: font.name, base, differences, glyph_bytes })
 }
-

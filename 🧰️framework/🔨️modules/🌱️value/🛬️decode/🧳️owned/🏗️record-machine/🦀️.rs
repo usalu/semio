@@ -287,7 +287,7 @@ fn apply<I:NativeValueSource+?Sized,N:'static,const C:usize>(c:&mut NativeRecord
   19=>{c.stage=2;work=1},20=>{c.stage=3;work=1},
   26=>{if spec.tuple||spec.any_flatten{return Err(invalid().into())}let NativeRecordKey::Ordinal(ordinal)=input.get().record_key(c.scan)?else{return Err(invalid().into())};match spec.leaves.iter().position(|leaf|leaf.ordinal==u32::from(ordinal)){Some(field)=>{if c.positions[field].is_some(){return Err(invalid().into())}c.positions[field]=Some(c.scan)},None if c.subset=>{},None=>return Err(invalid().into())}c.scan+=1;work=2;},
   25=>{let field=c.field;a.leaf_field(c,field,input,&mut work)?},
-  _=>return Err(invalid().into())}Ok(Some(Step::Progress(receipt(d))))})()?;
+  _=>return Err(invalid().into())}DBG_ACTIONS[action as usize%64].0.fetch_add(1,std::sync::atomic::Ordering::Relaxed);DBG_ACTIONS[action as usize%64].1.fetch_add(d.copy_bytes as u64,std::sync::atomic::Ordering::Relaxed);Ok(Some(Step::Progress(receipt(d))))})()?;
  let Some(step)=step else{return Ok(None)};
  let recorded=effect.performed_work();
  if work>recorded{let owed=u64::try_from(work-recorded).map_err(|_|ValueError::invariant("native record action work overflow"))?;if !effect.performed(owed)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native record action exceeded its original work").into())}}else if work<recorded{return Err(ValueError::invariant("native record action recorded more work than it quoted").into())}
@@ -472,3 +472,6 @@ impl<I:NativeValueSource+?Sized,N:RetireOwned+'static,F:NativeRecordArms<I,N,C>,
 }
 
 impl<I:NativeValueSource+?Sized,N:'static,F:NativeRecordArms<I,N,C>,const C:usize> Drop for NativeRecordReceiver<I,N,F,C>{fn drop(&mut self){assert!(std::thread::panicking()||is_empty(&self.core,&self.fields),"native record receiving requires funded closure")}}
+
+#[allow(clippy::declare_interior_mutable_const)]pub static DBG_ACTIONS:[(std::sync::atomic::AtomicU64,std::sync::atomic::AtomicU64);64]=[const{(std::sync::atomic::AtomicU64::new(0),std::sync::atomic::AtomicU64::new(0))};64];
+pub fn debug_dump()->String{DBG_ACTIONS.iter().enumerate().filter(|(_,(n,_))|n.load(std::sync::atomic::Ordering::Relaxed)>0).map(|(i,(n,b))|format!("a{}:{}x{}",i,n.load(std::sync::atomic::Ordering::Relaxed),b.load(std::sync::atomic::Ordering::Relaxed))).collect::<Vec<_>>().join(" ")}

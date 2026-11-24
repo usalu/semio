@@ -1,12 +1,12 @@
 import { OperationDiagnosticObservers } from "@semio-tech/framework/actor/wire-turn/diagnostic/delivery";
-import { operationDiagnosticFanouts, type PluginOperationDiagnostic } from "../📬️typed-result/🟦️.ts";
+import { operationDiagnosticFanouts, operationFaultFanouts, type PluginOperationDiagnostic } from "../📬️typed-result/🟦️.ts";
 /** 🔗️ `adaptPluginHandle`, the `AppChannelClient` adapter over the kernel handle, with the bounded history-read retry and the shell actor identity.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
 import { mediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/channel";
-import { type Effect, type HistoryPatch, type InvocationResponse } from "@semio-tech/framework";
+import { type Effect, type HistoryPatch, type InvocationResponse, type SemioFaultError } from "@semio-tech/framework";
 import {
   decodePackValue
 } from "@semio-tech/framework/packs";
@@ -309,6 +309,14 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const returned = listeners.subscribe(listener);
       const original = listeners;
       return () => { returned(); if (original.size === 0 && operationDiagnosticFanouts.get(instanceId) === original) operationDiagnosticFanouts.delete(instanceId); };
+    },
+    subscribeOperationFaults: (instanceId, listener) => {
+      requireChannel(instanceId);
+      let listeners = operationFaultFanouts.get(instanceId);
+      if (!listeners) { listeners = new OperationDiagnosticObservers<SemioFaultError>(64, error => console.error("plugin.fault-observer-failed", error)); operationFaultFanouts.set(instanceId, listeners); }
+      const returned = listeners.subscribe(listener);
+      const original = listeners;
+      return () => { returned(); if (original.size === 0 && operationFaultFanouts.get(instanceId) === original) operationFaultFanouts.delete(instanceId); };
     },
     subscribeOperationCompletions: (instanceId, listener) => {
       const channel = requireChannel(instanceId);

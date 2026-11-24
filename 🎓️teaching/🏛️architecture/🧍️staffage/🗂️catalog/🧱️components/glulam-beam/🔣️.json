@@ -1787,6 +1787,99 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "bearing-plate-left",
+              "bone": "beam",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bearing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.08,
+              "w": 0.12,
+              "h": 0.16
+            },
+            {
+              "id": "bearing-plate-right",
+              "bone": "beam",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bearing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 7.88,
+              "y": -0.08,
+              "w": 0.12,
+              "h": 0.16
+            },
+            {
+              "id": "grain-top-0",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.55,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.4,
+                  -0.03
+                ],
+                [
+                  2.45,
+                  -0.03
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "grain-top-1",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.55,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  2.75,
+                  0.035
+                ],
+                [
+                  5.7,
+                  0.035
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "grain-top-2",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.55,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  6.05,
+                  -0.01
+                ],
+                [
+                  7.7,
+                  -0.01
+                ]
+              ],
+              "closed": false
             }
           ]
         },
@@ -1962,6 +2055,80 @@
               "y": -0.08,
               "w": 8,
               "h": 0.16
+            },
+            {
+              "id": "bearing-plate-left",
+              "bone": "beam",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bearing-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.08,
+              "w": 0.12,
+              "h": 0.16
+            },
+            {
+              "id": "bearing-plate-right",
+              "bone": "beam",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bearing-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": 7.88,
+              "y": -0.08,
+              "w": 0.12,
+              "h": 0.16
+            },
+            {
+              "id": "finger-joint-top-0",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-top",
+              "kind": "poly",
+              "points": [
+                [
+                  2.59,
+                  -0.0755
+                ],
+                [
+                  2.59,
+                  0.0755
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "finger-joint-top-1",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-top",
+              "kind": "poly",
+              "points": [
+                [
+                  5.89,
+                  -0.0755
+                ],
+                [
+                  5.89,
+                  0.0755
+                ]
+              ],
+              "closed": false
             }
           ]
         },
@@ -2143,6 +2310,38 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "bearing-left",
+              "bone": "beam",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bearing-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.08,
+              "w": 0.12,
+              "h": 0.16
+            },
+            {
+              "id": "bearing-right",
+              "bone": "beam",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bearing-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": 7.88,
+              "y": -0.08,
+              "w": 0.12,
+              "h": 0.16
             }
           ]
         },

@@ -1,0 +1,301 @@
+[
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "thigh-l",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "thigh-l",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "thigh-r",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "thigh-r",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "shank-l",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "shank-l",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "shank-r",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "shank-r",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "thigh-l",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "thigh-l",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "thigh-r",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "thigh-r",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "shank-l",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "shank-l",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "shank-r",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "shank-r",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "flat shape on a foot that rolls over 32 degrees: the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "flat shape on a foot that rolls over 32 degrees: the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "flat shape on a foot that rolls over 32 degrees: the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "flat shape on a foot that rolls over 32 degrees: the elevation outline swept laterally"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "thigh-l",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-l",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "thigh-r",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-r",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "shank-l",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "shank-l",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "shank-r",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "shank-r",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "flat shape on a foot that rolls over 32 degrees: the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "flat shape on a foot that rolls over 32 degrees: the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "flat shape on a foot that rolls over 32 degrees: the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "flat shape on a foot that rolls over 32 degrees: the elevation outline swept laterally"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "thigh-l",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-l",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "thigh-r",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-r",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "shank-l",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shank-l",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "shank-r",
+  "why": "flat front shape on a leg bone that swings: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shank-r",
+  "why": "flat plan shape of a leg bone that swings: revolved about the bone axis"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "flat shape on a foot that rolls over 32 degrees: the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "flat shape on a foot that rolls over 32 degrees: the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "flat shape on a foot that rolls over 32 degrees: the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "flat shape on a foot that rolls over 32 degrees: the elevation outline swept laterally"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "front and plan drew the hand as a body swept laterally from a side profile, the elevation (and the volume) as a flat hand seen on edge, a prism along v: one body in the three views"
+ }
+]

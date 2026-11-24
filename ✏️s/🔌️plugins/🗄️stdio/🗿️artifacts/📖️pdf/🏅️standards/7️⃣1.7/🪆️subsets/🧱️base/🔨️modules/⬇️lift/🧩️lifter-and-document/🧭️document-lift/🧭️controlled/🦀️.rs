@@ -2,10 +2,10 @@
 
 use super::*;
 use crate::standards::v1_7::subsets::base::modules::{
-    content::{bounded_number, FontTable, PdfFixedCodeWidth}, fonts::{ControlledFontResources, FontCodec},
+    colour::lift_ext_g_state, content::{bounded_number, FontTable, PdfFixedCodeWidth}, fonts::{controlled_simple_text, ControlledFontResources, FontCodec},
     images::{ControlledImageBinding, ControlledImageResources}, lexer::{CosReceipt, CosStatus},
 };
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfFont, PdfFontKind, PdfFontProgram};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfExtGState, PdfFont, PdfFontKind, PdfFontProgram, PdfNamedProperties};
 use std::mem::size_of;
 
 const MAX_DICTIONARY: usize = 32;
@@ -13,6 +13,7 @@ const MAX_COPY: usize = 128;
 const MAX_ROLE_OWNERS: usize = 32;
 const MAX_ANNOTATIONS: usize = 8;
 const MAX_PAGES: usize = 16_384;
+const MAX_STATES: usize = 32;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ControlledLiftBarrier { Trailer, Catalog, Info, PageTree, Page, Resources, Roles, Program }
@@ -35,8 +36,10 @@ pub struct ControlledLiftReceipt {
 enum Stage {
     Open, Trailer(usize), Catalog(usize), Info(usize), PageCapacity, Walk,
     Resources { location: ResourceLocation, resume: Resume },
-    Image { resume: Resume, font: Option<(ResourceLocation, ObjRef)> },
-    Font { resources: ResourceLocation, owner: ObjRef, resume: Resume },
+    Entries { location: ResourceLocation, category: Category, index: usize, resume: Resume },
+    Image { location: ResourceLocation, index: usize, resume: Resume },
+    State { location: ResourceLocation, category: Category, index: usize, owner: ObjRef, resume: Resume },
+    Font { location: ResourceLocation, index: usize, owner: ObjRef, resume: Resume },
     Page(usize), Inherit(usize), Ancestor { owner: ObjRef, depth: usize },
     AnnotationArray(AnnotationArray, usize, usize), Annotation(AnnotationArray, usize, usize, ObjRef),
     RoleStart, RoleArray { owner: Option<ObjRef>, index: usize, count: usize },
@@ -48,6 +51,32 @@ enum Stage {
 enum Resume { Walk, Inherit, Role }
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum ResourceLocation { Direct(PageAttribute), Indirect(ObjRef) }
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Category { Font, XObject, ExtGState, Properties }
+
+impl Category {
+    fn key(self) -> &'static str {
+        match self { Self::Font => "Font", Self::XObject => "XObject", Self::ExtGState => "ExtGState", Self::Properties => "Properties" }
+    }
+}
+
+enum Entry { End, Item { name: [u8; MAX_COPY], length: usize, owner: ObjRef } }
+
+#[derive(Clone, Copy, Default)]
+struct PageFonts { slots: [u8; ControlledFontResources::MAX_COUNT], length: usize }
+
+impl PageFonts {
+    fn push(&mut self, slot: usize) -> bool {
+        let Some(entry) = self.slots.get_mut(self.length) else { return false; };
+        let Ok(slot) = u8::try_from(slot) else { return false; };
+        *entry = slot;
+        self.length += 1;
+        true
+    }
+
+    fn as_slice(&self) -> &[u8] { &self.slots[..self.length] }
+}
 
 impl ResourceLocation {
     fn inspect(self, source: &mut dyn ObjectSource, read: &mut dyn FnMut(Option<&PdfObject>)) {
@@ -83,7 +112,11 @@ pub struct ControlledDocumentLiftCursor {
     contents: Option<PageAttribute>,
     indirect_contents: bool,
     font_resources: ControlledFontResources,
-    page_font: Option<(ResourceLocation, usize)>,
+    page_resources: Option<ResourceLocation>,
+    page_font_dictionary: bool,
+    page_fonts: PageFonts,
+    states: GraphicsStates,
+    content_roles: usize,
     images: ControlledImageResources,
     owners: [ObjRef; MAX_ROLE_OWNERS],
     owners_len: usize,
@@ -99,7 +132,8 @@ impl ControlledDocumentLiftCursor {
             stage: Stage::Open, snapshot: None, page: None, trailer_seen: 0, catalog: None, info: None, tree: None,
             walk: None, leaf: None, contents: None, owners: [ObjRef::default(); MAX_ROLE_OWNERS],
             owners_len: 0, program: None, indirect_contents: false,
-            font_resources: Default::default(), page_font: None, images: Default::default(),
+            font_resources: Default::default(), page_resources: None, page_font_dictionary: false, page_fonts: Default::default(),
+            states: Default::default(), content_roles: 0, images: Default::default(),
         }
     }
 
@@ -113,6 +147,7 @@ impl ControlledDocumentLiftCursor {
     pub fn next_inline_body_bytes(&self) -> usize {
         match self.stage {
             Stage::Annotation(..) => size_of::<PdfAnnotation>(),
+            Stage::State { .. } => size_of::<PdfExtGState>().max(size_of::<PdfNamedProperties>()),
             Stage::Font { .. } => self.font_resources.inline_body_bytes(),
             Stage::Image { .. } => self.images.inline_body_bytes(self.snapshot.as_ref().expect("active PDF image snapshot")),
             _ => 0,
@@ -147,8 +182,10 @@ impl ControlledDocumentLiftCursor {
             Stage::PageCapacity => self.reserve_pages(source, grant),
             Stage::Walk => self.walk_page(source, grant),
             Stage::Resources { location, resume } => self.resources(source, location, resume),
-            Stage::Image { resume, font } => self.image(source, grant, resume, font),
-            Stage::Font { resources, owner, resume } => self.font(source, grant, resources, owner, resume),
+            Stage::Entries { location, category, index, resume } => self.entries(source, location, category, index, resume),
+            Stage::Image { location, index, resume } => self.image(source, grant, location, index, resume),
+            Stage::Font { location, index, owner, resume } => self.font(source, grant, location, index, owner, resume),
+            Stage::State { location, category, index, owner, resume } => self.state(source, grant, location, category, index, owner, resume),
             Stage::Page(index) => {
                 let leaf = self.leaf.expect("active PDF page leaf");
                 let mut turn = None;
@@ -386,8 +423,10 @@ impl ControlledDocumentLiftCursor {
                 self.page = Some(PdfPage::default());
                 self.contents = None;
                 self.indirect_contents = false;
-                self.page_font = None;
-                self.images.set_page(None);
+                self.page_resources = None;
+                self.page_font_dictionary = false;
+                self.page_fonts = PageFonts::default();
+                self.images.clear_page();
                 self.owners_len = 0;
                 self.stage = Stage::Page(0);
             }
@@ -511,67 +550,91 @@ impl ControlledDocumentLiftCursor {
 
     fn resources(&mut self, source: &mut dyn ObjectSource, location: ResourceLocation, resume: Resume) -> ControlledLiftReceipt {
         let mut owner = None;
-        let mut bindings = None;
+        let mut shape = None;
         location.inspect(source, &mut |value| {
             owner = value.and_then(PdfObject::as_ref);
-            bindings = resource_bindings(value);
+            shape = resource_shape(value);
         });
         if let (ResourceLocation::Direct(_), Some(owner)) = (location, owner) {
             self.stage = Stage::Resources { location: ResourceLocation::Indirect(owner), resume };
             return work(0, 0);
         }
-        let Some((font, image)) = bindings else { return self.defer(Barrier::Resources); };
+        let Some(shape) = shape else { return self.defer(Barrier::Resources); };
         if resume == Resume::Role {
-            let snapshot = self.snapshot.as_ref().expect("active PDF resource snapshot");
-            let same_font = self.page_font.map(|(resources, index)| (resources, self.font_resources.owners[index])) == font.map(|owner| (location, owner));
-            let same_image = image.map_or_else(|| self.images.page_name(snapshot).is_none(), |binding| self.images.matches_page(snapshot, &binding));
-            if !same_font || !same_image { return self.defer(Barrier::Resources); }
+            if self.page_resources != Some(location) { return self.defer(Barrier::Resources); }
             self.resume(resume);
-        } else {
-            if font.is_some() && resume == Resume::Walk && !self.snapshot_mut().pages.is_empty() { return self.defer(Barrier::Resources); }
-            if let Some(binding) = image {
-                self.images.begin(binding);
-                self.stage = Stage::Image { resume, font: font.map(|owner| (location, owner)) };
-            } else {
-                self.resume_resources(resume, font.map(|owner| (location, owner)));
-            }
+            return work(0, 0);
+        }
+        if resume == Resume::Inherit {
+            self.page_resources = Some(location);
+            self.page_font_dictionary = shape.fonts;
+        }
+        if resume == Resume::Walk && shape.populated && !self.snapshot_mut().pages.is_empty() { return self.defer(Barrier::Resources); }
+        self.stage = Stage::Entries { location, category: Category::Font, index: 0, resume };
+        work(0, 0)
+    }
+
+    fn entries(&mut self, source: &mut dyn ObjectSource, location: ResourceLocation, category: Category, index: usize, resume: Resume) -> ControlledLiftReceipt {
+        let mut entry = None;
+        location.inspect(source, &mut |value| { entry = category_entry(value, category, index); });
+        match entry {
+            None => return self.defer(Barrier::Resources),
+            Some(Entry::End) => match category {
+                Category::Font => self.stage = Stage::Entries { location, category: Category::XObject, index: 0, resume },
+                Category::XObject => self.stage = Stage::Entries { location, category: Category::ExtGState, index: 0, resume },
+                Category::ExtGState => self.stage = Stage::Entries { location, category: Category::Properties, index: 0, resume },
+                Category::Properties => self.resume(resume),
+            },
+            Some(Entry::Item { name, length, owner }) => match category {
+                Category::Font => self.stage = Stage::Font { location, index, owner, resume },
+                Category::XObject => {
+                    let Some(binding) = ControlledImageBinding::new(owner, &name[..length]) else { return self.defer(Barrier::Resources); };
+                    self.images.begin(binding);
+                    self.stage = Stage::Image { location, index, resume };
+                }
+                Category::ExtGState | Category::Properties => self.stage = Stage::State { location, category, index, owner, resume },
+            },
         }
         work(0, 0)
     }
 
-    fn resume_resources(&mut self, resume: Resume, font: Option<(ResourceLocation, ObjRef)>) {
-        if let Some((resources, owner)) = font { self.stage = Stage::Font { resources, owner, resume }; }
-        else { self.resume(resume); }
-    }
-
-    fn image(&mut self, source: &mut dyn ObjectSource, grant: CosGrant, resume: Resume, font: Option<(ResourceLocation, ObjRef)>) -> ControlledLiftReceipt {
-        let Some(turn) = self.images.advance(source, self.snapshot.as_mut().expect("active PDF image snapshot"), grant) else { return self.defer(Barrier::Resources); };
+    fn image(&mut self, source: &mut dyn ObjectSource, grant: CosGrant, location: ResourceLocation, index: usize, resume: Resume) -> ControlledLiftReceipt {
+        let Some(turn) = self.images.advance(source, self.snapshot.as_mut().expect("active PDF image snapshot"), grant, self.content_roles) else { return self.defer(Barrier::Resources); };
         if let Ok(CosStatus::Complete { end }) = turn.status {
-            if resume == Resume::Inherit { self.images.set_page(Some(end)); }
-            self.resume_resources(resume, font);
+            if resume == Resume::Inherit && !self.images.push_page(end) { return self.defer_turn(Barrier::Resources, image_turn(turn)); }
+            self.stage = Stage::Entries { location, category: Category::XObject, index: index + 1, resume };
         }
         image_turn(turn)
     }
 
-    fn font(&mut self, source: &mut dyn ObjectSource, grant: CosGrant, resources: ResourceLocation, owner: ObjRef, resume: Resume) -> ControlledLiftReceipt {
-        let mut name = [0; MAX_COPY];
-        let mut length = None;
-        resources.inspect(source, &mut |value| {
-            let Some(entry) = value.and_then(|value| value.dict_get("Font")).and_then(single_resource) else { return; };
-            let n = entry.key.len();
-            if n != 0 && n <= name.len() {
-                name[..n].copy_from_slice(entry.key.as_bytes());
-                length = Some(n);
-            }
-        });
-        let Some(length) = length else { return self.defer(Barrier::Resources); };
+    fn state(&mut self, source: &mut dyn ObjectSource, grant: CosGrant, location: ResourceLocation, category: Category, index: usize, owner: ObjRef, resume: Resume) -> ControlledLiftReceipt {
+        let mut entry = None;
+        location.inspect(source, &mut |value| { entry = category_entry(value, category, index); });
+        let Some(Entry::Item { name, length, owner: current }) = entry else { return self.defer(Barrier::Resources); };
+        if current != owner { return self.defer(Barrier::Resources); }
+        let name = std::str::from_utf8(&name[..length]).expect("authored PDF resource name");
+        let snapshot = self.snapshot.as_mut().expect("active PDF state snapshot");
+        let admitted = match category {
+            Category::ExtGState => self.states.admit_ext_g_state(source, snapshot, name, owner, grant),
+            _ => self.states.admit_properties(source, snapshot, name, owner, grant),
+        };
+        let Some((turn, complete)) = admitted else { return self.defer(Barrier::Resources); };
+        if complete { self.stage = Stage::Entries { location, category, index: index + 1, resume }; }
+        turn
+    }
+
+    fn font(&mut self, source: &mut dyn ObjectSource, grant: CosGrant, location: ResourceLocation, index: usize, owner: ObjRef, resume: Resume) -> ControlledLiftReceipt {
+        let mut entry = None;
+        location.inspect(source, &mut |value| { entry = category_entry(value, Category::Font, index); });
+        let Some(Entry::Item { name, length, owner: current }) = entry else { return self.defer(Barrier::Resources); };
+        if current != owner { return self.defer(Barrier::Resources); }
         let name = std::str::from_utf8(&name[..length]).expect("authored PDF font name");
         let snapshot = self.snapshot.as_mut().expect("active PDF font snapshot");
         let turn = self.font_resources.admit(&mut |id, read| source.inspect(id, read), snapshot, owner, name, grant);
         let Some(turn) = turn else { return self.defer(Barrier::Resources); };
-        if let Ok(CosStatus::Complete { end: index }) = turn.status {
-            if resume == Resume::Inherit { self.page_font = Some((resources, index)); }
-            self.resume(resume);
+        if let Ok(CosStatus::Complete { end: slot }) = turn.status {
+            if resume == Resume::Inherit && !self.page_fonts.push(slot) { return self.defer_turn(Barrier::Resources, image_turn(turn)); }
+            self.stage = Stage::Entries { location, category: Category::Font, index: index + 1, resume };
         }
         image_turn(turn)
     }
@@ -590,8 +653,7 @@ impl ControlledDocumentLiftCursor {
     fn ancestor(&mut self, source: &mut dyn ObjectSource, owner: ObjRef, depth: usize) -> ControlledLiftReceipt {
         if self.contents.is_none() { self.stage = Stage::Program; return work(0, 0); }
         if depth >= 64 { return self.defer(Barrier::Roles); }
-        let snapshot = self.snapshot.as_ref().expect("active PDF image snapshot");
-        let no_binding = self.page_font.is_none() && self.images.page_name(snapshot).is_none();
+        let no_binding = self.page_resources.is_none();
         let mut step = None;
         source.inspect(owner, &mut |value| {
             let Some(dict) = small_dict(value) else { return; };
@@ -666,13 +728,13 @@ impl ControlledDocumentLiftCursor {
         }
         let program = self.program.as_mut().expect("active PDF page program");
         if let Some(PdfOp::PaintXObject { name }) = program.pending_operator() {
-            if self.images.page_name(self.snapshot.as_ref().expect("active PDF image snapshot")) != Some(name.as_str()) {
+            if !self.images.page_contains(self.snapshot.as_ref().expect("active PDF image snapshot"), name.as_str()) {
                 return self.defer(Barrier::Program);
             }
         }
-        let turn = if let Some((_, index)) = self.page_font {
-            let font = &self.snapshot.as_ref().expect("active typed PDF snapshot").fonts[index];
-            program.advance_with_fonts(source, &PageFontBinding(font), grant, false)
+        let turn = if self.page_fonts.length != 0 {
+            let fonts = PageFontTable { fonts: &self.snapshot.as_ref().expect("active typed PDF snapshot").fonts, slots: self.page_fonts.as_slice() };
+            program.advance_with_fonts(source, &fonts, grant, false)
         } else {
             program.advance(source, grant, false)
         };
@@ -693,21 +755,27 @@ impl ControlledDocumentLiftCursor {
         let mut acquired = 0;
         if let Some(contents) = self.contents {
             let count = self.snapshot_mut().fonts.len();
-            let mut fonts = self.font_resources.owners;
-            fonts[..count].sort_unstable();
-            let context = self.page_font.map(|(resources, index)| (resources, self.font_resources.owners[index]));
-            let extra = self.page_font.map_or(&[][..], |(_, index)| self.font_resources.dependencies(index));
-            let capacity = self.owners_len + 1 + count + usize::from(context.is_some()) + extra.len();
+            let resources = self.page_resources.filter(|_| self.page_font_dictionary);
+            let page = self.page_fonts;
+            let mut others = [(ObjRef::default(), 0usize); ControlledFontResources::MAX_COUNT];
+            let mut other_count = 0;
+            for slot in (0..count).filter(|slot| !page.as_slice().contains(&(*slot as u8))) {
+                others[other_count] = (self.font_resources.owners[slot], slot);
+                other_count += 1;
+            }
+            others[..other_count].sort_unstable();
+            let extras = (0..count).map(|slot| self.font_resources.dependencies(slot).len()).sum::<usize>();
+            let capacity = 1 + usize::from(resources.is_some()) + self.owners_len + count + extras;
             acquired = 2 * (size_of::<PdfGraphPath>() + "Contents".len()) + capacity * size_of::<PdfGraphIdentity>()
-                + context.map_or(0, |(location, _)| size_of::<PdfGraphPath>() + "Font".len()
+                + resources.map_or(0, |location| size_of::<PdfGraphPath>() + "Font".len()
                     + if matches!(location, ResourceLocation::Direct(_)) { size_of::<PdfGraphPath>() + "Resources".len() } else { 0 });
             if let Some(denied) = budget(grant, acquired, 0) { return denied; }
             let identity = PdfGraphIdentity { owner: contents.owner, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] };
             let mut dependencies = Vec::with_capacity(capacity);
             dependencies.push(identity.clone());
-            if let Some((resources, _)) = context {
+            if let Some(location) = resources {
                 let font = PdfGraphPath::Entry { key: "Font".into() };
-                let identity = match resources {
+                let identity = match location {
                     ResourceLocation::Indirect(owner) => PdfGraphIdentity { owner, path: vec![font] },
                     ResourceLocation::Direct(attribute) => PdfGraphIdentity { owner: attribute.owner, path: vec![PdfGraphPath::Entry { key: "Resources".into() }, font] },
                 };
@@ -715,13 +783,23 @@ impl ControlledDocumentLiftCursor {
             }
             let (initial, remaining) = self.owners[..self.owners_len].split_at(if self.indirect_contents { 1 } else { self.owners_len });
             dependencies.extend(initial.iter().copied().map(root_identity));
-            if let Some((_, owner)) = context { dependencies.push(root_identity(owner)); }
+            dependencies.extend(page.as_slice().iter().map(|slot| root_identity(self.font_resources.owners[usize::from(*slot)])));
             dependencies.extend(remaining.iter().copied().map(root_identity));
-            dependencies.extend(fonts[..count].iter().copied().filter(|owner| context.is_none_or(|(_, active)| *owner != active)).map(root_identity));
-            dependencies.extend(extra.iter().copied().map(root_identity));
+            for slot in page.as_slice() {
+                dependencies.extend(self.font_resources.dependencies(usize::from(*slot)).iter().copied().map(root_identity));
+            }
+            for (owner, slot) in &others[..other_count] {
+                dependencies.push(root_identity(*owner));
+                dependencies.extend(self.font_resources.dependencies(*slot).iter().copied().map(root_identity));
+            }
+            let mut index = 0;
+            while index < dependencies.len() {
+                if dependencies[..index].contains(&dependencies[index]) { dependencies.remove(index); } else { index += 1; }
+            }
             let content = self.program.as_mut().and_then(PageProgramCursor::take_program).expect("ready admitted PDF operators");
             self.program = None;
             self.snapshot_mut().admitted_stream_roles.push(PdfAdmittedStreamRole { identity, dependencies, value: PdfStreamRoleValue::Operators { content } });
+            self.content_roles += 1;
         }
         let page = self.page.take().expect("qualified projected page");
         self.snapshot_mut().pages.push(page);
@@ -739,19 +817,29 @@ impl ControlledDocumentLiftCursor {
     }
 }
 
-struct PageFontBinding<'a>(&'a PdfFont);
+struct PageFontTable<'a> { fonts: &'a [PdfFont], slots: &'a [u8] }
 
-impl FontTable for PageFontBinding<'_> {
+impl PageFontTable<'_> {
+    fn bound(&self, name: &str) -> Option<&PdfFont> {
+        self.slots.iter().map(|slot| &self.fonts[usize::from(*slot)]).find(|font| font.id == name)
+    }
+}
+
+impl FontTable for PageFontTable<'_> {
     fn font(&self, _: &str) -> Option<&FontCodec> { None }
 
     fn controlled_type1(&self, name: &str) -> Option<PdfBaseEncoding> {
-        let PdfFontKind::Type1 { encoding, program: None, .. } = &self.0.kind else { return None; };
-        (self.0.id == name && self.controlled_code_width(name).is_none()).then_some(encoding.base.unwrap_or(PdfBaseEncoding::Standard))
+        let PdfFontKind::Type1 { encoding, program: None, .. } = &self.bound(name)?.kind else { return None; };
+        self.controlled_code_width(name).is_none().then_some(encoding.base.unwrap_or(PdfBaseEncoding::Standard))
+    }
+
+    fn controlled_type1_text(&self, name: &str, byte: u8) -> Option<&'static str> {
+        let PdfFontKind::Type1 { encoding, program: None, .. } = &self.bound(name)?.kind else { return None; };
+        controlled_simple_text(encoding.base.unwrap_or(PdfBaseEncoding::Standard), &encoding.differences, byte)
     }
 
     fn controlled_code_width(&self, name: &str) -> Option<PdfFixedCodeWidth> {
-        if self.0.id != name { return None; }
-        match &self.0.kind {
+        match &self.bound(name)?.kind {
             PdfFontKind::Type1 { base_font, program: None, .. } if matches!(base_font.as_str(), "Symbol" | "ZapfDingbats") => Some(PdfFixedCodeWidth::One),
             PdfFontKind::Type1 { program: Some(PdfFontProgram::OpenType { .. }), .. } => Some(PdfFixedCodeWidth::One),
             PdfFontKind::Type0 { descendant, .. } if descendant.true_type => Some(PdfFixedCodeWidth::Two),
@@ -760,24 +848,140 @@ impl FontTable for PageFontBinding<'_> {
     }
 }
 
-fn resource_bindings(value: Option<&PdfObject>) -> Option<(Option<ObjRef>, Option<ControlledImageBinding>)> {
-    if empty_dictionary(value) { return Some((None, None)); }
-    let dict = value?.as_dict().filter(|dict| dict.len() <= 2)?;
-    let mut font = None;
-    let mut image = None;
-    for entry in dict {
+struct ResourceShape { fonts: bool, populated: bool }
+
+fn resource_shape(value: Option<&PdfObject>) -> Option<ResourceShape> {
+    if empty_dictionary(value) { return Some(ResourceShape { fonts: false, populated: false }); }
+    let dict = small_dict(value)?;
+    let mut shape = ResourceShape { fonts: false, populated: false };
+    for (index, entry) in dict.iter().enumerate() {
+        if dict[..index].iter().any(|other| other.key == entry.key) { return None; }
         match entry.key.as_str() {
-            "Font" if font.is_none() => font = Some(single_resource(&entry.value)?.value.as_ref()?),
-            "XObject" if image.is_none() => image = Some(ControlledImageBinding::from_xobjects(&entry.value)?),
+            "Font" | "XObject" | "ExtGState" | "Properties" => {
+                let PdfObject::Dict(entries) = &entry.value else { return None; };
+                if entries.len() > ControlledFontResources::MAX_COUNT { return None; }
+                shape.populated = true;
+                if entry.key == "Font" { shape.fonts = true; }
+            }
+            "ProcSet" => {}
             _ => return None,
         }
     }
-    Some((font, image))
+    Some(shape)
 }
 
-fn single_resource(value: &PdfObject) -> Option<&PdfDictEntry> {
-    let [entry] = value.as_dict()? else { return None; };
-    Some(entry)
+fn category_entry(value: Option<&PdfObject>, category: Category, index: usize) -> Option<Entry> {
+    let Some(resources) = value.and_then(PdfObject::as_dict) else { return empty_dictionary(value).then_some(Entry::End); };
+    let Some(subdictionary) = resources.iter().find(|entry| entry.key == category.key()) else { return Some(Entry::End); };
+    let entries = subdictionary.value.as_dict()?;
+    let Some(entry) = entries.get(index) else { return Some(Entry::End); };
+    if entries[..index].iter().any(|other| other.key == entry.key) { return None; }
+    let owner = entry.value.as_ref()?;
+    let length = entry.key.len();
+    if length == 0 || length > MAX_COPY { return None; }
+    let mut name = [0; MAX_COPY];
+    name[..length].copy_from_slice(entry.key.as_bytes());
+    Some(Entry::Item { name, length, owner })
+}
+
+/// 🎛️ Admits scalar extended graphics states and plain property lists under one exact owner each.
+#[derive(Default)]
+struct GraphicsStates { states: [ObjRef; MAX_STATES], properties: [ObjRef; MAX_STATES] }
+
+struct NoObjects;
+
+impl ObjectSource for NoObjects {
+    fn get(&mut self, _: ObjRef) -> Option<PdfObject> { None }
+}
+
+impl GraphicsStates {
+    fn admit_ext_g_state(&mut self, source: &mut dyn ObjectSource, snapshot: &mut PdfSnapshot, name: &str, owner: ObjRef, grant: CosGrant) -> Option<(ControlledLiftReceipt, bool)> {
+        let count = snapshot.ext_g_states.len();
+        if let Some(slot) = self.states[..count].iter().position(|existing| *existing == owner) {
+            return (snapshot.ext_g_states[slot].id == name).then(|| (work(0, 0), true));
+        }
+        if count == MAX_STATES || snapshot.ext_g_states.iter().any(|state| state.id == name) { return None; }
+        let mut text = None;
+        source.inspect(owner, &mut |value| { text = scalar_graphics_state(value); });
+        let bytes = size_of::<PdfExtGState>() + name.len() + size_of::<String>() + text?;
+        if snapshot.ext_g_states.capacity() == 0 {
+            let table = MAX_STATES * size_of::<PdfExtGState>();
+            if let Some(denied) = budget(grant, table, 0) { return Some((denied, false)); }
+            if snapshot.ext_g_states.try_reserve_exact(MAX_STATES).is_err() { return Some((ControlledLiftReceipt { event: Err("unable to allocate PDF graphics state slots"), ..work(0, 0) }, false)); }
+            return Some((work(snapshot.ext_g_states.capacity() * size_of::<PdfExtGState>(), 0), false));
+        }
+        if let Some(denied) = budget(grant, bytes, 0) { return Some((denied, false)); }
+        let mut form = |_: &PdfObject, _: &mut dyn ObjectSource| -> Option<String> { None };
+        let mut font = |_: &PdfObject, _: &mut dyn ObjectSource| -> Option<String> { None };
+        let mut state = None;
+        source.inspect(owner, &mut |value| {
+            state = value.and_then(PdfObject::as_dict).map(|dict| lift_ext_g_state(name, dict, &mut NoObjects, &mut form, &mut font));
+        });
+        snapshot.ext_g_states.push(state?);
+        self.states[count] = owner;
+        Some((work(bytes, 0), true))
+    }
+
+    fn admit_properties(&mut self, source: &mut dyn ObjectSource, snapshot: &mut PdfSnapshot, name: &str, owner: ObjRef, grant: CosGrant) -> Option<(ControlledLiftReceipt, bool)> {
+        let count = snapshot.properties.len();
+        if let Some(slot) = self.properties[..count].iter().position(|existing| *existing == owner) {
+            return (snapshot.properties[slot].name == name).then(|| (work(0, 0), true));
+        }
+        if count == MAX_STATES || snapshot.properties.iter().any(|properties| properties.name == name) { return None; }
+        let mut text = None;
+        source.inspect(owner, &mut |value| { text = plain_properties(value); });
+        let bytes = size_of::<PdfNamedProperties>() + name.len() + text?;
+        if snapshot.properties.capacity() == 0 {
+            let table = MAX_STATES * size_of::<PdfNamedProperties>();
+            if let Some(denied) = budget(grant, table, 0) { return Some((denied, false)); }
+            if snapshot.properties.try_reserve_exact(MAX_STATES).is_err() { return Some((ControlledLiftReceipt { event: Err("unable to allocate PDF property list slots"), ..work(0, 0) }, false)); }
+            return Some((work(snapshot.properties.capacity() * size_of::<PdfNamedProperties>(), 0), false));
+        }
+        if let Some(denied) = budget(grant, bytes, 0) { return Some((denied, false)); }
+        let mut properties = None;
+        source.inspect(owner, &mut |value| {
+            properties = value.and_then(PdfObject::as_dict).map(|dict| PdfNamedProperties { name: name.to_owned(), entries: dict.to_vec() });
+        });
+        snapshot.properties.push(properties?);
+        self.properties[count] = owner;
+        Some((work(bytes, 0), true))
+    }
+}
+
+fn atomic_bytes(value: &PdfObject) -> Option<usize> {
+    match value {
+        PdfObject::Null | PdfObject::Bool(_) | PdfObject::Int(_) | PdfObject::Real(_) | PdfObject::Ref(_) => Some(0),
+        PdfObject::Name(text) | PdfObject::Text(text) => (text.len() <= MAX_COPY).then_some(text.len()),
+        PdfObject::Str(bytes) => (bytes.len() <= MAX_COPY).then_some(bytes.len()),
+        _ => None,
+    }
+}
+
+fn scalar_graphics_state(value: Option<&PdfObject>) -> Option<usize> {
+    let dict = small_dict(value)?;
+    let mut text = 0;
+    for (index, entry) in dict.iter().enumerate() {
+        if dict[..index].iter().any(|other| other.key == entry.key) { return None; }
+        match (entry.key.as_str(), &entry.value) {
+            ("Type", PdfObject::Name(name)) if name == "ExtGState" => {}
+            ("LW" | "ML" | "CA" | "ca" | "FL" | "SM", PdfObject::Int(_) | PdfObject::Real(_)) => {}
+            ("LC" | "LJ" | "OPM", PdfObject::Int(_)) => {}
+            ("OP" | "op" | "AIS" | "SA" | "TK", PdfObject::Bool(_)) => {}
+            ("RI" | "BM", PdfObject::Name(name)) if name.len() <= MAX_COPY => text += name.len() + size_of::<String>(),
+            _ => return None,
+        }
+    }
+    Some(text)
+}
+
+fn plain_properties(value: Option<&PdfObject>) -> Option<usize> {
+    let dict = small_dict(value)?;
+    let mut bytes = dict.len() * size_of::<PdfDictEntry>();
+    for entry in dict {
+        if entry.key.len() > MAX_COPY { return None; }
+        bytes += entry.key.len() + atomic_bytes(&entry.value)?;
+    }
+    Some(bytes)
 }
 
 fn root_identity(owner: ObjRef) -> PdfGraphIdentity { PdfGraphIdentity { owner, path: Vec::new() } }

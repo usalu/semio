@@ -144,8 +144,8 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dContrib
             match invalidated {
                 None => pending = true,
                 Some(true) => {
-                    let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
-                    owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
+                    let unserved = flow_eval_tick::unserved_kinds(&input.snapshot.host_snapshot);
+                    owner.owe_attached_previews_carrying(&windows, &unserved, &mut emit, input.operation.retained)?;
                 }
                 Some(false) => {}
             }

@@ -118,26 +118,30 @@ export interface StagedPets {
 //#region 🗺️Stage
 /** 🪵️ What pets stand on in the quiz: the border lines of the screen. The top edge of every card — the one line it
  * shares with the card above, so a pet on it stands in the open room of that card —, the top edge of the chips at a card's
- * foot (its actions, its notes), and the footer line of the client, which is the floor. The cards of the pages behind the overview are inert and the cards of a dialog lie outside `main`, so
+ * foot (its actions, its notes), the lines between the rows of a quiz's task list (a pet on one stands beside the words of
+ * the row above, where it finds its foothold to tug at a task), and the footer line of the client, which is the floor. The cards of the pages behind the overview are inert and the cards of a dialog lie outside `main`, so
  * neither carries a pet. A card the overview conceals while the pointer hovers another (`data-concealed` on its host) is
  * unseen too: the survey drops its edge, its sides and anything a pet was playing with on it, and whatever stood there
  * falls. */
-export const COURSE_PET_SURFACES = '#course-main [data-card] [data-window-frame], #course-main [data-card] [data-window-frame-chip][data-dock="bottom"], .course-app > footer';
+export const COURSE_PET_SURFACES = '#course-main [data-card] [data-window-frame], #course-main [data-card] [data-window-frame-chip][data-dock="bottom"], #course-main [data-card="course-tasks"] li, .course-app > footer';
 
 /** 🪟️ The surfaces that are frames around open room: every card. Its border is a line to walk on and to climb, its
  * inside is where pets roam between what a learner reads and operates; a chip stays a solid body a pet stands on. */
-export const COURSE_PET_OPEN = "#course-main [data-card] [data-window-frame]";
+export const COURSE_PET_OPEN = '#course-main [data-card] [data-window-frame], #course-main [data-card="course-tasks"] li';
 
 /** 🚧️ What pets keep clear of in the quiz besides what the layer avoids anyway: the items a learner drags, the zones
  * they are dropped on, and the navigation bar as a whole — its mark and its title are neither controls nor text
- * blocks, and a pet on the topmost card of a page would stand in front of them. */
-export const COURSE_PET_KEEPOUTS = "[data-course-item], [data-course-drop], .course-app > header";
+ * blocks, and a pet on the topmost card of a page would stand in front of them —, and what a row of a quiz's task list
+ * says (its number, glyph and title, and its kind): the row itself is ground, so its words are named here. */
+export const COURSE_PET_KEEPOUTS = '[data-course-item], [data-course-drop], .course-app > header, #course-main [data-card="course-tasks"] li [data-icon-host] > *';
 
 /** 🖱️ What of the quiz acts on a press although the layer's own rules call it no control, so a press there is never a
  * pet's: the grip that starts the drag of an item (an `aria-hidden` span), the zones an item is dropped on, and the chips
- * at a card's foot, which are solid bodies a pet stands on. A card of the overview is none: pets live in its open room, and
- * a press on a pet there is the pet's, a press beside it opens the card as ever. */
-export const COURSE_PET_CONTROLS = "[data-course-grip], [data-course-drop], #course-main [data-window-frame-chip][data-dock=\"bottom\"]";
+ * at a card's foot, which are solid bodies a pet stands on. A card of the overview is none where the pages lie side by side:
+ * pets live in its open room, and a press on a pet there is the pet's, a press beside it opens the card as ever. Where the
+ * learner swipes from page to page (phones), the card fills the page and every press on it starts a swipe, so there the
+ * card keeps the press and a pet inside it is no hit target. */
+export const COURSE_PET_CONTROLS = "[data-course-grip], [data-course-drop], #course-main [data-window-frame-chip][data-dock=\"bottom\"], [data-layered-overview][data-mode=\"swipe\"] [data-layered-card] [data-card]";
 
 /** 🧸️ What pets may play with in the quiz: every element marked with a topic key (`data-pet-prop`) — except the copy of
  * a row a drag carries, a deep clone of the row with all of its attributes. */

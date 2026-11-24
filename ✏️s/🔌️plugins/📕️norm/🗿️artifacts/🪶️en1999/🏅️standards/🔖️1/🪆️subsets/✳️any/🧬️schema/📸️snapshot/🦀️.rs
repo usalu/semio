@@ -73,7 +73,6 @@ pub enum WeldDirection {
 pub struct PlateElement {
     pub id: String,
     /// ↔️ Flat width b [m].
-#[cfg_attr(any(test, feature = "test-support"), serde(default, skip_serializing_if = "is_zero_f64"))]
     pub width: f64,
     /// 📏️ Thickness t [m].
     pub thickness: f64,
@@ -81,8 +80,7 @@ pub struct PlateElement {
     pub outstand: bool,
     /// 🪛️ Element contains a weld (applies η and HAZ).
     pub welded: bool,
-    /// 🔧️ Weld position along element from root [m] (0 = at junction); omitted when not welded.
-    #[cfg_attr(any(test, feature = "test-support"), serde(default, skip_serializing_if = "is_zero_f64"))]
+    /// 🔧️ Weld position along element from root [m] (0 = at junction); zero when not welded.
     pub weld_position: f64,
     /// 🔥️ Welding process `mig` | `tig` (HAZ extent factor).
     pub weld_process: WeldProcess,
@@ -123,16 +121,12 @@ pub struct AluminiumSection {
     /// 🧊️ Discriminated geometry: `extrudedI` | `channel` | `angle` | `rhs` | `box` | `tube`/`chs`.
     /// I/H/channel/angle/rhs/box use height/width/flangeThickness/webThickness; CHS/tube use outerDiameter + webThickness (wall).
     pub kind: SectionKind,
-    /// ↕️ Zero for CHS/tube (discriminated — omitted when 0).
-    #[cfg_attr(any(test, feature = "test-support"), serde(default, skip_serializing_if = "is_zero_f64"))]
+    /// ↕️ Zero for CHS/tube (discriminated geometry).
     pub height: f64,
-    #[cfg_attr(any(test, feature = "test-support"), serde(default, skip_serializing_if = "is_zero_f64"))]
     pub width: f64,
-    #[cfg_attr(any(test, feature = "test-support"), serde(default, skip_serializing_if = "is_zero_f64"))]
     pub flange_thickness: f64,
     pub web_thickness: f64,
-    /// 📤️ CHS/tube outer diameter D [m]; omitted for non-tube kinds (discriminated geometry).
-    #[cfg_attr(any(test, feature = "test-support"), serde(default, skip_serializing_if = "is_zero_f64"))]
+    /// 📤️ CHS/tube outer diameter D [m]; zero for non-tube kinds (discriminated geometry).
     pub outer_diameter: f64,
     #[dsl(table)]
     pub elements: Vec<PlateElement>,
@@ -382,8 +376,7 @@ pub struct FatigueDetail {
     pub member_id: String,
     /// 🎛️ Annex J detail category id (e.g. `71`, `40-weld`).
     pub detail_category: String,
-    /// 🔺️ Detail category Δσ_C [Pa] — derived from detailCategory (one source of truth; not serialized).
-    #[cfg_attr(any(test, feature = "test-support"), serde(default, skip_serializing))]
+    /// 🔺️ Detail category Δσ_C [Pa] — seeded from detailCategory; always serialised.
     pub delta_sigma_c: f64,
     /// ✏️ Constant-amplitude stress range Δσ [Pa] (single-range spectrum entry).
     pub delta_sigma_ed: f64,
@@ -770,8 +763,6 @@ pub struct En1999Snapshot {
 }
 
 //#endregion 🔖️Snapshot
-
-fn is_zero_f64(v: &f64) -> bool { *v == 0.0 }
 
 fn default_plate(id: &str, width: f64, thickness: f64, outstand: bool, welded: bool) -> PlateElement {
     PlateElement { id: id.into(), width, thickness, outstand, welded, weld_position: if welded { 0.005 } else { 0.0 }, weld_process: WeldProcess::Mig, weld_t_junction: false, weld_direction: WeldDirection::Longitudinal, edge_stiffener_depth: 0.0, edge_stiffener_thickness: 0.0 }

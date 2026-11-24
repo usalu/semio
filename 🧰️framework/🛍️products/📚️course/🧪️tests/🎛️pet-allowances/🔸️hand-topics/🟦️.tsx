@@ -79,7 +79,7 @@ export function registerHandTopicsTests(): void {
       }
       expect([...document.querySelectorAll<HTMLElement>(COURSE_PET_PROPS)].filter((element) => element.closest("[data-layered-card]") !== null).map((element) => element.dataset.petProp).sort()).toEqual(["cooling", "heating"]);
 
-      expect({version:taskTopics.version,markerTag:taskTopics.markerTag,rowTag:taskTopics.rowTag,listTag:taskTopics.listTag,card:taskTopics.card,props:taskTopics.rows.map(row=>row.prop),cases:taskTopics.cases}).toEqual({version:1,markerTag:"DIV",rowTag:"LI",listTag:"OL",card:"course-tasks",props:["heating/u-values","heating/heating-load-and-demand"],cases:[{id:"open",locked:false},{id:"first-task-locked",locked:true}]});
+      expect({version:taskTopics.version,markerTag:taskTopics.markerTag,rowTag:taskTopics.rowTag,listTag:taskTopics.listTag,card:taskTopics.card,props:taskTopics.rows.map(row=>row.prop),cases:taskTopics.cases}).toEqual({version:1,markerTag:"SPAN",rowTag:"LI",listTag:"OL",card:"course-tasks",props:["heating/u-values","heating/heating-load-and-demand"],cases:[{id:"open",locked:false},{id:"first-task-locked",locked:true}]});
       for (const vector of taskTopics.cases) {
         const state = homeAt({ screen: "home", page: "heating" });
         const course = vector.locked ? { ...state.course!, unlocks: { ...state.course!.unlocks, [taskTopics.rows[0]!.prop]: null } } : state.course;

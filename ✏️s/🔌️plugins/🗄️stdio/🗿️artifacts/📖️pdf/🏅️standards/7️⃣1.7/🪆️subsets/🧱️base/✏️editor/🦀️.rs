@@ -362,7 +362,11 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
     host_tools: ["insert-image", "replace-image"],
     transient_tools: ["zoom-in", "zoom-out", "fit-page", "fit-width", "actual-size", "go-to-page", "set-query", "toggle-match-case", "next-hit", "previous-hit", "presence-pointer", "presence-pointer-leave", "presence-caret", "presence-caret-clear"],
     work: image_import::native_work,
+    contract: semio_plugin::ToolExecutionContract::bounded_first_step(Self::NATIVE_MAXIMUM_RAW_BYTES, 4_096, NATIVE_STEP_UNITS, Self::NATIVE_MAXIMUM_RAW_BYTES, 7_500),
 }
+
+/// 🪙️ Work units one native worker step owns: the page authoring and picker admission quotes (8 and 1,030 units) each need their full quote inside one step, so a one-unit step could never advance them.
+const NATIVE_STEP_UNITS: u64 = 4_096;
 
 //#endregion 🔖️Editor
 

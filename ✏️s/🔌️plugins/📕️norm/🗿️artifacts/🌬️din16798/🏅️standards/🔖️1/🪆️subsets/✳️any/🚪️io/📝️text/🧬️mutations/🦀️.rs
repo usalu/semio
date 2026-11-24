@@ -52,6 +52,8 @@ use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_fan_run_hours::C
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_duct_test_pressure::ChangeVentDuctTestPressure;
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_humidification_required::ChangeVentHumidificationRequired;
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_humidification_provided::ChangeVentHumidificationProvided;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_unoccupied_ventilation::ChangeZoneUnoccupiedVentilation;
+use semio_s_artifact_norm_din16798_mut_zones::clear_zone_unoccupied_ventilation::ClearZoneUnoccupiedVentilation;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -172,6 +174,8 @@ fn print_din16798_mutation(mutation: &Din16798Mutation) -> String {
         Din16798Mutation::ChangeVentDuctTestPressure(p) => format!("change-vent-duct-test-pressure {}", [format!("vent-id={}", enc_json(&p.vent_id)), format!("new-duct-test-pressure-pa={}", enc_json(&p.new_duct_test_pressure_pa))].join(" ")),
         Din16798Mutation::ChangeVentHumidificationRequired(p) => format!("change-vent-humidification-required {}", [format!("vent-id={}", enc_json(&p.vent_id)), format!("new-humidification-required-kg-h={}", enc_json(&p.new_humidification_required_kg_h))].join(" ")),
         Din16798Mutation::ChangeVentHumidificationProvided(p) => format!("change-vent-humidification-provided {}", [format!("vent-id={}", enc_json(&p.vent_id)), format!("new-humidification-provided-kg-h={}", enc_json(&p.new_humidification_provided_kg_h))].join(" ")),
+        Din16798Mutation::ChangeZoneUnoccupiedVentilation(p) => format!("change-zone-unoccupied-ventilation {}", [format!("zone-id={}", enc_json(&p.zone_id)), format!("new-unoccupied-ventilation={}", enc_json(&p.new_unoccupied_ventilation))].join(" ")),
+        Din16798Mutation::ClearZoneUnoccupiedVentilation(p) => format!("clear-zone-unoccupied-ventilation {}", [format!("zone-id={}", enc_json(&p.zone_id))].join(" ")),
         Din16798Mutation::InsertVentSystem(p) => format!("insert-vent-system {}", [format!("index={}", enc_json(&p.index)), format!("vent={}", enc_json(&p.vent))].join(" ")),
         Din16798Mutation::RemoveVentSystem(p) => format!("remove-vent-system {}", [format!("vent-id={}", enc_json(&p.vent_id))].join(" ")),
         Din16798Mutation::ChangeVentSystemType(p) => format!("change-vent-system-type {}", [format!("vent-id={}", enc_json(&p.vent_id)), format!("new-system-type={}", enc_json(&p.new_system_type))].join(" ")),
@@ -240,6 +244,8 @@ fn parse_din16798_mutation(line: &str) -> Result<Din16798Mutation, String> {
         "change-vent-duct-test-pressure" => Ok(Din16798Mutation::ChangeVentDuctTestPressure(ChangeVentDuctTestPressure { vent_id: dec_json(&arg("vent-id")?)?, new_duct_test_pressure_pa: dec_json(&arg("new-duct-test-pressure-pa")?)? })),
         "change-vent-humidification-required" => Ok(Din16798Mutation::ChangeVentHumidificationRequired(ChangeVentHumidificationRequired { vent_id: dec_json(&arg("vent-id")?)?, new_humidification_required_kg_h: dec_json(&arg("new-humidification-required-kg-h")?)? })),
         "change-vent-humidification-provided" => Ok(Din16798Mutation::ChangeVentHumidificationProvided(ChangeVentHumidificationProvided { vent_id: dec_json(&arg("vent-id")?)?, new_humidification_provided_kg_h: dec_json(&arg("new-humidification-provided-kg-h")?)? })),
+        "change-zone-unoccupied-ventilation" => Ok(Din16798Mutation::ChangeZoneUnoccupiedVentilation(ChangeZoneUnoccupiedVentilation { zone_id: dec_json(&arg("zone-id")?)?, new_unoccupied_ventilation: dec_json(&arg("new-unoccupied-ventilation")?)? })),
+        "clear-zone-unoccupied-ventilation" => Ok(Din16798Mutation::ClearZoneUnoccupiedVentilation(ClearZoneUnoccupiedVentilation { zone_id: dec_json(&arg("zone-id")?)? })),
         "change-vent-duct-leakage" => Ok(Din16798Mutation::ChangeVentDuctLeakage(ChangeVentDuctLeakage { vent_id: dec_json(&arg("vent-id")?)?, new_duct_leakage_m3_s_m2: dec_json(&arg("new-duct-leakage-m3-s-m2")?)? })),
         "change-vent-design-airflow" => Ok(Din16798Mutation::ChangeVentDesignAirflow(ChangeVentDesignAirflow { vent_id: dec_json(&arg("vent-id")?)?, new_design_airflow_m3_h: dec_json(&arg("new-design-airflow-m3-h")?)? })),
         other => Err(format!("unknown din16798 mutation keyword '{other}'")),
@@ -310,6 +316,8 @@ pub fn demo_mutation_cases() -> Vec<Din16798Mutation> {
         Din16798Mutation::ChangeVentDuctTestPressure(ChangeVentDuctTestPressure { vent_id: "x".into(), new_duct_test_pressure_pa: 1.0 }),
         Din16798Mutation::ChangeVentHumidificationRequired(ChangeVentHumidificationRequired { vent_id: "x".into(), new_humidification_required_kg_h: 1.0 }),
         Din16798Mutation::ChangeVentHumidificationProvided(ChangeVentHumidificationProvided { vent_id: "x".into(), new_humidification_provided_kg_h: 1.0 }),
+        Din16798Mutation::ChangeZoneUnoccupiedVentilation(ChangeZoneUnoccupiedVentilation { zone_id: "x".into(), new_unoccupied_ventilation: semio_s_artifact_norm_din16798_model::UnoccupiedVentilation { operation: semio_s_artifact_norm_din16798_model::UnoccupiedVentilationOperation::NonResidentialPurge, assessed_area_m2: 1.0, zone_volume_m3: 1.0, minutes_before_occupancy: 1.0, residential_design_rate_l_per_s_m2: 0.0, outdoor_air_m3_h: 1.0 } }),
+        Din16798Mutation::ClearZoneUnoccupiedVentilation(ClearZoneUnoccupiedVentilation { zone_id: "x".into() }),
     ]
 }
 //#endregion 🔖️DemoCases
@@ -374,6 +382,8 @@ use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_fan_run_hours;
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_duct_test_pressure;
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_humidification_required;
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_humidification_provided;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_unoccupied_ventilation;
+use semio_s_artifact_norm_din16798_mut_zones::clear_zone_unoccupied_ventilation;
 
 pub fn decode_din16798_mutation_json(text: &str) -> Result<Din16798Mutation, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())

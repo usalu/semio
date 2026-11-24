@@ -1913,25 +1913,6 @@
               "y": -0.13,
               "w": 0.3,
               "h": 0.26
-            },
-            {
-              "id": "cap-plate",
-              "bone": "column",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.4,
-              "regions": [
-                "cap-plate",
-                "column-flange",
-                "column-web"
-              ],
-              "material": "steel",
-              "kind": "rect",
-              "x": -0.12,
-              "y": -0.11,
-              "w": 0.24,
-              "h": 0.22
             }
           ]
         },

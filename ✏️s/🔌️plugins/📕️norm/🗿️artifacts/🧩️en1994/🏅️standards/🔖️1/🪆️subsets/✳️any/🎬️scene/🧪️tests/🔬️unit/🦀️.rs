@@ -594,7 +594,7 @@ fn the_slip_distribution_is_antisymmetric_and_zero_at_midspan() {
     let diagram = diagrams(&document, &report, Some("beam-B1")).into_iter().find(|d| d.id == "slip-distribution:beam-B1").expect("slip distribution");
     assert_eq!(diagram.validate(), Ok(()));
     assert!(diagram.table_twin.rows() > 0);
-    let Series::Polyline { points, .. } = &diagram.series[0] else { panic!("slip line") };
+    let scene::Series::Polyline { points, .. } = &diagram.series[0] else { panic!("slip line") };
     let (first, last, middle) = (points.first().unwrap(), points.last().unwrap(), &points[points.len() / 2]);
     assert!(first.y >= 0.0 && last.y <= 0.0);
     assert!((first.y + last.y).abs() < 1e-9 * first.y.abs().max(1.0));

@@ -5,7 +5,7 @@ import {decodeProtobufV1,REAPI_V1,type ProtobufMessageV1} from "../../📡️wir
 import {connectGrpcV1,GRPC_CODES_V1,GrpcErrorV1,type GrpcClientV1} from "../../📡️wire/🚪️grpc/🟦️.ts";
 import type {RemoteExecutionContentV1} from "../../🗄️content/🟦️.ts";
 import {remoteExecutionPeakOfMetadataV1,remoteExecutionPhasesOfMetadataV1,remoteExecutionThreadsOfMetadataV1,type RemoteExecutionPhasesV1} from "../../🟦️.ts";
-import {classifyOffloadStatusV1} from "../🩺️failure/🟦️.ts";
+import {classifyOffloadStatusV1,offloadMissingBlobsV1} from "../🩺️failure/🟦️.ts";
 import {OFFLOAD_POLICY_V1,type OffloadReasonV1} from "../📐️policy/🟦️.ts";
 import type {OffloadDigestV1} from "../📜️action/🟦️.ts";
 
@@ -20,12 +20,13 @@ export type OffloadExecutionV1=Readonly<{kind:"done";actionResult:ProtobufMessag
 export function offloadExecuteBudgetMillisecondsV1(actionSeconds:number=timeouts.actionSeconds):number{return actionSeconds*1000+timeouts.executeMarginMilliseconds;}
 
 const declined=(reason:OffloadReasonV1,detail:string,transient=false):OffloadExecutionV1=>({kind:"declined",reason,detail,...(transient?{transient:true as const}:{})});
-/** 🔌️ Submits an action once with `semio-offload=if-idle` semantics and waits for it under per-phase timeouts: connecting, being taken by an idle machine, running. The wait for the answer never outlasts three limits: the overall wait (`executeMilliseconds`), the deadline of the unit (`deadlineMilliseconds`, counted from the moment it executes and never restarted when the scheduler hands it to another machine) and the silence of the server: the server repeats its operation every few seconds (`keepAliveSeconds`), so a stream that stays silent for `silenceMilliseconds` is closed and the client re-attaches to the operation by name (`WaitExecution`) on a new connection, as often as the server answers that attach and the other limits hold; an operation the server no longer knows or an attach that stays silent ends the wait. A refusal for lack of an idle machine, a timeout, a lost operation or any fault is a decline the caller answers by compiling here; a cancelled `signal` closes the call, which cancels the remote action. */
-export async function executeOffloadV1(input:Readonly<{endpoint:string;token:string|undefined;sign?:(method:string,content:string)=>Record<string,string>;instance:string;action:OffloadDigestV1;signal?:AbortSignal;onStage?:(stage:OffloadStageV1)=>void;queueMilliseconds?:number;executeMilliseconds?:number;connectMilliseconds?:number;deadlineMilliseconds?:number;silenceMilliseconds?:number;reattachMilliseconds?:number}>):Promise<OffloadExecutionV1>{
+/** 🔌️ Submits an action once with `semio-offload=if-idle` semantics and waits for it under per-phase timeouts: connecting, being taken by an idle machine, running. The wait for the answer never outlasts three limits: the overall wait (`executeMilliseconds`), the deadline of the unit (`deadlineMilliseconds`, counted from the moment it executes and never restarted when the scheduler hands it to another machine) and the silence of the server: the server repeats its operation every few seconds (`keepAliveSeconds`), so a stream that stays silent for `silenceMilliseconds` is closed and the client re-attaches to the operation by name (`WaitExecution`) on a new connection, as often as the server answers that attach and the other limits hold; a call the transport loses (the server restarts: connection refused or reset, the stream ends without an answer) is never the end of the wait: the client reconnects with jittered back-off and re-attaches to the same operation by name (`WaitExecution`), for as long as the outage lasts at most `rideThroughMilliseconds` (counted from the first lost call, reset by every row heard) and the three limits above hold; an operation the server does not know after it is back (up to three times in a row) is submitted again (the scheduler joins the identical action in flight, restores it from its journal, or answers a finished one from the action cache, so the unit never runs twice); an attach that stays silent ends the wait; a `FAILED_PRECONDITION` that names missing blobs (a blob the store collected between the existence check and the fetch) is answered by `repair`, which sends exactly those blobs again, and the same action runs once more, at most `repairRounds` times (`limits.repairRounds`), before the unit is declined as `incomplete-inputs`. A refusal for lack of an idle machine, a timeout, a lost operation or any fault is a decline the caller answers by compiling here; a cancelled `signal` closes the call, which cancels the remote action. */
+export async function executeOffloadV1(input:Readonly<{endpoint:string;token:string|undefined;sign?:(method:string,content:string)=>Record<string,string>;instance:string;action:OffloadDigestV1;signal?:AbortSignal;onStage?:(stage:OffloadStageV1)=>void;queueMilliseconds?:number;executeMilliseconds?:number;connectMilliseconds?:number;deadlineMilliseconds?:number;silenceMilliseconds?:number;reattachMilliseconds?:number;rideThroughMilliseconds?:number;repair?:(missing:readonly OffloadDigestV1[],signal:AbortSignal)=>Promise<Readonly<{blobs:number;bytes:number}>|undefined>;repairRounds?:number;onRepair?:(row:Readonly<{round:number;named:number;blobs:number;bytes:number}>)=>void;pause?:(milliseconds:number,signal:AbortSignal)=>Promise<void>}>):Promise<OffloadExecutionV1>{
  const controller=new AbortController(),connect=():GrpcClientV1=>connectGrpcV1(input.endpoint,input.sign===undefined?{}:{sign:input.sign}),cancel=()=>controller.abort();
  let client=connect();
  input.signal?.addEventListener("abort",cancel,{once:true});
- let phase="connect" as "connect"|"queue"|"execute",expired=false,deadlineAt:number|undefined;
+ let phase="connect" as "connect"|"queue"|"execute",expired=false,deadlineAt:number|undefined,outageSince:number|undefined,outages=0,unknown=0,repairs=0,resent=0;
+ const repairLimit=input.repairRounds??policy.limits.repairRounds,ride=input.rideThroughMilliseconds??timeouts.rideThroughMilliseconds,pause=input.pause??((milliseconds,signal)=>new Promise<void>(done=>{const timer=setTimeout(done,milliseconds);signal.addEventListener("abort",()=>{clearTimeout(timer);done();},{once:true});}));
  const limits={connect:input.connectMilliseconds??timeouts.connectMilliseconds,queue:input.queueMilliseconds??timeouts.queueMilliseconds,execute:input.executeMilliseconds??offloadExecuteBudgetMillisecondsV1()},submitted=Date.now(),silenceLimit=input.silenceMilliseconds??deadlines.silenceMilliseconds,reattachLimit=input.reattachMilliseconds??deadlines.reattachMilliseconds;
  let timer:ReturnType<typeof setTimeout>|undefined;
  const arm=(next:typeof phase):void=>{
@@ -38,15 +39,15 @@ export async function executeOffloadV1(input:Readonly<{endpoint:string;token:str
  const metadata:Record<string,string>=input.token?{authorization:`Bearer ${input.token}`}:{};
  try{
   let response:ProtobufMessageV1|undefined,name:string|undefined,seen:OffloadStageV1|undefined;
-  for(let round=0;response===undefined;round++){
-   const attempt=new AbortController(),link=()=>attempt.abort(),silenceFor=round===0?silenceLimit:reattachLimit;
-   let lastRow=Date.now(),silent=false,heard=false;
+  for(;;){for(let round=0;response===undefined;round++){
+   const resume=name!==undefined,attempt=new AbortController(),link=()=>attempt.abort(),silenceFor=resume?reattachLimit:silenceLimit;
+   let lastRow=Date.now(),silent=false,heard=false,lost:string|undefined;
    controller.signal.addEventListener("abort",link,{once:true});
    const watchdog=setInterval(()=>{if(Date.now()-lastRow>silenceFor){silent=true;attempt.abort();}},Math.max(25,Math.floor(silenceFor/4)));
    try{
-    const stream=round===0?client.stream(`${NAMESPACE}.Execution/Execute`,{instance_name:input.instance,action_digest:input.action,skip_cache_lookup:false},{metadata,signal:attempt.signal}):client.stream(`${NAMESPACE}.Execution/WaitExecution`,{name},{metadata,signal:attempt.signal});
+    const stream=resume?client.stream(`${NAMESPACE}.Execution/WaitExecution`,{name},{metadata,signal:attempt.signal}):client.stream(`${NAMESPACE}.Execution/Execute`,{instance_name:input.instance,action_digest:input.action,skip_cache_lookup:false},{metadata,signal:attempt.signal});
     for await(const row of stream){
-     lastRow=Date.now();heard=true;
+     lastRow=Date.now();heard=true;outageSince=undefined;if(resume)unknown=0;
      if(typeof row.name==="string"&&row.name!=="")name=row.name;
      const stage=STAGES[decodeProtobufV1(REAPI_V1.executeMetadata,row.metadata.value).stage]??"UNKNOWN";
      if(stage!==seen){
@@ -57,18 +58,44 @@ export async function executeOffloadV1(input:Readonly<{endpoint:string;token:str
      if(row.done)response=decodeProtobufV1(REAPI_V1.executeResponse,row.response.value);
     }
    }catch(error){
-    if(!silent||controller.signal.aborted)throw error;
+    if(controller.signal.aborted)throw error;
+    if(silent){}
+    else if(error instanceof GrpcErrorV1&&error.code===GRPC_CODES_V1.UNAVAILABLE)lost=`${error.code} ${error.message}`;
+    else if(error instanceof GrpcErrorV1&&error.code===GRPC_CODES_V1.NOT_FOUND&&resume&&++unknown<=3){name=undefined;seen=undefined;}
+    else throw error;
    }finally{clearInterval(watchdog);controller.signal.removeEventListener("abort",link);}
    if(response!==undefined)break;
    if(input.signal?.aborted)return declined("cancelled","");
    if(controller.signal.aborted)throw Error("aborted");
-   if(!silent)break;
-   if(name===undefined)return declined("infrastructure","silent");
-   if(round>0&&!heard)return declined("infrastructure","silent after attach");
+   if(silent){
+    if(name===undefined)return declined("infrastructure","silent");
+    if(resume&&!heard)return declined("infrastructure","silent after attach");
+   }else if(lost===undefined){
+    if(name!==undefined||unknown===0)lost="stream ended without an answer";
+   }
+   if(lost!==undefined){
+    outageSince??=Date.now();
+    if(Date.now()-outageSince>ride)return declined("infrastructure",`the server stayed away for ${Math.round((Date.now()-outageSince)/1000)} s: ${lost}`);
+    if(timer)clearTimeout(timer);
+    await pause(Math.min(2000,250*2**Math.min(outages++,5))*(0.5+Math.random()),controller.signal);
+    if(input.signal?.aborted)return declined("cancelled","");
+    if(controller.signal.aborted)throw Error("aborted");
+    arm(phase);
+   }
    client.close();client=connect();
   }
   if(input.signal?.aborted)return declined("cancelled","");
   if(!response)return declined("infrastructure","no response",true);
+  const named=response.status?.code===GRPC_CODES_V1.FAILED_PRECONDITION?offloadMissingBlobsV1(response.status):[];
+  if(named.length===0||input.repair===undefined)break;
+  const first=`${named[0]!.hash}/${named[0]!.size_bytes}`;
+  if(repairs>=repairLimit)return declined("incomplete-inputs",`${named.length} blobs missing after ${repairs} re-uploads (${resent} bytes sent again): ${first}`);
+  if(timer)clearTimeout(timer);
+  const sent=await input.repair(named,controller.signal);
+  if(sent===undefined)return declined("incomplete-inputs",`${named.length} blobs missing that cannot be sent again: ${first}`);
+  repairs++;resent+=sent.bytes;input.onRepair?.({round:repairs,named:named.length,blobs:sent.blobs,bytes:sent.bytes});
+  response=undefined;name=undefined;seen=undefined;unknown=0;outageSince=undefined;arm("connect");
+  }
   const code=response.status?.code??0;
   if(code!==0){const message=String(response.status?.message??""),verdict=classifyOffloadStatusV1({code,message});return declined(verdict.reason,verdict.reason==="infrastructure"?`${code} ${message}`:message.slice(0,200));}
   const result=response.result;
@@ -126,19 +153,6 @@ export async function writeOffloadOutputsV1(content:RemoteExecutionContentV1,ins
   }
  }));
  return written.sort();
-}
-
-/** 🛟️ Submits like `executeOffloadV1` and, when the call is lost to the transport (the scheduler restarts: connection refused or reset, the stream ends without an answer), submits the same action again with jittered back-off for `budgetMilliseconds`. The scheduler deduplicates by action digest (a worker that kept running the action re-joins and the scheduler adopts it) and answers an action that already finished from the action cache, so the retry never runs the unit a second time; once the budget is spent the caller compiles locally as before. A refusal, a timeout or a cancel is never retried, and the whole ride never outlasts the overall wait of one action (`offloadExecuteBudgetMillisecondsV1`, or `executeMilliseconds`): every new submission gets what is left of it. */
-export async function executeOffloadRidingThroughV1(input:Parameters<typeof executeOffloadV1>[0],budgetMilliseconds:number,pause:(milliseconds:number)=>Promise<void>=milliseconds=>new Promise<void>(done=>{setTimeout(done,milliseconds);})):Promise<OffloadExecutionV1>{
- const began=Date.now(),overall=input.executeMilliseconds??offloadExecuteBudgetMillisecondsV1(),until=began+Math.min(budgetMilliseconds,overall);
- let execution=await executeOffloadV1(input);
- for(let attempt=0;execution.kind==="declined"&&execution.transient===true&&input.signal?.aborted!==true&&Date.now()<until;attempt++){
-  await pause(Math.min(2000,250*2**attempt)*(0.5+Math.random()));
-  const left=began+overall-Date.now();
-  if(left<=0||Boolean(input.signal?.aborted))break;
-  execution=await executeOffloadV1({...input,executeMilliseconds:left,...input.deadlineMilliseconds===undefined?{}:{deadlineMilliseconds:Math.max(1000,input.deadlineMilliseconds-(Date.now()-began))}});
- }
- return execution;
 }
 
 /** ⏱️ Runs one phase of an offload (the upload) under a time limit that really stops it: the work gets a signal that aborts when the time is spent or the build is cancelled, so the transport closes its requests; the phase ends at that moment even for work that ignores the signal. Answers the value, `timeout` or `cancelled`; a fault of the work itself is rethrown. */

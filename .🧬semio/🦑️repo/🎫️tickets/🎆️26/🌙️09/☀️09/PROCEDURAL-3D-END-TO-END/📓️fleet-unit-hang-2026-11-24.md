@@ -1,0 +1,7 @@
+# Fleet unit hang of hub-15 (2026-11-24)
+
+- Hung unit: `semio_hub_flow_component` (linked wasm final), operation `b2907920-d972-4ba2-b69c-380082f60767`, action `1b4fa319de7e`, EXECUTING on worker g1-server for 1439 s.
+- Unblocked: `repo remote-execution cancel all-stuck` (only that operation was stuck). The counter went to "0 on the fleet", the unit waited ~3 min in local memory admission (needs 4767 MB + 2458 MB margin), then "1 running locally".
+- Root cause: the deadline of an offloaded unit was factor 4 times the recorded local cost (496697 ms, 8.3 min = 33 min) plus 600 s outage patience for linked units = 43 min, while the same unit costs 8.3 min locally. The scheduler keep-alives and the worker heartbeat continue while the action hangs, so silence detection never fires; only the deadline can end it.
+- Fix: factor 4 -> 2 in `🚀️offload/🧬️schema/🔣️.json` (policy.deadline), outage patience no longer added to the execution deadline in `🚀️offload/🟦️.ts` (it stays on the overall budget and the download). Test vectors `🚀️offload/🧪️tests/⏱️timeouts/🔣️.json` updated first (failed), plus the hub's real cost vector; python oracle unchanged and agrees. `bun test` of that file: 12 pass.
+- Not done (follow-up): a progress-based liveness (CPU time of the task process group in the worker heartbeat, next to the existing memory usage) so a stalled action is dropped before the deadline; local admission wait has no visible bound either.

@@ -8,9 +8,13 @@ pub fn used_layers<'a>(entities: &'a [SceneEntity], annotations: &[Annotation], 
     entities.iter().map(|e| e.layer.as_str()).chain(annotations.iter().map(|_| annotation_layer)).collect()
 }
 
-/// 🗂️ The `(id, English, German)` rows of `table` that are in use, in table order; layers listed in `hidden` start invisible.
+/// 🏞️ The `(id, English, German)` row of the layer of the project site plate every artifact with document-level checks draws ([`crate::projection_kit::highlight::with_site`]).
+pub const SITE_LAYER: (&str, &str, &str) = ("site", "Site", "Standort");
+
+/// 🗂️ The `(id, English, German)` rows of `table` that are in use, in table order, then the shared [`SITE_LAYER`] when in use and not in `table`; layers listed in `hidden` start invisible.
 pub fn layers(table: &[(&str, &str, &str)], used: &BTreeSet<&str>, hidden: &[&str]) -> Vec<Layer> {
-    table.iter().filter(|(id, _, _)| used.contains(id)).map(|&(id, en, de)| Layer { id: id.to_string(), name: LocalizedCopy::new(en, de), visible: !hidden.contains(&id), locked: false }).collect()
+    let site = (!table.iter().any(|(id, _, _)| *id == SITE_LAYER.0)).then_some(SITE_LAYER);
+    table.iter().copied().chain(site).filter(|(id, _, _)| used.contains(id)).map(|(id, en, de)| Layer { id: id.to_string(), name: LocalizedCopy::new(en, de), visible: !hidden.contains(&id), locked: false }).collect()
 }
 
 /// 🌡️ The utilisation legend on the viridis ramp from 0 to 1.2.

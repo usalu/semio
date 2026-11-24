@@ -25,12 +25,12 @@
     {
       "id": "ancestor-replaced",
       "fault": "ancestor-replaced",
-      "outcome": "refuse"
+      "outcome": "recompute"
     },
     {
       "id": "hash",
       "fault": "hash",
-      "outcome": "refuse"
+      "outcome": "recompute"
     },
     {
       "id": "contract",
@@ -55,7 +55,7 @@
     {
       "id": "absence-reappears",
       "fault": "absence-reappears",
-      "outcome": "refuse"
+      "outcome": "recompute"
     },
     {
       "id": "permission",
@@ -80,7 +80,7 @@
     {
       "id": "cold-inventory-correct-hash-invalid-utf8",
       "fault": "cold-utf8",
-      "outcome": "refuse"
+      "outcome": "recompute"
     }
   ],
   "primaryFailures": [

@@ -1119,7 +1119,7 @@ async fn every_traced_verification_id_is_realised_by_a_document_check() {
     extended.members[0].nominal_dimension = 0.3;
     extended.members[0].dimension_tolerance = 0.005;
     extended.members[0].member_alpha_cr = 12.0;
-    extended.factor_overrides = vec![override_row("O1", "psi0", "Q-wind", 0.4, "wind tunnel study")];
+    extended.factor_overrides = vec![override_row("O1", FactorKind::Psi0, "Q-wind", 0.4, "wind tunnel study")];
     let documents = [
         En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De),
         extended,
@@ -1149,8 +1149,8 @@ async fn every_traced_verification_id_is_realised_by_a_document_check() {
     semio_s_plugin_norm_compliance::spec_trace::assert_traced(&semio_s_artifact_norm_en1990_checks::spec_trace::TABLE, &emitted);
 }
 
-fn override_row(id: &str, factor: &str, target: &str, value: f64, justification: &str) -> semio_s_artifact_norm_en1990_model::FactorOverride {
-    semio_s_artifact_norm_en1990_model::FactorOverride { id: id.into(), factor: factor.into(), target: target.into(), value, justification: justification.into() }
+fn override_row(id: &str, factor: FactorKind, target: &str, value: f64, justification: &str) -> semio_s_artifact_norm_en1990_model::FactorOverride {
+    semio_s_artifact_norm_en1990_model::FactorOverride { id: id.into(), factor, target: target.into(), value, justification: justification.into() }
 }
 
 fn term_factor(doc: &En1990Snapshot, action: &str) -> (f64, bool) {
@@ -1168,7 +1168,7 @@ fn an_allowed_psi_override_changes_the_combination_and_warns_with_the_annex_valu
     doc.annex = De;
     let (annex_factor, annex_deviates) = term_factor(&doc, "Q-wind");
     assert!(!annex_deviates);
-    doc.factor_overrides = vec![override_row("O1", "psi0", "Q-wind", 0.3, "wind tunnel study")];
+    doc.factor_overrides = vec![override_row("O1", FactorKind::Psi0, "Q-wind", 0.3, "wind tunnel study")];
     let (factor, deviates) = term_factor(&doc, "Q-wind");
     assert!(deviates && (factor - annex_factor / psi_lookup(De, "wind").unwrap().psi_0 * 0.3).abs() < 1e-9, "factor {factor}");
     let report = evaluate(&doc);
@@ -1184,8 +1184,8 @@ fn a_row_reset_to_the_annex_value_is_applied_without_deviating() {
     use semio_s_plugin_norm_compliance::AnnexChoice::De;
     let mut doc = En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     doc.annex = De;
-    let annex = factor_overrides::annex_for_action(&doc, "psi0", "Q-wind").expect("annex psi0");
-    doc.factor_overrides = vec![override_row("O1", "psi0", "Q-wind", annex, "reset")];
+    let annex = factor_overrides::annex_for_action(&doc, FactorKind::Psi0, "Q-wind").expect("annex psi0");
+    doc.factor_overrides = vec![override_row("O1", FactorKind::Psi0, "Q-wind", annex, "reset")];
     assert_eq!(factor_overrides::verdicts(&doc), vec![factor_overrides::Verdict::Applied]);
     assert_eq!(factor_overrides::deviations(&doc), vec![false]);
     assert!(factor_overrides::action_override(&doc, "Q-wind").is_empty());
@@ -1194,7 +1194,7 @@ fn a_row_reset_to_the_annex_value_is_applied_without_deviating() {
     let check = report.checks.iter().find(|c| c.id == "en1990.override.O1").expect("override check");
     assert_eq!(check.status, CheckStatus::Info);
     assert!(check.remedies.is_empty() && check.explanation.en.contains("no effect") && check.explanation.de.contains("wirkungslos"));
-    doc.factor_overrides = vec![override_row("O0", "psi0", "", 0.3, "brief"), override_row("O1", "psi0", "Q-wind", annex, "reset")];
+    doc.factor_overrides = vec![override_row("O0", FactorKind::Psi0, "", 0.3, "brief"), override_row("O1", FactorKind::Psi0, "Q-wind", annex, "reset")];
     assert_eq!(factor_overrides::deviations(&doc), vec![true, false]);
     assert_eq!(factor_overrides::action_override(&doc, "Q-wind").psi[0], None, "the later, more specific reset wins over the general row");
     assert_eq!(factor_overrides::action_override(&doc, "Q-office").psi[0], Some(0.3));
@@ -1207,7 +1207,7 @@ fn a_gamma_override_applies_only_where_the_annex_allows_it() {
     let mut doc = En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     doc.annex = En;
     let (base, _) = term_factor(&doc, "Q-office");
-    doc.factor_overrides = vec![override_row("G1", "gamma", "Q-office", 1.2, "controlled use")];
+    doc.factor_overrides = vec![override_row("G1", FactorKind::Gamma, "Q-office", 1.2, "controlled use")];
     let (factor, deviates) = term_factor(&doc, "Q-office");
     assert!(deviates && (factor - 1.2).abs() < 1e-9 && factor < base);
     doc.annex = De;
@@ -1225,20 +1225,19 @@ fn invalid_unjustified_unknown_and_superseded_override_rows_never_reach_the_gene
     let mut doc = En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     doc.annex = De;
     doc.factor_overrides = vec![
-        override_row("A", "psi0", "Q-wind", 1.7, "too large"),
-        override_row("B", "psi0", "Q-wind", 0.4, ""),
-        override_row("C", "psi1", "nothing", 0.4, "x"),
-        override_row("D", "chi", "Q-wind", 0.4, "x"),
-        override_row("E", "psi2", "Q-snow", 0.1, "first"),
-        override_row("F", "psi2", "Q-snow", 0.2, "second"),
+        override_row("A", FactorKind::Psi0, "Q-wind", 1.7, "too large"),
+        override_row("B", FactorKind::Psi0, "Q-wind", 0.4, ""),
+        override_row("C", FactorKind::Psi1, "nothing", 0.4, "x"),
+        override_row("E", FactorKind::Psi2, "Q-snow", 0.1, "first"),
+        override_row("F", FactorKind::Psi2, "Q-snow", 0.2, "second"),
     ];
     let verdicts = factor_overrides::verdicts(&doc);
     use factor_overrides::Verdict::*;
-    assert_eq!(verdicts, vec![InvalidValue, MissingJustification, UnknownTarget, UnknownKind, Superseded, Applied]);
+    assert_eq!(verdicts, vec![InvalidValue, MissingJustification, UnknownTarget, Superseded, Applied]);
     assert_eq!(factor_overrides::action_override(&doc, "Q-snow").psi[2], Some(0.2));
     assert!(factor_overrides::action_override(&doc, "Q-wind").is_empty());
     let report = evaluate(&doc);
-    assert_eq!(report.checks.iter().filter(|c| c.id.starts_with("en1990.override.") && c.status == CheckStatus::Fail).count(), 4);
+    assert_eq!(report.checks.iter().filter(|c| c.id.starts_with("en1990.override.") && c.status == CheckStatus::Fail).count(), 3);
     assert!(report.checks.iter().filter(|c| c.id.starts_with("en1990.override.") && c.status == CheckStatus::Fail).all(|c| !c.remedies.is_empty()));
 }
 
@@ -1247,7 +1246,7 @@ fn the_xi_and_k_fi_overrides_reach_the_context() {
     use semio_s_plugin_norm_compliance::AnnexChoice::En;
     let mut doc = En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     doc.annex = En;
-    doc.factor_overrides = vec![override_row("X", "xi", "", 0.8, "client brief"), override_row("K", "k_fi", "", 1.0, "client brief")];
+    doc.factor_overrides = vec![override_row("X", FactorKind::Xi, "", 0.8, "client brief"), override_row("K", FactorKind::KFi, "", 1.0, "client brief")];
     let ctx = context_for(&doc, FactorSet::StrB).expect("context");
     assert_eq!(ctx.xi, Some(0.8));
     assert!(!ctx.k_fi_overridden, "K_FI is not overridable in the registry default");

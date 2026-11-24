@@ -225,7 +225,7 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
 
   const contributorInstancesRef = core.contributorInstancesRef;
   const contributorRosterKey = JSON.stringify([...contributorInstancesRef.current].map(([key, entry]) => [key, entry.pluginId, entry.instanceId, entry.ownerId]));
-  useOperationCompletionSubscriptions({ session, loadedPluginsRef, settleOperation, applyHistoryPatch, captureProgramEffectOwner, applyLeftoverInteractionView, dropForRetiredInstance, isCurrentEffectOwner, hostMode, spawnedAppsRef, spawnedRosterKey, contributorInstancesRef, contributorRosterKey, showTransientNoticeRef, applyHostEffects });
+  useOperationCompletionSubscriptions({ session, loadedPluginsRef, settleOperation, applyHistoryPatch, captureProgramEffectOwner, applyLeftoverInteractionView, dropForRetiredInstance, isCurrentEffectOwner, hostMode, spawnedAppsRef, spawnedRosterKey, contributorInstancesRef, contributorRosterKey, showTransientNoticeRef, uiTerminologyRef, applyHostEffects });
 
   useOperationProgressSubscriptions({ session, loadedPluginsRef, applyHistoryPatch, captureProgramEffectOwner, dropForRetiredInstance, isCurrentEffectOwner, hostMode, spawnedAppsRef, spawnedRosterKey, contributorInstancesRef, contributorRosterKey, applyHostEffects });
 

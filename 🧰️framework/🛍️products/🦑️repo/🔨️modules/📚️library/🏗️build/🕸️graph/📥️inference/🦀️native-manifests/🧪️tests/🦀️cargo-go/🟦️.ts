@@ -101,3 +101,42 @@ test("a path dependency without a manifest is refused once, naming the manifest 
  const rootless=attempt(()=>nativeDependencyRoots("nothing",repository,true,new Map(),new Map()));
  expect(rootless.error?.message).toBe(`Native dependency has no Cargo manifest: ${join(repository,"nothing","Cargo.toml")}`);
 });
+
+const cargo=Bun.which("cargo"),withCargo=cargo?test:test.skip;
+const FIXTURE_CARGO:Record<string,string>={
+ "Cargo.toml":'[workspace]\nmembers=["app","lib-a","lib-b","lib-x","tools/gen"]\n[workspace.dependencies]\nshared={path="lib-b"}\ngenerator={path="tools/gen",package="gen-tool"}\n',
+ "app/Cargo.toml":'[package]\nname="app"\nversion="0.1.0"\nedition="2021"\n[dependencies]\na={path="../lib-a"}\nshared={workspace=true}\ngenerator={workspace=true}\nrenamed={path="../lib-b",package="lib-b"}\nserde="1"\n[dev-dependencies]\nx={path="../lib-x"}\n[build-dependencies]\nb={path="../lib-b"}\n[target.\'cfg(unix)\'.dependencies]\nu={path="../lib-x",package="lib-x"}\n[target.\'cfg(windows)\'.dev-dependencies]\nw={path="../lib-a",package="lib-a"}\n',
+ "lib-a/Cargo.toml":'[package]\nname="lib-a"\nversion="0.1.0"\nedition="2021"\n[dependencies]\nshared={workspace=true}\n[dev-dependencies]\nx={path="../lib-x"}\n',
+ "lib-b/Cargo.toml":'[package]\nname="lib-b"\nversion="0.1.0"\nedition="2021"\n',
+ "lib-x/Cargo.toml":'[package]\nname="lib-x"\nversion="0.1.0"\nedition="2021"\n[build-dependencies]\nb={path="../lib-b"}\n',
+ "tools/gen/Cargo.toml":'[package]\nname="gen-tool"\nversion="0.1.0"\nedition="2021"\n[dependencies]\na={path="../../lib-a"}\n',
+};
+const metadataKind:Record<string,string>={normal:"dependencies",dev:"dev-dependencies",build:"build-dependencies"};
+withCargo("path dependencies and path closures equal the answer of `cargo metadata --no-deps` of Cargo itself",()=>{
+ wire({sourceAnalyses:{},coordinates:{buildPath:(path:string)=>path.split("\\").join("/"),SCRIPT_BASENAME:"x"},targetPolicy:{}});
+ const repository=join(root,"cargo-metadata");
+ for(const[path,text]of Object.entries(FIXTURE_CARGO)){mkdirSync(dirname(join(repository,path)),{recursive:true});writeFileSync(join(repository,path),text);mkdirSync(join(dirname(join(repository,path)),"src"),{recursive:true});writeFileSync(join(dirname(join(repository,path)),"src","lib.rs"),"");}
+ const run=spawnSync(cargo!,["metadata","--no-deps","--offline","--format-version","1","--manifest-path",join(repository,"Cargo.toml")],{encoding:"utf8",maxBuffer:1<<26,env:{...process.env,CARGO_TARGET_DIR:join(repository,"target")}});
+ expect(run.status,run.stderr).toBe(0);
+ const metadata=JSON.parse(run.stdout),byDirectory=new Map<string,any>();
+ for(const row of metadata.packages)byDirectory.set(dirname(row.manifest_path),row);
+ expect(byDirectory.size).toBe(5);
+ const spelled=(directory:string)=>relative(repository,directory).split("\\").join("/")||".";
+ const fromCargo=(directory:string)=>byDirectory.get(directory).dependencies.filter((row:any)=>row.path!==undefined).map((row:any)=>`${metadataKind[row.kind??"normal"]} ${row.name} ${spelled(row.path)}`).sort();
+ for(const directory of byDirectory.keys()){
+  const manifest=plain(parse(readFileSync(join(directory,"Cargo.toml"),"utf8"))) as any,workspace=nativeWorkspaceV1(directory,repository,manifest);
+  const ours=nativeDependencies(manifest,workspace.declaration).map(row=>`${row.kind} ${row.name} ${spelled(resolve(row.workspace?workspace.root:directory,row.path))}`).sort();
+  expect(ours,spelled(directory)).toEqual(fromCargo(directory));
+ }
+ const closureOfCargo=(directory:string,tests:boolean)=>{
+  const seen=new Set<string>([directory]),visit=(current:string,includeTests:boolean)=>{
+   for(const row of byDirectory.get(current).dependencies){
+    if(row.path===undefined||row.kind==="dev"&&!includeTests||seen.has(row.path))continue;
+    seen.add(row.path);visit(row.path,false);
+   }
+  };
+  visit(directory,tests);
+  return[...seen].map(spelled).sort();
+ };
+ for(const directory of byDirectory.keys())for(const tests of[true,false])expect(nativeDependencyRoots(spelled(directory),repository,tests,new Map(),new Map()),`${spelled(directory)} tests=${tests}`).toEqual(closureOfCargo(directory,tests));
+});

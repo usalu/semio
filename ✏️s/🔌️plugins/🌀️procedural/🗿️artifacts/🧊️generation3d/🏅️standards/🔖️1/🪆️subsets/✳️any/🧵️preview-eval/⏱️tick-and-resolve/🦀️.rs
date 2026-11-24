@@ -67,6 +67,9 @@ impl MountedPreviewTick {
         effect: &mut RetainedAllocationEffect<'_>,
         project: impl FnOnce(&mut std::collections::HashMap<String, semio_framework_artifact_flow_flow::neural::Dictionary>),
     ) -> Result<(Option<FlowEvalTickOutcome>, RetainedCloneProgress), ValueError> {
+        if self.host.is_none() && !session.preview_cancellation_terminal_is_empty() {
+            return Ok((None, session.preview_cancellation_step(effect)?.progress()));
+        }
         let grant = effect.grant();
         let demand = self.demands(session, grant.maximum_copy_bytes)?;
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {

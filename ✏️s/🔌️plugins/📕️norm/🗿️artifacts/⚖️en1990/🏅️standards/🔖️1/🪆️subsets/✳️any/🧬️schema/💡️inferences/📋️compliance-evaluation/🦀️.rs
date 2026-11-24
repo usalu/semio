@@ -31,6 +31,11 @@ impl RowGate {
     }
 }
 
+/// 🧼️ Starts a row with an empty NDP read log: reads a previous row did not cite must not leak into the first check of this one, so a row yields the same checks alone (as a unit) and inside the whole report.
+fn isolate() {
+    semio_s_plugin_norm_compliance::drain_ndp_reads();
+}
+
 /// 🎯️ The evaluation restricted to `scope` (every check outside the member loop, or one member row); the gates (input validation, empty members, broken wiring) are evaluated per call, so the ordered concatenation of the scopes is [`evaluate`]; a unit list shares them through [`evaluate_gated`].
 pub fn evaluate_scoped(document: &En1990Snapshot, scope: Scope<'_>) -> CheckReport {
     evaluate_gated(document, scope, &Gate::new())
@@ -39,6 +44,7 @@ pub fn evaluate_scoped(document: &En1990Snapshot, scope: Scope<'_>) -> CheckRepo
 /// 🎯️ [`evaluate_scoped`] with the row gates taken from `gate` (computed by the first row that asks); the global scopes emit the gate checks themselves and never read it.
 pub fn evaluate_gated(document: &En1990Snapshot, scope: Scope<'_>, gate: &Gate<RowGate>) -> CheckReport {
     let mut report = CheckReport::default();
+    isolate();
     let globals = scope.globals();
     let admitted = if globals { push_input_validation(&mut report, document) } else { gate.get(|| RowGate::of(document)).admitted };
     if !admitted {
@@ -75,7 +81,7 @@ pub fn evaluate_gated(document: &En1990Snapshot, scope: Scope<'_>, gate: &Gate<R
         push_traffic_group_rows(&mut report, document);
         report.push(check_reliability_index_for(document.beta_computed, document.consequence_class, document.reliability_class.number(), document.reference_period_years, document.annex));
     }
-    for (_, member) in document.members.iter().enumerate().filter(|(index, _)| scope.admits("members", *index)) {
+    for (_, member) in document.members.iter().enumerate().filter(|(index, _)| scope.admits("members", *index)).inspect(|_| isolate()) {
         if broken_members.contains(&member.id) {
             push_member_unassessable(&mut report, document, member);
             continue;
@@ -111,14 +117,14 @@ pub fn evaluate_gated(document: &En1990Snapshot, scope: Scope<'_>, gate: &Gate<R
 
 /// 📊️ The reliability analyses, test series and design cases of the document, independent of the member loop.
 fn push_document_analyses(report: &mut CheckReport, document: &En1990Snapshot, scope: Scope<'_>) {
-    for (_, analysis) in document.reliability_analyses.iter().enumerate().filter(|(index, _)| scope.admits("reliabilityAnalyses", *index)) {
+    for (_, analysis) in document.reliability_analyses.iter().enumerate().filter(|(index, _)| scope.admits("reliabilityAnalyses", *index)).inspect(|_| isolate()) {
         push_reliability_analysis(report, document, analysis);
     }
-    for (_, series) in document.test_series.iter().enumerate().filter(|(index, _)| scope.admits("testSeries", *index)) {
+    for (_, series) in document.test_series.iter().enumerate().filter(|(index, _)| scope.admits("testSeries", *index)).inspect(|_| isolate()) {
         push_test_series(report, document, series);
         push_test_standard(report, document, series);
     }
-    for (_, case) in document.cases.iter().enumerate().filter(|(index, _)| scope.admits("cases", *index)) {
+    for (_, case) in document.cases.iter().enumerate().filter(|(index, _)| scope.admits("cases", *index)).inspect(|_| isolate()) {
         report.extend(catalogue::evaluate_design_case(&semio_s_plugin_norm_compliance::design_case::DesignCase::from(case), document.annex));
     }
 }

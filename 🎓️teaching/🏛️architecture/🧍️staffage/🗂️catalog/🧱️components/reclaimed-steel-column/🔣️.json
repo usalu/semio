@@ -5568,6 +5568,42 @@
        "closed": false
       },
       {
+       "id": "web",
+       "bone": "column",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.55,
+       "region": "column-web",
+       "material": "steel-painted",
+       "kind": "poly",
+       "points": [
+        [
+         0.025,
+         -0.085
+        ],
+        [
+         3.58,
+         -0.085
+        ],
+        [
+         3.58,
+         0.085
+        ],
+        [
+         0.025,
+         0.085
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0045,
+        "z1": 0.0045
+       }
+      },
+      {
        "id": "flange-top",
        "bone": "column",
        "role": "body",

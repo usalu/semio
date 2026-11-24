@@ -90,11 +90,11 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.35,
-    "densityKgM3": 650.0,
+    "densityKgM3": 650,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 1600000000.0,
-    "strengthPa": 11000000.0,
+    "elasticModulusPa": 1600000000,
+    "strengthPa": 11000000,
     "source": "literature",
     "reference": "en-312-2010"
    },
@@ -106,11 +106,11 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.65,
-    "densityKgM3": 850.0,
+    "densityKgM3": 850,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 3000000000.0,
-    "strengthPa": 30000000.0,
+    "elasticModulusPa": 3000000000,
+    "strengthPa": 30000000,
     "source": "literature",
     "reference": "en-622-5-2009"
    },
@@ -122,11 +122,11 @@
     },
     "emissivity": 0.77,
     "solarAbsorptivity": 0.4,
-    "densityKgM3": 2700.0,
+    "densityKgM3": 2700,
     "conductivityWmK": 160,
     "specificHeatJKgK": 900,
-    "elasticModulusPa": 70000000000.0,
-    "strengthPa": 160000000.0,
+    "elasticModulusPa": 70000000000,
+    "strengthPa": 160000000,
     "source": "literature",
     "reference": "incropera-2018"
    },
@@ -138,11 +138,11 @@
     },
     "emissivity": 0.3,
     "solarAbsorptivity": 0.5,
-    "densityKgM3": 7850.0,
+    "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "incropera-2018"
    },
@@ -154,11 +154,11 @@
     },
     "emissivity": 0.25,
     "solarAbsorptivity": 0.5,
-    "densityKgM3": 7850.0,
+    "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 450,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -170,7 +170,7 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.75,
-    "densityKgM3": 148.0,
+    "densityKgM3": 148,
     "conductivityWmK": 0.045,
     "specificHeatJKgK": 1300,
     "source": "authored-estimate",
@@ -283,7 +283,7 @@
      },
      "section": {
       "areaM2": 0.012736,
-      "secondMomentM4": 2.717e-07,
+      "secondMomentM4": 2.717e-7,
       "extremeFibreM": 0.008,
       "material": "chipboard-foil",
       "title": {
@@ -318,7 +318,7 @@
      },
      "section": {
       "areaM2": 0.012736,
-      "secondMomentM4": 2.717e-07,
+      "secondMomentM4": 2.717e-7,
       "extremeFibreM": 0.008,
       "material": "chipboard-foil",
       "title": {
@@ -353,7 +353,7 @@
      },
      "section": {
       "areaM2": 0.012736,
-      "secondMomentM4": 2.717e-07,
+      "secondMomentM4": 2.717e-7,
       "extremeFibreM": 0.008,
       "material": "chipboard-foil",
       "title": {
@@ -369,7 +369,7 @@
     "id": "blanket-floor-r",
     "bone": "blanket",
     "x": 0.3,
-    "y": 0.0,
+    "y": 0,
     "z": -0.3,
     "kind": "contact",
     "title": {
@@ -386,7 +386,7 @@
     "id": "blanket-floor-l",
     "bone": "blanket",
     "x": 0.3,
-    "y": 0.0,
+    "y": 0,
     "z": 0.3,
     "kind": "contact",
     "title": {
@@ -403,7 +403,7 @@
     "id": "foot-r",
     "bone": "carcass",
     "x": 0.0785,
-    "y": 0.0,
+    "y": 0,
     "z": -0.392,
     "kind": "contact",
     "title": {
@@ -420,7 +420,7 @@
     "id": "foot-l",
     "bone": "carcass",
     "x": 0.0785,
-    "y": 0.0,
+    "y": 0,
     "z": 0.392,
     "kind": "contact",
     "title": {
@@ -436,7 +436,7 @@
    {
     "id": "grip-bottom-r",
     "bone": "carcass",
-    "x": 0.0,
+    "x": 0,
     "y": 0.05,
     "z": -0.392,
     "kind": "support",
@@ -453,7 +453,7 @@
    {
     "id": "grip-bottom-l",
     "bone": "carcass",
-    "x": 0.0,
+    "x": 0,
     "y": 0.05,
     "z": 0.392,
     "kind": "support",
@@ -470,7 +470,7 @@
    {
     "id": "grip-top-r",
     "bone": "carcass",
-    "x": 0.0,
+    "x": 0,
     "y": 1.4,
     "z": -0.392,
     "kind": "support",
@@ -487,7 +487,7 @@
    {
     "id": "grip-top-l",
     "bone": "carcass",
-    "x": 0.0,
+    "x": 0,
     "y": 1.4,
     "z": 0.392,
     "kind": "support",
@@ -550,2797 +550,6 @@
    }
   ],
   "representations": {
-   "500": {
-    "status": "authored",
-    "denominator": 500,
-    "validRange": {
-     "minDenominator": 350,
-     "maxDenominator": 1000
-    },
-    "pens": {
-     "body": 0.2,
-     "detail": null,
-     "texture": null,
-     "glazing": null,
-     "ground": 0.25
-    },
-    "hatches": [],
-    "geometry": {
-     "elevation": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.35,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.6,
-         0.0
-        ],
-        [
-         0.6,
-         0.015
-        ],
-        [
-         0.0,
-         0.015
-        ]
-       ],
-       "closed": true,
-       "region": "blanket",
-       "material": "polyester-nonwoven",
-       "penMm": 0.2
-      },
-      {
-       "id": "back",
-       "bone": "carcass",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.06
-        ],
-        [
-         0.003,
-         0.06
-        ],
-        [
-         0.003,
-         1.45
-        ],
-        [
-         0.0,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "region": "back-panel",
-       "material": "hdf-back"
-      },
-      {
-       "id": "flap-1-front",
-       "bone": "flap-1",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.457,
-         0.0
-        ],
-        [
-         0.457,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "region": "flaps",
-       "material": "chipboard-foil",
-       "penMm": 0.2
-      },
-      {
-       "id": "flap-2-front",
-       "bone": "flap-2",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.457,
-         0.0
-        ],
-        [
-         0.457,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "region": "flaps",
-       "material": "chipboard-foil",
-       "penMm": 0.2
-      },
-      {
-       "id": "flap-3-front",
-       "bone": "flap-3",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.4555,
-         0.0
-        ],
-        [
-         0.4555,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "region": "flaps",
-       "material": "chipboard-foil",
-       "penMm": 0.2
-      },
-      {
-       "id": "frame",
-       "bone": "carcass",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "poly",
-       "points": [
-        [
-         0.003,
-         0.0
-        ],
-        [
-         0.154,
-         0.0
-        ],
-        [
-         0.154,
-         1.45
-        ],
-        [
-         0.003,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "regions": [
-        "carcass",
-        "plinth"
-       ],
-       "material": "chipboard-foil",
-       "penMm": 0.2
-      }
-     ],
-     "front": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.35,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.6,
-         0.0
-        ],
-        [
-         0.6,
-         0.015
-        ],
-        [
-         0.0,
-         0.015
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.45,
-        "z1": 0.45
-       },
-       "region": "blanket",
-       "material": "polyester-nonwoven",
-       "penMm": 0.2
-      },
-      {
-       "id": "back",
-       "bone": "carcass",
-       "role": "body",
-       "z": 0,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.06
-        ],
-        [
-         0.003,
-         0.06
-        ],
-        [
-         0.003,
-         1.45
-        ],
-        [
-         0.0,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "region": "back-panel",
-       "material": "hdf-back"
-      },
-      {
-       "id": "flap-1-front",
-       "bone": "flap-1",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.457,
-         0.0
-        ],
-        [
-         0.457,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil",
-       "penMm": 0.2
-      },
-      {
-       "id": "flap-2-front",
-       "bone": "flap-2",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.457,
-         0.0
-        ],
-        [
-         0.457,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil",
-       "penMm": 0.2
-      },
-      {
-       "id": "flap-3-front",
-       "bone": "flap-3",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.4555,
-         0.0
-        ],
-        [
-         0.4555,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil",
-       "penMm": 0.2
-      },
-      {
-       "id": "frame",
-       "bone": "carcass",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "poly",
-       "points": [
-        [
-         0.003,
-         0.0
-        ],
-        [
-         0.154,
-         0.0
-        ],
-        [
-         0.154,
-         1.45
-        ],
-        [
-         0.003,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "regions": [
-        "carcass",
-        "plinth"
-       ],
-       "material": "chipboard-foil",
-       "penMm": 0.2
-      }
-     ],
-     "plan": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.35,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.6,
-         0.0
-        ],
-        [
-         0.6,
-         0.015
-        ],
-        [
-         0.0,
-         0.015
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.45,
-        "z1": 0.45
-       },
-       "region": "blanket",
-       "material": "polyester-nonwoven",
-       "penMm": 0.2
-      },
-      {
-       "id": "back",
-       "bone": "carcass",
-       "role": "body",
-       "z": 0,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.06
-        ],
-        [
-         0.003,
-         0.06
-        ],
-        [
-         0.003,
-         1.45
-        ],
-        [
-         0.0,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "region": "back-panel",
-       "material": "hdf-back"
-      },
-      {
-       "id": "flap-1-front",
-       "bone": "flap-1",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.457,
-         0.0
-        ],
-        [
-         0.457,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil",
-       "penMm": 0.2
-      },
-      {
-       "id": "flap-2-front",
-       "bone": "flap-2",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.457,
-         0.0
-        ],
-        [
-         0.457,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil",
-       "penMm": 0.2
-      },
-      {
-       "id": "flap-3-front",
-       "bone": "flap-3",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.4555,
-         0.0
-        ],
-        [
-         0.4555,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil",
-       "penMm": 0.2
-      },
-      {
-       "id": "frame",
-       "bone": "carcass",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "poly",
-       "points": [
-        [
-         0.003,
-         0.0
-        ],
-        [
-         0.154,
-         0.0
-        ],
-        [
-         0.154,
-         1.45
-        ],
-        [
-         0.003,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "regions": [
-        "carcass",
-        "plinth"
-       ],
-       "material": "chipboard-foil",
-       "penMm": 0.2
-      }
-     ]
-    },
-    "decisions": {
-     "silhouette": {
-      "en": "1.6 x 3 mm on paper: the carcass block, the three flaps closing their joints, the blanket as a line.",
-      "de": "1,6 x 3 mm auf dem Papier: der Korpusblock, die drei Klappen ohne Fugen, die Decke als Linie."
-     },
-     "retained": {
-      "en": "The slim proportion 0.17 x 1.45 m, the flaps as the moving front, the blanket under it.",
-      "de": "Die schlanke Proportion 0,17 x 1,45 m, die Klappen als bewegte Front, die Decke darunter."
-     },
-     "merged": {
-      "en": "Carcass and plinth into one block (regions carcass and plinth on one shape); the 3 mm flap joints closed.",
-      "de": "Korpus und Sockel zu einem Block (Regionen carcass und plinth auf einer Form); die 3-mm-Klappenfugen geschlossen."
-     },
-     "omitted": {
-      "en": "Handles, trays, bracket, the plinth recess and all traces of use.",
-      "de": "Griffe, Fächer, Winkel, der Sockelrücksprung und alle Gebrauchsspuren."
-     },
-     "thinElements": {
-      "en": "Flaps and blanket at true thickness with a 0.2 mm pen print to 1:1000.",
-      "de": "Klappen und Decke in wahrer Stärke mit einem 0,2-mm-Stift drucken bis 1:1000."
-     },
-     "hatching": {
-      "en": "None.",
-      "de": "Keine."
-     },
-     "styles": {
-      "en": "Body pen 0.2 mm; carcass 0.85, flaps 0.88, blanket 0.35.",
-      "de": "Körperstift 0,2 mm; Korpus 0,85, Klappen 0,88, Decke 0,35."
-     },
-     "overlays": {
-      "en": "Regions carcass and plinth on the block, back-panel, flaps and blanket on their own shapes.",
-      "de": "Regionen carcass und plinth auf dem Block, back-panel, flaps und blanket auf eigenen Formen."
-     }
-    }
-   },
-   "200": {
-    "status": "authored",
-    "denominator": 200,
-    "validRange": {
-     "minDenominator": 150,
-     "maxDenominator": 350
-    },
-    "pens": {
-     "body": 0.25,
-     "detail": 0.13,
-     "texture": null,
-     "glazing": null,
-     "ground": 0.35
-    },
-    "hatches": [],
-    "geometry": {
-     "elevation": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.35,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.6,
-         0.0
-        ],
-        [
-         0.6,
-         0.015
-        ],
-        [
-         0.0,
-         0.015
-        ]
-       ],
-       "closed": true,
-       "region": "blanket",
-       "material": "polyester-nonwoven"
-      },
-      {
-       "id": "back",
-       "bone": "carcass",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.06
-        ],
-        [
-         0.003,
-         0.06
-        ],
-        [
-         0.003,
-         1.45
-        ],
-        [
-         0.0,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "region": "back-panel",
-       "material": "hdf-back"
-      },
-      {
-       "id": "kick",
-       "bone": "carcass",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.6,
-       "kind": "poly",
-       "points": [
-        [
-         0.124,
-         0.0
-        ],
-        [
-         0.154,
-         0.0
-        ],
-        [
-         0.154,
-         0.06
-        ],
-        [
-         0.124,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "region": "plinth",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "flap-1-front",
-       "bone": "flap-1",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "flap-2-front",
-       "bone": "flap-2",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "flap-3-front",
-       "bone": "flap-3",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "frame",
-       "bone": "carcass",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "poly",
-       "points": [
-        [
-         0.003,
-         0.0
-        ],
-        [
-         0.154,
-         0.0
-        ],
-        [
-         0.154,
-         1.45
-        ],
-        [
-         0.003,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "material": "chipboard-foil",
-       "region": "carcass"
-      }
-     ],
-     "front": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.35,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.6,
-         0.0
-        ],
-        [
-         0.6,
-         0.015
-        ],
-        [
-         0.0,
-         0.015
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.45,
-        "z1": 0.45
-       },
-       "region": "blanket",
-       "material": "polyester-nonwoven"
-      },
-      {
-       "id": "back",
-       "bone": "carcass",
-       "role": "body",
-       "z": 0,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.06
-        ],
-        [
-         0.003,
-         0.06
-        ],
-        [
-         0.003,
-         1.45
-        ],
-        [
-         0.0,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "region": "back-panel",
-       "material": "hdf-back"
-      },
-      {
-       "id": "kick",
-       "bone": "carcass",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.6,
-       "kind": "poly",
-       "points": [
-        [
-         0.124,
-         0.0
-        ],
-        [
-         0.154,
-         0.0
-        ],
-        [
-         0.154,
-         0.06
-        ],
-        [
-         0.124,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.384,
-        "z1": 0.384
-       },
-       "region": "plinth",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "flap-1-front",
-       "bone": "flap-1",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "flap-2-front",
-       "bone": "flap-2",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "flap-3-front",
-       "bone": "flap-3",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "frame",
-       "bone": "carcass",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "poly",
-       "points": [
-        [
-         0.003,
-         0.0
-        ],
-        [
-         0.154,
-         0.0
-        ],
-        [
-         0.154,
-         1.45
-        ],
-        [
-         0.003,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "material": "chipboard-foil",
-       "region": "carcass"
-      }
-     ],
-     "plan": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.35,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.6,
-         0.0
-        ],
-        [
-         0.6,
-         0.015
-        ],
-        [
-         0.0,
-         0.015
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.45,
-        "z1": 0.45
-       },
-       "region": "blanket",
-       "material": "polyester-nonwoven"
-      },
-      {
-       "id": "back",
-       "bone": "carcass",
-       "role": "body",
-       "z": 0,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.06
-        ],
-        [
-         0.003,
-         0.06
-        ],
-        [
-         0.003,
-         1.45
-        ],
-        [
-         0.0,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "region": "back-panel",
-       "material": "hdf-back"
-      },
-      {
-       "id": "flap-1-front",
-       "bone": "flap-1",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "flap-2-front",
-       "bone": "flap-2",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "flap-3-front",
-       "bone": "flap-3",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "frame",
-       "bone": "carcass",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "poly",
-       "points": [
-        [
-         0.003,
-         0.0
-        ],
-        [
-         0.154,
-         0.0
-        ],
-        [
-         0.154,
-         1.45
-        ],
-        [
-         0.003,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "material": "chipboard-foil",
-       "region": "carcass"
-      }
-     ]
-    },
-    "decisions": {
-     "silhouette": {
-      "en": "4 x 7 mm on paper: the carcass block with the back, the three flap fronts as thin plates, the blanket. Front: the flaps over the carcass, the plinth zone below.",
-      "de": "4 x 7 mm auf dem Papier: der Korpusblock mit Rückwand, die drei Klappenfronten als dünne Platten, die Decke. Vorderansicht: die Klappen über dem Korpus, die Sockelzone darunter."
-     },
-     "retained": {
-      "en": "The three flaps on their pivots (they still tip out), the plinth zone, the blanket under the cabinet.",
-      "de": "Die drei Klappen an ihren Drehpunkten (sie kippen noch auf), die Sockelzone, die Decke unter dem Schrank."
-     },
-     "merged": {
-      "en": "Top, sides, bottom and dividers into one frame; the kick board into a 30 mm plinth zone.",
-      "de": "Deckel, Seiten, Boden und Zwischenböden zu einem Rahmen; die Sockelblende zu einer 30-mm-Sockelzone."
-     },
-     "omitted": {
-      "en": "Handles (25 mm proud), trays, bracket, top overhang and all traces of use, which are below 0.15 mm.",
-      "de": "Griffe (25 mm vorstehend), Fächer, Winkel, Deckelüberstand und alle Gebrauchsspuren, die unter 0,15 mm liegen."
-     },
-     "thinElements": {
-      "en": "Flaps (16 mm, 0.08 mm) and blanket (15 mm) are drawn true with a 0.25 mm pen, so they print to 1:350.",
-      "de": "Klappen (16 mm, 0,08 mm) und Decke (15 mm) sind wahr mit einem 0,25-mm-Stift gezeichnet und drucken so bis 1:350."
-     },
-     "hatching": {
-      "en": "None.",
-      "de": "Keine."
-     },
-     "styles": {
-      "en": "Body pen 0.25 mm; carcass 0.85, flaps 0.88, blanket 0.35.",
-      "de": "Körperstift 0,25 mm; Korpus 0,85, Klappen 0,88, Decke 0,35."
-     },
-     "overlays": {
-      "en": "Regions carcass, back-panel, plinth, flaps and blanket.",
-      "de": "Regionen carcass, back-panel, plinth, flaps und blanket."
-     }
-    }
-   },
-   "100": {
-    "status": "authored",
-    "denominator": 100,
-    "validRange": {
-     "minDenominator": 75,
-     "maxDenominator": 150
-    },
-    "pens": {
-     "body": 0.35,
-     "detail": 0.18,
-     "texture": 0.13,
-     "glazing": 0.13,
-     "ground": 0.5
-    },
-    "hatches": [],
-    "geometry": {
-     "elevation": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.35,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.6,
-         0.0
-        ],
-        [
-         0.6,
-         0.015
-        ],
-        [
-         0.0,
-         0.015
-        ]
-       ],
-       "closed": true,
-       "region": "blanket",
-       "material": "polyester-nonwoven"
-      },
-      {
-       "id": "back",
-       "bone": "carcass",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.06
-        ],
-        [
-         0.003,
-         0.06
-        ],
-        [
-         0.003,
-         1.45
-        ],
-        [
-         0.0,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "region": "back-panel",
-       "material": "hdf-back"
-      },
-      {
-       "id": "top",
-       "bone": "carcass",
-       "role": "body",
-       "z": 5,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "poly",
-       "points": [
-        [
-         0.003,
-         1.434
-        ],
-        [
-         0.17,
-         1.434
-        ],
-        [
-         0.17,
-         1.45
-        ],
-        [
-         0.003,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "region": "carcass",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "kick",
-       "bone": "carcass",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.6,
-       "kind": "poly",
-       "points": [
-        [
-         0.138,
-         0.0
-        ],
-        [
-         0.154,
-         0.0
-        ],
-        [
-         0.154,
-         0.06
-        ],
-        [
-         0.138,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "region": "plinth",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "bracket",
-       "bone": "carcass",
-       "role": "body",
-       "z": 9,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         1.45
-        ],
-        [
-         0.04,
-         1.45
-        ],
-        [
-         0.04,
-         1.465
-        ],
-        [
-         0.015,
-         1.465
-        ],
-        [
-         0.015,
-         1.475
-        ],
-        [
-         0.0,
-         1.475
-        ]
-       ],
-       "closed": true,
-       "material": "zinc-plated-steel"
-      },
-      {
-       "id": "flap-1-front",
-       "bone": "flap-1",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "flap-1-tray",
-       "bone": "flap-1",
-       "role": "detail",
-       "z": 2,
-       "filled": true,
-       "tone": 0.65,
-       "kind": "poly",
-       "points": [
-        [
-         0.01556,
-         0.016
-        ],
-        [
-         0.21986,
-         0.13857
-        ],
-        [
-         0.225,
-         0.13
-        ],
-        [
-         0.27,
-         0.13
-        ],
-        [
-         0.37,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "handle-1",
-       "bone": "flap-1",
-       "role": "body",
-       "z": 8,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "poly",
-       "points": [
-        [
-         0.41,
-         -0.025
-        ],
-        [
-         0.42,
-         -0.025
-        ],
-        [
-         0.42,
-         0.0
-        ],
-        [
-         0.41,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "material": "brushed-steel"
-      },
-      {
-       "id": "flap-2-front",
-       "bone": "flap-2",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "flap-2-tray",
-       "bone": "flap-2",
-       "role": "detail",
-       "z": 2,
-       "filled": true,
-       "tone": 0.65,
-       "kind": "poly",
-       "points": [
-        [
-         0.01556,
-         0.016
-        ],
-        [
-         0.21986,
-         0.13857
-        ],
-        [
-         0.225,
-         0.13
-        ],
-        [
-         0.27,
-         0.13
-        ],
-        [
-         0.37,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "handle-2",
-       "bone": "flap-2",
-       "role": "body",
-       "z": 8,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "poly",
-       "points": [
-        [
-         0.41,
-         -0.025
-        ],
-        [
-         0.42,
-         -0.025
-        ],
-        [
-         0.42,
-         0.0
-        ],
-        [
-         0.41,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "material": "aluminium-handle"
-      },
-      {
-       "id": "flap-3-front",
-       "bone": "flap-3",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "flap-3-tray",
-       "bone": "flap-3",
-       "role": "detail",
-       "z": 2,
-       "filled": true,
-       "tone": 0.65,
-       "kind": "poly",
-       "points": [
-        [
-         0.01556,
-         0.016
-        ],
-        [
-         0.21986,
-         0.13857
-        ],
-        [
-         0.225,
-         0.13
-        ],
-        [
-         0.27,
-         0.13
-        ],
-        [
-         0.37,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "handle-3",
-       "bone": "flap-3",
-       "role": "body",
-       "z": 8,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "poly",
-       "points": [
-        [
-         0.41,
-         -0.025
-        ],
-        [
-         0.42,
-         -0.025
-        ],
-        [
-         0.42,
-         0.0
-        ],
-        [
-         0.41,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "material": "aluminium-handle"
-      },
-      {
-       "id": "frame",
-       "bone": "carcass",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "poly",
-       "points": [
-        [
-         0.003,
-         0.0
-        ],
-        [
-         0.154,
-         0.0
-        ],
-        [
-         0.154,
-         1.434
-        ],
-        [
-         0.003,
-         1.434
-        ]
-       ],
-       "closed": true,
-       "material": "chipboard-foil",
-       "region": "carcass"
-      }
-     ],
-     "front": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.35,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.6,
-         0.0
-        ],
-        [
-         0.6,
-         0.015
-        ],
-        [
-         0.0,
-         0.015
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.45,
-        "z1": 0.45
-       },
-       "region": "blanket",
-       "material": "polyester-nonwoven"
-      },
-      {
-       "id": "back",
-       "bone": "carcass",
-       "role": "body",
-       "z": 0,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.06
-        ],
-        [
-         0.003,
-         0.06
-        ],
-        [
-         0.003,
-         1.45
-        ],
-        [
-         0.0,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "region": "back-panel",
-       "material": "hdf-back"
-      },
-      {
-       "id": "top",
-       "bone": "carcass",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "poly",
-       "points": [
-        [
-         0.003,
-         1.434
-        ],
-        [
-         0.17,
-         1.434
-        ],
-        [
-         0.17,
-         1.45
-        ],
-        [
-         0.003,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "region": "carcass",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "kick",
-       "bone": "carcass",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.6,
-       "kind": "poly",
-       "points": [
-        [
-         0.138,
-         0.0
-        ],
-        [
-         0.154,
-         0.0
-        ],
-        [
-         0.154,
-         0.06
-        ],
-        [
-         0.138,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.384,
-        "z1": 0.384
-       },
-       "region": "plinth",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "bracket",
-       "bone": "carcass",
-       "role": "body",
-       "z": 9,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         1.45
-        ],
-        [
-         0.04,
-         1.45
-        ],
-        [
-         0.04,
-         1.465
-        ],
-        [
-         0.015,
-         1.465
-        ],
-        [
-         0.015,
-         1.475
-        ],
-        [
-         0.0,
-         1.475
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.3125,
-        "z1": -0.2875
-       },
-       "material": "zinc-plated-steel"
-      },
-      {
-       "id": "flap-1-front",
-       "bone": "flap-1",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "handle-1",
-       "bone": "flap-1",
-       "role": "body",
-       "z": 8,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "poly",
-       "points": [
-        [
-         0.41,
-         -0.025
-        ],
-        [
-         0.42,
-         -0.025
-        ],
-        [
-         0.42,
-         0.0
-        ],
-        [
-         0.41,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.096,
-        "z1": 0.096
-       },
-       "material": "brushed-steel"
-      },
-      {
-       "id": "flap-2-front",
-       "bone": "flap-2",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "handle-2",
-       "bone": "flap-2",
-       "role": "body",
-       "z": 8,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "poly",
-       "points": [
-        [
-         0.41,
-         -0.025
-        ],
-        [
-         0.42,
-         -0.025
-        ],
-        [
-         0.42,
-         0.0
-        ],
-        [
-         0.41,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.074,
-        "z1": 0.074
-       },
-       "material": "aluminium-handle"
-      },
-      {
-       "id": "flap-3-front",
-       "bone": "flap-3",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "handle-3",
-       "bone": "flap-3",
-       "role": "body",
-       "z": 8,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "poly",
-       "points": [
-        [
-         0.41,
-         -0.025
-        ],
-        [
-         0.42,
-         -0.025
-        ],
-        [
-         0.42,
-         0.0
-        ],
-        [
-         0.41,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.074,
-        "z1": 0.074
-       },
-       "material": "aluminium-handle"
-      },
-      {
-       "id": "frame",
-       "bone": "carcass",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "poly",
-       "points": [
-        [
-         0.003,
-         0.0
-        ],
-        [
-         0.154,
-         0.0
-        ],
-        [
-         0.154,
-         1.434
-        ],
-        [
-         0.003,
-         1.434
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "material": "chipboard-foil",
-       "region": "carcass"
-      },
-      {
-       "id": "scuff-1",
-       "bone": "flap-1",
-       "role": "texture",
-       "z": 22,
-       "filled": false,
-       "tone": 0.35,
-       "kind": "poly",
-       "points": [
-        [
-         -0.3,
-         0.127
-        ],
-        [
-         -0.18,
-         0.147
-        ]
-       ],
-       "closed": false
-      },
-      {
-       "id": "scuff-2",
-       "bone": "flap-1",
-       "role": "texture",
-       "z": 22,
-       "filled": false,
-       "tone": 0.35,
-       "kind": "poly",
-       "points": [
-        [
-         0.08,
-         0.137
-        ],
-        [
-         0.24,
-         0.117
-        ]
-       ],
-       "closed": false
-      }
-     ],
-     "plan": [
-      {
-       "id": "blanket",
-       "bone": "blanket",
-       "role": "body",
-       "z": 1,
-       "filled": true,
-       "tone": 0.35,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.6,
-         0.0
-        ],
-        [
-         0.6,
-         0.015
-        ],
-        [
-         0.0,
-         0.015
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.45,
-        "z1": 0.45
-       },
-       "region": "blanket",
-       "material": "polyester-nonwoven"
-      },
-      {
-       "id": "back",
-       "bone": "carcass",
-       "role": "body",
-       "z": 0,
-       "filled": true,
-       "tone": 0.55,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.06
-        ],
-        [
-         0.003,
-         0.06
-        ],
-        [
-         0.003,
-         1.45
-        ],
-        [
-         0.0,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "region": "back-panel",
-       "material": "hdf-back"
-      },
-      {
-       "id": "top",
-       "bone": "carcass",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.85,
-       "kind": "poly",
-       "points": [
-        [
-         0.003,
-         1.434
-        ],
-        [
-         0.17,
-         1.434
-        ],
-        [
-         0.17,
-         1.45
-        ],
-        [
-         0.003,
-         1.45
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.4,
-        "z1": 0.4
-       },
-       "region": "carcass",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "bracket",
-       "bone": "carcass",
-       "role": "body",
-       "z": 9,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         1.45
-        ],
-        [
-         0.04,
-         1.45
-        ],
-        [
-         0.04,
-         1.465
-        ],
-        [
-         0.015,
-         1.465
-        ],
-        [
-         0.015,
-         1.475
-        ],
-        [
-         0.0,
-         1.475
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.3125,
-        "z1": -0.2875
-       },
-       "material": "zinc-plated-steel"
-      },
-      {
-       "id": "flap-1-front",
-       "bone": "flap-1",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "handle-1",
-       "bone": "flap-1",
-       "role": "body",
-       "z": 8,
-       "filled": true,
-       "tone": 0.3,
-       "kind": "poly",
-       "points": [
-        [
-         0.41,
-         -0.025
-        ],
-        [
-         0.42,
-         -0.025
-        ],
-        [
-         0.42,
-         0.0
-        ],
-        [
-         0.41,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.096,
-        "z1": 0.096
-       },
-       "material": "brushed-steel"
-      },
-      {
-       "id": "flap-2-front",
-       "bone": "flap-2",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "handle-2",
-       "bone": "flap-2",
-       "role": "body",
-       "z": 8,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "poly",
-       "points": [
-        [
-         0.41,
-         -0.025
-        ],
-        [
-         0.42,
-         -0.025
-        ],
-        [
-         0.42,
-         0.0
-        ],
-        [
-         0.41,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.074,
-        "z1": 0.074
-       },
-       "material": "aluminium-handle"
-      },
-      {
-       "id": "flap-3-front",
-       "bone": "flap-3",
-       "role": "body",
-       "z": 6,
-       "filled": true,
-       "tone": 0.88,
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         0.0
-        ],
-        [
-         0.455,
-         0.0
-        ],
-        [
-         0.455,
-         0.016
-        ],
-        [
-         0.0,
-         0.016
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.398,
-        "z1": 0.398
-       },
-       "region": "flaps",
-       "material": "chipboard-foil"
-      },
-      {
-       "id": "handle-3",
-       "bone": "flap-3",
-       "role": "body",
-       "z": 8,
-       "filled": true,
-       "tone": 0.4,
-       "kind": "poly",
-       "points": [
-        [
-         0.41,
-         -0.025
-        ],
-        [
-         0.42,
-         -0.025
-        ],
-        [
-         0.42,
-         0.0
-        ],
-        [
-         0.41,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.074,
-        "z1": 0.074
-       },
-       "material": "aluminium-handle"
-      }
-     ]
-    },
-    "decisions": {
-     "silhouette": {
-      "en": "8 x 15 mm on paper: the carcass as one side outline, the top and the 3 mm back, the three flap fronts, the handles as blocks, the blanket. Front: flaps, joints, top edge, kick board, side edges.",
-      "de": "8 x 15 mm auf dem Papier: der Korpus als eine Seitenkontur, Deckel und 3-mm-Rückwand, die drei Klappenfronten, die Griffe als Blöcke, die Decke. Vorderansicht: Klappen, Fugen, Deckelkante, Sockelblende, Seitenkanten."
-     },
-     "retained": {
-      "en": "Board thickness of flaps, top and kick board (16 mm = 0.16 mm), the flap joints, the handle positions with the longer replacement on the bottom flap, one tray wedge per flap that swings out with it.",
-      "de": "Plattenstärke von Klappen, Deckel und Sockelblende (16 mm = 0,16 mm), die Klappenfugen, die Griffpositionen mit dem längeren Ersatzgriff unten, je Klappe ein Fachkeil, der mit ihr ausschwenkt."
-     },
-     "merged": {
-      "en": "Sides, bottom and dividers into one carcass frame; cheeks and tray into one wedge; bar and legs of each handle into one block.",
-      "de": "Seiten, Boden und Zwischenböden zu einem Korpusrahmen; Wangen und Fachboden zu einem Keil; Stange und Füße jedes Griffs zu einem Block."
-     },
-     "omitted": {
-      "en": "The bracket (25 mm), the torn-out notch (12 mm), the open screw holes, the chipped corner, the rounded folds of the blanket.",
-      "de": "Der Winkel (25 mm), die ausgebrochene Kerbe (12 mm), die offenen Schraubenlöcher, die abgeplatzte Ecke, die gerundeten Falten der Decke."
-     },
-     "thinElements": {
-      "en": "The back (0.03 mm) reads through its outline; two scuff strokes stay on the bottom flap.",
-      "de": "Die Rückwand (0,03 mm) wirkt durch ihre Kontur; zwei Abriebstriche bleiben auf der unteren Klappe."
-     },
-     "hatching": {
-      "en": "None; tones as at 1:50.",
-      "de": "Keine; Töne wie bei 1:50."
-     },
-     "styles": {
-      "en": "Body pen 0.35 mm, texture 0.13 mm; tones as at 1:50.",
-      "de": "Körperstift 0,35 mm, Textur 0,13 mm; Töne wie bei 1:50."
-     },
-     "overlays": {
-      "en": "One shape per merged part; regions carcass, back-panel, plinth, flaps and blanket.",
-      "de": "Eine Form je zusammengefasstem Teil; Regionen carcass, back-panel, plinth, flaps und blanket."
-     }
-    }
-   },
    "50": {
     "status": "authored",
     "denominator": 50,
@@ -3369,7 +578,7 @@
        "points": [
         [
          0.5925,
-         0.0
+         0
         ],
         [
          0.59537,
@@ -3420,7 +629,7 @@
          0.01037
         ],
         [
-         0.0,
+         0,
          0.0075
         ],
         [
@@ -3437,7 +646,7 @@
         ],
         [
          0.0075,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3454,7 +663,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.06
         ],
         [
@@ -3466,7 +675,7 @@
          1.45
         ],
         [
-         0.0,
+         0,
          1.45
         ]
        ],
@@ -3485,11 +694,11 @@
        "points": [
         [
          0.003,
-         0.0
+         0
         ],
         [
          0.154,
-         0.0
+         0
         ],
         [
          0.154,
@@ -3515,11 +724,11 @@
        "points": [
         [
          0.138,
-         0.0
+         0
         ],
         [
          0.154,
-         0.0
+         0
         ],
         [
          0.154,
@@ -3544,7 +753,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          1.45
         ],
         [
@@ -3564,7 +773,7 @@
          1.475
         ],
         [
-         0.0,
+         0,
          1.475
         ]
        ],
@@ -3581,19 +790,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.455,
-         0.0
+         0
         ],
         [
          0.455,
          0.016
         ],
         [
-         0.0,
+         0,
          0.016
         ]
        ],
@@ -3707,11 +916,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3736,11 +945,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3756,19 +965,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.455,
-         0.0
+         0
         ],
         [
          0.455,
          0.016
         ],
         [
-         0.0,
+         0,
          0.016
         ]
        ],
@@ -3882,11 +1091,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3911,11 +1120,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -3931,19 +1140,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.455,
-         0.0
+         0
         ],
         [
          0.455,
          0.016
         ],
         [
-         0.0,
+         0,
          0.016
         ]
        ],
@@ -4057,11 +1266,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4086,11 +1295,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4139,7 +1348,7 @@
        "points": [
         [
          0.5925,
-         0.0
+         0
         ],
         [
          0.59537,
@@ -4190,7 +1399,7 @@
          0.01037
         ],
         [
-         0.0,
+         0,
          0.0075
         ],
         [
@@ -4207,7 +1416,7 @@
         ],
         [
          0.0075,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4230,7 +1439,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.06
         ],
         [
@@ -4242,7 +1451,7 @@
          1.45
         ],
         [
-         0.0,
+         0,
          1.45
         ]
        ],
@@ -4267,11 +1476,11 @@
        "points": [
         [
          0.003,
-         0.0
+         0
         ],
         [
          0.154,
-         0.0
+         0
         ],
         [
          0.154,
@@ -4303,11 +1512,11 @@
        "points": [
         [
          0.003,
-         0.0
+         0
         ],
         [
          0.154,
-         0.0
+         0
         ],
         [
          0.154,
@@ -4339,11 +1548,11 @@
        "points": [
         [
          0.138,
-         0.0
+         0
         ],
         [
          0.154,
-         0.0
+         0
         ],
         [
          0.154,
@@ -4374,7 +1583,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          1.45
         ],
         [
@@ -4394,7 +1603,7 @@
          1.475
         ],
         [
-         0.0,
+         0,
          1.475
         ]
        ],
@@ -4417,19 +1626,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.455,
-         0.0
+         0
         ],
         [
          0.455,
          0.016
         ],
         [
-         0.0,
+         0,
          0.016
         ]
        ],
@@ -4497,11 +1706,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4532,11 +1741,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4558,19 +1767,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.455,
-         0.0
+         0
         ],
         [
          0.455,
          0.016
         ],
         [
-         0.0,
+         0,
          0.016
         ]
        ],
@@ -4638,11 +1847,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4673,11 +1882,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4699,19 +1908,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.455,
-         0.0
+         0
         ],
         [
          0.455,
          0.016
         ],
         [
-         0.0,
+         0,
          0.016
         ]
        ],
@@ -4779,11 +1988,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -4814,11 +2023,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -5107,7 +2316,7 @@
        "points": [
         [
          0.5925,
-         0.0
+         0
         ],
         [
          0.59537,
@@ -5158,7 +2367,7 @@
          0.01037
         ],
         [
-         0.0,
+         0,
          0.0075
         ],
         [
@@ -5175,7 +2384,7 @@
         ],
         [
          0.0075,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -5198,7 +2407,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.06
         ],
         [
@@ -5210,7 +2419,7 @@
          1.45
         ],
         [
-         0.0,
+         0,
          1.45
         ]
        ],
@@ -5225,6 +2434,42 @@
        "material": "hdf-back"
       },
       {
+       "id": "frame",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         1.434
+        ],
+        [
+         0.003,
+         1.434
+        ]
+       ],
+       "closed": true,
+       "region": "carcass",
+       "material": "chipboard-foil",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       }
+      },
+      {
        "id": "bracket",
        "bone": "carcass",
        "role": "body",
@@ -5234,7 +2479,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          1.45
         ],
         [
@@ -5254,7 +2499,7 @@
          1.475
         ],
         [
-         0.0,
+         0,
          1.475
         ]
        ],
@@ -5277,19 +2522,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.455,
-         0.0
+         0
         ],
         [
          0.455,
          0.016
         ],
         [
-         0.0,
+         0,
          0.016
         ]
        ],
@@ -5357,11 +2602,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -5392,11 +2637,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -5418,19 +2663,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.455,
-         0.0
+         0
         ],
         [
          0.455,
          0.016
         ],
         [
-         0.0,
+         0,
          0.016
         ]
        ],
@@ -5498,11 +2743,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -5533,11 +2778,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -5559,19 +2804,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.455,
-         0.0
+         0
         ],
         [
          0.455,
          0.016
         ],
         [
-         0.0,
+         0,
          0.016
         ]
        ],
@@ -5639,11 +2884,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -5674,11 +2919,11 @@
         ],
         [
          0.42,
-         0.0
+         0
         ],
         [
          0.41,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -5898,8 +3143,8 @@
       "de": "Der Schrank mit 16 x 29 mm auf dem Papier mit echten 16-mm-Platten: von rechts die Seitenwand, der Deckel darüber, der 3-mm-Rückwandstreifen, die drei Klappenfronten vor dem Korpus mit ihren Stangengriffen, der verbliebene Winkel auf dem Deckel und die Decke darunter. Vorderansicht: die drei Klappen mit 3-mm-Fugen, die Deckelkante, die Seitenkanten und die Sockelblende darunter. Grundriss: der Deckel mit der ausgebrochenen Kerbe, die Griffe davor, die Decke ringsum."
      },
      "retained": {
-      "en": "Every board at its true thickness, the flap joints, the pivot at the front-bottom edge of each flap, the shoe trays and cheeks behind the flaps (drawn under the side panel, visible when a flap is open), handles with legs, the longer replacement handle on the bottom flap, the bracket and the notch of the torn one.",
-      "de": "Jede Platte in wahrer Stärke, die Klappenfugen, der Drehpunkt an der vorderen Unterkante jeder Klappe, Schuhfächer und Wangen hinter den Klappen (unter der Seitenwand gezeichnet, sichtbar bei offener Klappe), Griffe mit Füßen, der längere Ersatzgriff an der unteren Klappe, der Winkel und die Kerbe des ausgerissenen."
+      "en": "Every board at its true thickness, the flap joints, the pivot at the front-bottom edge of each flap, the shoe trays and cheeks behind the flaps (drawn under the side panel, visible when a flap is open), handles with legs, the longer replacement handle on the bottom flap, the bracket and the notch of the torn one. Plan: the carcass block under the top, which shows when the cabinet is tilted.",
+      "de": "Jede Platte in wahrer Stärke, die Klappenfugen, der Drehpunkt an der vorderen Unterkante jeder Klappe, Schuhfächer und Wangen hinter den Klappen (unter der Seitenwand gezeichnet, sichtbar bei offener Klappe), Griffe mit Füßen, der längere Ersatzgriff an der unteren Klappe, der Winkel und die Kerbe des ausgerissenen. Draufsicht: der Korpusblock unter dem Deckel, der sichtbar wird, wenn der Schrank gekippt ist."
      },
      "merged": {
       "en": "Edge banding and foil are merged into the boards; the cam fittings and nails into their boards.",
@@ -5924,6 +3169,2833 @@
      "overlays": {
       "en": "One shape per board, flap part, handle part and blanket; regions carcass, back-panel, plinth, flaps and blanket.",
       "de": "Eine Form je Platte, Klappenteil, Griffteil und Decke; Regionen carcass, back-panel, plinth, flaps und blanket."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.015
+        ],
+        [
+         0,
+         0.015
+        ]
+       ],
+       "closed": true,
+       "region": "blanket",
+       "material": "polyester-nonwoven"
+      },
+      {
+       "id": "back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.06
+        ],
+        [
+         0.003,
+         0.06
+        ],
+        [
+         0.003,
+         1.45
+        ],
+        [
+         0,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "region": "back-panel",
+       "material": "hdf-back"
+      },
+      {
+       "id": "top",
+       "bone": "carcass",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         1.434
+        ],
+        [
+         0.17,
+         1.434
+        ],
+        [
+         0.17,
+         1.45
+        ],
+        [
+         0.003,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "region": "carcass",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "kick",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.138,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         0.06
+        ],
+        [
+         0.138,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "plinth",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "bracket",
+       "bone": "carcass",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         1.45
+        ],
+        [
+         0.04,
+         1.45
+        ],
+        [
+         0.04,
+         1.465
+        ],
+        [
+         0.015,
+         1.465
+        ],
+        [
+         0.015,
+         1.475
+        ],
+        [
+         0,
+         1.475
+        ]
+       ],
+       "closed": true,
+       "material": "zinc-plated-steel"
+      },
+      {
+       "id": "flap-1-front",
+       "bone": "flap-1",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "flap-1-tray",
+       "bone": "flap-1",
+       "role": "detail",
+       "z": 2,
+       "filled": true,
+       "tone": 0.65,
+       "kind": "poly",
+       "points": [
+        [
+         0.01556,
+         0.016
+        ],
+        [
+         0.21986,
+         0.13857
+        ],
+        [
+         0.225,
+         0.13
+        ],
+        [
+         0.27,
+         0.13
+        ],
+        [
+         0.37,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "handle-1",
+       "bone": "flap-1",
+       "role": "body",
+       "z": 8,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.41,
+         -0.025
+        ],
+        [
+         0.42,
+         -0.025
+        ],
+        [
+         0.42,
+         0
+        ],
+        [
+         0.41,
+         0
+        ]
+       ],
+       "closed": true,
+       "material": "brushed-steel"
+      },
+      {
+       "id": "flap-2-front",
+       "bone": "flap-2",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "flap-2-tray",
+       "bone": "flap-2",
+       "role": "detail",
+       "z": 2,
+       "filled": true,
+       "tone": 0.65,
+       "kind": "poly",
+       "points": [
+        [
+         0.01556,
+         0.016
+        ],
+        [
+         0.21986,
+         0.13857
+        ],
+        [
+         0.225,
+         0.13
+        ],
+        [
+         0.27,
+         0.13
+        ],
+        [
+         0.37,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "handle-2",
+       "bone": "flap-2",
+       "role": "body",
+       "z": 8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.41,
+         -0.025
+        ],
+        [
+         0.42,
+         -0.025
+        ],
+        [
+         0.42,
+         0
+        ],
+        [
+         0.41,
+         0
+        ]
+       ],
+       "closed": true,
+       "material": "aluminium-handle"
+      },
+      {
+       "id": "flap-3-front",
+       "bone": "flap-3",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "flap-3-tray",
+       "bone": "flap-3",
+       "role": "detail",
+       "z": 2,
+       "filled": true,
+       "tone": 0.65,
+       "kind": "poly",
+       "points": [
+        [
+         0.01556,
+         0.016
+        ],
+        [
+         0.21986,
+         0.13857
+        ],
+        [
+         0.225,
+         0.13
+        ],
+        [
+         0.27,
+         0.13
+        ],
+        [
+         0.37,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "handle-3",
+       "bone": "flap-3",
+       "role": "body",
+       "z": 8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.41,
+         -0.025
+        ],
+        [
+         0.42,
+         -0.025
+        ],
+        [
+         0.42,
+         0
+        ],
+        [
+         0.41,
+         0
+        ]
+       ],
+       "closed": true,
+       "material": "aluminium-handle"
+      },
+      {
+       "id": "frame",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         1.434
+        ],
+        [
+         0.003,
+         1.434
+        ]
+       ],
+       "closed": true,
+       "material": "chipboard-foil",
+       "region": "carcass"
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.015
+        ],
+        [
+         0,
+         0.015
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.45,
+        "z1": 0.45
+       },
+       "region": "blanket",
+       "material": "polyester-nonwoven"
+      },
+      {
+       "id": "back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.06
+        ],
+        [
+         0.003,
+         0.06
+        ],
+        [
+         0.003,
+         1.45
+        ],
+        [
+         0,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "region": "back-panel",
+       "material": "hdf-back"
+      },
+      {
+       "id": "top",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         1.434
+        ],
+        [
+         0.17,
+         1.434
+        ],
+        [
+         0.17,
+         1.45
+        ],
+        [
+         0.003,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "region": "carcass",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "kick",
+       "bone": "carcass",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.138,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         0.06
+        ],
+        [
+         0.138,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.384,
+        "z1": 0.384
+       },
+       "region": "plinth",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "bracket",
+       "bone": "carcass",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         1.45
+        ],
+        [
+         0.04,
+         1.45
+        ],
+        [
+         0.04,
+         1.465
+        ],
+        [
+         0.015,
+         1.465
+        ],
+        [
+         0.015,
+         1.475
+        ],
+        [
+         0,
+         1.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3125,
+        "z1": -0.2875
+       },
+       "material": "zinc-plated-steel"
+      },
+      {
+       "id": "flap-1-front",
+       "bone": "flap-1",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "handle-1",
+       "bone": "flap-1",
+       "role": "body",
+       "z": 8,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.41,
+         -0.025
+        ],
+        [
+         0.42,
+         -0.025
+        ],
+        [
+         0.42,
+         0
+        ],
+        [
+         0.41,
+         0
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.096,
+        "z1": 0.096
+       },
+       "material": "brushed-steel"
+      },
+      {
+       "id": "flap-2-front",
+       "bone": "flap-2",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "handle-2",
+       "bone": "flap-2",
+       "role": "body",
+       "z": 8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.41,
+         -0.025
+        ],
+        [
+         0.42,
+         -0.025
+        ],
+        [
+         0.42,
+         0
+        ],
+        [
+         0.41,
+         0
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.074,
+        "z1": 0.074
+       },
+       "material": "aluminium-handle"
+      },
+      {
+       "id": "flap-3-front",
+       "bone": "flap-3",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "handle-3",
+       "bone": "flap-3",
+       "role": "body",
+       "z": 8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.41,
+         -0.025
+        ],
+        [
+         0.42,
+         -0.025
+        ],
+        [
+         0.42,
+         0
+        ],
+        [
+         0.41,
+         0
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.074,
+        "z1": 0.074
+       },
+       "material": "aluminium-handle"
+      },
+      {
+       "id": "frame",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         1.434
+        ],
+        [
+         0.003,
+         1.434
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "material": "chipboard-foil",
+       "region": "carcass"
+      },
+      {
+       "id": "scuff-1",
+       "bone": "flap-1",
+       "role": "texture",
+       "z": 22,
+       "filled": false,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.3,
+         0.127
+        ],
+        [
+         -0.18,
+         0.147
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "scuff-2",
+       "bone": "flap-1",
+       "role": "texture",
+       "z": 22,
+       "filled": false,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.08,
+         0.137
+        ],
+        [
+         0.24,
+         0.117
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.015
+        ],
+        [
+         0,
+         0.015
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.45,
+        "z1": 0.45
+       },
+       "region": "blanket",
+       "material": "polyester-nonwoven"
+      },
+      {
+       "id": "back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.06
+        ],
+        [
+         0.003,
+         0.06
+        ],
+        [
+         0.003,
+         1.45
+        ],
+        [
+         0,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "region": "back-panel",
+       "material": "hdf-back"
+      },
+      {
+       "id": "frame",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         1.434
+        ],
+        [
+         0.003,
+         1.434
+        ]
+       ],
+       "closed": true,
+       "material": "chipboard-foil",
+       "region": "carcass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       }
+      },
+      {
+       "id": "top",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         1.434
+        ],
+        [
+         0.17,
+         1.434
+        ],
+        [
+         0.17,
+         1.45
+        ],
+        [
+         0.003,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "region": "carcass",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "bracket",
+       "bone": "carcass",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         1.45
+        ],
+        [
+         0.04,
+         1.45
+        ],
+        [
+         0.04,
+         1.465
+        ],
+        [
+         0.015,
+         1.465
+        ],
+        [
+         0.015,
+         1.475
+        ],
+        [
+         0,
+         1.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3125,
+        "z1": -0.2875
+       },
+       "material": "zinc-plated-steel"
+      },
+      {
+       "id": "flap-1-front",
+       "bone": "flap-1",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "handle-1",
+       "bone": "flap-1",
+       "role": "body",
+       "z": 8,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.41,
+         -0.025
+        ],
+        [
+         0.42,
+         -0.025
+        ],
+        [
+         0.42,
+         0
+        ],
+        [
+         0.41,
+         0
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.096,
+        "z1": 0.096
+       },
+       "material": "brushed-steel"
+      },
+      {
+       "id": "flap-2-front",
+       "bone": "flap-2",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "handle-2",
+       "bone": "flap-2",
+       "role": "body",
+       "z": 8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.41,
+         -0.025
+        ],
+        [
+         0.42,
+         -0.025
+        ],
+        [
+         0.42,
+         0
+        ],
+        [
+         0.41,
+         0
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.074,
+        "z1": 0.074
+       },
+       "material": "aluminium-handle"
+      },
+      {
+       "id": "flap-3-front",
+       "bone": "flap-3",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "handle-3",
+       "bone": "flap-3",
+       "role": "body",
+       "z": 8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.41,
+         -0.025
+        ],
+        [
+         0.42,
+         -0.025
+        ],
+        [
+         0.42,
+         0
+        ],
+        [
+         0.41,
+         0
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.074,
+        "z1": 0.074
+       },
+       "material": "aluminium-handle"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "8 x 15 mm on paper: the carcass as one side outline, the top and the 3 mm back, the three flap fronts, the handles as blocks, the blanket. Front: flaps, joints, top edge, kick board, side edges.",
+      "de": "8 x 15 mm auf dem Papier: der Korpus als eine Seitenkontur, Deckel und 3-mm-Rückwand, die drei Klappenfronten, die Griffe als Blöcke, die Decke. Vorderansicht: Klappen, Fugen, Deckelkante, Sockelblende, Seitenkanten."
+     },
+     "retained": {
+      "en": "Board thickness of flaps, top and kick board (16 mm = 0.16 mm), the flap joints, the handle positions with the longer replacement on the bottom flap, one tray wedge per flap that swings out with it. Plan: the carcass block under the top, which shows when the cabinet is tilted.",
+      "de": "Plattenstärke von Klappen, Deckel und Sockelblende (16 mm = 0,16 mm), die Klappenfugen, die Griffpositionen mit dem längeren Ersatzgriff unten, je Klappe ein Fachkeil, der mit ihr ausschwenkt. Draufsicht: der Korpusblock unter dem Deckel, der sichtbar wird, wenn der Schrank gekippt ist."
+     },
+     "merged": {
+      "en": "Sides, bottom and dividers into one carcass frame; cheeks and tray into one wedge; bar and legs of each handle into one block.",
+      "de": "Seiten, Boden und Zwischenböden zu einem Korpusrahmen; Wangen und Fachboden zu einem Keil; Stange und Füße jedes Griffs zu einem Block."
+     },
+     "omitted": {
+      "en": "The bracket (25 mm), the torn-out notch (12 mm), the open screw holes, the chipped corner, the rounded folds of the blanket.",
+      "de": "Der Winkel (25 mm), die ausgebrochene Kerbe (12 mm), die offenen Schraubenlöcher, die abgeplatzte Ecke, die gerundeten Falten der Decke."
+     },
+     "thinElements": {
+      "en": "The back (0.03 mm) reads through its outline; two scuff strokes stay on the bottom flap.",
+      "de": "Die Rückwand (0,03 mm) wirkt durch ihre Kontur; zwei Abriebstriche bleiben auf der unteren Klappe."
+     },
+     "hatching": {
+      "en": "None; tones as at 1:50.",
+      "de": "Keine; Töne wie bei 1:50."
+     },
+     "styles": {
+      "en": "Body pen 0.35 mm, texture 0.13 mm; tones as at 1:50.",
+      "de": "Körperstift 0,35 mm, Textur 0,13 mm; Töne wie bei 1:50."
+     },
+     "overlays": {
+      "en": "One shape per merged part; regions carcass, back-panel, plinth, flaps and blanket.",
+      "de": "Eine Form je zusammengefasstem Teil; Regionen carcass, back-panel, plinth, flaps und blanket."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.015
+        ],
+        [
+         0,
+         0.015
+        ]
+       ],
+       "closed": true,
+       "region": "blanket",
+       "material": "polyester-nonwoven"
+      },
+      {
+       "id": "back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.06
+        ],
+        [
+         0.003,
+         0.06
+        ],
+        [
+         0.003,
+         1.45
+        ],
+        [
+         0,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "region": "back-panel",
+       "material": "hdf-back"
+      },
+      {
+       "id": "kick",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.124,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         0.06
+        ],
+        [
+         0.124,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "plinth",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "flap-1-front",
+       "bone": "flap-1",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "flap-2-front",
+       "bone": "flap-2",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "flap-3-front",
+       "bone": "flap-3",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "frame",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         1.45
+        ],
+        [
+         0.003,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "material": "chipboard-foil",
+       "region": "carcass"
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.015
+        ],
+        [
+         0,
+         0.015
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.45,
+        "z1": 0.45
+       },
+       "region": "blanket",
+       "material": "polyester-nonwoven"
+      },
+      {
+       "id": "back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.06
+        ],
+        [
+         0.003,
+         0.06
+        ],
+        [
+         0.003,
+         1.45
+        ],
+        [
+         0,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "region": "back-panel",
+       "material": "hdf-back"
+      },
+      {
+       "id": "kick",
+       "bone": "carcass",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.124,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         0.06
+        ],
+        [
+         0.124,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.384,
+        "z1": 0.384
+       },
+       "region": "plinth",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "flap-1-front",
+       "bone": "flap-1",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "flap-2-front",
+       "bone": "flap-2",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "flap-3-front",
+       "bone": "flap-3",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "frame",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         1.45
+        ],
+        [
+         0.003,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "material": "chipboard-foil",
+       "region": "carcass"
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.015
+        ],
+        [
+         0,
+         0.015
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.45,
+        "z1": 0.45
+       },
+       "region": "blanket",
+       "material": "polyester-nonwoven"
+      },
+      {
+       "id": "back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.06
+        ],
+        [
+         0.003,
+         0.06
+        ],
+        [
+         0.003,
+         1.45
+        ],
+        [
+         0,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "region": "back-panel",
+       "material": "hdf-back"
+      },
+      {
+       "id": "flap-1-front",
+       "bone": "flap-1",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "flap-2-front",
+       "bone": "flap-2",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "flap-3-front",
+       "bone": "flap-3",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.455,
+         0
+        ],
+        [
+         0.455,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil"
+      },
+      {
+       "id": "frame",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         1.45
+        ],
+        [
+         0.003,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "material": "chipboard-foil",
+       "region": "carcass"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "4 x 7 mm on paper: the carcass block with the back, the three flap fronts as thin plates, the blanket. Front: the flaps over the carcass, the plinth zone below.",
+      "de": "4 x 7 mm auf dem Papier: der Korpusblock mit Rückwand, die drei Klappenfronten als dünne Platten, die Decke. Vorderansicht: die Klappen über dem Korpus, die Sockelzone darunter."
+     },
+     "retained": {
+      "en": "The three flaps on their pivots (they still tip out), the plinth zone, the blanket under the cabinet.",
+      "de": "Die drei Klappen an ihren Drehpunkten (sie kippen noch auf), die Sockelzone, die Decke unter dem Schrank."
+     },
+     "merged": {
+      "en": "Top, sides, bottom and dividers into one frame; the kick board into a 30 mm plinth zone.",
+      "de": "Deckel, Seiten, Boden und Zwischenböden zu einem Rahmen; die Sockelblende zu einer 30-mm-Sockelzone."
+     },
+     "omitted": {
+      "en": "Handles (25 mm proud), trays, bracket, top overhang and all traces of use, which are below 0.15 mm.",
+      "de": "Griffe (25 mm vorstehend), Fächer, Winkel, Deckelüberstand und alle Gebrauchsspuren, die unter 0,15 mm liegen."
+     },
+     "thinElements": {
+      "en": "Flaps (16 mm, 0.08 mm) and blanket (15 mm) are drawn true with a 0.25 mm pen, so they print to 1:350.",
+      "de": "Klappen (16 mm, 0,08 mm) und Decke (15 mm) sind wahr mit einem 0,25-mm-Stift gezeichnet und drucken so bis 1:350."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Body pen 0.25 mm; carcass 0.85, flaps 0.88, blanket 0.35.",
+      "de": "Körperstift 0,25 mm; Korpus 0,85, Klappen 0,88, Decke 0,35."
+     },
+     "overlays": {
+      "en": "Regions carcass, back-panel, plinth, flaps and blanket.",
+      "de": "Regionen carcass, back-panel, plinth, flaps und blanket."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.2,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.015
+        ],
+        [
+         0,
+         0.015
+        ]
+       ],
+       "closed": true,
+       "region": "blanket",
+       "material": "polyester-nonwoven",
+       "penMm": 0.2
+      },
+      {
+       "id": "back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.06
+        ],
+        [
+         0.003,
+         0.06
+        ],
+        [
+         0.003,
+         1.45
+        ],
+        [
+         0,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "region": "back-panel",
+       "material": "hdf-back"
+      },
+      {
+       "id": "flap-1-front",
+       "bone": "flap-1",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.457,
+         0
+        ],
+        [
+         0.457,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "region": "flaps",
+       "material": "chipboard-foil",
+       "penMm": 0.2
+      },
+      {
+       "id": "flap-2-front",
+       "bone": "flap-2",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.457,
+         0
+        ],
+        [
+         0.457,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "region": "flaps",
+       "material": "chipboard-foil",
+       "penMm": 0.2
+      },
+      {
+       "id": "flap-3-front",
+       "bone": "flap-3",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.4555,
+         0
+        ],
+        [
+         0.4555,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "region": "flaps",
+       "material": "chipboard-foil",
+       "penMm": 0.2
+      },
+      {
+       "id": "frame",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         1.45
+        ],
+        [
+         0.003,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "carcass",
+        "plinth"
+       ],
+       "material": "chipboard-foil",
+       "penMm": 0.2
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.015
+        ],
+        [
+         0,
+         0.015
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.45,
+        "z1": 0.45
+       },
+       "region": "blanket",
+       "material": "polyester-nonwoven",
+       "penMm": 0.2
+      },
+      {
+       "id": "back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.06
+        ],
+        [
+         0.003,
+         0.06
+        ],
+        [
+         0.003,
+         1.45
+        ],
+        [
+         0,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "region": "back-panel",
+       "material": "hdf-back"
+      },
+      {
+       "id": "flap-1-front",
+       "bone": "flap-1",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.457,
+         0
+        ],
+        [
+         0.457,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil",
+       "penMm": 0.2
+      },
+      {
+       "id": "flap-2-front",
+       "bone": "flap-2",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.457,
+         0
+        ],
+        [
+         0.457,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil",
+       "penMm": 0.2
+      },
+      {
+       "id": "flap-3-front",
+       "bone": "flap-3",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.4555,
+         0
+        ],
+        [
+         0.4555,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil",
+       "penMm": 0.2
+      },
+      {
+       "id": "frame",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         1.45
+        ],
+        [
+         0.003,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "regions": [
+        "carcass",
+        "plinth"
+       ],
+       "material": "chipboard-foil",
+       "penMm": 0.2
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6,
+         0.015
+        ],
+        [
+         0,
+         0.015
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.45,
+        "z1": 0.45
+       },
+       "region": "blanket",
+       "material": "polyester-nonwoven",
+       "penMm": 0.2
+      },
+      {
+       "id": "back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.06
+        ],
+        [
+         0.003,
+         0.06
+        ],
+        [
+         0.003,
+         1.45
+        ],
+        [
+         0,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "region": "back-panel",
+       "material": "hdf-back"
+      },
+      {
+       "id": "flap-1-front",
+       "bone": "flap-1",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.457,
+         0
+        ],
+        [
+         0.457,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil",
+       "penMm": 0.2
+      },
+      {
+       "id": "flap-2-front",
+       "bone": "flap-2",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.457,
+         0
+        ],
+        [
+         0.457,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil",
+       "penMm": 0.2
+      },
+      {
+       "id": "flap-3-front",
+       "bone": "flap-3",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.4555,
+         0
+        ],
+        [
+         0.4555,
+         0.016
+        ],
+        [
+         0,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.398,
+        "z1": 0.398
+       },
+       "region": "flaps",
+       "material": "chipboard-foil",
+       "penMm": 0.2
+      },
+      {
+       "id": "frame",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.003,
+         0
+        ],
+        [
+         0.154,
+         0
+        ],
+        [
+         0.154,
+         1.45
+        ],
+        [
+         0.003,
+         1.45
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       },
+       "regions": [
+        "carcass",
+        "plinth"
+       ],
+       "material": "chipboard-foil",
+       "penMm": 0.2
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "1.6 x 3 mm on paper: the carcass block, the three flaps closing their joints, the blanket as a line.",
+      "de": "1,6 x 3 mm auf dem Papier: der Korpusblock, die drei Klappen ohne Fugen, die Decke als Linie."
+     },
+     "retained": {
+      "en": "The slim proportion 0.17 x 1.45 m, the flaps as the moving front, the blanket under it.",
+      "de": "Die schlanke Proportion 0,17 x 1,45 m, die Klappen als bewegte Front, die Decke darunter."
+     },
+     "merged": {
+      "en": "Carcass and plinth into one block (regions carcass and plinth on one shape); the 3 mm flap joints closed.",
+      "de": "Korpus und Sockel zu einem Block (Regionen carcass und plinth auf einer Form); die 3-mm-Klappenfugen geschlossen."
+     },
+     "omitted": {
+      "en": "Handles, trays, bracket, the plinth recess and all traces of use.",
+      "de": "Griffe, Fächer, Winkel, der Sockelrücksprung und alle Gebrauchsspuren."
+     },
+     "thinElements": {
+      "en": "Flaps and blanket at true thickness with a 0.2 mm pen print to 1:1000.",
+      "de": "Klappen und Decke in wahrer Stärke mit einem 0,2-mm-Stift drucken bis 1:1000."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Body pen 0.2 mm; carcass 0.85, flaps 0.88, blanket 0.35.",
+      "de": "Körperstift 0,2 mm; Korpus 0,85, Klappen 0,88, Decke 0,35."
+     },
+     "overlays": {
+      "en": "Regions carcass and plinth on the block, back-panel, flaps and blanket on their own shapes.",
+      "de": "Regionen carcass und plinth auf dem Block, back-panel, flaps und blanket auf eigenen Formen."
      }
     }
    }
@@ -5967,11 +6039,11 @@
        "points": [
         [
          -0.03,
-         0.0
+         0
         ],
         [
          0.57,
-         0.0
+         0
         ],
         [
          0.57,
@@ -5994,7 +6066,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.015
         ],
         [
@@ -6006,7 +6078,7 @@
          1.465
         ],
         [
-         0.0,
+         0,
          1.465
         ]
        ],
@@ -6025,11 +6097,11 @@
        "points": [
         [
          -0.45,
-         0.0
+         0
         ],
         [
          0.45,
-         0.0
+         0
         ],
         [
          0.45,
@@ -6150,7 +6222,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.4
         ],
         [
@@ -6162,7 +6234,7 @@
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -6216,19 +6288,19 @@
     "thermal": {
      "regions": {
       "carcass": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.1
       },
       "back-panel": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "plinth": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "flaps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.15
       },
       "blanket": {
@@ -6272,19 +6344,19 @@
     "thermal": {
      "regions": {
       "carcass": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.1
       },
       "back-panel": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "plinth": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "flaps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       },
       "blanket": {
@@ -6328,22 +6400,22 @@
      "regions": {
       "carcass": {
        "exposedFraction": 0.95,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "back-panel": {
        "exposedFraction": 0.1,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.85,
         "tempC": 18
        }
       },
       "plinth": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "flaps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.05
       },
       "blanket": {
@@ -6366,7 +6438,7 @@
        "de": "Schuhe in Klappe 1 (4 Paar, 3,2 kg)"
       },
       "anchor": "shoes-1",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -31.38,
       "source": "authored-estimate",
       "reference": "semio-used-household"
@@ -6379,7 +6451,7 @@
        "de": "Schuhe in Klappe 2 (4 Paar, 3,2 kg)"
       },
       "anchor": "shoes-2",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -31.38,
       "source": "authored-estimate",
       "reference": "semio-used-household"
@@ -6392,7 +6464,7 @@
        "de": "Schuhe in Klappe 3 (4 Paar, 3,2 kg)"
       },
       "anchor": "shoes-3",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -31.38,
       "source": "authored-estimate",
       "reference": "semio-used-household"
@@ -6417,7 +6489,7 @@
       "dx": 0.25
      },
      "flap-3": {
-      "angleDeg": -40.0
+      "angleDeg": -40
      }
     },
     "ground": "authored",
@@ -6430,22 +6502,22 @@
      "regions": {
       "carcass": {
        "exposedFraction": 0.95,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "back-panel": {
        "exposedFraction": 0.1,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.85,
         "tempC": 18
        }
       },
       "plinth": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "flaps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.05
       },
       "blanket": {
@@ -6468,7 +6540,7 @@
        "de": "Schuhe in Klappe 1 (4 Paar, 3,2 kg)"
       },
       "anchor": "shoes-1",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -31.38,
       "source": "authored-estimate",
       "reference": "semio-used-household"
@@ -6481,7 +6553,7 @@
        "de": "Schuhe in Klappe 2 (4 Paar, 3,2 kg)"
       },
       "anchor": "shoes-2",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -31.38,
       "source": "authored-estimate",
       "reference": "semio-used-household"
@@ -6494,7 +6566,7 @@
        "de": "Schuhe in Klappe 3 (4 Paar, 3,2 kg)"
       },
       "anchor": "shoes-3",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -31.38,
       "source": "authored-estimate",
       "reference": "semio-used-household"
@@ -6519,13 +6591,13 @@
       "dx": 0.25
      },
      "flap-1": {
-      "angleDeg": -40.0
+      "angleDeg": -40
      },
      "flap-2": {
-      "angleDeg": -40.0
+      "angleDeg": -40
      },
      "flap-3": {
-      "angleDeg": -40.0
+      "angleDeg": -40
      }
     },
     "ground": "authored",
@@ -6538,22 +6610,22 @@
      "regions": {
       "carcass": {
        "exposedFraction": 0.95,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "back-panel": {
        "exposedFraction": 0.1,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.85,
         "tempC": 18
        }
       },
       "plinth": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "flaps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.05
       },
       "blanket": {
@@ -6576,7 +6648,7 @@
        "de": "Schuhe in Klappe 1 (4 Paar, 3,2 kg)"
       },
       "anchor": "shoes-1",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -31.38,
       "source": "authored-estimate",
       "reference": "semio-used-household"
@@ -6589,7 +6661,7 @@
        "de": "Schuhe in Klappe 2 (4 Paar, 3,2 kg)"
       },
       "anchor": "shoes-2",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -31.38,
       "source": "authored-estimate",
       "reference": "semio-used-household"
@@ -6602,7 +6674,7 @@
        "de": "Schuhe in Klappe 3 (4 Paar, 3,2 kg)"
       },
       "anchor": "shoes-3",
-      "fxN": 0.0,
+      "fxN": 0,
       "fyN": -31.38,
       "source": "authored-estimate",
       "reference": "semio-used-household"
@@ -6634,19 +6706,19 @@
     "thermal": {
      "regions": {
       "carcass": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.1
       },
       "back-panel": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "plinth": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "flaps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       },
       "blanket": {
@@ -6691,19 +6763,19 @@
     "thermal": {
      "regions": {
       "carcass": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.1
       },
       "back-panel": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "plinth": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "flaps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.2
       },
       "blanket": {
@@ -6859,7 +6931,7 @@
      "en": "In use: the top flap is pulled open at its handle to the 40 degree stop, shoes are taken out, and it falls shut again under its own weight.",
      "de": "In Gebrauch: die obere Klappe wird am Griff bis zum 40-Grad-Anschlag aufgezogen, Schuhe werden entnommen, und sie fällt unter ihrem Gewicht wieder zu."
     },
-    "durationS": 3.0,
+    "durationS": 3,
     "fps": 30,
     "loop": true,
     "rootMotion": "none",
@@ -6875,7 +6947,7 @@
       "ease": "linear"
      },
      {
-      "t": 2.0,
+      "t": 2,
       "pose": "flap-open",
       "ease": "in"
      },
@@ -6885,7 +6957,7 @@
       "ease": "linear"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "pose": "in-use",
       "ease": "linear"
      }
@@ -6894,17 +6966,17 @@
      {
       "anchor": "foot-r",
       "fromS": 0,
-      "toS": 3.0
+      "toS": 3
      },
      {
       "anchor": "foot-l",
       "fromS": 0,
-      "toS": 3.0
+      "toS": 3
      },
      {
       "anchor": "wall-fixing",
       "fromS": 0,
-      "toS": 3.0
+      "toS": 3
      }
     ],
     "phases": [
@@ -6920,7 +6992,7 @@
      {
       "id": "take-shoes",
       "fromS": 0.8,
-      "toS": 2.0,
+      "toS": 2,
       "title": {
        "en": "Shoes taken out at 40 degrees",
        "de": "Schuhe bei 40 Grad entnommen"
@@ -6928,7 +7000,7 @@
      },
      {
       "id": "close",
-      "fromS": 2.0,
+      "fromS": 2,
       "toS": 2.6,
       "title": {
        "en": "Let go, the flap falls shut",
@@ -6938,7 +7010,7 @@
      {
       "id": "rest",
       "fromS": 2.6,
-      "toS": 3.0,
+      "toS": 3,
       "title": {
        "en": "Closed",
        "de": "Geschlossen"
@@ -7005,12 +7077,12 @@
        "material": "chipboard-foil",
        "thicknessM": 0.016,
        "resistanceM2KW": 0.12308,
-       "heatCapacityJM2K": 17680.0,
+       "heatCapacityJM2K": 17680,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 17680.0,
+     "heatCapacityJM2K": 17680,
      "source": "authored-estimate",
      "reference": "iso-10456-2007",
      "ratedPowerW": 0,
@@ -7040,12 +7112,12 @@
        "material": "hdf-back",
        "thicknessM": 0.003,
        "resistanceM2KW": 0.01765,
-       "heatCapacityJM2K": 4335.0,
+       "heatCapacityJM2K": 4335,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 4335.0,
+     "heatCapacityJM2K": 4335,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -7073,12 +7145,12 @@
        "material": "chipboard-foil",
        "thicknessM": 0.016,
        "resistanceM2KW": 0.12308,
-       "heatCapacityJM2K": 17680.0,
+       "heatCapacityJM2K": 17680,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 17680.0,
+     "heatCapacityJM2K": 17680,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -7106,12 +7178,12 @@
        "material": "chipboard-foil",
        "thicknessM": 0.016,
        "resistanceM2KW": 0.12308,
-       "heatCapacityJM2K": 17680.0,
+       "heatCapacityJM2K": 17680,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 17680.0,
+     "heatCapacityJM2K": 17680,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -7139,12 +7211,12 @@
        "material": "polyester-nonwoven",
        "thicknessM": 0.015,
        "resistanceM2KW": 0.33333,
-       "heatCapacityJM2K": 2886.0,
+       "heatCapacityJM2K": 2886,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 2886.0,
+     "heatCapacityJM2K": 2886,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     }
@@ -7209,7 +7281,7 @@
       "profile": [
        [
         0.5925,
-        0.0
+        0
        ],
        [
         0.59537,
@@ -7260,7 +7332,7 @@
         0.01037
        ],
        [
-        0.0,
+        0,
         0.0075
        ],
        [
@@ -7277,7 +7349,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -7293,7 +7365,7 @@
       "tone": 0.55,
       "profile": [
        [
-        0.0,
+        0,
         0.06
        ],
        [
@@ -7305,7 +7377,7 @@
         1.45
        ],
        [
-        0.0,
+        0,
         1.45
        ]
       ],
@@ -7324,11 +7396,11 @@
       "profile": [
        [
         0.003,
-        0.0
+        0
        ],
        [
         0.154,
-        0.0
+        0
        ],
        [
         0.154,
@@ -7353,11 +7425,11 @@
       "profile": [
        [
         0.003,
-        0.0
+        0
        ],
        [
         0.154,
-        0.0
+        0
        ],
        [
         0.154,
@@ -7469,11 +7541,11 @@
       "profile": [
        [
         0.138,
-        0.0
+        0
        ],
        [
         0.154,
-        0.0
+        0
        ],
        [
         0.154,
@@ -7497,7 +7569,7 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
+        0,
         1.45
        ],
        [
@@ -7517,7 +7589,7 @@
         1.475
        ],
        [
-        0.0,
+        0,
         1.475
        ]
       ],
@@ -7534,19 +7606,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.455,
-        0.0
+        0
        ],
        [
         0.455,
         0.016
        ],
        [
-        0.0,
+        0,
         0.016
        ]
       ],
@@ -7688,11 +7760,11 @@
        ],
        [
         0.42,
-        0.0
+        0
        ],
        [
         0.41,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -7717,11 +7789,11 @@
        ],
        [
         0.42,
-        0.0
+        0
        ],
        [
         0.41,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -7737,19 +7809,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.455,
-        0.0
+        0
        ],
        [
         0.455,
         0.016
        ],
        [
-        0.0,
+        0,
         0.016
        ]
       ],
@@ -7891,11 +7963,11 @@
        ],
        [
         0.42,
-        0.0
+        0
        ],
        [
         0.41,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -7920,11 +7992,11 @@
        ],
        [
         0.42,
-        0.0
+        0
        ],
        [
         0.41,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -7940,19 +8012,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.455,
-        0.0
+        0
        ],
        [
         0.455,
         0.016
        ],
        [
-        0.0,
+        0,
         0.016
        ]
       ],
@@ -8094,11 +8166,11 @@
        ],
        [
         0.42,
-        0.0
+        0
        ],
        [
         0.41,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -8123,11 +8195,11 @@
        ],
        [
         0.42,
-        0.0
+        0
        ],
        [
         0.41,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -8371,7 +8443,7 @@
        "translation": [
         0.005,
         0.008,
-        0.0
+        0
        ]
       },
       "member": "flap-1",
@@ -8417,7 +8489,7 @@
        "translation": [
         0.005,
         0.008,
-        0.0
+        0
        ]
       },
       "member": "flap-2",
@@ -8463,7 +8535,7 @@
        "translation": [
         0.005,
         0.008,
-        0.0
+        0
        ]
       },
       "member": "flap-3",
@@ -8485,7 +8557,7 @@
        "translation": [
         0.06477,
         0.72428,
-        0.0
+        0
        ]
       },
       "member": "carcass",
@@ -8507,7 +8579,7 @@
        "translation": [
         0.20844,
         0.0241,
-        0.0
+        0
        ]
       },
       "member": "flap-1",
@@ -8529,7 +8601,7 @@
        "translation": [
         0.20356,
         0.02511,
-        0.0
+        0
        ]
       },
       "member": "flap-2",
@@ -8551,7 +8623,7 @@
        "translation": [
         0.20356,
         0.02511,
-        0.0
+        0
        ]
       },
       "member": "flap-3",
@@ -8582,19 +8654,19 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.6,
-        0.0
+        0
        ],
        [
         0.6,
         0.015
        ],
        [
-        0.0,
+        0,
         0.015
        ]
       ],
@@ -8611,7 +8683,7 @@
       "tone": 0.55,
       "profile": [
        [
-        0.0,
+        0,
         0.06
        ],
        [
@@ -8623,7 +8695,7 @@
         1.45
        ],
        [
-        0.0,
+        0,
         1.45
        ]
       ],
@@ -8671,11 +8743,11 @@
       "profile": [
        [
         0.138,
-        0.0
+        0
        ],
        [
         0.154,
-        0.0
+        0
        ],
        [
         0.154,
@@ -8699,7 +8771,7 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
+        0,
         1.45
        ],
        [
@@ -8719,7 +8791,7 @@
         1.475
        ],
        [
-        0.0,
+        0,
         1.475
        ]
       ],
@@ -8736,19 +8808,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.455,
-        0.0
+        0
        ],
        [
         0.455,
         0.016
        ],
        [
-        0.0,
+        0,
         0.016
        ]
       ],
@@ -8807,11 +8879,11 @@
        ],
        [
         0.42,
-        0.0
+        0
        ],
        [
         0.41,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -8827,19 +8899,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.455,
-        0.0
+        0
        ],
        [
         0.455,
         0.016
        ],
        [
-        0.0,
+        0,
         0.016
        ]
       ],
@@ -8898,11 +8970,11 @@
        ],
        [
         0.42,
-        0.0
+        0
        ],
        [
         0.41,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -8918,19 +8990,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.455,
-        0.0
+        0
        ],
        [
         0.455,
         0.016
        ],
        [
-        0.0,
+        0,
         0.016
        ]
       ],
@@ -8989,11 +9061,11 @@
        ],
        [
         0.42,
-        0.0
+        0
        ],
        [
         0.41,
-        0.0
+        0
        ]
       ],
       "plane": "xy",
@@ -9009,11 +9081,11 @@
       "tone": 0.85,
       "profile": [
        [
-        0.0,
+        0,
         -0.4
        ],
        [
-        0.0,
+        0,
         -0.384
        ],
        [
@@ -9025,11 +9097,11 @@
         0.384
        ],
        [
-        0.0,
+        0,
         0.384
        ],
        [
-        0.0,
+        0,
         0.4
        ],
        [
@@ -9195,7 +9267,7 @@
        "translation": [
         0.0075,
         0.008,
-        0.0
+        0
        ]
       },
       "member": "flap-1",
@@ -9229,7 +9301,7 @@
        "translation": [
         0.0075,
         0.008,
-        0.0
+        0
        ]
       },
       "member": "flap-2",
@@ -9263,7 +9335,7 @@
        "translation": [
         0.0075,
         0.008,
-        0.0
+        0
        ]
       },
       "member": "flap-3",
@@ -9285,7 +9357,7 @@
        "translation": [
         0.06477,
         0.72428,
-        0.0
+        0
        ]
       },
       "member": "carcass",
@@ -9307,7 +9379,7 @@
        "translation": [
         0.20844,
         0.0241,
-        0.0
+        0
        ]
       },
       "member": "flap-1",
@@ -9329,7 +9401,7 @@
        "translation": [
         0.20356,
         0.02511,
-        0.0
+        0
        ]
       },
       "member": "flap-2",
@@ -9351,7 +9423,7 @@
        "translation": [
         0.20356,
         0.02511,
-        0.0
+        0
        ]
       },
       "member": "flap-3",
@@ -9382,19 +9454,19 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.6,
-        0.0
+        0
        ],
        [
         0.6,
         0.015
        ],
        [
-        0.0,
+        0,
         0.015
        ]
       ],
@@ -9412,7 +9484,7 @@
       "tone": 0.55,
       "profile": [
        [
-        0.0,
+        0,
         0.06
        ],
        [
@@ -9424,7 +9496,7 @@
         1.45
        ],
        [
-        0.0,
+        0,
         1.45
        ]
       ],
@@ -9443,11 +9515,11 @@
       "profile": [
        [
         0.124,
-        0.0
+        0
        ],
        [
         0.154,
-        0.0
+        0
        ],
        [
         0.154,
@@ -9471,19 +9543,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.455,
-        0.0
+        0
        ],
        [
         0.455,
         0.016
        ],
        [
-        0.0,
+        0,
         0.016
        ]
       ],
@@ -9501,19 +9573,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.455,
-        0.0
+        0
        ],
        [
         0.455,
         0.016
        ],
        [
-        0.0,
+        0,
         0.016
        ]
       ],
@@ -9531,19 +9603,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.455,
-        0.0
+        0
        ],
        [
         0.455,
         0.016
        ],
        [
-        0.0,
+        0,
         0.016
        ]
       ],
@@ -9561,11 +9633,11 @@
       "tone": 0.85,
       "profile": [
        [
-        0.0,
+        0,
         -0.4
        ],
        [
-        0.0,
+        0,
         -0.384
        ],
        [
@@ -9577,11 +9649,11 @@
         0.384
        ],
        [
-        0.0,
+        0,
         0.384
        ],
        [
-        0.0,
+        0,
         0.4
        ],
        [
@@ -9726,7 +9798,7 @@
        "translation": [
         0.015,
         0.008,
-        0.0
+        0
        ]
       },
       "member": "flap-1",
@@ -9754,7 +9826,7 @@
        "translation": [
         0.015,
         0.008,
-        0.0
+        0
        ]
       },
       "member": "flap-2",
@@ -9782,7 +9854,7 @@
        "translation": [
         0.015,
         0.008,
-        0.0
+        0
        ]
       },
       "member": "flap-3",
@@ -9804,7 +9876,7 @@
        "translation": [
         0.06477,
         0.72428,
-        0.0
+        0
        ]
       },
       "member": "carcass",
@@ -9826,7 +9898,7 @@
        "translation": [
         0.20844,
         0.0241,
-        0.0
+        0
        ]
       },
       "member": "flap-1",
@@ -9848,7 +9920,7 @@
        "translation": [
         0.20356,
         0.02511,
-        0.0
+        0
        ]
       },
       "member": "flap-2",
@@ -9870,7 +9942,7 @@
        "translation": [
         0.20356,
         0.02511,
-        0.0
+        0
        ]
       },
       "member": "flap-3",
@@ -9901,19 +9973,19 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.6,
-        0.0
+        0
        ],
        [
         0.6,
         0.015
        ],
        [
-        0.0,
+        0,
         0.015
        ]
       ],
@@ -9931,7 +10003,7 @@
       "tone": 0.55,
       "profile": [
        [
-        0.0,
+        0,
         0.06
        ],
        [
@@ -9943,7 +10015,7 @@
         1.45
        ],
        [
-        0.0,
+        0,
         1.45
        ]
       ],
@@ -9961,19 +10033,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.457,
-        0.0
+        0
        ],
        [
         0.457,
         0.016
        ],
        [
-        0.0,
+        0,
         0.016
        ]
       ],
@@ -9991,19 +10063,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.457,
-        0.0
+        0
        ],
        [
         0.457,
         0.016
        ],
        [
-        0.0,
+        0,
         0.016
        ]
       ],
@@ -10021,19 +10093,19 @@
       "tone": 0.88,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.4555,
-        0.0
+        0
        ],
        [
         0.4555,
         0.016
        ],
        [
-        0.0,
+        0,
         0.016
        ]
       ],
@@ -10051,11 +10123,11 @@
       "tone": 0.85,
       "profile": [
        [
-        0.0,
+        0,
         -0.4
        ],
        [
-        0.0,
+        0,
         0.4
        ],
        [
@@ -10112,11 +10184,11 @@
       "tone": 0.85,
       "profile": [
        [
-        0.0,
+        0,
         -0.4
        ],
        [
-        0.0,
+        0,
         -0.384
        ],
        [
@@ -10128,11 +10200,11 @@
         0.384
        ],
        [
-        0.0,
+        0,
         0.384
        ],
        [
-        0.0,
+        0,
         0.4
        ],
        [
@@ -10185,7 +10257,7 @@
        "translation": [
         0.1165,
         0.0375,
-        0.0
+        0
        ]
       },
       "region": "plinth"
@@ -10253,7 +10325,7 @@
        "translation": [
         0.1096,
         0.72281,
-        0.0
+        0
        ]
       },
       "member": "carcass",

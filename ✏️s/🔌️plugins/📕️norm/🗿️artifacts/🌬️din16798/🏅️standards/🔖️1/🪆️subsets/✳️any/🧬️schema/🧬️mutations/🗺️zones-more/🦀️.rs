@@ -23,4 +23,8 @@ pub mod remove_zone;
 pub mod change_zone_name;
 #[path = "../🆔️change-zone-id/🦀️.rs"]
 pub mod change_zone_id;
+#[path = "../🌛️change-zone-unoccupied-ventilation/🦀️.rs"]
+pub mod change_zone_unoccupied_ventilation;
+#[path = "../🌜️clear-zone-unoccupied-ventilation/🦀️.rs"]
+pub mod clear_zone_unoccupied_ventilation;
 //#endregion 🪢️Mounts

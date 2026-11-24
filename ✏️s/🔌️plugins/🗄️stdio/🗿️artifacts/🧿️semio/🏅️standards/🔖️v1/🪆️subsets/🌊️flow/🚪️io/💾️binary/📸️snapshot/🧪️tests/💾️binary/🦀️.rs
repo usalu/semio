@@ -367,7 +367,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
     };
     assert!(open.terminal_is_empty());
     let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); assert!(matches!(open.step(&mut StepContext::new(OperationId(71), Generation(17), StepBudget::new(1, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut step_progress), retirement_policy()), MemberOpenStep::Rejected(MemberOpenDiagnostic::Stale)));
-    assert!(matches!(&reopened, SemioMembers::Flow(_)));
+    assert!(matches!(&reopened, SemioMembers::Flow(group) if matches!(group.as_ref(), semio_s_artifact_stdio_semio_flow_member::SemioFlowMember::Flow(_))));
     assert_eq!(reopened.artifact_ref(), Some(expected.clone()));
     assert_eq!(reopened.owner_ref(), Some(owner.clone()));
     assert_eq!(reopened.document_pack_bytes().await.expect("reopened Flow snapshot"), snapshot.encode_pack());

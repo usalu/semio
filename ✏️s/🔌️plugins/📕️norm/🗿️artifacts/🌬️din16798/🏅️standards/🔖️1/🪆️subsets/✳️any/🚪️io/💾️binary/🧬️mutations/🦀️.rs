@@ -78,6 +78,8 @@ use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_fan_run_hours::C
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_duct_test_pressure::ChangeVentDuctTestPressure;
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_humidification_required::ChangeVentHumidificationRequired;
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_humidification_provided::ChangeVentHumidificationProvided;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_unoccupied_ventilation::ChangeZoneUnoccupiedVentilation;
+use semio_s_artifact_norm_din16798_mut_zones::clear_zone_unoccupied_ventilation::ClearZoneUnoccupiedVentilation;
 fn write_json_bin<T: semio_framework_value::ToValue>(out: &mut Vec<u8>, value: &T) {
     let bytes = semio_framework_pack_json::to_json_string(value);
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
@@ -191,6 +193,10 @@ const TAG_CHANGE_VENT_HUMIDIFICATION_REQUIRED: u8 = dsl::protocol_record::tag_u8
 
 const TAG_CHANGE_VENT_HUMIDIFICATION_PROVIDED: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-vent-humidification-provided");
 
+const TAG_CHANGE_ZONE_UNOCCUPIED_VENTILATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-zone-unoccupied-ventilation");
+
+const TAG_CLEAR_ZONE_UNOCCUPIED_VENTILATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "clear-zone-unoccupied-ventilation");
+
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
 impl protocol::OpBinary for Din16798Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -245,6 +251,8 @@ impl protocol::OpBinary for Din16798Mutation {
             Din16798Mutation::ChangeVentDuctTestPressure(_) => TAG_CHANGE_VENT_DUCT_TEST_PRESSURE,
             Din16798Mutation::ChangeVentHumidificationRequired(_) => TAG_CHANGE_VENT_HUMIDIFICATION_REQUIRED,
             Din16798Mutation::ChangeVentHumidificationProvided(_) => TAG_CHANGE_VENT_HUMIDIFICATION_PROVIDED,
+            Din16798Mutation::ChangeZoneUnoccupiedVentilation(_) => TAG_CHANGE_ZONE_UNOCCUPIED_VENTILATION,
+            Din16798Mutation::ClearZoneUnoccupiedVentilation(_) => TAG_CLEAR_ZONE_UNOCCUPIED_VENTILATION,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -437,6 +445,13 @@ impl protocol::OpBinary for Din16798Mutation {
             Din16798Mutation::ChangeVentHumidificationProvided(p) => {
                 write_json_bin(&mut out, &p.vent_id);
                 write_json_bin(&mut out, &p.new_humidification_provided_kg_h);
+            }
+            Din16798Mutation::ChangeZoneUnoccupiedVentilation(p) => {
+                write_json_bin(&mut out, &p.zone_id);
+                write_json_bin(&mut out, &p.new_unoccupied_ventilation);
+            }
+            Din16798Mutation::ClearZoneUnoccupiedVentilation(p) => {
+                write_json_bin(&mut out, &p.zone_id);
             }
         }
         Ok(out)
@@ -687,6 +702,15 @@ impl protocol::OpBinary for Din16798Mutation {
                 let vent_id = read_json_bin(&mut reader).map_err(|e| malformed("vent_id", reader.position(), e))?;
                 let new_humidification_provided_kg_h = read_json_bin(&mut reader).map_err(|e| malformed("new_humidification_provided_kg_h", reader.position(), e))?;
                 Ok(Din16798Mutation::ChangeVentHumidificationProvided(ChangeVentHumidificationProvided { vent_id, new_humidification_provided_kg_h }))
+            }
+            TAG_CHANGE_ZONE_UNOCCUPIED_VENTILATION => {
+                let zone_id = read_json_bin(&mut reader).map_err(|e| malformed("zone_id", reader.position(), e))?;
+                let new_unoccupied_ventilation = read_json_bin(&mut reader).map_err(|e| malformed("new_unoccupied_ventilation", reader.position(), e))?;
+                Ok(Din16798Mutation::ChangeZoneUnoccupiedVentilation(ChangeZoneUnoccupiedVentilation { zone_id, new_unoccupied_ventilation }))
+            }
+            TAG_CLEAR_ZONE_UNOCCUPIED_VENTILATION => {
+                let zone_id = read_json_bin(&mut reader).map_err(|e| malformed("zone_id", reader.position(), e))?;
+                Ok(Din16798Mutation::ClearZoneUnoccupiedVentilation(ClearZoneUnoccupiedVentilation { zone_id }))
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         }

@@ -1,13 +1,14 @@
 import {expect,spyOn,test} from "bun:test";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
+import {createHash} from "node:crypto";
 import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import corpus from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {fleetDurationV1,fleetTextV1,formatFleetReportV1,summarizeFleetV1,validateFleetFactsV1,validateFleetReportV1,type FleetFactsV1,type FleetLanguageV1,type FleetReportV1 as FleetReport} from "../🟦️.ts";
-import {collectFleetFactsV1,readFleetBazelV1,readFleetGenerationV1,readFleetSealedV1,workerMemoryOfV1,type FleetReadersV1} from "../📥️readers/🟦️.ts";
+import {collectFleetFactsV1,readFleetBazelV1,readFleetGenerationV1,readFleetSealedV1,readWorkerMappingV1,readWorkerTreesV1,treeDifferenceV1,workerMemoryOfV1,type FleetReadersV1} from "../📥️readers/🟦️.ts";
 import {fleetArgumentsV1,runFleetCliV1} from "../⌨️command/🟦️.ts";
 import {requireHostWardenV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts";
 import {requireTestToolV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -279,6 +280,19 @@ test("a machine the fleet cache refuses is an alert and every machine lists why 
  expect(quiet.findings.some(row=>row.id.startsWith("unit-cache-"))).toBe(false);expect(formatFleetReportV1("en",quiet,20).join("\n")).not.toContain("did not share");
 });
 
+test("every machine line names the code its agent runs and whether it is the code of the coordinator's tree, in both languages, under the closed schema",()=>{
+ const base=cases.find(row=>row.id===cases[0]!.id)!,machine=(origin:string,over:Record<string,unknown>={})=>({origin,platform:"macos-arm64-0123456789abcdef",pressure:"normal",load:1.5,cores:8,running:2,queued:0,headroom:true,ageSeconds:3,worker:"busy",offloadedIn:4,offloadedOut:1,refused:0,cacheHit:30,cacheMiss:10,...over});
+ const facts={...plain(base.facts),fleet:{scheduler:"http://cache.g1.semio.internal:8981",expireSeconds:15,treeCode:"aaaaaaaaaaaaaaaa",machines:[machine("g1-m01",{code:"aaaaaaaaaaaaaaaa"}),machine("g1-m02",{code:"bbbbbbbbbbbbbbbb"}),machine("g1-m03")],queued:0,executing:0,offloadRejected:0,refused:0,retried:0}} as unknown as FleetFactsV1;
+ expect(validator("Facts")(facts)).toBe(true);expect(validateFleetFactsV1(facts)).toEqual([]);
+ for(const [language,same,differs,unknown] of [["en","code aaaaaaaaaaaaaaaa (the tree's)","CODE bbbbbbbbbbbbbbbb differs from the tree's aaaaaaaaaaaaaaaa","code unknown"],["de","Code aaaaaaaaaaaaaaaa (der des Baums)","CODE bbbbbbbbbbbbbbbb weicht vom Baum aaaaaaaaaaaaaaaa ab","Code unbekannt"]] as const){
+  const report=summarizeFleetV1(facts,language),lines=formatFleetReportV1(language,report,20);
+  expect(validator("Report")(report)).toBe(true);expect(validateFleetReportV1(report)).toEqual([]);
+  const row=(origin:string)=>lines.find(line=>line.includes(` ${origin} `))!;
+  expect(row("g1-m01")).toContain(same);expect(row("g1-m02")).toContain(differs);expect(row("g1-m03")).toContain(unknown);
+  expect(lines.join("\n")).not.toMatch(/\{[a-zA-Z]+\}/u);
+ }
+});
+
 test("the one-machine visibility sections (host store, fleet cache retention, offload) carry the numbers of the facts, in both languages, under both validators, and an unreported retention is explicit",()=>{
  const visible=report("one-machine-visible-en"),german=cases.find(row=>row.id==="one-machine-visible-de")!;
  expect([visible.cas.usedBytes,visible.cas.usedBasisPoints,visible.cas.lastCollection.ageSeconds,visible.cas.leases.leasedBytes]).toEqual([22*2**30,6666,600,1.5*2**30]);
@@ -303,8 +317,8 @@ test("the one-machine visibility sections (host store, fleet cache retention, of
  const badReport=plain(visible);badReport.retention.mode="loud";expect(reports(badReport)).toBe(false);expect(validateFleetReportV1(badReport).length>0).toBe(true);
 });
 
-test("the offload reader counts compile slots as local and light slots as running on the fleet per build and reads the counters with the deadline and lost-operation reasons; the host store reader reads the hint and the lease ledger without walking the objects",async()=>{
- const {readFleetCasV1,readFleetOffloadV1}=await import("../📥️readers/🟦️.ts"),{bumpOffloadCountersV1}=await import("../../🌐️remote-execution/🚀️offload/📊️counters/🟦️.ts"),{leaseCasTransientV1}=await import("../../🗄️cas/📌️pins/🟦️.ts"),{casObjectPathV1}=await import("../../🗄️cas/🗃️store/🟦️.ts");
+test("the offload reader counts compile slots as local and light slots as running on the fleet per build and reads the counters with the deadline and lost-operation reasons; the host store reader reads the hint and the census without walking the objects or the lease ledger",async()=>{
+ const {readFleetCasV1,readFleetOffloadV1}=await import("../📥️readers/🟦️.ts"),{bumpOffloadCountersV1}=await import("../../🌐️remote-execution/🚀️offload/📊️counters/🟦️.ts"),{writeCasCensusV1}=await import("../../🗄️cas/🧹️collector/🟦️.ts"),{casObjectPathV1}=await import("../../🗄️cas/🗃️store/🟦️.ts");
  const root=mkdtempSync(join(tmpdir(),"fleet-one-machine-")),now=Date.now();
  try{
   const unit=join(root,"unit"),slots=join(unit,"s");mkdirSync(slots,{recursive:true});
@@ -312,11 +326,17 @@ test("the offload reader counts compile slots as local and light slots as runnin
   bumpOffloadCountersV1(root,{out:2,fellBack:1},"deadline");bumpOffloadCountersV1(root,{fellBack:1},"operation-lost");
   const offload=(await readFleetOffloadV1({root,environment:{SEMIO_UNIT_CACHE_ROOT:unit},language:"en",now:()=>now})).offload!;
   expect([offload.local,offload.fleet,offload.builds,offload.out,offload.fellBack,offload.reasons.deadline,offload.reasons["operation-lost"]]).toEqual([1,2,[{pid:process.ppid,local:1,fleet:2}],2,2,1,1]);
+  expect(offload.spool,"an empty spool is depth zero").toMatchObject({depth:0});expect(offload.spool!.bound).toBeGreaterThanOrEqual(4096);
+  const up=join(unit,"fl","up");mkdirSync(up,{recursive:true});for(const name of ["a.json","b.json","offer-c.json"])writeFileSync(join(up,name),"{}");writeFileSync(join(up,"note.tmp"),"x");
+  const queued=(await readFleetOffloadV1({root,environment:{SEMIO_UNIT_CACHE_ROOT:unit},language:"en",now:()=>now})).offload!;
+  expect(queued.spool,"the depth of the upload spool of the unit cache root, in jobs").toMatchObject({depth:3});
+  expect(validateFleetFactsV1({version:1,atMs:now,workspace:root,offload:queued,sources:[{id:"offload",ok:true,milliseconds:1}]})).toEqual([]);
+  expect(fleetTextV1("en","offload.spool",{depth:3,bound:4096})).toContain("3 units");expect(fleetTextV1("de","offload.spool",{depth:3,bound:4096})).toContain("3 Einheiten");
   expect(validateFleetFactsV1({version:1,atMs:now,workspace:root,offload,sources:[{id:"offload",ok:true,milliseconds:1}]})).toEqual([]);
   const home=join(root,"home"),store=join(home,".cache","semio","cas"),digest="a".repeat(64);
   mkdirSync(join(store,"v1"),{recursive:true});mkdirSync(join(casObjectPathV1(store,digest),".."),{recursive:true});writeFileSync(casObjectPathV1(store,digest),"0123456789");
   writeFileSync(join(store,"v1","usage.json"),JSON.stringify({version:1,bytes:12345,atMs:now-1000}));
-  await leaseCasTransientV1(store,{transientLeaseMs:1_800_000},"w1",[digest],now);
+  await writeCasCensusV1(store,{version:1,atMs:now-500,objects:1,bytes:10,classes:{pinned:{objects:0,bytes:0},held:{objects:0,bytes:0},leased:{objects:1,bytes:10},linked:{objects:0,bytes:0},expired:{objects:0,bytes:0},young:{objects:0,bytes:0},unreferenced:{objects:0,bytes:0}},holders:[]});
   const cas=(await readFleetCasV1({root,environment:{HOME:home},language:"en",now:()=>now})).cas!;
   expect([cas.root,cas.lastCollection,cas.leases]).toEqual([store,{atMs:now-1000,bytes:12345},{leased:1,expired:0,leasedBytes:10,expiredBytes:0}]);
   expect([cas.highWatermarkBytes,cas.lowWatermarkBytes]).toEqual([Math.floor(cas.effectiveCapBytes*0.9),Math.floor(cas.effectiveCapBytes*0.75)]);
@@ -325,8 +345,8 @@ test("the offload reader counts compile slots as local and light slots as runnin
 });
 
 const NOW=1_793_000_000_000;
-const alarmOf=(action:"suspend"|"cancel",text:{en:string;de:string})=>({version:1,atMs:NOW-4000,observed:false,level:"danger",action,reason:"danger",id:"p1",pid:4242,kind:"cargo",owner:"agent-7",megabytes:3100,host:{availableMegabytes:600,guardMegabytes:2048,dangerMegabytes:1024,swapOutMegabytesPerSecond:30,pressure:"critical"},text});
-const stateOf=(over:Record<string,unknown>={},host:Record<string,unknown>={})=>({version:1,atMs:NOW-5000,pid:77,mode:"enforce",code:"c0de",host:{totalMegabytes:16384,availableMegabytes:7000,swapUsedMegabytes:100,swapOutMegabytesPerSecond:0,compressedMegabytes:900,pressure:"normal",...host},level:"calm",hold:false,guardMegabytes:2048,dangerMegabytes:1024,resumeMegabytes:3072,subjects:{count:2,megabytes:2500,byKind:{cargo:{count:2,megabytes:2500}}},suspended:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:50},lastAlarms:[],overhead:{tickMillisecondsP50:2,tickMillisecondsP95:4.5,cpuBasisPoints:60,residentMegabytes:41},...over});
+const alarmOf=(action:"suspend"|"cancel",text:{en:string;de:string})=>({version:1,atMs:NOW-4000,observed:false,level:"danger",action,reason:"danger",id:"p1",pid:4242,kind:"cargo",owner:"agent-7",megabytes:3100,host:{availableMegabytes:600,guardMegabytes:2048,dangerMegabytes:1024,swapOutMegabytesPerSecond:30,pressure:"critical",headroomMegabytes:null,headroomGuardMegabytes:4096,headroomDangerMegabytes:2048},text});
+const stateOf=(over:Record<string,unknown>={},host:Record<string,unknown>={})=>({version:1,atMs:NOW-5000,pid:77,mode:"enforce",code:"c0de",host:{totalMegabytes:16384,availableMegabytes:7000,swapUsedMegabytes:100,swapOutMegabytesPerSecond:0,compressedMegabytes:900,pressure:"normal",swapFreeMegabytes:null,swapVolumeFreeMegabytes:null,...host},level:"calm",hold:false,guardMegabytes:2048,dangerMegabytes:1024,resumeMegabytes:3072,swapRoomMegabytes:null,headroomMegabytes:null,headroomGuardMegabytes:4096,headroomDangerMegabytes:2048,subjects:{count:2,megabytes:2500,byKind:{cargo:{count:2,megabytes:2500}}},suspended:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:50},lastAlarms:[],overhead:{tickMillisecondsP50:2,tickMillisecondsP95:4.5,cpuBasisPoints:60,residentMegabytes:41},...over});
 const memoryOf=(origin:string,value:unknown,at=NOW)=>workerMemoryOfV1(origin,value as never,at);
 const workerRow=(origin:string,liveness:"ready"|"working"|"offline"="ready")=>({origin,platform:"macos",liveness,recorded:"running",stage:"tools",stageIndex:1,stageCount:5,attempts:1,recordAgeSeconds:3,heartbeatAgeSeconds:2,refusal:null});
 const memoryFacts=(origins:Record<string,unknown>,local:unknown=null):FleetFactsV1=>({version:1,atMs:NOW,workspace:"/w",sources:[],workers:{offlineSeconds:600,rows:Object.keys(origins).map(origin=>workerRow(origin))},memory:{local:local as never,origins:origins as never}});
@@ -412,4 +432,67 @@ test("the newest alarm of a state is the last alarm, whatever the order of the l
  const state=stateOf({counters:{suspended:1,resumed:0,cancelled:1,ticks:3},lastAlarms:[alarmOf("cancel",{en:"newest",de:"neu"}),{...alarmOf("suspend",{en:"older",de:"älter"}),atMs:NOW-9000}]});
  expect(memoryOf("x",state)!.lastAlarm).toMatchObject({action:"cancel",text:{en:"newest",de:"neu"},kind:"cargo",pid:4242,owner:"agent-7",megabytes:3100});
  expect(memoryOf("x",null)).toBeNull();
+});
+
+test("the tree difference counts every path whose state differs once, from the lines only one side shows",()=>{
+ expect(treeDifferenceV1([],[])).toEqual({files:0,onlyThere:0,onlyHere:0});
+ expect(treeDifferenceV1([" M a/x.rs"," M b/y.rs"],[" M b/y.rs"," D c/z.rs"])).toEqual({files:3,onlyThere:1,onlyHere:1});
+ expect(treeDifferenceV1([" M a/x.rs"],[" D a/x.rs"])).toEqual({files:1,onlyThere:0,onlyHere:0});
+});
+
+test("a worker row shows how its tree differs from the coordinator in both languages, or that it is the same, stale or not comparable, and the tree keeps the closed schema",()=>{
+ const tree=(extra:Record<string,unknown>)=>({reference:"g1-server",files:0,onlyThere:0,onlyHere:0,stale:false,verdict:"ok",...extra});
+ const facts=(rows:Record<string,unknown>[]):FleetFactsV1=>({version:1,atMs:NOW,workspace:"/w",sources:[],workers:{offlineSeconds:600,rows:rows as never}});
+ const recent={hours:12,ok:0,failed:1,stalled:28,timedOut:0,seconds:12_060};
+ const rows=[{...workerRow("same"),tree:tree({}),recent},{...workerRow("apart"),tree:tree({files:8,onlyThere:8,stale:true,verdict:"lagging"})},{...workerRow("blind"),tree:null},{...workerRow("plain")}];
+ const english=formatFleetReportV1("en",summarizeFleetV1(facts(rows),"en")),german=formatFleetReportV1("de",summarizeFleetV1(facts(rows),"de"));
+ expect(english.find(line=>line.includes("same macos"))).toContain(", tree same as g1-server");
+ expect(english.find(line=>line.includes("apart macos"))).toContain(", tree differs from g1-server by 8 file(s) (8 only here at the worker, 0 only at g1-server), replica says lagging, edits in flight, its view is still being refreshed");
+ expect(english.find(line=>line.includes("blind macos"))).toContain(", tree not comparable (no readable view)");
+ expect(english.find(line=>line.includes("plain macos"))).not.toContain("tree");
+ expect(english.find(line=>line.includes("same macos"))).toContain(", last 12 h in this stage: 1 failed, 28 stopped as stalled (3.4 h run)");
+ expect(german.find(line=>line.includes("same macos"))).toContain(", letzte 12 h in dieser Stufe: 1 fehlgeschlagen, 28 als stillstehend beendet (");
+ expect(english.find(line=>line.includes("plain macos"))).not.toContain("last 12 h");
+ expect(german.find(line=>line.includes("apart macos"))).toContain(", Baum weicht von g1-server um 8 Datei(en) ab");
+ expect(validateFleetReportV1(plain(summarizeFleetV1(facts(rows),"en")))).toEqual([]);
+});
+
+test("the worker tree reader compares the views the replicas publish: equal views are the same tree, differing lines are counted per path, a torn view is not comparable, and a machine outside the store gives nothing",async()=>{
+ const root=mkdtempSync(join(tmpdir(),"fleet-tree-")),store=join(root,"store");
+ try{
+  const attestation=(origin:string,text:string|null)=>({version:1,originId:origin,groupId:"g1",platform:"macos",wallMs:NOW,hlc:`${NOW}-000000-${origin}`,sync:true,code:"0".repeat(64),cursors:{[origin]:{segment:1,bytes:1}},files:3,manifest:"1".repeat(64),head:null,indexTree:null,view:text===null?null:{staged:0,modified:text.split("\n").length,deleted:0,untracked:0,digest:createHash("sha256").update(text).digest("hex")},guards:null,latency:{publishMs:{p50:null,p95:null},applyMs:{p50:1,p95:1},samples:{publish:0,apply:1},tiers:{hot:{passes:1,lastMs:1,dutyPercent:1},sweep:{passes:1,lastMs:1,dutyPercent:1},file:{passes:1,lastMs:1,dutyPercent:1},walk:{passes:0,lastMs:null,dutyPercent:null},view:{passes:1,lastMs:1,dutyPercent:1}}},queue:{incoming:0}});
+  const put=(origin:string,text:string|null,file:string|null=text)=>{const directory=join(store,"v1","origins",origin);mkdirSync(directory,{recursive:true});writeFileSync(join(directory,"attest.json"),JSON.stringify(attestation(origin,text)));if(file!==null)writeFileSync(join(directory,"view.txt"),file);};
+  put("g1-server"," M a/x.rs\n M b/y.rs");put("g1-m01"," M a/x.rs\n M b/y.rs");put("g1-m02"," M a/x.rs\n M b/y.rs\n M c/z.rs");put("g1-m03"," M a/x.rs",null);
+  const context=(origin:string|undefined)=>({root,environment:{...(origin===undefined?{}:{SEMIO_FLEET_ORIGIN:origin})} as NodeJS.ProcessEnv,language:"en" as const,now:()=>NOW});
+  const found=(await readWorkerTreesV1(store,context("g1-server")))!;
+  expect(found.get("g1-m01")).toEqual({reference:"g1-server",files:0,onlyThere:0,onlyHere:0,stale:false,verdict:expect.any(String)});
+  expect(found.get("g1-m02")).toEqual({reference:"g1-server",files:1,onlyThere:1,onlyHere:0,stale:false,verdict:expect.any(String)});
+  expect(found.get("g1-m03")).toBeNull();
+  expect(found.has("g1-server")).toBe(false);
+  expect(await readWorkerTreesV1(store,context("g1-unknown"))).toBeUndefined();
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a worker row names the mapping grant queue of its graph read, in both languages: who waits, for what step, the lease queue head and the finished tallies",()=>{
+ const root=mkdtempSync(join(tmpdir(),"fleet-mapping-")),file=join(root,"slice-memory.json"),now=Date.now();
+ try{
+  const queue={waiting:[{kind:"shared",step:"grant",waitedMilliseconds:61000},{kind:"shared",step:"slot",waitedMilliseconds:2000}],holders:{shared:1,exclusive:0,exclusiveHeldMilliseconds:0},ownerSlots:{retained:3,waiting:0,queued:0,maximum:32},head:{holderKind:"exclusive",holderPid:4242,holderCommand:"cargo build",holderSeconds:75,position:2,queued:3,ageMilliseconds:100},granted:{shared:{count:12,waitedMilliseconds:90000,maximumMilliseconds:61000},exclusive:{count:1,waitedMilliseconds:500,maximumMilliseconds:500}},exclusiveHeld:{count:1,waitedMilliseconds:7000,maximumMilliseconds:7000}};
+  writeFileSync(file,JSON.stringify({sources:{owners:{taken:33,presence:{mappingQueue:queue}}}}));
+  const mapping=readWorkerMappingV1(file,now,262144,600)!;
+  expect(mapping).toMatchObject({taken:33,waiting:2,step:"grant",longestWaitedSeconds:61,holderKind:"exclusive",holderPid:4242,holderSeconds:75,queued:3,sharedGrants:12,sharedWaitedSeconds:90,sharedLongestSeconds:61,exclusiveHeldSeconds:7});
+  expect(readWorkerMappingV1(file,now+620000,262144,600),"a report older than the freshness bound says nothing").toBeUndefined();
+  expect(readWorkerMappingV1(file,now,10,600),"an oversized report says nothing").toBeUndefined();
+  writeFileSync(file,"{torn");expect(readWorkerMappingV1(file,now,262144,600)).toBeUndefined();
+  writeFileSync(file,JSON.stringify({sources:{owners:{taken:1,presence:{}}}}));expect(readWorkerMappingV1(file,now,262144,600),"an older worker code publishes no queue").toBeUndefined();
+  const base=cases[0]!,fact=plain(base.facts) as unknown as FleetFactsV1,row={origin:"g1-m10",platform:"macos",liveness:"working",recorded:"running",stage:"workspace",stageIndex:5,stageCount:5,attempts:3,recordAgeSeconds:2,heartbeatAgeSeconds:1,refusal:null,mapping};
+  const facts={...fact,workers:{offlineSeconds:600,rows:[row,{...row,origin:"g1-m11",mapping:{...mapping,waiting:0,step:null,holderKind:null,holderPid:null,holderCommand:null,holderSeconds:null,queued:null}}]}} as unknown as FleetFactsV1;
+  expect(validator("Facts")(facts),JSON.stringify(validator("Facts").errors?.[0])).toBe(true);
+  const report=summarizeFleetV1(facts,"en");expect(validator("Report")(report),JSON.stringify(validator("Report").errors?.[0])).toBe(true);
+  const english=formatFleetReportV1("en",report,40).filter(line=>line.includes("g1-m1")),german=formatFleetReportV1("de",summarizeFleetV1(facts,"de"),40).filter(line=>line.includes("g1-m1"));
+  expect(english[0]).toContain("mapping grant: 2 waiting for the lease grant, longest 61 s");
+  expect(english[0]).toContain("head of the lease queue: exclusive holder, process 4242 (cargo build) for 75 s, 3 queued");
+  expect(english[1]).toContain("mapping grant: nobody waiting (12 shared grants waited");
+  expect(german[0]).toContain("Zuordnungs-Grant: 2 warten auf Lease-Zuteilung");expect(german[0]).toContain("exklusiver Halter, Prozess 4242");
+  expect(english.join("\n")).not.toMatch(/\{[a-zA-Z]+\}/u);expect(german.join("\n")).not.toMatch(/\{[a-zA-Z]+\}/u);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

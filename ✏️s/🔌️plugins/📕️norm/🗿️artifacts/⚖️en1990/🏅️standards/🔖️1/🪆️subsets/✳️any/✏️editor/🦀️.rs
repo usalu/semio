@@ -270,7 +270,7 @@ semio_s_plugin_norm_app_surface::norm_live_editor!(En1990PlayApp, En1990Command,
 #[cfg(test)]
 semio_s_plugin_norm_app_surface::norm_live_acceptance!(En1990PlayApp, entities = live_entities);
 #[cfg(test)]
-semio_s_plugin_norm_app_surface::norm_latency_bench!(En1990PlayApp, variant = "en1990", seed = semio_s_artifact_norm_en1990_model::En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De), scene = |d, r| viewport::scene_of(d, r, semio_s_plugin_norm_structural_scene::projection::ViewOptions::none()), full = viewport::full_scene_of);
+semio_s_plugin_norm_app_surface::norm_latency_bench!(En1990PlayApp, variant = "en1990", seed = semio_s_artifact_norm_en1990_model::En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De), scene = |d, r| viewport::scene_of(d, r, semio_s_plugin_norm_structural_scene::projection::ViewOptions::none()), full = viewport::full_scene_of, release_only);
 //#endregion 🫧️LiveEditor
 
 //#region 🧵️RetainedCommands

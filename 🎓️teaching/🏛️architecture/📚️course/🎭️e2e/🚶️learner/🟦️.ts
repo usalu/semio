@@ -928,10 +928,12 @@ export async function restingPage(page: Page): Promise<string | null> {
   });
 }
 
-/** 👆️ One finger drawn across the overview by `dx`, `dy` px in `steps` moves over about `ms`, as a touch screen sends it. */
+/** 👆️ One finger drawn across the overview by `dx`, `dy` px in `steps` moves over about `ms`, as a touch screen sends it: around the middle of the part of the overview the window shows, since a window lower than the page shows only a part of it. */
 export async function touchSwipe(page: Page, dx: number, dy: number, ms = 160, steps = 12): Promise<void> {
   const box = await boxOf(activeOverview(page));
-  const [x, y] = [box.x + box.width / 2 - dx / 2, box.y + box.height / 2 - dy / 2];
+  const window = page.viewportSize() ?? { width: box.x + box.width, height: box.y + box.height };
+  const [left, top, right, bottom] = [Math.max(box.x, 0), Math.max(box.y, 0), Math.min(box.x + box.width, window.width), Math.min(box.y + box.height, window.height)];
+  const [x, y] = [(left + right) / 2 - dx / 2, (top + bottom) / 2 - dy / 2];
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
   for (let step = 1; step <= steps; step += 1) {

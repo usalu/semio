@@ -1,0 +1,4 @@
+[
+  {"op":"anchor","id":"tp-sun-2","set":{"bone":"fol-limb-b1","x":0.7139,"y":-0.567,"z":-0.2668}},
+  {"op":"anchor","id":"tp-sun-6","set":{"bone":"fol-limb-a2","x":0.3441,"y":1.1197,"z":0.5597}}
+]

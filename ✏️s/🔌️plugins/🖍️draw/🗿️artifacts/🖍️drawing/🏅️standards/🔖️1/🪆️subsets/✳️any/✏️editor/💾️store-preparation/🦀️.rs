@@ -56,6 +56,16 @@ impl store::os_store::replay_preparation::ArtifactReplayPreparationFactory<Drawi
         store::os_store::replay_preparation::ArtifactReplayPreparationFactory::begin(&DrawingCold::default(), request, grant)
     }
 }
+
+/// 📏️ Quotes the document owner catalog whose one drawing issuer serves publication and replay.
+pub fn drawing_document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    store::os_store::document_store_owners::bounded_artifact_store_owners_shared_semantic_source_demands::<DrawingSnapshot, DrawingMutation, DrawingArtifactStorePreparationFactory>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }, 0)
+}
+
+/// 🗃️ Admits the document owner catalog with the drawing issuer installed for publication and replay, so a persisted folder with history restores.
+pub fn drawing_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<DrawingSnapshot, DrawingMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DrawingSnapshot, DrawingMutation>> {
+    store::os_store::document_store_owners::bounded_artifact_store_owners_with_shared_semantic_preparation(grant, semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }, 0, DrawingArtifactStorePreparationFactory::default)
+}
 //#endregion 📬️StorePreparation
 
 #[path="🏭️member/🦀️.rs"]pub mod member;

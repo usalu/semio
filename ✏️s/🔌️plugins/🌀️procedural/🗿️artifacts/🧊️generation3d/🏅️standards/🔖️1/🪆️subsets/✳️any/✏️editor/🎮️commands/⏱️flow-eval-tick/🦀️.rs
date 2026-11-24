@@ -47,6 +47,11 @@ pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSna
     preview_eval::may_rearm(host_snapshot)
 }
 
+/// 🧭️ The operator kinds of `host_snapshot` the live registry cannot serve ([`preview_eval::unserved_kinds`]): what a route that owes the previews hands the carrying call so an unservable graph also asks the host for its extensions.
+pub fn unserved_kinds(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> Vec<String> {
+    preview_eval::unserved_kinds(host_snapshot)
+}
+
 /// 🪟️ The one `windowId`/`windowKindId` argument object every hop of the chain carries.
 pub fn window_args(window_id: &str, window_kind_id: &str) -> semio_framework_value::DslValue {
     preview_eval::window_args(window_id, window_kind_id)

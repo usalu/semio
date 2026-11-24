@@ -58,3 +58,11 @@ setInterval(()=>{},1000);
   const last=await (await fetch(`http://127.0.0.1:${port}/`)).text();expect(last,"the successor serves after the handover").toBe("2");
  }finally{running=false;launcher.kill("SIGTERM");await launcher.exited;}
 },60000);
+
+test("a successor hands over again once it listens: the flag that marks it a successor ends with its promotion, only the cache hands over, and only over a launcher channel",async()=>{
+ const {sidecarHandsOverV1,settleSidecarSuccessorV1}=await import("../../🧰️shared/🟦️.ts"),environment:Record<string,string|undefined>={SEMIO_SIDECAR_SUCCESSOR:"1"};
+ expect(sidecarHandsOverV1("cache",true,environment)).toBe(false);
+ settleSidecarSuccessorV1(environment);expect(environment.SEMIO_SIDECAR_SUCCESSOR).toBeUndefined();
+ expect(sidecarHandsOverV1("cache",true,environment)).toBe(true);expect(sidecarHandsOverV1("cache",false,environment)).toBe(false);
+ for(const role of ["agent","scheduler","graph","pool","ready"] as const)expect(sidecarHandsOverV1(role,true,{})).toBe(false);
+});

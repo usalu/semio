@@ -678,27 +678,22 @@
 % by one hairline, so its top edge lies on the previous frame's bottom edge. A
 % paragraph or authored space in between clears the record and the frame keeps
 % its ordinary separation. The record is state, not \lastskip: the page builder
-% empties the main vertical list between two frames. The shared edge takes the
-% accent colour when one of the two frames has one.
-\def\semio@frame@edge@neutral{semio-chrome-border-normal}
+% empties the main vertical list between two frames. A horizontal edge is shared
+% by the two sections it separates and belongs to neither, so it is always drawn
+% in the neutral border colour; only vertical edges belong to one part and may
+% carry its accent colour.
 \newif\ifsemio@frame@pending
 \newif\ifsemio@frame@interlocked
-\gdef\semio@frame@bottom@color{semio-chrome-border-normal}
-\gdef\semio@frame@top@color{semio-chrome-border-normal}
 \gdef\semio@frame@pending@gap{0pt}
 \newcommand{\semio@frame@release}{\global\semio@frame@pendingfalse}
 \AddToHook{para/begin}{\semio@frame@release}
 \AddToHook{cmd/vspace/before}{\semio@frame@release}
-% 🔓️ Arguments: separation from a preceding non-frame, own edge colour.
-\newcommand{\semio@frame@open}[2]{%
+% 🔓️ Argument: separation from a preceding non-frame.
+\newcommand{\semio@frame@open}[1]{%
   \ifhmode\par\fi
   \global\semio@frame@interlockedfalse
-  \xdef\semio@frame@top@color{#2}%
   \ifsemio@frame@pending
     \global\semio@frame@interlockedtrue
-    \ifx\semio@frame@bottom@color\semio@frame@edge@neutral\else
-      \global\let\semio@frame@top@color\semio@frame@bottom@color
-    \fi
     \vskip\dimexpr-\semio@frame@pending@gap-\semio@stroke@hairline\relax
     \nointerlineskip
   \else
@@ -706,18 +701,17 @@
   \fi
   \semio@frame@release
 }
-% 🔒️ Arguments: separation to a following non-frame, bottom edge colour.
-\newcommand{\semio@frame@close}[2]{%
+% 🔒️ Argument: separation to a following non-frame.
+\newcommand{\semio@frame@close}[1]{%
   \ifhmode\par\fi
   \vskip\dimexpr#1\relax
-  \semio@frame@record{#1}{#2}%
+  \semio@frame@record{#1}%
 }
 % 🧲️ A frame set as a paragraph of its own drops \parskip when it shares the edge above.
 \newcommand{\semio@frame@tight}{\ifsemio@frame@interlocked\parskip\z@\fi}
-% 📝️ Arguments: glue between the frame's bottom edge and whatever follows, bottom edge colour.
-\newcommand{\semio@frame@record}[2]{%
+% 📝️ Argument: glue between the frame's bottom edge and whatever follows.
+\newcommand{\semio@frame@record}[1]{%
   \xdef\semio@frame@pending@gap{\the\dimexpr#1\relax}%
-  \xdef\semio@frame@bottom@color{#2}%
   \global\semio@frame@pendingtrue
 }
 % \noindent must precede the following material in the same paragraph. A
@@ -797,7 +791,7 @@
 }
 \AtBeginDocument{\everydisplay\expandafter{\the\everydisplay\semio@display@inset}}
 % 🤝️ The closing line of a list is a frame edge: a frame that follows directly shares it.
-\newcommand{\semio@list@after}{\ifsemio@column@framed\else\semio@frame@record{\semio@list@tail}{\semio@frame@edge@neutral}\fi}
+\newcommand{\semio@list@after}{\ifsemio@column@framed\else\semio@frame@record{\semio@list@tail}\fi}
 \AddToHook{env/itemize/after}{\semio@list@after}
 \AddToHook{env/enumerate/after}{\semio@list@after}
 \AddToHook{env/description/after}{\semio@list@after}

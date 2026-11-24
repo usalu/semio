@@ -2,6 +2,7 @@
 
 use super::{base_id, binding_of_check, status as scene_status};
 use crate::projection::{Fragment, Part, SceneBuilder, SITE_ENTITY};
+use super::legends::SITE_LAYER;
 use crate::*;
 use norm::{CheckReport, CheckResult};
 use semio_framework_value::ToValue;
@@ -71,7 +72,7 @@ pub fn with_site(fragment: Fragment, report: &CheckReport) -> Fragment {
         .named("Project site", "Projektstandort")
         .detail("Ground plate that stands for the project and carries its document-level checks", "Bodenplatte als Stellvertreter des Projekts mit seinen Dokument-Prüfungen")
         .labelled("Project", "Projekt")
-        .layer("site", "Site", "Standort")
+        .layer(SITE_LAYER.0, SITE_LAYER.1, SITE_LAYER.2)
         .opacity(0.35)
         .add();
     builder.absorb(fragment);

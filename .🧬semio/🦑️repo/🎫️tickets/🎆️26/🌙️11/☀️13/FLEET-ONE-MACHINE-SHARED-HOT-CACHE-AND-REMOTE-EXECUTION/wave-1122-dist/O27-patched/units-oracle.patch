@@ -1,0 +1,11 @@
+--- /Users/ueli/.sinc/play/🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🐍️oracle/🐍️.py	2026-11-22 23:59:56
++++ /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/o27/root/🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🐍️oracle/🐍️.py	2026-11-24 15:09:24
+@@ -35,7 +35,7 @@
+         if 1 < units:
+             units, reason = 1, "pressure-critical"
+     elif host["pressure"] == "warn":
+-        halved = math.ceil(units / policy["pressureWarnDivisor"])
++        halved = math.ceil(units / policy["localPressureWarnDivisor"])
+         if halved < units:
+             units, reason = max(1, halved), "pressure-warn"
+     minimum = max(1, -(-units * policy["minimumShareBasisPoints"] // 10000))

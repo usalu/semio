@@ -14,6 +14,8 @@ import fixture from "./🔣️.json" with {type:"json"};
 import {javascriptInstallSchemaV1 as installSchema} from "../../💾️storage/🧱️schemas/🟦️.ts";
 import policy from "../../../../💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {readRepositoryCacheBudgetV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
+import {observeDependencyStoreHoldersV1,type DependencyStoreRegistryPortsV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/💰️funding/🟦️.ts";
+import {readyHolderCustodyV1,readyHolderWaitOfV1} from "../../../../../🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🌲️process-tree/🟦️.ts";
 
 const protocol=core.concurrentProtocolV1,here=(name:string)=>fileURLToPath(new URL(name,import.meta.url));
 const oracle=(command:string,cases:unknown):any=>{const run=spawnSync(testPythonV1()??"python3",["-I",here("./🐍️.py"),command],{encoding:"utf8",input:JSON.stringify(cases),maxBuffer:1<<26});if(run.status!==0)throw Error("oracle failed: "+run.stderr);return JSON.parse(run.stdout);};
@@ -119,6 +121,44 @@ test("concurrent acquisition: a busy lease is probed, readiness coalesces the wa
  const abort=new AbortController(),cancelled=make(10_000,null,600000,abort);abort.abort(new Error("cancelled by the caller"));
  await expect(glue.acquireConcurrentLeaseV1("build","/w","exclusive",cancelled.ports,600000)).rejects.toThrow("cancelled by the caller");
  await expect(glue.acquireConcurrentLeaseV1("pin" as never,"/w","exclusive",free.ports,1)).rejects.toThrow("Closed concurrent lease kind");
+});
+
+/** 🪪️ The wait for the build lease names its holder in the words the readiness supervisor parses, so a holder that is gone, silent or an ancestor is judged instead of waited for blindly. */
+test("concurrent wait: the holder is named in the line the supervisor parses, a gone holder is reported once and an ancestor holder is refused after its grace",async()=>{
+ const holder:core.ConcurrentHolderV1&{ancestor:boolean}={pid:25776,command:"2513e416 run @",sinceMs:Date.parse("2026-11-24T07:12:15.867Z"),silentMs:0,mode:"exclusive",ancestor:false};
+ const make=(view:(round:number)=>glue.ConcurrentHoldersViewV1,busyRounds=45)=>{
+  let clock=0,rounds=0,observed=0;const events:core.ConcurrentEventV1[]=[];
+  const ports:glue.ConcurrentLeasePortsV1={acquire:async()=>++rounds>busyRounds?{resource:"x",mode:"exclusive",release(){}} as ResourceLease:null,observe:()=>view(++observed),sleep:async ms=>{clock+=ms;},now:()=>clock,report:event=>{events.push(event);},signal:new AbortController().signal};
+  return{ports,events};
+ };
+ const named=make(()=>({live:[holder],gone:[]}));
+ await glue.acquireConcurrentLeaseV1("build","/w","exclusive",named.ports,120000);
+ const waiting=named.events.filter(event=>event.event==="waiting");
+ expect(waiting.length).toBeGreaterThanOrEqual(2);expect(waiting[0]).toMatchObject({holder:{pid:25776,command:"2513e416 run @",mode:"exclusive"},limitMs:120000});
+ for(const language of protocol.languages){
+  const text=core.concurrentTextV1(language,"waitingHolder",{pid:holder.pid,command:holder.command,since:new Date(holder.sinceMs).toISOString(),seconds:20,limit:120}),parsed=readyHolderWaitOfV1([text]);
+  expect(parsed,language).toMatchObject({pid:25776,command:"2513e416 run @",seconds:20,limitSeconds:120,silentSeconds:null});
+  const silent=readyHolderWaitOfV1([core.concurrentTextV1(language,"waitingSilentHolder",{pid:holder.pid,command:holder.command,since:new Date(holder.sinceMs).toISOString(),silent:400,seconds:20,limit:120})]);
+  expect(silent,language).toMatchObject({pid:25776,silentSeconds:400});
+ }
+ const now=holder.sinceMs+60000,wait=readyHolderWaitOfV1([core.concurrentTextV1("en","waitingHolder",{pid:25776,command:"x",since:"2026-11-24T07:12:15.867Z",seconds:20,limit:120})])!;
+ expect(readyHolderCustodyV1({wait,entry:{pid:25776,startedAtMs:holder.sinceMs,updatedAtMs:now,command:"x"},table:[{pid:25776,ppid:1,startMs:holder.sinceMs}],nowMs:now}).kind).toBe("progressing");
+ expect(readyHolderCustodyV1({wait,entry:{pid:25776,startedAtMs:holder.sinceMs,updatedAtMs:now,command:"x"},table:[{pid:25776,ppid:1,startMs:holder.sinceMs+3_600_000}],nowMs:now}).kind,"a reused pid").toBe("gone");
+ const gone=make(round=>round===1?{live:[],gone:[{pid:holder.pid,command:holder.command,sinceMs:holder.sinceMs,silentMs:holder.silentMs,mode:holder.mode}]}:{live:[],gone:[]});
+ await glue.acquireConcurrentLeaseV1("build","/w","exclusive",gone.ports,120000);
+ expect(gone.events.filter(event=>event.event==="holder-gone")).toEqual([expect.objectContaining({holder:expect.objectContaining({pid:25776}),resource:"build"})]);
+ const ancestor=make(()=>({live:[{...holder,ancestor:true}],gone:[]}),1000);
+ await expect(glue.acquireConcurrentLeaseV1("build","/w","exclusive",ancestor.ports,120000)).rejects.toThrow("ancestor of this process");
+ await expect(glue.acquireConcurrentLeaseV1("build","/w","exclusive",ancestor.ports,120000)).rejects.toThrow("Vorfahre dieses Prozesses");
+});
+
+/** 🪟️ The registry look that names the holder judges pid reuse by the operating system's start time (Windows reuses pids within hours), an unreadable start by the heartbeat, and removes the registration of a holder that is gone. */
+test("concurrent wait: the registry look removes a holder whose pid was reused or whose unreadable start went silent, and names a living one",()=>{
+ const removed:string[]=[],entry=(pid:number,startedAtMs:number,updatedAtMs:number)=>({path:`/r/${pid}.json`,entry:{version:1,pid,startedAtMs,updatedAtMs,command:"cmd "+pid,directory:"/d",holds:[{resource:"build:/w",mode:"exclusive" as const,sinceMs:startedAtMs}],waits:[]} as never});
+ const now=10_000_000,ports=(start:(pid:number)=>number|undefined):DependencyStoreRegistryPortsV1=>({entries:()=>[entry(11,1_000_000,now),entry(12,1_000_000,now),entry(13,1_000_000,now-400_000),entry(14,1_000_000,now-400_000),entry(99,1_000_000,now)],alive:pid=>pid!==99,osStartedAtMs:start,now:()=>now,ancestors:()=>[],remove:path=>{removed.push(path);},pid:1,startedAtMs:5});
+ const seen=observeDependencyStoreHoldersV1("/d","build:/w",ports(pid=>pid===11?1_000_000+3_600_000:pid===12?1_000_000:undefined));
+ expect(seen.live.map(holder=>holder.pid)).toEqual([12]);expect(seen.gone.map(holder=>holder.pid).sort()).toEqual([11,13,14,99].filter(pid=>pid!==14||true).sort());
+ expect(removed.sort()).toEqual(["/r/11.json","/r/13.json","/r/14.json","/r/99.json"]);
 });
 
 /** 🔀️ Proves the pointer switch is atomic for a reader in another process: every read is complete, sealed and monotone while the publisher replaces the file hundreds of times. */
@@ -369,11 +409,16 @@ test("concurrent budget: the declared partition funds every platform backend and
  const independent=oracle("budget",fixture.budget);
  for(const[index,row]of fixture.budget.entries()){expect(core.concurrentRequiredImageBytesV1(row.sharing)).toBe(row.requiredBytes);expect(independent[index].requiredBytes).toBe(row.requiredBytes);expect(row.requiredBytes).toBeLessThanOrEqual(declared);}
  expect(core.concurrentRequiredImageBytesV1(false)).toBeGreaterThan(core.concurrentRequiredImageBytesV1(true));
- expect(protocol.admission.defaultGenerationBytes).toBe(4*budget.physicalGenerationBytes);
- const measured=budget.measured,unique=(measured.usedKiB-measured.packageCacheKiB-measured.temporariesKiB-measured.receiptsKiB-measured.capsulesKiB)*1024/measured.generationsCounted;
+ expect(protocol.admission.defaultGenerationBytes).toBe(budget.physicalGenerationBytes);
+ const measured=budget.measured,unique=measured.generationsKiB*1024/measured.generationsCounted;
  expect(budget.physicalGenerationBytes).toBeGreaterThanOrEqual(unique);expect(budget.physicalGenerationBytes).toBeLessThan(2*unique);
  expect(budget.copiedGenerationBytes).toBeGreaterThanOrEqual(measured.logicalGenerationSetKiB*1024/budget.scopes);
  expect(budget.packageCacheBytes).toBeGreaterThan(measured.packageCacheKiB*1024);
+ expect(budget.pythonBytes).toBeGreaterThan(measured.pythonKiB*1024);expect(measured.remoteExecutionKiB*1024).toBeLessThan(core.concurrentWorkDirectoryBytesV1("worker"));
+ expect(core.concurrentRequiredImageBytesV1(true)+core.concurrentWorkDirectoryBytesV1("worker")).toBeLessThanOrEqual(declared);
+ expect(core.concurrentWorkDirectoryBytesV1("worker")).toBe(budget.remoteExecution.reserveBytes+budget.remoteExecution.slots.worker*budget.remoteExecution.perActionBytes);
+ expect(budget.remoteExecution.slots.worker).toBeGreaterThanOrEqual(budget.remoteExecution.slots.builder);
+ expect(()=>core.concurrentWorkDirectoryBytesV1("nobody" as never)).toThrow();
  const backends=(installSchema.$defs.ProducerRecipeProtocol.const as unknown as {backends:Record<string,string>}).backends;
  expect(backends.darwin).toBe("clonefile");
  for(const backend of Object.values(backends))expect(core.concurrentRequiredImageBytesV1(backend==="clonefile")).toBeLessThanOrEqual(declared);

@@ -34,7 +34,7 @@ pub struct OpeningState {
     /// 🚪️ The ONE document open in flight or settled, advanced by the frame pump
     /// ([`Self::advance_document_opening`]) and painted as its own band with a cancel control.
     pub document_opening: Option<ShellDocumentOpening>,
-    pub icon_export: Option<IconExportBatch>,
+    pub icon_export: Option<Box<IconExportBatch>>,
     /// 🎥️ The video exports of `Effect::VideoRenderExport`: their event-sourced ledger, renders and save dialogs.
     pub video_render: VideoRenderJobs,
     /// 📈️ The latest runtime actor snapshot; `None` while no actor runtime is attached.

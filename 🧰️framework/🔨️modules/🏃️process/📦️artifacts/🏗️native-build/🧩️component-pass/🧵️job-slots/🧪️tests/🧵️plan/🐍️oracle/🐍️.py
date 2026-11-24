@@ -22,14 +22,8 @@ def plan(policy, host):
     for value, why in limits:
         if value < remote:
             remote, reason = max(0, value), why
-    if host["pressure"] == "critical":
-        halved = 0
-    elif host["pressure"] == "warn":
-        halved = remote // policy["pressureWarnDivisor"]
-    else:
-        halved = remote
-    if halved < remote:
-        remote, reason = halved, "jobs-pressure"
+    if host["pressure"] == "critical" and remote > 0:
+        remote, reason = 0, "jobs-pressure"
     return {"jobs": local + remote, "local": local, "remote": remote, "reason": reason}
 
 

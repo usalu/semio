@@ -1,8 +1,9 @@
-//! 🎚️ Gauges: one scalar grip for every numeric field of a row that has no geometric grip of its own, listed per collection in one table. The drag parameter `s` is the displacement in metres along `+Z` of the gauge anchor, so the field is `value + 20 * step * s`, quantised to its schema step (`x-semio-ui.step`) and clamped to its physical range; no limit is a normative value.
+//! 🎚️ Gauges: one scalar grip for every numeric field of a row that has no geometric grip of its own, listed per collection in one table. The drag parameter `s` is the displacement in metres along `+Z` of the gauge anchor, re-based on the absolute rest parameter of the grip, so the field is `value + 20 * step * (s − rest)`, quantised to its schema step (`x-semio-ui.step`) and clamped to its physical range; no limit is a normative value.
 //! 🔗️ Handle laws: [`assert_handle_laws`](crate::scene::projection_kit::test_support::assert_handle_laws).
 
 use super::*;
 use crate::model::{BridgeSls, MemberEffect, Member, TestSeries};
+use crate::scene::projection_kit::handle_kit::rebased;
 
 pub const STEPS_PER_METRE: f64 = 20.0;
 pub const PITCH: f64 = 0.4;
@@ -88,7 +89,7 @@ fn one<T>(g: &Gauge<T>, row: &T, entity: &EntityRef, tag: &str, path: String, an
     let base = (g.get)(row);
     let k = STEPS_PER_METRE * g.step;
     let (a, b) = ((g.lo.min(base) - base) / k, (g.hi.max(base) - base) / k);
-    handle(Spec {
+    with_rest_in_limits(rebased(bare(Spec {
         entity,
         tag,
         kind: HandleKind::ScalarAlong { axis: Vec3::Z },
@@ -98,7 +99,7 @@ fn one<T>(g: &Gauge<T>, row: &T, entity: &EntityRef, tag: &str, path: String, an
         snap: grid(0.05),
         limits: (a.min(b), a.max(b)),
         name: loc(&format!("{} {subject}", g.en), &format!("{} {subject}", g.de)),
-    })
+    })))
 }
 
 /// 🎚️ The gauges of one row as handles: a rack of diamonds beside the entity, `at(i)` giving the anchor of the `i`-th at the offset `dy` from the middle of the rack.

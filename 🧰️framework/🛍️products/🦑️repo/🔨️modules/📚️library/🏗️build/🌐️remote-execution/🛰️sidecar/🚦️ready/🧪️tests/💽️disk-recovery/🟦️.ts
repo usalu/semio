@@ -4,7 +4,7 @@ import{mkdtempSync,rmSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{spawnSync}from"node:child_process";
-import{READY_POLICY_V1 as P,createReadyLeaseV1,emptyReadyStateV1,readyDigestsV1,readyDiskNeedV1,readyDiskRefusalV1,readyDiskShortV1,readyNoSpaceV1,readyStoreFullV1,readyTailWithDiskCauseV1,runReadyV1,type ReadyFilesystemFactsV1,type ReadyLocalStateV1,type ReadyPortsV1,type ReadyRunResultV1,type ReadyStatusV1,type ReadyTimingV1}from"../../🟦️.ts";
+import{READY_POLICY_V1 as P,createReadyLeaseV1,emptyReadyStateV1,readyDigestsV1,readyDiskNeedV1,readyDiskRefusalV1,readyDiskShortV1,readyDiskUnfitRefusalV1,readyUnfitRecheckDueV1,readyNoSpaceV1,readyStoreFullV1,readyTailWithDiskCauseV1,runReadyV1,type ReadyFilesystemFactsV1,type ReadyLocalStateV1,type ReadyPortsV1,type ReadyRunResultV1,type ReadyStatusV1,type ReadyTimingV1}from"../../🟦️.ts";
 import{recoverNeedV1,type DiskWriterV1}from"../../../../../🌡️host-capacity/🧹️disk-recovery/🟦️.ts";
 import{DISK_WRITERS_V1}from"../../../../../🌡️host-capacity/🧹️disk-recovery/🟦️.ts";
 import{CAS_RESERVE_FACTOR_V1}from"../../../../../🗄️cas/🧬️schema/🟦️.ts";
@@ -56,21 +56,53 @@ test("2993 MB free, 4096 MB needed: the collectors run in priority order until t
  expect(w.updates.some(update=>update.refusal?.code==="disk-collecting"&&update.refusal.en.includes("4096")&&update.refusal.de.includes("4096"))).toBe(true);
 });
 
-test("automatic collection left the volume short: the stage waits with the typed refusal that lists the largest consumers and the exact command for each, in both languages, and starts when space returns",async()=>{
+test("automatic collection left the volume short: the worker is named unfit (disk) once with the largest consumers and the exact command for each, in both languages, never collects again in a loop and starts when space returns",async()=>{
  const volume={freeMegabytes:2993},log:string[]=[];
- const w=world(volume,[writer(volume,"cas-lru",5000,0,log),writer(volume,"image-slack",12_000,0,log,{fail:true}),writer(volume,"read-verdicts",300,0,log),writer(volume,"replica-lost",40,0,log)],{stopAfterSleeps:6,external:round=>{if(round===3)volume.freeMegabytes=4200;}});
+ const w=world(volume,[writer(volume,"cas-lru",5000,0,log),writer(volume,"image-slack",12_000,0,log,{fail:true}),writer(volume,"read-verdicts",300,0,log),writer(volume,"replica-lost",40,0,log)],{stopAfterSleeps:6,external:round=>{if(round===3)volume.freeMegabytes=3500;if(round===5)volume.freeMegabytes=4200;}});
  await runReadyV1(w.ports,w.controller.signal);
- const refusals=w.updates.map(update=>update.refusal).filter(refusal=>refusal?.code==="disk-consumers");
+ const refusals=w.updates.map(update=>update.refusal).filter(refusal=>refusal?.code==="disk-unfit");
  expect(refusals.length).toBeGreaterThanOrEqual(2);
  const first=refusals[0]!;
  for(const text of[first.en,first.de]){expect(text).toContain("4096");expect(text).toContain("2993");expect(text).toContain("/ws/image-slack");expect(text).toContain("/ws/cas-lru");expect(text).toContain("`");expect(text).not.toContain("{");}
  expect(first.en.indexOf("/ws/image-slack")).toBeLessThan(first.en.indexOf("/ws/cas-lru"));
  expect(first.en).toContain(rowOf("cas-lru").command);expect(first.en).toContain("repo");
  expect(first.en).not.toBe(first.de);
- expect(first.en).toContain("after automatic collection");expect(first.de).toContain("nach der automatischen Bereinigung");
+ expect(first.en).toContain("unfit (disk)");expect(first.de).toContain("ungeeignet (Platte)");expect(first.en).toContain("not retried in a loop");
+ expect(w.updates.some(update=>update.refusal?.code==="disk-consumers")).toBe(false);
  expect(w.said.some(line=>line.includes("boom image-slack"))).toBe(true);
+ expect(w.said.filter(line=>line.includes("unfit (disk)"))).toHaveLength(1);
+ expect(log.filter(id=>id==="cas-lru")).toHaveLength(1);
  expect(w.calls).toContain("workspace");
- expect(log.filter(id=>id==="cas-lru").length).toBeGreaterThanOrEqual(2);
+});
+
+test("an unfit worker is looked at again only when 1024 MB more are free or after six hours, and says so once per episode",async()=>{
+ const volume={freeMegabytes:2993},log:string[]=[];
+ const grew=world(volume,[writer(volume,"cas-lru",5000,0,log)],{stopAfterSleeps:8,external:round=>{if(round===4)volume.freeMegabytes=2993+P.unfitRecheckGrowthMegabytes;}});
+ await runReadyV1(grew.ports,grew.controller.signal);
+ expect(log).toEqual(["cas-lru","cas-lru"]);
+ expect(grew.said.filter(line=>line.includes("unfit (disk)"))).toHaveLength(2);
+ const quiet={freeMegabytes:2993},quietLog:string[]=[];
+ const waited=world(quiet,[writer(quiet,"cas-lru",5000,0,quietLog)],{stopAfterSleeps:5});
+ await runReadyV1(waited.ports,waited.controller.signal);
+ expect(quietLog).toEqual(["cas-lru"]);expect(waited.said.filter(line=>line.includes("unfit (disk)"))).toHaveLength(1);
+ expect(readyUnfitRecheckDueV1({atMs:0,availableMegabytes:100},100+P.unfitRecheckGrowthMegabytes-1,P.unfitRecheckMilliseconds-1)).toBe(false);
+ expect(readyUnfitRecheckDueV1({atMs:0,availableMegabytes:100},100+P.unfitRecheckGrowthMegabytes,1)).toBe(true);
+ expect(readyUnfitRecheckDueV1({atMs:0,availableMegabytes:100},100,P.unfitRecheckMilliseconds)).toBe(true);
+ const refusal=readyDiskUnfitRefusalV1("dependencies",{path:"/ws/.cache",resource:"space",needed:6144,available:3860},[]);
+ for(const text of[refusal.en,refusal.de]){expect(text).toContain("6144");expect(text).toContain("3860");expect(text).toContain("2284");expect(text).not.toContain("{");}
+});
+
+test("the storage of the dependencies stage is repaired before it starts: an image that grew is said, an image the host cannot hold parks the worker as unfit once and the stage runs after the host has room",async()=>{
+ const volume={freeMegabytes:50_000};
+ const w=world(volume,[],{stage:"dependencies",stopAfterSleeps:6,external:round=>{if(round===3)room.free=70_000;}});
+ const room={free:10_000},reports:string[]=[];let healed=0;
+ const ports:ReadyPortsV1={...w.ports,freeMegabytes:()=>room.free,heal:async request=>{if(request.stage!=="dependencies")return{grown:0,unfit:null};healed++;request.report("growing the image / das Image wächst: storage-grow:dependencies:1/4");return room.free<60_000?{grown:0,unfit:{path:"/ws/.cache/b/d",neededMegabytes:27_800,availableMegabytes:room.free}}:{grown:1,unfit:null};}};
+ await runReadyV1(ports,w.controller.signal);
+ const refusals=w.updates.map(update=>update.refusal).filter(refusal=>refusal?.code==="disk-unfit");
+ expect(refusals.length).toBeGreaterThanOrEqual(1);expect(refusals[0]!.en).toContain("27800");expect(refusals[0]!.de).toContain("27800");
+ expect(w.said.filter(line=>line.includes("unfit (disk)"))).toHaveLength(1);
+ expect(healed).toBe(2);expect(w.calls).toContain("dependencies");
+ reports.push(...w.said);expect(reports.some(line=>line.includes("growing the image"))).toBe(true);
 });
 
 test("a failing collector never stops the next and the collection is cancelled by the signal without starting the stage",async()=>{

@@ -121,6 +121,7 @@ fn with_flow_neuron_kind_info_owner<R>(read: impl FnOnce(&FlowNeuronKindInfos) -
     static CACHE: std::sync::LazyLock<std::sync::Mutex<Option<(u64, FlowNeuronKindInfos)>>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(None));
     let generation = flow_extension_registry_generation();
     let mut cache = CACHE.lock().expect("flow neuron kind info cache");
+    drain_superseded_catalogues();
     if let Some((cached_generation, infos)) = cache.as_ref() {
         if *cached_generation == generation {
             return read(infos);
@@ -134,20 +135,39 @@ fn with_flow_neuron_kind_info_owner<R>(read: impl FnOnce(&FlowNeuronKindInfos) -
     read(&cache.as_ref().expect("flow neuron info cache was refreshed").1)
 }
 
-/// ♻️ Closes the registry's own alias of a superseded generation in host-funded owner-less turns.
-fn retire_superseded_catalogue(infos: semio_framework_value_ordered::ordered::SharedOwner<protocol::causal::transition::HistoryFoldIndex<String, OperatorInfo>>) {
-    use semio_framework_value::{retirement::controlled::ControlledRetirement, RetainedCloneGrant};
-    let mut owner = ControlledRetirement::retain(infos);
-    for _ in 0..4096 {
+/// ♻️ The catalogues of superseded registry generations still owing their retirement, oldest first. A generation moves whenever an extension is contributed, and a lazily activated extension moves it AFTER the first catalogue was built, so the displaced one (every operator record of every built-in and contributed extension, tens of thousands of owned allocations at one item per step) cannot be closed inside the single guest turn that replaced it: the former fixed 4096-step bound panicked the whole actor (`superseded flow catalogue did not terminate`) on the first lazy activation.
+static SUPERSEDED_CATALOGUES: std::sync::LazyLock<std::sync::Mutex<std::collections::VecDeque<semio_framework_value::retirement::controlled::ControlledRetirement<FlowNeuronKindInfos>>>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(std::collections::VecDeque::new()));
+
+/// 🪙️ How many one-item retirement steps one call spends on the oldest superseded catalogue; every later catalogue read continues where it stopped, so the turn that replaced a generation pays a bounded share and the rest drains across the next reads.
+const SUPERSEDED_CATALOGUE_STEPS: usize = 2048;
+
+/// ♻️ Queues the registry's own alias of a superseded generation and spends the bounded share of retirement work on the queue in host-funded owner-less turns.
+fn retire_superseded_catalogue(infos: FlowNeuronKindInfos) {
+    SUPERSEDED_CATALOGUES.lock().expect("superseded flow catalogues").push_back(semio_framework_value::retirement::controlled::ControlledRetirement::retain(infos));
+    drain_superseded_catalogues();
+}
+
+/// ♻️ Spends at most [`SUPERSEDED_CATALOGUE_STEPS`] steps on the oldest superseded catalogues; an empty queue costs one lock.
+fn drain_superseded_catalogues() {
+    use semio_framework_value::RetainedCloneGrant;
+    let mut queue = SUPERSEDED_CATALOGUES.lock().expect("superseded flow catalogues");
+    for _ in 0..SUPERSEDED_CATALOGUE_STEPS {
+        let Some(owner) = queue.front_mut() else { return };
         if owner.terminal_is_empty() {
-            return;
+            queue.pop_front();
+            continue;
         }
         let copy = 4096.max(owner.next_copy_byte_demand().expect("superseded catalogue copy"));
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).expect("superseded catalogue capacity"), maximum_release_bytes: owner.next_release_byte_demand().expect("superseded catalogue release"), maximum_depth: owner.next_depth_demand().expect("superseded catalogue depth") };
         let mut turn = semio_framework_job::OriginalRetirementPump::new().turn(1 << 16, u64::MAX, || Some(0), grant).expect("superseded catalogue turn");
         turn.with_effect(|effect| owner.step(copy, effect)).expect("superseded catalogue effect");
     }
-    panic!("superseded flow catalogue did not terminate");
+}
+
+/// 🔭️ How many superseded catalogues still owe their retirement: what a law reads to prove the queue drains.
+#[cfg(any(test, feature = "protocol-laws"))]
+pub fn superseded_flow_catalogues_pending() -> usize {
+    SUPERSEDED_CATALOGUES.lock().expect("superseded flow catalogues").len()
 }
 
 /// 📚️ Extension plus static widget sections for side palettes (spotlight merges static in the host).

@@ -68,7 +68,10 @@ for(const row of corpus.cases)test("watchdog adoption preserves "+row.id,async()
    while(observed()<target&&performance.now()<limit)await Bun.sleep(30);
    expect(observed()).toBeGreaterThanOrEqual(target);
   }
+  if(row.mode==="gap")await Bun.sleep(tree.stallStopMilliseconds+500);
   const second=await detach(700);
+  if(row.mode==="gap"){expect(second.unwatchedMilliseconds).toBeGreaterThanOrEqual(tree.stallStopMilliseconds+500);expect(second.stallAt).toBe(first.stallAt);}
+  else if(row.mode==="quiet")expect(second.unwatchedMilliseconds).toBeLessThan(tree.stallStopMilliseconds);
   const third=await detach(700);
   if(row.mode==="foreign")expect(second.armedAt).toBeGreaterThan(first.armedAt);
   else expect(second.armedAt).toBe(first.armedAt);
@@ -103,7 +106,7 @@ for(const row of corpus.cases)test("watchdog adoption preserves "+row.id,async()
    if(row.mode==="peak")expect(result.peakMegabytes).toBe(expected);
    else expect(result.peakMegabytes??0).toBeLessThan(expected);
   }
-  if(row.mode==="quiet"||row.mode==="semantics"||row.mode==="step"){
+  if(row.mode==="quiet"||row.mode==="gap"||row.mode==="semantics"||row.mode==="step"){
    const result=await run(new AbortController().signal);
    expect(result).toMatchObject({detached:false,startedMs,stalled:true});
    if(row.mode==="semantics")expect(result.codeChanged).toBe("semantics.json");

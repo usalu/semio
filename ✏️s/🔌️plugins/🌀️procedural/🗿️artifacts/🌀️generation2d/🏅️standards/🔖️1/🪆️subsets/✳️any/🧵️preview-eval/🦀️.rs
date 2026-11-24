@@ -98,7 +98,12 @@ pub fn tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
 /// 🚧️ Whether an evaluation of `host_snapshot` may start or continue at all: an operator kind no contributed
 /// extension serves faults identically on every hop, and only `setContributions` can change that.
 pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> bool {
-    semio_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_os_flow::flow_operator_registry()).is_empty()
+    unserved_kinds(host_snapshot).is_empty()
+}
+
+/// 🧭️ The operator kinds of `host_snapshot` the live flow extension registry cannot serve, ascending: what a route hands [`owe_attached_previews_carrying`] and [`owe_attached_previews_for_mutations`] so an unservable graph parks its preview and asks the host to activate the deferred extensions. Empty means servable.
+pub fn unserved_kinds(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> Vec<String> {
+    semio_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_os_flow::flow_operator_registry())
 }
 
 /// 🙏️ The one argument object every hop carries, on the redispatch and on the extension request alike.
@@ -132,20 +137,24 @@ pub fn owe_attached_previews(sessions: PreviewEvalSessions<'_>, link: &mut Previ
 /// 🩹️ What a LANDED GESTURE owes the attached previews, read off its own emit: artifact mutations moved
 /// the document every evaluation reads, so each attached window owes one fresh evaluation; a gesture
 /// that authored none owes a settled run nothing. Answers whether it owed.
-pub fn owe_attached_previews_for_mutations<M, C, D>(sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut semio_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, semio_framework_value::ValueError> {
+pub fn owe_attached_previews_for_mutations<M, C, D>(sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], unserved: &[String], emit: &mut semio_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, semio_framework_value::ValueError> {
     if emit.artifact_mutations.is_empty() {
         link.wake();
         return Ok(false);
     }
-    owe_attached_previews_carrying(sessions, link, windows, servable, emit, grant)?;
+    owe_attached_previews_carrying(sessions, link, windows, unserved, emit, grant)?;
     Ok(true)
 }
 
 /// 🚦️ Owes every attached preview window an evaluation AND puts on `emit` whatever asks for it: a live,
 /// unsettled run is woken through its port, a surface with no such run carries the run start itself —
 /// the host polls `pending_effects` only on activity, so a debt nobody asks about is never paid.
-pub fn owe_attached_previews_carrying<M, C, D>(sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut semio_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+pub fn owe_attached_previews_carrying<M, C, D>(sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], unserved: &[String], emit: &mut semio_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     owe_attached_previews(sessions, link, windows, grant)?;
+    let servable = unserved.is_empty();
+    if !windows.is_empty() {
+        emit.effects.extend(on_demand_run_effects(link, unserved.to_vec()));
+    }
     let woken = link.port.is_some() && link.settled.is_none();
     if !windows.is_empty() && servable && !woken && link.requested.is_none() {
         link.requested = Some((PreviewEvalRunRequest::Start, None));

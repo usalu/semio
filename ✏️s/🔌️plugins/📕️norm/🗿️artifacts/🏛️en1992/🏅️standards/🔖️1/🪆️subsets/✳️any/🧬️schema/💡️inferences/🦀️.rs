@@ -78,9 +78,15 @@ pub fn evaluate(document: &En1992Snapshot) -> CheckReport {
     evaluate_scoped(document, Scope::All)
 }
 
+/// 🧼️ Starts a row with an empty NDP read log: reads a previous row did not cite must not leak into the first check of this one, so a row yields the same checks alone (as a unit) and inside the whole report.
+fn isolate() {
+    semio_s_plugin_norm_compliance::drain_ndp_reads();
+}
+
 /// 🎯️ The evaluation restricted to `scope` (global integrity, or one member or anchor row); the ordered concatenation of all scopes is [`evaluate`].
 pub fn evaluate_scoped(document: &En1992Snapshot, scope: Scope<'_>) -> CheckReport {
     let mut report = CheckReport::default();
+    isolate();
     if scope.globals() {
         push_duplicate_ids(&mut report, document, "members", &document.members.iter().map(|m| m.id.clone()).collect::<Vec<_>>(), &|id| format!("members[id={id}].id"));
         push_duplicate_ids(&mut report, document, "anchors", &document.anchors.iter().map(|a| a.id.clone()).collect::<Vec<_>>(), &|id| format!("anchors[id={id}].id"));
@@ -94,13 +100,13 @@ pub fn evaluate_scoped(document: &En1992Snapshot, scope: Scope<'_>) -> CheckRepo
         }
         report.extend(evaluate_material_cases(document));
     }
-    for (index, member) in document.members.iter().enumerate().filter(|(index, _)| scope.admits("members", *index)) {
+    for (index, member) in document.members.iter().enumerate().filter(|(index, _)| scope.admits("members", *index)).inspect(|_| isolate()) {
         report.extend(evaluate_member(document, member));
     }
-    for (index, anchor) in document.anchors.iter().enumerate().filter(|(index, _)| scope.admits("anchors", *index)) {
+    for (index, anchor) in document.anchors.iter().enumerate().filter(|(index, _)| scope.admits("anchors", *index)).inspect(|_| isolate()) {
         report.extend(evaluate_anchor(document, anchor));
     }
-    for (index, case) in document.cases.iter().enumerate().filter(|(index, _)| scope.admits("cases", *index)) {
+    for (index, case) in document.cases.iter().enumerate().filter(|(index, _)| scope.admits("cases", *index)).inspect(|_| isolate()) {
         report.extend(semio_s_artifact_norm_en1992_checks::evaluate_design_case(&semio_s_plugin_norm_compliance::design_case::DesignCase::from(case), document.annex));
     }
     report

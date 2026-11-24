@@ -1,0 +1,106 @@
+[
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "sleeve-l",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "arm-l: rev/swv/sww: one revolved body"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "sleeve-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "arm-r: rev/swu/swv: one revolved body"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "neck",
+  "why": "neck: sww/swv/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "sleeve-r",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "why": "arm-r: rev/None/swv: one revolved body"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "neck",
+  "why": "neck: sww/swv/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "copy",
+  "scale": "200",
+  "id": "sleeve-r",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "why": "arm-r: rev/None/swv: one revolved body"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "shoe-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "shoe-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-r",
+  "why": "thigh-r: sww/None/rev: revolved about the bone axis"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "sil-shoe-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "sil-shoe-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "sil-neck",
+  "why": "neck: sww/swv/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "shank-r",
+  "why": "shank-r: sww/swv/None: prism along v fitted to the elevation outline"
+ }
+]

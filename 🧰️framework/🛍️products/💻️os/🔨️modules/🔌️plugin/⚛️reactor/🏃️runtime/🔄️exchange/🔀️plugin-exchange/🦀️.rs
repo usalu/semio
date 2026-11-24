@@ -55,7 +55,7 @@ struct ExchangeFlags {
     started_typed_operation: Option<u64>,
 }
 
-/// 🪜️ Moves of one retained `MediaIn` custody (descriptor parse, typed receiving, payload donation, metadata, reserved preparation, mount) one turn may chain while each move still moves retained stock and the turn has not yielded; every move is a quote-exact native action, so one move per turn cost the shell thousands of host round trips (ticket 26/11/22 GET-PDF-ARTIFACT-EDITOR-WORKING-END-TO-END).
+/// 🪜️ Moves of one retained `MediaIn` custody (descriptor parse, typed receiving and its retirement, payload donation, metadata, reserved preparation, import) one turn may chain while each move still spends fuel or moves retained stock and the turn has not yielded; the typed receive runs as many receiving actions per move as its scope slice admits (ticket 26/11/22 GET-PDF-ARTIFACT-EDITOR-WORKING-END-TO-END, `📨️media-in-receive.md`).
 const MEDIA_IN_MOVES_PER_TURN: usize = 1_024;
 
 /// 🕹️ The typed operation an `AppCommand::Command` of this exchange STARTED (its reply's
@@ -202,9 +202,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let media_pending=match owner.original_command(){
             Some(protocol::AppCommand::MediaIn { .. }) => {
                 let receiving = async {
-                    for chained in 0..MEDIA_IN_MOVES_PER_TURN {
-                        if chained > 0 && chained % 128 == 0 { eprintln!("[DEBUG] media-in chained {chained} moves in one turn"); }
-                        let before = cx.retained_progress();
+                    for _ in 0..MEDIA_IN_MOVES_PER_TURN {
+                        let before = (cx.retained_progress(), cx.fuel_remaining());
                         let step: Result<bool, semio_framework_job::OriginalTurnFailure> = async {
                             if owner.original_media_finished() {
                                 return owner.settle_original_media_import(cx).map(|ready| !ready);
@@ -251,7 +250,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                             Ok(true)
                         }.await;
                         match step {
-                            Ok(true) if !cx.should_yield() && cx.retained_progress() != before => continue,
+                            Ok(true) if !cx.should_yield() && (cx.retained_progress(), cx.fuel_remaining()) != before => continue,
                             other => return other,
                         }
                     }

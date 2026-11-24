@@ -108,6 +108,7 @@ export function analyzeDoctorV1(facts:DoctorFactsV1,options:DoctorAnalysisOption
     const age=part.publicationAgeSeconds??0;
     add("storage.publication-pending",age>=policy.storage.publicationErrorSeconds?"error":"info",part.id,{partition:part.id,which:part.publication,ageSeconds:age});
    }
+   if(part.state==="mounted"&&part.image==="ok"&&part.imageBytes!==null&&part.needBytes!==undefined&&part.needBytes!==null&&part.needBytes>0&&part.imageBytes-policy.storage.imageTrailerBytes+policy.storage.imageUnitBytes<part.needBytes)add("storage.image-below-need","error",part.id,{partition:part.id,imageBytes:part.imageBytes,needBytes:part.needBytes});
    if(part.state==="mounted"&&part.freeBytes!==null&&part.capacityBytes!==null&&part.capacityBytes>0){
     const floor=policy.storage.floorBytes[part.id],percent=Math.floor(100*part.freeBytes/part.capacityBytes);
     if(floor!==undefined&&part.freeBytes<floor)add("storage.image-below-floor","error",part.id,{partition:part.id,freeBytes:part.freeBytes,floorBytes:floor});

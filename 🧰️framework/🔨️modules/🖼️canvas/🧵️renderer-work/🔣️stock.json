@@ -2,24 +2,24 @@
   "version": 1,
   "stock": {
     "grant": {
-      "maximumItems": 67108864,
-      "maximumCopyBytes": 8589934592,
-      "maximumCapacityBytes": 4294967296,
-      "maximumReleaseBytes": 4294967296,
+      "maximumItems": 4503599627370496,
+      "maximumCopyBytes": 4503599627370496,
+      "maximumCapacityBytes": 4503599627370496,
+      "maximumReleaseBytes": 4503599627370496,
       "maximumDepth": 128
     },
-    "fuel": 1099511627776,
-    "maximumElapsedUs": "86400000000"
+    "fuel": 4503599627370496,
+    "maximumElapsedUs": "31536000000000"
   },
   "operation": {
     "grant": {
-      "maximumItems": 8388608,
+      "maximumItems": 2147483648,
       "maximumCopyBytes": 2147483648,
-      "maximumCapacityBytes": 536870912,
-      "maximumReleaseBytes": 536870912,
+      "maximumCapacityBytes": 2147483648,
+      "maximumReleaseBytes": 2147483648,
       "maximumDepth": 64
     },
-    "fuel": 50000000,
-    "maximumElapsedUs": "3600000000"
+    "fuel": 1099511627776,
+    "maximumElapsedUs": "31536000000000"
   }
 }

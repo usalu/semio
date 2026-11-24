@@ -1,0 +1,93 @@
+[
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "neck",
+  "bone": "neck",
+  "view": "front"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "neck",
+  "bone": "neck",
+  "view": "plan"
+ },
+ {
+  "op": "sync",
+  "scale": "50",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "neck",
+  "bone": "neck",
+  "view": "front"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "neck",
+  "bone": "neck",
+  "view": "plan"
+ },
+ {
+  "op": "sync",
+  "scale": "100",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "neck",
+  "bone": "neck",
+  "view": "front"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "neck",
+  "bone": "neck",
+  "view": "plan"
+ },
+ {
+  "op": "sync",
+  "scale": "200",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "sil-neck",
+  "bone": "neck",
+  "from": "front",
+  "to": [
+   "elevation",
+   "plan"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "sil-head",
+  "bone": "head",
+  "view": "front"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "sil-head",
+  "bone": "head",
+  "view": "plan"
+ },
+ {
+  "op": "sync",
+  "scale": "500",
+  "id": "sil-head",
+  "bone": "head"
+ }
+]

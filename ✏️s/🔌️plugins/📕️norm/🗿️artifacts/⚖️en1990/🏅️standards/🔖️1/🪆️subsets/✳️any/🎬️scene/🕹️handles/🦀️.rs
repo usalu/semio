@@ -3,23 +3,39 @@
 //! 📏️ Span and pre-camber for members, the magnitude of every action (the grip height is the magnitude over a scale of N per metre) and the combination selector, whose write path `view.activeCombination` is view state and not a document leaf.
 
 use super::scene::projection_kit::{along, base_id, entity_ref, loc, mul, v3, Placement};
-use super::actions::{affected, lift, present_groups, rows, selector_anchor, GROUP_LANE};
+use super::actions::{affected, factor_symbol, lift, present_groups, rows, selector_anchor, GROUP_LANE};
 use super::analyses;
 use super::kit::{member_depth, raw_value, COMBINATION_ENTITY};
 use super::layout::Layout;
 use super::members::exaggeration;
 use super::model::{self, En1990Snapshot};
 use super::scene::*;
-use super::scene::projection_kit::handle_kit::{choice_handle, grid, handle, HandleSpec as Spec, field_binding as binding};
+use super::scene::projection_kit::handle_kit::{choice_handle, grid, handle as bare, with_rest_in_limits, HandleSpec as Spec, field_binding as binding};
 
 #[path = "🎚️gauges/🦀️.rs"]
 pub(crate) mod gauges;
+
+/// 🕹️ The grip of a spec resting inside its limits, so an untouched grip read back through the keyboard or the value field is never clamped away from its value.
+fn handle(spec: Spec<'_>) -> Handle {
+    with_rest_in_limits(bare(spec))
+}
+
+/// 📍️ A grip drawn `k⁻¹ · value` away from `origin` along its axis, read on the absolute parameter of the framework: the map becomes `k · (s − origin · axis)`, the limits are displacements from the origin, and the grip rests inside its limits, so an untouched grip writes the value it shows.
+fn from_origin(origin: &Vec3, mut handle: Handle) -> Handle {
+    let HandleKind::ScalarAlong { axis } = &handle.kind else { return handle };
+    let shift = origin.dot(axis);
+    for write in &mut handle.writes {
+        write.map.base -= write.map.k * shift;
+    }
+    handle.limits = handle.limits.map(|limits| Interval::new(limits.min + shift, limits.max + shift));
+    with_rest_in_limits(handle)
+}
 
 fn spread_handle(d: &En1990Snapshot, bar: &analyses::Bar, entity: &EntityRef) -> Option<Handle> {
     let tag = bar.spread_tag()?;
     let analysis = d.reliability_analyses.iter().find(|a| a.id == bar.owner)?;
     let spread = match bar.suffix { Some("action2") => analysis.second_action_sd, Some(_) => analysis.action_sd, None => analysis.resistance_sd };
-    Some(handle(Spec {
+    Some(from_origin(&v3(bar.x, bar.y, bar.height()), bare(Spec {
         entity,
         tag,
         kind: HandleKind::ScalarAlong { axis: Vec3::Z },
@@ -29,7 +45,7 @@ fn spread_handle(d: &En1990Snapshot, bar: &analyses::Bar, entity: &EntityRef) ->
         snap: grid(0.05),
         limits: (0.01, 6.0),
         name: loc(&format!("Standard deviation of {}", bar.name.en), &format!("Standardabweichung von {}", bar.name.de)),
-    }))
+    })))
 }
 
 fn analysis_handles(d: &En1990Snapshot, layout: &Layout, id: &str) -> Vec<Handle> {
@@ -60,7 +76,7 @@ fn fatigue_handles(d: &En1990Snapshot, bar: &analyses::Bar, entity: &EntityRef) 
             limits: (0.02, 12.0),
             name: name("Detail category Δσ_C", "Kerbfall Δσ_C"),
         }),
-        handle(Spec {
+        from_origin(&v3(bar.x, bar.y, 0.0), bare(Spec {
             entity,
             tag: "cycles",
             kind: HandleKind::ScalarAlong { axis: Vec3::Y },
@@ -70,7 +86,7 @@ fn fatigue_handles(d: &En1990Snapshot, bar: &analyses::Bar, entity: &EntityRef) 
             snap: grid(0.05),
             limits: (0.0, 12.0),
             name: name("Number of cycles n", "Zyklenzahl n"),
-        }),
+        })),
     ]
 }
 
@@ -106,7 +122,7 @@ fn member_handles(d: &En1990Snapshot, layout: &Layout, id: &str) -> Vec<Handle> 
     let scale = exaggeration(member.span, net.abs());
     let soffit = along(&along(&f.origin, &f.x, member.span / 2.0), &f.z, -member_depth(member.span) / 2.0);
     vec![
-        handle(Spec {
+        from_origin(&f.origin, bare(Spec {
             entity: &entity,
             tag: "span",
             kind: HandleKind::ScalarAlong { axis: f.x.clone() },
@@ -116,8 +132,8 @@ fn member_handles(d: &En1990Snapshot, layout: &Layout, id: &str) -> Vec<Handle> 
             snap: grid(0.05),
             limits: (0.5, 200.0),
             name: loc(&format!("Span of {}", member.label_en), &format!("Stützweite von {}", member.label_de)),
-        }),
-        handle(Spec {
+        })),
+        from_origin(&soffit, bare(Spec {
             entity: &entity,
             tag: "precamber",
             kind: HandleKind::ScalarAlong { axis: f.z.clone() },
@@ -127,7 +143,7 @@ fn member_handles(d: &En1990Snapshot, layout: &Layout, id: &str) -> Vec<Handle> 
             snap: grid(0.01),
             limits: (0.0, member.span / 50.0 * scale),
             name: loc(&format!("Pre-camber w_c of {}", member.label_en), &format!("Überhöhung w_c von {}", member.label_de)),
-        }),
+        })),
     ]
     .into_iter()
     .chain(deflection_handles(member, &entity, &f.z, &soffit, scale))
@@ -152,7 +168,7 @@ fn resistance_handles(member: &model::Member, entity: &EntityRef, f: &Frame) -> 
     rows.into_iter().enumerate().filter(|(_, (_, value, ..))| *value > 0.0).map(|(slot, (field, value, en, de))| {
         let per_metre = analyses::decade_scale(value.abs());
         let at = along(&along(&f.origin, &f.x, member.span * (slot as f64 + 1.0) / 9.0), &f.z, depth / 2.0 + 0.5);
-        handle(Spec {
+        from_origin(&at, bare(Spec {
             entity,
             tag: field,
             kind: HandleKind::ScalarAlong { axis: f.z.clone() },
@@ -162,7 +178,7 @@ fn resistance_handles(member: &model::Member, entity: &EntityRef, f: &Frame) -> 
             snap: grid(0.05),
             limits: (0.02, 12.0),
             name: loc(&format!("{en} of {}", member.label_en), &format!("{de} von {}", member.label_de)),
-        })
+        }))
     }).collect()
 }
 
@@ -173,18 +189,19 @@ fn deflection_handles(member: &model::Member, entity: &EntityRef, up: &Vec3, sof
     [("w1", "deflectionW1", member.deflection_w1, "Permanent deflection w_1", "Ständige Durchbiegung w_1"), ("w2", "deflectionW2", member.deflection_w2, "Long-term deflection w_2", "Langzeitdurchbiegung w_2"), ("w3", "deflectionW3", member.deflection_w3, "Variable deflection w_3", "Durchbiegung w_3 aus veränderlicher Einwirkung")]
         .into_iter()
         .map(|(tag, field, value, en, de)| {
+            let prior = cumulative;
             cumulative += value;
-            handle(Spec {
+            from_origin(soffit, bare(Spec {
                 entity,
                 tag,
                 kind: HandleKind::ScalarAlong { axis: mul(up, -1.0) },
                 anchor: along(soffit, up, -cumulative * scale),
                 grip: GripStyle::Diamond,
-                writes: vec![binding(format!("members[id={}].{field}", entity.id), Affine { base: 0.0, k: 1.0 / scale }, "m", Some(Quantise::Round { step: 0.0005 }))],
+                writes: vec![binding(format!("members[id={}].{field}", entity.id), Affine { base: -prior, k: 1.0 / scale }, "m", Some(Quantise::Round { step: 0.0005 }))],
                 snap: grid(0.01),
                 limits: (-limit, limit),
                 name: loc(&format!("{en} of {}", member.label_en), &format!("{de} von {}", member.label_de)),
-            })
+            }))
         })
         .collect()
 }
@@ -209,7 +226,7 @@ fn action_handles(d: &En1990Snapshot, layout: &Layout, id: &str) -> Vec<Handle> 
     let base = along(&along(&f.origin, &f.x, member.span / 2.0), &f.z, member_depth(member.span) / 2.0 + lift(index));
     let entity = entity_ref(EntityKind::Load, id, row.collection);
     let influences = d.effects.iter().enumerate().filter(|(_, e)| e.action_id == id).enumerate().map(|(slot, (index, effect))| gauges::influence(effect, index, &entity, along(&along(&base, &f.y, -OVERRIDE_REACH * (slot as f64 + 2.0)), &f.z, 0.0)));
-    std::iter::once(handle(Spec {
+    std::iter::once(from_origin(&base, bare(Spec {
         entity: &entity,
         tag: "magnitude",
         kind: HandleKind::ScalarAlong { axis: f.z.clone() },
@@ -219,7 +236,7 @@ fn action_handles(d: &En1990Snapshot, layout: &Layout, id: &str) -> Vec<Handle> 
         snap: grid(0.05),
         limits: (0.0, HEIGHT_LIMIT),
         name: loc(&format!("Magnitude of {}", row.name.en), &format!("Größe von {}", row.name.de)),
-    }))
+    })))
     .chain(influences)
     .collect()
 }
@@ -275,16 +292,11 @@ fn override_handles(d: &En1990Snapshot, layout: &Layout, id: &str) -> Vec<Handle
     let entity = entity_ref(EntityKind::Load, id, row.collection);
     d.factor_overrides
         .iter()
-        .filter(|o| o.target.trim() == id && matches!(o.factor.as_str(), "gamma" | "psi0" | "psi1" | "psi2"))
+        .filter(|o| o.target.trim() == id && o.factor.per_action())
         .map(|o| {
-            let scale = if o.factor == "gamma" { 1.0 } else { 2.0 };
-            let symbol = match o.factor.as_str() {
-                "gamma" => "γ",
-                "psi0" => "ψ₀",
-                "psi1" => "ψ₁",
-                _ => "ψ₂",
-            };
-            handle(Spec {
+            let scale = if o.factor == model::FactorKind::Gamma { 1.0 } else { 2.0 };
+            let symbol = factor_symbol(o.factor);
+            from_origin(&base, bare(Spec {
                 entity: &entity,
                 tag: &override_tag(&o.id),
                 kind: HandleKind::ScalarAlong { axis: f.z.clone() },
@@ -294,7 +306,7 @@ fn override_handles(d: &En1990Snapshot, layout: &Layout, id: &str) -> Vec<Handle
                 snap: grid(0.05),
                 limits: (0.0, 2.0 * scale),
                 name: loc(&format!("{symbol} override of {} (deviates from NA)", row.name.en), &format!("{symbol}-Überschreibung von {} (weicht vom NA ab)", row.name.de)),
-            })
+            }))
         })
         .collect()
 }
@@ -352,7 +364,7 @@ fn bridge_handles(d: &En1990Snapshot, layout: &Layout, id: &str) -> Vec<Handle> 
     [("deflection", "bridgeDeflection", sls.bridge_deflection, 0.0, "Bridge deflection", "Brückendurchbiegung"), ("deflection-limit", "bridgeDeflectionLimit", sls.bridge_deflection_limit, 0.4, "Bridge deflection limit", "Grenzdurchbiegung der Brücke")]
         .into_iter()
         .map(|(tag, field, value, reach, en, de)| {
-            handle(Spec {
+            from_origin(&soffit, bare(Spec {
                 entity: &entity,
                 tag,
                 kind: HandleKind::ScalarAlong { axis: mul(&f.z, -1.0) },
@@ -362,7 +374,7 @@ fn bridge_handles(d: &En1990Snapshot, layout: &Layout, id: &str) -> Vec<Handle> 
                 snap: grid(0.01),
                 limits: (0.0, member.span / 50.0 * scale),
                 name: loc(&format!("{en} of {id}"), &format!("{de} von {id}")),
-            })
+            }))
         })
         .chain(gauges::rack(gauges::BRIDGE_SLS, sls, "bridgeSls", id, &entity, |dy| along(&along(&f.origin, &f.x, member.span + 0.8), &f.y, dy)))
         .collect()
@@ -408,7 +420,7 @@ pub(crate) fn action_ids(document: &En1990Snapshot, id: &str) -> Vec<String> {
     let mut ids = vec![format!("{id}:magnitude")];
     ids.extend(document.seismics.iter().filter(|a| a.id == id).map(|_| format!("{id}:importance")));
     ids.extend(document.effects.iter().filter(|e| e.action_id == id).map(|e| format!("{id}:{}", gauges::influence_tag(&e.member_id))));
-    ids.extend(document.factor_overrides.iter().filter(|o| o.target.trim() == id && matches!(o.factor.as_str(), "gamma" | "psi0" | "psi1" | "psi2")).map(|o| format!("{id}:{}", override_tag(&o.id))));
+    ids.extend(document.factor_overrides.iter().filter(|o| o.target.trim() == id && o.factor.per_action()).map(|o| format!("{id}:{}", override_tag(&o.id))));
     ids
 }
 

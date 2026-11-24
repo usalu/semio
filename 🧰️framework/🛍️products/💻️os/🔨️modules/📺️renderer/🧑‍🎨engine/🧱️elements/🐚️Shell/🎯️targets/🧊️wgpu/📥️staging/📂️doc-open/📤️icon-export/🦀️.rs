@@ -22,7 +22,7 @@ impl OpeningState {
         if let Some(batch) = self.icon_export.as_mut().filter(|batch| batch.running()) {
             batch.append(items);
         } else {
-            self.icon_export = Some(IconExportBatch::new(items));
+            self.icon_export = Some(Box::new(IconExportBatch::new(items)));
         }
     }
 

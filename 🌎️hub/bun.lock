@@ -2813,6 +2813,7 @@
       },
       "devDependencies": {
         "@semio-tech/plugin-registry": "workspace:*",
+        "ajv": "8.20.0",
         "smol-toml": "1.6.1",
         "typescript": "^5.9.3"
       }

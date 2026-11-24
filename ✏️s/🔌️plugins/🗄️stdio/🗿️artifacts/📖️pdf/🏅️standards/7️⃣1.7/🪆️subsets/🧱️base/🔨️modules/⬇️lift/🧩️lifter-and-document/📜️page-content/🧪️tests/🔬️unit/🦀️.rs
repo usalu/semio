@@ -130,8 +130,9 @@ fn controlled_page_projection_matches_reference_across_borrowed_and_split_stream
     assert_eq!(single_ops, reference_ops);
     assert!(split_ops.iter().any(|op| matches!(op, PdfOp::MoveTo { x: 20.0, y: 10.0 })));
     assert!(split_ops.iter().any(|op| matches!(op, PdfOp::SetDash { array, phase } if array == &[6., 2.] && *phase == 1.)));
-    assert_eq!(split_account.acquired - single_account.acquired, joined.len());
-    assert_eq!(split_account.released - single_account.released, joined.len());
+    assert_eq!(split_account.acquired, single_account.acquired, "paged stream octets are copied once into the joined backing whether the page holds one stream or two");
+    assert_eq!(split_account.released, single_account.released);
+    assert!(single_account.acquired >= joined.len());
     let transferred = split_ops.capacity() * std::mem::size_of::<PdfOp>() + split_ops.iter().map(|op| match op {
         PdfOp::SetDash { array, .. } | PdfOp::SetFillColor { components: array } => array.capacity() * std::mem::size_of::<f64>(),
         PdfOp::SetFillColorSpace { name } => name.capacity(),

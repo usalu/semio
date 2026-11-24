@@ -5,7 +5,7 @@
 
 #[cfg(test)]
 use crate::standards::v1_7::subsets::base::io::text_string::{decode_text_string, encode_text_string};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfCMap, PdfFont, PdfFontKind, PdfFontProgram, PdfOp, PdfSimpleEncoding, PdfTextArrayItem, PdfTextString, PdfToUnicode, PdfToUnicodeMapping};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfCMap, PdfEncodingDifference, PdfFont, PdfFontKind, PdfFontProgram, PdfOp, PdfSimpleEncoding, PdfTextArrayItem, PdfTextString, PdfToUnicode, PdfToUnicodeMapping};
 use std::borrow::Cow;
 #[path = "✒️cff/🦀️.rs"]
 mod cff;
@@ -29,17 +29,24 @@ pub use glyph_list::ADOBE_GLYPH_LIST;
 pub use tables::{MAC_ROMAN_ENCODING, STANDARD_ENCODING, STANDARD_FONTS, WIN_ANSI_ENCODING};
 pub use truetype::TrueTypeFont;
 
-/// 🪪️ Decodes a reversible code in the standard or WinAnsi encoding of a non-symbolic Type1 font.
+/// 🪪️ Decodes a reversible code in the standard, WinAnsi or MacRoman encoding of a non-symbolic Type1 font.
 pub fn controlled_type1_text(encoding: PdfBaseEncoding, byte: u8) -> Option<&'static str> {
-    let table = match encoding {
+    controlled_simple_text(encoding, &[], byte)
+}
+
+/// 🔡️ Decodes a reversible code of a base encoding refined by its `/Differences`; a glyph shown by an earlier code stays raw so the text re-encodes to one code.
+pub fn controlled_simple_text(base: PdfBaseEncoding, differences: &[PdfEncodingDifference], byte: u8) -> Option<&'static str> {
+    let table = match base {
         PdfBaseEncoding::Standard => STANDARD_ENCODING,
         PdfBaseEncoding::WinAnsi => WIN_ANSI_ENCODING,
-        _ => return None,
+        PdfBaseEncoding::MacRoman => MAC_ROMAN_ENCODING,
+        PdfBaseEncoding::MacExpert => return None,
     };
-    let code = table.binary_search_by_key(&byte, |(code, _)| *code).ok()?;
-    let glyph = table[code].1;
-    if table[..code].iter().any(|(_, name)| *name == glyph) { return None; }
-    let index = ADOBE_GLYPH_LIST.binary_search_by_key(&glyph, |(name, _)| *name).ok()?;
+    let glyph = |code: u8| differences.iter().rev().find(|difference| difference.code == u32::from(code)).map(|difference| difference.glyph.as_str())
+        .or_else(|| table.binary_search_by_key(&code, |(code, _)| *code).ok().map(|index| table[index].1));
+    let name = glyph(byte)?;
+    if (0..byte).any(|code| glyph(code) == Some(name)) { return None; }
+    let index = ADOBE_GLYPH_LIST.binary_search_by_key(&name, |(name, _)| *name).ok()?;
     Some(ADOBE_GLYPH_LIST[index].1)
 }
 

@@ -166,12 +166,11 @@ fn python_oracle_matches_rust_utilizations_within_half_percent() {
             assert!(rel <= 0.005 || (pu - rc.utilization).abs() <= 0.005, "{label} check {id}: python={pu} rust={} rel={rel}", rc.utilization);
             seen.insert(id.to_owned());
         }
-        for c in &rust.checks {
-            let verified = ["en1999.6.", "en1999.7.", "en1999.8.", "en1999.1-"].iter().any(|p| c.id.starts_with(p));
-            if verified && c.status != CheckStatus::NotApplicable && !c.id.ends_with(".empty") {
-                assert!(seen.contains(&c.id), "{label}: Rust check {} is not covered by the oracle", c.id);
-            }
-        }
+        let uncovered: Vec<&str> = rust.checks.iter()
+            .filter(|c| ["en1999.6.", "en1999.7.", "en1999.8.", "en1999.1-"].iter().any(|p| c.id.starts_with(p)) && c.status != CheckStatus::NotApplicable && !c.id.ends_with(".empty") && !seen.contains(&c.id))
+            .map(|c| c.id.as_str())
+            .collect();
+        assert!(uncovered.is_empty(), "{label}: Rust checks not covered by the oracle: {uncovered:?}");
         assert!(seen.len() >= 40, "{label}: expected >=40 oracle checks, got {}", seen.len());
     }
 }

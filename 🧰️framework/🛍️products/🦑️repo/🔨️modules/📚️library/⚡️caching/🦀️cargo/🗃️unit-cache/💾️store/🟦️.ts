@@ -19,7 +19,7 @@ type Definitions=typeof schema.definitions;
 /** 📦️ One cached compilation: the files it read, the environment it observed, the files it wrote and the compiler's own messages. */
 export type UnitEntryV1={version:1;key:string;slot?:string;session?:true;retention?:DeclarationV1;crate:string;dependencies:{path:string;sha256:string|null}[];environment:{name:string;value:string|null}[];outputs:{name:string;sha256:string;bytes:number;executable:boolean;template?:boolean}[];stderr:string|null;stdout:string|null;createdMs:number;provenance?:{peakRssBytes:number;userMs:number;sysMs:number;wallMs:number;rmetaOffsetMs:number|null}|null};
 /** 🧾️ One measured cache decision (`Event` in the schema). */
-export type UnitEventV1={version:1;atMs:number;lane:string;pid:number;kind:Definitions["Event"]["properties"]["kind"]["enum"][number];crate:string;key:string|null;milliseconds:number;waitedMs:number;reason?:string};
+export type UnitEventV1={version:1;atMs:number;lane:string;pid:number;kind:Definitions["Event"]["properties"]["kind"]["enum"][number];crate:string;key:string|null;milliseconds:number;waitedMs:number;reason?:string;peakRssBytes?:number};
 
 /** 🗄️ Where one cache root keeps each kind of state. */
 export function storePathsV1(root:string){return Object.freeze({root,objects:join(root,layout.objects),entries:join(root,layout.entries),locks:join(root,layout.locks),events:join(root,layout.events),temporary:join(root,layout.temporary)});}

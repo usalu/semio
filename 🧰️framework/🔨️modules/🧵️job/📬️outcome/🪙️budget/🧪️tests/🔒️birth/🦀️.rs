@@ -12,6 +12,7 @@ impl OriginalReturnOrigin for LayoutOrigin{
  fn fuel(&self)->u64{0}
  fn spent(&self)->RetainedCloneProgress{Default::default()}
  fn work(&self)->u128{0}
+ fn succeeded(self,_:RetainedCloneGrant,_:u64)->Self{self}
 }
 #[test]
 fn original_origin_producer_request_fits_the_fixed_window(){

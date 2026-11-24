@@ -1,0 +1,616 @@
+[
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "dog-far-forearm",
+  "why": "dog-forearm-ff: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "dog-near-forearm",
+  "why": "dog-forearm-fn: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "dog-far-humerus",
+  "why": "dog-humerus-ff: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "dog-near-humerus",
+  "why": "dog-humerus-fn: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "prism",
+  "scale": "50",
+  "id": "dog-hindbody",
+  "view": "front",
+  "why": "dog-lumbar: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "prism",
+  "scale": "50",
+  "id": "dog-hindbody",
+  "view": "plan",
+  "why": "dog-lumbar: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "dog-far-hock",
+  "why": "dog-metatarsus-hf: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "dog-near-hock",
+  "why": "dog-metatarsus-hn: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "prism",
+  "scale": "50",
+  "id": "dog-croup",
+  "view": "front",
+  "why": "dog-pelvis: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "prism",
+  "scale": "50",
+  "id": "dog-croup",
+  "view": "plan",
+  "why": "dog-pelvis: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "dog-far-shank",
+  "why": "dog-shank-hf: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "dog-far-shank",
+  "why": "dog-shank-hf: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "dog-near-shank",
+  "why": "dog-shank-hn: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "dog-near-shank",
+  "why": "dog-shank-hn: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "dog-far-thigh",
+  "why": "dog-thigh-hf: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "dog-far-thigh",
+  "why": "dog-thigh-hf: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "dog-near-thigh",
+  "why": "dog-thigh-hn: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "dog-near-thigh",
+  "why": "dog-thigh-hn: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "hand-l: swv/swu/rev: the body of the elevation in every view"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "hand-r: sww/swu/swu: the body of the elevation in every view"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "dog-far-forearm",
+  "why": "dog-forearm-ff: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "dog-near-forearm",
+  "why": "dog-forearm-fn: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "dog-far-upper-arm",
+  "why": "dog-humerus-ff: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "dog-near-upper-arm",
+  "why": "dog-humerus-fn: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "prism",
+  "scale": "100",
+  "id": "dog-hindbody",
+  "view": "front",
+  "why": "dog-lumbar: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "prism",
+  "scale": "100",
+  "id": "dog-hindbody",
+  "view": "plan",
+  "why": "dog-lumbar: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "dog-far-hock",
+  "why": "dog-metatarsus-hf: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "dog-near-hock",
+  "why": "dog-metatarsus-hn: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "dog-neck",
+  "why": "dog-neck: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "dog-far-shank",
+  "why": "dog-shank-hf: flat/flat/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "dog-near-shank",
+  "why": "dog-shank-hn: flat/flat/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "dog-far-thigh",
+  "why": "dog-thigh-hf: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "dog-far-thigh",
+  "why": "dog-thigh-hf: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "dog-near-thigh",
+  "why": "dog-thigh-hn: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "dog-near-thigh",
+  "why": "dog-thigh-hn: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/None: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/None: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "dog-far-fore-forearm",
+  "why": "dog-forearm-ff: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "dog-near-fore-forearm",
+  "why": "dog-forearm-fn: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "dog-far-fore-upper",
+  "why": "dog-humerus-ff: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "dog-near-fore-upper",
+  "why": "dog-humerus-fn: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "prism",
+  "scale": "200",
+  "id": "dog-hindbody",
+  "view": "front",
+  "why": "dog-lumbar: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "prism",
+  "scale": "200",
+  "id": "dog-hindbody",
+  "view": "plan",
+  "why": "dog-lumbar: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "dog-neck",
+  "why": "dog-neck: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "dog-far-hind-shank",
+  "why": "dog-shank-hf: flat/flat/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "dog-near-hind-shank",
+  "why": "dog-shank-hn: flat/flat/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "dog-tail",
+  "why": "dog-tail-2: flat/flat/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "dog-far-hind-thigh",
+  "why": "dog-thigh-hf: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "dog-far-hind-thigh",
+  "why": "dog-thigh-hf: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "dog-near-hind-thigh",
+  "why": "dog-thigh-hn: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "dog-near-hind-thigh",
+  "why": "dog-thigh-hn: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/None: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/None: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "shank-l",
+  "why": "shank-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "shank-r",
+  "why": "shank-r: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "dog-f-fore-leg",
+  "why": "dog-forearm-ff: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "dog-n-fore-leg",
+  "why": "dog-forearm-fn: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "dog-f-fore-upper",
+  "why": "dog-humerus-ff: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "dog-f-fore-upper",
+  "why": "dog-humerus-ff: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "dog-n-fore-upper",
+  "why": "dog-humerus-fn: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "dog-n-fore-upper",
+  "why": "dog-humerus-fn: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "prism",
+  "scale": "500",
+  "id": "dog-hindbody",
+  "view": "front",
+  "why": "dog-lumbar: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "prism",
+  "scale": "500",
+  "id": "dog-hindbody",
+  "view": "plan",
+  "why": "dog-lumbar: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "dog-f-hind-foot",
+  "why": "dog-metatarsus-hf: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "dog-f-hind-foot",
+  "why": "dog-metatarsus-hf: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "dog-n-hind-foot",
+  "why": "dog-metatarsus-hn: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "dog-n-hind-foot",
+  "why": "dog-metatarsus-hn: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "dog-neck",
+  "why": "dog-neck: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "dog-tail",
+  "why": "dog-tail-2: flat/flat/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "dog-f-hind-thigh",
+  "why": "dog-thigh-hf: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "dog-f-hind-thigh",
+  "why": "dog-thigh-hf: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "dog-n-hind-thigh",
+  "why": "dog-thigh-hn: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "dog-n-hind-thigh",
+  "why": "dog-thigh-hn: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shank-l",
+  "why": "shank-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shank-r",
+  "why": "shank-r: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ }
+]

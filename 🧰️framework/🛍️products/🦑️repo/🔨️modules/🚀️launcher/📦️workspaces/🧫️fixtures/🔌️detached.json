@@ -1,6 +1,7 @@
 [
   { "id": "detached-store", "mutation": "none", "accepted": true },
   { "id": "detached-relative-link", "mutation": "relative", "accepted": true },
+  { "id": "unready-image", "mutation": "unready-image", "accepted": true },
   { "id": "foreign-store", "mutation": "foreign-store", "accepted": false },
   { "id": "wrong-endpoint-name", "mutation": "wrong-name", "accepted": false },
   { "id": "wrong-generation-prefix", "mutation": "wrong-generation", "accepted": false },

@@ -1,0 +1,265 @@
+[
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "hand-r: sww/swv/swv: the body of the elevation in every view"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "shank-r",
+  "why": "shank-r: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "hand-l",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "why": "hand-l: sww/None/swv: the body of the elevation in every view"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "hand-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "hand-r: sww/swv/swv: the body of the elevation in every view"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "shank-r",
+  "why": "shank-r: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "copy",
+  "scale": "200",
+  "id": "hand-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "hand-r: sww/swv/swv: the body of the elevation in every view"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "shank-r",
+  "why": "shank-r: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "prism",
+  "scale": "500",
+  "id": "trousers-seat",
+  "view": "front",
+  "why": "pelvis: flat/flat/None: prism that keeps the outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shank-r",
+  "why": "shank-r: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "jacket",
+  "why": "torso: flat/swv/sww: the front prism refitted to the elevation outline"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "elevation",
+  "id": "jacket",
+  "set": {
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.2,
+    "z1": 0.2
+   }
+  },
+  "why": "torso: the lateral span of the elevation body was 0.104 m, the jacket is 0.40 m wide in the front"
+ },
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "jacket",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "why": "torso: the plan was a half outline swept with a span of 2 mm growing to 2 m at the bone tip, 148 mm short of the elevation when crouching: the body of the elevation instead"
+ },
+ {
+  "op": "prism",
+  "scale": "100",
+  "id": "jacket-skirt",
+  "view": "plan",
+  "why": "pelvis: flat plan shape; crouching turns the pelvis 32 degrees and the elevation reaches 37 mm further back than the plan (sync-forward): prism that keeps the outline"
+ },
+ {
+  "op": "prism",
+  "scale": "100",
+  "id": "trousers-seat",
+  "view": "plan",
+  "why": "pelvis: flat plan shape; crouching turns the pelvis 32 degrees and the elevation reaches 37 mm further back than the plan (sync-forward): prism that keeps the outline"
+ }
+]

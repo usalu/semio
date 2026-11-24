@@ -62,6 +62,8 @@ type Din16798ZonePatch {
   turbulenceIntensityPercent: Float
   ventMethod: String
   ventSystemId: String
+  unoccupiedVentilation: Din16798UnoccupiedVentilation
+  clearUnoccupiedVentilation: Boolean
 }
 
 type Din16798VentSystemDelta {

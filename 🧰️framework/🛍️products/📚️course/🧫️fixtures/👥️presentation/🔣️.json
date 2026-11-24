@@ -8303,7 +8303,7 @@
     "schemaValid": true
   },
   {
-    "id": "public-selected-and-overall-leaderboard",
+    "id": "public-selected-leaderboard",
     "definition": "PresenceState",
     "state": {
       "tag": "0a1b2c3d",
@@ -8548,14 +8548,7 @@
           "learners": 0,
           "submissions": 0
         },
-        "leaderboardAt": 1,
-        "overall": {
-          "period": "all-time",
-          "rows": [],
-          "learners": 0,
-          "submissions": 0
-        },
-        "overallAt": 2
+        "leaderboardAt": 1
       }
     },
     "valid": true
@@ -8807,14 +8800,7 @@
           "submissions": 0,
           "learner": "0123456789abcdef0123456789abcdef"
         },
-        "leaderboardAt": 1,
-        "overall": {
-          "period": "all-time",
-          "rows": [],
-          "learners": 0,
-          "submissions": 0
-        },
-        "overallAt": 2
+        "leaderboardAt": 1
       }
     },
     "valid": false
@@ -9065,14 +9051,7 @@
           "learners": 0,
           "submissions": 0
         },
-        "leaderboardAt": -1,
-        "overall": {
-          "period": "all-time",
-          "rows": [],
-          "learners": 0,
-          "submissions": 0
-        },
-        "overallAt": 2
+        "leaderboardAt": -1
       }
     },
     "valid": false
@@ -10418,57 +10397,7 @@
             "lastActivity": 1
           }
         },
-        "leaderboardAt": 1,
-        "overall": {
-          "period": "all-time",
-          "rows": [
-            {
-              "rank": 1,
-              "tag": "0a1b2c3d",
-              "identity": {
-                "kind": "anonymous"
-              },
-              "total": 50,
-              "reachedAt": 1,
-              "best": {
-                "tiny": {
-                  "challenge": "easy",
-                  "score": 0.5,
-                  "points": 50
-                }
-              },
-              "badges": [
-                "first"
-              ],
-              "runs": 1,
-              "lastActivity": 1
-            }
-          ],
-          "learners": 1,
-          "submissions": 0,
-          "own": {
-            "rank": 1,
-            "tag": "0a1b2c3d",
-            "identity": {
-              "kind": "anonymous"
-            },
-            "total": 50,
-            "reachedAt": 1,
-            "best": {
-              "tiny": {
-                "challenge": "easy",
-                "score": 0.5,
-                "points": 50
-              }
-            },
-            "badges": [
-              "first"
-            ],
-            "runs": 1,
-            "lastActivity": 1
-          }
-        },
-        "overallAt": 2
+        "leaderboardAt": 1
       }
     },
     "valid": true
@@ -10764,59 +10693,7 @@
             "lastActivity": 1
           }
         },
-        "leaderboardAt": 1,
-        "overall": {
-          "period": "all-time",
-          "rows": [
-            {
-              "rank": 1,
-              "tag": "0a1b2c3d",
-              "identity": {
-                "kind": "name",
-                "handle": "Ada Lovelace"
-              },
-              "total": 50,
-              "reachedAt": 1,
-              "best": {
-                "tiny": {
-                  "challenge": "easy",
-                  "score": 0.5,
-                  "points": 50
-                }
-              },
-              "badges": [
-                "first"
-              ],
-              "runs": 1,
-              "lastActivity": 1
-            }
-          ],
-          "learners": 1,
-          "submissions": 0,
-          "own": {
-            "rank": 1,
-            "tag": "0a1b2c3d",
-            "identity": {
-              "kind": "name",
-              "handle": "Ada Lovelace"
-            },
-            "total": 50,
-            "reachedAt": 1,
-            "best": {
-              "tiny": {
-                "challenge": "easy",
-                "score": 0.5,
-                "points": 50
-              }
-            },
-            "badges": [
-              "first"
-            ],
-            "runs": 1,
-            "lastActivity": 1
-          }
-        },
-        "overallAt": 2
+        "leaderboardAt": 1
       }
     },
     "valid": true
@@ -11112,59 +10989,7 @@
             "lastActivity": 1
           }
         },
-        "leaderboardAt": 1,
-        "overall": {
-          "period": "all-time",
-          "rows": [
-            {
-              "rank": 1,
-              "tag": "0a1b2c3d",
-              "identity": {
-                "kind": "pseudonym",
-                "handle": "Éva Müller"
-              },
-              "total": 50,
-              "reachedAt": 1,
-              "best": {
-                "tiny": {
-                  "challenge": "easy",
-                  "score": 0.5,
-                  "points": 50
-                }
-              },
-              "badges": [
-                "first"
-              ],
-              "runs": 1,
-              "lastActivity": 1
-            }
-          ],
-          "learners": 1,
-          "submissions": 0,
-          "own": {
-            "rank": 1,
-            "tag": "0a1b2c3d",
-            "identity": {
-              "kind": "pseudonym",
-              "handle": "Éva Müller"
-            },
-            "total": 50,
-            "reachedAt": 1,
-            "best": {
-              "tiny": {
-                "challenge": "easy",
-                "score": 0.5,
-                "points": 50
-              }
-            },
-            "badges": [
-              "first"
-            ],
-            "runs": 1,
-            "lastActivity": 1
-          }
-        },
-        "overallAt": 2
+        "leaderboardAt": 1
       }
     },
     "valid": true

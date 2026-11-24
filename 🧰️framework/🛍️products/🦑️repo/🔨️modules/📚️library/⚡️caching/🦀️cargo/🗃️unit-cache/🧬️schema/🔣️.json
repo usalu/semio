@@ -76,6 +76,9 @@
           "maximumVariants": 8,
           "maximumOutputBytes": 1073741824,
           "maximumDependencyFiles": 65536,
+          "environmentIgnored": [
+            "SEMIO_COMPILER_RESOURCE_ROOT"
+          ],
           "compilerWrittenFiles": [
             "(^|/)semio-compiler-resources/[0-9]+-[0-9]+-[0-9]+/observation\\.json$"
           ],
@@ -202,6 +205,7 @@
           "pollBackoffBasisPoints": 15000,
           "listedCrates": 16,
           "listedHolders": 4,
+          "restartHoldMilliseconds": 1800000,
           "machineStore": "rust",
           "reserved": [
             "d"
@@ -213,6 +217,8 @@
             "maximumReceiptBytes": 512,
             "retainMilliseconds": 43200000
           },
+          "recentMilliseconds": 43200000,
+          "flavourPattern": "^[a-z0-9-]{1,16}$",
           "catalogClaim": "pool-catalog"
         },
         "retention": {
@@ -237,6 +243,10 @@
         "trimmed": {
           "en": "[repo cargo] lane pool trimmed to its bound ({count} lanes, {quotaMib} MiB): removed {removed} idle lane(s)",
           "de": "[repo cargo] Lane-Pool auf seine Grenze gekürzt ({count} Lanes, {quotaMib} MiB): {removed} ruhende Lane(s) entfernt"
+        },
+        "poolCannotHold": {
+          "en": "[repo cargo] the lanes of build flavour {flavour} need {needMib} MiB but the compiler image holds {imageMib} MiB below its high-water mark; no lane was removed, the build continues and refills from the shared unit cache (enlarge the image or build a smaller flavour)",
+          "de": "[repo cargo] Die Lanes der Build-Variante {flavour} brauchen {needMib} MiB, das Compiler-Image fasst unterhalb seiner Hochwassermarke aber nur {imageMib} MiB; es wurde keine Lane entfernt, der Build läuft weiter und füllt sich aus dem gemeinsamen Unit-Cache (Image vergrößern oder eine kleinere Variante bauen)"
         },
         "poolBusy": {
           "en": "[repo cargo] all {live} live lanes are claimed (maximum {maximum}); held by {holders}; waiting for a free lane",
@@ -677,6 +687,8 @@
             "remote-wait",
             "remote-publish",
             "remote-skip",
+            "manifest-fetch",
+            "manifest-publish",
             "publish-skip",
             "incomplete"
           ]
@@ -704,6 +716,11 @@
         },
         "reason": {
           "type": "string"
+        },
+        "peakRssBytes": {
+          "description": "The peak resident memory of the compiler run behind a miss event, in bytes, as the operating system reports it for the compiler process and its waited-for children; absent for hits, offloaded units and failures. Compared with the unit ceiling of the native-build admission policy.",
+          "type": "integer",
+          "minimum": 1
         }
       }
     },

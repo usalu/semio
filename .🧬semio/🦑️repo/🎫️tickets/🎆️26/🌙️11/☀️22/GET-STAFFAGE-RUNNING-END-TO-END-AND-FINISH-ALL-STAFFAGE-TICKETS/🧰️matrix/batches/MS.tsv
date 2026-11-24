@@ -1,0 +1,20 @@
+appliances	ceiling-diffuser				100 front, 200 front, 50 front	
+appliances	decentralised-hrv-fan				50 plan	
+appliances	duct-fan			100 plan, 200 plan	50 plan	
+appliances	pendant-lamp	0 / 4; flat			100 front, 200 front, 50 front	100, 200, 50
+components	etics-brick-wall-12			100 front, 200 front, 50 front, 500 front	100 plan, 200 plan, 500 plan	
+components	etics-brick-wall-30			100 front, 200 front, 50 front, 500 front	100 plan, 200 plan, 500 plan	
+components	glulam-beam			100 plan, 500 plan	500 plan	
+components	solid-brick-wall-1960			100 front, 200 front, 200 plan, 50 front, 500 front, 500 plan	100 plan, 200 plan, 500 plan	
+components	steel-column			200 plan, 500 plan	100 front, 200 front, 500 front	
+objects	tealight	2 / 4; flat; 6 other id		100 plan, 200 plan, 50 plan	100 front, 200 front, 50 front	100, 200, 50
+objects	used-bollard-light			200 plan, 500 plan	200 front, 500 front	100, 200, 50, 500
+objects	used-park-lantern				500 front	
+objects	used-playground-roundabout				200 front, 500 front	
+objects	waste-bin				500 front	
+vegetation	boxwood-ball				500 front	
+vegetation	european-larch				500 front	
+vegetation	norway-spruce				200 front, 500 front	
+vegetation	rowan	0 / 12; flat; 4 extent	3; off 2, other bone 1		500 front	
+vegetation	saucer-magnolia		2; other bone 2		500 front	
+vegetation	windmill-palm				200 front	

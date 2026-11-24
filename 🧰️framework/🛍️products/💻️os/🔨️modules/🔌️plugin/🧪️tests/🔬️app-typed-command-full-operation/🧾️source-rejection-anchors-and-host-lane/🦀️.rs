@@ -183,3 +183,42 @@
         let context = demands.find("artifact_retirement_box_demands(owner,copy)").expect("boxed context demand");
         assert!(completion < context && completion_retirement < context, "completion is quoted before the boxed context in the demand quote");
     }
+
+    /// 🔁️ A press commit that waits to admit its scrub writer behind the tool follow's retained read of the press slot drives that
+    /// follow itself. The follow is otherwise advanced only by live maintenance, which a turn spent on the waiting publication never
+    /// reaches, so an edit followed by a click stalled `patchNode` at `the tool settlement is not complete [2, …]` (ticket 26/11/22).
+    #[test]
+    fn a_press_commit_blocked_by_the_follow_read_drives_the_follow() {
+        let source=instance_source();
+        let settle=slice(&source,"pub fn settle_press<D>","pub fn settle_tool_operation");
+        let wait=settle.find("if owner.awaits_writer()&&self.tools.original_tool_follow.is_some(){return self.follow_before_writer(cx,\"press\")}").expect("the press writer wait drives the follow");
+        let advance=settle.find("owner.advance(&mut self.tool_machines.presses").expect("the settlement advances its own phases");
+        assert!(wait<advance,"the follow is driven before the press settlement re-polls its blocked writer admission");
+        follow_step_is_funded(&source);
+    }
+
+    /// ⌨️ A typing edit whose writer admission waits on the follow's retained read of its slot drives the follow the same way.
+    #[test]
+    fn a_typing_commit_blocked_by_the_follow_read_drives_the_follow() {
+        let source=instance_source();
+        let settle=slice(&source,"fn settle_tool_operation_unit","
+    }
+");
+        let wait=settle.find("if owner.awaits_writer(&self.tool_machines.typing)&&self.tools.original_tool_follow.is_some(){return self.follow_before_writer(cx,\"typing\")}").expect("the typing writer wait drives the follow");
+        let advance=settle.find("owner.advance(&mut self.tool_machines.typing").expect("the typing settlement advances its own phases");
+        assert!(wait<advance,"the follow is driven before the typing settlement re-polls its blocked writer admission");
+        follow_step_is_funded(&source);
+    }
+
+    /// ✂️ The source between a settlement's signature and its end marker.
+    fn slice<'s>(source:&'s str,start:&str,end:&str)->&'s str{let begin=source.find(start).expect("the settlement exists");let stop=source[begin..].find(end).map(|offset|begin+offset).expect("the settlement ends");&source[begin..stop]}
+
+    /// 💳️ The shared follow step quotes and funds itself before it runs.
+    fn follow_step_is_funded(source:&str){
+        let helper=slice(source,"fn follow_before_writer","
+    }
+");
+        let funded=helper.find("plugin_grant_shortfall(demand,grant)").expect("an unfunded follow step names its shortfall");
+        let drive=helper.find("self.tool_overlay_retirement_step(cx,grant,false)").expect("the waiting settlement drives the follow");
+        assert!(funded<drive,"the follow step is funded by its own quote before it runs");
+    }

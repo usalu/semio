@@ -72,6 +72,23 @@ test("cancel drops the held output of its job", async () => {
   expect(log).toEqual(["cancel"]);
 });
 
+test("a cancel the guest cannot fund yet is retried until it is admitted", async () => {
+  const { jobs, log } = guest([]);
+  const refusing = { ...(jobs as object), cancelJob: async (_job: bigint, budget: { input: unknown }) => (log.push("cancel"), reply(budget, zero, { admitted: log.length === 3 })) } as never;
+  const held = new Map([[4n, { parts: [new Uint8Array([1])], length: 1n }]]);
+  await new OriginalJobFunds(1n, 0n, 1_000_000n, clock()).cancel(refusing, 4n, { held });
+  expect(log).toEqual(["cancel", "cancel", "cancel"]);
+  expect(held.size).toBe(0);
+});
+
+test("a cancel the guest never admits stalls with its held output kept", async () => {
+  const { jobs } = guest([]);
+  const refusing = { ...(jobs as object), cancelJob: async (_job: bigint, budget: { input: unknown }) => reply(budget, zero, { admitted: false }) } as never;
+  const held = new Map([[4n, { parts: [new Uint8Array([1])], length: 1n }]]);
+  await expect(new OriginalJobFunds(1n, 0n, 3n, clock(1n)).cancel(refusing, 4n, { held })).rejects.toThrow("original-job.cancel-stalled");
+  expect(held.size).toBe(1);
+});
+
 function strictGuest(bodies: Map<bigint, Uint8Array>, failAck: { count: number } = { count: 0 }) {
   let identity: bigint | undefined, offset = 0, ack = false;
   const log: string[] = [];
@@ -230,9 +247,8 @@ test("an exhausted self-issued stock is a typed fault, not an endless more-work 
   const { guest: child, calls } = childGuest(async () => {}, 21n << 20n);
   const turns = new OriginalSelfIssuedTurns(child, clock(1n));
   for (let turn = 0; turn < 3; turn += 1) await turns.poll([], shape);
-  const fault = await turns.poll([], shape).then(() => undefined, (error: Error & { remaining?: { maximumCopyBytes: number } }) => error);
-  expect(fault?.message).toBe("original-turn.stock-exhausted");
-  expect(fault?.remaining!.maximumCopyBytes).toBeLessThan(4 << 20);
+  const fault = await turns.poll([], shape).then(() => undefined, (error: Error & { fault?: { code: string; params: { axis: string; remaining: string } } }) => error);
+  expect(fault?.fault).toMatchObject({ code: "plugin.original-stock-exhausted", params: { axis: "maximumCopyBytes", remaining: String(1 << 20) } });
   expect(calls.filter((call) => call === "poll")).toHaveLength(3);
 });
 

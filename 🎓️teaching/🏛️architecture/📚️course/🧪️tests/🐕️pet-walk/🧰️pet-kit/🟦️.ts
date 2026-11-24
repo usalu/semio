@@ -43,7 +43,7 @@ export function hoverOf(id: string): number {
 }
 
 /** 🃏️ The border lines of the cards of the screen in front: the frame of every card, whose top edge is the line it shares with the card above, and the chips at its foot. */
-export const CARD_PARTS = '#course-main [data-card] [data-window-frame], #course-main [data-card] [data-window-frame-chip][data-dock="bottom"]';
+export const CARD_PARTS = '#course-main [data-card] [data-window-frame], #course-main [data-card] [data-window-frame-chip][data-dock="bottom"], #course-main [data-card="course-tasks"] li';
 
 /** 🧱️ What pets stand on in the quiz, as the client names it for its pet layer: the border lines of every card, and the
  * footer line. */
@@ -52,7 +52,7 @@ export const EDGES = `${CARD_PARTS}, .course-app > footer`;
 /** 🕹️ What a press on a pet never takes from the learner in the quiz: the controls of the layer (links, buttons, form
  * fields, labels, ARIA widgets, focusable elements) and what the quiz adds (the grip of an item, the zones an item is
  * dropped on, the cards of the overview, not the empty space of their cells). A pointer over one of them is over a control, where circling is not followed. */
-export const CONTROLS = 'a[href], button, input, select, textarea, summary, label, [role="button"], [role="link"], [role="checkbox"], [role="radio"], [role="tab"], [role="menuitem"], [role="option"], [role="slider"], [role="switch"], [tabindex]:not([tabindex="-1"]), [contenteditable]:not([contenteditable="false"]), [data-course-grip], [data-course-drop], [data-layered-card] [data-card]';
+export const CONTROLS = 'a[href], button, input, select, textarea, summary, label, [role="button"], [role="link"], [role="checkbox"], [role="radio"], [role="tab"], [role="menuitem"], [role="option"], [role="slider"], [role="switch"], [tabindex]:not([tabindex="-1"]), [contenteditable]:not([contenteditable="false"]), [data-course-grip], [data-course-drop], #course-main [data-window-frame-chip][data-dock="bottom"], [data-layered-overview][data-mode="swipe"] [data-layered-card] [data-card]';
 
 /** 🏡️ The scene of every screen that belongs to no quiz. */
 export const HOME = "home";
@@ -329,7 +329,7 @@ export function circleRound(body: Body, cue: "circle" | "countercircle", laps: n
   return Array.from({ length: laps * CIRCLE_POINTS + 1 }, (_, step) => ({ x: middle.x + radius * Math.cos((way * step * 2 * Math.PI) / CIRCLE_POINTS), y: middle.y + radius * Math.sin((way * step * 2 * Math.PI) / CIRCLE_POINTS) }));
 }
 
-/** 🏝️ In the page: a place on the footer line with room for a pet and a circle round it — no part of a card and no pet
+/** 🏝️ In the page: a place on the footer line with room for a pet and a circle round it — no solid part of a card (`parts`: the chips at its foot; a card itself is open room) and no pet
  * within `reach` pixels to either side and `room` pixels above the line (the parts of cards of pages behind the screen, which are inert or hidden, are no part), no control on the line below it — the one
  * nearest `near` (the middle of the window when absent), or `null`. */
 export function floorSpot(question: { readonly parts: string; readonly controls: string; readonly reach: number; readonly room: number; readonly near?: number }): { readonly x: number; readonly top: number } | null {

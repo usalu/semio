@@ -1,0 +1,36 @@
+import { chromium } from "playwright";
+import { mkdirSync, statSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+const out = resolve(process.argv[2]); const folder = join(out, "document"); mkdirSync(folder, { recursive: true });
+const browser = await chromium.launch({ headless: true, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
+const page = await (await browser.newContext({ locale: "en", viewport: { width: 1600, height: 1000 } })).newPage();
+const lines = []; const t0 = Date.now();
+const log = s => { lines.push(`${Date.now() - t0} ${s}`); writeFileSync(join(out, "probe.txt"), lines.join("\n")); console.log(s); };
+page.on("console", m => { const v = m.text(); if (/\[DEBUG\] folder|sync|binding|attach|detach/i.test(v) || m.type() === "error") log(`console ${m.type()} ${v.slice(0, 300)}`); });
+const events = join(folder, ".semio", "events.semio");
+const snap = async tag => log(`${tag} :: ${JSON.stringify(await page.evaluate(() => ({ status: [...document.querySelectorAll("[data-semio-sync-status]")].map(e => e.textContent), remote: document.body.innerText.match(/Remote: \w+/g), pathInput: !!document.getElementById("framework.sync.folder.path"), detach: [...document.querySelectorAll("button")].some(b => /^(detach|trennen)$/i.test(b.innerText.trim())) })))} bytes=${statSync(events, { throwIfNoEntry: false })?.size}`);
+const click = id => page.locator(`[id="${id}"]`).first().click({ timeout: 15000 });
+const syncPanel = page.locator('[data-slot="panel"][id="framework.panelTab.s-sync-status"]').first();
+const openCard = async () => {
+  if (!(await syncPanel.isVisible())) await click("s-sync-status");
+  const u = page.locator('[id="framework.sync.folder"]').first();
+  if (!(await u.isVisible())) await click("ui.utilities.group.sync");
+  await u.click({ timeout: 15000 });
+};
+const closePanel = async () => { await page.keyboard.press("Escape"); if (await syncPanel.waitFor({ state: "hidden", timeout: 2000 }).then(() => false, () => true)) await click("s-sync-status"); await syncPanel.waitFor({ state: "hidden", timeout: 15000 }); };
+await page.goto("http://127.0.0.1:6064/?plugin=draw", { waitUntil: "domcontentloaded" });
+await page.waitForFunction(() => document.documentElement.dataset.semioOsReady, undefined, { timeout: 90000 });
+await page.locator('[id="playground.navbar.fixture"]').first().getByText("Demo", { exact: true }).waitFor({ timeout: 60000 });
+await snap("boot");
+await openCard(); await snap("card-open-before-attach");
+await page.locator('[id="framework.sync.folder.path"]').fill(folder);
+await page.getByRole("button", { name: /^(attach|verbinden)$/i }).click();
+await page.locator('[id="framework.sync.folder.path"]').waitFor({ state: "hidden", timeout: 15000 });
+await snap("after-attach-click");
+await openCard(); await snap("card-reopened");
+await closePanel(); await snap("panel-closed");
+for (const s of [2, 5, 10]) { await page.waitForTimeout(s * 1000); await snap(`wait+${s}`); }
+await openCard(); await snap("card-reopened-2");
+await closePanel();
+await page.screenshot({ path: join(out, "end.png") });
+await browser.close();

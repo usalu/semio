@@ -1,0 +1,16 @@
+--- /Users/ueli/.sinc/play/🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🛰️fleet-jobs/🧫️fixtures/🔣️.json	2026-11-22 23:59:56
++++ /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/o27/root/🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🛰️fleet-jobs/🧫️fixtures/🔣️.json	2026-11-24 15:09:24
+@@ -8,9 +8,11 @@
+     {"name": "the local compiles eat the memory: no light job", "host": {"local": 10, "fleetIdle": 30, "availableMegabytes": 6000, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 10, "local": 10, "remote": 0, "reason": "fleet-memory"}},
+     {"name": "the spare memory carries nine light jobs", "host": {"local": 2, "fleetIdle": 30, "availableMegabytes": 4000, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 11, "local": 2, "remote": 9, "reason": "fleet-memory"}},
+     {"name": "unknown memory is no limit", "host": {"local": 4, "fleetIdle": 12, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}, "expect": {"jobs": 16, "local": 4, "remote": 12, "reason": "fleet-all"}},
+-    {"name": "raised memory pressure halves the remote jobs", "host": {"local": 4, "fleetIdle": 7, "availableMegabytes": 64000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 7, "local": 4, "remote": 3, "reason": "fleet-pressure"}},
++    {"name": "raised memory pressure with ample memory takes nothing off the remote share", "host": {"local": 4, "fleetIdle": 7, "availableMegabytes": 64000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 11, "local": 4, "remote": 7, "reason": "fleet-all"}},
++    {"name": "raised memory pressure with scarce memory is bound by the memory term alone", "host": {"local": 2, "fleetIdle": 30, "availableMegabytes": 4000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 11, "local": 2, "remote": 9, "reason": "fleet-memory"}},
++    {"name": "the 92 idle slot release build under raised pressure: 44 remote jobs, not 14", "host": {"local": 4, "fleetIdle": 92, "availableMegabytes": 9000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 48, "local": 4, "remote": 44, "reason": "fleet-cap"}},
+     {"name": "critical memory pressure keeps every remote job away", "host": {"local": 1, "fleetIdle": 7, "availableMegabytes": 64000, "pressure": "critical", "unitMegabytes": 512}, "expect": {"jobs": 1, "local": 1, "remote": 0, "reason": "fleet-pressure"}},
+-    {"name": "one idle slot under raised pressure is none", "host": {"local": 4, "fleetIdle": 1, "availableMegabytes": 64000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 4, "local": 4, "remote": 0, "reason": "fleet-pressure"}}
++    {"name": "one idle slot under raised pressure is still taken", "host": {"local": 4, "fleetIdle": 1, "availableMegabytes": 64000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 5, "local": 4, "remote": 1, "reason": "fleet-all"}}
+   ],
+   "invalid": [
+     {"name": "no local core", "host": {"local": 0, "fleetIdle": 3, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}},

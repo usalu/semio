@@ -1,0 +1,9 @@
+# Job cancellation (2026-11-24)
+
+Found with guest r34, the first build that reaches undo and redo.
+
+1. **Stale cancel (browser host).** `cancel-job` was sent even when the job had already reached its terminal ahead of the cancel in the actor's ingress order; the guest has no slot and refuses (`original-job.call-refused`). The native `ShardLoop::pump` cancels only jobs in `running_jobs`. `PluginRuntime/🚚️handle-turn-drive` now keeps the same set. Redo passes in en and de with the host change alone (run r34c). Test: `sends a guest's cancel-job only while the guest still owns the job` (fixture `🛑️job-cancellation`), passes; the PluginRuntime suite ran 143 of 143 green at level `long` after a stale expectation about `inspectEncodedAppCommand` (new `operation` field) was corrected. Run it with `SEMIO_TEST_LEVEL=long` through `draw-native-dev.ts`; `repo test-file` on these files runs 0 tests.
+2. **No retry (both hosts).** A cancel answers `admitted: false` when a slice cannot fund it. `OriginalJobFunds.cancel` and `cancel_job_funded` threw at once; both now retry like `start`. `job-funds` tests: 17 pass. The Rust change is not compiled yet.
+3. **Actor-wide flag (guest).** `cancel_job_original`/`cancel_job_owned` first raised the cancel flag of the crossing's source and answered `admitted: false` (that is the refusal in the de run). The browser funds every poll and job of an actor from one source, so every later `start` would see a cancelled source; the de run shows `original-job.start-stalled` right after. Both now cancel only the job's slot (`JobSlot.cancelled`), which `step_job` already closes. Read from the code and consistent with the run; not proven in isolation. Compiling in r35.
+
+Not touched: the native host removes a cancelled job from its running set and never steps it again, so the guest's slot is only released by `close_jobs`. Read from code, not tested.

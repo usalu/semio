@@ -161189,7 +161189,7 @@
               "role": "body",
               "z": 6.390000000000001,
               "filled": true,
-              "tone": 0.15,
+              "tone": 0.72,
               "region": "head-skin",
               "material": "skin",
               "solid": {
@@ -163469,7 +163469,7 @@
               "role": "body",
               "z": 6.390000000000001,
               "filled": true,
-              "tone": 0.15,
+              "tone": 0.9,
               "region": "headband",
               "material": "nylon-clothing",
               "solid": {
@@ -174648,7 +174648,7 @@
               "role": "body",
               "z": 6.390000000000001,
               "filled": true,
-              "tone": 0.15,
+              "tone": 0.72,
               "region": "hair",
               "material": "skin",
               "solid": {
@@ -175228,7 +175228,7 @@
               "role": "body",
               "z": 6.390000000000001,
               "filled": true,
-              "tone": 0.15,
+              "tone": 0.9,
               "region": "headband",
               "material": "nylon-clothing",
               "solid": {
@@ -184102,7 +184102,7 @@
               "role": "body",
               "z": 6.390000000000001,
               "filled": true,
-              "tone": 0.15,
+              "tone": 0.72,
               "region": "hair",
               "material": "skin",
               "solid": {

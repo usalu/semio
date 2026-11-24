@@ -6,7 +6,7 @@ use crate::standards::v1_7::subsets::base::modules::lower::LowerOptions;
 use crate::standards::v1_7::subsets::base::modules::writer::WriteOptions;
 use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;
 use crate::standards::v1_7::subsets::base::io::import::{decode_pdf, decode_pdf_with_password};
-use semio_framework_test_fixtures::{fixture_bytes, fixture_path, fixture_text};
+use semio_framework_test_fixtures::{repo_bytes, repo_text};
 use std::collections::HashMap;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::modules::content::{content_references, ContentReferences};
@@ -35,8 +35,8 @@ use crate::standards::v1_7::subsets::base::io::export::graft::*;
 use crate::standards::v1_7::subsets::base::io::export::*;
 use crate::standards::v1_7::subsets::base::modules::fonts::truetype::synthesize_truetype;
 
-static THESIS: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(fixture_path!("../../../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf")).expect("the committed fixture is readable").into_boxed_slice()));
-static REPORT_STRIP: std::sync::LazyLock<&[u8]> = std::sync::LazyLock::new(|| fixture_bytes!("../../../../🧪️tests/🧫️fixtures/📊️report-strip/📊️report-strip.pdf"));
+static THESIS: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| repo_bytes!("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf"));
+static REPORT_STRIP: std::sync::LazyLock<&[u8]> = std::sync::LazyLock::new(|| repo_bytes!("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📊️report-strip/📊️report-strip.pdf"));
 
 fn typed_lanes(snapshot: &PdfSnapshot) -> PdfSnapshot {
     PdfSnapshot { objects: Vec::new(), trailer: Vec::new(), admitted_stream_roles: Vec::new(), ..snapshot.clone() }
@@ -462,7 +462,7 @@ fn logical_character_codes_bind_complete_native_fragments_and_preserve_word_prec
     use crate::standards::v1_7::subsets::base::modules::content::{parse_content, print_content};
     use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
     use std::collections::HashMap;
-    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🚪️io/🧪️tests/🧫️fixtures/🔢️logical-character-codes/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(repo_text!("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🧪️tests/🧫️fixtures/🔢️logical-character-codes/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let width=case["width"].as_u64().unwrap()as usize;
         let expected:Vec<u32>=case["codes"].as_array().unwrap().iter().map(|code|u32::try_from(code.as_u64().unwrap()).unwrap()).collect();
@@ -487,7 +487,7 @@ fn logical_character_codes_bind_complete_native_fragments_and_preserve_word_prec
 fn retained_text_dates_admit_owned_values_and_keep_indirect_identity() {
     use crate::standards::v1_7::subsets::base::modules::lexer::{Lexer, object_bytes};
     use semio_framework_value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🚪️io/🧪️tests/🧫️fixtures/🪪️retained-text/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(repo_text!("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🧪️tests/🧫️fixtures/🪪️retained-text/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let native=case["native"].as_str().unwrap();
         let value=Lexer::new(native.as_bytes()).parse_object().unwrap();
@@ -513,7 +513,7 @@ fn retained_text_dates_admit_owned_values_and_keep_indirect_identity() {
 
 #[test]
 fn demo_pdf_asset_is_the_natural_file_of_the_demo_snapshot() {
-    let asset = fixture_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎬️demo.pdf");
+    let asset = repo_bytes!("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🎬️demo.pdf");
     assert!(asset.starts_with(b"%PDF-1.7"));
     assert_eq!(asset, encode_pdf(&text_document(&[(200.0, 300.0, "Semio")])).unwrap());
     assert_same_lanes(&decode_pdf(&asset).unwrap(), &demo_pdf17_snapshot());

@@ -1,11 +1,11 @@
-/** 🪜️ The mischief, the ladder and the phone in a real browser: a pet lifts a copy of a quiz task, a climber raises its ladder or a grappler shoots its rope, and a phone shows at most two small pets.
+/** 🪜️ The mischief, the ladder and the phone in a real browser: a pet lifts a copy of a quiz task, on the home screen a climber raises its ladder against a card of the grid and a grappler shoots its rope from the footer line (a quiz's page stacks its cards over the whole width: it has no free side for a ladder to lean on), and a phone shows at most two small pets.
  *
  * @see ../🟦️.ts — the pets in a real browser, as the second round made them
  */
 import type { Page } from "@playwright/test";
-import { HANG_ROD, LADDER_LEAN, ROPE_LONG } from "@semio-tech/pets";
+import { HANG_ROD, LADDER_LEAN, LADDER_TALL, ROPE_LONG } from "@semio-tech/pets";
 import {QUIZZES, enter, expect, pane, playQuiz, swipeTo, test, type Device, activeOverview} from "../../../🎭️e2e/🚶️learner/🟦️.ts";
-import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, carry, castOf, choosePets, CONTROLS, enterWithPets, expectCast, expectPerched, floorSpot, HASTE, hasten, hoverOf, instrumented, type Instruments, KINDS, LANDING_MS, layer, MISCHIEF_HASTE, MISCHIEF_QUIZ, misplaced, pets, reachable, RECAST_MS, ROPE_MS, ROPE_ROUND_MS, stagePasses, standing, TEMPO, trailOf, WALK_MS } from "../🧰️pet-kit/🟦️.ts";
+import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, CHIPS, carry, castOf, choosePets, CONTROLS, enterWithPets, expectCast, expectPerched, floorSpot, HASTE, hasten, hoverOf, instrumented, type Instruments, KINDS, LANDING_MS, layer, MISCHIEF_HASTE, MISCHIEF_QUIZ, misplaced, pets, reachable, RECAST_MS, ROPE_MS, ROPE_ROUND_MS, stagePasses, standing, TEMPO, trailOf, WALK_MS } from "../🧰️pet-kit/🟦️.ts";
 
 for (const reclaim of ["hover", "focus"] as const) test(`a pet lifts a copy of a task of a quiz's page out of its place, beside its transparent original; the original is back at once on ${reclaim}, and the pet is thrown off`, async ({ device }) => {
   const learner = await device("en");
@@ -56,16 +56,16 @@ async function lively(learner: Device): Promise<void> {
 /** 🪜️ How long, in milliseconds of the wall clock (two minutes of the pets' time at eight times the pace), a climber that was put where its way to the foot of its ladder is clear gets to raise it before the next round: whether it chooses the trip is its own business. Over 120 simulated stages of this page it raised its ladder at once or after a median of about 20 s of its time; one in five took longer than a round, one in twelve longer than two. */
 const LADDER_ROUND_MS = 15_000;
 
-/** 🔁️ How long the spec tries for a ladder in all, round after round, in milliseconds of the wall clock: sixteen rounds, since each round after the first fails about two times in five and one in a million is the most a gate may flake. The footer line is one lane no pet passes another on and the page has a single place a ladder can stand, so a climber that is not next to it waits for as long as anybody stands between: every round that sees no ladder puts a climber there again. */
+/** 🔁️ How long the spec tries for a ladder in all, round after round, in milliseconds of the wall clock: sixteen rounds, since each round after the first fails about two times in five and one in a million is the most a gate may flake. The footer line is one lane no pet passes another on, so a climber that is not next to the foot of a ladder waits for as long as anybody stands between: every round that sees no ladder puts a climber at the next foot. */
 const LADDER_MS = 2 * WALK_MS;
 
-/** 🦶️ In the page: where on the footer line the foot of a ladder against the right side of the lowest visible card part stands — its side plus {@link LADDER_LEAN} of the rise to the footer line — or `null` without such a part. */
-function ladderFoot(question: { readonly parts: string; readonly lean: number }): number | null {
+/** 🦶️ In the page: where on the footer line the feet of ladders against the sides of the visible card parts stand, the lowest part first — a side plus or minus {@link LADDER_LEAN} of the rise from the footer line to the part's top, for every part that rises no more than `tall` above the line and whose foot stays in the window. */
+function ladderFeet(question: { readonly parts: string; readonly lean: number; readonly tall: number }): number[] {
   const footer = document.querySelector(".course-app > footer");
-  if (footer === null) return null;
+  if (footer === null) return [];
   const line = footer.getBoundingClientRect().top;
-  const lowest = [...document.querySelectorAll(question.parts)].filter((part) => part.closest("[inert], [hidden]") === null).map((part) => part.getBoundingClientRect()).filter((box) => box.left >= 0 && box.right <= window.innerWidth && box.bottom <= line).reduce<DOMRect | null>((best, box) => (best === null || box.bottom > best.bottom ? box : best), null);
-  return lowest === null ? null : lowest.right + question.lean * (line - lowest.top);
+  const boxes = [...document.querySelectorAll(question.parts)].filter((part) => part.closest("[inert], [hidden]") === null).map((part) => part.getBoundingClientRect()).filter((box) => box.width > 0 && box.left >= 0 && box.right <= window.innerWidth && box.top < line && line - box.top <= question.tall).sort((first, second) => second.top - first.top);
+  return boxes.flatMap((box) => [box.right + question.lean * (line - box.top), box.left - question.lean * (line - box.top)]).filter((foot) => foot > 0 && foot < window.innerWidth);
 }
 
 /** 🧗️ The pets that have stood on `footing` (a ladder, a rope) since the instruments were put in. */
@@ -73,37 +73,35 @@ function carriedOn(page: Page, footing: string): Promise<readonly string[]> {
   return page.evaluate((wanted) => Object.entries((window as unknown as { petWalk: Instruments }).petWalk.trails).flatMap(([id, trail]) => (trail.some((line) => line.split("/")[1] === wanted) ? [id] : [])), footing);
 }
 
-test("a pet that cannot hop to a perch above raises its ladder: on a quiz's page a climber raises its ladder against the lowest card of the column", async ({ device }) => {
+test("a pet that cannot hop to a perch above raises its ladder: on the home screen a climber raises its ladder against a card of the grid", async ({ device }) => {
   test.setTimeout(30 * 60_000);
   const learner = await device("en");
   const page = learner.page;
   await lively(learner);
   const climber = (id: string): boolean => ["climb", "ladder"].every((gear) => KINDS[id]?.gear.includes(gear) === true);
-  const gutters = QUIZZES.find((quiz) => castOf(quiz.id).core.some(climber));
-  expect(gutters, "a quiz whose cast has a climber with a ladder in its core").toBeDefined();
-  await page.evaluate((id) => (window.location.hash = id), gutters!.id);
-  await expect(pane(page, gutters!.id)).toHaveAttribute("data-opened", "");
-  await expectCast(learner, gutters!.id, true);
+  expect(castOf("home").core.some(climber), "a climber with a ladder in the core of the cast of the home screen").toBe(true);
+  await expectCast(learner, "home", true);
   await instrumented(page);
-  const ladderRound = async (): Promise<void> => {
+  const ladderRound = async (attempt: number): Promise<void> => {
     if ((await carriedOn(page, "ladder")).length > 0) return;
     const pet = await reachable(page, (body) => climber(body.id)).catch(() => undefined);
-    const foot = await page.evaluate(ladderFoot, { parts: CARD_PARTS, lean: LADDER_LEAN });
-    if (pet !== undefined && foot !== null) {
+    const feet = pet === undefined ? [] : await page.evaluate(ladderFeet, { parts: CARD_PARTS, lean: LADDER_LEAN, tall: LADDER_TALL * KINDS[pet.id]!.size.height });
+    const foot = feet[(attempt - 1) % Math.max(feet.length, 1)];
+    if (pet !== undefined && foot !== undefined) {
       const height = pet.bottom - pet.top;
       const hover = hoverOf(pet.id);
-      const spot = await page.evaluate(floorSpot, { parts: CARD_PARTS, controls: CONTROLS, reach: (pet.right - pet.left) / 2 + 12, room: height + hover + 12, near: foot });
+      const spot = await page.evaluate(floorSpot, { parts: CHIPS, controls: CONTROLS, reach: (pet.right - pet.left) / 2 + 12, room: height + hover + 12, near: foot });
       if (spot !== null) {
         await carry(page, pet, { x: spot.x, y: spot.top - HANG_ROD * height - hover - 8 });
         await page.mouse.up();
         await expectPerched(page, pet.id, LANDING_MS).catch(() => undefined);
       }
     }
-    await eventually(page, () => carriedOn(page, "ladder"), (seen) => seen.length > 0, { stageMs: LADDER_ROUND_MS * HASTE, message: `a pet on a ladder on the page of ${gutters!.id}` });
+    await eventually(page, () => carriedOn(page, "ladder"), (seen) => seen.length > 0, { stageMs: LADDER_ROUND_MS * HASTE, message: "a pet on a ladder on the home screen" });
   };
   for (let attempt = 1; ; attempt++) {
     try {
-      await ladderRound();
+      await ladderRound(attempt);
       break;
     } catch (failure) {
       if (attempt >= LADDER_MS / LADDER_ROUND_MS) throw failure;
@@ -117,10 +115,8 @@ test("a pet that cannot hop to a perch above raises its ladder: on a quiz's page
 /** 🪝️ Where the gear spec stands a grappler on the footer line round after round, as fractions of the window's width: the edges a rope can reach lie where the page leaves their way free, which differs from page to page, so the spec tries the strip from the middle outwards. */
 const ROPE_SPOTS = [0.5, 0.7, 0.45, 0.9, 0.6, 0.35, 0.8, 0.55] as const;
 
-/** 🎣️ The pages the gear spec shoots a rope on: the first quiz page whose cast has a grappler in its core. */
-const ROPE_PAGES = [
-  { name: "a quiz's page", scene: QUIZZES.find((quiz) => castOf(quiz.id).core.some((id) => KINDS[id]?.gear.includes("grapple") === true))?.id ?? "", opens: true },
-] as const;
+/** 🎣️ The pages the gear spec shoots a rope on: the home screen, whose grid leaves the way from the footer line to the edges of its cards free (on a quiz's page a control as wide as the page lies between). */
+const ROPE_PAGES: readonly { readonly name: string; readonly scene: string; readonly opens: boolean }[] = [{ name: "the home screen", scene: "home", opens: false }];
 
 for (const where of ROPE_PAGES) test(`a pet that cannot hop to a perch above shoots its grapple there: on ${where.name} a grappler on the footer line reels itself up a rope to the edge of a card, with nothing added to the page`, async ({ device }) => {
   test.setTimeout(30 * 60_000);
@@ -142,12 +138,12 @@ for (const where of ROPE_PAGES) test(`a pet that cannot hop to a perch above sho
     const footer = (await page.locator(".course-app > footer").boundingBox())!;
     const raised = (body: Body): number => footer.y - body.bottom - hoverOf(body.id);
     const near = page.viewportSize()!.width * ROPE_SPOTS[attempt % ROPE_SPOTS.length]!;
-    for (const body of (await bodies(page)).filter((candidate) => grappling(candidate) && candidate.footing === "perch" && raised(candidate) <= 2)) {
+    for (const body of (await bodies(page)).filter((candidate) => grappling(candidate) && candidate.footing === "perch").sort((first, second) => raised(first) - raised(second))) {
       const pet = await reachable(page, (candidate) => candidate.id === body.id).catch(() => undefined);
       if (pet === undefined) continue;
       const height = pet.bottom - pet.top;
       const hover = hoverOf(pet.id);
-      const spot = await page.evaluate(floorSpot, { parts: CARD_PARTS, controls: CONTROLS, reach: (pet.right - pet.left) / 2 + 12, room: height + hover + 12, near });
+      const spot = await page.evaluate(floorSpot, { parts: CHIPS, controls: CONTROLS, reach: (pet.right - pet.left) / 2 + 12, room: height + hover + 12, near });
       if (spot === null) continue;
       await carry(page, pet, { x: spot.x, y: spot.top - HANG_ROD * height - hover - 8 });
       await page.mouse.up();

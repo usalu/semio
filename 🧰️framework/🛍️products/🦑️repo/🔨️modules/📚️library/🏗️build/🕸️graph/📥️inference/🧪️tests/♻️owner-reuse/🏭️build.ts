@@ -1,5 +1,6 @@
-/** 🏭️ One build of the owner-reuse world in a process of its own: infers every owner through its stored record and prints which owners were inferred and how many closure entries were derived, loaded and found stale. */
+/** 🏭️ One build of the owner-reuse world in a process of its own: infers every owner through its stored record (the process kills itself with SIGKILL after `SEMIO_OWNER_REUSE_KILL_AFTER` owners settled, as a read that is killed does) and prints which owners were inferred and how many closure entries were derived, loaded and found stale. */
 import{test}from"bun:test";
+import{writeSync}from"node:fs";
 import{join}from"node:path";
 import fixture from"./🔣️.json";
 import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
@@ -9,7 +10,7 @@ declareLibraryBuildTestEnvelopeV1({suite:"build-inference",scratch:"checkout"});
 const inference=await import("../../🟨️.mjs"),{createScriptInputCache,libraryBootstrap}=inference as any;
 await libraryBootstrap;
 const observation=await import("../../../../👁️observation/🟨️.mjs") as any,scriptInputs=await import("../../🧭️script-inputs/🟨️.mjs") as any;
-const root=process.env.SEMIO_OWNER_REUSE_ROOT!;
+const root=process.env.SEMIO_OWNER_REUSE_ROOT!,killAfter=process.env.SEMIO_OWNER_REUSE_KILL_AFTER===undefined?undefined:Number(process.env.SEMIO_OWNER_REUSE_KILL_AFTER);let settled=0;
 test("one build of the owner-reuse world",async()=>repository.invoke(async()=>{
  scriptInputs.bindClosureStoreV1(root,join(root,"ce"),true);
  const scripts=createScriptInputCache({workspaceRoot:root,lateClosures:true}),api=scriptInputs.closureApiV1(scripts,root),inferred:string[]=[],rosters:Record<string,string[]>={};
@@ -20,7 +21,10 @@ test("one build of the owner-reuse world",async()=>repository.invoke(async()=>{
     const list=await api.closureOf([join(root,"owners",name,"entry.mjs")],[],"test-discovery"),answer=await api.some(list,fixture.question);
     return{inputs:[...list],answer,own:observation.observedFs.readFileSync(join(root,"owners",name,"data.txt"),"utf8"),...api.table([...list].map((item:any)=>item.closureRef))};
    });
-   if((observation.projectInferenceCountsV1()[name]??0)-before>0)inferred.push(name);
+   const fresh=(observation.projectInferenceCountsV1()[name]??0)-before>0;
+   if(fresh)inferred.push(name);
+   writeSync(1,"owner-reuse-settled "+name+" "+(fresh?"inferred":"reloaded")+"\n");
+   if(killAfter!==undefined&&++settled>=killAfter)process.kill(process.pid,"SIGKILL");
    const{values}=await api.resolve(Object.entries(value.closureRecipes));
    rosters[name]=(values.get(value.inputs[0].closureRef) as string[]).map(path=>path.replace("{workspaceRoot}/","")).sort();
   }

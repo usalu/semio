@@ -1,0 +1,7 @@
+{
+  "ops": [
+    { "op": "shape-add", "scale": "500", "view": "plan", "after": "stretcher-1", "shape": { "id": "leg-front-0", "bone": "leg-front", "role": "body", "z": 1, "filled": false, "tone": 0.3, "kind": "poly", "points": [[0.455, 0.21], [0.43545, 0.19]], "closed": false, "region": "steel-tube", "material": "steel-tube" } },
+    { "op": "shape-add", "scale": "500", "view": "plan", "after": "leg-front-0", "shape": { "id": "leg-front-1", "bone": "leg-front", "role": "body", "z": 1, "filled": false, "tone": 0.3, "kind": "poly", "points": [[0.455, -0.21], [0.43545, -0.19]], "closed": false, "region": "steel-tube", "material": "steel-tube" } }
+  ],
+  "solidify": [{ "under": "ground", "strip": "-[01]$" }]
+}

@@ -1,4 +1,6 @@
 use super::*;
+use shear::{basis, strut_and_tie, truss_resistances, ShearBasis, SHEAR_PLANE_TAG};
+use layout::Class;
 use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 use scene::projection_kit::test_support::revision;
 
@@ -19,7 +21,7 @@ fn the_truss_resistances_follow_the_closed_forms_over_cot_theta() {
     let s = basis(&input, member).expect("basis");
     let (one, _) = truss_resistances(&input, &s, 1.0);
     let (two, _) = truss_resistances(&input, &s, 2.0);
-    assert!((one - s.asw_s * s.z * s.f_yk / GAMMA_S / 1e3).abs() < 1e-9 * one.abs().max(1.0));
+    assert!((one - s.asw_s * s.z * s.f_yk / norm::ndp_number("ndp.en1992.gamma-s", document.annex) / 1e3).abs() < 1e-9 * one.abs().max(1.0));
     assert!((two - 2.0 * one).abs() < 1e-9 * two.abs().max(1.0));
     let (_, max_low) = truss_resistances(&input, &s, 1.0);
     let (_, max_high) = truss_resistances(&input, &s, 2.5);
@@ -39,9 +41,9 @@ fn the_strut_and_tie_forces_close_the_node_equilibrium() {
 fn the_shear_planes_stand_at_d_from_both_supports() {
     let document = En1992Snapshot::compliant_office_frame();
     let report = report_of(&document);
-    let scene = crate::project(&SceneInput { document: &document, report: &report, placements: &[], revision: revision() });
+    let scene = project(&SceneInput { document: &document, report: &report, placements: &[], revision: revision() });
     let input = SceneInput { document: &document, report: &report, placements: &[], revision: revision() };
-    for member in document.members.iter().filter(|m| basis(&input, m).is_some_and(|s| m.span > 2.0 * s.d) && crate::layout::class_of(m.kind) != Class::Upright) {
+    for member in document.members.iter().filter(|m| basis(&input, m).is_some_and(|s| m.span > 2.0 * s.d) && layout::class_of(m.kind) != Class::Upright) {
         for tag in ["start", "end"] {
             assert!(scene.entities.iter().any(|e| e.entity.id == format!("{}:{SHEAR_PLANE_TAG}-{tag}", member.id)), "{} {tag}", member.id);
         }

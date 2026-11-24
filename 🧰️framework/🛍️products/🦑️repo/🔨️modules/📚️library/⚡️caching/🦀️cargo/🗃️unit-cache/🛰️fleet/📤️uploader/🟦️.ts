@@ -1,19 +1,20 @@
 import {spawn} from "node:child_process";
 import {createHash,randomBytes} from "node:crypto";
-import {existsSync,mkdirSync,readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,readFileSync,readdirSync,renameSync,rmSync,statSync,statfsSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {tryClaimV1} from "../../🔒️lock/🟦️.ts";
+import {claimHeldV1,tryClaimV1} from "../../🔒️lock/🟦️.ts";
 import {dropSpillObjectsV1,newestBuildRunV1,newestEntryV1,emitUnitEventV1,readSpillObjectV1} from "../../💾️store/🟦️.ts";
 import {packRunV1} from "../../🏗️buildscript/📦️run-wire/🟦️.ts";
 import {casRootV1} from "../../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
 import {readCasObjectSyncV1} from "../../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
-import {createFleetClientV1,readFleetSettingsV1,type FleetClientV1} from "../📡️client/🟦️.ts";
+import {createFleetClientV1,readFleetSettingsV1,type FleetClientV1,type FleetVerdictV1} from "../📡️client/🟦️.ts";
 import {remoteCacheFetchV1} from "../../../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {FLEET_POLICY_V1,portableRootsV1,portableTextV1,type PlatformV1,type ToolRootsV1} from "../🪪️identity/🟦️.ts";
 import {adoptFleetUnitV1} from "../📥️adopt/🟦️.ts";
+import {registerSpoolV1} from "../📮️registry/🟦️.ts";
 import {packUnitV1,type RemoteUnitV1} from "../📦️wire/🟦️.ts";
-import {countSkipV1,countUnitV1,writeBuildCountersV1} from "../📊️counters/🟦️.ts";
+import {countSkipV1,countUnitV1,noteSpoolV1,writeBuildCountersV1} from "../📊️counters/🟦️.ts";
 import {publishRootHintByKeyV1} from "../🟦️.ts";
 import {publishKeySamplesV1} from "../🔑️key-samples/🟦️.ts";
 
@@ -21,7 +22,7 @@ const fleet=FLEET_POLICY_V1,limits=fleet.limits,sha=(bytes:Uint8Array)=>createHa
 type Environment=Readonly<Record<string,string|undefined>>;
 
 /** 🧾️ One unit waiting for upload (`SpoolJob` of the schema). */
-export type SpoolJobV1={version:1;key:string;localKey:string;slot:string;crate:string;cwd:string;workspace:string|null;laneRoot:string|null;owner:string;claimed:boolean;offer?:boolean;run?:boolean;tools?:ToolRootsV1;hint?:{neutralKey:string;kinds:string[]};costMs:number;platform:PlatformV1;queuedMs:number;attempts?:number;notBeforeMs?:number};
+export type SpoolJobV1={version:1;key:string;localKey:string;slot:string;crate:string;cwd:string;workspace:string|null;laneRoot:string|null;owner:string;claimed:boolean;offer?:boolean;run?:boolean;tools?:ToolRootsV1;hint?:{neutralKey:string;kinds:string[]};costMs:number;platform:PlatformV1;queuedMs:number;attempts?:number;notBeforeMs?:number;deferredBy?:string};
 
 const spoolDirectory=(root:string)=>join(root,fleet.layout.state,fleet.layout.spool);
 const offeredPath=(root:string,key:string)=>join(root,fleet.layout.state,"offered",key.slice(0,2),key);
@@ -31,15 +32,33 @@ export function offeredV1(root:string,key:string):boolean{try{statSync(offeredPa
 /** 🏷️ Remembers that the unit is settled, so later local hits do not offer it again. */
 export function markOfferedV1(root:string,key:string):void{try{const path=offeredPath(root,key);mkdirSync(join(path,".."),{recursive:true});writeFileSync(path,"");}catch{}}
 
-/** 📮️ Queues a unit for upload: one small file renamed into the spool, `false` (the unit is dropped) when the spool is full; offers of local hits may fill half of it, so they never crowd out a unit that was just compiled. Never waits for the network. */
-export function enqueueUploadV1(root:string,job:SpoolJobV1):boolean{
+const bounds=new Map<string,{at:number;entries:number}>();
+
+/** 📏️ How many units the spool of this cache root may hold: `spool.freeSharePercent` of the free room of its disk, one entry per `spool.entryBytes`, between `spool.minimumEntries` and `spool.maximumEntries` (a machine with a small disk still holds a build's worth, a big one never fills its disk with queue files). Re-measured every `spool.boundTtlMilliseconds`. */
+export function spoolBoundV1(root:string):number{
+ const policy=fleet.spool,known=bounds.get(root),now=Date.now();
+ if(known!==undefined&&now-known.at<policy.boundTtlMilliseconds)return known.entries;
+ let entries=policy.minimumEntries;
+ try{const stats=statfsSync(root);entries=Math.floor(Number(stats.bavail)*Number(stats.bsize)*policy.freeSharePercent/100/policy.entryBytes);}catch{}
+ entries=Math.min(policy.maximumEntries,Math.max(policy.minimumEntries,entries));
+ bounds.set(root,{at:now,entries});return entries;
+}
+
+/** 📮️ Queues a unit for upload: one small file renamed into the spool, `false` (the unit is not queued; the caller waits for room or counts it) when the spool holds {@link spoolBoundV1} units already; offers of local hits may fill half of it, so they never crowd out a unit that was just compiled. Never waits for the network. */
+export function enqueueUploadV1(root:string,job:SpoolJobV1,bound?:number):boolean{
  try{
   const directory=spoolDirectory(root);mkdirSync(directory,{recursive:true});
-  const waiting=readdirSync(directory).filter(name=>name.endsWith(".json"));
-  if(waiting.length>=(job.offer?limits.maximumSpool/2:limits.maximumSpool))return false;
+  const waiting=readdirSync(directory).filter(name=>name.endsWith(".json")),limit=bound??spoolBoundV1(root);
+  if(waiting.some(name=>name.endsWith("-"+job.key.slice(0,16)+".json")))return true;
+  if(waiting.length>=(job.offer?limit/2:limit))return false;
   const temporary=join(directory,"."+randomBytes(6).toString("hex")+".tmp"),name=(job.offer?"offer-":String(job.queuedMs).padStart(15,"0")+"-")+job.key.slice(0,16)+".json";
   writeFileSync(temporary,JSON.stringify(job));renameSync(temporary,join(directory,name));return true;
  }catch{return false;}
+}
+
+/** 🔁️ Rewrites a waiting job under its own name (atomically): a job that must wait keeps its place and never needs a free slot, so back-pressure can never lose it. */
+function rewriteJobV1(path:string,job:SpoolJobV1):boolean{
+ try{const temporary=path+"."+randomBytes(4).toString("hex")+".tmp";writeFileSync(temporary,JSON.stringify(job));renameSync(temporary,path);return true;}catch{return false;}
 }
 
 /** 🔢️ How many units wait in the spool. */
@@ -47,19 +66,23 @@ export function spoolLengthV1(root:string):number{try{return readdirSync(spoolDi
 
 const scriptOf=()=>{const path=fileURLToPath(new URL("../../📜️script.ts",import.meta.url));return existsSync(path)?path:undefined;};
 
-/** 🚀️ Starts the upload worker when none is alive: one detached process per machine (a lock file with a heartbeat names it), without any inherited descriptor, so Cargo never waits for it and the compiler's exit is not delayed by uploads. A start storm is throttled. */
-export function startUploaderV1(root:string,environment:Environment):void{
+/** 🚀️ Starts the upload worker when none is alive (`true` when it started one) and registers the root with the machine's sidecar, which starts the worker again whenever the spool holds jobs and none lives (a build that ends, a worker that is killed or crashes, a machine that restarts): one detached process per machine (a lock file with a heartbeat names it), without any inherited descriptor, so Cargo never waits for it and the compiler's exit is not delayed by uploads. A start storm is throttled. */
+export function startUploaderV1(root:string,environment:Environment):boolean{
  try{
   const directory=join(root,fleet.layout.state);mkdirSync(directory,{recursive:true});
-  const lock=join(directory,"uploader.lock"),stamp=join(directory,fleet.layout.spawned);
-  try{if(Date.now()-statSync(lock).mtimeMs<fleet.uploader.staleMilliseconds)return;}catch{}
-  try{if(Date.now()-statSync(stamp).mtimeMs<fleet.uploader.spawnThrottleMilliseconds)return;}catch{}
-  writeFileSync(stamp,String(Date.now()));
+  const stamp=join(directory,fleet.layout.spawned),identityFile=join(directory,fleet.layout.uploaderIdentity),mine=readFleetSettingsV1(root,environment)?.identity;
+  if(mine!==undefined)registerSpoolV1(root,environment,mine);
+  let current:string|undefined;try{current=readFileSync(identityFile,"utf8");}catch{}
+  const alive=claimHeldV1(directory,"uploader");
+  const succeeding=alive&&mine!==undefined&&current!==mine;
+  if(alive&&!succeeding)return false;
+  try{if(Date.now()-statSync(stamp).mtimeMs<fleet.uploader.spawnThrottleMilliseconds)return false;}catch{}
+  writeFileSync(stamp,String(Date.now()));if(mine!==undefined)writeFileSync(identityFile,mine);
   const script=scriptOf(),env:Record<string,string>={};
   for(const [name,value] of Object.entries(environment)){if(value!==undefined&&!/^(CARGO_MAKEFLAGS|MAKEFLAGS|MFLAGS)$/u.test(name))env[name]=value;}
-  const child=spawn(process.execPath,[...(script?[script]:[]),"--semio-unit-cache","fleet-upload","--root",root],{env,detached:true,stdio:"ignore",windowsHide:true});
-  child.on("error",()=>{});child.unref();
- }catch{}
+  const child=spawn(process.execPath,[...(script?[script]:[]),"--semio-unit-cache","fleet-upload","--root",root,...succeeding?["--takeover"]:[]],{env,detached:true,stdio:"ignore",windowsHide:true});
+  child.on("error",()=>{});child.unref();return true;
+ }catch{return false;}
 }
 
 async function bounded<T>(items:readonly T[],concurrency:number,work:(item:T)=>Promise<boolean>):Promise<boolean>{
@@ -68,133 +91,158 @@ async function bounded<T>(items:readonly T[],concurrency:number,work:(item:T)=>P
  return ok;
 }
 
-/** 📤️ Builds and uploads one spooled unit (`"diverged"`: the fleet already holds this key with other bytes, a determinism bug or an attack; the caller adopts the fleet's copy): reads the local entry and its objects, turns every path into its token, uploads the blobs the server lacks and then the action result (which makes the server wake every waiter). `"retry"` when the unit was built and the fleet cache did not take it (network or server fault: the drain queues it again, see `retryJobV1`), `false` on any other fault: the unit is simply not shared. */
-export async function uploadUnitV1(client:FleetClientV1,root:string,job:SpoolJobV1):Promise<boolean|"diverged"|"stale"|"retry">{
+/** 🏁️ How one upload ended: `true` (stored), `"diverged"` (the fleet already holds this key with other bytes, a determinism bug or an attack; the caller adopts the fleet's copy), `"stale"` (the sources of the unit differ from the synchronized tree), `"refused"` (the server will never take these bytes: 400, 413), `"capacity"` (its store is full: 507), `"retry"` (network or server fault that can pass), `"gone"` (the local entry or one of its objects is no longer there), `false` (any other fault: the unit is not shared). */
+export type UploadOutcomeV1=boolean|"diverged"|"stale"|"refused"|"capacity"|"retry"|"gone";
+
+const RANK:Readonly<Record<FleetVerdictV1,number>>={stored:0,diverged:0,stale:0,down:1,busy:1,capacity:2,refused:3};
+
+/** 📨️ Sends the blobs the server lacks and then the action result (which makes the server wake every waiter), keeping the claim alive meanwhile; the worst verdict of the blobs decides how the job ends. */
+async function sendV1(client:FleetClientV1,job:SpoolJobV1,upload:Readonly<{blobs:ReadonlyMap<string,Uint8Array>;result:Uint8Array}>):Promise<UploadOutcomeV1>{
+ const renewing=job.claimed?setInterval(()=>{void client.renew(job.key,job.owner,fleet.claim.ttlMilliseconds);},fleet.claim.heartbeatMilliseconds):undefined;renewing?.unref?.();
+ try{
+  let worst:FleetVerdictV1="stored";
+  await bounded([...upload.blobs.keys()],limits.maximumUploadConcurrency,async hash=>{
+   if(await client.hasBlob(hash)===true)return true;
+   const verdict=await client.storeBlob(hash,upload.blobs.get(hash)!);
+   if(RANK[verdict]>RANK[worst])worst=verdict;
+   return verdict==="stored";
+  });
+  if(worst==="refused"||worst==="capacity")return worst;
+  if(worst!=="stored")return "retry";
+  const verdict=await client.storeResult(job.key,upload.result,job.slot);
+  return verdict==="stored"?true:verdict==="diverged"||verdict==="stale"||verdict==="refused"||verdict==="capacity"?verdict:"retry";
+ }finally{if(renewing)clearInterval(renewing);}
+}
+
+/** 📤️ Builds and uploads one spooled unit: reads the local entry and its objects, turns every path into its token, uploads the blobs the server lacks and then the action result. See {@link UploadOutcomeV1} for the ends; `"retry"`, `"capacity"` queue the job again (see {@link retryJobV1}). */
+export async function uploadUnitV1(client:FleetClientV1,root:string,job:SpoolJobV1):Promise<UploadOutcomeV1>{
  const roots=portableRootsV1({cwd:job.cwd,workspace:job.workspace??undefined,...job.tools}),cas=casRootV1();
  if(job.run===true)return uploadRunV1(client,root,job,roots);
- const entry=newestEntryV1(root,job.localKey);if(!entry||entry.session===true)return false;
+ const entry=newestEntryV1(root,job.localKey);if(!entry)return "gone";
+ if(entry.session===true)return false;
  const contents=new Map<string,Uint8Array>();
- let total=0;
+ let total=0,missing=false;
  const convert=(sha256:string,text:boolean):string|undefined=>{
-  const bytes=readCasObjectSyncV1(cas,sha256)??readSpillObjectV1(root,sha256);if(!bytes)return undefined;
+  const bytes=readCasObjectSyncV1(cas,sha256)??readSpillObjectV1(root,sha256);if(!bytes){missing=true;return undefined;}
   const out=text?encoder.encode(portableTextV1(decoder.decode(bytes),roots)):new Uint8Array(bytes);total+=out.length;
   if(out.length>limits.maximumBlobBytes||total>limits.maximumEntryBytes)return undefined;
   const hash=sha(out);contents.set(hash,out);return hash;
  };
+ const failed=():UploadOutcomeV1=>missing?"gone":false;
  try{
   const outputs:RemoteUnitV1["outputs"]=[];
   for(const output of entry.outputs){
-   const hash=convert(output.sha256,output.template===true);if(hash===undefined)return false;
+   const hash=convert(output.sha256,output.template===true);if(hash===undefined)return failed();
    outputs.push({name:output.name,sha256:hash,bytes:contents.get(hash)!.length,executable:output.executable,...(output.template?{template:true}:{})});
   }
   const stream=(value:string|null|undefined):string|null|undefined=>value==null?null:convert(value,true);
-  const stdout=stream(entry.stdout),stderr=stream(entry.stderr);if(stdout===undefined||stderr===undefined)return false;
+  const stdout=stream(entry.stdout),stderr=stream(entry.stderr);if(stdout===undefined||stderr===undefined)return failed();
   const unit:RemoteUnitV1={version:1,key:job.key,localKey:job.localKey,slot:job.slot,crate:job.crate,platform:job.platform,createdMs:entry.createdMs,costMs:job.costMs,dependencies:entry.dependencies.map(row=>({path:portableTextV1(row.path,roots),sha256:row.sha256})),environment:entry.environment.map(row=>({name:row.name,value:row.value===null?null:portableTextV1(row.value,roots)})),outputs,stdout,stderr,...(entry.retention===undefined?{}:{retention:entry.retention})};
-  const packed=packUnitV1(unit,contents),hashes=[...packed.blobs.keys()];
-  const renewing=job.claimed?setInterval(()=>{void client.renew(job.key,job.owner,fleet.claim.ttlMilliseconds);},fleet.claim.heartbeatMilliseconds):undefined;renewing?.unref?.();
-  try{
-   const sent=await bounded(hashes,limits.maximumUploadConcurrency,async hash=>{
-    if(await client.hasBlob(hash)===true)return true;
-    return client.putBlob(hash,packed.blobs.get(hash)!);
-   });
-   if(!sent)return "retry";
-   const stored=await client.putResult(job.key,packed.result,job.slot);
-   return stored===false?"retry":stored;
-  }finally{if(renewing)clearInterval(renewing);}
+  return await sendV1(client,job,packUnitV1(unit,contents));
  }catch{return false;}
 }
 
 /** 📤️ {@link uploadUnitV1} for the run of a build script: the local run entry and its objects become one manifest (`run.json` and one `f:` output per OUT_DIR file) with the roots of the machine as tokens. A run that still names a directory of this machine is not uploaded. */
-async function uploadRunV1(client:FleetClientV1,root:string,job:SpoolJobV1,roots:ReturnType<typeof portableRootsV1>):Promise<boolean|"diverged"|"stale"|"retry">{
- const entry=newestBuildRunV1(root,job.localKey);if(!entry)return false;
+async function uploadRunV1(client:FleetClientV1,root:string,job:SpoolJobV1,roots:ReturnType<typeof portableRootsV1>):Promise<UploadOutcomeV1>{
+ const entry=newestBuildRunV1(root,job.localKey);if(!entry)return "gone";
  const cas=casRootV1(),packed=packRunV1(entry,{key:job.key,localKey:job.localKey,slot:job.slot,platform:job.platform,costMs:job.costMs},roots,digest=>readCasObjectSyncV1(cas,digest)??readSpillObjectV1(root,digest));
  if(typeof packed==="string")return false;
- try{
-  const upload=packUnitV1(packed.unit,packed.contents),hashes=[...upload.blobs.keys()];
-  const renewing=job.claimed?setInterval(()=>{void client.renew(job.key,job.owner,fleet.claim.ttlMilliseconds);},fleet.claim.heartbeatMilliseconds):undefined;renewing?.unref?.();
-  try{
-   const sent=await bounded(hashes,limits.maximumUploadConcurrency,async hash=>{
-    if(await client.hasBlob(hash)===true)return true;
-    return client.putBlob(hash,upload.blobs.get(hash)!);
-   });
-   if(!sent)return "retry";
-   const stored=await client.putResult(job.key,upload.result,job.slot);
-   return stored===false?"retry":stored;
-  }finally{if(renewing)clearInterval(renewing);}
- }catch{return false;}
+ try{return await sendV1(client,job,packUnitV1(packed.unit,packed.contents));}catch{return false;}
 }
 
-/** 🔁️ The job to queue again after a failed upload, `undefined` when it has used its attempts or is too old: a settled offer (the next drain first asks the server whether another machine stored the unit meanwhile) due after an exponentially growing delay, without the claim (a waiting machine takes the unit over). */
+/** 🔁️ The job to queue again after an upload that can still succeed (the server was busy, down or full), `undefined` once it is older than `uploader.maximumJobAgeMilliseconds`: a settled offer (the next drain first asks the server whether another machine stored the unit meanwhile) due after an exponentially growing delay that stops growing at `uploader.maximumBackoffMilliseconds`, without the claim (a waiting machine takes the unit over). The number of tries is no bound: the age is. */
 export function retryJobV1(job:SpoolJobV1,now:number):SpoolJobV1|undefined{
- const attempts=(job.attempts??0)+1,policy=fleet.uploader;
- if(attempts>=policy.maximumAttempts||now-job.queuedMs>policy.maximumJobAgeMilliseconds)return undefined;
- return{...job,claimed:false,offer:true,attempts,notBeforeMs:now+policy.retryBackoffMilliseconds*2**(attempts-1)};
+ const attempts=(job.attempts??0)+1,policy=fleet.uploader,{deferredBy:_,...rest}=job;
+ if(now-job.queuedMs>policy.maximumJobAgeMilliseconds)return undefined;
+ return{...rest,claimed:false,offer:true,attempts,notBeforeMs:now+Math.min(policy.maximumBackoffMilliseconds,policy.retryBackoffMilliseconds*2**Math.min(attempts-1,16))};
 }
 
 /** 🚰️ The summary of one drain. */
 export type DrainResultV1=Readonly<{uploaded:number;failed:number;dropped:number;retried?:number;deferred?:number}>;
 
-/** 🚰️ Drains the spool until it has been empty for `idleMilliseconds` (or once, with `idleMilliseconds` 0): one drainer per machine holds the lock, takes units oldest first, uploads a few at a time, deletes each job file whatever the outcome (jobs run in a sliding pool of `maximumUploadJobs`, so one slow upload never stalls the others; a failed unit is dropped, never retried; a job found while the cache is unreachable is queued again, due after the retry delay, and the drain ends after its idle time; the next compile starts a worker again, until the job is too old) and releases the claim of a unit it could not upload so a waiter can take over. */
-export async function drainUploadsV1(root:string,environment:Environment,options:Readonly<{idleMilliseconds?:number;signal?:AbortSignal}>={}):Promise<DrainResultV1|"busy">{
+/** 🚰️ Drains the spool until it has been empty for `idleMilliseconds` (default `uploader.idleMilliseconds`, `SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS` overrides; or once, with `idleMilliseconds` 0): one drainer per machine holds the lock, takes units oldest first, uploads a few at a time in a sliding pool (`maximumUploadJobs`, so one slow upload never stalls the others), and lives as long as any job waits, so a cache that is down for minutes costs no unit. A job leaves the spool only when it is uploaded, settled by the fleet, refused for good, or too old; a job that must wait (cache down or busy or full) is rewritten in place with a later due time and keeps its slot. The claim of a unit that was not uploaded is released so a waiter can take over. A drainer lives with the cache identity it started with (endpoint, generation, token): `takeover` names a new identity in `uploader.identity`, the old drainer finishes its running uploads and leaves, and this one replaces it (the next compile with another identity does the same through {@link startUploaderV1}). */
+export async function drainUploadsV1(root:string,environment:Environment,options:Readonly<{idleMilliseconds?:number;signal?:AbortSignal;takeover?:boolean}>={}):Promise<DrainResultV1|"busy">{
  const settings=readFleetSettingsV1(root,environment);if(!settings)return "busy";
  const directory=join(root,fleet.layout.state);mkdirSync(directory,{recursive:true});
- const lock=tryClaimV1(directory,"uploader");if(!lock)return "busy";
- const client=createFleetClientV1(settings,{fetch:remoteCacheFetchV1(environment,{root:environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||root})}),idle=options.idleMilliseconds??fleet.uploader.idleMilliseconds,spool=spoolDirectory(root),result:{uploaded:number;failed:number;dropped:number;retried?:number;deferred?:number}={uploaded:0,failed:0,dropped:0};
- let quietSince=Date.now();const dueAt=new Map<string,{modified:number;at:number}>(),running=new Set<Promise<boolean>>();
+ const identityFile=join(directory,fleet.layout.uploaderIdentity),identity=()=>{try{return readFileSync(identityFile,"utf8");}catch{return undefined;}};
+ let lock=tryClaimV1(directory,"uploader");
+ if(!lock&&options.takeover===true){if(identity()!==settings.identity)try{writeFileSync(identityFile,settings.identity);}catch{}const until=Date.now()+fleet.uploader.takeoverMilliseconds;while(!lock&&Date.now()<until&&identity()===settings.identity){await new Promise(done=>setTimeout(done,500));lock=tryClaimV1(directory,"uploader");}}
+ if(!lock)return "busy";
+ const workspace=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,client=createFleetClientV1(settings,{fetch:remoteCacheFetchV1(environment,{root:workspace||root})}),idle=options.idleMilliseconds??(Number(environment.SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS)||fleet.uploader.idleMilliseconds),spool=spoolDirectory(root),policy=fleet.uploader,result:{uploaded:number;failed:number;dropped:number;retried?:number;deferred?:number}={uploaded:0,failed:0,dropped:0};
+ let quietSince=Date.now(),listedAt=0;const dueAt=new Map<string,number>(),inFlight=new Set<string>(),queued=new Set<string>(),running=new Set<Promise<boolean>>(),queue:string[]=[];
+ const pause=(milliseconds:number)=>new Promise(done=>setTimeout(done,milliseconds));
+ const refill=():number=>{
+  let names:string[]=[];try{names=readdirSync(spool).filter(name=>name.endsWith(".json")).sort();}catch{}
+  listedAt=Date.now();noteSpoolV1(workspace,names.length,spoolBoundV1(root));
+  const now=listedAt,present=new Set(names);for(const name of dueAt.keys())if(!present.has(name))dueAt.delete(name);
+  for(const name of names){
+   if(inFlight.has(name)||queued.has(name))continue;
+   let at=dueAt.get(name);
+   if(at===undefined){try{const waiting=JSON.parse(readFileSync(join(spool,name),"utf8")) as SpoolJobV1;at=waiting.deferredBy!==undefined&&waiting.deferredBy!==settings.identity?0:waiting.notBeforeMs??0;}catch{at=0;}dueAt.set(name,at);}
+   if(at<=now){queue.push(name);queued.add(name);}
+  }
+  return names.length;
+ };
+ const start=(name:string):void=>{
+  inFlight.add(name);
+  const task=(async():Promise<boolean>=>{
+   const path=join(spool,name);let job:SpoolJobV1;
+   try{job=JSON.parse(readFileSync(path,"utf8")) as SpoolJobV1;}catch{rmSync(path,{force:true});result.dropped++;return false;}
+   const started=Date.now(),event=(kind:"remote-publish"|"remote-skip",reason:string)=>emitUnitEventV1(root,{lane:"uploader",kind,crate:job.crate,key:job.key,milliseconds:Date.now()-started,waitedMs:Math.max(0,started-job.queuedMs),reason});
+   const release=async()=>{if(job.claimed)await client.release(job.key,job.owner);};
+   const finish=()=>{rmSync(path,{force:true});dueAt.delete(name);const spilled=newestEntryV1(root,job.localKey);if(spilled)dropSpillObjectsV1(root,spilled);};
+   const wait=(at:number,reason:string,deferredBy?:string)=>{
+    const {deferredBy:_,...rest}=job;
+    if(!rewriteJobV1(path,{...rest,claimed:false,notBeforeMs:at,...deferredBy===undefined?{}:{deferredBy}}))return;
+    dueAt.set(name,at);result.deferred=(result.deferred??0)+1;event("remote-skip",reason);
+   };
+   if(started-job.queuedMs>policy.maximumJobAgeMilliseconds){finish();result.dropped++;countSkipV1(workspace,client.usable()?"upload-expired":"upload-expired-"+client.state());event("remote-skip","upload-expired");await release();return false;}
+   if(!client.usable()){wait(started+Math.round(policy.retryBackoffMilliseconds*(0.5+Math.random())),"upload-deferred: "+client.state(),settings.identity);await release();return false;}
+   if(job.hint!==undefined){
+    const named=await publishRootHintByKeyV1(client,job.hint.neutralKey,job.hint.kinds);
+    if(named===undefined){wait(started+policy.retryBackoffMilliseconds,"root-hint-deferred");return false;}
+    if(!job.hint.kinds.every(kind=>(named as readonly string[]).includes(kind))||named.length!==job.hint.kinds.length){finish();result.dropped++;countSkipV1(workspace,"root-key-conflict");event("remote-skip","root-key-conflict: the fleet names other directories for this unit");return false;}
+   }
+   if(job.offer===true&&await client.hasResult(job.key)===true){markOfferedV1(root,job.key);finish();result.dropped++;event("remote-skip","already-stored");return true;}
+   const outcome=await Promise.race([uploadUnitV1(client,root,job),new Promise<"retry">(done=>{const timer=setTimeout(()=>done("retry"),policy.jobMilliseconds);timer.unref?.();})]);
+   if(outcome===true){markOfferedV1(root,job.key);finish();result.uploaded++;countUnitV1(workspace,"stored");event("remote-publish","uploaded");return true;}
+   if(outcome==="retry"||outcome==="capacity"){
+    const again=client.usable()||outcome==="capacity"?retryJobV1(job,Date.now()):{...job,claimed:false,notBeforeMs:Date.now()+policy.retryBackoffMilliseconds,deferredBy:settings.identity};
+    if(again!==undefined&&rewriteJobV1(path,again)){dueAt.set(name,again.notBeforeMs??0);result.retried=(result.retried??0)+1;event("remote-skip",(outcome==="capacity"?"upload-capacity: the fleet cache is full, ":"upload-retry: ")+"next try in "+Math.round(((again.notBeforeMs??0)-Date.now())/1000)+" s (try "+(again.attempts??0)+")");await release();return false;}
+    finish();result.dropped++;countSkipV1(workspace,"upload-expired");event("remote-skip","upload-expired");await release();return false;
+   }
+   finish();result.failed++;await release();
+   if(outcome==="stale"){countSkipV1(workspace,"stale-on-arrival");event("remote-skip","stale-on-arrival: the fleet cache refused the unit, its sources differ from the synchronized tree");}
+   else if(outcome==="diverged"){const adopted=await adoptFleetUnitV1(client,root,job);countSkipV1(workspace,"diverged");event("remote-skip",adopted?"diverged: the fleet holds other bytes for this key, its copy replaces the local entry":"diverged: the fleet holds other bytes for this key and its copy could not be fetched");}
+   else if(outcome==="refused"){countSkipV1(workspace,"upload-refused");event("remote-skip","upload-refused: the fleet cache will never take these bytes");}
+   else if(outcome==="gone"){countSkipV1(workspace,"upload-entry-gone");event("remote-skip","upload-entry-gone: the local entry or one of its objects was removed before the upload");}
+   else{countSkipV1(workspace,"upload-failed");event("remote-skip","upload-failed");}
+   return false;
+  })().catch(()=>false);
+  running.add(task);void task.finally(()=>{running.delete(task);inFlight.delete(name);});
+ };
  try{
   for(;;){
    if(options.signal?.aborted)break;
-   let names:string[]=[];try{names=readdirSync(spool).filter(name=>name.endsWith(".json")).sort();}catch{}
-   if(names.length===0){if(Date.now()-quietSince>=idle)break;await new Promise(done=>setTimeout(done,fleet.uploader.pollMilliseconds));continue;}
-   const due=names.filter(name=>{
-    let modified=0;try{modified=statSync(join(spool,name)).mtimeMs;}catch{return false;}
-    let known=dueAt.get(name);if(known===undefined||known.modified!==modified){let at=0;try{at=(JSON.parse(readFileSync(join(spool,name),"utf8")) as SpoolJobV1).notBeforeMs??0;}catch{}known={modified,at};dueAt.set(name,known);}
-    return known.at<=Date.now();
-   });
-   if(dueAt.size>names.length+256){const present=new Set(names);for(const name of dueAt.keys())if(!present.has(name))dueAt.delete(name);}
-   if(due.length===0){if(options.idleMilliseconds===0||(!client.usable()&&Date.now()-quietSince>=idle))break;await new Promise(done=>setTimeout(done,fleet.uploader.pollMilliseconds));continue;}
-   names=due;const worked=result.uploaded+result.failed+result.dropped+(result.retried??0);
-   for(const name of names.slice(0,Math.max(0,limits.maximumUploadJobs-running.size))){const task=(async():Promise<boolean>=>{
-    const path=join(spool,name);let job:SpoolJobV1;
-    try{job=JSON.parse(readFileSync(path,"utf8")) as SpoolJobV1;}catch{rmSync(path,{force:true});result.dropped++;return false;}
-    rmSync(path,{force:true});
-    const started=Date.now(),event=(kind:"remote-publish"|"remote-skip",reason:string)=>emitUnitEventV1(root,{lane:"uploader",kind,crate:job.crate,key:job.key,milliseconds:Date.now()-started,waitedMs:Math.max(0,started-job.queuedMs),reason});
-    if(started-job.queuedMs>fleet.uploader.maximumJobAgeMilliseconds){result.dropped++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,client.usable()?"upload-expired":"upload-expired-"+client.state());event("remote-skip","upload-expired");if(job.claimed)await client.release(job.key,job.owner);return false;}
-    if(!client.usable()){if(enqueueUploadV1(root,{...job,claimed:false,notBeforeMs:Date.now()+fleet.uploader.retryBackoffMilliseconds})){result.deferred=(result.deferred??0)+1;event("remote-skip","upload-deferred: "+client.state());}else{result.dropped++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"spool-full");event("remote-skip","spool-full");}if(job.claimed)await client.release(job.key,job.owner);return false;}
-    if(job.hint!==undefined){
-     const named=await publishRootHintByKeyV1(client,job.hint.neutralKey,job.hint.kinds);
-     if(named===undefined){if(enqueueUploadV1(root,{...job,notBeforeMs:Date.now()+fleet.uploader.retryBackoffMilliseconds})){result.deferred=(result.deferred??0)+1;event("remote-skip","root-hint-deferred");}else{result.dropped++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"spool-full");}return false;}
-     if(!job.hint.kinds.every(kind=>(named as readonly string[]).includes(kind))||named.length!==job.hint.kinds.length){result.dropped++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"root-key-conflict");event("remote-skip","root-key-conflict: the fleet names other directories for this unit");return false;}
+   if(options.idleMilliseconds!==0){const named=identity();if(named!==undefined&&named!==settings.identity)break;}
+   while(running.size<limits.maximumUploadJobs&&queue.length>0){const name=queue.shift()!;queued.delete(name);start(name);}
+   if(running.size>=limits.maximumUploadJobs){await Promise.race([...running]);continue;}
+   if(queue.length===0&&Date.now()-listedAt>=(running.size>0?policy.pollMilliseconds*5:0)){
+    const files=refill();
+    if(files>0||running.size>0)quietSince=Date.now();
+    if(queue.length>0)continue;
+    if(running.size===0){
+     if(files===0){if(Date.now()-quietSince>=idle)break;await pause(policy.pollMilliseconds);continue;}
+     if(idle===0)break;
+     await pause(policy.waitingPollMilliseconds);continue;
     }
-    if(job.offer===true&&await client.hasResult(job.key)===true){markOfferedV1(root,job.key);result.dropped++;event("remote-skip","already-stored");return true;}
-    const outcome=await Promise.race([uploadUnitV1(client,root,job),new Promise<"retry">(done=>{const timer=setTimeout(()=>done("retry"),fleet.uploader.jobMilliseconds);timer.unref?.();})]),ok=outcome===true;
-    if(outcome==="stale"){
-     result.failed++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"stale-on-arrival");event("remote-skip","stale-on-arrival: the fleet cache refused the unit, its sources differ from the synchronized tree");
-     if(job.claimed)await client.release(job.key,job.owner);
-    }else if(outcome==="diverged"){
-     const adopted=await adoptFleetUnitV1(client,root,job);
-     result.failed++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"diverged");event("remote-skip",adopted?"diverged: the fleet holds other bytes for this key, its copy replaces the local entry":"diverged: the fleet holds other bytes for this key and its copy could not be fetched");
-     if(job.claimed)await client.release(job.key,job.owner);
-    }else if(ok){markOfferedV1(root,job.key);result.uploaded++;countUnitV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"stored");event("remote-publish","uploaded");}
-    else{
-     const refused=outcome==="retry"&&!client.usable(),again=outcome!=="retry"?undefined:refused?{...job,claimed:false,notBeforeMs:Date.now()+fleet.uploader.retryBackoffMilliseconds}:retryJobV1(job,Date.now()),queued=again!==undefined&&enqueueUploadV1(root,again);
-     if(queued){if(refused){result.deferred=(result.deferred??0)+1;event("remote-skip","upload-deferred: "+client.state());}else{result.retried=(result.retried??0)+1;event("remote-skip","upload-retry "+again!.attempts+"/"+fleet.uploader.maximumAttempts);}}
-     else{result.failed++;countSkipV1(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT,"upload-failed");event("remote-skip",outcome==="retry"?"upload-failed after "+((job.attempts??0)+1)+" attempts":"upload-failed");}
-     if(job.claimed)await client.release(job.key,job.owner);
-     if(queued)return false;
-    }
-    {const spilled=newestEntryV1(root,job.localKey);if(spilled)dropSpillObjectsV1(root,spilled);}
-    return ok;
-   })().catch(()=>false);running.add(task);void task.finally(()=>{running.delete(task);});}
-   if(running.size>0)await Promise.race([...running,new Promise(done=>setTimeout(done,fleet.uploader.pollMilliseconds))]);
-   if(result.uploaded+result.failed+result.dropped+(result.retried??0)>worked)quietSince=Date.now();
+   }
+   await Promise.race([...running,pause(policy.pollMilliseconds)]);
   }
  }finally{
   await Promise.allSettled([...running]);
-  const workspace=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT;
   if(workspace)await publishKeySamplesV1(client,{root,workspace});
-  lock.release();if(workspace)writeBuildCountersV1(workspace);
+  lock.release();if(workspace){noteSpoolV1(workspace,spoolLengthV1(root),spoolBoundV1(root),true);writeBuildCountersV1(workspace);}
  }
  return result;
 }
-

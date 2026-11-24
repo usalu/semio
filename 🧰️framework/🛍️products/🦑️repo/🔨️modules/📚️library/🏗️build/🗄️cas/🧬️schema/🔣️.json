@@ -21,7 +21,7 @@
     "Policy": {
       "const": {
         "version": 1,
-        "capBytes": 103079215104,
+        "capBytes": 274877906944,
         "minimumCapBytes": 1073741824,
         "sizing": {
           "transientBytes": 4294967296,
@@ -30,14 +30,19 @@
           "roleTtlMs": 604800000,
           "defaultRole": "builder",
           "roles": [
-            {"id": "worker", "sharePercent": 3, "releases": 0, "server": false},
-            {"id": "builder", "sharePercent": 6, "releases": 1, "server": false},
-            {"id": "cache-host", "sharePercent": 6, "releases": 2, "server": true}
+            {"id": "worker", "sharePercent": 3, "freePercent": 0, "releases": 0, "server": false, "reservePercent": 4, "reserveFloorBytes": 8589934592},
+            {"id": "builder", "sharePercent": 6, "freePercent": 0, "releases": 1, "server": false, "reservePercent": 6, "reserveFloorBytes": 17179869184},
+            {"id": "cache-host", "sharePercent": 6, "freePercent": 70, "releases": 2, "server": true, "reservePercent": 8, "reserveFloorBytes": 77309411328}
           ]
         },
         "enforceTickMilliseconds": 30000,
         "incrementBytes": 2147483648,
         "transientLeaseMs": 1800000,
+        "transientGraceMs": 60000,
+        "requesterLeaseMs": 600000,
+        "transientSegmentBytes": 8388608,
+        "sweepEveryMs": 60000,
+        "sweepStepBytes": 4294967296,
         "holderTtlMs": 86400000,
         "holderRenewMs": 900000,
         "holderCacheMs": 30000,
@@ -186,6 +191,10 @@
           "en": "Another collector already runs on this cache store.",
           "de": "Auf diesem Cache-Speicher läuft bereits ein Sammler."
         },
+        "lockedBy": {
+          "en": "Another collector already runs on this cache store: process {pid} holds the lock, last progress {beatSeconds} s ago. It collects continuously; try again or let it finish.",
+          "de": "Auf diesem Cache-Speicher läuft bereits ein Sammler: Prozess {pid} hält die Sperre, letzter Fortschritt vor {beatSeconds} s. Er sammelt fortlaufend; später erneut versuchen oder ihn beenden lassen."
+        },
         "partial": {
           "en": ", cancelled before completion",
           "de": ", vor dem Ende abgebrochen"
@@ -209,6 +218,14 @@
         "statusCollection": {
           "en": "Last collection {age} min ago left {gib} GiB.",
           "de": "Letzte Sammlung vor {age} Min. ließ {gib} GiB übrig."
+        },
+        "statusCensus": {
+          "en": "Census of the last complete scan, {age} s old: pinned {pinned} GiB, held {held} GiB, leased {leased} GiB, linked {linked} GiB, expired {expired} GiB, young {young} GiB, unreferenced {unreferenced} GiB.",
+          "de": "Zählung des letzten vollständigen Durchgangs, {age} s alt: gepinnt {pinned} GiB, gehalten {held} GiB, geleast {leased} GiB, verlinkt {linked} GiB, abgelaufen {expired} GiB, jung {young} GiB, unreferenziert {unreferenced} GiB."
+        },
+        "statusNoCensus": {
+          "en": "No census yet: the next sweep of the store writes it (status never walks the store).",
+          "de": "Noch keine Zählung: der nächste Durchgang des Speichers schreibt sie (der Status durchläuft den Speicher nie)."
         },
         "statusNoCollection": {
           "en": "No finished collection recorded.",
@@ -241,6 +258,22 @@
         "doneUnreferenced": {
           "en": "Unreferenced collection removed {objects} objects and freed {gib} GiB; held entries evicted: 0; {kept} objects kept{partial}.",
           "de": "Die Sammlung unreferenzierter Objekte entfernte {objects} Objekte und gab {gib} GiB frei; verdrängte gehaltene Einträge: 0; {kept} Objekte blieben{partial}."
+        },
+        "capRefusedDetail": {
+          "en": "The store holds {usedGib} GiB of its {capGib} GiB cap in force (role {role}, {freeGib} GiB free on the partition, hard reserve {reserveGib} GiB); largest holders: {holders}.",
+          "de": "Der Speicher hält {usedGib} GiB seiner wirksamen Grenze von {capGib} GiB (Rolle {role}, {freeGib} GiB frei auf der Partition, harte Reserve {reserveGib} GiB); größte Halter: {holders}."
+        },
+        "statusReserve": {
+          "en": "Hard free-space reserve {reserveGib} GiB for role {role} (larger of {percent}% of the partition and {floorGib} GiB): {freeGib} GiB free, {distanceGib} GiB above it; the store never grows into it.",
+          "de": "Harte Freiraum-Reserve {reserveGib} GiB für Rolle {role} (größer von {percent} % der Partition und {floorGib} GiB): {freeGib} GiB frei, {distanceGib} GiB darüber; der Speicher wächst nie hinein."
+        },
+        "statusReserveBreached": {
+          "en": "Hard free-space reserve {reserveGib} GiB for role {role} (larger of {percent}% of the partition and {floorGib} GiB): only {freeGib} GiB free, {distanceGib} GiB BELOW it; the store collects expired inputs, then unreferenced data, until the reserve is back and refuses writes meanwhile.",
+          "de": "Harte Freiraum-Reserve {reserveGib} GiB für Rolle {role} (größer von {percent} % der Partition und {floorGib} GiB): nur {freeGib} GiB frei, {distanceGib} GiB UNTER der Reserve; der Speicher bereinigt abgelaufene Eingaben, dann unreferenzierte Daten, bis die Reserve wieder erreicht ist, und lehnt solange Schreiben ab."
+        },
+        "reserveRefused": {
+          "en": "The cache store would grow into its free-space reserve ({freeGib} GiB free, {reserveGib} GiB reserved for role {role}); this write is refused and the caller carries on without the cache.",
+          "de": "Der Cache-Speicher würde in seine Freiraum-Reserve hineinwachsen ({freeGib} GiB frei, {reserveGib} GiB reserviert für Rolle {role}); dieses Schreiben wird abgelehnt und der Aufrufer arbeitet ohne Cache weiter."
         },
         "capRefused": {
           "en": "The cache store is over its cap ({usedGib} GiB of {capGib} GiB) and the collection freed too little in time; this write is refused and the caller carries on without the cache.",

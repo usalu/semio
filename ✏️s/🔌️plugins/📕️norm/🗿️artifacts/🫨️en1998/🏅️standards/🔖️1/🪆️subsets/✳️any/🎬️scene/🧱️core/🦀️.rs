@@ -24,21 +24,21 @@ pub mod isolation;
 
 pub use model::En1998Snapshot;
 pub use norm::CheckReport;
-pub use scene::projection::{project_whole, Fragment, Kit, KitDoc, Part, ProjectionContext, SceneKit};
+pub use scene::projection::{project_parts, Fragment, Kit, KitDoc, Part, ProjectionContext, SceneKit};
 pub use scene::projection_kit;
 pub use scene::tessellation::Lod;
 pub use scene::{live_scene, EntityRef, LocalizedCopy, SceneRevision, StructuralScene};
 pub use std::collections::BTreeMap;
 
-/// 🎬️ The complete scene of one document revision: deterministic, locale-free, validated by the golden and law tests; the same fragments the live scene assembles per entity.
+/// 🎬️ The complete scene of one document revision: deterministic, locale-free, validated by the golden and law tests; the same fragments the live scene assembles per entity, in the same order (several rows draw the entities of their children, so the order of the document ids does not sort them).
 pub fn project(input: &SceneInput) -> StructuralScene {
-    project_whole::<En1998Kit>(&KitDoc { snapshot: input.document, placements: input.placements, view: scene::projection::ViewOptions::none() }, input.report, input.revision.clone())
+    project_parts::<En1998Kit>(&KitDoc { snapshot: input.document, placements: input.placements, view: scene::projection::ViewOptions::none() }, input.report, input.revision.clone())
 }
 
-/// 🧩️ The part of the scene of `input` that belongs to `part`; `input.report` may be restricted to the rows the part reads.
+/// 🧩️ The part of the scene of `input` that belongs to `part`; `input.report` may be restricted to the rows the part reads. The global part owns no row, so it lists no grips and skips the pass that derives them.
 pub fn fragment(input: &SceneInput, part: Part<'_>) -> Fragment {
     let layout = Layout::of(input.document, input.placements);
-    let grips = handles::index(&handles::all(input.document, &layout));
+    let grips = if matches!(part, Part::Global) { handles::Index::default() } else { handles::index(&handles::all(input.document, &layout)) };
     let site = response::site(input.document);
     let mut out = Out::scoped(part);
     buildings::project(input, &layout, &site, &grips, &mut out);

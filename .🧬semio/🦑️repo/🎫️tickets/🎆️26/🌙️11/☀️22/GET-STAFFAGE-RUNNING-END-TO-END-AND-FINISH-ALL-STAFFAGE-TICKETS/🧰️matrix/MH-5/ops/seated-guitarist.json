@@ -1,0 +1,183 @@
+[
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "shirt",
+  "bone": "torso"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "shirt",
+  "bone": "torso",
+  "view": "plan"
+ },
+ {
+  "op": "sync",
+  "scale": "200",
+  "id": "shirt",
+  "bone": "torso"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "front",
+  "id": "shirt",
+  "bone": "torso",
+  "why": "result of the candidate mr-front-extrude-plan of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0712,
+     0.1689
+    ],
+    [
+     0.1108,
+     0.1597
+    ],
+    [
+     0.3056,
+     0.176
+    ],
+    [
+     0.4323,
+     0.2017
+    ],
+    [
+     0.4877,
+     0.0935
+    ],
+    [
+     0.4877,
+     -0.0939
+    ],
+    [
+     0.4323,
+     -0.202
+    ],
+    [
+     0.3079,
+     -0.1763
+    ],
+    [
+     0.1155,
+     -0.16
+    ],
+    [
+     -0.0698,
+     -0.1693
+    ],
+    [
+     -0.0712,
+     -0.1596
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "v",
+    "z0": -0.1048,
+    "z1": 0.1186,
+    "zTip": [
+     -0.0851,
+     0.08
+    ]
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "plan",
+  "id": "shirt",
+  "bone": "torso",
+  "why": "result of the candidate mr-front-extrude-plan of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0712,
+     -0.0993
+    ],
+    [
+     -0.0628,
+     -0.1125
+    ],
+    [
+     0.3069,
+     -0.1253
+    ],
+    [
+     0.4255,
+     -0.0706
+    ],
+    [
+     0.4853,
+     -0.0596
+    ],
+    [
+     0.4877,
+     0.0744
+    ],
+    [
+     0.3042,
+     0.1231
+    ],
+    [
+     0.0991,
+     0.111
+    ],
+    [
+     -0.0707,
+     0.1189
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.202,
+    "z1": 0.2017,
+    "zTip": [
+     -0.202,
+     0.2017
+    ]
+   }
+  }
+ }
+]

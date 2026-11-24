@@ -202,7 +202,7 @@ export interface En1990Placement {
 
 export interface En1990FactorOverride {
   id: string;
-  factor: string;
+  factor: "gamma" | "psi0" | "psi1" | "psi2" | "xi" | "k_fi";
   target: string;
   value: number;
   justification: string;
@@ -255,7 +255,7 @@ export const parseEn1990ReliabilityAnalysis: NormWireReader<En1990ReliabilityAna
 export const parseEn1990TestDistribution: NormWireReader<En1990TestDistribution> = normWireLiteral("normal", "lognormal");
 export const parseEn1990TestSeries: NormWireReader<En1990TestSeries> = normWireObject<En1990TestSeries>({ id: normWireRequired(normWireString), quantity: normWireRequired(normWireString), distribution: normWireRequired(normWireRef(() => parseEn1990TestDistribution)), sampleSize: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), mean: normWireRequired(normWireNumber), stdDev: normWireRequired(normWireNumber), variationKnown: normWireRequired(normWireNumber), conversionFactor: normWireRequired(normWireNumber), required: normWireRequired(normWireNumber), pairs: normWireRequired(normWireString), theoryVariation: normWireRequired(normWireNumber), theoryMean: normWireRequired(normWireNumber) });
 export const parseEn1990Placement: NormWireReader<En1990Placement> = normWireObject<En1990Placement>({ id: normWireRequired(normWireString), x: normWireRequired(normWireNumber), y: normWireRequired(normWireNumber), z: normWireRequired(normWireNumber), yaw: normWireRequired(normWireNumber) });
-export const parseEn1990FactorOverride: NormWireReader<En1990FactorOverride> = normWireObject<En1990FactorOverride>({ id: normWireRequired(normWireString), factor: normWireRequired(normWireString), target: normWireRequired(normWireString), value: normWireRequired(normWireNumber), justification: normWireRequired(normWireString) });
+export const parseEn1990FactorOverride: NormWireReader<En1990FactorOverride> = normWireObject<En1990FactorOverride>({ id: normWireRequired(normWireString), factor: normWireRequired(normWireLiteral("gamma", "psi0", "psi1", "psi2", "xi", "k_fi")), target: normWireRequired(normWireString), value: normWireRequired(normWireNumber), justification: normWireRequired(normWireString) });
 export const parseEn1990TrafficGroup: NormWireReader<En1990TrafficGroup> = normWireObject<En1990TrafficGroup>({ id: normWireRequired(normWireString), group: normWireRequired(normWireLiteral("GR1A", "GR1B", "GR2", "GR3", "GR4", "GR5", "GR6")), variableId: normWireRequired(normWireString) });
 export const parseEn1990AnnexChoice: NormWireReader<En1990AnnexChoice> = normWireLiteral("En", "De");
 export const parseEn1990ImportanceClass: NormWireReader<En1990ImportanceClass> = normWireLiteral("I", "II", "III", "IV");

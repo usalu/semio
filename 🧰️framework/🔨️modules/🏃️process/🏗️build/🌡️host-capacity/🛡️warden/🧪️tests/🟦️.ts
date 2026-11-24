@@ -3,7 +3,7 @@
  * @see ./🧫️fixtures/🔣️.json
  * @see ../🧬️schema/🔣️.json */
 import {afterAll,expect,test} from "bun:test";
-import {mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync,existsSync} from "node:fs";
+import {mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,symlinkSync,writeFileSync,existsSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
@@ -13,8 +13,9 @@ import buildPolicy from "../../../../../../🛍️products/🦑️repo/🔨️mo
 import {readHostCapacityPolicyV1} from "../../📏️decision/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json";
-import {HOST_WARDEN_POLICY_V1,HOST_WARDEN_TABLES_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,formatHostWardenAlarmV1,isHostWardenV1,parseWardenElapsedV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,wardenSubjectIdV1,type HostWardenHostV1,type HostWardenKindV1,type HostWardenPolicyV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
-import {currentHostWardenMirrorV1,defaultHostWardenPortsV1,ensureHostWardenV1,hostWardenCodeDigestV1,readHostWardenCancelV1,readHostWardenCancelsSinceV1,readHostWardenMirrorV1,readHostWardenStateV1,runHostWardenLoopV1,wardenProcessStartV1,type HostWardenPortsV1} from "../🔁️loop/🟦️.ts";
+import {repoPlaywrightBrowsersPath} from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
+import {HOST_WARDEN_ANCHORS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_TABLES_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,discoverWardenWorkspacesV1,expandWardenPatternV1,headroomHostWardenV1,parseWardenSwapV1,wardenBrowsersV1,formatHostWardenAlarmV1,isHostWardenV1,triggerHostWardenV1,parseWardenElapsedV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,wardenSubjectIdV1,type HostWardenHostV1,type HostWardenKindV1,type HostWardenPolicyV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
+import {currentHostWardenMirrorV1,defaultHostWardenPortsV1,readWardenSwapV1,ensureHostWardenV1,hostWardenCodeDigestV1,readHostWardenCancelV1,readHostWardenCancelsSinceV1,readHostWardenMirrorV1,readHostWardenStateV1,runHostWardenLoopV1,wardenProcessStartV1,type HostWardenPortsV1} from "../🔁️loop/🟦️.ts";
 
 const python=testPythonV1()??Bun.which("python3")??"python3",oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url)),decoder=new TextDecoder();
 const model=(mode:string):any=>{const done=Bun.spawnSync([python,"-I",oracle,mode]);if(done.exitCode!==0)throw Error(decoder.decode(done.stderr));return JSON.parse(decoder.decode(done.stdout));};
@@ -27,8 +28,9 @@ const mutable=<T>(value:unknown):T=>value as T;
 
 test("the schema is closed and every kind names a pattern, a rank, actions and a source that exists in the repository",()=>{
  const kinds=schema.definitions.Kinds.const;
- expect(kinds.map(kind=>kind.name)).toEqual(["remote-unit","local-unit","pool-child","farm-worker","warm-deriver","heavy-question","test","slice-worker","stage"]);
- expect(kinds.map(kind=>kind.rank)).toEqual([10,20,25,30,35,40,50,60,90]);
+ expect(kinds.map(kind=>kind.name)).toEqual(["remote-unit","local-unit","pool-child","farm-worker","warm-deriver","heavy-question","browser","test","test-binary","slice-worker","cargo","stage"]);
+ expect(kinds.map(kind=>kind.rank)).toEqual([10,20,25,30,35,40,45,50,55,60,65,90]);
+ expect(kinds.map(kind=>kind.rank),"kinds are listed by ascending cost").toEqual([...kinds.map(kind=>kind.rank)].sort((a,b)=>a-b));
  for(const kind of kinds){
   expect(existsSync(join(repoRoot,kind.source)),`${kind.name}: ${kind.source}`).toBe(true);
   if(!kind.pattern.startsWith("^"))expect(kind.source.includes(kind.pattern),`${kind.name} pattern is a fragment of its source`).toBe(true);
@@ -37,8 +39,14 @@ test("the schema is closed and every kind names a pattern, a rank, actions and a
  expect(kinds.find(kind=>kind.name==="stage")).toMatchObject({actions:["cancel"],signal:"SIGTERM",scope:"tree"});
  expect(kinds.find(kind=>kind.name==="pool-child")).toMatchObject({rank:25,actions:["suspend","cancel"],signal:"SIGKILL",scope:"tree"});
  expect(kinds.find(kind=>kind.name==="warm-deriver")).toMatchObject({rank:35,actions:["suspend","cancel"],signal:"SIGKILL",scope:"tree"});
- expect(HOST_WARDEN_POLICY_V1).toMatchObject({guardBasisPoints:1000,guardMinimumMegabytes:1024,guardMaximumMegabytes:4096,dangerBasisPoints:500,dangerMinimumMegabytes:512,dangerMaximumMegabytes:2048,resumeBasisPoints:1500,swapActiveMegabytesPerSecond:16,calmTicks:3,suspendMaximumSeconds:120,maximumSuspendsPerTick:4,maximumCancelsPerTick:2,keepRunning:1,calmMilliseconds:2000,tightMilliseconds:500,idleMilliseconds:600000,codeCheckMilliseconds:60000,lastAlarms:8,alarmsMaximumBytes:1048576,cancelRecordMaximumAgeMilliseconds:3600000,stateFile:"state.json",lockFile:"lock.json",alarmsFile:"alarms.jsonl",modeFile:"mode",protectFile:"protect.json",cancelledDirectory:"cancelled",directory:"warden",logFile:"warden.log",logMaximumBytes:4194304,defaultMode:"enforce",ensureMilliseconds:15000});
- for(const pattern of[...schema.definitions.Roots.const,...schema.definitions.Never.const])expect(()=>new RegExp(pattern,"u")).not.toThrow();
+ expect(kinds.find(kind=>kind.name==="browser")).toMatchObject({rank:45,actions:["suspend","cancel"],signal:"SIGKILL",scope:"tree"});
+ expect(kinds.find(kind=>kind.name==="test-binary")).toMatchObject({rank:55,actions:["suspend","cancel"],signal:"SIGKILL",scope:"tree"});
+ expect(kinds.find(kind=>kind.name==="cargo")).toMatchObject({rank:65,actions:["cancel"],signal:"SIGTERM",scope:"tree"});
+ expect(Math.min(...kinds.filter(kind=>["browser","test-binary","cargo"].includes(kind.name)).map(kind=>kind.rank)),"new kinds cost more to redo than a compile unit").toBeGreaterThan(kinds.find(kind=>kind.name==="local-unit")!.rank);
+ expect(kinds.find(kind=>kind.name==="cargo")!.rank,"cancelling cargo loses every unit of its tree, so it ranks after its units and its test binaries").toBeGreaterThan(kinds.find(kind=>kind.name==="test-binary")!.rank);
+ expect(HOST_WARDEN_POLICY_V1).toMatchObject({guardBasisPoints:1000,guardMinimumMegabytes:1024,guardMaximumMegabytes:4096,dangerBasisPoints:500,dangerMinimumMegabytes:512,dangerMaximumMegabytes:2048,resumeBasisPoints:1500,swapActiveMegabytesPerSecond:16,swapDiskReserveMegabytes:4096,swapRoomMaximumBasisPoints:5000,headroomGuardBasisPoints:2500,headroomGuardMinimumMegabytes:2048,headroomGuardMaximumMegabytes:8192,headroomDangerBasisPoints:1250,headroomDangerMinimumMegabytes:1024,headroomDangerMaximumMegabytes:4096,calmTicks:3,suspendMaximumSeconds:120,maximumSuspendsPerTick:4,maximumCancelsPerTick:2,keepRunning:1,calmMilliseconds:2000,tightMilliseconds:500,idleMilliseconds:600000,codeCheckMilliseconds:60000,lastAlarms:8,alarmsMaximumBytes:1048576,cancelRecordMaximumAgeMilliseconds:3600000,stateFile:"state.json",lockFile:"lock.json",alarmsFile:"alarms.jsonl",modeFile:"mode",protectFile:"protect.json",cancelledDirectory:"cancelled",directory:"warden",logFile:"warden.log",logMaximumBytes:4194304,defaultMode:"enforce",ensureMilliseconds:15000});
+ for(const pattern of[...schema.definitions.Roots.const,...schema.definitions.Never.const,...schema.definitions.Identities.const])expect(()=>new RegExp(pattern,"u")).not.toThrow();
+ for(const pattern of[...schema.definitions.Identities.const,...kinds.map(kind=>kind.pattern)])expect(()=>new RegExp(expandWardenPatternV1(pattern,["/w/s"])!,"u"),pattern).not.toThrow();
 });
 
 test("every decision equals the independent Python oracle and the expectation stored in the fixture",()=>{
@@ -59,7 +67,7 @@ test("every decision equals the independent Python oracle and the expectation st
 
 test("the ladder lines clamp on small and large hosts as the law says",()=>{
  const none:HostWardenSubjectV1[]=[],calm={level:"calm" as const,calmTicks:0};
- const lines=(total:number)=>{const d=decideHostWardenV1(HOST_WARDEN_POLICY_V1,{totalMegabytes:total,availableMegabytes:total,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,compressedMegabytes:0,pressure:"normal"},none,calm);return[d.guardMegabytes,d.dangerMegabytes,d.resumeMegabytes];};
+ const lines=(total:number)=>{const d=decideHostWardenV1(HOST_WARDEN_POLICY_V1,{totalMegabytes:total,availableMegabytes:total,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,compressedMegabytes:0,pressure:"normal",swapFreeMegabytes:null,swapVolumeFreeMegabytes:null},none,calm);return[d.guardMegabytes,d.dangerMegabytes,d.resumeMegabytes];};
  expect(lines(4096)).toEqual([1024,512,1024]);
  expect(lines(16384)).toEqual([1638,819,2457]);
  expect(lines(131072)).toEqual([4096,2048,19660]);
@@ -123,15 +131,35 @@ test("a signal plan reaches the tree parent first, leaves out the warden itself,
 });
 
 test("an alarm names the action, the process, its owner, its megabytes and the host numbers in English and German",()=>{
- const host:HostWardenHostV1={totalMegabytes:16384,availableMegabytes:1500,swapUsedMegabytes:100,swapOutMegabytesPerSecond:20,compressedMegabytes:2000,pressure:"warn"};
- const alarm=buildHostWardenAlarmV1({atMs:1,observed:false,level:"guard",action:{action:"suspend",id:"7.abcd",reason:"guard"},subject:{pid:7,kind:"local-unit",megabytes:683,owner:"bun repo build"},host,decision:{guardMegabytes:1638,dangerMegabytes:819}});
+ const host:HostWardenHostV1={totalMegabytes:16384,availableMegabytes:1500,swapUsedMegabytes:100,swapOutMegabytesPerSecond:20,compressedMegabytes:2000,pressure:"warn",swapFreeMegabytes:null,swapVolumeFreeMegabytes:null};
+ const alarm=buildHostWardenAlarmV1({atMs:1,observed:false,level:"guard",action:{action:"suspend",id:"7.abcd",reason:"guard"},subject:{pid:7,kind:"local-unit",megabytes:683,owner:"bun repo build"},host,decision:{guardMegabytes:1638,dangerMegabytes:819,headroomMegabytes:null,headroomGuardMegabytes:4096,headroomDangerMegabytes:2048}});
  expect(alarm.text.en).toBe("[warden] suspended local-unit pid 7 (bun repo build, 683 MB): available memory is below the guard line; host 1500 MB available (guard 1638 MB, danger 819 MB), swap 20 MB/s, pressure warn");
  expect(alarm.text.de).toBe("[Wächter] angehalten local-unit pid 7 (bun repo build, 683 MB): der verfügbare Speicher liegt unter der Wachlinie; Host 1500 MB verfügbar (Wache 1638 MB, Gefahr 819 MB), Swap 20 MB/s, Druck Warnung");
  expect(isHostWardenV1("Alarm",alarm)).toBe(true);
- const observed=buildHostWardenAlarmV1({atMs:1,observed:true,level:"danger",action:{action:"cancel",id:"7.abcd",reason:"danger"},subject:{pid:7,kind:"stage",megabytes:1},host:{...host,swapOutMegabytesPerSecond:null,pressure:"critical"},decision:{guardMegabytes:1,dangerMegabytes:1}});
+ const observed=buildHostWardenAlarmV1({atMs:1,observed:true,level:"danger",action:{action:"cancel",id:"7.abcd",reason:"danger"},subject:{pid:7,kind:"stage",megabytes:1},host:{...host,swapOutMegabytesPerSecond:null,pressure:"critical"},decision:{guardMegabytes:1,dangerMegabytes:1,headroomMegabytes:null,headroomGuardMegabytes:1,headroomDangerMegabytes:1}});
  expect(observed.observed).toBe(true);expect(observed.owner).toBe("");
  expect(formatHostWardenAlarmV1("en",observed)).toContain("swap unknown, pressure critical [observe mode: nothing was signalled]");
  expect(formatHostWardenAlarmV1("de",observed)).toContain("Swap unbekannt, Druck kritisch [Beobachtungsmodus: nichts wurde signalisiert]");
+});
+
+test("the alarm text names the trigger that decided the level, and agrees with the level of the decision",()=>{
+ const base:HostWardenHostV1={totalMegabytes:16384,availableMegabytes:2000,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,compressedMegabytes:null,pressure:"normal",swapFreeMegabytes:null,swapVolumeFreeMegabytes:null};
+ const words=(host:HostWardenHostV1,level:"guard"|"danger")=>{
+  const decision=decideHostWardenV1(HOST_WARDEN_POLICY_V1,host,[],{level:"calm",calmTicks:0});
+  expect(decision.level).toBe(level);
+  const alarm=buildHostWardenAlarmV1({atMs:1,observed:false,level,action:{action:"suspend",id:"7.abcd",reason:level},subject:{pid:7,kind:"stage",megabytes:1,owner:"o"},host,decision});
+  return{trigger:triggerHostWardenV1(level,{availableMegabytes:host.availableMegabytes,guardMegabytes:decision.guardMegabytes,dangerMegabytes:decision.dangerMegabytes,pressure:host.pressure,headroomMegabytes:decision.headroomMegabytes,headroomGuardMegabytes:decision.headroomGuardMegabytes,headroomDangerMegabytes:decision.headroomDangerMegabytes}),en:alarm.text.en,de:alarm.text.de};
+ };
+ const critical=words({...base,availableMegabytes:2000,pressure:"critical"},"danger");
+ expect(critical.trigger).toBe("pressure");expect(critical.en).toContain("memory pressure is critical");expect(critical.en).not.toContain("below the danger line");expect(critical.de).toContain("der Speicherdruck ist kritisch");
+ const low=words({...base,availableMegabytes:500,pressure:"critical"},"danger");
+ expect(low.trigger).toBe("available");expect(low.en).toContain("available memory is below the danger line");expect(low.de).toContain("unter der Gefahrenlinie");
+ const warn=words({...base,availableMegabytes:2000,pressure:"warn"},"guard");
+ expect(warn.trigger).toBe("pressure");expect(warn.en).toContain("memory pressure is warn");expect(warn.de).toContain("der Speicherdruck ist Warnung");
+ const swap=words({...base,availableMegabytes:2000,swapOutMegabytesPerSecond:50},"guard");
+ expect(swap.trigger).toBe("swap");expect(swap.en).toContain("swap-out rate is high");expect(swap.de).toContain("Swap-Auslagerungsrate");
+ const guard=words({...base,availableMegabytes:1000},"guard");
+ expect(guard.trigger).toBe("available");expect(guard.en).toContain("below the guard line");
 });
 
 test("a third-party schema validator (python jsonschema, when installed) agrees with the validator of the repository on every record of the fixtures",()=>{
@@ -156,7 +184,7 @@ const kind=(name:string,rank:number,tag:string):HostWardenKindV1=>({name,rank,pa
 const testTables:HostWardenTablesV1={roots:[`warden-test-${token}`],never:[],kinds:[kind("cheap",10,"a"),kind("middle",20,"b"),kind("dear",30,"c")]};
 const startChild=(tag:string)=>{const child=Bun.spawn([process.execPath,"-e",hog(tag)],{stdout:"ignore",stderr:"ignore",stdin:"ignore"});children.push(child);return child;};
 const stateOf=(pid:number):string=>{const done=Bun.spawnSync(["ps","-o","state=","-p",String(pid)]);return decoder.decode(done.stdout).trim();};
-const host=(available:number,pressure:"normal"|"warn"|"critical"="normal",swap:number|null=0):HostWardenHostV1=>({totalMegabytes:4096,availableMegabytes:available,swapUsedMegabytes:0,swapOutMegabytesPerSecond:swap,compressedMegabytes:0,pressure});
+const host=(available:number,pressure:"normal"|"warn"|"critical"="normal",swap:number|null=0):HostWardenHostV1=>({totalMegabytes:4096,availableMegabytes:available,swapUsedMegabytes:0,swapOutMegabytesPerSecond:swap,compressedMegabytes:0,pressure,swapFreeMegabytes:null,swapVolumeFreeMegabytes:null});
 const realTable=async():Promise<readonly HostWardenRowV1[]>=>{const done=Bun.spawn(["ps","-A","-ww","-o","pid=,ppid=,pgid=,rss=,state=,etime=,lstart=,args="],{stdout:"pipe",env:{...process.env,LC_ALL:"en_US.UTF-8"}});return parseWardenProcessTableV1(await new Response(done.stdout).text());};
 const quickPolicy:HostWardenPolicyV1={...HOST_WARDEN_POLICY_V1,calmMilliseconds:1,tightMilliseconds:1};
 const scripted=(directory:string,phases:readonly HostWardenHostV1[],written:string[],afterTick:(tick:number)=>Promise<void>=async()=>undefined,mode:()=>"observe"|"enforce"=()=>"enforce"):HostWardenPortsV1=>{
@@ -224,7 +252,7 @@ test("MOUNTED: a fresh loop resumes what a dead predecessor left suspended and t
  expect(stateOf(d.pid).startsWith("T")).toBe(true);
  const startD=wardenProcessStartV1(d.pid),rows=await realTable(),rowD=rows.find(row=>row.pid===d.pid)!;
  expect(rowD.start).toBe(startD);
- const state={version:1,atMs:Date.now()-60000,pid:999999,mode:"enforce",code:"dead",host:host(3000),level:"guard",hold:true,guardMegabytes:1024,dangerMegabytes:512,resumeMegabytes:1024,subjects:{count:2,megabytes:100,byKind:{cheap:{count:1,megabytes:50}}},suspended:[{id:wardenSubjectIdV1(d.pid,startD),pid:d.pid,start:startD,kind:"cheap",sinceMs:Date.now()-50000},{id:"1.deadbeef",pid:1,start:"never started",kind:"cheap",sinceMs:1}],counters:{suspended:1,resumed:0,cancelled:0,ticks:5},lastAlarms:[],overhead:{tickMillisecondsP50:1,tickMillisecondsP95:2,cpuBasisPoints:1,residentMegabytes:1}};
+ const state={version:1,atMs:Date.now()-60000,pid:999999,mode:"enforce",code:"dead",host:host(3000),level:"guard",hold:true,guardMegabytes:1024,dangerMegabytes:512,resumeMegabytes:1024,swapRoomMegabytes:null,headroomMegabytes:null,headroomGuardMegabytes:2048,headroomDangerMegabytes:1024,subjects:{count:2,megabytes:100,byKind:{cheap:{count:1,megabytes:50}}},suspended:[{id:wardenSubjectIdV1(d.pid,startD),pid:d.pid,start:startD,kind:"cheap",sinceMs:Date.now()-50000},{id:"1.deadbeef",pid:1,start:"never started",kind:"cheap",sinceMs:1}],counters:{suspended:1,resumed:0,cancelled:0,ticks:5},lastAlarms:[],overhead:{tickMillisecondsP50:1,tickMillisecondsP95:2,cpuBasisPoints:1,residentMegabytes:1}};
  requireHostWardenV1("State",state);
  writeFileSync(join(directory,"state.json"),JSON.stringify(state));
  writeFileSync(join(directory,"lock.json"),JSON.stringify({pid:999999,start:"Thu Jan  1 00:00:00 1970"}));
@@ -278,7 +306,7 @@ test("ensure is cheap and idempotent: no spawn while a fresh alive holder runs t
  expect(spawned[0]!.args[0]!.endsWith("⌨️main/🟦️.ts")).toBe(true);
  expect(spawned[0]!.args.slice(1)).toEqual(["--directory",directory]);
  const dir=join(directory,"warden");
- const state={version:1,atMs:Date.now(),pid:process.pid,mode:"enforce",code:"x",host:host(3000),level:"calm",hold:false,guardMegabytes:1,dangerMegabytes:1,resumeMegabytes:1,subjects:{count:0,megabytes:0,byKind:{}},suspended:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:1},lastAlarms:[],overhead:{tickMillisecondsP50:1,tickMillisecondsP95:1,cpuBasisPoints:1,residentMegabytes:1}};
+ const state={version:1,atMs:Date.now(),pid:process.pid,mode:"enforce",code:"x",host:host(3000),level:"calm",hold:false,guardMegabytes:1,dangerMegabytes:1,resumeMegabytes:1,swapRoomMegabytes:null,headroomMegabytes:null,headroomGuardMegabytes:1,headroomDangerMegabytes:1,subjects:{count:0,megabytes:0,byKind:{}},suspended:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:1},lastAlarms:[],overhead:{tickMillisecondsP50:1,tickMillisecondsP95:1,cpuBasisPoints:1,residentMegabytes:1}};
  mkdirSync(dir,{recursive:true});writeFileSync(join(dir,"state.json"),JSON.stringify(state));
  expect(ensureHostWardenV1({directory,code:"x",spawn:run,memoise:false})).toEqual({started:false,reason:"running"});
  expect(ensureHostWardenV1({directory,code:"y",spawn:run,memoise:false})).toEqual({started:false,reason:"replacing"});
@@ -344,7 +372,7 @@ test("cancel records carry the command; readers list the records since a time; t
  const absent=currentHostWardenMirrorV1(directory,now);
  expect(absent).toEqual({version:1,atMs:now,absent:true});
  expect(requireHostWardenV1("Mirror",absent)).toEqual(absent);
- const state={version:1,atMs:now,pid:process.pid,mode:"observe",code:"x",host:host(3000),level:"calm",hold:false,guardMegabytes:1,dangerMegabytes:1,resumeMegabytes:1,subjects:{count:0,megabytes:0,byKind:{}},suspended:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:1},lastAlarms:[],overhead:{tickMillisecondsP50:1,tickMillisecondsP95:1,cpuBasisPoints:1,residentMegabytes:1}};
+ const state={version:1,atMs:now,pid:process.pid,mode:"observe",code:"x",host:host(3000),level:"calm",hold:false,guardMegabytes:1,dangerMegabytes:1,resumeMegabytes:1,swapRoomMegabytes:null,headroomMegabytes:null,headroomGuardMegabytes:1,headroomDangerMegabytes:1,subjects:{count:0,megabytes:0,byKind:{}},suspended:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:1},lastAlarms:[],overhead:{tickMillisecondsP50:1,tickMillisecondsP95:1,cpuBasisPoints:1,residentMegabytes:1}};
  writeFileSync(join(dir,"state.json"),JSON.stringify(state));
  const mirrored=currentHostWardenMirrorV1(directory,now);
  expect(mirrored).toEqual(state);
@@ -374,7 +402,13 @@ test("the default ports read this machine: a host sample that validates, a two-s
  expect(isHostWardenV1("Host",sample)).toBe(true);
  expect(sample.availableMegabytes).toBeGreaterThan(0);
  expect(sample.availableMegabytes).toBeLessThanOrEqual(sample.totalMegabytes);
- if(process.platform==="darwin")expect(typeof sample.compressedMegabytes).toBe("number");
+ if(process.platform==="darwin"){
+  expect(typeof sample.compressedMegabytes).toBe("number");
+  expect(typeof sample.swapFreeMegabytes,"free swap of sysctl vm.swapusage").toBe("number");
+  const disk=Bun.spawnSync(["df","-k","/System/Volumes/Data"]),columns=decoder.decode(disk.stdout).trim().split("\n").at(-1)!.trim().split(/\s+/u);
+  expect(Math.abs(sample.swapVolumeFreeMegabytes!-Math.floor(Number(columns[3])/1024)),"the swap volume shares its container with the data volume").toBeLessThan(8192);
+ }
+ if(process.platform==="linux")expect(sample.swapVolumeFreeMegabytes).toBeNull();
  const first=await ports.table(),second=await ports.table(),full=await realTable();
  for(const rows of[first,second]){
   const mine=rows.find(row=>row.pid===process.pid);
@@ -388,4 +422,120 @@ test("the default ports read this machine: a host sample that validates, a two-s
  mkdirSync(join(base,"warden"),{recursive:true});
  writeFileSync(join(base,"warden","mode"),"observe");
  expect(ports.mode()).toBe("observe");
+});
+
+test("every workspace discovery and every swap reading equals the independent Python oracle and the stored expectation",()=>{
+ const found=model("--discover"),swaps=model("--swap");
+ expect(fixture.discoveries.length).toBeGreaterThanOrEqual(3);expect(fixture.swaps.length).toBeGreaterThanOrEqual(9);
+ fixture.discoveries.forEach((row,index)=>{
+  expect(JSON.parse(JSON.stringify(discoverWardenWorkspacesV1(mutable<HostWardenRowV1[]>(row.rows),row.seed))),row.name).toEqual(found[index]);
+  expect(found[index],`stored expectation of ${row.name}`).toEqual((row as {expect:unknown}).expect);
+ });
+ fixture.swaps.forEach((row,index)=>{
+  expect(JSON.parse(JSON.stringify(parseWardenSwapV1(row.platform,row.texts as never))),row.name).toEqual(swaps[index]);
+  expect(swaps[index],`stored expectation of ${row.name}`).toEqual((row as {expect:unknown}).expect);
+ });
+ expect(new Set(fixture.swaps.map(row=>row.platform))).toEqual(new Set(["darwin","linux","win32"]));
+});
+
+test("the browser anchor of the schema is the browser path the repository computes (ensureRepositoryBrowserPathV1 defaults to it), below any workspace",()=>{
+ expect(HOST_WARDEN_ANCHORS_V1.browsers).toHaveLength(1);
+ expect(wardenBrowsersV1([repoRoot])).toEqual([repoPlaywrightBrowsersPath(repoRoot)]);
+ const second="/Users/other/ws";
+ expect(wardenBrowsersV1([repoRoot,second])).toEqual([repoPlaywrightBrowsersPath(repoRoot),repoPlaywrightBrowsersPath(second)]);
+ expect(expandWardenPatternV1("^<browsers>/x",[])).toBeNull();
+ expect(expandWardenPatternV1("^<workspace>/x",["/a.b","/c"])).toBe("^(?:/a\\.b|/c)/x");
+ expect(expandWardenPatternV1("^plain",[])).toBe("^plain");
+});
+
+test("identity facts: shell-launched pinned toolchain and cargo test binaries are subjects, cargo ranks after its units, the user's tools and the Claude app never are",()=>{
+ const find=(name:string)=>(fixture.classifications.find(row=>row.name.startsWith(name))as unknown as {expect:{pid:number;kind:string;rank:number;megabytes:number;owner:string}[]}).expect;
+ const shell=find("identity: pinned toolchain");
+ expect(shell.map(subject=>[subject.pid,subject.kind])).toEqual([[30,"cargo"],[31,"local-unit"],[32,"local-unit"],[33,"local-unit"],[34,"local-unit"]]);
+ expect(shell.find(subject=>subject.kind==="cargo")!.rank).toBeGreaterThan(shell.find(subject=>subject.kind==="local-unit")!.rank);
+ expect(find("identity: the rustc, cargo and Homebrew")).toEqual([]);
+ expect(find("identity: cargo test and bench").map(subject=>[subject.pid,subject.kind])).toEqual([[30,"cargo"],[31,"test-binary"],[32,"test-binary"],[33,"test-binary"]]);
+ const browser=find("identity: the repository browser runtime");
+ expect(browser.map(subject=>[subject.pid,subject.kind])).toEqual([[40,"browser"],[43,"browser"]]);
+ expect(browser[0]!.megabytes,"the renderer and the crash handler count into the main browser process").toBe(Math.floor((150000+600000+9000)/1024));
+ expect(find("identity anchors")).toEqual([]);
+ expect(find("identity: protected").map(subject=>subject.pid)).toEqual([33]);
+ expect(find("identity: a rustc below a root").map(subject=>subject.owner)).toEqual(["bun x/script.ts repo build","rustc --crate-name b src/lib.rs"]);
+ const order=(rows:{rank:number}[])=>rows.map(row=>row.rank);
+ expect(order(shell).slice(1).every(rank=>rank===20)).toBe(true);
+});
+
+test("the headroom law: available memory plus the swap room, bounded by the free disk of the swap volume minus the reserve and by the share of the physical memory",()=>{
+ const base:HostWardenHostV1={totalMegabytes:16384,availableMegabytes:3000,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,compressedMegabytes:null,pressure:"normal",swapFreeMegabytes:1000,swapVolumeFreeMegabytes:1500};
+ const room=(over:Partial<HostWardenHostV1>)=>headroomHostWardenV1(HOST_WARDEN_POLICY_V1,{...base,...over});
+ expect(room({})).toEqual({swapRoomMegabytes:1000,headroomMegabytes:4000,headroomGuardMegabytes:4096,headroomDangerMegabytes:2048});
+ expect(room({swapVolumeFreeMegabytes:4096}).swapRoomMegabytes,"a free disk equal to the reserve grows nothing").toBe(1000);
+ expect(room({swapVolumeFreeMegabytes:4096+500}).swapRoomMegabytes).toBe(1500);
+ expect(room({swapVolumeFreeMegabytes:61000}).swapRoomMegabytes,"bounded by half of the physical memory").toBe(8192);
+ expect(room({swapVolumeFreeMegabytes:null}).swapRoomMegabytes,"a swap that cannot grow keeps its free part").toBe(1000);
+ expect(room({swapFreeMegabytes:null}).headroomMegabytes).toBeNull();
+ const level=(over:Partial<HostWardenHostV1>)=>decideHostWardenV1(HOST_WARDEN_POLICY_V1,{...base,...over},[],{level:"calm",calmTicks:0});
+ expect(level({}).level,"available above the guard line, headroom below its line: the old law said calm").toBe("guard");
+ expect(level({swapVolumeFreeMegabytes:61000}).level).toBe("calm");
+ expect(level({availableMegabytes:1900,swapFreeMegabytes:0,swapVolumeFreeMegabytes:0}).level).toBe("danger");
+ expect(level({swapFreeMegabytes:null}).level,"a host without swap keeps the available-memory law").toBe("calm");
+ expect(level({}).swapRoomMegabytes).toBe(1000);
+ for(const total of[2048,4096,8192,16384,32768,65536,131072]){
+  const calm=decideHostWardenV1(HOST_WARDEN_POLICY_V1,{totalMegabytes:total,availableMegabytes:0,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,compressedMegabytes:null,pressure:"normal",swapFreeMegabytes:0,swapVolumeFreeMegabytes:10**7},[],{level:"calm",calmTicks:0});
+  const guard=decideHostWardenV1(HOST_WARDEN_POLICY_V1,{totalMegabytes:total,availableMegabytes:0,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,compressedMegabytes:null,pressure:"normal",swapFreeMegabytes:null,swapVolumeFreeMegabytes:null},[],{level:"calm",calmTicks:0}).guardMegabytes;
+  const healthy=decideHostWardenV1(HOST_WARDEN_POLICY_V1,{totalMegabytes:total,availableMegabytes:guard,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,compressedMegabytes:null,pressure:"normal",swapFreeMegabytes:0,swapVolumeFreeMegabytes:10**7},[],{level:"calm",calmTicks:0});
+  expect(calm.level,`${total} MB: no available memory is danger`).toBe("danger");
+  expect(healthy.level,`${total} MB: a roomy disk never escalates what the available-memory law calls calm`).toBe("calm");
+ }
+});
+
+test("the alarm names the headroom as the trigger and prints it in both languages; a headroom trigger never says 'available memory is below the guard line'",()=>{
+ const host:HostWardenHostV1={totalMegabytes:16384,availableMegabytes:3000,swapUsedMegabytes:1856,swapOutMegabytesPerSecond:0,compressedMegabytes:null,pressure:"normal",swapFreeMegabytes:1000,swapVolumeFreeMegabytes:1500};
+ const decision=decideHostWardenV1(HOST_WARDEN_POLICY_V1,host,[],{level:"calm",calmTicks:0});
+ expect(decision.level).toBe("guard");
+ const alarm=buildHostWardenAlarmV1({atMs:1,observed:false,level:"guard",action:{action:"suspend",id:"7.abcd",reason:"guard"},subject:{pid:7,kind:"local-unit",megabytes:683,owner:"zsh"},host,decision});
+ expect(alarm.text.en).toBe("[warden] suspended local-unit pid 7 (zsh, 683 MB): available memory plus swap that can still grow is below the headroom guard line; host 3000 MB available (guard 1638 MB, danger 819 MB), swap 0 MB/s, pressure normal, headroom 4000 MB (guard 4096 MB, danger 2048 MB)");
+ expect(alarm.text.de).toBe("[Wächter] angehalten local-unit pid 7 (zsh, 683 MB): der verfügbare Speicher plus noch wachsender Swap liegt unter der Wachlinie der Reserve; Host 3000 MB verfügbar (Wache 1638 MB, Gefahr 819 MB), Swap 0 MB/s, Druck normal, Reserve 4000 MB (Wache 4096 MB, Gefahr 2048 MB)");
+ expect(isHostWardenV1("Alarm",alarm)).toBe(true);
+ const danger=decideHostWardenV1(HOST_WARDEN_POLICY_V1,{...host,availableMegabytes:1900,swapFreeMegabytes:0,swapVolumeFreeMegabytes:0},[],{level:"calm",calmTicks:0});
+ const text=buildHostWardenAlarmV1({atMs:1,observed:false,level:"danger",action:{action:"cancel",id:"7.abcd",reason:"danger"},subject:{pid:7,kind:"cargo",megabytes:1,owner:"zsh"},host:{...host,availableMegabytes:1900,swapFreeMegabytes:0,swapVolumeFreeMegabytes:0},decision:danger}).text;
+ expect(text.en).toContain("below the headroom danger line");expect(text.en).not.toContain("available memory is below");expect(text.de).toContain("Gefahrenlinie der Reserve");
+});
+
+test("MOUNTED: a pinned rustc and a cargo test binary started from a shell (no root at all in the tables) are subjects and are suspended by the ladder; a rustc outside the pinned path of the workspace is not touched",async()=>{
+ await reap();
+ const workspace=fresh(),bin=join(workspace,".cache","b","t","m","r","h0","toolchains","nightly-test","bin"),deps=join(workspace,"target","debug","deps"),foreignBin=join(fresh(),"bin"),sleep=Bun.which("sleep")!;
+ mkdirSync(bin,{recursive:true});mkdirSync(deps,{recursive:true});mkdirSync(foreignBin,{recursive:true});
+ const unitPath=join(bin,"rustc"),binaryPath=join(deps,"semio_core-0123456789abcdef"),foreignPath=join(foreignBin,"rustc");
+ for(const path of[unitPath,binaryPath,foreignPath])symlinkSync(sleep,path);
+ const spawnAs=(path:string)=>{const child=Bun.spawn([path,"60"],{stdout:"ignore",stderr:"ignore",stdin:"ignore"});children.push(child);return child;};
+ const unit=spawnAs(unitPath),binary=spawnAs(binaryPath),foreign=spawnAs(foreignPath),directory=fresh(),written:string[]=[],states:Record<number,Record<string,string>>={};
+ await Bun.sleep(500);
+ const ports=scripted(directory,[host(1000),host(1000),host(1000)],written,async tick=>{states[tick]={unit:stateOf(unit.pid),binary:stateOf(binary.pid),foreign:stateOf(foreign.pid)};});
+ const result=await runHostWardenLoopV1({ports,policy:quickPolicy,tables:{...HOST_WARDEN_TABLES_V1,roots:[]},workspaces:[workspace],within:process.pid,maxTicks:3,code:"identity"});
+ expect(result.reason).toBe("limit");
+ expect(states[2]!.unit.startsWith("T"),"the pinned rustc is stopped although no root is among its ancestors").toBe(true);
+ expect(states[2]!.binary.startsWith("T"),"the most expensive subject keeps running").toBe(false);
+ expect(states[2]!.foreign.startsWith("T"),"a rustc outside the pinned toolchain path is never touched").toBe(false);
+ const state=JSON.parse(readFileSync(join(directory,"state.json"),"utf8"));
+ expect(requireHostWardenV1("State",state).subjects.byKind["local-unit"].count).toBe(1);
+ expect(state.subjects.byKind["test-binary"].count).toBe(1);
+ expect(Object.keys(state.subjects.byKind).sort()).toEqual(["local-unit","test-binary"]);
+ const lines=readFileSync(join(directory,"alarms.jsonl"),"utf8").trim().split("\n").map(line=>JSON.parse(line));
+ expect(lines.map(line=>`${line.action}.${line.kind}`)).toEqual(["suspend.local-unit"]);
+ expect(lines[0].owner.startsWith("rustc"),"a subject outside every root is its own owner").toBe(true);
+ expect(stateOf(unit.pid).startsWith("T"),"leaving resumes what this run suspended").toBe(false);
+});
+
+test("the swap reader runs the commands of the schema per platform and a failing command leaves its number null",async()=>{
+ const calls:string[]=[],texts:Record<string,string>={"sysctl -n vm.swapusage":"total = 3072.00M  used = 1832.19M  free = 1239.81M  (encrypted)","df -k /System/Volumes/VM":fixture.swaps[0]!.texts.disk!};
+ const run=async(command:string,args:readonly string[])=>{const key=[command,...args].join(" ");calls.push(key);const text=texts[key];if(text===undefined)throw Error("no such command");return text;};
+ expect(await readWardenSwapV1("darwin",{run,read:async()=>null})).toEqual({swapFreeMegabytes:1239,swapVolumeFreeMegabytes:60487});
+ expect(calls).toEqual(["sysctl -n vm.swapusage","df -k /System/Volumes/VM"]);
+ calls.length=0;delete texts["df -k /System/Volumes/VM"];texts["df -k /System/Volumes/Data"]=fixture.swaps[1]!.texts.disk!;
+ expect(await readWardenSwapV1("darwin",{run,read:async()=>null})).toEqual({swapFreeMegabytes:1239,swapVolumeFreeMegabytes:2307});
+ expect(calls).toEqual(["sysctl -n vm.swapusage","df -k /System/Volumes/VM","df -k /System/Volumes/Data"]);
+ expect(await readWardenSwapV1("darwin",{run:async()=>{throw Error("x");},read:async()=>null})).toEqual({swapFreeMegabytes:null,swapVolumeFreeMegabytes:null});
+ expect(await readWardenSwapV1("linux",{run,read:async path=>path==="/proc/meminfo"?fixture.swaps[5]!.texts.meminfo!:null})).toEqual({swapFreeMegabytes:4882,swapVolumeFreeMegabytes:null});
+ expect(await readWardenSwapV1("win32",{run,read:async()=>null})).toEqual({swapFreeMegabytes:null,swapVolumeFreeMegabytes:null});
 });

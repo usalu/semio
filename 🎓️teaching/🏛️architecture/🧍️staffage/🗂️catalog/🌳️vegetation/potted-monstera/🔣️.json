@@ -34616,15 +34616,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         -0.24875,
-         -0.29515
+         0.504,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "aerial-root-2",
@@ -34662,15 +34668,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         0.33238,
-         0.28397
+         0.554,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "moss-pole",
@@ -35002,15 +35014,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         -0.29177,
-         -0.2162
+         0.524,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-03",
@@ -35309,15 +35327,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         0.23255,
-         0.27589
+         0.504,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-04",
@@ -35580,15 +35604,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         -0.16662,
-         -0.23503
+         0.464,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-05",
@@ -35871,15 +35901,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         0.22115,
-         0.14295
+         0.424,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-06",
@@ -36154,15 +36190,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         -0.16742,
-         -0.086
+         0.384,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "petiole-08",
@@ -36177,15 +36219,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         0.09761,
-         0.129
+         0.324,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-07",
@@ -36808,15 +36856,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         -0.06265,
-         0.06683
+         0.304,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-09",
@@ -40734,15 +40788,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         -0.24875,
-         -0.29515
+         0.504,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "aerial-root-2",
@@ -40780,15 +40840,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         0.33238,
-         0.28397
+         0.554,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-02",
@@ -40943,15 +41009,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         -0.29177,
-         -0.2162
+         0.524,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-03",
@@ -41106,15 +41178,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         0.23255,
-         0.27589
+         0.504,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-04",
@@ -41269,15 +41347,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         -0.16662,
-         -0.23503
+         0.464,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-05",
@@ -41432,15 +41516,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         0.22115,
-         0.14295
+         0.424,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-06",
@@ -41595,15 +41685,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         -0.16742,
-         -0.086
+         0.384,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "petiole-08",
@@ -41618,15 +41714,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         0.09761,
-         0.129
+         0.324,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-07",
@@ -41921,15 +42023,21 @@
        "kind": "poly",
        "points": [
         [
-         0.017,
+         0,
          0
         ],
         [
-         -0.06265,
-         0.06683
+         0.304,
+         0
         ]
        ],
-       "closed": false
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.00075,
+        "z1": 0.00075
+       }
       },
       {
        "id": "blade-09",

@@ -1,0 +1,69 @@
+# W8: worker storage (g1-m13 image, g1-m04 disk, g1-m05 stale holder), 2026-11-24 08:40 to 09:45
+
+LIB = `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/`. Evidence read-only from `/Users/Shared/semio-store/v1/origins/g1-{m04,m05,m13}/` (ready.json, ready-timings.json, ready-log-*.txt) and the coordinator's own dependencies volume. Nothing was done on a worker. Lock `lock.worker-storage` (released). Landings: `T/landings.md` "W8 worker storage".
+
+## 1. g1-m13 (macOS): image 7.8 GiB, real use 9 to 18 GiB, `d/m/remote-execution` 0.3 GiB free
+
+### What was wrong (numbers)
+- The declared `needBytes.darwin` (7,491,026,944) came from `concurrentRequiredImageBytesV1(true)` = (4 GiB package cache + 0.25 GiB scratch + 2 x 6 x 64 MiB) x 1.25. The 64 MiB per generation was measured on 2026-10-20 when clonefile shared the extents with the package cache.
+- Re-measured on the coordinator's volume today (`df`: 14.6 GB used of 36 GiB): `j` 9,426,196 KiB over 6 generations = 1.5 GiB each (no sharing), `bun-cache` 3.4 GiB, `python` 2.0 GiB, `remote-execution` 0.96 GiB, `generation` 0.2 GiB. The model knew neither the python runtime nor the work directory, and its 64 MiB generation was off by 24x.
+- The work directory of the remote-execution worker is the nested ledger area `remote-execution-worker`, a fixed tenth of the partition: 10 % of 7.8 GiB is 0.78 GiB, so "0 of 10 slots usable, one action needs 1.0 GiB". On top of that a born fixed image never grew.
+
+### Model (schema first, `LIB/⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/🧬️schema/🔣️.json` `budget`)
+- New terms: `pythonBytes` 2.5 GiB (measured 2.0), `buildingGenerations` 2 (the old `2 x scopes` assumed a second complete set), `physicalGenerationBytes` 1.5 GiB (measured), `headroomPercent` 15, `remoteExecution` {`reserveBytes` 0.5 GiB, `perActionBytes` 0.5 GiB, `slots` per cas role `worker` 10, `builder` 4, `cache-host` 4}, `measured` block of 2026-11-24 with the derivation text.
+- install = (4 + 2.5 + 0.25 + (6 + 2) x generation) x 1.15: 21.56 GiB with sharing (darwin), 23.86 GiB copying (linux, win32).
+- work directory = reserve + slots x one action = 0.5 + 10 x 0.5 = 5.5 GiB (`concurrentWorkDirectoryBytesV1(role)`), the byte budget of the ledger area `remote-execution-worker` (was `basisPoints` 1000). The worker role is the strongest, so builder and cache-host hosts have room to spare.
+- `needBytes` is the smallest capacity that holds install + work directory after the image overhead (same Python search as before): darwin 29,177,675,776 (27.2 GiB, was 7.0), linux and win32 31,656,509,440 (29.5 GiB, was 35.2: the old linux model double counted a second set).
+- Tests now state the real sizes: the dependencies-need test subtracts the nested byte budget and asserts it equals `concurrentWorkDirectoryBytesV1("worker")` and is >= the other roles; the host-profile test lists a new "16 GB RAM, 100 GB free" profile that must fit and states that the "16 GB RAM, 60 GB free" profile (56 GiB free) is too small for a build worker (images sum to 64.5 GiB); the concurrent test asserts python/work directory against the measured block and `defaultGenerationBytes` = one generation; the frozen vectors (`requiredBytes` 23,152,558,080 and 25,622,164,276) and the Python oracle follow.
+
+### Growing an existing too-small image in place (new member)
+`🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📈️grow/` (public entry `.../image/grow`):
+- `nativeImageGrowAdmissionV1` (pure): `already` / `grow` / `host-short`; `hdiutil resize` refuses a size beyond the free host bytes although the backing stays sparse, so the host must hold the whole larger envelope (`nativeImageSparseAdmissionBytesV1`). A short host is named, not retried.
+- `growNativeImageV1(port, hooks, bytes)`: detach when attached (a busy image refuses and nothing changes), `hdiutil resize` (status 35 retried by the ST1 retry), the volume takes the whole size at the next attach (proved: `diskutil image resize` and `hdiutil resize` both refuse an attached image, a detached UDRW stretched 64 m to 300 m shows a 300 MB volume at attach), re-attach at the canonical mount point; always attached again after a failure or cancellation (the ST1 `attachNativeImageV1` handles a leftover `semio-trim` volume). Four progress steps, `check()` between steps. Receipt `image.json` is rewritten atomically afterwards (`size` = fs + 40,960 trailer, `filesystemBytes`, `maximumPhysicalBytes` = fs + 1 MiB; inode, ancestry, boot session untouched).
+- Doctor: new finding `storage.image-below-need` (error, EN/DE, fact `needBytes`) with the automatic repair `storage-grow` (`repo doctor --fix --only=storage`): exclusive image lease tried once without waiting, progress through the doctor ports, cancellation through the signal, dry run counts. Only macOS has images (other platforms: "not applicable").
+- Ready: before the `dependencies` stage the supervisor runs the same pass (`ports.heal`, at most every 10 min, own 5 min command timeout); an image that grew is said, an image the host cannot hold parks the worker as unfit (see 2).
+- Proof: real image tests (module and doctor repair, a 64 MiB attached image grown to its 200 MiB and to the 27 GiB policy need, sparse on disk, mount point and receipt checked with `statfs`/`df` and `hdiutil`), recording fake ports for refusal/failure/cancellation order, Python oracle for the pure laws.
+- Not touched on the live machines: m13's host has 8.6 GB free now (29 GB earlier), the larger envelope needs 27.2 GiB free, so on m13 the pass answers `host-short`: the worker is unfit (disk) until the host has room. The image is not touched.
+
+### Remote-execution volume, collect first
+`runRemoteExecutionAgentV1`: when the work volume allows fewer slots than the worker offers, it first retires the finished action sandboxes of dead workers (`retireRemoteExecutionWorkV1`, at most once a minute, injectable `collect`), measures again and only then says `disk-full`. Cluster test: a worker with 1.2 GiB free serves after one collection and, when nothing can be collected, says `disk-full` without sweeping again within a minute.
+
+## 2. g1-m04 (linux): "needs 6,144 MB free ... 2,284 MB still missing" for hours
+
+### What occupies the disk and why freeing never converged
+- `ready-log-dependencies*.txt`: `/home/deck/semio` 475,758 MB total, 3.8 to 5.0 GB free; all 16 collectors of the registry (`cargo-incremental` ... `image-slack`) free **0 B**. The machine's semio-owned writers hold nothing derivable; the other ~460 GiB belong to the host's user (a deck home), not to a semio writer. The need (6,144 MB) is the declared dependencies stage estimate (no OK run, so never measured).
+- Why it looped: `recoverNeedV1` answers `refuse` once every collector ran. The supervisor then slept one poll and ran the whole collection again on the next turn, setting `disk-collecting` each time. Nothing remembered that a collection had found nothing, so the stage stayed "freeing space by priority now" with the same shortfall (2,284 to 2,291 MB) forever (attempt 21, 14 h).
+- Machine can never satisfy the install: even the install model needs 29.5 GiB for linux (6 generations x 1.75 GiB copied + cache); the largest growth measured before the failures was 1.7 GiB in 3 minutes.
+- Side finding (not a disk defect, not fixed here): its earlier attempts 14 to 21 died with `error: failed applying patch file: EACCES: Permission denied (open())` / `failed to apply patchfile (patches/1.patch)` in the bun install (`ready-log-dependencies-failed.txt`); that needs its own lane (permissions of the replicated `patches/` files on Linux).
+
+### Fix (state machine, `🚦️ready/🟦️.ts`, schema `🧬️schema/🔣️.json`)
+- A refused recovery marks the stage `unfit` with the free MB at that moment: refusal code `disk-unfit`, text EN "Worker is unfit (disk): stage ... needs N MB free in <path> but only M MB are free after every derivable cache was collected, K MB are missing ... checked again when 1024 MB more are free or after 6 h. Disk consumers and their collection commands: ..." and DE "Arbeiter ist ungeeignet (Platte): ...". Said once per episode (not every poll), the collectors are not run again.
+- `readyUnfitRecheckDueV1`: looked at again only when the free megabytes grew by `unfitRecheckGrowthMegabytes` (1024) or after `unfitRecheckMilliseconds` (6 h); a freed volume (need fits) clears it at once. The heartbeat keeps `ready.json` fresh while unfit; `repo fleet status` shows the refusal text unchanged (it already carries `refusal.en/de`).
+- The same state carries the image case of m13 (heal answer `unfit`): same refusal, own once-flag, re-checked on growth or time.
+- Tests (disk-recovery 10/0, 3 new): unfit said once with consumers and exact commands in EN/DE and the collector runs once; recheck after +1024 MB and after 6 h; heal grows once, parks as unfit once and runs the stage after the host has room.
+
+## 3. g1-m05 (windows): attempt 37, "Another process is building the dependencies"
+
+### Findings (from the published records; I cannot look at the machine)
+- The wait line of the `build` lease never named its holder (`waitingBuild` has no pid, command or age). Every judge of stale holders (Ready custody `readyHolderCustodyV1`: gone / reused / silent / bound; the registry look `observeDependencyStoreHoldersV1`: dead pid, reused pid by OS start time, unreadable start plus 5 min silence) keys on the named line "Process N (cmd) holds the dependency store since ...; waiting for it (s of at most L s)" and only the store lease printed it. So for the build lease nobody could judge the holder, the 10-minute stall rule killed the stage, and the next attempt waited again (`ready-timings.json`: 37 attempts, stalls of 641 to 733 s interleaved with a 13,133 s `stage-failed`).
+- `ready-log-dependencies-containment.txt` (07:30Z): registry of the machine lists 4 entries, verdicts `not-ours` for pid 25776 (`run @...`, started 07:12:15Z, alive; no owner token of a stopped try, so the orphan reaper rightly spares it) and pid 39612 (resident service from 03:20Z). The build lease is held by a live process that is not a descendant of the stopped tries; the earlier tries ended at 07:16:24Z, 4 minutes after 25776 started. This is a live holder, not a dead one; a dead or pid-reused holder cannot hold the kernel claim, and the registry law for those already existed but was never consulted.
+- The 13,133 s run ended `Declared provider descriptor changed (e2e1621e)` (a `package.json` edited under the sync while 4,148 edges were checked): the Windows build is long enough to be hit by the peers' edits. Not changed here.
+
+### Fix (cross-platform, schema first)
+- The wait for any concurrent dependency lease (`build`, `bindings`, `writer`) looks at the lease registry every progress tick (production port `observe`, same `observeDependencyStoreHoldersV1` as the store wait, with its Windows laws: OS start time vs registered start for pid reuse, heartbeat age when the start cannot be read) and:
+  - names the holder in the exact words the supervisor parses (`waitingHolder` / `waitingSilentHolder`, EN and DE, `limitMs` = the declared bound), so `readyHolderCustodyV1` decides progressing / silent / gone / bound and a progressing holder is no stall;
+  - reports a holder that is gone or whose pid was reused once as event `holder-gone` and removes its registration (the look does);
+  - refuses with a bilingual error when every holder is an ancestor of the waiter for 15 s (a waiter can never get a lease its own ancestor holds; before, it waited for the declared maximum).
+- Event schema and `ConcurrentHolderV1`/`ConcurrentHoldersViewV1` types, texts, oracle-free pure parts.
+- Tests (concurrent 20/0, 2 new): the holder line is parsed by the supervisor's own `readyHolderWaitOfV1` in both languages (silent variant included), custody says `progressing` for the live holder and `gone` for a pid with another start time; `holder-gone` once; ancestor refusal in EN and DE; the registry look on a fake registry reproduces Windows pid reuse (OS start 1 h after the registered start), unreadable start plus 400 s silence, a dead pid and a living holder.
+- Open: a live holder that is not ours (here 25776) is named and judged but never killed; if it is silent past the heartbeat bound the supervisor reports `stage-holder-silent` with its pid and command. Who owns `run @...` on that PC needs a human look.
+
+## Tests (one at a time, `repo test-file`)
+grow 7/0, doctor 17/0 + probes 21/0 + command 9/0, concurrent 20/0, dependencies storage 47/0, report 3/0, budget 21/2 (the 2 failures `nx partition provisions its own backing` and an unnamed settle test fail identically before the change with `Actual Native platform image required`), ledger 15/0, needs 9/0, model 3/0, law 8/0, sizes 1/0, ready main 58/0, disk-recovery 10/0, resume 8/0, disk-unknown 6/0, early-admission 4/0, refresh 9/0, stale-stage 14/0, silence 6/0, stage-completion 8/0, stage-plan 3/0, holder-custody 6/0 + 7/0, process-tree 16/0, fleet-status 26/0, host-capacity disk-recovery 22/0 + 7/0, remote-execution disk 8/0.
+
+## Open items
+1. m13 and m04 stay not Ready until their hosts have room (27.2 GiB / 29.5 GiB for the larger envelope; m13 host has 8.6 GB free): they now say so once ("unfit (disk)") instead of failing or collecting in a loop. The sidecars pick the code up on their own.
+2. m04: the bun patch `EACCES` failure (section 2) is a separate defect.
+3. m05: the live non-owned holder and the long Windows provider check (descriptor edits) as above.
+4. Linux and Windows have no images in this repository (no mkfs/New-VHD anywhere), so the grow pass applies to macOS only; the new needs apply to them as directory budgets.
+5. The 60 GB / 16 GB profile cannot hold a build worker any more (stated in the budget test); a smaller worker role (fewer slots, fewer scopes) would need its own declared need.

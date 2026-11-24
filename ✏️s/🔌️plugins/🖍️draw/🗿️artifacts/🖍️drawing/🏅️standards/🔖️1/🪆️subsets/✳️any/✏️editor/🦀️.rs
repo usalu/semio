@@ -173,7 +173,7 @@ use path_job::DrawingPathCommandJobFactory;
 
 //#region 📬️StorePreparation
 
-use semio_s_artifact_draw_drawing_editor_store_preparation::DrawingArtifactStorePreparationFactory;
+use semio_s_artifact_draw_drawing_editor_store_preparation::{drawing_document_store_owners, drawing_document_store_owners_source_demands, DrawingArtifactStorePreparationFactory};
 
 //#endregion 📬️StorePreparation
 

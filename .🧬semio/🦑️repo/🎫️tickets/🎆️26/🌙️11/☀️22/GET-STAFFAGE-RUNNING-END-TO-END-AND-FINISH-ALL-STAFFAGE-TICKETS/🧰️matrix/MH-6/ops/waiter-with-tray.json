@@ -1,0 +1,18 @@
+[
+  {"op": "front-sweep", "scale": "50", "id": "neck"},
+  {"op": "front-sweep", "scale": "100", "id": "neck"},
+  {"op": "front-sweep", "scale": "200", "id": "neck"},
+  {"op": "front-sweep", "scale": "500", "id": "sil-neck"},
+  {"op": "thicken", "scale": "50", "view": "front", "id": "sleeve-r"},
+  {"op": "thicken", "scale": "50", "view": "plan", "id": "sleeve-r"},
+  {"op": "rebind", "scale": "50", "view": "plan", "id": "torso-fill-p", "to": "pelvis"},
+  {"op": "core", "scale": "200", "id": "waistcoat"},
+  {"op": "extrude", "scale": "200", "id": "shoe-l", "view": "front", "across": "range"},
+  {"op": "extrude", "scale": "200", "id": "shoe-l", "view": "plan"},
+  {"op": "extrude", "scale": "200", "id": "shoe-r", "view": "front", "across": "range"},
+  {"op": "extrude", "scale": "200", "id": "shoe-r", "view": "plan"},
+  {"op": "extrude", "scale": "500", "id": "sil-shoe-l", "view": "front", "across": "range"},
+  {"op": "extrude", "scale": "500", "id": "sil-shoe-l", "view": "plan"},
+  {"op": "extrude", "scale": "500", "id": "sil-shoe-r", "view": "front", "across": "range"},
+  {"op": "extrude", "scale": "500", "id": "sil-shoe-r", "view": "plan"}
+]

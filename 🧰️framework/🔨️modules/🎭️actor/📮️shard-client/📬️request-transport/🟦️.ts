@@ -69,6 +69,13 @@ export class ShardRequestTransport {
       void returned.catch(refusal => slot.worker.postMessage({ kind: "original-root-refusal", actorId: original.actorId, activationGeneration: original.generation, refusal }));
       return;
     }
+    if (message.kind === "original-succession-request") {
+      const original = this.state.actorActivations.get(message.actorId);
+      const known = original && original.slot === slot && original.generation === message.activationGeneration && original.originalAdmission.operation === message.operation && original.originalAdmission.generation === message.generation;
+      const drawn = known ? this.state.originalWorkStock.succeed(original.originalAdmission) : Promise.reject(new Error("original-bootstrap.foreign-admission"));
+      void drawn.then((admission) => slot.worker.postMessage({ kind: "original-succession-result", request: message.request, admission }), (refusal) => slot.worker.postMessage({ kind: "original-succession-result", request: message.request, refusal }));
+      return;
+    }
     if (message.kind === "original-source-close") {
       const original = this.state.originalClosures.get(message.operation);
       if (!original || original.slot !== slot || original.actorId !== message.actorId || original.generation !== message.activationGeneration || original.originalAdmission.generation !== message.generation || message.sourceClosed !== true) return;
@@ -85,7 +92,7 @@ export class ShardRequestTransport {
       if (entry.kind === "turn" && entry.actorId !== "") this.state.actorsPastFirstTurn.add(entry.actorId);
       this.recomputeOldestPending(slot);
       if (message.ok) entry.resolve(message.value);
-      else entry.reject(graftWorkerStack(entry.actorId, message.error, message.stack, message.type, message.framesBytes, message.retryableLifecycle));
+      else entry.reject(graftWorkerStack(entry.actorId, message.error, message.stack, message.type, message.framesBytes, message.retryableLifecycle, message.fault));
     } catch (error) { entry.reject(error); }
   }
 

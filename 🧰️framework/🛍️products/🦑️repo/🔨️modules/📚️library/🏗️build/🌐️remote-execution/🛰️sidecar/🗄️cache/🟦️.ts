@@ -8,7 +8,7 @@ import {fleetInterfaceAddressV1,fleetPeerAllowedV1,fleetSignedFetchV1,loadFleetS
 import {cacheAreaHomeV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import {readRemoteCachePolicyV1} from "../../../🌐️remote-cache/🟦️.ts";
 import {startRemoteCacheServerV1} from "../../../🌐️remote-cache/🖥️server/🟦️.ts";
-import {createActivityWakeV1,createLoopLagWatchV1,createStallProfilerV1,type RemoteExecutionSidecarContextV1,sleep} from "../🧰️shared/🟦️.ts";
+import {createActivityWakeV1,settleSidecarSuccessorV1,createLoopLagWatchV1,createStallProfilerV1,type RemoteExecutionSidecarContextV1,sleep} from "../🧰️shared/🟦️.ts";
 import {readdirSync} from "node:fs";
 
 /** 🗄️ The cache server of the group (run on the group server only, supervised by the replica daemon): the current code of this worktree, its index in the declared ledger area `fleet-cache-index` (blobs in the host store), its own port (`ports.cache` of the topology row), bound to the fleet interface, trusting only the origins registered in the stores of the fleet (its own group, and read-only the peer groups of the topology), by signature and never by address (the network of the group is an access condition only when the topology says `access.enforceNetwork`). On a miss it reads through to the cache servers of the peer groups (direct or relayed as each link says) and keeps what it got; it answers the relayed requests of the peers. Its port, the hosts it advertises to other networks and its peers come from the topology row of the group. It is the only publisher of the fleet facts, and it publishes only because it holds the admin signing key of the group server origin, which exists on that machine's disk alone; a restart of the sidecar (new code) needs no owner action. */
@@ -43,6 +43,7 @@ export async function runCache(context:RemoteExecutionSidecarContextV1):Promise<
  const profile=await createStallProfilerV1(),lag=createLoopLagWatchV1({intervalMilliseconds:1000,thresholdMilliseconds:1500,attributeMilliseconds:400,...profile===undefined?{}:{profile},openFiles:()=>{try{return readdirSync(process.platform==="win32"?".":"/dev/fd").length;}catch{return undefined;}},report:say}),lagTimer=setInterval(()=>{lag.tick();},1000);lagTimer.unref();
  say(`serving the cache on ${server.url}, index ${directory}`);
  try{process.send?.({type:"listening"});}catch{}
+ settleSidecarSuccessorV1(process.env);
  const publish=async():Promise<void>=>{
   try{
    const hosts=[address,...additionalHosts,...(view?.advertise??[])];

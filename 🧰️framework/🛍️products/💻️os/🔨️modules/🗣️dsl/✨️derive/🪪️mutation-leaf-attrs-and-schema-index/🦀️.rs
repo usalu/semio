@@ -65,19 +65,18 @@ pub(super) fn mutation_authority_canonical(path: &Path) -> Result<PathBuf, Strin
     Ok(match canonical.to_str().and_then(|value| value.strip_prefix(r"\\?\")) { Some(plain) => PathBuf::from(plain), None => canonical })
 }
 
+/// 🪪️ Digest of the authority projection and its relative locator, never a path.
 #[doc(hidden)] pub fn mutation_authority_workspace_token(workspace_root: &Path, taxonomy_path: &Path) -> Result<[u8; 32], String> {
     let workspace_root = mutation_authority_canonical(workspace_root)?;
     let taxonomy_path = mutation_authority_canonical(taxonomy_path)?;
-    let workspace = mutation_leaf_portable_path(&workspace_root)?;
     let taxonomy = mutation_authority_relative(&workspace_root, &taxonomy_path)?;
-    let mut input = b"semio.mutation-source-provenance/v1\0".to_vec();
-    for value in [workspace.as_bytes(), taxonomy.as_bytes()] { let length = u64::try_from(value.len()).map_err(|_| "metadata token component exceeds u64".to_string())?; input.extend_from_slice(&length.to_be_bytes()); input.extend_from_slice(value); }
+    let content = semio_framework_hash::Sha256::digest(&crate::compiler_resources::read(&taxonomy_path).map_err(|error| error.to_string())?);
+    let mut input = b"semio.mutation-source-provenance/v2\0".to_vec();
+    for value in [taxonomy.as_bytes(), content.as_slice()] { let length = u64::try_from(value.len()).map_err(|_| "metadata token component exceeds u64".to_string())?; input.extend_from_slice(&length.to_be_bytes()); input.extend_from_slice(value); }
     Ok(semio_framework_hash::Sha256::digest(&input))
 }
 
 #[doc(hidden)] pub fn mutation_leaf_workspace_token(authority: &MutationSourceAuthority) -> Result<[u8; 32], String> { mutation_authority_workspace_token(&authority.workspace_root, &authority.taxonomy_path) }
-
-pub(super) fn mutation_leaf_include_path(path: &Path) -> Result<String, String> { mutation_leaf_portable_path(path) }
 
 /// 🚪️ The editing surface of a withdraw-only leaf (descriptor `editable: false`, design §22.20): `input_schema` is always `None`, so
 /// the history editor never opens on it, and `with_input_value` refuses every edited payload — the editable-payload law
@@ -114,10 +113,12 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
     let taxonomy_path = match mutation_authority_relative(&authority.workspace_root, &authority.taxonomy_path) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
     let payload_schema_path = match mutation_leaf_payload_schema_path(&authority, &descriptor.payload_schema) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf payload schema failed: {error}")).to_compile_error().into() };
     let inverse_rows = match mutation_leaf_inverse_rows(&payload_schema_path) { Ok(rows) => rows, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf x-semio-inverse-rows failed: {error}")).to_compile_error().into() };
-    let referenced_documents = match mutation_leaf_referenced_documents(&payload_schema_path).and_then(|paths| paths.iter().map(|path| mutation_leaf_include_path(path)).collect::<Result<Vec<_>, _>>()) { Ok(paths) => paths, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf referenced schema documents failed: {error}")).to_compile_error().into() };
+    let referenced_paths = match mutation_leaf_referenced_documents(&payload_schema_path) { Ok(paths) => paths, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf referenced schema documents failed: {error}")).to_compile_error().into() };
+    let referenced_documents: Vec<String> = referenced_paths.iter().filter_map(|path| mutation_leaf_portable_path(path).ok()).collect();
+    let referenced_includes: Vec<String> = referenced_paths.iter().filter_map(|path| crate::compiler_resources::include_path_v1(&authority.source_path, path).ok()).collect();
     let compiled_inputs = match input_compilation::compile(&payload_schema_path, &referenced_documents, &attrs.contract) { Ok(inputs) => inputs, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf input compilation failed: {error}")).to_compile_error().into() };
     let dependency_paths = [authority.taxonomy_path.clone(), authority.descriptor_path.clone(), payload_schema_path];
-    let dependency_paths: Result<Vec<_>, _> = dependency_paths.iter().map(|path| mutation_leaf_include_path(path)).collect();
+    let dependency_paths: Result<Vec<_>, _> = dependency_paths.iter().map(|path| crate::compiler_resources::include_path_v1(&authority.source_path, path)).collect();
     let dependency_paths = match dependency_paths { Ok(paths) => paths, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
     let [taxonomy_dependency, descriptor_dependency, payload_schema_dependency]: [String; 3] = match dependency_paths.try_into() { Ok(paths) => paths, Err(_) => unreachable!() };
     let name = &input.ident;
@@ -157,7 +158,7 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
             const DESCRIPTOR: #contract::MutationLeafDescriptor = #descriptor;
             const PROVENANCE: #contract::MutationSourceProvenance = #contract::MutationSourceProvenance { workspace_token: [#(#workspace_token),*], mutation_root: #mutation_root, owner: #owner, source_path: #source_path, descriptor_path: #descriptor_path, taxonomy_path: #taxonomy_path };
             const PAYLOAD_SCHEMA: &'static str = ::core::include_str!(#payload_schema_dependency);
-            const PAYLOAD_SCHEMA_DOCUMENTS: &'static [&'static str] = &[#(::core::include_str!(#referenced_documents)),*];
+            const PAYLOAD_SCHEMA_DOCUMENTS: &'static [&'static str] = &[#(::core::include_str!(#referenced_includes)),*];
             const COMPILED_INPUTS: Option<#contract::CompiledMutationInputDefinitions> = #compiled_inputs;
             #editable
             #instance_schema

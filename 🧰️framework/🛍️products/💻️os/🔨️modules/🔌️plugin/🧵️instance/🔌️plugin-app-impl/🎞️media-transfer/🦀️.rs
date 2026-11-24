@@ -15,7 +15,6 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
     }
 
     pub(super) async fn advance_original_media_import(&mut self, port: &str, media: &mut Option<Media>, meta: &ActionMeta, progress: &mut semio_plugin_reactor_app::OriginalMediaImport, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
-        use semio_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, TypedOperationResultLane, decode_typed_operation_fault_page};
         use semio_framework_value::{RetainedCloneProgress, RetirementDemand};
         if progress.complete {
             return Ok(true);
@@ -28,16 +27,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         if let Some(mounted) = self.tools.tool_operations.get(operation.operation.0) {
             let awaiting_page = mounted.result_page.as_ref().filter(|_| mounted.stage == MountedTypedCommandFullOperationStage::AwaitingAck);
             if progress.terminal.is_none() {
-                let terminal = mounted.terminal_fault.map(Err).or_else(|| {
-                    let page = mounted.result_page.as_ref()?;
-                    match page.lane {
-                        TypedOperationResultLane::Fault => Some(Err(ArtifactBoundedToolFault::from_fault(&decode_typed_operation_fault_page(page.bytes())))),
-                        TypedOperationResultLane::Terminal if mounted.user_cancel_requested => Some(Err(ArtifactBoundedToolFault::from_fault(&Fault::from("original media import was cancelled")))),
-                        TypedOperationResultLane::Terminal | TypedOperationResultLane::Download => Some(Ok(())),
-                        _ => None,
-                    }
-                });
-                if let Some(terminal) = terminal {
+                if let Some(terminal) = mounted.terminal_publication() {
                     let copy_bytes = size_of_val(&progress.terminal);
                     let demand = RetirementDemand { copy_bytes, depth: 1, ..Default::default() };
                     if cx.retirement_should_yield() || !cx.retained_work_can_enter(demand) {
@@ -61,6 +51,22 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
                 cx.consume_fuel(1);
             }
             return Ok(false);
+        }
+        if progress.terminal.is_none() {
+            let Some(terminal) = self.media.reserved_terminal.filter(|(owner, _)| *owner == operation.operation.0).and_then(|(_, terminal)| terminal) else {
+                return Err(ValueError::invariant("original media import retired without a terminal publication").into());
+            };
+            let copy_bytes = size_of_val(&progress.terminal);
+            let demand = RetirementDemand { copy_bytes, depth: 1, ..Default::default() };
+            if cx.retirement_should_yield() || !cx.retained_work_can_enter(demand) {
+                return Ok(false);
+            }
+            cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..Default::default() })?;
+            cx.consume_fuel(1);
+            progress.terminal = Some(terminal);
+        }
+        if self.media.reserved_terminal.is_some_and(|(owner, _)| owner == operation.operation.0) {
+            self.media.reserved_terminal = None;
         }
         let terminal = progress.terminal.ok_or_else(|| ValueError::invariant("original media import retired without a terminal publication"))?;
         terminal.map_err(|fault| fault.into_fault())?;

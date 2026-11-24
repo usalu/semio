@@ -203,9 +203,9 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         if next.active_example_id != input.config.active_example_id || next.tolerance().to_bits() != input.config.tolerance().to_bits() {
             let windows = generation3d_view_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
             let viewed = Generation3dViewedDocument::resolve(input.snapshot, &next);
-            let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
+            let unserved = preview_eval::unserved_kinds(&viewed.snapshot().host_snapshot);
             viewed.retire();
-            self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained))?;
+            self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, &unserved, &mut emit, input.operation.retained))?;
         }
         let presence = std::mem::take(&mut self.presence);
         self.emit = Some(emit);

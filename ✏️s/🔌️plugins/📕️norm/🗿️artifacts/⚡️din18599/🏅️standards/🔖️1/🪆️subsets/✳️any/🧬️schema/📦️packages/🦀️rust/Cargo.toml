@@ -27,9 +27,10 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-din18599-diff = { workspace = true }
 semio-s-artifact-norm-din18599-model = { workspace = true }
 semio-s-artifact-norm-din18599-mutations = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true, optional = true }
 
 [features]
-test-support = ["dep:serde", "semio-s-artifact-norm-din18599-diff/test-support", "semio-s-artifact-norm-din18599-model/test-support", "semio-s-artifact-norm-din18599-mutations/test-support"]
+test-support = ["dep:serde", "semio-s-artifact-norm-din18599-diff/test-support", "semio-s-artifact-norm-din18599-model/test-support", "semio-s-artifact-norm-din18599-mutations/test-support", "dep:semio-s-plugin-norm-compliance", "semio-s-plugin-norm-compliance/compliance-testing"]
 
 [dev-dependencies]
 semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }

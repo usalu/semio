@@ -7,7 +7,7 @@
   "Policy": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["form", "waitMilliseconds", "waitBudgetMilliseconds", "expectedMilliseconds", "fetchConcurrency", "offersInFlight", "claimStaleMilliseconds", "claimWaitMilliseconds", "refusedMilliseconds"],
+   "required": ["form", "waitMilliseconds", "waitBudgetMilliseconds", "expectedMilliseconds", "fetchConcurrency", "offersInFlight", "offerQueue", "packedMemoryBytes", "packedLayerRows", "claimStaleMilliseconds", "claimWaitMilliseconds", "refusedMilliseconds"],
    "properties": {
     "form": { "type": "string" },
     "waitMilliseconds": { "type": "integer", "minimum": 1 },
@@ -15,11 +15,14 @@
     "expectedMilliseconds": { "type": "integer", "minimum": 1 },
     "fetchConcurrency": { "type": "integer", "minimum": 1 },
     "offersInFlight": { "type": "integer", "minimum": 1 },
+    "offerQueue": { "type": "integer", "minimum": 1 },
+    "packedMemoryBytes": { "type": "integer", "minimum": 1 },
+    "packedLayerRows": { "type": "integer", "minimum": 1, "description": "EN: Rows of packed layers one process remembers for its offers before it starts again. DE: Zeilen gepackter Schichten, die ein Prozess für seine Angebote behält, bevor er neu beginnt." },
     "claimStaleMilliseconds": { "type": "integer", "minimum": 1 },
     "claimWaitMilliseconds": { "type": "integer", "minimum": 1 },
     "refusedMilliseconds": { "type": "integer", "minimum": 1 }
    },
-   "const": { "form": "closure-entry-v1", "waitMilliseconds": 120000, "waitBudgetMilliseconds": 1800000, "expectedMilliseconds": 30000, "fetchConcurrency": 2, "offersInFlight": 1, "claimStaleMilliseconds": 120000, "claimWaitMilliseconds": 60000, "refusedMilliseconds": 600000 }
+   "const": { "form": "closure-entry-v1", "waitMilliseconds": 120000, "waitBudgetMilliseconds": 1800000, "expectedMilliseconds": 30000, "fetchConcurrency": 2, "offersInFlight": 1, "offerQueue": 256, "packedMemoryBytes": 134217728, "packedLayerRows": 1048576, "claimStaleMilliseconds": 120000, "claimWaitMilliseconds": 60000, "refusedMilliseconds": 600000 }
   },
   "Texts": {
    "const": {

@@ -244,11 +244,11 @@ export function QuizPage(props: QuizProps & { readonly view: PaneView; readonly 
           {quiz.tasks.map((task, index) => (
             <li key={task.id} {...CELL}>
               <AccessGate course={state.course} page={quiz.id} task={task.id} at={at} locale={locale} text={text}>
-                <div data-icon-host="" data-pet-prop={petProp(quiz.id, task.id)} className="flex min-w-0 items-center gap-double px-double py-single text-sm">
+                <div data-icon-host="" className="flex min-w-0 items-center gap-double px-double py-single text-sm">
                   <span className="course-nowrap w-[2ch] shrink-0 font-semibold tabular-nums text-muted-foreground">{index + 1}</span>
                   <TaskGlyph task={task} />
-                  <span className="min-w-0 flex-1 font-medium">{localized(task.title, locale)}</span>
-                  <span className="text-xs text-muted-foreground">{text(TASK_KIND_LABELS[task.kind])}</span>
+                  <span data-pet-prop={petProp(quiz.id, task.id)} className="min-w-0 font-medium">{localized(task.title, locale)}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">{text(TASK_KIND_LABELS[task.kind])}</span>
                 </div>
               </AccessGate>
             </li>

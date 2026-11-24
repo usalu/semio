@@ -33,7 +33,7 @@
   "fairness": {
     "queuedWithResourceLeases": true,
     "writerPreferenceMilliseconds": 120000,
-    "writerPreferenceByPrefix": [{ "prefix": "native-fixed-image:" }]
+    "writerPreferenceByPrefix": [{ "prefix": "native-fixed-image:" }, { "prefix": "native-storage-mapping:", "cycle": { "standAsideMilliseconds": 4000, "blockMilliseconds": 1000 } }]
   },
   "gate": {
     "releaseWhileWaiting": true,

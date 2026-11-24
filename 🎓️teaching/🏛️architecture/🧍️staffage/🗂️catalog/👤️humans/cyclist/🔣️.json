@@ -133567,7 +133567,7 @@
               "role": "body",
               "z": 5,
               "filled": true,
-              "tone": 0.15,
+              "tone": 0.1,
               "region": "bike-metal",
               "material": "rubber",
               "solid": {
@@ -133891,7 +133891,7 @@
               "role": "body",
               "z": 5,
               "filled": true,
-              "tone": 0.15,
+              "tone": 0.2,
               "region": "bike-metal",
               "material": "steel",
               "solid": {
@@ -143724,7 +143724,7 @@
               "role": "body",
               "z": 15.59,
               "filled": true,
-              "tone": 0.15,
+              "tone": 0.1,
               "region": "bike-metal",
               "material": "rubber",
               "solid": {
@@ -144208,7 +144208,7 @@
               "role": "body",
               "z": 15.59,
               "filled": true,
-              "tone": 0.15,
+              "tone": 0.2,
               "region": "bike-metal",
               "material": "steel",
               "solid": {

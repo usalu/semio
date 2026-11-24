@@ -39,6 +39,8 @@ for slug in proof:
     c = collections.Counter()
     for o in ops:
         g = str(o.get("group", ""))
+        if o["op"] == "order":
+            continue
         if o["op"] == "dims":
             c["dims " + ", ".join(f"{k} {v}" for k, v in o["set"].items())] += 1
         elif o["op"].startswith("solid"):

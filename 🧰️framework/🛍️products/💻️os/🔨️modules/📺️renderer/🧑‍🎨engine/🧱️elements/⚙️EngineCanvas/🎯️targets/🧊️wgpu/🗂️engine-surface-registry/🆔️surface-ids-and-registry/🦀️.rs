@@ -214,8 +214,8 @@ pub struct EngineSurfaceSlot {
     pub id: Option<EngineSurfaceId>,
     pub generation: u64,
     pub exhausted: bool,
-    pub value: Option<EngineSurface>,
-    pub retirement: Option<EngineSurfaceRetirement>,
+    pub value: Option<Box<EngineSurface>>,
+    pub retirement: Option<Box<EngineSurfaceRetirement>>,
 }
 
 pub struct EngineSurfaceRegistry {
@@ -241,12 +241,12 @@ impl EngineSurfaceRegistry {
     }
 
     pub fn get(&self, id: &str) -> Option<&EngineSurface> {
-        self.slots.get(self.slot_index(id)?)?.value.as_ref()
+        self.slots.get(self.slot_index(id)?)?.value.as_deref()
     }
 
     pub fn get_mut(&mut self, id: &str) -> Option<&mut EngineSurface> {
         let index = self.slot_index(id)?;
-        self.slots[index].value.as_mut()
+        self.slots[index].value.as_deref_mut()
     }
 
     #[cfg(any(test, feature = "testkit"))]
@@ -296,7 +296,7 @@ impl EngineSurfaceRegistry {
         if slot.generation != token.generation || slot.id.is_none() || slot.value.is_some() || slot.retirement.is_some() {
             return Err(value);
         }
-        slot.value = Some(value);
+        slot.value = Some(Box::new(value));
         Ok(())
     }
 
@@ -309,11 +309,11 @@ impl EngineSurfaceRegistry {
             u64::MAX
         });
         slot.id = None;
-        slot.value.take()
+        slot.value.take().map(|surface| *surface)
     }
 
     pub fn values_mut(&mut self) -> impl Iterator<Item = &mut EngineSurface> {
-        self.slots.iter_mut().filter_map(|slot| slot.value.as_mut())
+        self.slots.iter_mut().filter_map(|slot| slot.value.as_deref_mut())
     }
 
     pub fn begin_close(&mut self, token: EngineSurfaceToken) -> bool {
@@ -329,10 +329,10 @@ impl EngineSurfaceRegistry {
         let host_id = slot.id;
         let surface = match slot.value.take() {
             Some(surface) => surface,
-            None if host_id.is_some() => empty_engine_surface(1, 1),
+            None if host_id.is_some() => Box::new(empty_engine_surface(1, 1)),
             None => return false,
         };
-        slot.retirement = Some(EngineSurfaceRetirement::new(surface, host_id));
+        slot.retirement = Some(Box::new(EngineSurfaceRetirement::new(*surface, host_id)));
         true
     }
 

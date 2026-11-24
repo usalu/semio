@@ -422,6 +422,26 @@
               "type": "null"
             }
           ]
+        },
+        "unoccupiedVentilation": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json#/$defs/UnoccupiedVentilation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "clearUnoccupiedVentilation": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },

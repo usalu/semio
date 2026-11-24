@@ -203,7 +203,7 @@ fn a_plate_thickness_drag_updates_haz_zones_and_class_colouring_through_the_incr
     assert!(!previous.is_empty(), "the purlin has welded plates");
     let mut changed = 0;
     for step in 1..=6 {
-        document.sections.iter_mut().find(|s| s.id == section_id).expect("section").elements[0].thickness += 0.001 * step as f64;
+        document.sections.iter_mut().find(|s| s.id == section_id).expect("section").elements.iter_mut().find(|e| e.id == "web").expect("web").thickness += 0.001 * step as f64;
         let report = report_of(&document);
         let got = incremental(&mut projector, &mut held, &document, &report);
         assert_eq!(got, full(&document, &report), "incremental equals full after thickness step {step}");

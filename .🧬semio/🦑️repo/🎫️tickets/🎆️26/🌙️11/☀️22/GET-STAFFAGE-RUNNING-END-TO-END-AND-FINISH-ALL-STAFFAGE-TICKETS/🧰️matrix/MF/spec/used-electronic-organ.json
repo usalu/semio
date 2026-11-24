@@ -1,0 +1,10 @@
+{
+  "ops": [
+    { "op": "contact-split", "anchor": "bench-feet", "padSize": [null, 0.04, 0.04], "parts": [
+      { "id": "bench-foot-back-right", "y": 0.125, "z": -0.39, "footprintLengthM": 0.03, "footprintWidthM": 0.04, "title": { "en": "Bench foot on the floor, back right", "de": "Bankfuß auf dem Boden, hinten rechts" } },
+      { "id": "bench-foot-back-left", "y": 0.125, "z": 0.33, "footprintLengthM": 0.03, "footprintWidthM": 0.04, "title": { "en": "Bench foot on the floor, back left", "de": "Bankfuß auf dem Boden, hinten links" } },
+      { "id": "bench-foot-front-right", "y": -0.125, "z": -0.39, "footprintLengthM": 0.03, "footprintWidthM": 0.04, "title": { "en": "Bench foot on the floor, front right", "de": "Bankfuß auf dem Boden, vorn rechts" } },
+      { "id": "bench-foot-front-left", "y": -0.125, "z": 0.33, "footprintLengthM": 0.03, "footprintWidthM": 0.04, "title": { "en": "Bench foot on the floor, front left", "de": "Bankfuß auf dem Boden, vorn links" } }
+    ] }
+  ]
+}

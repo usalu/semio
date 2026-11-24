@@ -144,18 +144,21 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
     originalReturn.receipt(receipt);
   }
   const heldOutput = new Map();
+  const succession = new OriginalStockSuccession(originalSource, reactor, originalReturn, heldOutput);
   let sourceTail = Promise.resolve();
-  const exclusive = (run) => {
-    const work = sourceTail.then(() => {
+  const exclusive = (run, cleanup = false) => {
+    const work = sourceTail.then(async () => {
       const refusal = nativeRefusalError(originalSource.nativeRefusal, refusalDetail);
       if (refusal !== undefined) throw refusal;
+      if (contextReady) await succession.advance();
+      if (!cleanup) originalSource.requireStock(succession.refusal);
       return run();
     });
     sourceTail = work.then(() => {}, () => {});
     return work;
   };
-  const fundedJob = (budget, run) => exclusive(() => originalSourceJob(originalSource, (receipt) => originalReturn.receipt(receipt), originalJobWallUs(budget), run));
   let contextReady = false;
+  const fundedJob = (budget, run, cleanup = false) => exclusive(() => originalSourceJob(originalSource, (receipt) => originalReturn.receipt(receipt), originalJobWallUs(budget), run, cleanup), cleanup);
   async function admitWire(value) {
     const turn = originalSource.issue();
     let call;
@@ -229,13 +232,18 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
       } catch (failure) {
         try {
           const receipt = failure?.payload ?? failure;
-          if (receipt && receipt.input && receipt.spent && typeof receipt.workUnitsSpent === "bigint") receiveOriginal(receipt, receipt.workUnitsSpent);
-          if (originalSource.nativeRefusal === undefined) { originalSource.holdNativeRefusal(failure); originalReturn.hold(failure); }
+          const accounted = !!(receipt && receipt.input && receipt.spent && typeof receipt.workUnitsSpent === "bigint");
+          if (accounted) receiveOriginal(receipt, receipt.workUnitsSpent);
+          const refusal = receipt?.failure;
+          const overrun = accounted && refusal?.tag === "authority" && refusal.val === "work-limit";
+          if (!overrun && originalSource.nativeRefusal === undefined) { originalSource.holdNativeRefusal(failure); originalReturn.hold(failure); }
         } finally {
           const raw = hostShim.__returnOriginal(turn);
           if (raw !== undefined) { originalSource.holdProducerRefusal(raw); originalReturn.hold(raw); }
         }
-        refusalDetail ??= hostShim.__takeActorFault();
+        const detail = hostShim.__takeActorFault();
+        if (originalSource.nativeRefusal === undefined) throw nativeRefusalError(failure, detail) ?? failure;
+        refusalDetail ??= detail;
         throw nativeRefusalError(failure, refusalDetail) ?? failure;
       }
       let raw;
@@ -244,9 +252,9 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
       if (raw !== undefined) throw Object.assign(new Error("original-turn.producer-held"), { originalProducer: raw });
       return { ...result, nextWake: optionValue(result.nextWake) ?? null, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
     }),
-    startJob: async (job, kind, input) => fundedJob(undefined, (funds) => funds.start({ reactor, jobs }, job, kind, input)),
-    stepJob: async (job, budget, control = {}) => fundedJob(budget, (funds) => funds.step(jobs, job, { ...control, held: heldOutput })),
-    cancelJob: async (job) => fundedJob(undefined, (funds) => funds.cancel(jobs, job, { held: heldOutput })),
+    startJob: async (job, kind, input) => fundedJob(undefined, async (funds) => { succession.started(job); await funds.start({ reactor, jobs }, job, kind, input); }),
+    stepJob: async (job, budget, control = {}) => fundedJob(budget, async (funds) => { const step = await funds.step(jobs, job, { ...control, held: heldOutput }); if (step.status !== "running") succession.settled(job); return step; }),
+    cancelJob: async (job) => fundedJob(undefined, async (funds) => { await funds.cancel(jobs, job, { held: heldOutput }); succession.settled(job); }, true),
     takeSegmentedDownloadChunk: async (instanceId, operationId) => optionValue(await jobs.takeSegmentedDownloadChunk(instanceId, operationId)),
     checkpoint: () => unreceipted(undefined, (budget) => checkpoint.checkpoint(budget)),
     restore: (state) => unreceipted({ operation: "restore", state }, (budget) => checkpoint.restore(budget)),

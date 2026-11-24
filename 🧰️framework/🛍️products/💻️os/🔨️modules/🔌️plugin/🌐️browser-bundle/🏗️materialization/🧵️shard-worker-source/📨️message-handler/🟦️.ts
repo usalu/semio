@@ -43,6 +43,10 @@ self.addEventListener("message", async (event) => {
     if (actor && actor.activationGeneration === msg.activationGeneration && actor.api.originalSource.nativeRefusal === undefined) actor.api.originalSource.holdNativeRefusal(msg.refusal);
     return;
   }
+  if (kind === "original-succession-result") {
+    settleSuccession(msg);
+    return;
+  }
   if (kind === "dispose") {
     const actor = actors.get(msg.actorId);
     if (!actor || actor.activationGeneration !== msg.activationGeneration || actor.disposeRequested) return;

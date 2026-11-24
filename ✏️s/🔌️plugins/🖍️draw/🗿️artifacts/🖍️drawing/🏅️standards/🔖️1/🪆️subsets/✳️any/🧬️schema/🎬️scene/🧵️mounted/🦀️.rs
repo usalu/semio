@@ -20,6 +20,8 @@ const SHELLS:usize=256;
 const TAG:u64=0x000d_0000_0000_0000;
 const COUNTER_MAX:u64=u32::MAX as u64;
 pub fn identity(render:AppRenderOperationContext)->SceneIdentity{SceneIdentity{instance:render.app_instance_id,base:render.base_revision.0,generation:render.generation.0,revision:render.canonical_base_revision}}
+/// 📏️ The coarsest flatness every canvas consumer accepts: picking asks for a tenth of a pixel at the largest camera zoom.
+pub const CANVAS_FLATNESS:f64=0.1/32.0;
 pub fn limits()->DocumentSceneLimits{Default::default()}
 pub fn algorithms()->DocumentAlgorithmLimits{Default::default()}
 pub fn paint_limits()->PaintedSceneLimits{PaintedSceneLimits{max_nodes:1024,max_segments:65536,max_points:262144,max_contours:65536,max_work:1000000000}}
@@ -88,7 +90,7 @@ impl GeometryJob{
   if state.job_id!=self.job||!state.identity.matches(self.identity){return JobStep::Failed(b"drawing.geometry.factory-stale".to_vec());}
   if !current||state.cancelled{state.transfer(false);fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.cancelled".to_vec());}
   let previous_work=state.work;let started=semio_framework_job::default_now_us();let deadline=started.map(|t|t.saturating_add(8_000).min(cx.deadline_us()));
-  for _ in 0..cx.fuel_remaining().min(65536){if deadline.is_some_and(|d|semio_framework_job::default_now_us().is_none_or(|t|t>=d)){break;}
+  for turn in 0..cx.fuel_remaining().min(65536){if turn%32==0&&deadline.is_some_and(|d|semio_framework_job::default_now_us().is_none_or(|t|t>=d)){break;}
    if state.cache.is_some(){
     if !state.producer.as_ref().is_some_and(|producer|producer.snapshot_authority_matches(self.identity.generation,self.identity.revision)){state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.stale-source".to_vec());}
     let Some(cache)=state.cache.as_mut()else{return JobStep::Failed(b"drawing.geometry.owner-missing".to_vec())};let result=cache.advance_original(cx);let actual=cache.last_turn_work();state.work+=actual;match result{
@@ -99,7 +101,7 @@ impl GeometryJob{
    }else{
     let Some(producer)=&mut state.producer else{return JobStep::Done(Vec::new())};
     match producer.advance_original(cx){
-     Ok(progress)=>{let actual=producer.last_turn_work();state.work+=actual;if actual==0{return JobStep::Running(None);}if progress.done{if !producer.snapshot_authority_matches(self.identity.generation,self.identity.revision){state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.stale-source".to_vec());}let Ok(plan)=producer.result()else{state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.owner-missing".to_vec())};state.cache=Some(ScenePaintJob::new(plan,0.001,paint_limits()));}}
+     Ok(progress)=>{let actual=producer.last_turn_work();state.work+=actual;if actual==0{return JobStep::Running(None);}if progress.done{if !producer.snapshot_authority_matches(self.identity.generation,self.identity.revision){state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.stale-source".to_vec());}let Ok(plan)=producer.result()else{state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.owner-missing".to_vec())};state.cache=Some(ScenePaintJob::new(plan,CANVAS_FLATNESS,paint_limits()));}}
      Err(error)=>{state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(error.domain_message().as_bytes().to_vec());}
     }
    }

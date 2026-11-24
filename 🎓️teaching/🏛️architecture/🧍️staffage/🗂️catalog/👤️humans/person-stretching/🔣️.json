@@ -38923,7 +38923,7 @@
        "role": "body",
        "z": 5,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.75,
        "material": "hair",
        "region": "hair",
        "solid": {
@@ -39439,7 +39439,7 @@
        "role": "body",
        "z": 5,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.25,
        "material": "skin",
        "region": "face-skin",
        "solid": {
@@ -41370,7 +41370,7 @@
        "role": "body",
        "z": 4.5,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.45,
        "region": "hoodie",
        "material": "training-fleece",
        "solid": {
@@ -41828,7 +41828,7 @@
        "role": "body",
        "z": 1.1,
        "filled": true,
-       "tone": 0.25,
+       "tone": 0.12,
        "region": "running-shoes",
        "material": "running-shoe",
        "solid": {
@@ -43593,7 +43593,7 @@
        "role": "body",
        "z": 2.2,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.45,
        "region": "hoodie",
        "material": "training-fleece",
        "solid": {
@@ -43957,7 +43957,7 @@
        "role": "body",
        "z": 2.2,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.45,
        "region": "hoodie",
        "material": "training-fleece",
        "solid": {
@@ -44497,7 +44497,7 @@
        "role": "body",
        "z": 2.3,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.45,
        "region": "hoodie",
        "material": "training-fleece",
        "solid": {
@@ -44941,7 +44941,7 @@
        "role": "body",
        "z": 2.3,
        "filled": true,
-       "tone": 0.4,
+       "tone": 0.45,
        "region": "hoodie",
        "material": "training-fleece",
        "solid": {

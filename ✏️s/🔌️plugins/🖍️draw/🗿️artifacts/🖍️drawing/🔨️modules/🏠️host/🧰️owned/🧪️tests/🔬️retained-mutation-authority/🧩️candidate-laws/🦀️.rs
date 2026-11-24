@@ -67,7 +67,7 @@ fn retained_drawing_depth_plus_one_and_hostile_fields_fault_then_close_terminal_
     drain_snapshot(source);
 
     let source = nested_snapshot();
-    let mutation = DrawingMutation::RenameLayer(RenameLayer { layer_id: "x".repeat(DRAWING_OWNED_FIELD_BYTES + 1), new_name: "hostile".into() });
+    let mutation = DrawingMutation::RenameLayer(RenameLayer { layer_id: "x".repeat(DRAWING_OWNED_FIELD_BYTES + 1).into(), new_name: "hostile".into() });
     let (source, _) = apply(source, &mutation).expect_err("hostile Drawing field rejects");
     drain_snapshot(source);
 }
@@ -146,6 +146,7 @@ fn retained_drawing_rebuild_fault_after_every_phase_rolls_back_exact_container_a
             let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("pending")).to_string().into()).expect("nonempty authored identity"), "pending", Default::default())) });
             let operation = semio_framework_job::OperationId(8_500 + phase as u64);
             let generation = semio_framework_job::Generation(850 + phase as u64);
+            let held = HeldMutation::new(&mutation, &source);
             let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(None, pool.clone()).expect("Drawing rollback candidate borrows one exact pool slot");
             let slot = authority.arena_slot;
             let arena_generation = authority.arena_generation;
@@ -162,7 +163,7 @@ fn retained_drawing_rebuild_fault_after_every_phase_rolls_back_exact_container_a
                 }
                 let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
                 let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
-                assert!(!authority.step(&mut source, &mutation, &mut context).expect("Drawing rollback fixture reaches every internal rebuild phase"));
+                assert!(!held.step(&mut authority, &mut source, &mut context).expect("Drawing rollback fixture reaches every internal rebuild phase"));
             }
             assert!(authority.rebuild.as_ref().is_some_and(|rebuild| rebuild.recorded_move_in_phase(phase)));
             if !stale {
@@ -178,7 +179,7 @@ fn retained_drawing_rebuild_fault_after_every_phase_rolls_back_exact_container_a
                 &mut preview_sequence,
                 &mut rejected_retained,
             );
-            assert_eq!(authority.step(&mut source, &mutation, &mut rejected), Err(if stale { "drawing-store.mutation-candidate-stale-authority" } else { "drawing-store.mutation-candidate-cancelled" }));
+            assert_eq!(held.step(&mut authority, &mut source, &mut rejected), Err(if stale { "drawing-store.mutation-candidate-stale-authority" } else { "drawing-store.mutation-candidate-cancelled" }));
             close_candidate(&mut authority, Some(&mut source));
             assert_eq!(native_layer_backing(&source.layers), source_owner, "rollback restores the exact original live native page backing");
             assert_eq!(source.layers.iter().map(|layer| semio_s_artifact_draw_drawing_model::layer_id(layer)).collect::<Vec<_>>(), source_ids.iter().map(String::as_str).collect::<Vec<_>>(), "rollback restores exact FIFO layer order");
@@ -216,6 +217,7 @@ fn retained_drawing_reorder_fault_after_source_handoff_restores_exact_nested_fif
         let mutation = DrawingMutation::ReorderLayer(ReorderLayer { layer_id: target, parent_id: Some(group_id), index: 2 });
         let operation = semio_framework_job::OperationId(8_700);
         let generation = semio_framework_job::Generation(870);
+        let held = HeldMutation::new(&mutation, &source);
         let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(None, pool.clone()).expect("Drawing reorder rollback candidate borrows one exact pool slot");
         let slot = authority.arena_slot;
         let reverse_owner = authority.container_reverse.as_ref().expect("Drawing reorder reverse owner").as_ptr();
@@ -228,7 +230,7 @@ fn retained_drawing_reorder_fault_after_source_handoff_restores_exact_nested_fif
             }
             let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
             let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
-            assert!(!authority.step(&mut source, &mutation, &mut context).expect("Drawing reorder rollback fixture reaches destination rebuild after source handoff"));
+            assert!(!held.step(&mut authority, &mut source, &mut context).expect("Drawing reorder rollback fixture reaches destination rebuild after source handoff"));
         }
         assert_eq!(authority.rebuild_role, Some(DrawingContainerRebuildRole::Destination));
         assert!(authority.source_undo.is_some(), "source handoff keeps the exact insertion undo authority until destination publication");
@@ -245,7 +247,7 @@ fn retained_drawing_reorder_fault_after_source_handoff_restores_exact_nested_fif
             &mut preview_sequence,
             &mut rejected_retained,
         );
-        assert_eq!(authority.step(&mut source, &mutation, &mut rejected), Err(if stale { "drawing-store.mutation-candidate-stale-authority" } else { "drawing-store.mutation-candidate-cancelled" }));
+        assert_eq!(held.step(&mut authority, &mut source, &mut rejected), Err(if stale { "drawing-store.mutation-candidate-stale-authority" } else { "drawing-store.mutation-candidate-cancelled" }));
         close_candidate(&mut authority, Some(&mut source));
         drop(authority);
         let DrawingLayerNode::Group(group) = source.layers.last().expect("Drawing reorder rollback group remains retained") else { unreachable!("Drawing reorder rollback group remains a group") };

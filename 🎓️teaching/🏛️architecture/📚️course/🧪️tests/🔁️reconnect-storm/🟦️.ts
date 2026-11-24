@@ -85,6 +85,8 @@ async function arrange(index: number, device: Device, started: number): Promise<
     const at = (): number => Math.round((Date.now() - started) / 1000);
     const scope = decodeURIComponent(new URL(socket.url()).pathname).replace(/\/presence\/ws$/u, "").slice(-24);
     sockets.push(`+${at()}s open ${scope}`);
+    if (index === 0) socket.on("framereceived", (frame) => { const text = String(frame.payload).slice(0, 220); if (!/"type":"(state|pong|heartbeat)"/u.test(text)) console.log(`[DEBUG] +${at()}s ${scope} <- ${text}`); });
+    if (index === 0) socket.on("framesent", (frame) => { const text = String(frame.payload); if (text.length > 600) { let sizes = ""; try { const state = JSON.parse(text).state ?? {}; const walk = (value: unknown, path: string): void => { const size = JSON.stringify(value)?.length ?? 0; if (size > 200) { sizes += ` ${path}=${size}`; if (value !== null && typeof value === "object" && !Array.isArray(value)) for (const [key, inner] of Object.entries(value)) walk(inner, `${path}.${key}`); else if (Array.isArray(value)) sizes += `[${value.length} items, first ${JSON.stringify(value[0]).slice(0, 200)}]`; } }; walk(state, "state"); } catch { sizes = "?"; } console.log(`[DEBUG] +${at()}s ${scope} -> ${text.length} bytes:${sizes}`); } });
     socket.on("close", () => sockets.push(`+${at()}s closed ${scope}`));
     socket.on("socketerror", (error) => sockets.push(`+${at()}s error ${scope} ${String(error).slice(0, 40)}`));
   });
@@ -119,7 +121,7 @@ interface Observation {
 async function observe(page: Page): Promise<Observation> {
   return page.evaluate(() => ({
     footer: document.querySelector("[data-presence-footer] [data-presence-status]") !== null,
-    online: Number(/\d+/u.exec(document.querySelector("[data-presence-footer] [data-presence-status]")?.textContent ?? "")?.[0] ?? -1),
+    online: Number(/\d+/u.exec(document.querySelector("[data-presence-footer] [data-presence-status] > span:last-child")?.textContent ?? "")?.[0] ?? -1),
     tone: document.querySelector("header [data-tone]")?.getAttribute("data-tone") ?? null,
     visible: document.visibilityState,
     onLine: navigator.onLine,

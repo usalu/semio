@@ -1,7 +1,7 @@
 //! ⚖️ Handwritten EN1990 actions, verification members and influence relationships.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::En1990Snapshot;
-use crate::{AccidentalAction, BridgeSls, FatigueSpectrum, ImportanceClass, Member, MemberEffect, PermanentAction, ReliabilityAnalysis, ReliabilityClass, SeismicAction, TestSeries, Placement, FactorOverride, LoadGroup, TrafficGroup, VariableAction, CaseRow, CaseNumber, CaseText, DistributionKind, TestDistribution, PermanentKind, StructureKind, SupervisionLevel, InspectionLevel};
+use crate::{AccidentalAction, BridgeSls, FatigueSpectrum, ImportanceClass, Member, MemberEffect, PermanentAction, ReliabilityAnalysis, ReliabilityClass, SeismicAction, TestSeries, Placement, FactorKind, FactorOverride, LoadGroup, TrafficGroup, VariableAction, CaseRow, CaseNumber, CaseText, DistributionKind, TestDistribution, PermanentKind, StructureKind, SupervisionLevel, InspectionLevel};
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase, validate_sqlite_database_schema, artifact::{Cell, FloatColumn, FloatRow, NativeEncodingBound, RowWriter, reconstruct_text}}};
@@ -73,6 +73,7 @@ fn importance(value: ImportanceClass) -> &'static str { match value { Importance
 fn read_importance(value: &str) -> Result<ImportanceClass, ValueError> { match value { "I" => Ok(ImportanceClass::I), "II" => Ok(ImportanceClass::II), "III" => Ok(ImportanceClass::III), "IV" => Ok(ImportanceClass::IV), _ => Err(invalid("EN1990 importance class is not owned")) } }
 fn reliability(value: ReliabilityClass) -> &'static str { match value { ReliabilityClass::RC1 => "RC1", ReliabilityClass::RC2 => "RC2", ReliabilityClass::RC3 => "RC3" } }
 fn read_reliability(value: &str) -> Result<ReliabilityClass, ValueError> { match value { "RC1" => Ok(ReliabilityClass::RC1), "RC2" => Ok(ReliabilityClass::RC2), "RC3" => Ok(ReliabilityClass::RC3), _ => Err(invalid("EN1990 reliability class is not owned")) } }
+fn read_factor_kind(value: &str) -> Result<FactorKind, ValueError> { FactorKind::from_id(value).ok_or_else(|| invalid("EN1990 factor kind is not owned")) }
 fn load_group(value: LoadGroup) -> &'static str { match value { LoadGroup::GR1A=>"GR1A",LoadGroup::GR1B=>"GR1B",LoadGroup::GR2=>"GR2",LoadGroup::GR3=>"GR3",LoadGroup::GR4=>"GR4",LoadGroup::GR5=>"GR5",LoadGroup::GR6=>"GR6" } }
 fn read_load_group(value: &str) -> Result<LoadGroup, ValueError> { match value { "GR1A"=>Ok(LoadGroup::GR1A),"GR1B"=>Ok(LoadGroup::GR1B),"GR2"=>Ok(LoadGroup::GR2),"GR3"=>Ok(LoadGroup::GR3),"GR4"=>Ok(LoadGroup::GR4),"GR5"=>Ok(LoadGroup::GR5),"GR6"=>Ok(LoadGroup::GR6), _ => Err(invalid("EN1990 traffic load group is not owned")) } }
 fn ordinal(value: usize) -> Result<Cell<'static>, ValueError> { Ok(Cell::Integer(i64::try_from(value).map_err(|error| invalid(error.to_string()))?)) }
@@ -138,7 +139,7 @@ impl En1990Snapshot{
             for (index, text) in case.texts.iter().enumerate() { out.insert_float("en1990_case_text", &[Cell::Integer(id), ordinal(index)?, Cell::Text(&text.id), Cell::Text(&text.value)], &[])?; }
         }
         for (position, row) in self.factor_overrides.iter().enumerate() {
-            out.insert_float("en1990_factor_override", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&row.id), Cell::Text(&row.factor), Cell::Text(&row.target), Cell::Real(row.value), Cell::Text(&row.justification)], FACTOR_OVERRIDE_FLOATS)?;
+            out.insert_float("en1990_factor_override", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&row.id), Cell::Text(row.factor.as_str()), Cell::Text(&row.target), Cell::Real(row.value), Cell::Text(&row.justification)], FACTOR_OVERRIDE_FLOATS)?;
         }
         for (position, row) in self.traffic_groups.iter().enumerate() {
             out.insert_float("en1990_traffic_group", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&row.id), Cell::Text(load_group(row.group)), Cell::Text(&row.variable_id)], &[])?;
@@ -171,7 +172,7 @@ impl ArtifactSqliteSnapshotHost for En1990Snapshot {
         for analysis in &self.reliability_analyses { bound.add(4096)?; bound.repeated(analysis.id.len(), 24)?; bound.repeated(analysis.member_id.len(), 24)?; bound.repeated(analysis.resistance_distribution.as_str().len(), 24)?; bound.repeated(analysis.action_distribution.as_str().len(), 24)?; bound.repeated(analysis.second_action_distribution.as_str().len(), 24)?; }
         for series in &self.test_series { bound.add(4096)?; bound.repeated(series.id.len(), 24)?; bound.repeated(series.quantity.len(), 24)?; bound.repeated(series.pairs.len(), 24)?; bound.repeated(series.distribution.as_str().len(), 24)?; }
         for placement in &self.placements { bound.add(4096)?; bound.repeated(placement.id.len(), 24)?; }
-        for row in &self.factor_overrides { bound.add(4096)?; for value in [&row.id, &row.factor, &row.target, &row.justification] { bound.repeated(value.len(), 24)?; } }
+        for row in &self.factor_overrides { bound.add(4096)?; for value in [&row.id, &row.target, &row.justification] { bound.repeated(value.len(), 24)?; } bound.repeated(row.factor.as_str().len(), 24)?; }
         for row in &self.traffic_groups { bound.add(4096)?; for value in [&row.id, &row.variable_id] { bound.repeated(value.len(), 24)?; } }
         for case in &self.cases { bound.add(4096)?; for value in [&case.id, &case.label_en, &case.label_de, &case.entry_id] { bound.repeated(value.len(), 24)?; } for number in &case.numbers { bound.add(2048)?; bound.repeated(number.id.len(), 24)?; } for text in &case.texts { bound.add(2048)?; for value in [&text.id, &text.value] { bound.repeated(value.len(), 24)?; } } }
         bound.finish()
@@ -290,7 +291,7 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
         for row in ordered(override_rows.values().copied(), 2, control)? {
             checkpoint(control, factor_overrides.len(), 0)?;
             if row.integer(1)? != 1 { return Err(invalid("EN1990 factor override has an unknown document")); }
-            factor_overrides.push(FactorOverride { id: reconstruct_text(control, row.text(3)?)?, factor: reconstruct_text(control, row.text(4)?)?, target: reconstruct_text(control, row.text(5)?)?, value: row.real(6)?, justification: reconstruct_text(control, row.text(7)?)? });
+            factor_overrides.push(FactorOverride { id: reconstruct_text(control, row.text(3)?)?, factor: read_factor_kind(row.text(4)?)?, target: reconstruct_text(control, row.text(5)?)?, value: row.real(6)?, justification: reconstruct_text(control, row.text(7)?)? });
         }
         let mut traffic_groups = Vec::new();
         for row in ordered(traffic_rows.values().copied(), 2, control)? {

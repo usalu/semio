@@ -1210,5 +1210,147 @@
       ]
     },
     "invalidTerminated": "{\"v\":1,\"key\":\"torn"
-  }
+  },
+  "forecasts": [
+    {
+      "name": "unchanged size keeps the history",
+      "lines": 60000,
+      "history": [
+        {
+          "v": 1,
+          "key": "semio-s-artifact-stdio-semio@semio_s_artifact_stdio_semio|host|dev|lib",
+          "peakRssBytes": 4194304000,
+          "outputBytes": 1,
+          "wallMs": 1,
+          "cpuMs": 1,
+          "remainingMs": 0,
+          "atMs": 1,
+          "lines": 60000
+        },
+        {
+          "v": 1,
+          "key": "semio-s-artifact-stdio-semio@semio_s_artifact_stdio_semio|host|dev|lib",
+          "peakRssBytes": 4299161600,
+          "outputBytes": 1,
+          "wallMs": 1,
+          "cpuMs": 1,
+          "remainingMs": 0,
+          "atMs": 2,
+          "lines": 61000
+        }
+      ],
+      "kept": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "a crate split to a fraction drops the stale rows",
+      "lines": 3000,
+      "history": [
+        {
+          "v": 1,
+          "key": "semio-s-artifact-stdio-semio@semio_s_artifact_stdio_semio|host|dev|lib",
+          "peakRssBytes": 4194304000,
+          "outputBytes": 1,
+          "wallMs": 1,
+          "cpuMs": 1,
+          "remainingMs": 0,
+          "atMs": 1,
+          "lines": 60000
+        },
+        {
+          "v": 1,
+          "key": "semio-s-artifact-stdio-semio@semio_s_artifact_stdio_semio|host|dev|lib",
+          "peakRssBytes": 4404019200,
+          "outputBytes": 1,
+          "wallMs": 1,
+          "cpuMs": 1,
+          "remainingMs": 0,
+          "atMs": 2,
+          "lines": 62000
+        }
+      ],
+      "kept": []
+    },
+    {
+      "name": "a grown crate drops the smaller rows",
+      "lines": 90000,
+      "history": [
+        {
+          "v": 1,
+          "key": "semio-s-artifact-stdio-semio@semio_s_artifact_stdio_semio|host|dev|lib",
+          "peakRssBytes": 4194304000,
+          "outputBytes": 1,
+          "wallMs": 1,
+          "cpuMs": 1,
+          "remainingMs": 0,
+          "atMs": 1,
+          "lines": 60000
+        },
+        {
+          "v": 1,
+          "key": "semio-s-artifact-stdio-semio@semio_s_artifact_stdio_semio|host|dev|lib",
+          "peakRssBytes": 5242880000,
+          "outputBytes": 1,
+          "wallMs": 1,
+          "cpuMs": 1,
+          "remainingMs": 0,
+          "atMs": 2,
+          "lines": 88000
+        }
+      ],
+      "kept": [
+        1
+      ]
+    },
+    {
+      "name": "rows without a recorded size are stale",
+      "lines": 60000,
+      "history": [
+        {
+          "v": 1,
+          "key": "semio-s-artifact-stdio-semio@semio_s_artifact_stdio_semio|host|dev|lib",
+          "peakRssBytes": 6659506176,
+          "outputBytes": 1,
+          "wallMs": 1,
+          "cpuMs": 1,
+          "remainingMs": 0,
+          "atMs": 1
+        }
+      ],
+      "kept": []
+    },
+    {
+      "name": "an empty crate matches only an empty crate",
+      "lines": 0,
+      "history": [
+        {
+          "v": 1,
+          "key": "semio-s-artifact-stdio-semio@semio_s_artifact_stdio_semio|host|dev|lib",
+          "peakRssBytes": 104857600,
+          "outputBytes": 1,
+          "wallMs": 1,
+          "cpuMs": 1,
+          "remainingMs": 0,
+          "atMs": 1,
+          "lines": 0
+        },
+        {
+          "v": 1,
+          "key": "semio-s-artifact-stdio-semio@semio_s_artifact_stdio_semio|host|dev|lib",
+          "peakRssBytes": 104857600,
+          "outputBytes": 1,
+          "wallMs": 1,
+          "cpuMs": 1,
+          "remainingMs": 0,
+          "atMs": 2,
+          "lines": 10
+        }
+      ],
+      "kept": [
+        0
+      ]
+    }
+  ]
 }

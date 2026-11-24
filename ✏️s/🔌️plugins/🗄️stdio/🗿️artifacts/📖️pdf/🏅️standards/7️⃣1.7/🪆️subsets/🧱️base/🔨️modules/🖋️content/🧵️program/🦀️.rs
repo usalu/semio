@@ -2,7 +2,6 @@
 
 use super::{array_text_item, bounded_number, bounded_spelling, first_array, fixed_operator, named_operator, num, plain_text_byte, ContentToken, ContentTokenCursor, FontState, FontTable, NumericArray, PdfObject, PdfOp, PdfTextArrayItem, PdfTextString, SavedFont, TextShow};
 use crate::standards::v1_7::subsets::base::modules::lexer::{ContentTokenEvent, ContentTokenReceipt, CosGrant, CosReceipt, CosStatus, PdfCosCursor};
-use crate::standards::v1_7::subsets::base::modules::fonts::controlled_type1_text;
 use super::{PdfBaseEncoding, PdfFixedCodeWidth};
 use std::mem::{size_of, take};
 
@@ -172,7 +171,7 @@ impl ContentProgramCursor {
             Phase::Apply { start, end } => self.apply(source, fonts, grant, start, end),
             Phase::ScanText { target, index, bytes } => {
                 self.phase = match target.bytes(&self.operands).get(index).copied() {
-                    Some(byte) => match text_byte_len(self.encoding, byte) {
+                    Some(byte) => match text_byte_len(fonts, self.fonts.current.as_deref(), self.encoding, byte) {
                         Some(len) => Phase::ScanText { target, index: index + 1, bytes: bytes + len },
                         None => Phase::AllocateText { target, utf8_bytes: None },
                     },
@@ -181,7 +180,7 @@ impl ContentProgramCursor {
                 worked(0, 0)
             }
             Phase::AllocateText { target, utf8_bytes } => self.allocate_text(target, utf8_bytes, grant),
-            Phase::CopyText { target, index } => self.copy_text(target, index),
+            Phase::CopyText { target, index } => self.copy_text(target, index, fonts),
             Phase::AllocateTextArray => self.allocate_text_array(grant),
             Phase::TextArray { index } => self.text_array_item(index),
             Phase::AllocateNumbers { target } => self.allocate_numbers(target, grant),
@@ -408,13 +407,13 @@ impl ContentProgramCursor {
         worked(bytes, 0)
     }
 
-    fn copy_text(&mut self, target: TextTarget, index: usize) -> ContentProgramReceipt {
+    fn copy_text(&mut self, target: TextTarget, index: usize, fonts: &dyn FontTable) -> ContentProgramReceipt {
         let width = self.native_width();
         let source = target.bytes(&self.operands);
         if let Some(byte) = source.get(index).copied() {
             match self.text.as_mut().expect("allocated PDF semantic text") {
                 PdfTextString::Text { text } => match self.encoding {
-                    Some(encoding) => text.push_str(controlled_type1_text(encoding, byte).expect("scanned Type1 text")),
+                    Some(_) => text.push_str(self.fonts.current.as_deref().and_then(|name| fonts.controlled_type1_text(name, byte)).expect("scanned Type1 text")),
                     None => text.push(char::from(byte)),
                 },
                 PdfTextString::Codes { codes } => {
@@ -496,9 +495,9 @@ impl ContentProgramCursor {
     }
 }
 
-fn text_byte_len(encoding: Option<PdfBaseEncoding>, byte: u8) -> Option<usize> {
+fn text_byte_len(fonts: &dyn FontTable, font: Option<&str>, encoding: Option<PdfBaseEncoding>, byte: u8) -> Option<usize> {
     match encoding {
-        Some(encoding) => controlled_type1_text(encoding, byte).map(str::len),
+        Some(_) => font.and_then(|name| fonts.controlled_type1_text(name, byte)).map(str::len),
         None => plain_text_byte(byte).then_some(1),
     }
 }

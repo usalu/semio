@@ -1,1 +1,66 @@
-[]
+[
+ {
+  "name": "open example select",
+  "js": "(async()=>'o')()",
+  "pointer": "(async()=>{const e=document.querySelector('[role=combobox]');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
+  "settleMs": 1000
+ },
+ {
+  "name": "switch example to No example",
+  "js": "(async()=>'p')()",
+  "pointer": "(async()=>{const e=[...document.querySelectorAll('[role=option]')].find(e=>e.innerText.trim()==='No example');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
+  "settleMs": 40000
+ },
+ {
+  "name": "example state none",
+  "js": "(async()=>JSON.stringify([document.querySelector('[role=combobox]').innerText,document.querySelectorAll('canvas').length]))()",
+  "settleMs": 500
+ },
+ {
+  "name": "reopen example select",
+  "js": "(async()=>'o')()",
+  "pointer": "(async()=>{const e=document.querySelector('[role=combobox]');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
+  "settleMs": 1000
+ },
+ {
+  "name": "switch example back to Demo",
+  "js": "(async()=>'p')()",
+  "pointer": "(async()=>{const e=[...document.querySelectorAll('[role=option]')].find(e=>e.innerText.trim()==='Demo');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
+  "settleMs": 40000
+ },
+ {
+  "name": "example state demo",
+  "js": "(async()=>JSON.stringify([document.querySelector('[role=combobox]').innerText,document.querySelectorAll('canvas').length]))()",
+  "settleMs": 500
+ },
+ {
+  "name": "switch to Viewer",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith(\"Viewer\")).click();return \"v\"})()",
+  "settleMs": 8000
+ },
+ {
+  "name": "switch back to Editor",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith(\"Editor\")).click();return \"e\"})()",
+  "settleMs": 8000
+ },
+ {
+  "name": "open Actions",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith(\"Actions\")).click();return \"a\"})()",
+  "settleMs": 3000
+ },
+ {
+  "name": "apply action Increase",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith(\"Increase\")).click();return \"i\"})()",
+  "settleMs": 6000
+ },
+ {
+  "name": "undo",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith(\"Undo\")).click();return \"u\"})()",
+  "settleMs": 6000
+ },
+ {
+  "name": "final state",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,document.querySelector('[role=combobox]').innerText]))()",
+  "settleMs": 500
+ }
+]

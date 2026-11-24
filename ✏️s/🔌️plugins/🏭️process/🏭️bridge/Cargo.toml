@@ -22,3 +22,6 @@ semio-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-s-artifact-process-process3d-model = { path = "../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-process-process3d-mutations = { path = "../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = "1"

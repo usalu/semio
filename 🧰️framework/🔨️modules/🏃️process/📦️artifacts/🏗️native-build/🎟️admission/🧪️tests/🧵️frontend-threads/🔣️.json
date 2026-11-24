@@ -170,13 +170,15 @@
     "a.rs"
    ],
    "tokens": 8,
-   "note": "a cdylib final gets one front-end thread whatever the grant; with 8 granted cores its back end keeps the jobserver and runs parallel",
+   "note": "a cdylib final gets one front-end thread whatever the grant; with 8 granted cores its back end still runs serial",
    "expected": [
     "--crate-type",
     "cdylib",
     "-Z",
     "threads=1",
-    "a.rs"
+    "a.rs",
+    "-Z",
+    "no-parallel-backend"
    ]
   },
   {
@@ -187,11 +189,13 @@
     "a.rs"
    ],
    "tokens": 8,
-   "note": "the joined crate-type spelling is a cdylib final too; its back end keeps the jobserver and runs parallel",
+   "note": "the joined crate-type spelling is a cdylib final too; its back end runs serial too",
    "expected": [
     "--crate-type=cdylib",
     "-Zthreads=1",
-    "a.rs"
+    "a.rs",
+    "-Z",
+    "no-parallel-backend"
    ]
   },
   {
@@ -259,11 +263,13 @@
     "a.rs"
    ],
    "tokens": 2,
-   "note": "two admitted jobs leave one token for a codegen thread: the back end takes it from the jobserver",
+   "note": "two admitted jobs still run the back end serial: a final is bounded by memory, not by idle tokens",
    "expected": [
     "--crate-type=cdylib",
     "-Zthreads=1",
-    "a.rs"
+    "a.rs",
+    "-Z",
+    "no-parallel-backend"
    ]
   }
  ]

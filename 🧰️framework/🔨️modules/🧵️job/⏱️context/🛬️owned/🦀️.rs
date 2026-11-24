@@ -84,6 +84,13 @@ impl StepContext<'_>{
  }
 
 
+ /// 🔪️ Quotes a sliced automatic claim: the half of the turn quantum, never above `slice`, raised to cover the indivisible `floor` (never above the whole turn quantum), with the automatic work.
+ pub(super) fn sliced_receiving_quote(&self,floor:RetirementDemand,slice:G)->(G,u64){
+  let whole=self.native_scope_quantum();let share=unquoted_receiving_grant(whole);
+  let up=|share:usize,cap:usize,floor:usize,whole:usize|share.min(cap).max(floor).min(whole);
+  (G{maximum_items:share.maximum_items.min(slice.maximum_items),maximum_copy_bytes:up(share.maximum_copy_bytes,slice.maximum_copy_bytes,floor.copy_bytes,whole.maximum_copy_bytes),maximum_capacity_bytes:up(share.maximum_capacity_bytes,slice.maximum_capacity_bytes,floor.capacity_bytes,whole.maximum_capacity_bytes),maximum_release_bytes:up(share.maximum_release_bytes,slice.maximum_release_bytes,floor.release_bytes,whole.maximum_release_bytes),maximum_depth:share.maximum_depth},unquoted_receiving_work(self.fuel_remaining))
+ }
+
  /// 🏦️ Hands the decoder's retained scope credit to a carrier at the point its payload is consumed; `Ok(None)` when no retained credit is held.
  pub fn adopt_original_credit<O>(&mut self,output:O)->Result<std::result::Result<OriginalCreditedOutput<O>,O>,Failure>{
   let Self{original_decoder,return_budget,..}=self;let(Some(owner),Some(budget))=(original_decoder.as_deref_mut(),return_budget.as_mut())else{return Ok(Err(output))};

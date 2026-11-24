@@ -57,6 +57,8 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         SetFieldRule { path: "ventSystems[].ductTestPressurePa", kind: "change-vent-duct-test-pressure", selectors: &[SelectorKey::Id("ventId")], value: "newDuctTestPressurePa" },
         SetFieldRule { path: "ventSystems[].humidificationRequiredKgH", kind: "change-vent-humidification-required", selectors: &[SelectorKey::Id("ventId")], value: "newHumidificationRequiredKgH" },
         SetFieldRule { path: "ventSystems[].humidificationProvidedKgH", kind: "change-vent-humidification-provided", selectors: &[SelectorKey::Id("ventId")], value: "newHumidificationProvidedKgH" },
+        SetFieldRule { path: "zones[].unoccupiedVentilation", kind: "change-zone-unoccupied-ventilation", selectors: &[SelectorKey::Id("zoneId")], value: "newUnoccupiedVentilation" },
+        SetFieldRule { path: "zones[].unoccupiedVentilation", kind: "clear-zone-unoccupied-ventilation", selectors: &[SelectorKey::Id("zoneId")], value: "" },
     ],
     insert_item: &[
         InsertItemRule { path: "zones", kind: "insert-zone", selectors: &[], index: "index", item: "zone" },

@@ -25,14 +25,16 @@ pub use original_fixed_slot_pages::OriginalFixedSlotPages;
 /// OS threads that own 2 MiB (`WorkerPool`'s workers take Rust's default) and on a wasm shadow
 /// stack of 16 MiB.
 ///
-/// `Vec::with_capacity` takes the allocation first and `resize_with` writes each slot directly into
-/// it, so the deepest live temporary is **one** `T`. The produced value is identical to the array
+/// `Vec::with_capacity` takes the allocation first and a plain `push` loop writes each slot into
+/// it, so the deepest live temporary is **one** `T` (`resize_with` stacks its iterator adapters, each copying `T` in a debug build). The produced value is identical to the array
 /// literal's, byte for byte.
 ///
 /// See also [`boxed_fixed_slots`] for the `Box<[T; N]>` (statically-sized) shape.
-pub fn boxed_slots<T>(len: usize, fill: impl FnMut() -> T) -> Box<[T]> {
+pub fn boxed_slots<T>(len: usize, mut fill: impl FnMut() -> T) -> Box<[T]> {
     let mut slots: Vec<T> = Vec::with_capacity(len);
-    slots.resize_with(len, fill);
+    for _ in 0..len {
+        slots.push(fill());
+    }
     slots.into_boxed_slice()
 }
 

@@ -1,0 +1,13 @@
+{
+  "ChangeZoneUnoccupiedVentilation": {
+    "zoneId": "zone-office",
+    "newUnoccupiedVentilation": {
+      "operation": "nonResidentialPurge",
+      "assessedAreaM2": 200.0,
+      "zoneVolumeM3": 600.0,
+      "minutesBeforeOccupancy": 60.0,
+      "residentialDesignRateLPerSM2": 0.0,
+      "outdoorAirM3H": 700.0
+    }
+  }
+}

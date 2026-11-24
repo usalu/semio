@@ -226,6 +226,8 @@ scalar_patch! {
     En1992MembersOpeningsPatch for semio_s_artifact_norm_en1992_model::Opening { x: f64, y: f64, width: f64, depth: f64 }
 }
 protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `openings` list (rows keyed by `id`).
     pub En1992MembersOpeningsRows { removal: En1992MembersOpeningsRemoved, insertion: En1992MembersOpeningsInserted, relocation: En1992MembersOpeningsMoved, modification: En1992MembersOpeningsModified, row: semio_s_artifact_norm_en1992_model::Opening, patch: En1992MembersOpeningsPatch, list: Vec<semio_s_artifact_norm_en1992_model::Opening>, key: String = by OpeningKey }
 }

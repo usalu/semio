@@ -1,0 +1,14 @@
+[
+  {"op":"anchor","id":"tp-1-3","set":{"bone":"leaf-1-3","x":0.36,"y":0.147,"z":0}},
+  {"op":"anchor","id":"tp-1-6","set":{"bone":"leaf-1-6","x":0.3375,"y":0.1372,"z":0}},
+  {"op":"anchor","id":"tp-2-3","set":{"bone":"leaf-2-3","x":0.36,"y":0.147,"z":0}},
+  {"op":"anchor","id":"tp-2-6","set":{"bone":"leaf-2-6","x":0.3375,"y":0.1372,"z":0}},
+  {"op":"anchor","id":"tp-3-3","set":{"bone":"leaf-3-3","x":0.36,"y":0.147,"z":0}},
+  {"op":"anchor","id":"tp-3-6","set":{"bone":"leaf-3-6","x":0.3375,"y":0.1372,"z":0}},
+  {"op":"anchor","id":"tp-4-3","set":{"bone":"leaf-4-3","x":0.36,"y":0.147,"z":0}},
+  {"op":"anchor","id":"tp-4-6","set":{"bone":"leaf-4-6","x":0.3375,"y":0.1372,"z":0}},
+  {"op":"anchor","id":"tp-5-3","set":{"bone":"leaf-5-3","x":0.36,"y":0.147,"z":0}},
+  {"op":"anchor","id":"tp-5-6","set":{"bone":"leaf-5-6","x":0.3375,"y":0.1372,"z":0}},
+  {"op":"anchor","id":"tp-6-3","set":{"bone":"leaf-6-3","x":0.36,"y":0.147,"z":0}},
+  {"op":"anchor","id":"tp-6-6","set":{"bone":"leaf-6-6","x":0.3375,"y":0.1372,"z":0}}
+]

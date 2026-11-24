@@ -53,6 +53,14 @@ const LOAD_GROUPS: &[NormFieldChoice] = &[
     choice("GR5", "gr5 special vehicles", "gr5 Sonderfahrzeuge"),
     choice("GR6", "gr6 (no normative table row registered, unverified)", "gr6 (keine normative Tabellenzeile registriert, ungeprüft)"),
 ];
+const FACTOR_KINDS: &[NormFieldChoice] = &[
+    choice("gamma", "γ partial factor", "γ Teilsicherheitsbeiwert"),
+    choice("psi0", "ψ₀ combination value", "ψ₀ Kombinationsbeiwert"),
+    choice("psi1", "ψ₁ frequent value", "ψ₁ Beiwert für häufige Werte"),
+    choice("psi2", "ψ₂ quasi-permanent value", "ψ₂ Beiwert für quasi-ständige Werte"),
+    choice("xi", "ξ reduction factor", "ξ Abminderungsbeiwert"),
+    choice("k_fi", "K_FI consequence factor", "K_FI Zuverlässigkeitsfaktor"),
+];
 const IMPORTANCE: &[NormFieldChoice] = &[
     choice("I", "I — minor importance", "I — geringe Bedeutung"),
     choice("II", "II — ordinary buildings", "II — gewöhnliche Hochbauten"),
@@ -238,7 +246,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("cases[].texts[].value", FieldSpec::new("Text value", "Textwert")),
     ("factorOverrides", FieldSpec::new("Factor overrides (deviate from the National Annex)", "Faktorüberschreibungen (weichen vom Nationalen Anhang ab)")),
     ("factorOverrides[].id", FieldSpec::new("Override id", "Überschreibungs-Id")),
-    ("factorOverrides[].factor", FieldSpec::new("Factor kind (gamma, psi0, psi1, psi2, xi, k_fi)", "Faktorart (gamma, psi0, psi1, psi2, xi, k_fi)")),
+    ("factorOverrides[].factor", FieldSpec::choice("Factor kind", "Faktorart", FACTOR_KINDS)),
     ("factorOverrides[].target", FieldSpec::new("Target action, group or category", "Zielwirkung, -gruppe oder -kategorie")),
     ("factorOverrides[].value", FieldSpec::new("Override value", "Überschreibungswert")),
     ("factorOverrides[].justification", FieldSpec::new("Justification", "Begründung")),

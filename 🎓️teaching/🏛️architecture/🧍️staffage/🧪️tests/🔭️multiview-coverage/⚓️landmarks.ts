@@ -1,19 +1,19 @@
 /** ⚓️ Per-bone and per-anchor agreement of the three views of one evaluated state.
  *
- * - Tier one ({@link boneSync}): a bone with exactly one drawn shape in two views must have the same extent along the shared axis in both (elevation and front: height, elevation and plan: forward, front and plan: lateral), within D18.
- * - Tier two ({@link boneSync}, `group`): the same comparison for the union extent of bones with several shapes in a view; reported as `group-drift`, never as a failure.
- * - Anchors ({@link anchorLandmarks}): every contact, attachment and emitter anchor lies inside or on the drawn shapes of its bone, within D18, in every view in which the bone is drawn (a bone without a shape in a view is hidden or absent there and is skipped, D40).
+ * - Tier one ({@link boneSync}): a bone whose single drawn shape in two views is the same part (a shape and its twin of the same id) must have the same extent along the shared axis in both (elevation and front: height, elevation and plan: forward, front and plan: lateral), within D18.
+ * - Tier two ({@link boneSync}, `group`): the same comparison for the union extent of bones with several shapes in a view, and for bones whose single shapes in the two views carry different ids (two different parts of one bone, the rest hidden by D40, are not comparable extents; D48 of the work board); reported as `group-drift`, never as a failure.
+ * - Anchors ({@link anchorLandmarks}): every contact, attachment and emitter anchor lies inside or on the drawn shapes of its bone or of a descendant bone (a contact is bound to the frame that carries a turning wheel, the wheel is drawn on its own bone below it), within D18, in every view in which the bone is drawn (a bone without a shape in a view is hidden or absent there and is skipped, D40).
  *
  * @see ./🧰️.ts — the matrix
  */
-import type { Anchor, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Anchor, Asset, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedShape, EvaluatedState, Point } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 
 /** 🧾️ One disagreement. */
 export type BoneFinding = { readonly tier: "bone" | "group"; readonly check: string; readonly bone: string; readonly pair: string; readonly deltaMm: number; readonly message: string };
 
 /** 🔭️ One anchor that does not lie on its bone's drawn shapes. */
-export type AnchorFinding = { readonly view: PlanarViewpoint; readonly anchor: string; readonly bone: string; readonly deltaMm: number; readonly message: string };
+export type AnchorFinding = { readonly view: PlanarViewpoint; readonly anchor: string; readonly kind: Anchor["kind"]; readonly bone: string; readonly deltaMm: number; readonly message: string };
 
 /** 📤️ The anchor kinds that must sit on drawn geometry. */
 export const LANDMARK_KINDS: readonly Anchor["kind"][] = ["contact", "attachment", "emitter"];
@@ -42,8 +42,10 @@ export function boneSync(state: EvaluatedState, toleranceM: number): BoneFinding
       if (ra === undefined || rb === undefined) continue;
       const delta = Math.max(Math.abs(ra[0] - rb[0]), Math.abs(ra[1] - rb[1]));
       if (!(delta > toleranceM)) continue;
-      const tier = left.length === 1 && right!.length === 1 ? "bone" : "group";
-      findings.push({ tier, check: `${tier === "bone" ? "sync-bone" : "group-drift"}-${name}`, bone, pair: `${a}/${b}`, deltaMm: delta * 1000, message: `bone "${bone}" ${a} [${ra[0].toFixed(3)}, ${ra[1].toFixed(3)}] vs ${b} [${rb[0].toFixed(3)}, ${rb[1].toFixed(3)}] m (${left.length} and ${right!.length} shapes)` });
+      const single = left.length === 1 && right!.length === 1;
+      const tier = single && left[0]!.shape.id === right![0]!.shape.id ? "bone" : "group";
+      const parts = single && tier === "group" ? `, different parts "${left[0]!.shape.id}" and "${right![0]!.shape.id}"` : "";
+      findings.push({ tier, check: `${tier === "bone" ? "sync-bone" : "group-drift"}-${name}`, bone, pair: `${a}/${b}`, deltaMm: delta * 1000, message: `bone "${bone}" ${a} [${ra[0].toFixed(3)}, ${ra[1].toFixed(3)}] vs ${b} [${rb[0].toFixed(3)}, ${rb[1].toFixed(3)}] m (${left.length} and ${right!.length} shapes${parts})` });
     }
   };
   compare("height", "elevation", "y", "front", "y");
@@ -83,19 +85,36 @@ export function distanceToShapes(p: Point, shapes: readonly EvaluatedShape[]): n
   return best;
 }
 
-/** 👁️ The anchors that do not lie on the drawn shapes of their bone in a view where the bone is drawn. */
+/** 🌳️ The subtree of every bone of a rig: the bone itself and all its descendant bones. */
+export function subtrees(bones: Asset["rig"]["bones"]): (bone: string) => ReadonlySet<string> {
+  const children = new Map<string, string[]>();
+  for (const bone of bones) if (bone.parent !== null && bone.parent !== undefined) (children.get(bone.parent) ?? children.set(bone.parent, []).get(bone.parent)!).push(bone.id);
+  const known = new Map<string, Set<string>>();
+  const of = (bone: string): Set<string> => {
+    const found = known.get(bone);
+    if (found !== undefined) return found;
+    const subtree = new Set<string>([bone]);
+    known.set(bone, subtree);
+    for (const child of children.get(bone) ?? []) for (const id of of(child)) subtree.add(id);
+    return subtree;
+  };
+  return of;
+}
+
+/** 👁️ The anchors that lie neither on the drawn shapes of their bone nor on those of its descendant bones, in a view where the bone is drawn. */
 export function anchorLandmarks(state: EvaluatedState, toleranceM: number): AnchorFinding[] {
   const views = { elevation: byBone(state.shapes.elevation), front: byBone(state.shapes.front), plan: byBone(state.shapes.plan) };
+  const subtree = subtrees(state.asset.rig.bones);
   const findings: AnchorFinding[] = [];
   for (const [id, { anchor, at, z }] of Object.entries(state.anchors)) {
     if (!LANDMARK_KINDS.includes(anchor.kind)) continue;
     const points: Record<PlanarViewpoint, Point> = { elevation: { x: at.x, y: at.y }, front: { x: z, y: at.y }, plan: { x: at.x, y: z } };
     for (const view of ["elevation", "front", "plan"] as const) {
-      const shapes = views[view].get(anchor.bone);
-      if (shapes === undefined) continue;
+      if (!views[view].has(anchor.bone)) continue;
+      const shapes = [...subtree(anchor.bone)].flatMap((bone) => views[view].get(bone) ?? []);
       const distance = distanceToShapes(points[view], shapes);
       if (!Number.isFinite(distance)) continue;
-      if (distance > toleranceM) findings.push({ view, anchor: id, bone: anchor.bone, deltaMm: distance * 1000, message: `${anchor.kind} anchor "${id}" at (${points[view].x.toFixed(3)}, ${points[view].y.toFixed(3)}) m is ${(distance * 1000).toFixed(0)} mm off the drawn shapes of bone "${anchor.bone}" in the ${view}` });
+      if (distance > toleranceM) findings.push({ view, anchor: id, kind: anchor.kind, bone: anchor.bone, deltaMm: distance * 1000, message: `${anchor.kind} anchor "${id}" at (${points[view].x.toFixed(3)}, ${points[view].y.toFixed(3)}) m is ${(distance * 1000).toFixed(0)} mm off the drawn shapes of bone "${anchor.bone}" and of its descendant bones in the ${view}` });
     }
   }
   return findings;

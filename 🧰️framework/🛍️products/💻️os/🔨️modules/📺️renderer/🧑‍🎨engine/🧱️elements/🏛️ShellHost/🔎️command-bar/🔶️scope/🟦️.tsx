@@ -51,6 +51,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
   const exampleActivationRef = useRef<AbortController | null>(null);
   const dispatchActiveExample = useCallback(
     (exampleId: string) => {
+      console.error("[DEBUG] dispatchActiveExample", exampleId, !!session, !!focusedApp, !!focusedProgram);
       if (!session || !focusedApp || !focusedProgram) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === focusedProgram.pluginId)?.handle;
       if (!plugin) return;
@@ -59,8 +60,8 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
       return openExampleAfterActivation({
         examples: focusedPluginManifest?.examples ?? [], exampleId, activator: { request: activateOnDemand }, locale: uiLocale, signal: activation.signal,
         notify: (notice) => showTransientNotice(notice.text, notice.announcement.role === "alert" ? "error" : "info", `on-demand.example.${exampleId}`),
-        handoff: () => onAction(buildActiveExampleAction(focusedApp.controllerId, exampleId)),
-      });
+        handoff: () => { console.error("[DEBUG] example handoff", exampleId); return onAction(buildActiveExampleAction(focusedApp.controllerId, exampleId)); },
+      }).then((result) => { console.error("[DEBUG] example opened", exampleId, result.state); return result; }, (error) => { console.error("[DEBUG] example failed", exampleId, String(error)); throw error; });
     },
     [loadedPlugins, onAction, session, focusedApp, focusedProgram, focusedPluginManifest, activateOnDemand, uiLocale, showTransientNotice],
   );

@@ -69,7 +69,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
             return Err(Fault::from("generation2d-contributions-route-rejected"));
         };
         let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
-        let servable = semio_s_artifact_procedural_2d_preview_eval::may_rearm(&input.snapshot.host_snapshot);
+        let unserved = semio_s_artifact_procedural_2d_preview_eval::unserved_kinds(&input.snapshot.host_snapshot);
         set_contributions::register(payload)?;
         let grant = cx.retained_grant();
         let mut pending = false;
@@ -82,7 +82,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
             };
             match invalidated {
                 None => pending = true,
-                Some(true) => owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?,
+                Some(true) => owner.owe_attached_previews_carrying(&windows, &unserved, &mut emit, input.operation.retained)?,
                 Some(false) => {}
             }
             Ok(Some(emit))

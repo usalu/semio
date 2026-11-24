@@ -69,11 +69,11 @@ export function planCompileUnitsV1(hostValue:CompileUnitsHostV1,intentValue:Comp
  if(host.grantedJobs!==null)limit(Math.max(host.grantedJobs,host.grantedMegabytes===null?0:Math.floor(host.grantedMegabytes/host.unitMegabytes)),"granted");
  if(host.availableMegabytes!==null)limit(Math.floor(Math.max(0,host.availableMegabytes-policy.reserveMegabytes)/host.unitMegabytes),"memory");
  if(host.pressure==="critical")limit(1,"pressure-critical");
- else if(host.pressure==="warn")limit(Math.ceil(units/policy.pressureWarnDivisor),"pressure-warn");
+ else if(host.pressure==="warn")limit(Math.ceil(units/policy.localPressureWarnDivisor),"pressure-warn");
  return Object.freeze(requireDefinition<CompileUnitsDecisionV1>("Decision",{preferred:units,minimum:Math.max(1,Math.ceil(units*policy.minimumShareBasisPoints/10000)),reason,budgetMegabytes:host.grantedMegabytes===null?null:Math.max(1,host.grantedMegabytes,units*host.unitMegabytes)}));
 }
 
-/** 🛰️ Sizes the jobs of one build to the fleet: the local grant plus the idle fleet slots, bounded by the authored cap (`fleetJobsMaximum`) and by the memory the light remote jobs (`lightUnitMegabytes` each, the wait and the input shipping, not a compile) may hold here beside the local compiles; none under critical memory pressure and half under raised pressure. Chosen once at the start of a build (cargo's jobserver cannot change its size while it runs); the wrapper places each unit, so a fleet that shrinks later only makes remote units compile here or wait.
+/** 🛰️ Sizes the jobs of one build to the fleet: the local grant plus the idle fleet slots, bounded by the authored cap (`fleetJobsMaximum`) and by the memory the light remote jobs (`lightUnitMegabytes` each, the wait and the input shipping, not a compile) may hold here beside the local compiles; none under critical memory pressure. Raised pressure takes nothing off the remote share: a waiting remote job is one idle wrapper process (`lightUnitMegabytes`, measured in the policy), so the memory term alone bounds it. Chosen once at the start of a build (cargo's jobserver cannot change its size while it runs); the wrapper places each unit, so a fleet that shrinks later only makes remote units compile here or wait.
  * @see ./🧬️schema/🔣️.json
  * @see ./🧪️tests/🛰️fleet-jobs/🐍️oracle/🐍️.py */
 export function planFleetJobsV1(hostValue:FleetJobsHostV1):FleetJobsDecisionV1{
@@ -84,7 +84,6 @@ export function planFleetJobsV1(hostValue:FleetJobsHostV1):FleetJobsDecisionV1{
  limit(Math.max(0,policy.fleetJobsMaximum-host.local),"fleet-cap");
  if(host.availableMegabytes!==null)limit(Math.floor(Math.max(0,host.availableMegabytes-policy.reserveMegabytes-host.local*host.unitMegabytes)/policy.lightUnitMegabytes),"fleet-memory");
  if(host.pressure==="critical")limit(0,"fleet-pressure");
- else if(host.pressure==="warn")limit(Math.floor(remote/policy.pressureWarnDivisor),"fleet-pressure");
  return Object.freeze(requireDefinition<FleetJobsDecisionV1>("FleetDecision",{jobs:host.local+remote,local:host.local,remote,reason}));
 }
 

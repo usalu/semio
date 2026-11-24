@@ -148,6 +148,19 @@ export function readyStallTrackerV1(policy:typeof P=P,prior:readonly string[]=[]
  * @see ./🧪️tests/🐍️.py */
 export function readyStalledV1(sinceProgressMs:number,policy:typeof P=P,exempt:boolean=false):boolean{return!exempt&&sinceProgressMs>=policy.stallStopMilliseconds;}
 
+/** 🧊️ Whether the host warden holds a process of the stage tree suspended: a suspended process cannot show anything new, so the stall window does not run while the warden holds one (the warden bounds the hold itself: it resumes or cancels after `suspendMaximumSeconds`). A pure function.
+ * @see ./🧪️tests/🧊️warden-hold */
+export function readyWardenHoldsV1(mirror:Readonly<{absent?:true;suspended?:readonly Readonly<{pid:number}>[]}>,tree:ReadonlySet<number>):boolean{return mirror.absent!==true&&(mirror.suspended??[]).some(row=>tree.has(row.pid));}
+
+/** 🔐️ Whether the read of the stage is queued for the storage mapping: its own fresh slice report (younger than `grantWaitFreshMilliseconds`) lists a waiter of the mapping queue (`presence.mappingQueue.waiting`) whose current wait is shorter than `grantWaitMaximumMilliseconds`. With the shared grant never queued behind long exclusive work a wait lasts seconds, so this is only a bounded safety: the stall window does not run while a short wait is pending, and a wait past the maximum is a wedge the stall rule ends. A pure function.
+ * @see ./🧪️tests/🔐️grant-wait */
+export function readyGrantWaitV1(report:unknown,nowMs:number,policy:typeof P=P):boolean{
+ const row=report as {atMs?:number;sources?:{owners?:{presence?:{mappingQueue?:{waiting?:readonly {waitedMilliseconds?:number}[]}}}}}|null|undefined;
+ if(typeof row?.atMs!=="number"||nowMs-row.atMs>policy.grantWaitFreshMilliseconds)return false;
+ const waiting=row.sources?.owners?.presence?.mappingQueue?.waiting;
+ return Array.isArray(waiting)&&waiting.some(wait=>typeof wait?.waitedMilliseconds==="number"&&wait.waitedMilliseconds<policy.grantWaitMaximumMilliseconds);
+}
+
 /** 🌱️ The graph counter tracker of one stage run: `observe` answers whether the newest counter of `graphCounterPatterns` (`taken 461 of 600`) is above the highest one seen, so a read whose text repeats after normalisation but whose server counter advanced is progress; a counter that repeats or falls back is none. A pure function of the lines seen so far.
  * @see ./🧪️tests/🌱️graph-progress */
 export function readyGraphCounterTrackerV1(policy:typeof P=P,prior:number=-1):Readonly<{observe(lines:readonly string[]):boolean;snapshot():number}>{

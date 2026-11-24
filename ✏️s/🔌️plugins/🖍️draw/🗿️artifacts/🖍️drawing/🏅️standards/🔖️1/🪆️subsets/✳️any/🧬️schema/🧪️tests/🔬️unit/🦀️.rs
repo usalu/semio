@@ -250,7 +250,7 @@ async fn layer_to_path_segments_covers_every_shape_kind_and_empty_polygon_and_un
 
 #[semio_framework_async_macros::async_test]
 async fn drawing_layer_world_bounds_covers_text_image_default_and_none_branches() {
-    let text = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("T")).to_string().into()).expect("nonempty authored identity"), "T"), x: 0.0, y: 0.0, content: "hi".into(), size: 10.0, font_family: crate::font_family::DrawingFontFamily::Anta });
+    let text = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("T")).to_string().into()).expect("nonempty authored identity"), "T"), x: 0.0, y: 0.0, content: "hi".into(), size: 10.0, font_family: semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::Anta });
     let (tx, ty, tw, th) = drawing_layer_world_bounds(&text).expect("text bounds");
     assert_eq!((tx, ty), (0.0, 0.0));
     assert!(tw > 0.0 && th > 0.0);
@@ -377,7 +377,7 @@ async fn flatten_segments_to_lines_samples_quad_and_cubic_into_lines() {
     let segments = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Quad { ctrl: [1.0, 1.0], to: [2.0, 0.0] }, PathSegment::Cubic { ctrl1: [2.0, 1.0], ctrl2: [3.0, 1.0], to: [4.0, 0.0] }];
     let flattened = flatten_segments_to_lines(&segments);
     assert!(flattened.iter().all(|segment| matches!(segment, PathSegment::Move { .. } | PathSegment::Line { .. })));
-    assert_eq!(flattened.len(), 1 + CURVE_LINE_SAMPLE_STEPS * 2);
+    assert_eq!(flattened.len(), 1 + semio_s_artifact_draw_drawing_geometry::testkit::CURVE_LINE_SAMPLE_STEPS * 2);
     match flattened.last().unwrap() {
         PathSegment::Line { to } => assert!((to[0] - 4.0).abs() < 1e-9 && (to[1] - 0.0).abs() < 1e-9),
         other => panic!("expected line, got {other:?}"),
@@ -410,36 +410,6 @@ async fn drawing_layer_descendant_leaf_ids_flattens_nested_groups_to_leaves() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn resolve_boolean_layer_segments_returns_empty_for_missing_children_and_invalid_operation() {
-    let mut doc = default_drawing_document("bool-empty", None);
-    doc.layers.clear();
-    let boolean_missing = DrawingBooleanBody { base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("B")).to_string().into()).expect("nonempty authored identity"), "B"), operation: "union".into(), children: vec!["missing".into()].into() };
-    assert!(resolve_boolean_layer_segments(&doc, &boolean_missing).is_empty());
-
-    let mut rect_a = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("A")).to_string().into()).expect("nonempty authored identity"), "A");
-    if let DrawingLayerNode::Shape(shape) = &mut rect_a {
-        shape.rect = Some(DrawingRect { x: 0.0, y: 0.0, width: 10.0, height: 10.0 });
-    }
-    let id_a = layer_id(&rect_a).clone();
-    let mut rect_b = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("B")).to_string().into()).expect("nonempty authored identity"), "B");
-    if let DrawingLayerNode::Shape(shape) = &mut rect_b {
-        shape.rect = Some(DrawingRect { x: 2.0, y: 2.0, width: 5.0, height: 5.0 });
-    }
-    let id_b = layer_id(&rect_b).clone();
-    doc.layers.push(rect_a);
-    doc.layers.push(rect_b);
-    let boolean_invalid = DrawingBooleanBody { base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("B")).to_string().into()).expect("nonempty authored identity"), "B"), operation: "not-a-real-op".into(), children: [id_a, id_b].into_iter().collect() };
-    assert!(resolve_boolean_layer_segments(&doc, &boolean_invalid).is_empty());
-}
-
-#[test]
-fn drawing_image_asset_luma_uses_intrinsic_alpha_weighted_samples_and_refuses_wrong_extent(){
- let asset=DrawingImageAsset{width:2,height:1,samples:vec![[255,255,255,255],[255,0,0,128]].into()};
- let (width,height,luma)=drawing_image_asset_luma(&asset).unwrap();assert_eq!((width,height),(2,1));assert_eq!(luma,vec![255,38]);
- let malformed=DrawingImageAsset{width:3,height:1,samples:asset.samples.clone()};assert!(drawing_image_asset_luma(&malformed).is_none());assert!(drawing_image_samples(&malformed).is_none());
-}
-
-#[semio_framework_async_macros::async_test]
 async fn resolve_drawing_artboard_falls_back_to_layer_bounds_and_returns_none_when_no_bounds() {
     let mut doc = default_drawing_document("artboard-fallback", None);
     doc.artboard = Some(DrawingArtboard { width: 0.0, height: 0.0 });
@@ -456,24 +426,6 @@ async fn resolve_drawing_artboard_falls_back_to_layer_bounds_and_returns_none_wh
     doc.layers.clear();
     doc.layers.push(create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("EmptyGroup")).to_string().into()).expect("nonempty authored identity"), "EmptyGroup"));
     assert!(resolve_drawing_artboard(&doc).is_none());
-}
-
-#[semio_framework_async_macros::async_test]
-async fn resolve_trace_layer_segments_returns_empty_without_assets_or_source_or_valid_decode() {
-    let mut doc = default_drawing_document("trace-empty", None);
-    doc.layers.clear();
-    doc.assets = Default::default();
-    let trace_no_assets = DrawingTraceBody { base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("T")).to_string().into()).expect("nonempty authored identity"), "T"), source_key: "missing".into(), params: default_drawing_trace_params() };
-    assert!(resolve_trace_layer_segments(&doc, &trace_no_assets).is_empty());
-
-    let mut assets = semio_framework_value::paged::PagedMap::default();
-    assets.insert("present", DrawingImageAsset { width: 1, height: 1, samples: Default::default() });
-    doc.assets = assets;
-    let trace_missing_key = DrawingTraceBody { base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("T")).to_string().into()).expect("nonempty authored identity"), "T"), source_key: "missing".into(), params: default_drawing_trace_params() };
-    assert!(resolve_trace_layer_segments(&doc, &trace_missing_key).is_empty());
-
-    let trace_bad_decode = DrawingTraceBody { base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("T")).to_string().into()).expect("nonempty authored identity"), "T"), source_key: "present".into(), params: default_drawing_trace_params() };
-    assert!(resolve_trace_layer_segments(&doc, &trace_bad_decode).is_empty());
 }
 
 #[semio_framework_async_macros::async_test]

@@ -6,7 +6,7 @@ import {fileURLToPath} from "node:url";
 import {applyServicePriorityV1,applyServiceUnitPriorityV1,launchdPriorityKeysV1,servicePriorityOfRoleV1,servicePriorityOfServiceV1,servicePriorityTextV1,servicePriorityV1,shellPriorityLinesV1,taskPriorityXmlV1,realServicePriorityPortsV1,type ServicePriorityPortsV1} from "../../🪜️priority/🟦️.ts";
 
 const schemaPath=fileURLToPath(new URL("../../🪜️priority/🧬️schema/🔣️.json",import.meta.url)),oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url));
-const ROLES=["agent","scheduler","cache","graph","pool","ready"],SERVICES=["replica","cache","relay","compact"];
+const ROLES=["agent","scheduler","cache","graph","pool","ready","spool"],SERVICES=["replica","cache","relay","compact"];
 const children:{kill():void}[]=[];
 afterAll(()=>{for(const child of children)child.kill();});
 

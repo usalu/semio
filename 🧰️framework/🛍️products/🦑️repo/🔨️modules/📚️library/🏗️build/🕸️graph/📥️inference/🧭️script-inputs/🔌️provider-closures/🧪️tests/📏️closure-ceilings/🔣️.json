@@ -24,6 +24,7 @@
     "scriptProvider:wasm-build:native": 2275,
     "scriptProvider:wasm-build:scheduling": 2000,
     "toolClosure:cargo-command:native": 2275,
+    "toolClosure:cargo-execution:native": 2275,
     "toolClosure:cargo-lock-owner:native": 2275,
     "toolClosure:driver-stages:scheduling": 2000,
     "toolClosure:extension-package:scheduling": 2000,

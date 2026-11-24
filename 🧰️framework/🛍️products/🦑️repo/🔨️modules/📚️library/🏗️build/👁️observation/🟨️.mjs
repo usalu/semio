@@ -5,7 +5,7 @@ import{declareFormatStampV1}from"../🧷️format-stamps/🟨️.mjs";
 import{publishFileDurablySyncV1,staleImplementationV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {withBuildGraphOptionalPublicationV1,registerBuildGraphOptionalHandleV1,requireRepositoryBuildGraphObservationPathV1 as requireManagedGraphObservationPathV1} from "../📥️inputs/💾️storage/🟨️.mjs";
 import * as fs from "node:fs";
-import{fieldFactV1,fieldValueV1,installedPackageFileV1,jsonPointerValueV1,registerFieldExtractorV1}from"./🧩️field/🟨️.mjs";
+import{fieldExtractorIdentityV1,fieldFactV1,fieldValueV1,installedPackageFileV1,jsonPointerValueV1,registerFieldExtractorV1}from"./🧩️field/🟨️.mjs";
 import{noteObservedInReadParentV1}from"./🚧️read-parent/🟨️.mjs";
 import{retireProducerPublicationAtExitV1}from"./🪦️producer-publications/🟨️.mjs";
 
@@ -880,6 +880,68 @@ export function retainDetachedFailureV1(error){
 export function observationLayerHoldsV1(layer){return memoRowsHoldV1(layer,scopes.getStore());}
 /** 🧪️ Whether one stored row still holds, probed against the tree now and remembered nowhere: for a caller that keeps its own verdict per distinct row (the row dictionary of the closure layers), which asks once per row and pass, so no per-round table of rows is filled beside it. */
 export function observationRowFreshV1(row){const seen=rebaseRowV1(row);if(machineLocalRowV1(seen.kind,seen.path))return true;return seen.kind==="file"?fileFactHolds(seen.path,seen.fact)&&JSON.stringify(facts.file(seen.path)?.sha256??null)===JSON.stringify(seen.fact.sha256??null):current([seen]);}
+
+/** 🪪️ The stamp of one path as a witness reads it: size, both times, inode and mode of what the path names now (a symbolic link is followed, so a retargeted link or a replaced file moves it), or `!` and the error code of the failed stat. */
+const witnessTupleV1=path=>{try{const status=fs.statSync(path);return status.size+":"+status.mtimeMs+":"+status.ctimeMs+":"+status.ino+":"+status.mode;}catch(error){return"!"+(error?.code??"E");}};
+const witnessLinkV1=path=>{try{return fs.lstatSync(path).isSymbolicLink();}catch{return false;}};
+const witnessDirectoryV1=path=>{try{return fs.lstatSync(path).isDirectory();}catch{return false;}};
+const WITNESS_TYPED_V1=new Set(["lstat","stat","exists","fileExists","directoryExists"]),WITNESS_LISTED_V1=new Set(["readdir","readdirNames"]);
+/** 🪪️ The witness of rows that all hold now: the stamps of the few files and directories whose state decides them, so that a later verification of the same rows is one stat per distinct path instead of one probe per row and no stored layer is read. An `analysis` row is decided by the bytes of its file (and the registered revision of its parser, kept in `code`) and by its nested rows; a type or existence row (`lstat`, `stat`, `exists`, `fileExists`, `directoryExists`) by its own name alone and is kept in `typed` with the fact it recorded: stamping the directory that holds the name (as an earlier form did) made every stamp fail whenever anything was created or removed beside it, in the workspace root, in a home directory or in a plugin folder a peer works in, and the full verification that followed read every layer again (11 to 28 CPU seconds per Rust owner instead of one); a listing row by the directory it lists; a module resolution of an absolute path by the directory of the target (the listing the extension probes read) and, for a directory or link, by the target and its `package.json`. Every other row (fields, owner registry questions, realpaths, TypeScript text) is kept in `live` and probed again by every verification. Undefined while a path is not calm (it was written within the racy window before `since`, the start of the verification that found the rows holding), a row is of a kind or shape that cannot be witnessed, or the observation runs over a plan port instead of the disk. Each stamped path is stated once: its stamp is refused unless it was last written and changed before `since` minus the racy window (a write inside the verification cannot hide), and the stamp kept is that same stat.
+ * @see ./🧪️tests/🪪️witness */
+export function observationWitnessV1(rows,{since=Date.now()}={}){
+ if(observedWorlds.getStore()!==undefined)return undefined;
+ const paths=new Set(),live=new Map(),code=new Map(),seen=new Set(),typed=[];
+ const visit=raw=>{
+  const row=rebaseRowV1(raw),{kind,path,fact}=row;
+  if(machineLocalRowV1(kind,path))return true;
+  const key=kind+"\0"+path+"\0"+(typeof fact==="string"?fact:JSON.stringify(fact));
+  if(seen.has(key))return true;
+  seen.add(key);
+  if(kind==="analysis"){const registered=registeredAnalysisV1(fact);if(registered===undefined||!Array.isArray(fact.nestedObservations))return false;code.set(fact.provider+"\0"+fact.revision,registered.provider.revision);paths.add(path);return fact.nestedObservations.every(visit);}
+  if(kind==="field"){const identity=fieldExtractorIdentityV1(fact?.format);if(identity===undefined)return false;code.set("f\0"+fact.format,identity);paths.add(path);for(const other of fact.paths??[])paths.add(other);return true;}
+  if(WITNESS_TYPED_V1.has(kind)){typed.push([kind,path,fact]);return true;}
+  if(WITNESS_LISTED_V1.has(kind)){paths.add(path);return true;}
+  if(kind==="resolve"){
+   let target;try{target=JSON.parse(path)[1];}catch{return false;}
+   if(typeof target!=="string"||resolve(target)!==target){live.set(JSON.stringify({kind,path,fact}),true);return true;}
+   paths.add(dirname(target));
+   if(witnessLinkV1(target)||witnessDirectoryV1(target)){paths.add(target);paths.add(join(target,"package.json"));}
+   return true;
+  }
+  live.set(JSON.stringify({kind,path,fact}),true);return true;
+ };
+ for(const row of rows)if(!visit(row))return undefined;
+ const limit=since-RACY_MS,list=[...paths],tuples=new Array(list.length);
+ for(let at=0;at<list.length;at++){let status;try{status=fs.statSync(list[at]);}catch(error){tuples[at]="!"+(error?.code??"E");continue;}if(status.mtimeMs>=limit||status.ctimeMs>=limit)return undefined;tuples[at]=status.size+":"+status.mtimeMs+":"+status.ctimeMs+":"+status.ino+":"+status.mode;}
+ return{paths:list,tuples,typed,code:[...code],live:[...live.keys()]};
+}
+/** 🪪️ Whether the state a witness recorded is the state of the disk now, with the registered parsers it was taken under: the stamps are compared path by path (each distinct path of a round is stamped once through `tuples`), the live rows are probed once per round through `verdicts`; `step` is awaited between chunks so a long witness gives the event loop its turns and stops at cancellation. A witness that fails says nothing about the rows: the caller verifies them in full.
+ * @see ./🧪️tests/🪪️witness */
+export async function observationWitnessHoldsV1(witness,{tuples=new Map(),verdicts=new Map(),step}={}){
+ if(observedWorlds.getStore()!==undefined)return false;
+ for(const[key,revision]of witness.code){if(key.startsWith("f\0")){if(fieldExtractorIdentityV1(key.slice(2))!==revision)return false;continue;}const[provider,recorded]=key.split("\0");if(registeredAnalysisV1({provider,revision:recorded})?.provider.revision!==revision)return false;}
+ const{paths,tuples:recorded}=witness;
+ for(let at=0;at<paths.length;at++){
+  let now=tuples.get(paths[at]);
+  if(now===undefined){now=witnessTupleV1(paths[at]);tuples.set(paths[at],now);}
+  if(now!==recorded[at])return false;
+  if(step!==undefined&&(at&1023)===1023)await step();
+ }
+ for(let at=0;at<witness.typed.length;at++){
+  const[kind,path,fact]=witness.typed[at],key="\0"+kind+"\0"+path;
+  let holds=verdicts.get(key);
+  if(holds===undefined){holds=recordedFactHoldsV1(kind,path,fact);verdicts.set(key,holds);}
+  if(!holds)return false;
+  if(step!==undefined&&(at&1023)===1023)await step();
+ }
+ for(const text of witness.live){
+  let holds=verdicts.get(text);
+  if(holds===undefined){holds=observationRowFreshV1(JSON.parse(text));verdicts.set(text,holds);}
+  if(!holds)return false;
+  if(step!==undefined)await step();
+ }
+ return true;
+}
 
 /** 🫧️ The same verdict on the shared rows of one reused computation as {@link observationLayerHoldsV1}, row by row with `step` awaited between rows so a long layer gives the event loop its turns and stops at cancellation. */
 export async function observationLayerHoldsAsyncV1(layer,step){

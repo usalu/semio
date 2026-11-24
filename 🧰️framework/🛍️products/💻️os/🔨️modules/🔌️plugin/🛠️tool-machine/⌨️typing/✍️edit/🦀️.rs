@@ -45,6 +45,8 @@ impl<A:ArtifactApp> OriginalTypingSettlement<A>{
   built(cx,&mut self.admission,&mut owners.request,construction(d),||{let mut text=String::with_capacity(actor.len());text.push_str(actor);let text_capacity=text.capacity();let(actor_owner,actor_progress)=semio_framework_value::SharedUtf8::admit(text,grant,&mut None).result.unwrap_or_else(|_|unreachable!("original typing actor frame was preadmitted"));let actual=text_capacity+actor_progress.retained_capacity_bytes;let(TypingTag{window,tool,buffer},clock)=receive();let request=OriginalTypingEditRequest{window,tool,actor:protocol::ActorId(actor_owner),buffer,leaves:std::mem::take(&mut emit.artifact_mutations),clock};self.backing=backing(emit);self.lengths=lengths(emit);self.captured=true;Ok((request,RetainedCloneProgress{retained_capacity_bytes:actual,..receipt(d)}))})?;Ok(self.captured)
  }
  pub fn captured(&self)->bool{self.captured}
+ /// ⏳️ Whether the captured edit waits to admit its writer because a retained read of its typing slot (the tool follow's walk) holds the slot.
+ pub fn awaits_writer(&self,ledger:&TypingLedger<A::Mutation>)->bool{self.captured&&!self.received&&!self.closing&&self.writer.is_none()&&self.owners.original().and_then(|owners|owners.request.as_ref()).is_some_and(|request|ledger.retained_read_pending(&request.window))}
  pub fn operation(&self)->u64{self.operation}
  pub fn matches_context(&self,cx:&StepContext<'_>)->bool{self.binding.matches(cx)&&cx.native_receiving_identity()==Some(self.decoder)}
  pub fn accepts<D>(&self,operation:u64,base:&[u8;32],actor:&str,emit:&Emit<A::Mutation,A::ConfigMutation,D>)->bool{self.operation==operation&&self.base==*base&&self.actor==(actor.as_ptr()as usize,actor.len())&&self.backing==backing(emit)&&self.lengths==lengths(emit)}

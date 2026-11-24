@@ -175,13 +175,18 @@ pub(super) fn push_referential_integrity(report: &mut CheckReport, document: &En
     }
 }
 
+/// 🧼️ Starts a row with an empty NDP read log: reads a previous row did not cite must not leak into the first check of this one, so a row yields the same checks alone (as a unit) and inside the whole report.
+pub(super) fn isolate() {
+    semio_s_plugin_norm_compliance::drain_ndp_reads();
+}
+
 pub(super) fn evaluate_bridges(report: &mut CheckReport, document: &En1998Snapshot, annex_params: &AnnexParams, gamma_i: f64, a_g: f64, s: f64, tb: f64, tc: f64, td: f64, scope: Scope<'_>) {
     let annex = annex_params.choice();
     if document.bridges.is_empty() && scope.part("bridges-na") {
         report.push(CheckResult::assess("en1998.2.na", "DIN EN 1998-2", ClauseId::new("EN 1998-2", "2", "5"), SubjectRef::whole(lc("Bridges", "Brücken")), lc("Bridge seismic checks", "Brücken-Erdbebennachweise")).not_applicable(lc("No bridges in the subject.", "Keine Brücken im Gegenstand.")).annex(annex).build());
         return;
     }
-    for (_, bridge) in document.bridges.iter().enumerate().filter(|(index, _)| scope.admits("bridges", *index)) {
+    for (_, bridge) in document.bridges.iter().enumerate().filter(|(index, _)| scope.admits("bridges", *index)).inspect(|_| isolate()) {
         let gamma_i = part_2::bridge_gamma_i(bridge.importance_class);
         let q_isol = part_2::design_behaviour_factor(bridge.period_ratio);
         let mass = part_1::entity_seismic_mass_kg(bridge.permanent_gk_n, &bridge.variables, false, bridge.correlated_occupancy);
@@ -243,7 +248,7 @@ pub(super) fn evaluate_bridges(report: &mut CheckReport, document: &En1998Snapsh
 /// 🛞 The isolation systems of bridges and buildings: the equivalent linear analysis of each system on the mass and the fixed-base period of the structure it names; a system that names no resolvable structure is reported by the integrity checks.
 pub(super) fn evaluate_isolation_systems(report: &mut CheckReport, document: &En1998Snapshot, annex_params: &AnnexParams, gamma_i: f64, a_g: f64, s: f64, tb: f64, tc: f64, td: f64, scope: Scope<'_>) {
     let annex = annex_params.choice();
-    for (_, system) in document.isolation_systems.iter().enumerate().filter(|(index, _)| scope.admits("isolationSystems", *index)) {
+    for (_, system) in document.isolation_systems.iter().enumerate().filter(|(index, _)| scope.admits("isolationSystems", *index)).inspect(|_| isolate()) {
         let bridge = document.bridges.iter().find(|b| !system.bridge_id.is_empty() && system.building_id.is_empty() && b.id == system.bridge_id);
         let building = document.buildings.iter().find(|b| !system.building_id.is_empty() && system.bridge_id.is_empty() && b.id == system.building_id);
         let (supported, importance) = match (bridge, building) {
@@ -264,7 +269,7 @@ pub(super) fn evaluate_isolation_systems(report: &mut CheckReport, document: &En
 /// 🪨 The foundation springs of the bridge piers: Gazetas springs with the degraded shear modulus, the period lengthening of the pier and the bearing displacement with it, on the fixed-base period of the bridge.
 pub(super) fn evaluate_pier_bases(report: &mut CheckReport, document: &En1998Snapshot, annex_params: &AnnexParams, a_g: f64, s: f64, tb: f64, tc: f64, td: f64, scope: Scope<'_>) {
     let annex = annex_params.choice();
-    for (_, base) in document.pier_bases.iter().enumerate().filter(|(index, _)| scope.admits("pierBases", *index)) {
+    for (_, base) in document.pier_bases.iter().enumerate().filter(|(index, _)| scope.admits("pierBases", *index)).inspect(|_| isolate()) {
         let Some(bridge) = document.bridges.iter().find(|b| b.id == base.bridge_id) else { continue };
         let ground = Ground { a_g, s, tb, tc, td, gamma_i: part_2::bridge_gamma_i(bridge.importance_class) };
         let mass = part_1::entity_seismic_mass_kg(bridge.permanent_gk_n, &bridge.variables, false, bridge.correlated_occupancy);
@@ -280,7 +285,7 @@ pub(super) fn evaluate_assessments(report: &mut CheckReport, document: &En1998Sn
         report.push(CheckResult::assess("en1998.3.na", "DIN EN 1998-3", ClauseId::new("EN 1998-3", "3", "2.3"), SubjectRef::whole(lc("Assessments", "Bestandsbewertung")), lc("Retrofit checks", "Ertüchtigungsnachweise")).not_applicable(lc("No retrofit assessments in the subject.", "Keine Bestandsbewertungen im Gegenstand.")).annex(annex).build());
         return;
     }
-    for (_, a) in document.assessments.iter().enumerate().filter(|(index, _)| scope.admits("assessments", *index)) {
+    for (_, a) in document.assessments.iter().enumerate().filter(|(index, _)| scope.admits("assessments", *index)).inspect(|_| isolate()) {
         let path = id_sel("assessments", &a.id);
         let building_ok = document.buildings.iter().any(|b| b.id == a.supported_building_id);
         {
@@ -347,7 +352,7 @@ pub(super) fn evaluate_silos_tanks(report: &mut CheckReport, document: &En1998Sn
     if document.silos.is_empty() && scope.part("silos-na") {
         report.push(CheckResult::assess("en1998.4.silo.na", "DIN EN 1998-4", ClauseId::new("EN 1998-4", "4", "3"), SubjectRef::whole(lc("Silos", "Silos")), lc("Silo checks", "Silo-Nachweise")).not_applicable(lc("No silos in the subject.", "Keine Silos im Gegenstand.")).annex(annex).build());
     }
-    for (_, silo) in document.silos.iter().enumerate().filter(|(index, _)| scope.admits("silos", *index)) {
+    for (_, silo) in document.silos.iter().enumerate().filter(|(index, _)| scope.admits("silos", *index)).inspect(|_| isolate()) {
         let q = part_4::silo_behaviour_factor(silo.q_nominal);
         let s_e = part_1::elastic_response_spectrum(a_g, s, tb, tc, td, tc);
         let s_d = part_1::design_spectrum_at(a_g, gamma_i, s, tb, tc, td, q, tc);
@@ -372,7 +377,7 @@ pub(super) fn evaluate_silos_tanks(report: &mut CheckReport, document: &En1998Sn
     if document.tanks.is_empty() && scope.part("tanks-na") {
         report.push(CheckResult::assess("en1998.4.tank.na", "DIN EN 1998-4", ClauseId::new("EN 1998-4", "4", "4"), SubjectRef::whole(lc("Tanks", "Behälter")), lc("Tank checks", "Tank-Nachweise")).not_applicable(lc("No tanks in the subject.", "Keine Tanks im Gegenstand.")).annex(annex).build());
     }
-    for (_, tank) in document.tanks.iter().enumerate().filter(|(index, _)| scope.admits("tanks", *index)) {
+    for (_, tank) in document.tanks.iter().enumerate().filter(|(index, _)| scope.admits("tanks", *index)).inspect(|_| isolate()) {
         let fluid_height = semio_s_artifact_norm_en1998_schema::tank::fluid_height_m(tank.height_m, tank.filling_ratio);
         let hr = fluid_height / tank.radius_m.max(1e-9);
         let t_c = part_4::convective_period_s(fluid_height, tank.radius_m);
@@ -416,7 +421,7 @@ pub(super) fn evaluate_foundations_walls(report: &mut CheckReport, document: &En
     if document.foundations.is_empty() && scope.part("foundations-na") {
         report.push(CheckResult::assess("en1998.5.foundation.na", "DIN EN 1998-5", ClauseId::new("EN 1998-5", "5", "7"), SubjectRef::whole(lc("Foundations", "Gründungen")), lc("Foundation checks", "Gründungsnachweise")).not_applicable(lc("No foundations in the subject.", "Keine Gründungen im Gegenstand.")).annex(annex).build());
     }
-    for (_, f) in document.foundations.iter().enumerate().filter(|(index, _)| scope.admits("foundations", *index)) {
+    for (_, f) in document.foundations.iter().enumerate().filter(|(index, _)| scope.admits("foundations", *index)).inspect(|_| isolate()) {
         let path = id_sel("foundations", &f.id);
         check_liquefaction(report, annex, f, gamma_i, a_g, s);
         check_soil_profile(report, annex, document, f, gamma_i, a_g, s);
@@ -511,19 +516,19 @@ pub(super) fn evaluate_foundations_walls(report: &mut CheckReport, document: &En
     if document.retaining_walls.is_empty() && scope.part("walls-na") {
         report.push(CheckResult::assess("en1998.5.wall.na", "DIN EN 1998-5", ClauseId::new("EN 1998-5", "5", "7.3.2"), SubjectRef::whole(lc("Retaining walls", "Stützwände")), lc("Retaining wall checks", "Stützwandnachweise")).not_applicable(lc("No retaining walls in the subject.", "Keine Stützwände im Gegenstand.")).annex(annex).build());
     }
-    for (_, w) in document.retaining_walls.iter().enumerate().filter(|(index, _)| scope.admits("retainingWalls", *index)) {
+    for (_, w) in document.retaining_walls.iter().enumerate().filter(|(index, _)| scope.admits("retainingWalls", *index)).inspect(|_| isolate()) {
         check_wall_thrust(report, annex, document, w, gamma_i, a_g, s);
     }
     if document.tie_beams.is_empty() && scope.part("tie-beams-na") {
         report.push(CheckResult::assess("en1998.5.tie-beam.na", "DIN EN 1998-5", ClauseId::new("EN 1998-5", "5", "5.4.1.2"), SubjectRef::whole(lc("Tie beams", "Fundamentbalken")), lc("Tie beam checks", "Fundamentbalkennachweise")).not_applicable(lc("No tie beams in the subject.", "Keine Fundamentbalken im Gegenstand.")).annex(annex).build());
     }
-    for (_, t) in document.tie_beams.iter().enumerate().filter(|(index, _)| scope.admits("tieBeams", *index)) {
+    for (_, t) in document.tie_beams.iter().enumerate().filter(|(index, _)| scope.admits("tieBeams", *index)).inspect(|_| isolate()) {
         check_tie_beam(report, annex, document, t, gamma_i, a_g, s);
     }
     if document.slopes.is_empty() && scope.part("slopes-na") {
         report.push(CheckResult::assess("en1998.5.slope.na", "DIN EN 1998-5", ClauseId::new("EN 1998-5", "5", "4.1.3.3"), SubjectRef::whole(lc("Slopes", "Böschungen")), lc("Slope checks", "Böschungsnachweise")).not_applicable(lc("No slopes in the subject.", "Keine Böschungen im Gegenstand.")).annex(annex).build());
     }
-    for (_, sl) in document.slopes.iter().enumerate().filter(|(index, _)| scope.admits("slopes", *index)) {
+    for (_, sl) in document.slopes.iter().enumerate().filter(|(index, _)| scope.admits("slopes", *index)).inspect(|_| isolate()) {
         check_slope(report, annex, document, sl, gamma_i, a_g, s);
     }
 }
@@ -645,7 +650,7 @@ pub(super) fn evaluate_towers(report: &mut CheckReport, document: &En1998Snapsho
         report.push(CheckResult::assess("en1998.6.na", "DIN EN 1998-6", ClauseId::new("EN 1998-6", "6", "4.3"), SubjectRef::whole(lc("Towers", "Türme")), lc("Tower checks", "Turmnachweise")).not_applicable(lc("No towers in the subject.", "Keine Türme im Gegenstand.")).annex(annex).build());
         return;
     }
-    for (_, t) in document.towers.iter().enumerate().filter(|(index, _)| scope.admits("towers", *index)) {
+    for (_, t) in document.towers.iter().enumerate().filter(|(index, _)| scope.admits("towers", *index)).inspect(|_| isolate()) {
         let q = part_6::tower_behaviour_factor(t.q_nominal, t.is_chimney);
         let mass = part_1::entity_seismic_mass_kg(t.permanent_gk_n, &t.variables, false, t.correlated_occupancy);
         let t_read = tower_period(report, annex, t, mass, tc);

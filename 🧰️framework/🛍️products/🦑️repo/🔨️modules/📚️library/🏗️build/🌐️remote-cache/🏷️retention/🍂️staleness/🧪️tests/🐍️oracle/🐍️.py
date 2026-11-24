@@ -11,7 +11,12 @@ def judge(scenario):
     entries = {row["key"]: dict(row, declared=row["declared"] and row.get("version", 2) == 2) for row in scenario["entries"]}
     tree = scenario["tree"]
     toolchains = scenario["toolchains"]
-    retired = {digest(name) for name in scenario["retired"]}
+    retired = {digest(row["blob"]): row for row in scenario["retired"]}
+
+    def holds(row):
+        if "path" in row:
+            return row["path"] not in tree or digest(tree[row["path"]]) != digest(row["content"])
+        return toolchains is not None and row["toolchain"] not in toolchains
     now, grace = scenario["now"], scenario["grace"]
     holders = {}
     for key, row in entries.items():
@@ -32,7 +37,7 @@ def judge(scenario):
             if path not in tree:
                 stale[key] = "deleted"
                 break
-            if digest(tree[path]) != digest(content):
+            if row.get("kind") != "input-manifest" and digest(tree[path]) != digest(content):
                 stale[key] = "edited"
                 break
     changed = True
@@ -43,7 +48,7 @@ def judge(scenario):
                 continue
             for blob in row["externs"]:
                 names = holders.get(digest(blob), set()) - {key}
-                if (not names and digest(blob) in retired) or (names and all(name in stale for name in names)):
+                if (not names and digest(blob) in retired and holds(retired[digest(blob)])) or (names and all(name in stale for name in names)):
                     stale[key] = "extern"
                     changed = True
                     break
@@ -66,6 +71,8 @@ def judge(scenario):
             roots.add(key)
         elif key in stale and not young(row):
             result[key] = "stale:" + stale[key]
+        elif row.get("kind") == "input-manifest" and not row["sources"] and key not in stale:
+            result[key] = "live"
         elif row["sources"] or row.get("kind") == "stage-output":
             result[key] = "grace" if key in stale else "live"
             roots.add(key)

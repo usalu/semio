@@ -246,6 +246,12 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️p
 [workspace.dependencies.semio-s-artifact-process-process3d-viewer]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-plugin-ownership]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-os-store-operation-wire]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust"
+
 [workspace.dependencies.leb128]
 version = "0.2.7"
 

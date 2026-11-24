@@ -7,7 +7,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Workshop
 /// 📏️ A stock dimension a capability rule checks against a capability's own parameter value.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum StockQuantity {
     #[default]
@@ -64,7 +64,7 @@ pub enum MeasureKind {
 /// ✅️ "the named stock quantity must be at least/at most the named capability parameter's value (±
 /// margin)" — a capability's rules are ANDed together, e.g. a crosscut capability needs stock width
 /// AND height above the blade diameter.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum CapabilityRule {
@@ -84,7 +84,7 @@ pub enum CapabilityRule {
 
 /// 🔧️ One named numeric parameter of a capability (e.g. blade diameter) — workshop-editable, and
 /// referenced by id from the capability's own `MeasureRecipe`/`CapabilityRule`s.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CapabilityParameter {
@@ -97,7 +97,7 @@ pub struct CapabilityParameter {
 /// 🪚️ How a capability's parameters build a kernel `ProcessMeasure` — every field names a
 /// `Capability::parameters` entry by id, resolved at measure-build time; `measure_kind()` derives the
 /// fixed Cut/Drill/Attach effect so it never needs to be stored redundantly alongside the recipe.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "recipe", rename_all = "camelCase")]
 pub enum MeasureRecipe {
@@ -134,7 +134,7 @@ controlled_tagged_variant_field!(MeasureRecipe, WorkingSolid, ProcessMeasure);
 
 /// 🪚️ One thing a machine can do; every capability turns into a step: `recipe` fixes the geometric
 /// effect and how it's sized, `parameters` size the tool, `rules` gate legality against the stock.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Capability {
@@ -152,7 +152,7 @@ pub struct Capability {
 /// 🛠️ A machine in the document's workshop — an embedded snapshot, never a reference; consistent with
 /// `StepOrigin`'s never-resolve invariant (see its doc comment), and robust to catalog drift: editing
 /// or removing an installed catalog can never retroactively change an already-configured workshop.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WorkshopMachine {
@@ -200,7 +200,7 @@ impl Patchable<WorkshopMachinePatch> for WorkshopMachine {
 }
 
 /// 🏭️ The document's configured workshop: the machines available to build steps from.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Workshop {

@@ -456,7 +456,17 @@
                 "required": ["prefix"],
                 "properties": {
                   "prefix": { "type": "string", "minLength": 1 },
-                  "milliseconds": { "type": "integer", "minimum": 1000, "maximum": 3600000, "description": "Absent: the writer keeps its preference until it is granted." }
+                  "milliseconds": { "type": "integer", "minimum": 1000, "maximum": 3600000, "description": "Absent: the writer keeps its preference until it is granted." },
+                  "cycle": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["standAsideMilliseconds", "blockMilliseconds"],
+                    "description": "Instead of one block of preference: the waiting writer lets readers pass for standAsideMilliseconds, closes the queue for blockMilliseconds, and repeats from its arrival, so readers wait at most one block and the writer is never starved.",
+                    "properties": {
+                      "standAsideMilliseconds": { "type": "integer", "minimum": 100, "maximum": 600000 },
+                      "blockMilliseconds": { "type": "integer", "minimum": 100, "maximum": 60000 }
+                    }
+                  }
                 }
               }
             }

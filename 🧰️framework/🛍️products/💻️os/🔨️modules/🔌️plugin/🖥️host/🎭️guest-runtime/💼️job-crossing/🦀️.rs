@@ -121,10 +121,15 @@ impl GuestRuntimes {
 
     /// 🛑️ Admits the cancellation of guest job `job`.
     pub async fn cancel_job_funded(&self, inst: &mut GuestInstance, funds: &mut JobFunds, job: u64) -> Result<(), TurnFault> {
-        let crossing = funds.crossing().map_err(identity_turn_fault)?;
-        let call = self.cancel_job(inst, job, crossing.budget, crossing.execution).await;
-        let reply = funds.settle_call(crossing, call, |reply| (reply.spent, reply.work_units_spent, reply.refusal))?;
-        if reply.admitted { Ok(()) } else { Err(TurnFault::Trapped(format!("guest job {job} cancellation was not admitted"))) }
+        for _ in 0..=Self::PENDING_PAGES {
+            let crossing = funds.crossing().map_err(identity_turn_fault)?;
+            let call = self.cancel_job(inst, job, crossing.budget, crossing.execution).await;
+            let reply = funds.settle_call(crossing, call, |reply| (reply.spent, reply.work_units_spent, reply.refusal))?;
+            if reply.admitted {
+                return Ok(());
+            }
+        }
+        Err(TurnFault::Trapped(format!("guest job {job} cancellation was not admitted")))
     }
 
     async fn collect_job_output(&self, inst: &mut GuestInstance, funds: &mut JobFunds, job: u64, expected: u64) -> Result<Vec<u8>, TurnFault> {

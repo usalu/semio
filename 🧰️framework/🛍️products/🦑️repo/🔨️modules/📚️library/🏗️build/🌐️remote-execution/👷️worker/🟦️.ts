@@ -6,18 +6,22 @@ import {chmod,copyFile,lstat,mkdir,readdir,readlink,realpath,rename,rm,stat,utim
 import {availableParallelism,hostname,platform as osPlatform,totalmem} from "node:os";
 import {delimiter,dirname,isAbsolute,join,normalize,sep} from "node:path";
 import {decodeProtobufV1,encodeProtobufV1,REAPI_V1,type ProtobufMessageV1} from "../📡️wire/📦️protobuf/🟦️.ts";
-import {httpRemoteExecutionContentV1,RemoteExecutionContentErrorV1,type RemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
+import {httpRemoteExecutionContentV1,retryRemoteExecutionContentOutageV1,RemoteExecutionContentErrorV1,type RemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
 import {placeRemoteExecutionLinkV1,remoteExecutionLinkEscapesV1,selectRemoteExecutionSandboxV1,type RemoteExecutionSandboxStrategyV1} from "../🔒️sandbox/🟦️.ts";
 import {expandRemoteExecutionRootV1,remoteExecutionCommandProgramV1,remoteExecutionNativePathV1,remoteExecutionToolOfProgramV1,validateRemoteExecutionCommandActionV1,validateRemoteExecutionRustcActionV1,type RemoteExecutionActionPolicyV1} from "../🧱️actions/🟦️.ts";
 import {COMMAND_POLICY_V1,commandTextV1,commandToolKeyV1,commandToolSourceV1,parseCommandProgramV1} from "../🚀️offload/🧰️command/📐️policy/🟦️.ts";
 import {OFFLOAD_POLICY_V1,offloadCrateTypesOfV1} from "../🚀️offload/📐️policy/🟦️.ts";
 import {createRemoteExecutionMeterV1,remoteExecutionProcessTableV1} from "./📏️task-memory/🟦️.ts";
 import {remoteExecutionCodegenArgumentsV1,remoteExecutionCodegenSerialRequestedV1,withRemoteExecutionCodegenPoolV1} from "./🧵️codegen/🟦️.ts";
-import type {RemoteExecutionAdmissionV1,RemoteExecutionWorkerStateV1} from "../🌡️load/🟦️.ts";
-import {remoteExecutionPeakEntryV1,remoteExecutionThreadsEntryV1,readRemoteExecutionPolicyV1,remoteExecutionHostPropertiesV1,remoteExecutionDigestV1,requireRemoteExecutionShapeV1,type RemoteExecutionConfinementV1,type RemoteExecutionDigestV1,type RemoteExecutionNetworkV1,type RemoteExecutionHeartbeatAnswerV1,type RemoteExecutionPollAnswerV1,type RemoteExecutionPropertyV1,type RemoteExecutionRefusalV1,type RemoteExecutionSandboxV1,type RemoteExecutionTaskResultV1,type RemoteExecutionTaskStatusV1,type RemoteExecutionTaskV1,type RemoteExecutionWorkerRegisteredV1} from "../🟦️.ts";
+import type {RemoteExecutionAdmissionV1,RemoteExecutionHeldUnitV1,RemoteExecutionWorkerStateV1} from "../🌡️load/🟦️.ts";
+import {remoteExecutionPeakEntryV1,remoteExecutionThreadsEntryV1,readRemoteExecutionPolicyV1,remoteExecutionHostPropertiesV1,remoteExecutionMatchPropertiesV1,remoteExecutionPlatformMatchesV1,remoteExecutionDigestV1,requireRemoteExecutionShapeV1,type RemoteExecutionConfinementV1,type RemoteExecutionDigestV1,type RemoteExecutionNetworkV1,type RemoteExecutionHeartbeatAnswerV1,type RemoteExecutionPollAnswerV1,type RemoteExecutionPropertyV1,type RemoteExecutionRefusalV1,type RemoteExecutionSandboxV1,type RemoteExecutionTaskResultV1,type RemoteExecutionTaskStatusV1,type RemoteExecutionTaskV1,type RemoteExecutionWorkerRegisteredV1} from "../🟦️.ts";
 import { runtimeSleepV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 import {runtimeIdentityV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import {OFFLOAD_REFUSAL_PREFIX_V1} from "../🚀️offload/🩺️failure/🟦️.ts";
+import {casObjectPathV1,casRootV1} from "../../🗄️cas/🗃️store/🟦️.ts";
+import {casReserveBytesV1,measureCasPartitionV1} from "../../🗄️cas/🌡️partition/🟦️.ts";
+import {CAS_POLICY_V1} from "../../🗄️cas/🧬️schema/🟦️.ts";
+import {remoteExecutionDiskNeedBytesV1} from "../🛰️agent/💽️disk/🟦️.ts";
 
 const EMPTY_HASH="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -26,10 +30,10 @@ export type RemoteExecutionWorkerEventV1=Readonly<{stage:"registered"|"reconnect
 
 /** ⚙️ Everything a worker needs: where the scheduler is, who it is, what it offers and where it works. */
 /** 🙋️ What the worker tells its admission: `poll` (before it asks the scheduler for a unit, so it asks for the smallest) or `task` (a unit arrived, with the peak megabytes its requester declared, 0 when none), and the peaks of the units it already runs (0 for an undeclared one). */
-export type RemoteExecutionUnitAskV1=Readonly<{stage:"poll";held:readonly number[]}>|Readonly<{stage:"task";megabytes:number;held:readonly number[]}>;
+export type RemoteExecutionUnitAskV1=Readonly<{stage:"poll";held:readonly RemoteExecutionHeldUnitV1[]}>|Readonly<{stage:"task";megabytes:number;held:readonly RemoteExecutionHeldUnitV1[]}>;
 
 /** 🧵️ What a worker tells its host to size the code generation threads of one linked unit: the cores its other running actions hold (the grant of a linked unit, else one each), the peak this unit was admitted with (0: none declared) and the peaks of the other running units. */
-export type RemoteExecutionThreadsAskV1=Readonly<{others:number;peakMegabytes:number;held:readonly number[]}>;
+export type RemoteExecutionThreadsAskV1=Readonly<{others:number;peakMegabytes:number;held:readonly RemoteExecutionHeldUnitV1[]}>;
 
 export type RemoteExecutionWorkerOptionsV1=Readonly<{
  scheduler:string;token?:string|undefined;cacheToken?:string|undefined;fetch?:typeof fetch|undefined;cacheFetch?:typeof fetch|undefined;actions?:RemoteExecutionActionPolicyV1;unconfinedForTests?:boolean;name?:string;concurrency:number;directory:string;sandbox:"auto"|RemoteExecutionSandboxV1;materialize:"clone"|"copy";maximumBlobBytes:number;inlineOutputBytes:number;
@@ -45,7 +49,7 @@ export type RemoteExecutionCommandToolsV1=RemoteExecutionToolsV1;
 
 /** 🎬️ What executing one action needs besides the store. */
 export type RemoteExecutionExecutionV1=Readonly<{
- instance:string;action:RemoteExecutionDigestV1;timeoutSeconds:number;content:RemoteExecutionContentV1;directory:string;work?:string;workerName:string;sandbox:RemoteExecutionSandboxStrategyV1;materialize:"clone"|"copy";inlineOutputBytes:number;signal:AbortSignal;keepWork?:boolean;blobs?:RemoteExecutionBlobCacheV1;network?:boolean;tools?:RemoteExecutionToolsV1;commands?:RemoteExecutionCommandToolsV1;actions?:RemoteExecutionActionPolicyV1;meter?:Readonly<{attach(pid:number):void;peak():number|undefined}>;threads?:()=>Promise<number>;wardenCancels?:(sinceMs:number)=>Promise<readonly Readonly<{pid:number;command:string}>[]>;
+ properties?:readonly RemoteExecutionPropertyV1[];instance:string;action:RemoteExecutionDigestV1;timeoutSeconds:number;content:RemoteExecutionContentV1;directory:string;work?:string;workerName:string;sandbox:RemoteExecutionSandboxStrategyV1;materialize:"clone"|"copy";inlineOutputBytes:number;signal:AbortSignal;keepWork?:boolean;blobs?:RemoteExecutionBlobCacheV1;network?:boolean;tools?:RemoteExecutionToolsV1;commands?:RemoteExecutionCommandToolsV1;actions?:RemoteExecutionActionPolicyV1;meter?:Readonly<{attach(pid:number):void;peak():number|undefined}>;threads?:()=>Promise<number>;wardenCancels?:(sinceMs:number)=>Promise<readonly Readonly<{pid:number;command:string}>[]>;
 }>;
 
 /** 🏁️ How executing one action ended. */
@@ -72,34 +76,74 @@ async function limited<T>(items:readonly T[],limit:number,work:(item:T)=>Promise
  if(failure!==undefined)throw failure;
 }
 
-/** 💽️ The worker's local, bounded, content-addressed blob cache: every blob is fetched once, verified against its digest and written atomically; least recently used blobs are evicted beyond the bound. */
+const BLOB_PROTECT_MILLISECONDS_V1=600000,FETCH_CONCURRENCY_V1=32;
+
+/** 📥️ Where the input files of one action came from: the worker's blob cache (`cached`), the machine's own content store (`local`, a copy on this disk) or the network (`fetched`), in files and bytes. */
+export type RemoteExecutionInputFetchV1={cachedFiles:number;cachedBytes:number;localFiles:number;localBytes:number;fetchedFiles:number;fetchedBytes:number};
+
+/** 🏷️ The type of the auxiliary metadata entry that carries {@link RemoteExecutionInputFetchV1} in an action result (REAPI `ExecutedActionMetadata.auxiliary_metadata`; clients that do not know it ignore it). */
+export const REMOTE_EXECUTION_INPUT_FETCH_TYPE_URL_V1="type.semio.dev/input-fetch";
+
+/** 📦️ The auxiliary entry of an input fetch: its JSON text. */
+export const remoteExecutionInputFetchEntryV1=(fetch:RemoteExecutionInputFetchV1):Readonly<{type_url:string;value:Uint8Array}>=>Object.freeze({type_url:REMOTE_EXECUTION_INPUT_FETCH_TYPE_URL_V1,value:new TextEncoder().encode(JSON.stringify(fetch))});
+
+/** 📖️ The input fetch an action result reports, `undefined` when it carries none. */
+export function remoteExecutionInputFetchOfV1(entries:readonly Readonly<{type_url:string;value:Uint8Array}>[]|undefined):RemoteExecutionInputFetchV1|undefined{
+ for(const entry of entries??[])if(entry.type_url===REMOTE_EXECUTION_INPUT_FETCH_TYPE_URL_V1)try{return JSON.parse(new TextDecoder().decode(entry.value)) as RemoteExecutionInputFetchV1;}catch{return undefined;}
+ return undefined;
+}
+
+/** 📐️ How large the blob cache may be on the disk it has: at most `maximumBytes`, and never so large that the volume of the work directory keeps less than what every action slot needs free (`keepWorkBytes`, the disk rule of the agent) or the volume of the machine's content store falls below the content store's hard reserve of the worker role (`hostReserveBytes`, CAS7); a volume that cannot be measured does not bound it. The cache counts its own bytes as room it may keep. Pure. */
+export function remoteExecutionBlobBoundBytesV1(input:Readonly<{maximumBytes:number;cacheBytes:number;workFreeBytes?:number|undefined;keepWorkBytes:number;hostFreeBytes?:number|undefined;hostReserveBytes:number}>):number{
+ const work=input.workFreeBytes===undefined?Infinity:input.cacheBytes+input.workFreeBytes-input.keepWorkBytes,host=input.hostFreeBytes===undefined?Infinity:input.cacheBytes+input.hostFreeBytes-input.hostReserveBytes;
+ return Math.max(0,Math.min(input.maximumBytes,work,host));
+}
+
+/** 💽️ The worker's local, bounded, content-addressed blob cache: every blob is fetched once, verified against its digest and written atomically; least recently used blobs are evicted beyond the bound, but never one that was used within the last ten minutes (an action that runs or is being prepared holds its inputs, so a bound below one input closure cannot make every action fetch its whole closure again). */
 export class RemoteExecutionBlobCacheV1{
  private readonly pending=new Map<string,Promise<string>>();
- readonly directory:string; private readonly content:RemoteExecutionContentV1; private readonly maximumBytes:number; constructor(directory:string,content:RemoteExecutionContentV1,maximumBytes:number){this.directory=directory;this.content=content;this.maximumBytes=maximumBytes;}
+ readonly directory:string; private readonly content:RemoteExecutionContentV1; private readonly maximumBytes:number; private readonly room:((cacheBytes:number)=>number)|undefined; private readonly local:string|undefined;
+ constructor(directory:string,content:RemoteExecutionContentV1,maximumBytes:number,options:Readonly<{room?:(cacheBytes:number)=>number;local?:string}>={}){this.directory=directory;this.content=content;this.maximumBytes=maximumBytes;this.room=options.room;this.local=options.local;}
 
  private location(hash:string):string{return join(this.directory,hash.slice(0,2),hash);}
 
- async path(instance:string,digest:RemoteExecutionDigestV1,signal?:AbortSignal):Promise<string>{
+ async path(instance:string,digest:RemoteExecutionDigestV1,signal?:AbortSignal,tally?:RemoteExecutionInputFetchV1):Promise<string>{
   const file=this.location(digest.hash),known=await stat(file).catch(()=>undefined);
-  if(known&&known.size===digest.size){const now=new Date();await utimes(file,now,now).catch(()=>{});return file;}
+  if(known&&known.size===digest.size){const now=new Date();await utimes(file,now,now).catch(()=>{});if(tally){tally.cachedFiles++;tally.cachedBytes+=digest.size;}return file;}
   const key=instance+"|"+digest.hash;let running=this.pending.get(key);
-  if(!running){running=this.fetch(instance,digest,file,signal).finally(()=>{this.pending.delete(key);});this.pending.set(key,running);}
+  if(!running){running=this.fetch(instance,digest,file,signal,tally).finally(()=>{this.pending.delete(key);});this.pending.set(key,running);}
   return running;
  }
 
- private async fetch(instance:string,digest:RemoteExecutionDigestV1,file:string,signal?:AbortSignal):Promise<string>{
+ /** 🔎️ Whether the blob is in the local copy at its size (no request). */
+ async cached(digest:RemoteExecutionDigestV1):Promise<boolean>{return(await stat(this.location(digest.hash)).catch(()=>undefined))?.size===digest.size;}
+
+ /** 📖️ The bytes of a small blob (a directory of an input tree) from the local copy, fetched once. */
+ async bytes(instance:string,digest:RemoteExecutionDigestV1,signal?:AbortSignal):Promise<Uint8Array>{
+  if(digest.size===0)return new Uint8Array(0);
+  return readFile(await this.path(instance,digest,signal));
+ }
+
+ private async fetch(instance:string,digest:RemoteExecutionDigestV1,file:string,signal?:AbortSignal,tally?:RemoteExecutionInputFetchV1):Promise<string>{
   await mkdir(dirname(file),{recursive:true});
   const temporary=`${file}.${process.pid}.${randomUUID()}.tmp`;
   if(digest.size===0){await writeFile(temporary,"");await rename(temporary,file);return file;}
+  const copy=async(source:AsyncIterable<Uint8Array>):Promise<boolean>=>{
+   const hash=createHash("sha256"),handle=createWriteStream(temporary),endStream=():Promise<void>=>new Promise((resolve,reject)=>{handle.once("error",reject);handle.end(()=>resolve());});let size=0;
+   try{
+    for await(const chunk of source){hash.update(chunk);size+=chunk.length;if(!handle.write(chunk))await new Promise<void>(resolve=>handle.once("drain",resolve));}
+    await endStream();
+    if(size!==digest.size||hash.digest("hex")!==digest.hash){await rm(temporary,{force:true});return false;}
+    await rename(temporary,file);return true;
+   }catch(error){try{await endStream();}catch{}await rm(temporary,{force:true});throw error;}
+  };
+  const near=this.local===undefined?undefined:casObjectPathV1(this.local,digest.hash);
+  if(near!==undefined&&(await stat(near).catch(()=>undefined))?.size===digest.size&&await copy(createReadStream(near) as unknown as AsyncIterable<Uint8Array>).catch(()=>false)){if(tally){tally.localFiles++;tally.localBytes+=digest.size;}return file;}
   const source=await this.content.stream(instance,digest,signal);
   if(!source)throw new MissingBlob(digest);
-  const hash=createHash("sha256"),handle=createWriteStream(temporary),endStream=():Promise<void>=>new Promise((resolve,reject)=>{handle.once("error",reject);handle.end(()=>resolve());});let size=0;
-  try{
-   for await(const chunk of source){hash.update(chunk);size+=chunk.length;if(!handle.write(chunk))await new Promise<void>(resolve=>handle.once("drain",resolve));}
-   await endStream();
-   if(size!==digest.size||hash.digest("hex")!==digest.hash)throw new RemoteExecutionContentErrorV1(15,`Blob ${digest.hash} does not match its digest`);
-   await rename(temporary,file);return file;
-  }catch(error){try{await endStream();}catch{}await rm(temporary,{force:true});throw error;}
+  if(!await copy(source))throw new RemoteExecutionContentErrorV1(15,`Blob ${digest.hash} does not match its digest`);
+  if(tally){tally.fetchedFiles++;tally.fetchedBytes+=digest.size;}
+  return file;
  }
 
  /** 🧹️ Removes the least recently used blobs until the cache fits its bound. */
@@ -114,8 +158,10 @@ export class RemoteExecutionBlobCacheV1{
    }
   }
   rows.sort((left,right)=>left.time-right.time);let removed=0;
-  if(total<=this.maximumBytes)return 0;
-  for(const row of rows){if(total<=this.maximumBytes*0.9)break;if(!dryRun)await rm(row.path,{force:true});total-=row.size;removed++;}
+  const bound=Math.min(this.maximumBytes,this.room?.(total)??Infinity);
+  if(total<=bound)return 0;
+  const protectedAfter=Date.now()-BLOB_PROTECT_MILLISECONDS_V1;
+  for(const row of rows){if(total<=bound*0.9||row.time>protectedAfter)break;if(!dryRun)await rm(row.path,{force:true});total-=row.size;removed++;}
   return removed;
  }
 }
@@ -230,11 +276,17 @@ const ensureWardenV1=():void=>{void import("../../../../../../../🔨️modules/
 export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutionV1):Promise<RemoteExecutionExecutionResultV1>{
  const started=Date.now(),task=randomBytes(6).toString("hex"),work=join(run.work??join(run.directory,"work"),task),root=join(work,"r"),links:{target:string;path:string}[]=[],blobs=run.blobs??new RemoteExecutionBlobCacheV1(join(run.directory,"blobs"),run.content,Number.MAX_SAFE_INTEGER);
  const fail=(code:number,message:string,missing?:RemoteExecutionDigestV1[]):RemoteExecutionExecutionResultV1=>({outcome:"failed",status:{code,message,...(missing?{missing}:{})},actionResult:null});
- const directories=new Map<string,Directory>();
+ const directories=new Map<string,Directory>(),inputs:RemoteExecutionInputFetchV1={cachedFiles:0,cachedBytes:0,localFiles:0,localBytes:0,fetchedFiles:0,fetchedBytes:0};
+ let surveyed:RemoteExecutionDigestV1|undefined;
+ let busy=0;const waiting:(()=>void)[]=[];
+ const place=async(work:()=>Promise<void>):Promise<void>=>{
+  while(busy>=FETCH_CONCURRENCY_V1)await new Promise<void>(resolve=>waiting.push(resolve));
+  busy++;
+  try{await work();}finally{busy--;waiting.shift()?.();}
+ };
  const loadDirectory=async(digest:RemoteExecutionDigestV1):Promise<Directory>=>{
   const known=directories.get(digest.hash);if(known)return known;
-  const bytes=digest.size===0?new Uint8Array(0):await run.content.read(run.instance,digest,run.signal);
-  if(!bytes)throw new MissingBlob(digest);
+  const bytes=await blobs.bytes(run.instance,digest,run.signal);
   if(sha256(bytes)!==digest.hash)throw new RemoteExecutionContentErrorV1(15,`Directory ${digest.hash} does not match its digest`);
   const directory=decodeProtobufV1(REAPI_V1.directory,bytes);directories.set(digest.hash,directory);return directory;
  };
@@ -244,12 +296,31 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
   await mkdir(target,{recursive:true});
   const seen=new Set<string>();
   for(const name of [...directory.files,...directory.directories,...directory.symlinks].map((node:{name:string})=>safeName(node.name))){if(seen.has(name))throw new RemoteExecutionContentErrorV1(3,`Duplicate name in input tree: ${name}`);seen.add(name);}
-  await limited(directory.files as {name:string;digest:{hash:string;size_bytes:number};is_executable:boolean}[],16,async node=>{
-   const source=await blobs.path(run.instance,unwire(node.digest),run.signal);
+  await limited(directory.files as {name:string;digest:{hash:string;size_bytes:number};is_executable:boolean}[],16,node=>place(async()=>{
+   const source=await blobs.path(run.instance,unwire(node.digest),run.signal,inputs);
    await placeFile(source,join(target,node.name),node.is_executable,run.materialize);
-  });
+  }));
   for(const node of directory.symlinks as {name:string;target:string}[])links.push({target:node.target,path:join(target,node.name)});
   await limited(directory.directories as {name:string;digest:{hash:string;size_bytes:number}}[],8,node=>materialize(unwire(node.digest),join(target,node.name),depth+1));
+ };
+ const survey=async(top:RemoteExecutionDigestV1):Promise<RemoteExecutionDigestV1[]>=>{
+  const gone=new Map<string,RemoteExecutionDigestV1>(),files=new Map<string,RemoteExecutionDigestV1>(),seen=new Set<string>();
+  let level=[top];
+  while(level.length>0){
+   const next:RemoteExecutionDigestV1[]=[];
+   await limited(level,16,async digest=>{
+    if(seen.has(digest.hash))return;seen.add(digest.hash);
+    let node:Directory;
+    try{node=await loadDirectory(digest);}catch(error){if(error instanceof MissingBlob){gone.set(digest.hash,digest);return;}throw error;}
+    for(const file of node.files as {digest:{hash:string;size_bytes:number}}[]){const found=unwire(file.digest);if(found.size>0)files.set(found.hash,found);}
+    for(const child of node.directories as {digest:{hash:string;size_bytes:number}}[])next.push(unwire(child.digest));
+   });
+   level=next;
+  }
+  const unknown:RemoteExecutionDigestV1[]=[];
+  for(const digest of files.values())if(!await blobs.cached(digest))unknown.push(digest);
+  for(const digest of unknown.length===0?[]:await run.content.missing(run.instance,unknown,run.signal))gone.set(digest.hash,digest);
+  return[...gone.values()];
  };
  try{
   const actionBytes=await run.content.read(run.instance,run.action,run.signal);
@@ -258,6 +329,10 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
   if(!commandBytes)return fail(9,`Missing blob ${commandDigest.hash}/${commandDigest.size}`,[commandDigest]);
   const command=decodeProtobufV1(REAPI_V1.command,commandBytes) as {arguments:string[];environment_variables:{name:string;value:string}[];output_files:string[];output_directories:string[];output_paths:string[];working_directory:string};
   if(command.arguments.length===0)return fail(3,"Command without arguments");
+  if(run.properties!==undefined){
+   const wanted=remoteExecutionMatchPropertiesV1((action.platform?.properties?.length?action.platform.properties:(command as {platform?:{properties?:readonly RemoteExecutionPropertyV1[]}}).platform?.properties)??[]),lacking=wanted.filter(row=>!remoteExecutionPlatformMatchesV1([row],run.properties!));
+   if(lacking.length>0)return fail(9,`No worker offers the platform ${lacking.map(row=>`${row.name}=${row.value}`).join(";")}: this worker (${run.workerName}) does not advertise it`);
+  }
   if(remoteExecutionCommandProgramV1(command.arguments[0]!)){
    const refusal=run.actions==="none"?"this worker runs no actions":run.commands===undefined?"this worker offers no command actions":validateRemoteExecutionCommandActionV1(command,{tools:run.commands,confined:run.sandbox.name!=="isolated-root",network:run.network===true});
    if(refusal!==undefined)return fail(9,`${OFFLOAD_REFUSAL_PREFIX_V1}: ${refusal}`);
@@ -267,6 +342,7 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
   }
   if(command.output_paths.length===0&&(command.output_files.length>0||command.output_directories.length>0))return fail(3,"Command declares only REAPI 2.0 output_files or output_directories; declare output_paths (REAPI 2.1)");
   const rootDigest=action.input_root_digest?unwire(action.input_root_digest):{hash:EMPTY_HASH,size:0},fetchStart=Date.now();
+  surveyed=rootDigest;
   await materialize(rootDigest,root,0);
   for(const link of links){
    if(remoteExecutionLinkEscapesV1(root,link.path,link.target))throw new RemoteExecutionContentErrorV1(3,`Input link leaves the input root: ${link.target}`);
@@ -340,22 +416,24 @@ export async function executeRemoteExecutionActionV1(run:RemoteExecutionExecutio
   const inlineOut=collected.stdout.length<=run.inlineOutputBytes,inlineErr=collected.stderr.length<=run.inlineOutputBytes;
   if(!inlineOut)stage(stdoutDigest,collected.stdout);
   if(!inlineErr)stage(stderrDigest,collected.stderr);
-  const rows=[...uploads.values()],absent=new Set((await run.content.missing(run.instance,rows.map(row=>row.digest),run.signal)).map(digest=>digest.hash));
-  await limited(rows.filter(row=>absent.has(row.digest.hash)),8,async row=>{
-   if(typeof row.source==="string"){
-    const stream=createReadStream(row.source);
-    await run.content.write(run.instance,row.digest,(async function*(){for await(const chunk of stream as unknown as AsyncIterable<Uint8Array>)yield chunk;})(),run.signal);
-   }else await run.content.write(run.instance,row.digest,row.source,run.signal);
-  });
+  const outage=readRemoteExecutionPolicyV1().worker.outage,rows=[...uploads.values()],absent=new Set((await retryRemoteExecutionContentOutageV1(()=>run.content.missing(run.instance,rows.map(row=>row.digest),run.signal),outage,run.signal)).map(digest=>digest.hash));
+  await limited(rows.filter(row=>absent.has(row.digest.hash)),8,row=>retryRemoteExecutionContentOutageV1(()=>{
+   if(typeof row.source!=="string")return run.content.write(run.instance,row.digest,row.source,run.signal);
+   const stream=createReadStream(row.source);
+   return run.content.write(run.instance,row.digest,(async function*(){for await(const chunk of stream as unknown as AsyncIterable<Uint8Array>)yield chunk;})(),run.signal);
+  },outage,run.signal));
   const end=Date.now(),result=encodeProtobufV1(REAPI_V1.actionResult,{
    output_files:outputFiles.sort((left,right)=>left.path<right.path?-1:1),output_directories:outputDirectories,output_symlinks:outputSymlinks,
    exit_code:collected.exitCode,...(inlineOut?{stdout_raw:collected.stdout}:{stdout_digest:wire(stdoutDigest)}),...(inlineErr?{stderr_raw:collected.stderr}:{stderr_digest:wire(stderrDigest)}),
-   execution_metadata:{worker:run.workerName,...(measured===undefined&&!linked?{}:{auxiliary_metadata:[...measured===undefined?[]:[remoteExecutionPeakEntryV1(measured)],...linked?[remoteExecutionThreadsEntryV1(granted)]:[]]}),worker_start_timestamp:timestamp(started),input_fetch_start_timestamp:timestamp(fetchStart),input_fetch_completed_timestamp:timestamp(executionStart),execution_start_timestamp:timestamp(executionStart),execution_completed_timestamp:timestamp(executionEnd),output_upload_start_timestamp:timestamp(uploadStart),output_upload_completed_timestamp:timestamp(end),worker_completed_timestamp:timestamp(end)},
+   execution_metadata:{worker:run.workerName,auxiliary_metadata:[...measured===undefined?[]:[remoteExecutionPeakEntryV1(measured)],...linked?[remoteExecutionThreadsEntryV1(granted)]:[],remoteExecutionInputFetchEntryV1(inputs)],worker_start_timestamp:timestamp(started),input_fetch_start_timestamp:timestamp(fetchStart),input_fetch_completed_timestamp:timestamp(executionStart),execution_start_timestamp:timestamp(executionStart),execution_completed_timestamp:timestamp(executionEnd),output_upload_start_timestamp:timestamp(uploadStart),output_upload_completed_timestamp:timestamp(end),worker_completed_timestamp:timestamp(end)},
   });
   return {outcome:"completed",status:{code:0,message:""},actionResult:result};
  }catch(error){
   if(run.signal.aborted)return {outcome:"cancelled",status:{code:1,message:"Cancelled"},actionResult:null};
-  if(error instanceof MissingBlob)return fail(9,error.message,[error.digest]);
+  if(error instanceof MissingBlob){
+   const named=surveyed===undefined?[error.digest]:await survey(surveyed).catch(()=>[error.digest]),all=[error.digest,...named.filter(digest=>digest.hash!==error.digest.hash)];
+   return fail(9,all.length===1?error.message:`${error.message} and ${all.length-1} more`,all);
+  }
   if(error instanceof RemoteExecutionContentErrorV1)return fail(error.code,error.message);
   return fail(14,`Executing the action failed: ${error instanceof Error?error.message:String(error)}`);
  }finally{
@@ -401,6 +479,7 @@ export async function runRemoteExecutionWorkerV1(options:RemoteExecutionWorkerOp
  ensureWardenV1();
  let registered:RemoteExecutionWorkerRegisteredV1|undefined,content=options.content;
  const meter=createRemoteExecutionMeterV1(remoteExecutionProcessTableV1,1000),running=new Map<string,AbortController>(),demands=new Map<string,number>(),grants=new Map<string,number>(),resumable=new Map<string,Readonly<{instance:string;action:{hash:string;size:number}}>>();
+ const heldUnits=(tasks:readonly string[]):readonly RemoteExecutionHeldUnitV1[]=>{const used=new Map(meter.usage().map(row=>[row.task,row.megabytes]));return tasks.map(task=>({megabytes:demands.get(task)??0,usedMegabytes:used.get(task)??0}));};
  let registering:Promise<void>|undefined;
  const registerOnce=async():Promise<void>=>{
   for(let delay=250;!options.signal.aborted;delay=Math.min(delay*2,5000)){
@@ -422,7 +501,9 @@ export async function runRemoteExecutionWorkerV1(options:RemoteExecutionWorkerOp
  const register=():Promise<void>=>{registering??=registerOnce().finally(()=>{registering=undefined;});return registering;};
  await register();
  if(!registered||!content)return;
- const store=new RemoteExecutionBlobCacheV1(join(options.directory,"blobs"),content,options.maximumBlobBytes),workDirectory=join(options.directory,"work",remoteExecutionWorkNameV1(name));
+ const local=casRootV1(),keepWorkBytes=remoteExecutionDiskNeedBytesV1(readRemoteExecutionPolicyV1().worker.disk,options.concurrency);
+ const room=(cacheBytes:number):number=>{const work=measureCasPartitionV1(options.directory),host=measureCasPartitionV1(local);return remoteExecutionBlobBoundBytesV1({maximumBytes:options.maximumBlobBytes,cacheBytes,workFreeBytes:work?.freeBytes,keepWorkBytes,hostFreeBytes:host?.freeBytes,hostReserveBytes:host===undefined?0:casReserveBytesV1(CAS_POLICY_V1,{totalBytes:host.totalBytes,role:"worker"})});};
+ const store=new RemoteExecutionBlobCacheV1(join(options.directory,"blobs"),content,options.maximumBlobBytes,{room,local}),workDirectory=join(options.directory,"work",remoteExecutionWorkNameV1(name));
  const ownerlessSeconds=readRemoteExecutionPolicyV1().worker.ownerlessWorkSeconds,retire=():void=>{void retireRemoteExecutionWorkV1(join(options.directory,"work"),{keep:remoteExecutionWorkNameV1(name),ownerlessSeconds}).catch(()=>undefined);};
  await rm(workDirectory,{recursive:true,force:true}).catch(()=>{});
  await claimRemoteExecutionWorkV1(workDirectory).catch(()=>{});retire();
@@ -438,16 +519,24 @@ export async function runRemoteExecutionWorkerV1(options:RemoteExecutionWorkerOp
  let wake:(()=>void)|undefined,refusing=false;
  const publish=():void=>{options.observe?.({state:refusing?"refusing":running.size>0?"busy":"idle",concurrency:options.concurrency,running:running.size,sandbox:sandbox.name,confinement,network});};
  const send=async(task:string,report:RemoteExecutionTaskResultV1):Promise<void>=>{
-  for(let attempt=0;attempt<8;attempt++){
+  const outage=readRemoteExecutionPolicyV1().worker.outage,until=Date.now()+outage.seconds*1000;let told=false;
+  for(let attempt=0;!options.signal.aborted;attempt++){
    try{await call("POST",`/v1/workers/${registered!.id}/tasks/${task}/result`,report,AbortSignal.timeout(30000));return;}
-   catch(error){if(attempt===7)say("reconnecting",`report lost: ${(error as Error).message}`);else{if(/Scheduler answered 404/u.test((error as Error).message))await register();await runtimeSleepV1(Math.min(3000,200*2**attempt));}}
+   catch(error){
+    const message=(error as Error).message,answered=/^Scheduler answered (\d+)/u.exec(message),status=answered===null?0:Number(answered[1]);
+    if(answered!==null&&status!==404&&status<500&&status!==408&&status!==429){say("reconnecting",`report refused: ${message}`);return;}
+    if(Date.now()>=until){say("reconnecting",`report lost after ${outage.seconds} s: ${message}`);return;}
+    if(!told){told=true;say("reconnecting",`report of ${task} kept, retrying: ${message}`);}
+    if(status===404)await register();
+    await runtimeSleepV1(Math.min(outage.maximumMilliseconds,Math.max(200,outage.initialMilliseconds/4)*2**Math.min(attempt,10)));
+   }
   }
  };
  const finishTask=async(task:RemoteExecutionTaskV1,controller:AbortController):Promise<void>=>{
   ensureWardenV1();
   say("started",`${task.id} ${task.action.hash.slice(0,12)}`);
   const limit=setTimeout(()=>{controller.abort();},(task.timeoutSeconds+readRemoteExecutionPolicyV1().server.cancelGraceSeconds)*1000);
-  const result=await executeRemoteExecutionActionV1({instance:task.instance,action:task.action,timeoutSeconds:task.timeoutSeconds,content:content!,directory:options.directory,work:workDirectory,workerName:name,sandbox,network:network==="allowed",actions,materialize:options.materialize,inlineOutputBytes:options.inlineOutputBytes,signal:controller.signal,meter:{attach:pid=>{meter.attach(task.id,pid);},peak:()=>meter.finish(task.id)},...(options.threads?{threads:async()=>{const others=[...running.keys()].filter(id=>id!==task.id),count=await options.threads!({others:others.reduce((sum,id)=>sum+(grants.get(id)??1),0),peakMegabytes:task.peakMegabytes??0,held:others.map(id=>demands.get(id)??0)});grants.set(task.id,count);return count;}}:{}),...(options.keepWork?{keepWork:true}:{}),...(options.tools?{tools:options.tools}:{}),...(options.commands?{commands:options.commands}:{}),blobs:store}).finally(()=>{clearTimeout(limit);meter.finish(task.id);});
+  const result=await executeRemoteExecutionActionV1({properties,instance:task.instance,action:task.action,timeoutSeconds:task.timeoutSeconds,content:content!,directory:options.directory,work:workDirectory,workerName:name,sandbox,network:network==="allowed",actions,materialize:options.materialize,inlineOutputBytes:options.inlineOutputBytes,signal:controller.signal,meter:{attach:pid=>{meter.attach(task.id,pid);},peak:()=>meter.finish(task.id)},...(options.threads?{threads:async()=>{const others=[...running.keys()].filter(id=>id!==task.id),count=await options.threads!({others:others.reduce((sum,id)=>sum+(grants.get(id)??1),0),peakMegabytes:task.peakMegabytes??0,held:heldUnits(others)});grants.set(task.id,count);return count;}}:{}),...(options.keepWork?{keepWork:true}:{}),...(options.tools?{tools:options.tools}:{}),...(options.commands?{commands:options.commands}:{}),blobs:store}).finally(()=>{clearTimeout(limit);meter.finish(task.id);});
   const report:RemoteExecutionTaskResultV1={version:1,outcome:result.outcome,status:result.status,actionResult:result.actionResult?Buffer.from(result.actionResult).toString("base64"):null,...result.outcome==="refused"?{refusal:result.refusal??"warden-cancelled"}:{}};
   await send(task.id,report);
   say(result.outcome==="cancelled"?"cancelled":result.outcome==="refused"?"refused":"finished",`${task.id} ${result.outcome} ${result.status.code}`);
@@ -459,7 +548,7 @@ export async function runRemoteExecutionWorkerV1(options:RemoteExecutionWorkerOp
   while(!options.signal.aborted){
    if(running.size>=options.concurrency){refusing=false;publish();await new Promise<void>(resolve=>{wake=resolve;options.signal.addEventListener("abort",()=>{resolve();},{once:true});});continue;}
    if(options.admit){
-    const verdict=await options.admit(running.size,{stage:"poll",held:[...demands.values()]}).catch(()=>({admit:true as const}));
+    const verdict=await options.admit(running.size,{stage:"poll",held:heldUnits([...demands.keys()])}).catch(()=>({admit:true as const}));
     refusing=!verdict.admit;publish();
     if(!verdict.admit){await new Promise<void>(resolve=>{const timer=setTimeout(resolve,options.admitRetryMilliseconds??2000);wake=()=>{clearTimeout(timer);resolve();};options.signal.addEventListener("abort",()=>{clearTimeout(timer);resolve();},{once:true});});continue;}
    }
@@ -470,7 +559,7 @@ export async function runRemoteExecutionWorkerV1(options:RemoteExecutionWorkerOp
    if(!answer.known){await register();continue;}
    cancel(answer.cancel);
    if(answer.task){
-    const verdict=options.admit?await options.admit(running.size,{stage:"task",megabytes:answer.task.peakMegabytes??0,held:[...demands.values()]}).catch(()=>({admit:true as const})):{admit:true as const};
+    const verdict=options.admit?await options.admit(running.size,{stage:"task",megabytes:answer.task.peakMegabytes??0,held:heldUnits([...demands.keys()])}).catch(()=>({admit:true as const})):{admit:true as const};
     if(!verdict.admit){
      refusing=true;publish();say("refused",`${answer.task.id} ${verdict.reason}`);
      await send(answer.task.id,{version:1,outcome:"refused",status:{code:8,message:`The machine has no headroom: ${verdict.reason}`},actionResult:null,refusal:verdict.reason});

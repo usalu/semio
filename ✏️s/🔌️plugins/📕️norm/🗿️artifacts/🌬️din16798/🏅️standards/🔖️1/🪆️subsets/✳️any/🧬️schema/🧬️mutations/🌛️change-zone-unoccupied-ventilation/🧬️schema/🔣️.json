@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-unoccupied-ventilation/schema.json",
+  "title": "ChangeZoneUnoccupiedVentilation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newUnoccupiedVentilation"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The ventilation zone this mutation addresses.",
+          "de": "Die Lüftungszone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newUnoccupiedVentilation": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json#/$defs/UnoccupiedVentilation",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Unoccupied ventilation",
+          "de": "Lüftung bei Nichtbelegung"
+        },
+        "description": {
+          "en": "The complete documented airflow during an unoccupied period.",
+          "de": "Der vollständige dokumentierte Luftvolumenstrom während einer Nichtbelegung."
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
+  }
+}

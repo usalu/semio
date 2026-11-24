@@ -1,0 +1,71 @@
+humans	barista	4 / 7; flat+solid; 2 extent				
+humans	basketball-player	0 / 8; solid; 2 extent	2; descendant 2			
+humans	child-on-kick-scooter	17 / 739; flat+followTip+solid; 756 other id; 12 extent	47; descendant 47			
+humans	construction-worker-with-shovel	15 / 36; flat+solid				
+humans	courier-with-hand-truck	0 / 13; flat+followTip; 3 other id	24; off 16, descendant 8			
+humans	cyclist	3 / 22; flat+solid; 1 extent	112; descendant 64, other bone 48			
+humans	dancer	5 / 47; solid; 38 other id; 3 extent	9; descendant 5, other bone 4			
+humans	doctor-with-clipboard	2 / 20; flat				
+humans	e-scooter-rider	5 / 60; solid	128; descendant 128			
+humans	elderly-person-knitting	1 / 34; flat+solid				
+humans	elderly-with-cane	3 / 135; flat+solid	14; descendant 12, off 2			
+humans	hiker-with-trekking-poles	0 / 11; flat+followTip; 4 other id	1; descendant 1			
+humans	jogger	0 / 16; flat+solid; 8 other id				
+humans	kneeling-gardener	2 / 7; solid; 1 other id	24; descendant 24			
+humans	leaning-person	1 / 29; flat+solid; 6 other id; 6 extent	24; other bone 20, off 4			
+humans	mobility-scooter-user	1 / 1; flat	64; descendant 32, off 32			
+humans	nurse-walking	2 / 241; flat; 37 extent	11; descendant 9, other bone 1, off 1			
+humans	office-worker-carrying-laptop	2 / 182; flat; 14 extent	24; descendant 18, off 4, other bone 2			
+humans	painter-at-easel	2 / 4; solid				
+humans	parent-carrying-toddler	0 / 57; solid	20; off 20			
+humans	parent-with-child-on-shoulders	2 / 74; flat; 6 extent	20; descendant 12, off 8			
+humans	parent-with-stroller	6 / 83; flat+solid; 2 extent	224; descendant 220, off 4			
+humans	patient-with-iv-pole	2 / 162; flat; 6 extent	24; descendant 18, off 4, other bone 2			
+humans	person-carrying-ladder	8 / 108; flat+solid; 33 other id; 1 extent	28; descendant 28			
+humans	person-carrying-shopping-bags	1 / 134; flat+solid; 7 other id; 4 extent	18; descendant 18			
+humans	person-checking-watch	0 / 6; solid				
+humans	person-cooking	0 / 2; solid; 1 extent				
+humans	person-drinking-coffee	8 / 45; flat+solid; 10 other id; 3 extent				
+humans	person-eating-standing	1 / 10; flat+solid; 3 other id; 3 extent				
+humans	person-hanging-laundry	2 / 37; flat+solid				
+humans	person-in-rain-poncho	0 / 68; flat; 18 extent	24; descendant 18, off 4, other bone 2			
+humans	person-in-winter-coat	2 / 32; flat+solid; 4 extent	18; descendant 18			
+humans	person-on-crutches	0 / 12; flat; 3 extent	8; off 8			
+humans	person-pushing-bicycle	4 / 55; solid	284; descendant 208, other bone 76			
+humans	person-queuing	2 / 8; solid	1; descendant 1			
+humans	person-signing	5 / 72; flat+solid; 14 other id				
+humans	person-stretching	6 / 38; flat+solid; 11 other id; 7 extent	4; off 4			
+humans	person-sweeping	9 / 38; flat+solid; 1 extent				
+humans	person-taking-selfie	3 / 6; solid; 1 extent				
+humans	person-with-arm-sling	0 / 159; flat; 7 extent	18; descendant 18			
+humans	person-with-guide-dog	3 / 61; flat+followTip+solid	8; descendant 8			
+humans	person-with-rollator	0 / 31; flat+solid				
+humans	person-with-umbrella	0 / 2; flat; 1 extent				
+humans	person-with-white-cane	3 / 17; flat+solid; 2 extent				
+humans	photographer-with-camera	0 / 29; flat+solid; 1 extent				
+humans	picnicker-sitting-on-ground	12 / 22; flat+solid	22; other bone 18, descendant 4			
+humans	postal-carrier	5 / 196; flat+solid; 26 extent	24; descendant 18, off 4, other bone 2			
+humans	pregnant-person	0 / 14; flat+solid				
+humans	presenter-at-flipchart	2 / 12; solid				
+humans	runner-with-blade-prosthesis	2 / 161; solid; 2 extent				
+humans	schoolchild-with-backpack	0 / 3; solid				
+humans	seated-guitarist	0 / 5; flat+solid	46; off 40, other bone 6			
+humans	seated-office-worker	2 / 23; flat+solid				
+humans	seated-reader	4 / 46; flat+solid				
+humans	skateboarder	0 / 96; solid; 1 extent	140; other bone 128, descendant 10, off 2			
+humans	sleeping-person	1 / 30; flat+solid	27; other bone 27			
+humans	standing-desk-worker	3 / 6; solid				
+humans	standing-phone-user	1 / 8; solid				
+humans	standing-violinist	4 / 12; solid				
+humans	surveyor-with-total-station	6 / 14; flat+solid; 6 other id; 1 extent	3; other bone 3			
+humans	teenager-with-headphones	4 / 0; flat+solid; 1 extent				
+humans	tennis-player	1 / 8; solid; 1 extent				
+humans	tour-guide	0 / 10; solid				
+humans	traveller-with-rolling-suitcase	5 / 208; flat+solid; 24 extent	32; descendant 21, other bone 7, off 4			
+humans	waiter-with-tray	4 / 11; flat+solid; 2 extent	6; descendant 5, off 1			
+humans	walking-toddler	1 / 5; solid; 3 extent				
+humans	waving-person	4 / 16; flat+solid				
+humans	wheelchair-user	0 / 2; flat	80; descendant 46, off 34			
+humans	worker-carrying-box	0 / 214; flat+solid; 3 extent				
+humans	worker-with-jackhammer	9 / 23; flat				
+humans	worker-with-pallet-jack	1 / 4; flat+followTip+solid; 4 other id	33; descendant 25, off 6, other bone 2			

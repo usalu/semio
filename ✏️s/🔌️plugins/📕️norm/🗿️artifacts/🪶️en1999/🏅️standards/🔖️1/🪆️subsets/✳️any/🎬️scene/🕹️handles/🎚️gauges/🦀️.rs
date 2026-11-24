@@ -278,9 +278,7 @@ fn shell_gauges(d: &En1999Snapshot, layout: &Layout, id: &str, out: &mut Vec<Han
     let Some(shell) = d.shells.iter().find(|s| s.id == id) else { return };
     let o = layout.origin(id);
     let entity = entity_ref(EntityKind::Shell, id, "shells");
-    let frame = crate::kit::member_frame(&o, &Vec3::Z);
-    let arrows = arrow_paths(&crate::members::action_grips(id, "shells", &shell.actions, &frame, shell.length, 2.0 * shell.radius));
-    let mut gauges = actions_of(id, "shells", &shell.actions, &arrows);
+    let mut gauges = actions_of(id, "shells", &shell.actions, &BTreeSet::new());
     gauges.extend(placement_z(d, id));
     rack(&entity, gauges, &|dy, dz| v3(o.x + shell.radius + 0.6, o.y + dy, o.z + shell.length / 2.0 + dz), &Vec3::Z, out);
 }

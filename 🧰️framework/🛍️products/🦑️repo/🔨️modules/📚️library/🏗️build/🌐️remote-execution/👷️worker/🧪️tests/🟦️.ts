@@ -3,13 +3,15 @@ import {createHash} from "node:crypto";
 import {chmodSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {dirname,join,sep,win32} from "node:path";
 import {decodeProtobufV1,encodeProtobufV1,REAPI_V1} from "../../📡️wire/📦️protobuf/🟦️.ts";
-import type {RemoteExecutionContentV1} from "../../🗄️content/🟦️.ts";
+import {RemoteExecutionContentErrorV1,type RemoteExecutionContentV1} from "../../🗄️content/🟦️.ts";
 import type {RemoteExecutionDigestV1} from "../../🟦️.ts";
 import {OFFLOAD_POLICY_V1} from "../../🚀️offload/📐️policy/🟦️.ts";
 import {placeRemoteExecutionLinkV1,remoteExecutionLinkEscapesV1,selectRemoteExecutionSandboxV1} from "../../🔒️sandbox/🟦️.ts";
 import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {remoteExecutionThreadsOfMetadataV1} from "../../🟦️.ts";
-import {executeRemoteExecutionActionV1,REMOTE_EXECUTION_INPUT_ROOT_ENV_V1,remoteExecutionWardenCancelledV1,remoteExecutionWorkNameV1} from "../🟦️.ts";
+import {executeRemoteExecutionActionV1,RemoteExecutionBlobCacheV1,REMOTE_EXECUTION_INPUT_ROOT_ENV_V1,remoteExecutionBlobBoundBytesV1,remoteExecutionInputFetchOfV1,remoteExecutionWardenCancelledV1,remoteExecutionWorkNameV1} from "../🟦️.ts";
+import {casObjectPathV1} from "../../../🗄️cas/🗃️store/🟦️.ts";
+import bounds from "./📐️blob-bound/🔣️.json";
 
 const sha=(data:Uint8Array)=>createHash("sha256").update(data).digest("hex"),scratch:string[]=[];
 afterEach(()=>{for(const path of scratch.splice(0))rmSync(path,{recursive:true,force:true});});
@@ -171,4 +173,108 @@ test.skipIf(process.platform==="win32")("a task whose process was killed while t
  expect(other.outcome).toBe("completed");expect((decodeProtobufV1(REAPI_V1.actionResult,other.actionResult!) as {exit_code:number}).exit_code).toBe(137);
  const none=await run(memory,digest(),directory,{wardenCancels:async()=>{throw Error("unreadable");}});
  expect(none.outcome).toBe("completed");
+});
+
+class Restarting extends Memory{
+ outage=2;attempts=0;missing_=0;streamed=0;
+ override async missing(instance:string,digests:readonly RemoteExecutionDigestV1[]){if(this.missing_++<1)throw new RemoteExecutionContentErrorV1(14,"Content store unreachable: http://store.invalid: Unable to connect");return super.missing(instance,digests);}
+ override async write(instance:string,digest:RemoteExecutionDigestV1,source:Uint8Array|AsyncIterable<Uint8Array>){
+  this.attempts++;
+  if(this.outage>0){this.outage--;throw new RemoteExecutionContentErrorV1(14,"Content store unreachable: http://store.invalid: Unable to connect");}
+  if(!(source instanceof Uint8Array))this.streamed++;
+  return super.write(instance,digest,source);
+ }
+}
+
+test("a finished action survives a restart of the content store: the outputs are handed over again (a file is streamed anew each attempt) once the store answers instead of the result being lost after the work was done",async()=>{
+ const memory=new Restarting(),directory=temporary();
+ const digest=action(memory,{"p.js":"const fs=require('fs');fs.mkdirSync('out',{recursive:true});fs.writeFileSync('out/big.bin',Buffer.alloc(300000,7));fs.writeFileSync('out/r.txt','done');"},[process.execPath,"p.js"],{},["out/big.bin","out/r.txt"]);
+ const started=Date.now(),result=await run(memory,digest,directory);
+ expect(result.status.message).toBe("");expect(result.outcome).toBe("completed");
+ expect(outputOf(memory,result.actionResult,"out/r.txt")).toBe("done");
+ expect(Buffer.from(memory.blobs.get(sha(Buffer.alloc(300000,7)))!).length).toBe(300000);
+ expect(memory.attempts,"the failed writes were attempted again").toBeGreaterThanOrEqual(4);
+ expect(memory.streamed,"the large file went out as a fresh stream").toBeGreaterThanOrEqual(1);
+ expect(Date.now()-started,"the pause between attempts is the policy's, not zero").toBeGreaterThanOrEqual(900);
+},30000);
+
+test("a worker never runs an action that requires a property it does not advertise, whatever scheduled it: the action's own platform is checked against the offer before anything is placed, control properties are not required, and a matching offer runs it",async()=>{
+ const memory=new Memory(),directory=temporary(),root=memory.put(encodeProtobufV1(REAPI_V1.directory,{files:[{name:"p.js",digest:wire(memory.put(new TextEncoder().encode(SCRIPT))),is_executable:false}],directories:[],symlinks:[]}));
+ const submit=(platform:readonly {name:string;value:string}[])=>{
+  const command=memory.put(encodeProtobufV1(REAPI_V1.command,{arguments:[process.execPath,"p.js"],environment_variables:[],output_files:[],output_directories:[],output_paths:["out/r.json"],working_directory:"",platform:{properties:platform}}));
+  return memory.put(encodeProtobufV1(REAPI_V1.action,{command_digest:wire(command),input_root_digest:wire(root)}));
+ };
+ const offer=[{name:"OSFamily",value:"macos"},{name:"semio-linker",value:"aaaaaaaaaaaaaaaa"}];
+ const refused=await run(memory,submit([{name:"OSFamily",value:"macos"},{name:"semio-linker",value:"bbbbbbbbbbbbbbbb"},{name:"semio-offload",value:"if-idle"}]),directory,{properties:offer});
+ expect(refused.outcome).toBe("failed");expect(refused.status.code).toBe(9);expect(refused.status.message).toContain("semio-linker=bbbbbbbbbbbbbbbb");expect(refused.status.message).not.toContain("OSFamily");expect(refused.actionResult).toBeNull();
+ const accepted=await run(memory,submit([{name:"OSFamily",value:"macos"},{name:"semio-linker",value:"aaaaaaaaaaaaaaaa"},{name:"semio-offload",value:"if-idle"},{name:"semio-origin",value:"g1-x"}]),directory,{properties:offer});
+ expect(accepted.status.message).toBe("");expect(accepted.outcome).toBe("completed");
+ const unchecked=await run(memory,submit([{name:"semio-linker",value:"bbbbbbbbbbbbbbbb"}]),directory);
+ expect(unchecked.outcome,"an embedder that passes no offer keeps the old behaviour").toBe("completed");
+});
+
+test("a second action that shares its inputs with a first one asks the store only for what the worker lacks: its directories and files come from the worker's local copy, so one new file costs one request and a closure larger than the bound of the cache is not fetched again",async()=>{
+ const memory=new Memory(),directory=temporary(),requests:string[]=[];
+ const counting=Object.assign(Object.create(memory) as Memory,{read:async(i:string,d:RemoteExecutionDigestV1)=>{requests.push(d.hash);return memory.read(i,d);},stream:async(i:string,d:RemoteExecutionDigestV1)=>{requests.push(d.hash);return memory.stream(i,d);}}) as RemoteExecutionContentV1;
+ const shared:Record<string,string>={"p.js":SCRIPT};
+ for(let index=0;index<99;index++)shared[`lib/d${index%9}/f${index}.rlib`]=`blob ${index} `.repeat(64);
+ const first=action(memory,shared,[process.execPath,"p.js"],{},["out/r.json"]),second=action(memory,{...shared,"lib/extra.rlib":"only the second action has this"},[process.execPath,"p.js"],{},["out/r.json"]);
+ const blobs=new RemoteExecutionBlobCacheV1(join(directory,"blobs"),counting,1<<10);
+ const one=await run(memory,first,directory,{content:counting,blobs});
+ expect(one.status.message).toBe("");expect(one.outcome).toBe("completed");
+ const afterFirst=requests.length;
+ await blobs.prune();
+ const two=await run(memory,second,directory,{content:counting,blobs});
+ expect(two.status.message).toBe("");expect(two.outcome).toBe("completed");
+ const second_=requests.slice(afterFirst);
+ expect(afterFirst).toBeGreaterThan(100);
+ expect(second_.length,"action, command, the changed directories and the new file; no shared file or unchanged directory").toBeLessThanOrEqual(8);
+});
+
+test("an input the machine's own content store already holds is copied from this disk, not fetched: the action result says how many files came from the cache, the disk and the network, and a corrupt local copy falls back to the network",async()=>{
+ const memory=new Memory(),directory=temporary(),local=temporary(),requests:string[]=[];
+ const counting=Object.assign(Object.create(memory) as Memory,{stream:async(i:string,d:RemoteExecutionDigestV1)=>{requests.push(d.hash);return memory.stream(i,d);}}) as RemoteExecutionContentV1;
+ const files:Record<string,string>={"p.js":SCRIPT};
+ for(let index=0;index<12;index++)files[`lib/f${index}.rlib`]=`rlib ${index} `.repeat(512);
+ const place=(text:string,bytes:string=text)=>{const path=casObjectPathV1(local,sha(new TextEncoder().encode(text)));mkdirSync(dirname(path),{recursive:true});writeFileSync(path,bytes);};
+ for(let index=0;index<8;index++)place(files[`lib/f${index}.rlib`]!);
+ place(files["lib/f8.rlib"]!,"x".repeat(files["lib/f8.rlib"]!.length));
+ const digest=action(memory,files,[process.execPath,"p.js"],{},["out/r.json"]),blobs=new RemoteExecutionBlobCacheV1(join(directory,"blobs"),counting,1<<30,{local});
+ const one=await run(memory,digest,directory,{content:counting,blobs});
+ expect(one.status.message).toBe("");expect(one.outcome).toBe("completed");
+ const meta=(bytes:Uint8Array|null)=>remoteExecutionInputFetchOfV1((decodeProtobufV1(REAPI_V1.actionResult,bytes!) as {execution_metadata:{auxiliary_metadata:{type_url:string;value:Uint8Array}[]}}).execution_metadata.auxiliary_metadata)!;
+ const first=meta(one.actionResult);
+ expect(first.localFiles,"8 rlibs from this disk; the corrupt one is not taken").toBe(8);
+ expect(first.fetchedFiles,"p.js, the corrupt f8 and f9 to f11 over the network").toBe(5);
+ expect(first.cachedFiles).toBe(0);
+ expect(first.localBytes).toBe(Array.from({length:8},(_,index)=>files[`lib/f${index}.rlib`]!.length).reduce((sum,size)=>sum+size,0));
+ const before=requests.length,two=await run(memory,digest,directory,{content:counting,blobs});
+ expect(meta(two.actionResult)).toMatchObject({cachedFiles:13,localFiles:0,fetchedFiles:0});
+ expect(requests.length-before,"no file is streamed again").toBe(0);
+});
+
+test("the blob cache is as large as the disk allows: every action slot keeps its room on the work volume, the content store's worker reserve stays free on the host volume, never above the maximum, equal to the Python oracle",()=>{
+ for(const row of bounds.cases)expect(remoteExecutionBlobBoundBytesV1(row.input),JSON.stringify(row.input)).toBe(row.bound);
+ expect(bounds.cases.length).toBeGreaterThan(20);
+ const run=Bun.spawnSync(["python3",join(import.meta.dir,"📐️blob-bound","🐍️.py"),"--check"]);
+ expect(run.exitCode,String(run.stderr)).toBe(0);
+});
+
+test("a worker that finds an input missing names every blob of the input root that the store lacks, not the first: files at every depth and a directory blob together",async()=>{
+ const memory=new Memory(),directory=temporary(),files={"top.txt":"top","a.txt":"aa","d/b.txt":"bbb","d/e/c.txt":"cccc","g/h/i.txt":"iiiii"},digest=action(memory,files,["/bin/true"],{},[]);
+ const root=decodeProtobufV1(REAPI_V1.directory,memory.blobs.get(decodeProtobufV1(REAPI_V1.action,memory.blobs.get(digest.hash)!).input_root_digest.hash)!) as {directories:{name:string;digest:{hash:string;size_bytes:number}}[]};
+ const gone=[...["top","aa","cccc"].map(text=>({hash:sha(new TextEncoder().encode(text)),size:text.length})),{hash:root.directories.find(row=>row.name==="g")!.digest.hash,size:root.directories.find(row=>row.name==="g")!.digest.size_bytes}];
+ for(const row of gone)memory.blobs.delete(row.hash);
+ const result=await run(memory,digest,directory);
+ expect(result.outcome).toBe("failed");expect(result.status.code).toBe(9);
+ expect(new Set(result.status.missing!.map(row=>row.hash))).toEqual(new Set(gone.map(row=>row.hash)));
+ expect(result.status.message).toBe(`Missing blob ${result.status.missing![0]!.hash}/${result.status.missing![0]!.size} and 3 more`);
+ for(const row of gone)memory.blobs.set(row.hash,new Uint8Array(row.size).fill(0));
+});
+
+test("a worker whose single input is missing answers the plain message of that one blob",async()=>{
+ const memory=new Memory(),directory=temporary(),digest=action(memory,{"only.txt":"only"},["/bin/true"],{},[]);
+ memory.blobs.delete(sha(new TextEncoder().encode("only")));
+ const result=await run(memory,digest,directory);
+ expect(result.status.code).toBe(9);expect(result.status.missing).toHaveLength(1);expect(result.status.message).toBe(`Missing blob ${sha(new TextEncoder().encode("only"))}/4`);
 });

@@ -1,0 +1,210 @@
+[
+ {
+  "op": "elevation-solid",
+  "scale": "100",
+  "id": "boot-l",
+  "respan": true,
+  "from": "plan",
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "boot-l",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "one body of the foot in the three views"
+ },
+ {
+  "op": "elevation-solid",
+  "scale": "100",
+  "id": "boot-r",
+  "respan": true,
+  "from": "plan",
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "boot-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "one body of the foot in the three views"
+ },
+ {
+  "op": "elevation-solid",
+  "scale": "100",
+  "id": "boot-toe-l",
+  "respan": true,
+  "from": "plan",
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "boot-toe-l",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "one body of the foot in the three views"
+ },
+ {
+  "op": "elevation-solid",
+  "scale": "100",
+  "id": "boot-toe-r",
+  "respan": true,
+  "from": "plan",
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "boot-toe-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "one body of the foot in the three views"
+ },
+ {
+  "op": "elevation-solid",
+  "scale": "200",
+  "id": "boot-l",
+  "respan": true,
+  "from": "plan",
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+ },
+ {
+  "op": "copy",
+  "scale": "200",
+  "id": "boot-l",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "one body of the foot in the three views"
+ },
+ {
+  "op": "elevation-solid",
+  "scale": "200",
+  "id": "boot-r",
+  "respan": true,
+  "from": "plan",
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+ },
+ {
+  "op": "copy",
+  "scale": "200",
+  "id": "boot-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "one body of the foot in the three views"
+ },
+ {
+  "op": "elevation-solid",
+  "scale": "500",
+  "id": "boot-l",
+  "respan": true,
+  "from": "plan",
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+ },
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "boot-l",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "one body of the foot in the three views"
+ },
+ {
+  "op": "elevation-solid",
+  "scale": "500",
+  "id": "boot-r",
+  "respan": true,
+  "from": "plan",
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+ },
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "boot-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "why": "one body of the foot in the three views"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "shank-l",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "why": "shank-l: elevation a prism along u, front and plan a body of revolution: one body"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "sleeve-l",
+  "rebuild": true,
+  "why": "upper-arm-l: flat elevation, revolved front and plan of another length (67 mm): a body of revolution from the elevation and front twins"
+ },
+ {
+  "op": "copy",
+  "scale": "200",
+  "id": "sleeve-l",
+  "from": "plan",
+  "to": [
+   "elevation",
+   "front"
+  ],
+  "why": "upper-arm-l: the same body in the three views (the arm is spread and twisted)"
+ },
+ {
+  "op": "prism",
+  "scale": "200",
+  "id": "shirt",
+  "view": "front",
+  "why": "torso: flat shape on a trunk that leans 16 degrees: prism that keeps the outline"
+ },
+ {
+  "op": "prism",
+  "scale": "200",
+  "id": "shirt",
+  "view": "plan",
+  "why": "torso: flat shape on a trunk that leans 16 degrees: prism that keeps the outline"
+ },
+ {
+  "op": "prism",
+  "scale": "500",
+  "id": "shirt",
+  "view": "front",
+  "why": "torso: flat shape on a trunk that leans 16 degrees: prism that keeps the outline"
+ },
+ {
+  "op": "prism",
+  "scale": "500",
+  "id": "shirt",
+  "view": "plan",
+  "why": "torso: flat shape on a trunk that leans 16 degrees: prism that keeps the outline"
+ }
+]

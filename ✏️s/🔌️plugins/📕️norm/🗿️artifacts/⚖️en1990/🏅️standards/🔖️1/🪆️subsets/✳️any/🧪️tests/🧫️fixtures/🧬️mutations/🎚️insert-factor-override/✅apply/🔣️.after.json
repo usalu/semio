@@ -192,14 +192,14 @@
   "factorOverrides": [
     {
       "id": "fac-1",
-      "factor": "normal",
+      "factor": "gamma",
       "target": "normal",
       "value": 1.0,
       "justification": "normal"
     },
     {
       "id": "fac-1-new",
-      "factor": "normal",
+      "factor": "gamma",
       "target": "normal",
       "value": 1.0,
       "justification": "normal"

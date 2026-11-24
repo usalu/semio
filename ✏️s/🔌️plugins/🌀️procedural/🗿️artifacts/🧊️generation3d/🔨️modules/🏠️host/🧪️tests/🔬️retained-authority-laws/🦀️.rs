@@ -2,7 +2,7 @@ use semio_s_artifact_procedural_3d_host::*;
 use semio_s_artifact_procedural_3d_envelope::*;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::close_job;
-use semio_s_artifact_procedural_3d_testkit::retirement_driver::step_once;
+use semio_s_artifact_procedural_3d_testkit::retirement_driver::StepSession;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_owned_for_test;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_shared_for_test;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::Stepped;
@@ -198,10 +198,13 @@ fn close_initializer(authority: &mut Generation3dStoreInitializationAuthority) {
     close_job(&mut AuthorityJob(authority), "P3 initializer");
 }
 
-/// 🦶️ Drives one step of the initializer under `fuel` and `deadline_us` through the original fixture caller and answers what it lent.
-fn step_initializer(authority: &mut Generation3dStoreInitializationAuthority, fuel: u64, deadline_us: u64, cancel: &semio_framework_job::CancelToken, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, sequence: &mut u64) -> Stepped {
-    step_once(&mut AuthorityJob(authority), fuel, deadline_us, cancel, operation, generation, sequence)
+/// 🦶️ Drives one step of the initializer under `fuel` and `deadline_us` through the one original source of `session` and answers what it lent.
+fn step_initializer(authority: &mut Generation3dStoreInitializationAuthority, session: &mut StepSession, fuel: u64, deadline_us: u64) -> Stepped {
+    session.step(&mut AuthorityJob(authority), fuel, deadline_us)
 }
+
+/// ⛽️ The work one funded owner turn is lent: a retirement or construction effect quotes its whole work up front, so a turn smaller than the largest quote can never be admitted.
+const OWNER_TURN_FUEL: u64 = 1 << 20;
 
 #[test]
 fn insufficient_fuel_and_expired_deadline_yield_before_initializer_progress() {
@@ -210,12 +213,12 @@ fn insufficient_fuel_and_expired_deadline_yield_before_initializer_progress() {
     let operation = semio_framework_job::OperationId(u64::MAX - 301);
     let generation = semio_framework_job::Generation(301);
     let mut authority = initializer(operation, generation);
-    let cancel = semio_framework_job::CancelToken::root_now();
-    let mut sequence = 0;
-    assert_eq!(step_initializer(&mut authority, 0, u64::MAX, &cancel, operation, generation, &mut sequence), Stepped::Yield);
+    let mut session = StepSession::open(operation, generation, 1 << 40);
+    assert_eq!(step_initializer(&mut authority, &mut session, 0, u64::MAX), Stepped::Yield);
     assert_eq!(format!("{:?}", authority.phase), "ValidateEnvelope");
-    assert_eq!(step_initializer(&mut authority, 1, 0, &cancel, operation, generation, &mut sequence), Stepped::Yield);
+    assert_eq!(step_initializer(&mut authority, &mut session, 1, 0), Stepped::Yield);
     assert_eq!(format!("{:?}", authority.phase), "ValidateEnvelope");
+    session.close();
     close_initializer(&mut authority);
 }
 
@@ -227,38 +230,39 @@ fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
     let cancelled_generation = semio_framework_job::Generation(302);
     let mut cancelled = initializer(cancelled_operation, cancelled_generation);
     cancelled.request_cancel();
-    let mut cancelled_sequence = 0;
-    let cancelled_token = semio_framework_job::CancelToken::root_now();
+    let mut cancelled_session = StepSession::open(cancelled_operation, cancelled_generation, 1 << 40);
     let mut cancelled_outcome = None;
     for _ in 0..100_000 {
-        let outcome = step_initializer(&mut cancelled, 1, u64::MAX, &cancelled_token, cancelled_operation, cancelled_generation, &mut cancelled_sequence);
+        let outcome = step_initializer(&mut cancelled, &mut cancelled_session, OWNER_TURN_FUEL, u64::MAX);
         if outcome != Stepped::Yield {
             cancelled_outcome = Some(outcome);
             break;
         }
     }
+    cancelled_session.close();
     assert_eq!(cancelled_outcome.expect("cancelled P3 initializer must terminate within its bounded owner budget"), Stepped::Cancelled);
     assert!(cancelled.terminal_is_empty());
 
     let stale_operation = semio_framework_job::OperationId(u64::MAX - 303);
     let stale_generation = semio_framework_job::Generation(303);
     let mut stale = initializer(stale_operation, stale_generation);
-    let mut stale_sequence = 0;
-    let stale_token = semio_framework_job::CancelToken::root_now();
+    stale.bind_replacement(semio_framework_job::ReplacementIdentity::new(0, stale_operation, stale_generation));
+    let mut stale_session = StepSession::open(stale_operation, stale_generation, 1 << 40).under_replacement(semio_framework_job::ReplacementIdentity::new(0, stale_operation, semio_framework_job::Generation(stale_generation.0 + 1)));
     let mut stale_outcome = None;
     for _ in 0..100_000 {
-        let outcome = step_initializer(&mut stale, 1, u64::MAX, &stale_token, stale_operation, semio_framework_job::Generation(stale_generation.0 + 1), &mut stale_sequence);
+        let outcome = step_initializer(&mut stale, &mut stale_session, OWNER_TURN_FUEL, u64::MAX);
         if outcome != Stepped::Yield {
             stale_outcome = Some(outcome);
             break;
         }
     }
-    assert_eq!(stale_outcome.expect("stale P3 initializer must terminate within its bounded owner budget"), Stepped::Fault);
+    stale_session.close();
+    assert_eq!(stale_outcome.expect("stale P3 initializer must terminate within its bounded owner budget"), Stepped::Cancelled);
     assert!(stale.terminal_is_empty());
 }
 //#endregion ⏱️BoundedInitializer
 
-/// 🧹️ Decodes the pack wire and retires the decoded owner before judging that it equals the mutation it came from.
+/// 🧹️ Decodes the pack wire and retires the decoded owner before judging that it equals the mutation it was handed.
 fn assert_decodes_to(bytes: &[u8], mutation: &Generation3dMutation) {
     let decoded = decode_op(bytes).expect("the pack wire decodes");
     let same = decoded == *mutation;
@@ -293,8 +297,7 @@ fn every_document_retirement_pays_its_own_flow_frontier_under_its_quoted_grants(
     let owned_bytes = drive_erased_released(owned.as_mut(), "owned document snapshot");
     let mut aliased = retire_shared_for_test(std::sync::Arc::new(Generation3dSnapshot::default()), "aliased document snapshot");
     let aliased_bytes = drive_erased_released(aliased.as_mut(), "aliased document snapshot");
-    eprintln!("[DEBUG] owned={owned_bytes} aliased={aliased_bytes} T={} arc={} birth={}", std::mem::size_of::<Generation3dSnapshot>(), semio_framework_value::shared_retirement_allocation_bytes::<Generation3dSnapshot>(), semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<Generation3dSnapshot>());
-    assert_eq!(owned_bytes + semio_framework_value::shared_retirement_allocation_bytes::<Generation3dSnapshot>(), aliased_bytes, "the Arc route must release exactly the owned document backing plus its own shared allocation");
+    assert_eq!(owned_bytes + semio_framework_value::shared_retirement_allocation_bytes::<Generation3dSnapshot>() + std::mem::size_of::<semio_framework_value::retirement::arc_custody::ArcLeaseRetirement<Generation3dSnapshot>>(), aliased_bytes, "the Arc route must release exactly the owned document backing plus its own shared allocation and lease frame");
     assert!(owned_bytes > 0, "a populated document fixture owns real backing");
 }
 

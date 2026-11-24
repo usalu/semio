@@ -1,7 +1,7 @@
 import {readRemoteExecutionPolicyV1} from "../../🟦️.ts";
 
 /** 🎭️ The two roles the replica daemon supervises: the agent (build worker and load reporter) and the graph server of every machine and, on the group server, the scheduler and the cache. */
-export type RemoteExecutionSidecarRoleV1="agent"|"scheduler"|"cache"|"graph"|"pool"|"ready";
+export type RemoteExecutionSidecarRoleV1="agent"|"scheduler"|"cache"|"graph"|"pool"|"ready"|"spool";
 
 /** 🧰️ What a sidecar needs: the worktree, the environment the replica daemon hands over (`SEMIO_FLEET_ORIGIN`, `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_STORE_ROOT`), cancellation and a log sink. */
 export type RemoteExecutionSidecarContextV1=Readonly<{root:string;environment:Readonly<Record<string,string|undefined>>;signal:AbortSignal;drain?:AbortSignal;write:(line:string)=>void;work?:SidecarWorkV1}>;
@@ -71,3 +71,9 @@ export function remoteExecutionWorkerApiV1(endpoint:string,workerPort:number):st
  const url=new URL(endpoint.replace(/^grpc(s?):/u,"http$1:"));
  return `${url.protocol}//${url.hostname.includes(":")&&!url.hostname.startsWith("[")?`[${url.hostname}]`:url.hostname}:${workerPort}`;
 }
+
+/** 🤝️ Whether a role that must restart asks its launcher for a successor that binds the same port before it leaves: the cache does, over the launcher's channel, unless it is itself a successor that has not listened yet. */
+export const sidecarHandsOverV1=(role:RemoteExecutionSidecarRoleV1,channel:boolean,environment:Readonly<Record<string,string|undefined>>):boolean=>role==="cache"&&channel&&environment.SEMIO_SIDECAR_SUCCESSOR!=="1";
+
+/** 🤝️ Marks a successor as promoted once it listens: it is the serving generation from then on and hands over to its own successor at the next restart (a flag that outlived the promotion made every second restart a gap of seconds in which the port had no listener). */
+export const settleSidecarSuccessorV1=(environment:Record<string,string|undefined>):void=>{delete environment.SEMIO_SIDECAR_SUCCESSOR;};

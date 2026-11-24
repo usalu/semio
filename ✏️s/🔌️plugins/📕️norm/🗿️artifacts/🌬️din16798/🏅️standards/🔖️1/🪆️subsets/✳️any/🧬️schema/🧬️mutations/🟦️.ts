@@ -49,6 +49,8 @@ import { type ChangeVentFilterSup, parseChangeVentFilterSup } from "./🧽change
 import { type ChangeVentId, parseChangeVentId } from "./🪪change-vent-id/🧬️schema/🟦️.ts";
 import { type ChangeZoneCo2, parseChangeZoneCo2 } from "./🫧change-zone-co2/🧬️schema/🟦️.ts";
 import { type ChangeVentHumidificationProvided, parseChangeVentHumidificationProvided } from "./🚿change-vent-humidification-provided/🧬️schema/🟦️.ts";
+import { type ChangeZoneUnoccupiedVentilation, parseChangeZoneUnoccupiedVentilation } from "./🌛️change-zone-unoccupied-ventilation/🧬️schema/🟦️.ts";
+import { type ClearZoneUnoccupiedVentilation, parseClearZoneUnoccupiedVentilation } from "./🌜️clear-zone-unoccupied-ventilation/🧬️schema/🟦️.ts";
 import { type ChangeZoneComfortCategory, parseChangeZoneComfortCategory } from "./🛋️change-zone-comfort-category/🧬️schema/🟦️.ts";
 import { type ChangeZoneId, parseChangeZoneId } from "./🆔️change-zone-id/🧬️schema/🟦️.ts";
 import { type InsertVentSystem, parseInsertVentSystem } from "./🆕️insert-vent-system/🧬️schema/🟦️.ts";
@@ -103,7 +105,9 @@ export type Din16798Mutation =
   | { ChangeVentFanRunHours: ChangeVentFanRunHours }
   | { ChangeVentDuctTestPressure: ChangeVentDuctTestPressure }
   | { ChangeVentHumidificationRequired: ChangeVentHumidificationRequired }
-  | { ChangeVentHumidificationProvided: ChangeVentHumidificationProvided };
+  | { ChangeVentHumidificationProvided: ChangeVentHumidificationProvided }
+  | { ChangeZoneUnoccupiedVentilation: ChangeZoneUnoccupiedVentilation }
+  | { ClearZoneUnoccupiedVentilation: ClearZoneUnoccupiedVentilation };
 
 export const parseDin16798Mutation: NormWireReader<Din16798Mutation> = normWireExternal<Din16798Mutation>({
   ChangeAnnex: parseChangeAnnex,
@@ -156,4 +160,6 @@ export const parseDin16798Mutation: NormWireReader<Din16798Mutation> = normWireE
   ChangeVentDuctTestPressure: parseChangeVentDuctTestPressure,
   ChangeVentHumidificationRequired: parseChangeVentHumidificationRequired,
   ChangeVentHumidificationProvided: parseChangeVentHumidificationProvided,
+  ChangeZoneUnoccupiedVentilation: parseChangeZoneUnoccupiedVentilation,
+  ClearZoneUnoccupiedVentilation: parseClearZoneUnoccupiedVentilation,
 });

@@ -1418,7 +1418,7 @@
       "directory": "remote-execution",
       "partition": "dependencies",
       "budget": {
-        "basisPoints": 1000
+        "bytes": 5905580032
       },
       "managed": {
         "owner": "remote-execution"
@@ -1427,8 +1427,8 @@
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/👷️agent/🟦️.ts"
       ],
       "purpose": {
-        "en": "Blob cache and private action roots of this machine's remote execution worker, a tenth of the dependencies partition; its image is not logged by the file event service.",
-        "de": "Blob-Cache und private Aktionsverzeichnisse des Remote-Execution-Workers dieser Maschine, ein Zehntel der Abhängigkeits-Partition; ihr Image wird vom Dateiereignisdienst nicht protokolliert."
+        "en": "Blob cache and private action roots of this machine's remote execution worker, sized from the worker role (reserve plus one action per slot); its image is not logged by the file event service.",
+        "de": "Blob-Cache und private Aktionsverzeichnisse des Remote-Execution-Workers dieser Maschine, bemessen nach der Worker-Rolle (Reserve plus eine Aktion je Slot); ihr Image wird vom Dateiereignisdienst nicht protokolliert."
       }
     }
   ],

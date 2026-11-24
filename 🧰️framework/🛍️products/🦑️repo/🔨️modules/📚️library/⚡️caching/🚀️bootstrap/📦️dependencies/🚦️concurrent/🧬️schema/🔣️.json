@@ -58,7 +58,9 @@
           "recheckMilliseconds": 5000,
           "progressMilliseconds": 10000,
           "maximumPublishMilliseconds": 900000,
-          "maximumWriterMilliseconds": 600000
+          "maximumWriterMilliseconds": 600000,
+          "ancestorGraceMilliseconds": 15000,
+          "silentMilliseconds": 300000
         },
         "pointer": {
           "directory": "pointer",
@@ -87,30 +89,42 @@
           "collected",
           "kept",
           "reclaiming",
-          "refused"
+          "refused",
+          "holder-gone"
         ],
         "admission": {
           "marginPercent": 115,
-          "defaultGenerationBytes": 268435456
+          "defaultGenerationBytes": 1610612736
         },
         "budget": {
           "scopes": 6,
-          "physicalGenerationBytes": 67108864,
+          "buildingGenerations": 2,
+          "physicalGenerationBytes": 1610612736,
           "copiedGenerationBytes": 1879048192,
           "packageCacheBytes": 4294967296,
+          "pythonBytes": 2684354560,
           "tmpReserveBytes": 268435456,
-          "headroomPercent": 25,
+          "headroomPercent": 15,
+          "remoteExecution": {
+            "reserveBytes": 536870912,
+            "perActionBytes": 536870912,
+            "slots": {
+              "worker": 10,
+              "builder": 4,
+              "cache-host": 4
+            }
+          },
           "measured": {
-            "on": "2026-10-20",
-            "imageBytes": 8589934592,
-            "usedKiB": 7089996,
-            "packageCacheKiB": 3332856,
-            "temporariesKiB": 2900116,
-            "receiptsKiB": 92792,
-            "capsulesKiB": 86592,
-            "generationsCounted": 12,
+            "on": "2026-11-24",
+            "image": "coordinator dependencies volume, 36 GiB, 6 generations installed",
+            "usedKiB": 14594204,
+            "generationsKiB": 9426196,
+            "generationsCounted": 6,
+            "packageCacheKiB": 3494860,
+            "pythonKiB": 2091332,
+            "remoteExecutionKiB": 987100,
             "logicalGenerationSetKiB": 9822704,
-            "derivation": "physicalGenerationBytes = ceil(64 MiB, (usedKiB - packageCacheKiB - temporariesKiB - receiptsKiB - capsulesKiB) / generationsCounted); copiedGenerationBytes = ceil(1.75 GiB, logicalGenerationSetKiB / scopes)"
+            "derivation": "physicalGenerationBytes = ceil(64 MiB, generationsKiB / generationsCounted) (the volume shows no sharing: the 6 generations hold about 1.5 GiB each); copiedGenerationBytes = ceil(1.75 GiB, logicalGenerationSetKiB / scopes); required = (packageCache + python + tmpReserve + (scopes + buildingGenerations) * generation) * (100 + headroomPercent) / 100 must fit after the nested areas of the partition; the remote-execution work directory is one of them and its byte budget is remoteExecution.reserve + slots[role] * remoteExecution.perAction for the worker role (the cas roles), so a worker holds all its slots"
           }
         },
         "temporaries": {
@@ -219,7 +233,8 @@
             "collected",
             "kept",
             "reclaiming",
-            "refused"
+            "refused",
+            "holder-gone"
           ]
         },
         "resource": {
@@ -257,6 +272,22 @@
         "freeBytes": {
           "type": "integer",
           "minimum": 0
+        },
+        "limitMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "holder": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pid", "command", "sinceMs", "silentMs", "mode"],
+          "properties": {
+            "pid": {"type": "integer", "minimum": 1},
+            "command": {"type": "string", "maxLength": 160},
+            "sinceMs": {"type": "integer", "minimum": 0},
+            "silentMs": {"type": "integer", "minimum": 0},
+            "mode": {"enum": ["shared", "exclusive"]}
+          }
         }
       }
     },
@@ -264,6 +295,10 @@
       "const": {
         "en": {
           "waitingBuild": "Another process is building the dependencies ({seconds} s). Other commands keep running; waiting for that build instead of starting a second one.",
+          "waitingHolder": "Process {pid} ({command}) holds the dependency store since {since}; waiting for it ({seconds} s of at most {limit} s)",
+          "waitingSilentHolder": "Process {pid} ({command}) holds the dependency store since {since} and has not renewed its registration for {silent} s, so it may be blocked; waiting for it ({seconds} s of at most {limit} s)",
+          "holder-gone": "Process {pid} ({command}) held the dependency {resource} lease but is gone (its pid is free or was reused by another process); its registration was removed.",
+          "ancestorHolds": "Process {pid} ({command}) holds the dependency {resource} lease and is an ancestor of this process, which can never wait for its release; refusing after {seconds} s.",
           "waitingPublish": "The dependencies are built. Waiting for running readers to finish before switching to the new generation ({seconds} s).",
           "waitingWriter": "Waiting for another process to finish writing a dependency receipt ({seconds} s).",
           "freeSpaceUnreadable": "The free space of the dependencies volume could not be read ({path}): {reason}. Nothing is installed without knowing how much space is left.",
@@ -277,6 +312,10 @@
         },
         "de": {
           "waitingBuild": "Ein anderer Prozess installiert die Abhängigkeiten ({seconds} s). Andere Befehle laufen weiter; es wird auf diesen Bau gewartet, statt einen zweiten zu starten.",
+          "waitingHolder": "Der Prozess {pid} ({command}) hält den Abhängigkeitsspeicher seit {since}; es wird darauf gewartet ({seconds} s von höchstens {limit} s)",
+          "waitingSilentHolder": "Der Prozess {pid} ({command}) hält den Abhängigkeitsspeicher seit {since} und hat seine Anmeldung seit {silent} s nicht erneuert, er ist womöglich blockiert; es wird darauf gewartet ({seconds} s von höchstens {limit} s)",
+          "holder-gone": "Der Prozess {pid} ({command}) hielt die Abhängigkeits-Lease {resource}, ist aber weg (seine pid ist frei oder wurde von einem anderen Prozess wiederverwendet); seine Anmeldung wurde entfernt.",
+          "ancestorHolds": "Der Prozess {pid} ({command}) hält die Abhängigkeits-Lease {resource} und ist ein Vorfahre dieses Prozesses, der nie auf dessen Freigabe warten kann; Abbruch nach {seconds} s.",
           "waitingPublish": "Die Abhängigkeiten sind gebaut. Es wird auf laufende Leser gewartet, bevor auf die neue Generation umgeschaltet wird ({seconds} s).",
           "waitingWriter": "Es wird gewartet, bis ein anderer Prozess eine Abhängigkeits-Quittung fertig geschrieben hat ({seconds} s).",
           "freeSpaceUnreadable": "Der freie Platz des Abhängigkeits-Volumes konnte nicht gelesen werden ({path}): {reason}. Es wird nichts installiert, ohne zu wissen, wie viel Platz noch frei ist.",

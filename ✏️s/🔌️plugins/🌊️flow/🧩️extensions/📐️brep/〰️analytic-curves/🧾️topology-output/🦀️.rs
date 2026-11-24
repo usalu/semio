@@ -40,6 +40,7 @@ impl Source {
 }
 
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub(super) struct TopologyOutput {
     source: Source,
     alias: Option<TopologyAlias>,

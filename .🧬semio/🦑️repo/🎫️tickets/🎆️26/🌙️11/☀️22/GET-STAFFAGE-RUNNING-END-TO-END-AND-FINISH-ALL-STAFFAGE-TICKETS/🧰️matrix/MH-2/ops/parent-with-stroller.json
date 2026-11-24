@@ -1,0 +1,14 @@
+[
+  {"op": "front-sweep", "scale": "50", "id": "hood"},
+  {"op": "plan-prism", "scale": "50", "id": "hood"},
+  {"op": "front-sweep", "scale": "100", "id": "hood"},
+  {"op": "plan-prism", "scale": "100", "id": "hood"},
+  {"op": "front-sweep", "scale": "200", "id": "torso"},
+  {"op": "plan-prism", "scale": "200", "id": "torso"},
+  {"op": "front-sweep", "scale": "200", "id": "child-body"},
+  {"op": "plan-prism", "scale": "200", "id": "child-body"},
+  {"op": "front-sweep", "scale": "200", "id": "hood"},
+  {"op": "plan-revolve", "scale": "500", "id": "hand-l"},
+  {"op": "plan-prism", "scale": "500", "id": "torso"},
+  {"op": "plan-prism", "scale": "500", "id": "child-body"}
+]

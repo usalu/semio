@@ -79,19 +79,19 @@ pub fn admit_payload(payload: &str) -> Result<(), Fault> {
 
 /// 📥️ Admits the whole payload and replaces the document with what it holds.
 pub fn emit(payload: &ImportDocument, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    emit_with_replacement_servability(payload, doc, cfg, |_| false).map(|(emit, _)| emit)
+    emit_with_replacement_unserved(payload, doc, cfg, |_| Vec::new()).map(|(emit, _)| emit)
 }
 
-/// 🪟️ Describes the decoded replacement's graph while it is still owned by the import.
-pub fn emit_with_replacement_servability(
+/// 🪟️ Describes the decoded replacement's unserved node kinds while the graph is still owned by the import.
+pub fn emit_with_replacement_unserved(
     payload: &ImportDocument,
     doc: &ArtifactView<'_, Generation3dSnapshot>,
     cfg: &ConfigView<'_, Generation3dConfig>,
-    is_servable: impl FnOnce(&Generation3dSnapshot) -> bool,
-) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, Option<bool>), Fault> {
+    unserved_of: impl FnOnce(&Generation3dSnapshot) -> Vec<String>,
+) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, Option<Vec<String>>), Fault> {
     admit_payload(&payload.payload)?;
     match (&payload.widget_id, &payload.channel, &payload.texture_id) {
-        (None, None, None) => apply_complete_payload(&payload.name, &payload.payload, cfg, is_servable),
+        (None, None, None) => apply_complete_payload(&payload.name, &payload.payload, cfg, unserved_of),
         (Some(widget), Some(channel), Some(texture)) => {
             let (id, channel, text) = semio_s_artifact_procedural_3d_set_widget_input::mesh_source_text(&doc.snapshot.host_snapshot, widget, channel).map_err(Fault::from)?;
             let edited = semio_s_artifact_procedural_3d_set_widget_input::import_mesh_texture(&text, texture, &payload.payload).map_err(Fault::from)?;
@@ -113,14 +113,14 @@ fn apply_complete_payload(
     name: &str,
     payload: &str,
     cfg: &ConfigView<'_, Generation3dConfig>,
-    is_servable: impl FnOnce(&Generation3dSnapshot) -> bool,
-) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, Option<bool>), Fault> {
+    unserved_of: impl FnOnce(&Generation3dSnapshot) -> Vec<String>,
+) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, Option<Vec<String>>), Fault> {
     let imported = document_io::import_document(name, payload).map_err(|error| import_fault("generation3d.io.import", error.to_string()))?;
-    let servable = is_servable(&imported);
+    let unserved = unserved_of(&imported);
     let effect = semio_s_artifact_procedural_3d_editor_commands::set_active_example::reset_generation3d_document_effect(&imported);
     let config_mutations = config_load_mutations(cfg.snapshot, &imported.host_snapshot.camera, imported.generation.selected_generation_id.clone());
     imported.retire_cold();
-    Ok((Emit { effects: vec![effect], config_mutations, ..Default::default() }, Some(servable)))
+    Ok((Emit { effects: vec![effect], config_mutations, ..Default::default() }, Some(unserved)))
 }
 
 /// 🧵️ The session-free entry point: the import needs no evaluation session, only the document and its config.

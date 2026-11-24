@@ -65,6 +65,8 @@ use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_fan_run_hours;
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_duct_test_pressure;
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_humidification_required;
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_humidification_provided;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_unoccupied_ventilation;
+use semio_s_artifact_norm_din16798_mut_zones::clear_zone_unoccupied_ventilation;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -121,6 +123,8 @@ pub enum Din16798Mutation {
     ChangeVentDuctTestPressure(change_vent_duct_test_pressure::ChangeVentDuctTestPressure),
     ChangeVentHumidificationRequired(change_vent_humidification_required::ChangeVentHumidificationRequired),
     ChangeVentHumidificationProvided(change_vent_humidification_provided::ChangeVentHumidificationProvided),
+    ChangeZoneUnoccupiedVentilation(change_zone_unoccupied_ventilation::ChangeZoneUnoccupiedVentilation),
+    ClearZoneUnoccupiedVentilation(clear_zone_unoccupied_ventilation::ClearZoneUnoccupiedVentilation),
 }
 
 pub const KINDS: &[&str] = &[
@@ -174,6 +178,8 @@ pub const KINDS: &[&str] = &[
     "change-vent-duct-test-pressure",
     "change-vent-humidification-required",
     "change-vent-humidification-provided",
+    "change-zone-unoccupied-ventilation",
+    "clear-zone-unoccupied-ventilation",
 ];
 
 #[cfg(test)]

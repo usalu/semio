@@ -79,3 +79,49 @@ New lane reports since 20:06: GR14, GR15, W3, W4, W5 (worker readiness), R4 (gra
 3. **A full release cache does not fit:** host store cap in force 27.75 GiB, full of in-use data; 2,202 of the play build's entries evicted for capacity between 20:24 and 00:40 → each restart recompiles about two thirds; offload uploads refused (507).
 4. Root constraint: coordinator disk at 96–97 %. `/Users/ueli/Documents/semio.old-20261114/.cache` (146 GiB, retired checkout) is the largest reclaimable item — USER decision, asked by the play session.
 5. Play release: not finished. Retention: dry-run (user decision). Server journal shows 2 small graph entries evicted for budget → R4 protection to re-check. Whole-graph generation head not in the protected class.
+
+## Morning addendum — state at 08:15 on 2026-11-24
+
+- Disk: `/Users/ueli/Documents/semio.old-20261114/.cache` deleted on the user's approval (free 30.5 → 175.5 GiB). Host store cap now sized per role: coordinator 60 GiB (CAS5).
+- **A real component final compiled on a worker (P4):** `semio_hub_stdio_binary_component`, pinned g1-m12 1,687 s; with `SEMIO_OFFLOAD` unset the gate placed it on g1-m10 by itself (1,688 s; 567 of 760 units stayed local). Local: 1,358 s. Remote is not faster yet: workers ran it on ONE codegen thread; one run queued 8.3 min; one 23-min result lost while the cache sidecar restarted (g1-m03); one link failed on g1-m06 (lld cannot read the bitcode objects). Lane O18 fixes these.
+- Workers: **1 Ready** (g1-m02), 11 working. Lane W7.
+- Units compiled on workers but not shared (cumulative counters): spool-full up to 53,450 and upload-failed up to 21,287 per machine. Lane U1.
+- Rust image detached after a killed in-place resize; repaired, attach now removes a leftover trim volume (ST1).
+- Memory (OS pausing programs on workers) is owned by the side session, ticket `26/11/24/FLEET-MEMORY-WATCHDOG-ADMISSION-AND-UNIT-CARVING`.
+
+## Afternoon addendum — state at 15:45 on 2026-11-24
+
+New lane reports: O18–O27, P5, P6, U1, U2, K7, W7, W8, L1, SY3, CAS6, CAS7, F5, GR16–GR18 (GR19 running). Patch sets for the play snapshot: O18, L1, O19, O20, O22, O23 (incl. the CAS6 client half), O25, O26 (= O24 + O26), O27.
+
+### Proven in the real release build (play, offload on since 09:09)
+- Ordinary units: 3 → 25 units/min at host load 40–100; remote unit median 94.7 s → 8.0 s after the worker blob cache fix (F5).
+- Component finals complete on workers (first: `semio_hub_note_component`, 1,012 s; fetch 4.6 s for 3.97 GB); transpile runs remotely in 5–14 s.
+- Derive users (113 crates): byte-identical on worker vs local, fleet hit with 0 compiles on two other workers (O21; probe crate with the real derive, live tree only).
+- A second worker with an empty store rebuilt the K7 proof crates with 0 compiles and 0 key-incomplete.
+
+### Defects found and fixed today
+| Area | Defect | Fix |
+|---|---|---|
+| Sharing | 10–32 % of worker-compiled units discarded as key-incomplete | fleet-wide input manifest per slot (K7) |
+| Sharing | outage losses (spool 4,096 jobs, 4 tries, 1 h); orphaned spools | disk-sized durable spool, back-pressure (U1); sidecar spool role (U2) |
+| Store | 507 on input uploads at 60 GiB cap with 176 GiB free; collector never finished (246 MB lease ledger) | cap follows free room, transient inputs, hard reserve 74 GiB, continuous sweep (CAS6, CAS7) |
+| Store | entry maximum 512 MiB vs 1.09 GB rlibs (413) | 1.25 GiB (CAS7), plan-time decline (O22) |
+| Workers | blob cache 256 MiB vs 527–820 MB input sets → full re-download per action | 12 GiB, recent blobs kept (F5) |
+| Offload | transitive rlib missing (crate name + svh vs file suffix) | closure from recorded edges (O19) |
+| Offload | derive baked the absolute checkout path into units | content digest + relative locator (O21) |
+| Offload | scheduler restart lost running finals (715 s) | operation journal, client re-attach, worker report retry (O23) |
+| Offload | `Missing blob` → local fallback after 14 min | operation-lifetime input leases, re-upload + retry (O25) |
+| Finals | one codegen thread on workers (load term; then memory term) | fair-share threads (O18, P6) — not yet observed on a real final |
+| Passes | storage gate charged a pass its whole prediction for life → passes serial | charge minus written, increments, fleet slots (O24, O26) |
+| Passes | local pressure "warn" halved the fleet share | removed (O27) |
+| Lanes | pool bound 17.8 GiB vs 31 GiB release need; restored lanes trimmed | bound from flavour need, requested lanes kept (L1) |
+| Graph | owner entries judged stale before parsers registered; stamps on busy directories | fixed (GR17, GR18): warm owner 0.5–2.7 CPU s |
+| Worker storage | darwin install model wrong; endless disk retries; unnamed lease holder | corrected model, `unfit (disk)`, holder named (W8) |
+
+### Not achieved
+1. Workers Ready: 1 of 11 this morning; not re-counted since. Cold whole-graph read ≈ 57 CPU-hours (GR18); GR19 is on the cold cost.
+2. Remote finals faster than local: unproven (one thread until P6 reaches workers; later finals 639–940 s run).
+3. Play release not finished; its snapshot has source drift (11 crates) fixed on its side.
+4. g1-m13 and g1-m04 need disk freed by hand; g1-m05 lease holder alive.
+5. Retention still dry-run (user decision). Cache server protection for input manifests live only since the sidecar restarts of today; fleet-wide spool depth not in status.
+6. Driver test file cannot finish on this host; cluster test file 13 pass / 2 fail (kill/cancel detection under load).

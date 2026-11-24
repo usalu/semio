@@ -49,7 +49,7 @@ import { assertNotReadParentV1, readParentObservedCountsV1, withReadParentScopeV
 import { createLookQueueV1 } from "./🔭️look-queue/🟨️.mjs";
 import { keepTakenThenReleaseV1 } from "./♻️taken-memo/🟨️.mjs";
 import { ownerSourceFailureV1, replicaUnsettledV1 } from "./🚧️source-failure/🟨️.mjs";
-let closureVerdictScopeV1, runClosureTakeV1, releaseAfterTakeLookV1, withClosurePassV1, primeSharedClosuresInChildV1, releaseOwnerStateV1, primeSharedClosuresV1, askHeavyQuestionV1, isHeavyQuestionV1, closureStoreDirectoryV1, bindClosureStoreV1, closureApiV1, closureHandleOfV1, closureHandleFromRecipeV1, deriveClosureFactV1, resolveClosureRefsV1, resolveClosureRefsPlanV1, adoptClosureRefsV1, inferenceCandidates,readBuildProducedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, projectStampPathsV1;
+let closureVerdictScopeV1, runClosureTakeV1, releaseAfterTakeLookV1, withClosurePassV1, primeSharedClosuresInChildV1, releaseOwnerStateV1, primeSharedClosuresV1, askHeavyQuestionV1, isHeavyQuestionV1, closureStoreDirectoryV1, bindClosureStoreV1, closureApiV1, closureHandleOfV1, closureHandleFromRecipeV1, deriveClosureFactV1, resolveClosureRefsV1, resolveClosureRefsPlanV1, adoptClosureRefsV1, inferenceCandidates,readBuildProducedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, printDocumentTargetNamesV1, loaded, readBunLockGraph, projectStampPathsV1;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
@@ -60,7 +60,7 @@ export function wire(registry) {
   ({ readTaxonomyProjectionV1 } = registry.sourceAnalyses);
   ({ collectPlaygroundCatalog, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1 } = registry.playgroundTargets);
   ({ readToml, withNativePreparation } = registry.nativeManifests);
-  ({ cargoTargets, componentBuildTargets, componentCrateRoots, withReleasePipelinePreparation } = registry.componentTargets);
+  ({ cargoTargets, componentBuildTargets, componentCrateRoots, withReleasePipelinePreparation, printDocumentTargetNamesV1 } = registry.componentTargets);
   ({ projectWithDefaults, resolveClosureRefsV1, resolveClosureRefsPlanV1, adoptClosureRefsV1 } = registry.projectAssembly);
   ({ loaded } = registry.bootstrap);
   ({ readBunLockGraph } = registry.bunLock);
@@ -276,10 +276,11 @@ export function projectGeneratorContractsV1(workspaceRoot) {
 /** 🧱️ Builds, from plain data, what the inference of one project shares across the projects of a graph construction; a worker process opens the session its parent describes, the generator contracts included: they are no fact of a project record but part of its key, so a worker that read them again after a peer edit would write content of other contracts under the key of its parent. */
 export function createProjectInferenceEnvironmentV1(session) {
   const { workspaceRoot, registry, projectsByRoot, componentRoots, contracts } = session;
-  if (typeof session.closureStore === "string") bindClosureStoreV1(workspaceRoot, session.closureStore);
+  if (typeof session.closureStore === "string") bindClosureStoreV1(workspaceRoot, session.closureStore, session.closureStoreWritable === true, session.closureStoreLimits);
   if (contracts !== null && typeof contracts === "object") useGeneratorContractsV1(workspaceRoot, contracts);
-  useAnalysisStoreV1(workspaceRoot, session.analysisStore ?? analysisStoreDirectoryOfV1(session.closureStore));
-  const context = { workspaceRoot, registry, lateClosures: session.lateClosures === true }, scripts = createScriptInputCache(context), commandInputs = session.commandInputs?.closureRecipe ? closureHandleFromRecipeV1(session.commandInputs.closureRecipe) : session.commandInputs;
+  const analysisStore = session.analysisStore ?? analysisStoreDirectoryOfV1(session.closureStore);
+  useAnalysisStoreV1(workspaceRoot, analysisStore);
+  const context = { workspaceRoot, registry, lateClosures: session.lateClosures === true, ...typeof analysisStore === "string" ? { cargoReceiptArchive: dirname(analysisStore) } : {} }, scripts = createScriptInputCache(context), commandInputs = session.commandInputs?.closureRecipe ? closureHandleFromRecipeV1(session.commandInputs.closureRecipe) : session.commandInputs;
   if (contracts === null || typeof contracts !== "object" || Array.isArray(contracts)) throw refuseBuildV1("invalid","graph.generator-contracts-required");
   scripts.generatedOutput = (path, origin) => readBuildProducedCompileOutputV1(path, workspaceRoot, generatorContractsInScopeV1(contracts), context.registry, origin);
   return { workspaceRoot, contracts, commandInputs, scripts, projectsByRoot: new Map(projectsByRoot), componentRoots, nativeCache: new Map(), nativeClosures: new Map(), context, registryAskedFor: undefined };
@@ -485,9 +486,17 @@ export const ownerAdmissionCompilesV1 = (activeJson, selectedInputs, nativeCandi
 /** 📦️ What a reader of an admission hands a pool wave about one owner so a machine that pulls it files the same record: the targets and inputs the admission selected for it and the generated task dependencies it applies. */
 export const ownerAdmissionOfV1 = (admission, job) => ({ ...admission.targets[job.json.name] === undefined ? {} : { targets: admission.targets[job.json.name] }, inputs: [...new Set(admission.inputs?.[job.json.name] ?? [])].sort(), ...admission.generatedDependencies?.[job.name] ? { generated: admission.generatedDependencies[job.name] } : {} });
 
+/** 🏭️ Applies the generated task prerequisites an admission found to the authored project; a consumer the Print catalogue synthesizes is left to project assembly, which replaces it and derives the same producers from its command closure, and any other absent consumer is still refused.
+ * @see ../🧩️component-targets/🟨️.mjs
+ * @see ../🧱️project-assembly/🟨️.mjs */
+export function withOwnerGeneratedDependenciesV1(json, generated, workspaceRoot) {
+  const synthesized = printDocumentTargetNamesV1(json, workspaceRoot);
+  return applyBuildGeneratedTaskDependenciesV1(json, Object.fromEntries(Object.entries(generated).filter(([name]) => Object.hasOwn(json.targets ?? {}, name) || !synthesized.has(name))));
+}
+
 /** 🏷️ The job of one owner of a wave that is inferred without an admission selection, from its project JSON and the head parts the wave shares: the same fields the wave computes for the owner it infers itself (native or release preparation, the assembly authority, the head of the record key and the record file name), so a machine that pulls the owner from the fleet pool files its record under the key the machine that runs the wave looks up. `environment` is the one of {@link createProjectInferenceEnvironmentV1}. */
 export function ownerJobV1(environment, globals, { name, json: raw, admission }) {
-  const { workspaceRoot, projectsByRoot, componentRoots, nativeCache, nativeClosures } = environment, json = admission?.generated ? applyBuildGeneratedTaskDependenciesV1(raw, admission.generated) : raw, root = json.root, nativeRoot = json.metadata?.nativeRoot ?? root;
+  const { workspaceRoot, projectsByRoot, componentRoots, nativeCache, nativeClosures } = environment, json = admission?.generated ? withOwnerGeneratedDependenciesV1(raw, admission.generated, workspaceRoot) : raw, root = json.root, nativeRoot = json.metadata?.nativeRoot ?? root;
   const { selectedTargets, selectedInputs, activeJson } = ownerAdmissionSelectionV1(admission === undefined ? undefined : { targets: { [json.name]: admission.targets }, inputs: { [json.name]: admission.inputs } }, json);
   const nativeTargets = Object.entries(activeJson.targets ?? {}).filter(([, target]) => target.metadata?.semio?.execution?.kind !== "source");
   const nativeCandidate = existsSync(join(workspaceRoot, nativeRoot, "Cargo.toml")) || nativeTargets.some(([, target]) => target.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts")), native = admission === undefined ? nativeCandidate : ownerAdmissionCompilesV1(activeJson, selectedInputs, nativeCandidate, nativeTargets), pipeline = Object.values(activeJson.targets ?? {}).some(target => target.metadata?.semio?.release);
@@ -716,7 +725,7 @@ async function emojiProjectJsonNodesBodyV1(configFiles, options, parentContext, 
   const takenMemo=late?undefined:context.takenMemo,memoContext=takenMemo===undefined?"":createHash("sha256").update(serialize([registryDigest,commandRevision,late,[...projectsByRoot],componentRoots,contracts])).digest("hex"),memoKeyOf=job=>createHash("sha256").update(memoContext+"\0"+JSON.stringify(job.json)+"\0"+JSON.stringify(options?.ownerAdmission?ownerAdmissionOfV1(options.ownerAdmission,job):null)).digest("hex");
   const inferProject=async({result,name,json},away=work=>work(),withdraw=waveSignal)=>{
     const memoKey=takenMemo===undefined?undefined:memoKeyOf({name,json});
-    if(options?.ownerAdmission?.generatedDependencies?.[name])json=applyBuildGeneratedTaskDependenciesV1(json,options.ownerAdmission.generatedDependencies[name]);
+    if(options?.ownerAdmission?.generatedDependencies?.[name])json=withOwnerGeneratedDependenciesV1(json,options.ownerAdmission.generatedDependencies[name],workspaceRoot);
     let looked;if(lookQueue!==undefined){stageV1(name,STAGE_LOOK_V1);try{looked=await lookQueue.ask(name,withdraw);withdraw.throwIfAborted();}finally{stageV1(name,STAGE_INFER_V1);}}if(looked?.verdict==="stale")adopt.staleRow(looked.staleRow?.kind);if(looked?.verdict==="stale"&&looked.staleRow!==undefined&&staleRowTold++<400){const row=looked.staleRow;takeSay(language=>ledger.staleRowLine(language,name,row));}
     const started=performance.now();
     await yieldInferenceV1(context,"build:projects",++projectIndex);

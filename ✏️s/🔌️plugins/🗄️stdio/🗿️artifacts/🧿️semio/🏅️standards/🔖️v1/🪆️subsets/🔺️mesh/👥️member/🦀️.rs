@@ -1,0 +1,14 @@
+//! 👥️ The typed member store of the `mesh` subset of the `stdio.semio` artifact. One subset is one crate so the typed stores of the whole artifact are never instantiated in a single compilation unit; see the master plan's "Architecture > The semio artifact" section.
+
+#![allow(async_fn_in_trait)]
+
+extern crate semio_os_kernel as dsl;
+
+dsl::space_members! {
+    native_producer:&::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
+    history_limits: ::semio_s_artifact_stdio_semio_base::SEMIO_MEMBER_HISTORY_LIMITS,
+    maximum_history_allocation_bytes: ::semio_s_artifact_stdio_semio_base::SEMIO_MEMBER_HISTORY_ALLOCATION_BYTES,
+    pub enum SemioMeshMember, SemioMeshMemberOpen {
+        Mesh("s.stdio.semio", "v1", "mesh", "stdio.semio") => (semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot, semio_s_artifact_stdio_semio_mesh::schema::mutations::SemioMeshMutation, ::semio_s_artifact_stdio_semio_base::SemioMemberStoreProducer<semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot,semio_s_artifact_stdio_semio_mesh::schema::mutations::SemioMeshMutation>, ::semio_s_artifact_stdio_semio_base::SemioMemberStoreProducer::<semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot,semio_s_artifact_stdio_semio_mesh::schema::mutations::SemioMeshMutation>::new()),
+    }
+}

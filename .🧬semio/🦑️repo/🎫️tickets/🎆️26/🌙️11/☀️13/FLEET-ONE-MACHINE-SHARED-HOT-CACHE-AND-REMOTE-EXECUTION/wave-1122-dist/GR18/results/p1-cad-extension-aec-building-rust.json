@@ -1,0 +1,322 @@
+{
+ "profiles": [
+  {
+   "counts": {
+    "closure": {
+     "derived": 9,
+     "loaded": 1,
+     "stale": 6,
+     "checked": 17,
+     "stamped": 0,
+     "stampsKept": 9,
+     "fetched": 9,
+     "reasked": 0,
+     "reaskFailed": 0,
+     "reaskEqual": 0,
+     "reaskDifferent": 0
+    },
+    "lane": {
+     "fetched": 12,
+     "prefetched": 0,
+     "computed": 6,
+     "published": 9,
+     "refused": 0,
+     "missed": 0,
+     "imported": 18
+    },
+    "verdicts": {
+     "read": 2,
+     "written": 7128,
+     "waited": 0
+    },
+    "layers": {
+     "hits": 55673,
+     "joined": 0,
+     "checked": 7111,
+     "indexed": 0,
+     "milliseconds": 54373
+    }
+   },
+   "name": "@semio-tech/cad-extension-aec-building-rust"
+  }
+ ],
+ "phases": [
+  {
+   "label": "start",
+   "wallMs": 4,
+   "cpuMs": 2,
+   "rssMB": 29,
+   "peakMB": 29,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "bootstrap",
+   "wallMs": 2956,
+   "cpuMs": 1028,
+   "rssMB": 149,
+   "peakMB": 149,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "import-modules",
+   "wallMs": 17,
+   "cpuMs": 2,
+   "rssMB": 149,
+   "peakMB": 149,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "open-session",
+   "wallMs": 50,
+   "cpuMs": 8,
+   "rssMB": 151,
+   "peakMB": 152,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "job:@semio-tech/cad-extension-aec-building-rust",
+   "wallMs": 1684,
+   "cpuMs": 584,
+   "rssMB": 191,
+   "peakMB": 191,
+   "files": 0,
+   "spawns": 0,
+   "hashes": 0
+  },
+  {
+   "label": "run:@semio-tech/cad-extension-aec-building-rust",
+   "wallMs": 380912,
+   "cpuMs": 136351,
+   "rssMB": 1862,
+   "peakMB": 3436,
+   "files": 2994,
+   "spawns": 0,
+   "hashes": 0,
+   "kind": "language:cargo",
+   "names": 600,
+   "cpuReply": 136349,
+   "peakReply": 3245,
+   "recordSummary": {
+    "keys": [
+     "digest",
+     "authority",
+     "observations",
+     "image"
+    ],
+    "rows": 1601,
+    "byKind": {
+     "stamp": 18,
+     "exists": 602,
+     "file": 2,
+     "global": 354,
+     "lstat": 15,
+     "field": 589,
+     "closure": 14,
+     "analysis": 6,
+     "readdirNames": 1
+    },
+    "closure": [
+     "{\"kind\":\"closure\",\"path\":\"[\\\"/Users/ueli/Documents/semio\\\",\\\"9e3fd0118d921580dd6d6e0f862e028c0983a9ac1356d24cd909f168f405d6a7\\\",[\\\"some\\\",[\\\"/🏃️process/🧪️testing/🦀️cargo/\\\"]]]\",\"fact\":\"true\"}",
+     "{\"kind\":\"closure\",\"path\":\"[\\\"/Users/ueli/Documents/semio\\\",\\\"9e3fd0118d921580dd6d6e0f862e028c0983a9ac1356d24cd909f168f405d6a7\\\",[\\\"workspaceKeys\\\",\\\"repo \\\\\\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\\\\\\\" native owne",
+     "{\"kind\":\"closure\",\"path\":\"[\\\"/Users/ueli/Documents/semio\\\",\\\"b2ef274b45238b32711d70cec3ed89adc9b68aa0053a726b6b3c1ce65afa7e6d\\\",[\\\"generated\\\"]]\",\"fact\":\"[]\"}",
+     "{\"kind\":\"closure\",\"path\":\"[\\\"/Users/ueli/Documents/semio\\\",\\\"da167b4ffb9580a35ec58e84282700cb93f9787a67d2fd394df65ac7cf89e038\\\",[\\\"some\\\",[\\\"/🏃️process/🧪️testing/🦀️cargo/\\\"]]]\",\"fact\":\"true\"}",
+     "{\"kind\":\"closure\",\"path\":\"[\\\"/Users/ueli/Documents/semio\\\",\\\"da167b4ffb9580a35ec58e84282700cb93f9787a67d2fd394df65ac7cf89e038\\\",[\\\"workspaceKeys\\\",\\\"repo \\\\\\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\\\\\\\" native owne",
+     "{\"kind\":\"closure\",\"path\":\"[\\\"/Users/ueli/Documents/semio\\\",\\\"253c94df32cb68d95e6a9eb62b6c2a7cf7d872d2d789d823b07a2636120c43eb\\\",[\\\"generated\\\"]]\",\"fact\":\"[]\"}"
+    ]
+   }
+  }
+ ],
+ "calls": {
+  "lstatSync": 2,
+  "openSync": 1,
+  "p.readFile": 157,
+  "p.stat": 103164,
+  "p.writeFile": 65284,
+  "p.readdir": 79,
+  "statSync": 4793,
+  "readFileSync": 2994,
+  "realpathSync": 358
+ },
+ "bytes": {
+  "readFileSync": 8612856
+ },
+ "distinctFilesRead": 127,
+ "spawns": [],
+ "topPaths": [
+  [
+   "p.stat /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-H/scratchpad/gr18",
+   103164
+  ],
+  [
+   "p.writeFile /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-H/scratchpad/gr18",
+   65284
+  ],
+  [
+   "readFileSync tsconfig.json",
+   1215
+  ],
+  [
+   "readFileSync 🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+   1056
+  ],
+  [
+   "readFileSync 🧰️framework/🛍️products/🦑️repo/package.json",
+   170
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement",
+   160
+  ],
+  [
+   "p.readFile /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-H/scratchpad/gr18",
+   157
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
+   133
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference",
+   114
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache",
+   92
+  ],
+  [
+   "statSync 🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage",
+   86
+  ],
+  [
+   "realpathSync 🧰️framework/🛍️products/🦑️repo/package.json",
+   85
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units",
+   82
+  ],
+  [
+   "readFileSync 🧰️framework/🛍️products/💻️os/tsconfig.json",
+   81
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel",
+   80
+  ],
+  [
+   "p.readdir /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-H/scratchpad/gr18",
+   79
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies",
+   72
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations",
+   72
+  ],
+  [
+   "readFileSync 🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+   40
+  ],
+  [
+   "readFileSync 🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️project.json",
+   40
+  ],
+  [
+   "readFileSync 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/package.json",
+   38
+  ],
+  [
+   "readFileSync node_modules/@semio-tech/process/package.json",
+   38
+  ],
+  [
+   "realpathSync node_modules/@semio-tech/process/package.json",
+   38
+  ],
+  [
+   "readFileSync 🧰️framework/📦️packages/🟦️typescript/tsconfig.json",
+   36
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage",
+   34
+  ],
+  [
+   "readFileSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/tsconfig.json",
+   33
+  ],
+  [
+   "readFileSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
+   30
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload",
+   28
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧮️derived-nodes",
+   24
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️load",
+   24
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/node_modules/@semio-tech",
+   22
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure",
+   22
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔎️probes",
+   22
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle",
+   20
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build",
+   20
+  ],
+  [
+   "realpathSync 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/package.json",
+   19
+  ],
+  [
+   "statSync 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot",
+   18
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin",
+   16
+  ],
+  [
+   "readFileSync package.json",
+   16
+  ],
+  [
+   "statSync 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛰️fleet-fetch",
+   16
+  ]
+ ],
+ "hashes": 0,
+ "hashBytes": 0,
+ "load": [
+  58.29296875,
+  51.83935546875,
+  48.3046875
+ ]
+}

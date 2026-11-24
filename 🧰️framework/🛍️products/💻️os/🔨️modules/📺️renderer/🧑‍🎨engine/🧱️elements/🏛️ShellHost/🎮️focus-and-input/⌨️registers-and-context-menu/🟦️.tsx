@@ -1,5 +1,5 @@
 /** ⌨️ The utility and tool registers, the introduction callbacks, the browser actor view state and the context menu of the focus and input hook. */
-import { shellDialogSessionIsCurrentV1 } from "../../🗨️dialog-origin/🟦️.ts";
+import { shellDialogSessionIsCurrentV1, shellDialogSessionKeyV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { resolveRuntimeKeyV1 } from "../../🗄️shell-uri-documents/🔑️runtime-key/🟦️.ts";
 import { spawnedGuestWindowInstancesV1 } from "../../🪟️spawned-program/🟦️.ts";
@@ -306,6 +306,7 @@ export function useBrowserActorViewAndContextMenu({ resolvedTargetViewState, pen
     [resolvedTargetViewState],
   );
 
+  const sessionIdentity = shellDialogSessionKeyV1(session);
   useEffect(() => {
     const pending = pendingDocumentOpeningPublicationRef.current;
     pendingDocumentOpeningPublicationRef.current = null;
@@ -320,7 +321,7 @@ export function useBrowserActorViewAndContextMenu({ resolvedTargetViewState, pen
     const runtimeKey = spawned === undefined ? retainedRuntimeKey : resolveRuntimeKeyV1(openDocumentSessionsRef.current, spawned);
     dispatch({ type: "SET_SYNC_BACKBONE_URI", value: runtimeKey === null ? null : `actor://${runtimeKey}` });
     dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
-  }, [panel?.activeSpawnedId, session, hostMode]);
+  }, [panel?.activeSpawnedId, sessionIdentity, hostMode]);
 
   useEffect(() => {
     return () => {

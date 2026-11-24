@@ -39,6 +39,7 @@ fn scoped_source(input: &Dictionary) -> Result<(&str, &Dictionary), ValueError> 
 }
 
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub(super) struct DeconstructOutput {
     reach: NativeTopologyReach,
     source_rank: usize,
@@ -188,6 +189,7 @@ impl DeconstructOutput {
 }
 
 #[derive(Default, semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Metadata {
     field: u8,
     kind: &'static str,

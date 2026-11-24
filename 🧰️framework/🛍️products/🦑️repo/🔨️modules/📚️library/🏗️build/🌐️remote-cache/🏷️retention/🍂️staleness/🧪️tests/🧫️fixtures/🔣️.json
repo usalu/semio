@@ -740,12 +740,16 @@
    }
   },
   {
-   "name": "a consumed blob that an earlier retirement took makes the dependent stale; a blob nobody ever held is unknown and ignored",
+   "name": "a consumed blob that an earlier retirement took for stale content makes the dependent stale while the cause still holds (the source it was built from is gone); a blob nobody ever held is unknown and ignored",
    "now": 10000000,
    "grace": 600000,
    "toolchains": null,
    "retired": [
-    "blob:gone"
+    {
+     "blob": "blob:gone",
+     "path": "a/old.rs",
+     "content": "old v1"
+    }
    ],
    "tree": {
     "a/lib.rs": "a v1",
@@ -788,6 +792,114 @@
    "expected": {
     "a": "stale:extern",
     "b": "live"
+   }
+  },
+  {
+   "name": "a tombstone counts only while its cause holds: the edited file is back to the retired content, or the toolchain is the fleet's again, so consumers of those retired blobs are live; one whose source still differs is stale",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": [
+    "t1"
+   ],
+   "retired": [
+    {
+     "blob": "blob:core-v1",
+     "path": "core/lib.rs",
+     "content": "core v1"
+    },
+    {
+     "blob": "blob:tool-v1",
+     "path": "tool/lib.rs",
+     "content": "tool v1"
+    },
+    {
+     "blob": "blob:old-toolchain",
+     "toolchain": "t1"
+    },
+    {
+     "blob": "blob:gone-toolchain",
+     "toolchain": "t0"
+    }
+   ],
+   "tree": {
+    "core/lib.rs": "core v1",
+    "tool/lib.rs": "tool v2",
+    "a/lib.rs": "a",
+    "b/lib.rs": "b",
+    "c/lib.rs": "c",
+    "d/lib.rs": "d"
+   },
+   "entries": [
+    {
+     "key": "a",
+     "storedAt": 0,
+     "refs": [
+      "blob:a"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "a/lib.rs": "a"
+     },
+     "externs": [
+      "blob:core-v1"
+     ]
+    },
+    {
+     "key": "b",
+     "storedAt": 0,
+     "refs": [
+      "blob:b"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "b/lib.rs": "b"
+     },
+     "externs": [
+      "blob:tool-v1"
+     ]
+    },
+    {
+     "key": "c",
+     "storedAt": 0,
+     "refs": [
+      "blob:c"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "c/lib.rs": "c"
+     },
+     "externs": [
+      "blob:old-toolchain"
+     ]
+    },
+    {
+     "key": "d",
+     "storedAt": 0,
+     "refs": [
+      "blob:d"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "d/lib.rs": "d"
+     },
+     "externs": [
+      "blob:gone-toolchain"
+     ]
+    }
+   ],
+   "expected": {
+    "a": "live",
+    "b": "stale:extern",
+    "c": "live",
+    "d": "stale:extern"
    }
   },
   {
@@ -1711,6 +1823,93 @@
     "head": "live",
     "head-young": "live",
     "core": "stale:edited"
+   }
+  },
+  {
+   "name": "an input manifest is live while the crate it names exists, whatever the edits of that crate say; gone with the crate; one of a crate outside the tree is never stale",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": [
+    "t2"
+   ],
+   "retired": [],
+   "tree": {
+    "core/lib.rs": "core v2"
+   },
+   "entries": [
+    {
+     "key": "m-edited",
+     "storedAt": 0,
+     "refs": [
+      "blob:m1"
+     ],
+     "declared": true,
+     "kind": "input-manifest",
+     "toolchain": "t2",
+     "sources": {
+      "core/lib.rs": "core v1"
+     },
+     "externs": []
+    },
+    {
+     "key": "m-gone",
+     "storedAt": 0,
+     "refs": [
+      "blob:m2"
+     ],
+     "declared": true,
+     "kind": "input-manifest",
+     "toolchain": "t2",
+     "sources": {
+      "gone/lib.rs": "gone v1"
+     },
+     "externs": []
+    },
+    {
+     "key": "m-gone-young",
+     "storedAt": 9900000,
+     "refs": [
+      "blob:m3"
+     ],
+     "declared": true,
+     "kind": "input-manifest",
+     "toolchain": "t2",
+     "sources": {
+      "gone/lib.rs": "gone v1"
+     },
+     "externs": []
+    },
+    {
+     "key": "m-registry",
+     "storedAt": 0,
+     "refs": [
+      "blob:m4"
+     ],
+     "declared": true,
+     "kind": "input-manifest",
+     "toolchain": "t2",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "m-other-toolchain",
+     "storedAt": 0,
+     "refs": [
+      "blob:m5"
+     ],
+     "declared": true,
+     "kind": "input-manifest",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    }
+   ],
+   "expected": {
+    "m-edited": "live",
+    "m-gone": "stale:deleted",
+    "m-gone-young": "grace",
+    "m-registry": "live",
+    "m-other-toolchain": "stale:toolchain"
    }
   }
  ]

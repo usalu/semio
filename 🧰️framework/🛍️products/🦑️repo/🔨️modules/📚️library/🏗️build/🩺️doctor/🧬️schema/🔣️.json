@@ -399,7 +399,9 @@
             "floorBytes",
             "hostFreeWarnBytes",
             "hostFreeErrorBytes",
-            "publicationErrorSeconds"
+            "publicationErrorSeconds",
+            "imageTrailerBytes",
+            "imageUnitBytes"
           ],
           "properties": {
             "freePercentWarn": {
@@ -431,6 +433,14 @@
               "minimum": 1
             },
             "publicationErrorSeconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "imageTrailerBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "imageUnitBytes": {
               "type": "integer",
               "minimum": 1
             }
@@ -813,6 +823,13 @@
             "damaged",
             "none"
           ]
+        },
+        "needBytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
         }
       }
     },

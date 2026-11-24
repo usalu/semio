@@ -53,6 +53,7 @@ export function createPluginRuntimeSupport(dependencies: PluginRuntimeDependenci
       readHistory: async () => ({ cursor: 0 }) as unknown as HistoryPatch,
       readLocalInteraction: async (instanceId) => fakeLocalInteraction(instanceId),
       subscribeOperationDiagnostics: () => () => {},
+      subscribeOperationFaults: () => () => {},
       subscribeOperationCompletions: () => () => {},
       subscribeOperationProgress: () => () => {},
       readWindowConfigPacks: async () => [],

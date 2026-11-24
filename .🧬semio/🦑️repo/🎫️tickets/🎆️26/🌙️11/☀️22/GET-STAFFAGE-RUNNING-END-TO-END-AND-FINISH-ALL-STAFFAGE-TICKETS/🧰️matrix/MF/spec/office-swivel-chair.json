@@ -1,0 +1,7 @@
+{
+  "ops": [
+    { "op": "sheet-chord", "view": "plan", "id": "backrest-shell" },
+    { "op": "sheet-chord", "view": "plan", "id": "backrest-pad" },
+    { "op": "sheet-chord", "view": "plan", "id": "backrest", "except": ["backrest-strut", "backrest-strut-foot", "backrest-bracket"] }
+  ]
+}

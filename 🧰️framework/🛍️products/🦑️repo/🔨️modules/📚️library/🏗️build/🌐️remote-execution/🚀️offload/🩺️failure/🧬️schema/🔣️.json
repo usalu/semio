@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:remote-execution:offload:failure:v1",
+  "title": "What a non-zero exit of a remote compiler run means",
+  "description": "A remote rustc run that exits non-zero is the build's verdict when its stderr consists of ordinary compiler diagnostics about the crate's own code (a genuine compile error is never compiled twice). It is not the verdict when the failure looks environmental, that is when the other machine lacked something this machine has: the unit is then compiled once more here (reason `remote-failed-local-redo`, with the head of the remote stderr, so remote-only failures are visible and countable). `codes` are the diagnostic codes that name a missing input (reason `incomplete-inputs`); every `classes` entry is a named class of environmental failure with the patterns (regular expressions, matched against the whole of stderr) that identify it; `noDiagnostic` names the class of a failure whose stderr holds no error diagnostic of the compiler at all. The exit statuses of a shell that could not run the compiler or of a killed compiler are infrastructure (`signalAbove`, 126, 127).",
+  "definitions": {
+    "Failure": {
+      "const": {
+        "headCharacters": 240,
+        "signalAbove": 128,
+        "notRunnable": [126, 127],
+        "codes": ["E0460", "E0463", "E0464", "E0583", "E0786"],
+        "noDiagnostic": "no-diagnostic",
+        "classes": [
+          {"name": "missing-crate", "codes": ["E0461", "E0462", "E0514"], "patterns": ["can't find crate", "found possibly newer version", "extern location for .* does not exist", "extern location .* does not exist"]},
+          {"name": "unreadable", "codes": [], "patterns": ["couldn't read", "No such file or directory", "os error 2\\b", "failed to read file", "file not found for module"]},
+          {"name": "linker", "codes": [], "patterns": ["linking with `", "rust-lld", "wasm-component-ld", "\\blld: error", "\\bld: ", "could not exec the linker", "linker `.*` not found"]},
+          {"name": "crash", "codes": [], "patterns": ["internal compiler error", "error: could not exec", "rustc interrupted by SIG", "\\bSIG(SEGV|ABRT|KILL|BUS|ILL)\\b", "Segmentation fault", "Bus error"]},
+          {"name": "disk", "codes": [], "patterns": ["No space left on device", "os error 28\\b"]}
+        ]
+      }
+    }
+  }
+}

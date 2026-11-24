@@ -100,7 +100,7 @@ def budget(cases):
     out = []
     for case in cases:
         generation = spec["physicalGenerationBytes"] if case["sharing"] else spec["copiedGenerationBytes"]
-        total = (spec["packageCacheBytes"] + spec["tmpReserveBytes"] + 2 * spec["scopes"] * generation) * (100 + spec["headroomPercent"])
+        total = (spec["packageCacheBytes"] + spec["pythonBytes"] + spec["tmpReserveBytes"] + (spec["scopes"] + spec["buildingGenerations"]) * generation) * (100 + spec["headroomPercent"])
         out.append({"name": case["name"], "requiredBytes": -(-total // 100)})
     return out
 
